@@ -3,3 +3,8 @@ Options All -Indexes
 RewriteEngine On
 
 RewriteRule ^([-a-zA-Z0-9]+)$ index.php?ruta=$1
+
+
+
+# Redirige /leads a /clientes.php
+RewriteRule ^leads$ clientes.php [L]

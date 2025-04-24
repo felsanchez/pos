@@ -1,63 +1,86 @@
-<?php 
+<?php
 
 require_once "../controladores/clientes.controlador.php";
 require_once "../modelos/clientes.modelo.php";
 
-class AjaxClientes{
+// Clase que contiene los métodos para manejar el AJAX
+class AjaxClientes {
 
-	/*=============================================
-	EDITAR CLIENTE
-	=============================================*/
+  public $idCliente;
+  public $validarCliente;
 
-	public $idCLiente;
+  /*=============================================
+  EDITAR CLIENTE
+  =============================================*/
+  public function ajaxEditarCliente() {
+    $item = "id";
+    $valor = $this->idCliente;
 
-	public function ajaxEditarCliente(){
+    $respuesta = ControladorClientes::ctrMostrarClientes($item, $valor);
+    echo json_encode($respuesta);
+  }
 
-		$item = "id";
-		$valor = $this->idCliente;
+  /*=============================================
+  VALIDAR NO REPETIR CLIENTE
+  =============================================*/
+  public function ajaxValidarCliente() {
+    $item = "nombre";
+    $valor = $this->validarCliente;
 
-		$respuesta = ControladorClientes::ctrMostrarClientes($item, $valor);
+    $respuesta = ControladorClientes::ctrMostrarClientes($item, $valor);
+    echo json_encode($respuesta);
+  }
 
-		echo json_encode($respuesta);
-	}
+  /*=============================================
+  ACTUALIZAR ESTATUS DEL CLIENTE
+  =============================================*/
+  public function ajaxActualizarEstatus($nuevoEstatus) {
+    $tabla = "clientes";
+    $datos = array(
+      "id" => $this->idCliente,
+      "estatus" => $nuevoEstatus
+    );
 
-
-	/*=============================================
-	HPM VALIDAR NO REPETIR CLIENTE
-	=============================================*/
-
-	public $validarCliente;
-	public function ajaxValidarCliente(){
-
-		$item = "nombre";
-		$valor = $this->validarCliente;
-
-		$respuesta = ControladorClientes::ctrMostrarClientes($item, $valor);
-
-		echo json_encode($respuesta);
-	}
-	
+    $respuesta = ModeloClientes::mdlActualizarEstatusCliente($tabla, $datos);
+    echo $respuesta;
+  }
 }
 
 /*=============================================
-EDITAR CATEGORIA
+SOLICITUD PARA EDITAR CLIENTE (usa "idClienteEditar")
 =============================================*/
-
-if(isset($_POST["idCliente"])){
-
-	$cliente = new AjaxClientes();
-	$cliente -> idCliente = $_POST["idCliente"];
-	$cliente -> ajaxEditarCliente();
+if (isset($_POST["idClienteEditar"])) {
+  $editar = new AjaxClientes();
+  $editar->idCliente = $_POST["idClienteEditar"];
+  $editar->ajaxEditarCliente();
+  return;
 }
-
 
 /*=============================================
-HPM VALIDAR NO REPETIR CLIENTE
+SOLICITUD PARA VALIDAR CLIENTE REPETIDO
 =============================================*/
-
-if(isset($_POST["validarCliente"])){
-
-	$valCliente = new AjaxClientes();
-	$valCliente -> validarCliente = $_POST["validarCliente"];
-	$valCliente -> ajaxValidarCliente();
+if (isset($_POST["validarCliente"])) {
+  $valCliente = new AjaxClientes();
+  $valCliente->validarCliente = $_POST["validarCliente"];
+  $valCliente->ajaxValidarCliente();
+  return;
 }
+
+/*=============================================
+SOLICITUD PARA ACTUALIZAR ESTATUS (usa "idCliente" y "nuevoEstatus")
+=============================================*/
+if (isset($_POST["idCliente"]) && isset($_POST["nuevoEstatus"])) {
+	$estatus = new AjaxClientes();
+	$estatus->idCliente = $_POST["idCliente"];
+	$estatus->ajaxActualizarEstatus($_POST["nuevoEstatus"]);
+	return;
+  }
+
+/*
+if (isset($_POST["idCliente"]) && isset($_POST["nuevoEstatus"])) {
+  $estatus = new AjaxClientes();
+  $estatus->idCliente = $_POST["idCliente"];
+  $estatus->ajaxActualizarEstatus($_POST["nuevoEstatus"]);
+  return;
+}
+*/

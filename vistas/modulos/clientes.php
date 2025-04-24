@@ -1,4 +1,4 @@
-  <div class="content-wrapper">
+<div class="content-wrapper">
     <section class="content-header">
 
       <h1>
@@ -7,7 +7,7 @@
 
       <ol class="breadcrumb">
         <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-        <li class="active">Administrar clientes</li>
+        <li class="active">Administrar Clientes</li>
       </ol>
 
     </section>
@@ -20,7 +20,7 @@
 
           <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarCliente">
             
-             Agregar cliente
+             Agregar Cliente
 
           </button>
 
@@ -38,6 +38,8 @@
                 <th>Documento ID</th>
                 <th>Email</th>
                 <th>Teléfono</th>
+                <th>Departamento</th>
+                <th>Ciudad</th>
                 <th>Dirección</th>
                 <th>Fecha de nacimiento</th>
                 <th>Total compras</th>
@@ -64,6 +66,8 @@
                       <td>'.$value["documento"].'</td>
                       <td>'.$value["email"].'</td>
                       <td>'.$value["telefono"].'</td>
+                      <td>'.$value["departamento"].'</td>
+                      <td>'.$value["ciudad"].'</td>
                       <td>'.$value["direccion"].'</td>
                       <td>'.$value["fecha_nacimiento"].'</td>
                       <td>'.$value["compras"].'</td>
@@ -179,13 +183,43 @@ MODAL AGREGAR CLIENTE
            </div>
 
 
+           <!-- entrada para departamento -->
+            
+           <div class="form-group">
+          
+          <div class="input-group">
+            
+            <span class="input-group-addon"><i class="fa fa-building"></i></span>
+
+            <input type="text" class="form-control input-lg" name="nuevoDepartamento" placeholder="Ingresar departamento" required>
+
+           </div>
+
+         </div>
+
+
+         <!-- entrada para ciudad -->
+            
+         <div class="form-group">
+          
+          <div class="input-group">
+            
+            <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
+
+            <input type="text" class="form-control input-lg" name="nuevoCiudad" placeholder="Ingresar Ciudad" required>
+
+           </div>
+
+         </div>
+
+
            <!-- entrada para la direccion -->
             
             <div class="form-group">
           
             <div class="input-group">
               
-              <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
+              <span class="input-group-addon"><i class="fa fa-home"></i></span>
 
               <input type="text" class="form-control input-lg" name="nuevaDireccion" placeholder="Ingresar dirección" required>
 
@@ -353,13 +387,43 @@ MODAL EDITAR CLIENTE
            </div>
 
 
+           <!-- entrada para la departamento -->
+            
+           <div class="form-group">
+          
+          <div class="input-group">
+            
+            <span class="input-group-addon"><i class="fa fa-building"></i></span>
+
+            <input type="text" class="form-control input-lg" name="editarDepartamento" id="editarDepartamento" required>
+
+           </div>
+
+         </div>
+
+
+         <!-- entrada para la departamento -->
+            
+         <div class="form-group">
+          
+          <div class="input-group">
+            
+            <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
+
+            <input type="text" class="form-control input-lg" name="editarCiudad" id="editarCiudad" required>
+
+           </div>
+
+         </div>
+
+
            <!-- entrada para la direccion -->
             
             <div class="form-group">
           
             <div class="input-group">
               
-              <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
+              <span class="input-group-addon"><i class="fa fa-home"></i></span>
 
               <input type="text" class="form-control input-lg" name="editarDireccion" id="editarDireccion" required>
 

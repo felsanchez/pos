@@ -17,7 +17,7 @@ session_start();
   PLUGINS DE CSS
   ======================================-->
 
-  <!-- responsive- para que salga el scroll solo en la tabla productos -->
+    <!-- responsive- para que salga el scroll solo en la tabla productos -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 
   <!-- Bootstrap 3.3.7 -->
@@ -51,6 +51,7 @@ session_start();
 
   <!--Morris chart -->
   <link rel="stylesheet" href="vistas/bower_components/morris.js/morris.css">
+
 
   
   <!--=====================================
@@ -143,11 +144,12 @@ INICIO
              $_GET["ruta"] == "usuarios" ||
              $_GET["ruta"] == "categorias" ||
              $_GET["ruta"] == "productos" ||
-             $_GET["ruta"] == "clientes" ||
+             $_GET["ruta"] == "contactos" ||
              $_GET["ruta"] == "ventas" ||
              $_GET["ruta"] == "crear-venta" ||
              $_GET["ruta"] == "editar-venta" ||
              $_GET["ruta"] == "reportes" ||
+             $_GET["ruta"] == "clientes" ||
              $_GET["ruta"] == "salir"){
 
             include "modulos/".$_GET["ruta"].".php";
