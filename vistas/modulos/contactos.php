@@ -1,70 +1,8 @@
 <!-- Librería de estilos de Choices.js -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
 
-<style>
-/*Campo estatus*/
-/* Aplica color según clase del contenedor */
-.choices.estatus-nuevo .choices__inner {
-  background-color: #ffffff !important;
-  color: rgba(0, 0, 0, 0.7) !important;
-}
-
-.choices.estatus-contactado .choices__inner {
-  background-color: #d4edda !important;
-  color: rgba(12, 37, 10, 0.69) !important;
-}
-
-.choices.estatus-en-espera .choices__inner {
-  background-color: #fff3cd !important;
-  color: #856404 !important;
-}
-
-.choices.estatus-interesado .choices__inner {
-  background-color: #cce5ff !important;
-  color: #004085 !important;
-}
-
-.choices.estatus-no-interesado .choices__inner {
-  background-color: #f8d7da !important;
-  color: #721c24 !important;
-}
-
-
-/* Opciones del menú desplegable en Choices.js según estatus */
-.choices__list--dropdown .choices__item--selectable[data-value="nuevo"] {
-  background-color: #ffffff !important;
-  color: rgba(0, 0, 0, 0.7) !important;
-}
-
-.choices__list--dropdown .choices__item--selectable[data-value="contactado"] {
-  background-color: #d4edda !important;
-  color: rgba(12, 37, 10, 0.69) !important;
-}
-
-.choices__list--dropdown .choices__item--selectable[data-value="en espera"] {
-  background-color: #fff3cd !important;
-  color: #856404 !important;
-}
-
-.choices__list--dropdown .choices__item--selectable[data-value="interesado"] {
-  background-color: #cce5ff !important;
-  color: #004085 !important;
-}
-
-.choices__list--dropdown .choices__item--selectable[data-value="no interesado"] {
-  background-color: #f8d7da !important;
-  color: #721c24 !important;
-}
-
-
-/* Aumentar grosor del borde del dropdown al abrir */
-.choices.is-open .choices__list--dropdown {
-  border-width: 2px !important; /* Puedes ajustar el valor */
-  border-color: #999 !important; /* Opcional: cambia el color si quieres */
-  border-radius: 5px;
-  border-style: inset;
-}
-</style>
+<!-- Ruta contactos.css -->
+<link rel="stylesheet" href="assets/css/contactos.css">
 
 
 <?php
@@ -101,33 +39,49 @@
 
         </div>
 
-        <!--buscador estatus-->
-        <select id="filtroEstatus" class="form-control filtro-estatus">
-          <option value="">Todos</option>
-          <option value="nuevo">Nuevo</option>
-          <option value="contactado">Contactado</option>
-          <option value="en espera">En espera</option>
-          <option value="interesado">Interesado</option>
-          <option value="no interesado">No interesado</option>
-        </select>
+  
+        <?php
+  $filtroEstatus = isset($_GET['filtroEstatus']) ? $_GET['filtroEstatus'] : '';  // Captura el valor del filtro de estatus si existe.
+
+  // Aquí aplica el filtro de estatus desde el GET para obtener los clientes correctos
+  $item = "estatus";
+  $valor = $filtroEstatus;
+  $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+?>
 
         <div class="box-body table-responsive">
 
-          <table class="table table-bordered table-striped tablas">
+
+         <!-- contenedor para ubicar el filtro a la derecha -->
+         <div class="clearfix mb-2">
+  <div class="pull-right filtro-estatus-wrapper d-flex align-items-center" style="gap: 8px;">
+    <label for="filtroEstatus" class="control-label mb-0">Estados:</label>
+    <select id="filtroEstatus" onchange="filterTable()" class="form-control filtro-estatus">
+      <option value="">Todos</option>
+      <option value="contactado" <?php if ($filtroEstatus == 'contactado') echo 'selected'; ?>>Contactado</option>
+      <option value="interesado" <?php if ($filtroEstatus == 'interesado') echo 'selected'; ?>>Interesado</option>
+      <option value="no interesado" <?php if ($filtroEstatus == 'no interesado') echo 'selected'; ?>>No Interesado</option>
+      <option value="en espera" <?php if ($filtroEstatus == 'en espera') echo 'selected'; ?>>En Espera</option>
+    </select>
+  </div>
+</div>
+
+
+          <table class="table table-bordered table-striped tablas">          
               
             <thead>
               <tr>
                 <th style="width: 10px">#</th>
                 <th>Nombre</th>
-                <th>Documento ID</th>
+                <th>Documento</th>
                 <th>Email</th>
                 <th>Teléfono</th>
                 <th>Departamento</th>
                 <th>Ciudad</th>
                 <th>Dirección</th>
-                <th>Estado</th>
-                <th>Notas</th>
                 <th>Fecha de nacimiento</th>
+                <th>Estado</th>
+                <th><i class="fa fa-pencil"></i> <i class="fa fa-hand-o-down"></i> Notas</th>
                 <th>Total compras</th>
                 <th>Ultima compra</th>
                 <th>Ingreso al sistema</th>
@@ -155,6 +109,7 @@
                   <td><?php echo $value["departamento"]; ?></td>
                   <td><?php echo $value["ciudad"]; ?></td>
                   <td><?php echo $value["direccion"]; ?></td>
+                  <td><?php echo $value["fecha_nacimiento"]; ?></td>
                   <td>
                     <select class="form-control cambiarEstatus <?php echo $estatusClass; ?>" data-id="<?php echo $value["id"]; ?>">
                       <option value="nuevo" <?php if($value["estatus"] == "nuevo") echo "selected"; ?>>Nuevo</option>
@@ -164,9 +119,11 @@
                       <option value="no interesado" <?php if($value["estatus"] == "no interesado") echo "selected"; ?>>No interesado</option>
                     </select>
                   </td>
+     
+                   <td contenteditable="true" class="celda-notas" data-id="<?= $value['id']; ?>">
+                    <?= $value['notas']; ?>
+                  </td>
 
-                   <td><?php echo $value["notas"]; ?></td>
-                  <td><?php echo $value["fecha_nacimiento"]; ?></td>
                   <td><?php echo $value["compras"]; ?></td>
                   <td><?php echo $value["ultima_compra"]; ?></td>
                   <td><?php echo $value["fecha"]; ?></td>
@@ -613,154 +570,20 @@ MODAL EDITAR CLIENTE
  ?>
 
 
-<!--Campo estatus-->
-<script>
-$(document).on("click", ".btnEditarCliente", function () {
-  var idCliente = $(this).attr("idCliente");
 
-  var datos = new FormData();
-  datos.append("idClienteEditar", idCliente);
+<!-- jQuery 
+<script src="vistas/bower_components/jquery/dist/jquery.min.js"></script>
+ Datatable
+<script src="vistas/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+-->
 
-  $.ajax({
-    url: "ajax/clientes.ajax.php",
-    method: "POST",
-    data: datos,
-    cache: false,
-    contentType: false,
-    processData: false,
-    dataType: "json",
-    success: function (respuesta) {
-
-      $("#editarCliente").val(respuesta.nombre); // mantiene tu variable personalizada
-      $("#editarDocumentoId").val(respuesta.documento); // mantiene tu variable personalizada
-      $("#editarEmail").val(respuesta.email);
-      $("#editarTelefono").val(respuesta.telefono);
-      $("#editarDepartamento").val(respuesta.departamento);
-      $("#editarCiudad").val(respuesta.ciudad);
-      $("#editarDireccion").val(respuesta.direccion);
-      $("#editarFechaNacimiento").val(respuesta.fecha_nacimiento);
-      $("#editarEstatus").val(respuesta.estatus);
-      $("#editarNota").val(respuesta.notas);
-
-      // Input oculto para el ID del cliente
-      $("#idCliente").val(respuesta.id);
-    }
-  });
-});
-</script>
-
-
-<!-- Choices.js -->
+<!-- Choices.js para Campo estatus-->
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
+<!--Ruta Contactos.js-->
+<script src="assets/js/contactos.js"></script>
 
-<!--Campo estatus-->
-<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-<script>
-  // Función para aplicar el color del estatus al contenedor de Choices.js
-  function aplicarColorEstatus(select) {
-    const value = select.value;
-    const container = select.closest('.choices');
-
-    if (!container) return;
-
-    // Eliminar clases anteriores que empiecen con "estatus-"
-    container.className = container.className
-      .split(" ")
-      .filter(cls => !cls.startsWith("estatus-"))
-      .join(" ");
-
-    // Agregar la nueva clase
-    container.classList.add("estatus-" + value.replace(/ /g, "-").toLowerCase());
-  }
-
-  document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.cambiarEstatus').forEach(function (select) {
-      const choices = new Choices(select, {
-        searchEnabled: false,
-        itemSelectText: ''
-      });
-
-      // Esperar a que Choices.js genere su HTML (usa setTimeout como fallback)
-      setTimeout(() => {
-        aplicarColorEstatus(select);
-      }, 100);
-
-      // Cambiar color dinámicamente al cambiar el valor
-      select.addEventListener('change', function () {
-        aplicarColorEstatus(select);
-      });
-    });
-  });
-
-  // Script para guardar el estatus por AJAX
-  $(document).on("change", ".cambiarEstatus", function () {
-    var idCliente = $(this).data("id");
-    var nuevoEstatus = $(this).val();
-    var select = $(this)[0]; // Para usarlo en aplicarColorEstatus
-
-    $.ajax({
-      url: "ajax/clientes.ajax.php",
-      method: "POST",
-      data: {
-        idCliente: idCliente,
-        nuevoEstatus: nuevoEstatus
-      },
-      success: function (respuesta) {
-        console.log("RESPUESTA:", respuesta);
-        if (respuesta === "ok") {
-          aplicarColorEstatus(select); // Asegura aplicar color correcto después del cambio
-        } else {
-          alert("Error al guardar el estatus");
-        }
-      },
-      error: function (xhr, status, error) {
-        console.error("AJAX Error:", error);
-      }
-    });
-  });
-</script>
-
-<!-- buscador estatus-->
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const tabla = $('.tablas').DataTable(); // Asegúrate que DataTable esté inicializado
-
-    const filtroSelect = document.getElementById('filtroEstatus');
-    const choicesFiltro = new Choices(filtroSelect, {
-      searchEnabled: false,
-      itemSelectText: '',
-      classNames: {
-        containerOuter: 'choices filtro-estatus'
-      }
-    });
-
-    const container = filtroSelect.closest('.choices');
-
-    function aplicarColor() {
-      container.classList.forEach(cls => {
-        if (cls.startsWith('estatus-')) {
-          container.classList.remove(cls);
-        }
-      });
-
-      const valor = filtroSelect.value;
-      if (valor) {
-        container.classList.add('estatus-' + valor.replace(/ /g, '-').toLowerCase());
-      }
-    }
-
-    aplicarColor(); // Al cargar
-    filtroSelect.addEventListener('change', function () {
-      aplicarColor();
-      tabla.column(8).search(this.value).draw(); // Asegúrate de que la columna 8 es la del estatus
-    });
-  });
-</script>
-
-
-
-
-
-
+<!--sirve para dar estilos al select-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
 

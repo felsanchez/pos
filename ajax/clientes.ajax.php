@@ -84,3 +84,19 @@ if (isset($_POST["idCliente"]) && isset($_POST["nuevoEstatus"])) {
   return;
 }
 */
+
+/*=============================================
+PERMITE EDITAR NOTAS
+=============================================*/
+if ($_POST["accion"] == "actualizarNota") {
+  $tabla = "clientes";
+  $datos = array(
+    "id" => $_POST["id"],
+    "notas" => $_POST["notas"]
+  );
+  $respuesta = ModeloClientes::mdlActualizarNota("clientes", $_POST["id"], $_POST["notas"]);
+  echo json_encode($respuesta);
+}
+
+
+

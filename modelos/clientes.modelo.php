@@ -175,6 +175,25 @@ class ModeloClientes{
 		//$stmt->close();
 		$stmt = null;
 	  }
+
+
+	  /*=============================================
+	ACTUALIZAR notas
+	=============================================*/
+	  static public function mdlActualizarNota($tabla, $id, $nota) {
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET notas = :nota WHERE id = :id");
+		$stmt->bindParam(":nota", $nota, PDO::PARAM_STR);
+		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
+	
+		if ($stmt->execute()) {
+			return "ok";
+		} else {
+			return "error";
+		}
+	
+		$stmt = null;
+	}
+	
 	  
 	
 

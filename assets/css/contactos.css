@@ -1,0 +1,91 @@
+/*Campo estatus*/
+/* Aplica color según clase del contenedor */
+.choices.estatus-nuevo .choices__inner {
+    background-color: #ffffff !important;
+    color: rgba(0, 0, 0, 0.7) !important;
+  }
+  
+  .choices.estatus-contactado .choices__inner {
+    background-color: #d4edda !important;
+    color: rgba(12, 37, 10, 0.69) !important;
+  }
+  
+  .choices.estatus-en-espera .choices__inner {
+    background-color: #fff3cd !important;
+    color: #856404 !important;
+  }
+  
+  .choices.estatus-interesado .choices__inner {
+    background-color: #cce5ff !important;
+    color: #004085 !important;
+  }
+  
+  .choices.estatus-no-interesado .choices__inner {
+    background-color: #f8d7da !important;
+    color: #721c24 !important;
+  }
+  
+  
+  /* Opciones del menú desplegable en Choices.js según estatus */
+  .choices__list--dropdown .choices__item--selectable[data-value="nuevo"] {
+    background-color: #ffffff !important;
+    color: rgba(0, 0, 0, 0.7) !important;
+  }
+  
+  .choices__list--dropdown .choices__item--selectable[data-value="contactado"] {
+    background-color: #d4edda !important;
+    color: rgba(12, 37, 10, 0.69) !important;
+  }
+  
+  .choices__list--dropdown .choices__item--selectable[data-value="en espera"] {
+    background-color: #fff3cd !important;
+    color: #856404 !important;
+  }
+  
+  .choices__list--dropdown .choices__item--selectable[data-value="interesado"] {
+    background-color: #cce5ff !important;
+    color: #004085 !important;
+  }
+  
+  .choices__list--dropdown .choices__item--selectable[data-value="no interesado"] {
+    background-color: #f8d7da !important;
+    color: #721c24 !important;
+  }
+  
+  
+  /* Aumentar grosor del borde del dropdown al abrir */
+  .choices.is-open .choices__list--dropdown {
+    border-width: 2px !important; /* Puedes ajustar el valor */
+    border-color: #999 !important; /* Opcional: cambia el color si quieres */
+    border-radius: 15px;
+    border-style: inset;
+  }
+
+
+  /*Buscador estatus**/
+  .filtro-estatus-container {
+    margin-bottom: 20px;
+  }
+  .filtro-estatus-container label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+
+  .filtro-estatus-wrapper {
+    min-width: 250px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .filtro-estatus {
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  
+  
