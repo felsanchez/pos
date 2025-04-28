@@ -31,8 +31,8 @@ class ControladorClientes{
 							   "ciudad" => $_POST["nuevoCiudad"],
 					           "direccion" => $_POST["nuevaDireccion"],
 							   "estatus" => $_POST["nuevoEstatus"],
-							   "notas" => $_POST["nuevaNota"],
-				               "fecha_nacimiento" => $_POST["nuevaFechaNacimiento"]);
+							   "fecha_nacimiento" => $_POST["nuevaFechaNacimiento"],
+							   "notas" => $_POST["nuevaNota"]);
 
 				$respuesta = ModeloClientes::mdlIngresarCliente($tabla, $datos);
 
@@ -104,9 +104,9 @@ class ControladorClientes{
 		if(isset($_POST["editarCliente"])){
 
 			/*echo "<pre>";
-    var_dump($_POST);
-    echo "</pre>";
-	*/
+				var_dump($_POST);
+				echo "</pre>";
+				*/
 
 			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarCliente"]) &&
 				preg_match('/^[0-9]+$/', $_POST["editarDocumentoId"]) &&

@@ -100,50 +100,101 @@ function aplicarColorEstatus(select) {
 
   // BUSCADOR ESTATUS
 // Función para aplicar el filtro personalizado
-function filterTable() {
-  $('.tablas').DataTable().draw(); // Forzar re-filtrado
+var tabla1;
+
+function filterTable1() {
+  tabla1.draw(); // Usamos directamente la instancia
 }
 
 $(document).ready(function () {
-
-  // Inicializar DataTable si no está ya inicializada
-  if (!$.fn.DataTable.isDataTable('.tablas')) {
-    $('.tablas').DataTable({
-      responsive: true,
-      language: {
-        url: "vistas/bower_components/datatables.net/Spanish.json",
-
-        search: "Palabra Clave:",
-        lengthMenu: "Mostrar _MENU_ entradas",
-        info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-        "sLoadingRecords": "Cargando...",
-        "oPaginate":       {
-        "sFirst":          "Primero",
-        "sLast":           "Último",
-        "sNext":           "Siguiente",
-        "sPrevious":       "Anterior"
-          },
-
-      }
-    });
-  }
-
-  // Agregamos el filtro personalizado por estatus
-  $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-    const filtroSeleccionado = $('#filtroEstatus').val().toLowerCase();
-
-    if (!filtroSeleccionado) return true;
-
-    // Buscar el texto visible del <select> en la columna 8
-    const row = settings.oInstance.api().row(dataIndex).node();
-    const select = $(row).find('td:eq(9) select option:selected').text().toLowerCase();
-
-    return select === filtroSeleccionado;
+  
+  tabla1 = $('.tablas1').DataTable({
+    responsive: true,
+    language: {
+      url: "vistas/bower_components/datatables.net/Spanish.json",
+      search: "Palabra Clave:",
+      lengthMenu: "Mostrar _MENU_ entradas",
+      info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+      "sLoadingRecords": "Cargando...",
+      "oPaginate": {
+        "sFirst": "Primero",
+        "sLast": "Último",
+        "sNext": "Siguiente",
+        "sPrevious": "Anterior"
+      },
+    }
   });
 
-  // Disparar filtro al cambiar el dropdown
-  $('#filtroEstatus').on('change', function () {
-    filterTable();
+  // Filtro individual SOLO para tabla1
+  tabla1.on('draw', function () {
+    const filtroSeleccionado = $('#filtroEstatus1').val().toLowerCase();
+
+    tabla1.rows().every(function () {
+      const row = $(this.node());
+      const estatus = row.find('td:eq(8) select option:selected').text().toLowerCase();
+      
+      if (filtroSeleccionado === "" || estatus === filtroSeleccionado) {
+        row.show();
+      } else {
+        row.hide();
+      }
+    });
+  });
+
+  // Al cambiar el filtro, disparar
+  $('#filtroEstatus1').on('change', function () {
+    filterTable1();
+  });
+
+});
+
+
+// BUSCADOR ESTATUS 2da Tabla
+// Función para aplicar el filtro personalizado
+var tabla2;
+
+function filterTable2() {
+  tabla2.draw(); // Usamos directamente la instancia
+}
+
+$(document).ready(function () {
+  
+  tabla2 = $('.tablas2').DataTable({
+    responsive: true,
+    language: {
+      url: "vistas/bower_components/datatables.net/Spanish.json",
+      search: "Palabra Clave:",
+      lengthMenu: "Mostrar _MENU_ entradas",
+      info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+      "sLoadingRecords": "Cargando...",
+      "oPaginate": {
+        "sFirst": "Primero",
+        "sLast": "Último",
+        "sNext": "Siguiente",
+        "sPrevious": "Anterior"
+      },
+    }
+  });
+
+  // Filtro individual SOLO para tabla2
+  tabla2.on('draw', function () {
+    const filtroSeleccionado = $('#filtroEstatus2').val().toLowerCase();
+
+    tabla2.rows().every(function () {
+      const row = $(this.node());
+      const estatus = row.find('td:eq(8) select option:selected').text().toLowerCase();
+      
+      if (filtroSeleccionado === "" || estatus === filtroSeleccionado) {
+        row.show();
+      } else {
+        row.hide();
+      }
+    });
+  });
+
+  // Al cambiar el filtro, disparar
+  $('#filtroEstatus2').on('change', function () {
+    filterTable2();
   });
 
 });

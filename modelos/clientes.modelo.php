@@ -194,9 +194,5 @@ class ModeloClientes{
 		$stmt = null;
 	}
 	
-	  
-	
-
-	
 
 }

@@ -43,7 +43,6 @@
                 <th>Precio de Venta</th>
                 <th>Agregado</th>
                 <th>Acciones</th>
-
               </tr>             
             </thead>
           

@@ -67,7 +67,6 @@
     margin-bottom: 20px;
   }
   .filtro-estatus-container label {
-    font-weight: bold;
     display: block;
     margin-bottom: 5px;
   }
@@ -88,4 +87,7 @@
   }
 
   
+  .filtro-estatus-wrapper label {
+    font-weight: 400 !important;
+  }
   

@@ -62,31 +62,29 @@
 
       if($_SESSION["perfil"] =="Administrador" || $_SESSION["perfil"] =="Vendedor"){
 
-        echo '<li class="treeview">
-        <a href="">         
+        echo '<li>
+
+        <a href="clientes">   
+
           <i class="fa fa-users"></i>
-          <span>Contactos</span>
-          <span class="pull-right-container">
-            <i class="fa fa-angle-left pull-right"></i>
-          </span>
-        </a>
+          <span>Clientes</span>
 
-        <ul class="treeview-menu">
-          <li>
-            <a href="contactos">
-              <i class="fa fa-circle-o"></i>
-              <span>Contactos</span>
-            </a>
-          </li>
+        </a>   
 
-          <li>
-            <a href="clientes">
-              <i class="fa fa-circle-o"></i>
-              <span>Clientes</span>
-            </a>
-          </li>';
-  
-       echo '</ul> 
+      </li>';
+      }
+
+
+      if($_SESSION["perfil"] =="Administrador" || $_SESSION["perfil"] =="Vendedor"){
+
+        echo '<li>
+
+        <a href="actividades">   
+
+          <i class="fa fa-users"></i>
+          <span>Actividades</span>
+
+        </a>   
 
       </li>';
       }

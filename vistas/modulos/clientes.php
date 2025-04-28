@@ -1,13 +1,26 @@
-<div class="content-wrapper">
+<!-- Librería de estilos de Choices.js -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+
+<!-- Ruta contactos.css -->
+<link rel="stylesheet" href="assets/css/clientes.css">
+
+
+<?php
+      $editarCliente = new ControladorClientes();
+      $editarCliente -> ctrEditarCliente();
+?>
+
+  
+  <div class="content-wrapper">
     <section class="content-header">
 
       <h1>
-        Administrar clientes
+        Administrar Clientes
       </h1>
 
       <ol class="breadcrumb">
         <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-        <li class="active">Administrar Clientes</li>
+        <li class="active">Administrar Contactos</li>
       </ol>
 
     </section>
@@ -20,28 +33,58 @@
 
           <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarCliente">
             
-             Agregar Cliente
+             Agregar Nuevo
 
           </button>
 
         </div>
+    
+  
+        <?php
+          $filtroEstatus1 = isset($_GET['filtroEstatus1']) ? $_GET['filtroEstatus1'] : '';  // Captura el valor del filtro de estatus si existe.
+
+          // Aquí aplica el filtro de estatus desde el GET para obtener los clientes correctos
+          $item = "estatus";
+          $valor = $filtroEstatus1;
+          $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+        ?>
+
+        <h3 style="text-align: center; font-weight: bold; margin: 20px 0; color: #4A4A4A; padding-bottom: 10px; border-bottom: 2px solid #4A4A4A;">
+          Lista de Clientes
+        </h3>
 
 
         <div class="box-body table-responsive">
 
-          <table class="table table-bordered table-striped tablas">
+            <!-- filtro estatus-->
+            <div class="clearfix mb-2">
+              <div class="pull-right filtro-estatus-wrapper d-flex align-items-center" style="gap: 8px;">
+                <label for="filtroEstatus1" class="control-label mb-0">Estados:</label>
+                <select id="filtroEstatus1" onchange="filterTable1()" class="form-control filtro-estatus">
+                  <option value="">Todos</option>
+                  <option value="contactado" <?php if ($filtroEstatus1 == 'contactado') echo 'selected'; ?>>Contactado</option>
+                  <option value="interesado" <?php if ($filtroEstatus1 == 'interesado') echo 'selected'; ?>>Interesado</option>
+                  <option value="no interesado" <?php if ($filtroEstatus1 == 'no interesado') echo 'selected'; ?>>No Interesado</option>
+                  <option value="en espera" <?php if ($filtroEstatus1 == 'en espera') echo 'selected'; ?>>En Espera</option>
+                </select>
+              </div>
+            </div>
+
+          <table class="table table-bordered table-striped tablas1">          
               
             <thead>
               <tr>
                 <th style="width: 10px">#</th>
                 <th>Nombre</th>
-                <th>Documento ID</th>
+                <th>Documento</th>
                 <th>Email</th>
                 <th>Teléfono</th>
                 <th>Departamento</th>
                 <th>Ciudad</th>
                 <th>Dirección</th>
-                <th>Fecha de nacimiento</th>
+                <!--<th>Fecha de nacimiento</th>-->
+                <th>Estado</th>
+                <th><i class="fa fa-pencil"></i> <i class="fa fa-hand-o-down"></i> Notas</th>
                 <th>Total compras</th>
                 <th>Ultima compra</th>
                 <th>Ingreso al sistema</th>
@@ -51,46 +94,58 @@
 
               <tbody>
 
-                <?php
+              <?php
+                $item = null;
+                $valor = null;
+                $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+              ?>
 
-                  $item = null;
-                  $valor = null;
+                  <?php 
+                  $key = 0;
+                  foreach ($clientes as $value): 
+                    if ($value["compras"] > 0): 
+                      $estatusClass = "estatus-" . str_replace(" ", "-", strtolower($value["estatus"]));
+                  ?>
 
-                  $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+              
+                <tr>
+                  <td><?php echo $key + 1; ?></td>
+                  <td><?php echo $value["nombre"]; ?></td>
+                  <td><?php echo $value["documento"]; ?></td>
+                  <td><?php echo $value["email"]; ?></td>
+                  <td><?php echo $value["telefono"]; ?></td>
+                  <td><?php echo $value["departamento"]; ?></td>
+                  <td><?php echo $value["ciudad"]; ?></td>
+                  <td><?php echo $value["direccion"]; ?></td>
+                  
+                  <td>
+                    <select class="form-control cambiarEstatus <?php echo $estatusClass; ?>" data-id="<?php echo $value["id"]; ?>">
+                      <option value="nuevo" <?php if($value["estatus"] == "nuevo") echo "selected"; ?>>Nuevo</option>
+                      <option value="contactado" <?php if($value["estatus"] == "contactado") echo "selected"; ?>>Contactado</option>
+                      <option value="en espera" <?php if($value["estatus"] == "en espera") echo "selected"; ?>>En espera</option>
+                      <option value="interesado" <?php if($value["estatus"] == "interesado") echo "selected"; ?>>Interesado</option>
+                      <option value="no interesado" <?php if($value["estatus"] == "no interesado") echo "selected"; ?>>No interesado</option>
+                    </select>
+                  </td>
+     
+                   <td contenteditable="true" class="celda-notas" data-id="<?= $value['id']; ?>">
+                    <?= $value['notas']; ?>
+                  </td>
 
-                  foreach ($clientes as $key => $value) {
-                    
-                        echo '<tr>
-                      <td>'.($key+1).'</td>
-                      <td>'.$value["nombre"].'</td>
-                      <td>'.$value["documento"].'</td>
-                      <td>'.$value["email"].'</td>
-                      <td>'.$value["telefono"].'</td>
-                      <td>'.$value["departamento"].'</td>
-                      <td>'.$value["ciudad"].'</td>
-                      <td>'.$value["direccion"].'</td>
-                      <td>'.$value["fecha_nacimiento"].'</td>
-                      <td>'.$value["compras"].'</td>
-                      <td>'.$value["ultima_compra"].'</td>
-                      <td>'.$value["fecha"].'</td>
-                      <td>
-                        <div class="btn-group">
-
-                          <button class="btn btn-warning btnEditarCliente" data-toggle="modal" data-target="#modalEditarCliente" idCliente="'.$value["id"].'"><i class="fa fa-pencil"></i></button>';
-
-                        //if($_SESSION["perfil"] =="Administrador"){  
-
-                          echo '<button class="btn btn-danger btnEliminarCliente" idCliente="'.$value["id"].'"><i class="fa fa-times"></i></button>';
-                        //}     
-
-                        echo'</div>
-                      </td>
-                    </tr>';
-
-                  }
-
-
-                ?>
+                  <td><?php echo $value["compras"]; ?></td>
+                  <td><?php echo $value["ultima_compra"]; ?></td>
+                  <td><?php echo $value["fecha"]; ?></td>
+                  <td>
+                    <div class="btn-group">
+                      <button class="btn btn-warning btnEditarCliente" data-toggle="modal" data-target="#modalEditarCliente" idCliente="<?php echo $value["id"]; ?>"><i class="fa fa-pencil"></i></button>
+                      <button class="btn btn-danger btnEliminarCliente" idCliente="<?php echo $value["id"]; ?>"><i class="fa fa-times"></i></button>
+                    </div>
+                  </td>
+                </tr>
+              <?php 
+               endif;
+            endforeach; 
+            ?>
 
                 
               </tbody>
@@ -98,6 +153,126 @@
           </table>
 
         </div>
+
+
+          <!--=====================================
+          2DA TABLA CLIENTES SIN VENTAS
+          ======================================-->
+          <br><br>
+
+            <?php
+              $filtroEstatus2 = isset($_GET['filtroEstatus2']) ? $_GET['filtroEstatus2'] : '';  // Captura el valor del filtro de estatus si existe.
+
+              // Aquí aplica el filtro de estatus desde el GET para obtener los clientes correctos
+              $item = "estatus";
+              $valor = $filtroEstatus2;
+              $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+            ?>
+
+        <h3 style="text-align: center; font-weight: bold; margin: 20px 0; color: #4A4A4A; padding-bottom: 10px; border-bottom: 2px solid #4A4A4A;">
+          Contactos sin Ventas
+        </h3>    
+
+            <div class="box-body table-responsive">
+
+            <!-- filtro estatus -->
+              <div class="clearfix mb-2">
+              <div class="pull-right filtro-estatus-wrapper d-flex align-items-center" style="gap: 8px;">
+                <label for="filtroEstatus2" class="control-label mb-0">Estados:</label>
+                <select id="filtroEstatus2" onchange="filterTable2()" class="form-control filtro-estatus">
+                  <option value="">Todos</option>
+                  <option value="contactado" <?php if ($filtroEstatus2 == 'contactado') echo 'selected'; ?>>Contactado</option>
+                  <option value="interesado" <?php if ($filtroEstatus2 == 'interesado') echo 'selected'; ?>>Interesado</option>
+                  <option value="no interesado" <?php if ($filtroEstatus2 == 'no interesado') echo 'selected'; ?>>No Interesado</option>
+                  <option value="en espera" <?php if ($filtroEstatus2 == 'en espera') echo 'selected'; ?>>En Espera</option>
+                </select>
+              </div>
+            </div>
+
+
+              <table class="table table-bordered table-striped tablas2">          
+                  
+                <thead>
+                  <tr>
+                    <th style="width: 10px">#</th>
+                    <th>Nombre</th>
+                    <th>Documento</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Departamento</th>
+                    <th>Ciudad</th>
+                    <th>Dirección</th>
+                    <!--<th>Fecha de nacimiento</th>-->
+                    <th>Estado</th>
+                    <th><i class="fa fa-pencil"></i> <i class="fa fa-hand-o-down"></i> Notas</th>
+                    <!--<th>Total compras</th>-->
+                    <!--<th>Ultima compra</th>-->
+                    <th>Ingreso al sistema</th>
+                    <th>Acciones</th>
+                  </tr>             
+                </thead>
+
+                  <tbody>
+
+                  <?php
+                    $item = null;
+                    $valor = null;
+                    $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+                  ?>
+
+                    <?php 
+                    $key = 0;
+                    foreach ($clientes as $value): 
+                      if ($value["compras"] == 0): 
+                        $estatusClass = "estatus-" . str_replace(" ", "-", strtolower($value["estatus"]));
+                    ?>
+
+                    <tr>
+                      <td><?php echo $key + 1; ?></td>
+                      <td><?php echo $value["nombre"]; ?></td>
+                      <td><?php echo $value["documento"]; ?></td>
+                      <td><?php echo $value["email"]; ?></td>
+                      <td><?php echo $value["telefono"]; ?></td>
+                      <td><?php echo $value["departamento"]; ?></td>
+                      <td><?php echo $value["ciudad"]; ?></td>
+                      <td><?php echo $value["direccion"]; ?></td>
+                      
+                      <td>
+                        <select class="form-control cambiarEstatus <?php echo $estatusClass; ?>" data-id="<?php echo $value["id"]; ?>">
+                          <option value="nuevo" <?php if($value["estatus"] == "nuevo") echo "selected"; ?>>Nuevo</option>
+                          <option value="contactado" <?php if($value["estatus"] == "contactado") echo "selected"; ?>>Contactado</option>
+                          <option value="en espera" <?php if($value["estatus"] == "en espera") echo "selected"; ?>>En espera</option>
+                          <option value="interesado" <?php if($value["estatus"] == "interesado") echo "selected"; ?>>Interesado</option>
+                          <option value="no interesado" <?php if($value["estatus"] == "no interesado") echo "selected"; ?>>No interesado</option>
+                        </select>
+                      </td>
+        
+                      <td contenteditable="true" class="celda-notas" data-id="<?= $value['id']; ?>">
+                        <?= $value['notas']; ?>
+                      </td>
+
+                      
+                      <td><?php echo $value["fecha"]; ?></td>
+                      <td>
+                        <div class="btn-group">
+                          <button class="btn btn-warning btnEditarCliente" data-toggle="modal" data-target="#modalEditarCliente" idCliente="<?php echo $value["id"]; ?>"><i class="fa fa-pencil"></i></button>
+                          <button class="btn btn-danger btnEliminarCliente" idCliente="<?php echo $value["id"]; ?>"><i class="fa fa-times"></i></button>
+                        </div>
+                      </td>
+                    </tr>
+                  <?php 
+                 endif;
+                 endforeach; 
+                 ?>
+
+                    
+                  </tbody>
+
+              </table>
+
+            </div>
+            <!--fin tabla-->
+
 
       </div>
 
@@ -183,6 +358,22 @@ MODAL AGREGAR CLIENTE
            </div>
 
 
+            <!-- entrada para Email -->
+            
+            <div class="form-group">
+          
+            <div class="input-group">
+              
+              <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+
+              <!--<input type="email" class="form-control input-lg" name="nuevoEmail" placeholder="Ingresar email" required>-->
+              <input type="email" class="form-control input-lg" name="nuevoEmail" placeholder="Ingresar email">
+
+             </div>
+
+           </div>
+
+
            <!-- entrada para departamento -->
             
            <div class="form-group">
@@ -228,24 +419,26 @@ MODAL AGREGAR CLIENTE
            </div>
 
 
-            <!-- entrada para Email -->
-            
-            <div class="form-group">
-          
-            <div class="input-group">
-              
-              <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+           <!-- entrada para estatus -->
+           <input type="hidden" name="nuevoEstatus" value="nuevo">
 
-              <!--<input type="email" class="form-control input-lg" name="nuevoEmail" placeholder="Ingresar email" required>-->
-              <input type="email" class="form-control input-lg" name="nuevoEmail" placeholder="Ingresar email">
 
-             </div>
-
-           </div>
+           <!-- Estatus 
+            <div class="form-group"> 
+              <label for="editarEstatus">Estatus</label>
+              <select class="form-control" name="editarEstatus" id="editarEstatus">
+                <option value="contactado">Contactado</option>
+                <option value="en espera">En espera</option>
+                <option value="interesado">Interesado</option>
+                <option value="no interesado">No interesado</option>
+              </select>
+            </div>
+            -->
 
 
            <!-- entrada para la fecha naciminiento -->
             
+           <!--
             <div class="form-group">
           
             <div class="input-group">
@@ -253,6 +446,22 @@ MODAL AGREGAR CLIENTE
               <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
 
               <input type="text" class="form-control input-lg" name="nuevaFechaNacimiento" placeholder="Ingresar fecha de nacimiento" data-inputmask="'alias': 'yyyy/mm/dd'" data-mask>
+
+             </div>
+
+           </div>
+           -->
+
+
+            <!-- entrada para notas -->
+            
+            <div class="form-group">
+          
+            <div class="input-group">
+              
+              <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
+
+              <input type="text" class="form-control input-lg" name="nuevaNota" placeholder="Ingresar Nota">
 
              </div>
 
@@ -356,6 +565,21 @@ MODAL EDITAR CLIENTE
            </div>
 
 
+           <!-- entrada para telefono -->
+            
+           <div class="form-group">
+          
+          <div class="input-group">
+            
+            <span class="input-group-addon"><i class="fa fa-phone"></i></span>
+
+            <input type="text" class="form-control input-lg" name="editarTelefono"  id="editarTelefono" data-inputmask="'mask':'(999) 999-9999'" data-mask required>
+
+           </div>
+
+         </div>
+
+
            <!-- entrada para Email -->
             
             <div class="form-group">
@@ -366,21 +590,6 @@ MODAL EDITAR CLIENTE
 
               <!--<input type="email" class="form-control input-lg" name="editarEmail" id="editarEmail" required>-->
               <input type="email" class="form-control input-lg" name="editarEmail" id="editarEmail">
-
-             </div>
-
-           </div>
-
-
-           <!-- entrada para telefono -->
-            
-            <div class="form-group">
-          
-            <div class="input-group">
-              
-              <span class="input-group-addon"><i class="fa fa-phone"></i></span>
-
-              <input type="text" class="form-control input-lg" name="editarTelefono"  id="editarTelefono" data-inputmask="'mask':'(999) 999-9999'" data-mask required>
 
              </div>
 
@@ -402,7 +611,7 @@ MODAL EDITAR CLIENTE
          </div>
 
 
-         <!-- entrada para la departamento -->
+         <!-- entrada para la ciudad -->
             
          <div class="form-group">
           
@@ -434,6 +643,7 @@ MODAL EDITAR CLIENTE
 
            <!-- entrada para la fecha naciminiento -->
             
+            <!-- 
             <div class="form-group">
           
             <div class="input-group">
@@ -445,6 +655,22 @@ MODAL EDITAR CLIENTE
              </div>
 
            </div>
+           -->
+
+
+           <!-- entrada para nota -->
+            
+           <div class="form-group">
+          
+          <div class="input-group">
+            
+            <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
+
+            <input type="text" class="form-control input-lg" name="editarNota" id="editarNota">
+
+           </div>
+
+         </div>
 
           
 
@@ -465,20 +691,11 @@ MODAL EDITAR CLIENTE
 
      </form>
 
-     <?php
-
-      $editarCliente = new ControladorClientes();
-      $editarCliente -> ctrEditarCliente();
-
-     ?>
-
-
     </div>
 
   </div>
 
 </div>
-
 
  <?php
 
@@ -486,3 +703,25 @@ MODAL EDITAR CLIENTE
  $eliminarCliente -> ctrEliminarCliente();
 
  ?>
+
+
+
+<!-- jQuery 
+<script src="vistas/bower_components/jquery/dist/jquery.min.js"></script>
+ Datatable
+<script src="vistas/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+-->
+
+<!-- Choices.js para Campo estatus-->
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+
+<!--Ruta Clientes.js-->
+<script src="assets/js/clientes.js"></script>
+
+
+
+<!--sirve para dar estilos al select-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+
