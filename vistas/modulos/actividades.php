@@ -1,9 +1,7 @@
 <?php
-
-      $editarActividad = new ControladorActividades();
-      $editarActividad -> ctrEditarActividad();
-
-     ?>
+$editarActividad = new ControladorActividades();
+$editarActividad -> ctrEditarActividad();
+?>
 
 <div class="content-wrapper">
     <section class="content-header">
@@ -389,36 +387,36 @@ MODAL EDITAR Actividad
 
                 </div>
 
-             <!-- entrada para usuario -->
+                             
+            <!-- entrada para seleccionar usuario -->
 
-                <div class="form-group">
+            <div class="form-group">
+            
+            <div class="input-group">
         
-                    <div class="input-group">
-                
-                        <span class="input-group-addon"><i class="fa fa-th"></i></span>
+                <span class="input-group-addon"><i class="fa fa-th"></i></span>
 
-                        <select class="form-control input-lg" id="editarUsuario" name="editarUsuario" required>
+                <select class="form-control input-lg" id="editarUsuario" name="editarUsuario" required>
+            
+                    <option value="">Seleccionar Responsable</option>
+
+                    <?php
+
+                    $item = null;
+                    $valor = null;
+                    $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
+
+                    foreach ($usuarios as $key => $value) {
                     
-                            <option value="">Seleccionar Responsable</option>
+                        echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';   
+                    }
 
-                            <?php
+                    ?>
 
-                            $item = null;
-                            $valor = null;
-                            $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
+                </select>
 
-                            foreach ($usuarios as $key => $value) {
-                            
-                                echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';   
-                            }
+            </div>
 
-                            ?>
-
-                        </select>
-
-                    </div>
-
-                </div>
 
                 <!-- entrada para fecha -->
                 
@@ -429,6 +427,7 @@ MODAL EDITAR Actividad
                             <span class="input-group-addon"><i class="fa fa-product-hunt"></i></span>
 
                             <input type="date" class="form-control input-lg" name="editarFecha" id="editarFecha" placeholder="Ingresar Fecha" required>
+
 
                         </div>
 
@@ -450,35 +449,33 @@ MODAL EDITAR Actividad
 
 
                     <!-- entrada para seleccionar cliente -->
-
-                        <div class="form-group">
+                            
+                    <div class="form-group">
+                        
+                        <div class="input-group">
                     
-                            <div class="input-group">
-                        
-                            <span class="input-group-addon"><i class="fa fa-th"></i></span>
+                        <span class="input-group-addon"><i class="fa fa-th"></i></span>
 
-                                <select class="form-control input-lg" id="editarCliente" name="editarCliente" required>
-                        
-                                <option value="">Seleccionar Cliente</option>
+                            <select class="form-control input-lg" id="editarCliente" name="editarCliente" required>
+                    
+                            <option value="">Seleccionar Cliente</option>
 
-                                <?php
+                            <?php
+                                $item = null;
+                                $valor = null;
+                                $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
 
-                                    $item = null;
-                                    $valor = null;
-                                    $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+                                foreach ($clientes as $key => $value) {
+                            
+                                echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
+                                }
+                            ?>
 
-                                    foreach ($clientes as $key => $value) {
-                                
-                                    echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
-                                    }
-
-                                ?>
-
-                                </select>
-
-                            </div>
+                            </select>
 
                         </div>
+
+                    </div>
 
 
                         <!-- entrada para observacion -->
@@ -519,12 +516,18 @@ MODAL EDITAR Actividad
 </div>
 
 
-  <?php
-
-    $eliminarActividad = new ControladorActividades();
-    $eliminarActividad -> ctrEliminarActividad();
-
-  ?>
 
   <!--Ruta actividades.js-->
-<script src="vistas/js/actividades.js"></script>
+  <script src="vistas/js/actividades.js"></script>
+
+
+  <?php
+    $eliminarActividad = new ControladorActividades();
+    $eliminarActividad -> ctrEliminarActividad();
+  ?>
+
+
+
+
+
+

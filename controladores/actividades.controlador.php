@@ -89,13 +89,10 @@ class ControladorActividades{
 
 	static public function ctrEditarActividad(){
 
-		var_dump($_GET);
-
 		if(isset($_POST["editarActividad"])){
 
 			// En el controlador
 			//var_dump($actividad);
-
 
 			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarActividad"]) &&
                 preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarTipo"]) &&
@@ -119,7 +116,7 @@ class ControladorActividades{
                         echo '<script>
                         swal({
                             type: "success",
-                            title: "!La actividad ha sido guardado correctamente!",
+                            title: "!La actividad ha sido editada correctamente!",
                             showConfirmButton: true,
                             confirmButtonText: "Cerrar",
                             closeOnConfirm: false
@@ -160,14 +157,15 @@ class ControladorActividades{
 	BORRAR actividades
 	=============================================*/
 
-	static public function ctrBorrarActividad(){
+	static public function ctrEliminarActividad(){
 
 		if(isset($_GET["idActividad"])){
 
-			$tabla = "Actividades";
+			$tabla = "actividades";
 			$datos = $_GET["idActividad"];
 
-			$respuesta = ModeloActividades::mdlBorrarActividad($tabla, $datos);
+			$respuesta = ModeloActividades::mdlEliminarActividad($tabla, $datos);
+			//var_dump($idActividad);
 
 			if($respuesta == "ok"){
 

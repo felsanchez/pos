@@ -2,19 +2,18 @@
 EDITAR Actividades
 =============================================*/
 
-$(document).ready(function() {
-    console.log("El archivo JS está cargado correctamente.");
-});
+//console log
+//console.log("Datos completos:", datos);
 
 
 
+
+/*=============================================
+EDITAR Actividades
+=============================================*/
 $(".tablas").on("click", ".btnEditarActividad", function(){
-   
-
 	var idActividad = $(this).attr("idActividad");
-
     console.log("ID Actividad: " + idActividad); 
-
 
 	var datos = new FormData();
 	datos.append("idActividad", idActividad);
@@ -30,12 +29,20 @@ $(".tablas").on("click", ".btnEditarActividad", function(){
 		dataType: "json",
 		success: function(respuesta){
 
-            //console.log("Entró al success");
+            //console.log("Respuesta AJAX:", respuesta);
 
+			//$("#idActividad").val(respuesta["id"]);
 			$("#editarActividad").val(respuesta["descripcion"]);
             $("#editarTipo").val(respuesta["tipo"]);
             $("#editarUsuario").val(respuesta["id_user"]);
-            $("#editarFecha").val(respuesta["fecha"]);
+            //$("#editarFecha").val(respuesta["fecha"]);
+
+			if (respuesta.fecha) {
+				$("#editarFecha").val(respuesta.fecha.substring(0, 10));
+			} else {
+				console.error("Fecha no válida:", respuesta.fecha);
+			}
+
             $("#editarEstado").val(respuesta["estado"]);
             $("#editarCliente").val(respuesta["id_cliente"]);
             $("#editarObservacion").val(respuesta["observacion"]);
@@ -59,12 +66,15 @@ $(".tablas").on("click", ".btnEditarActividad", function(){
 
 
 
+
 /*=============================================
 ELIMINAR Actividad
 =============================================*/
 $(".tablas").on("click", ".btnEliminarActividad", function(){
-
+	
 	var idActividad = $(this).attr("idActividad");
+
+	//var_dump($idActividad);
 
 	swal({
 

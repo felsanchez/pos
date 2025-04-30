@@ -1,7 +1,16 @@
-<?php 
+<?php
+
+//console log
+//console.log("¿Se cargó el script desde ajax1?");
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 require_once "../controladores/actividades.controlador.php";
 require_once "../modelos/actividades.modelo.php";
+
+
 
 class AjaxActividades{
 
@@ -9,9 +18,12 @@ class AjaxActividades{
 	EDITAR ACTIVIDAD
 	=============================================*/
 
-	//public $idActividad;
+	public $idActividad;
 
 	public function ajaxEditarActividad(){
+
+		//console log
+		//console.log("¿Se cargó el script desde ajax2?");
 
 		$item = "id";
 		$valor = $this->idActividad;
@@ -21,8 +33,7 @@ class AjaxActividades{
 		echo json_encode($respuesta);
 
 	}
-
-
+		
 	/*=============================================
 	HPM VALIDAR NO REPETIR actividad
 	=============================================
@@ -52,16 +63,3 @@ class AjaxActividades{
             $Actividad -> ajaxEditarActividad();
 			//return;
         }
-
-
-        /*=============================================
-        HPM VALIDAR NO REPETIR Actividad
-        =============================================
-
-        if(isset($_POST["validarActividad"])){
-
-            $valActividad = new AjaxActividades();
-            $valActividad -> validarActividad = $_POST["validarActividad"];
-            $valActividad -> ajaxValidarActividad();
-        }
-			*/

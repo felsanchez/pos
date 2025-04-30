@@ -41,7 +41,7 @@ class ModeloActividades{
 
 	static public function mdlMostrarActividades($tabla, $item, $valor){
 
-		var_dump($item, $valor); 
+		//var_dump($item, $valor); 
 
 		if($item != null){
 
