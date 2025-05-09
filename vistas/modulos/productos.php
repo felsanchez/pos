@@ -1,3 +1,9 @@
+<?php  
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+?>
+
   <div class="content-wrapper">
     <section class="content-header">
 
@@ -313,37 +319,62 @@ MODAL EDITAR PRODUCTO
         
         <div class="box-body">
 
-           <!-- entrada para seleccionar categoria -->
-
-              <div class="form-group">
-          
-                <div class="input-group">
-            
-                   <span class="input-group-addon"><i class="fa fa-th"></i></span>
-
-                     <select class="form-control input-lg" name="editarCategoria" readonly required>
-              
-                      <option id="editarCategoria"></option>
-
-                      </select>
-
-                 </div>
-
-              </div>
-
           <!-- entrada para el codigo -->
-            
+              
           <div class="form-group">
-          
+            
             <div class="input-group">
               
               <span class="input-group-addon"><i class="fa fa-code"></i></span>
 
               <input type="text" class="form-control input-lg" id="editarCodigo" name="editarCodigo" readonly required>
 
-             </div>
+            </div>
 
-           </div>
+          </div>
+
+           <!-- entrada para seleccionar categoria -->
+            <!--
+              <div class="form-group">
+                <div class="input-group">
+                   <span class="input-group-addon"><i class="fa fa-th"></i></span>
+                     <select class="form-control input-lg" name="editarCategoria" readonly required>
+                      <option id="editarCategoria"></option>
+                      </select>
+                 </div>
+              </div>
+              -->
+                      
+
+              <!-- entrada para seleccionar categoria -->
+              <div class="form-group">
+            
+                <div class="input-group">
+            
+                    <span class="input-group-addon"><i class="fa fa-th"></i></span>
+
+                    <select class="form-control input-lg" id="editarCategoria" name="editarCategoria">
+                
+                        <option value="">Editar Categoria</option>
+
+                        <?php
+                          $item = null;
+                          $valor = null;
+                          $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
+
+                          foreach ($categorias as $key => $value) {
+
+                              $selected = ($producto["id_categoria"] == $value["id"]) ? "selected" : "";
+
+                              echo'<option value="'.$value["id"].'" '.$selected.'>'.$value["categoria"].'</option>';   
+                          }
+                          ?>
+
+                    </select>
+
+                </div>
+              </div>
+
 
            <!-- entrada para la descripcion -->
             

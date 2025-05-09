@@ -1,0 +1,127 @@
+/*Campo estatus*/
+/* Aplica color según clase del contenedor */
+.choices.estado-programada .choices__inner {
+    background-color: #ffffff !important;
+    color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.choices.estado-completada .choices__inner {
+    background-color: #d4edda !important;
+    color: rgba(12, 37, 10, 0.69) !important;
+}
+
+.choices.estado-en-revision .choices__inner {
+    background-color: #fff3cd !important;
+    color: #856404 !important;
+}
+
+.choices.estado-pendiente .choices__inner {
+    background-color: #cce5ff !important;
+    color: #004085 !important;
+}
+
+.choices.estado-cancelada .choices__inner {
+    background-color: #f8d7da !important;
+    color: #721c24 !important;
+}
+
+
+/* Opciones del menú desplegable */
+.choices__list--dropdown .choices__item--selectable[data-value="programada"] {
+    background-color: #ffffff !important;
+    color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.choices__list--dropdown .choices__item--selectable[data-value="completada"] {
+    background-color: #d4edda !important;
+    color: rgba(12, 37, 10, 0.69) !important;
+}
+
+.choices__list--dropdown .choices__item--selectable[data-value="en-revision"] {
+    background-color: #fff3cd !important;
+    color: #856404 !important;
+}
+
+.choices__list--dropdown .choices__item--selectable[data-value="pendiente"] {
+    background-color: #cce5ff !important;
+    color: #004085 !important;
+}
+
+.choices__list--dropdown .choices__item--selectable[data-value="cancelada"] {
+    background-color: #f8d7da !important;
+    color: #721c24 !important;
+}
+
+/* Aumentar grosor del borde del dropdown */
+.choices.is-open .choices__list--dropdown {
+    border-width: 2px !important;
+    border-color: #999 !important;
+    border-radius: 15px;
+    border-style: inset;
+}
+  
+
+
+  /*Buscador estatus**/
+  .filtro-tipo-container {
+    margin-bottom: 20px;
+  }
+  .filtro-tipo-container label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .filtro-tipo-wrapper {
+    min-width: 250px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .filtro-tipo {
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .filtro-tipo-wrapper label {
+    font-weight: 400 !important;
+  }
+  
+
+    /*Buscador estatus**/
+    .filtro-estado-container {
+        margin-bottom: 20px;
+      }
+      .filtro-estado-container label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      
+      .filtro-estado-wrapper {
+        min-width: 250px;
+    
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .filtro-estado {
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+    
+      .filtro-estado-wrapper label {
+        font-weight: 400 !important;
+      }
+
+
+      .calendar-container {
+        display: flex;
+        justify-content: center; /* Centra horizontalmente */
+        align-items: center;     /* Centra verticalmente */
+        background-color: white;
+      }
+      

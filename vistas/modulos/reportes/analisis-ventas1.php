@@ -4,8 +4,6 @@
   }
 </style>
 
-
-
 <div class="row">
   <div class="col-md-12">
     <div class="card mb-4">
@@ -142,6 +140,7 @@
 
   salesChart.render();
 
+  
   // Mostrar campos personalizados al seleccionar "personalizado"
   document.getElementById('tipo-fecha').addEventListener('change', function () {
     const tipo = this.value;
@@ -177,7 +176,6 @@
     }
 
   
-
     fetch('/pos/vistas/modulos/reportes/filtro_ventas.php', {
       method: 'POST',
       body: formData

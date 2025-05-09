@@ -5,15 +5,15 @@ EDITAR Actividades
 //console log
 //console.log("Datos completos:", datos);
 
-
-
-
 /*=============================================
 EDITAR Actividades
 =============================================*/
 $(".tablas").on("click", ".btnEditarActividad", function(){
 	var idActividad = $(this).attr("idActividad");
     console.log("ID Actividad: " + idActividad); 
+
+	// Rellenar el input hidden
+    $('#modalEditarActividad input[name="idActividad"]').val(idActividad);
 
 	var datos = new FormData();
 	datos.append("idActividad", idActividad);
@@ -57,13 +57,9 @@ $(".tablas").on("click", ".btnEditarActividad", function(){
             //console.error("Error en AJAX:", xhr.responseText);
         //}
 
-        
-
 	}) 
 
-
 });
-
 
 
 
@@ -92,8 +88,67 @@ $(".tablas").on("click", ".btnEliminarActividad", function(){
 
 			window.location = "index.php?ruta=actividades&idActividad="+idActividad;
 		}
-
 	})
-
 })
 
+
+/*=============================================
+Guardar Tipo
+=============================================*/
+$(".tablas").on("change", ".cambiarTipo", function() {
+    var idActividad = $(this).data("id");
+    var nuevoTipo = $(this).val();
+
+	console.log("Voy a enviar AJAX con id:", idActividad, "y nuevoTipo:", nuevoTipo);
+
+    $.ajax({
+        url: "ajax/actividades.ajax.php",
+        method: "POST",
+        data: { idActividad: idActividad, nuevoTipo: nuevoTipo },
+        success: function(respuesta) {
+
+			//console.log("Respuesta RAW:", respuesta);
+
+			var datos = JSON.parse(respuesta);
+			//console.log("Respuesta al cambiar tipo:", datos);
+			if (datos.status === "error") {
+				alert("Hubo un error al actualizar");
+			} else {
+				alert("Tipo actualizado correctamente a: " + datos.tipo);
+				// Aquí puedes actualizar el valor mostrado en la tabla, si quieres
+			}
+		}
+        
+    });
+});
+
+
+/*=============================================
+Guardar Estado
+=============================================*/
+$(".tablas").on("change", ".cambiarEstado", function() {
+    var idActividad = $(this).data("id");
+    var nuevoEstado = $(this).val();
+
+	console.log("Voy a enviar AJAX con id:", idActividad, "y nuevoEstado:", nuevoEstado);
+
+    $.ajax({
+        url: "ajax/actividades.ajax.php",
+        method: "POST",
+        data: { idActividad: idActividad, nuevoEstado: nuevoEstado },
+        success: function(respuesta) {
+
+			//console.log("Respuesta RAW:", respuesta);
+
+			var datos = JSON.parse(respuesta);
+			//console.log("Respuesta al cambiar tipo:", datos);
+			if (datos.status === "error") {
+				alert("Hubo un error al actualizar");
+			} else {
+				alert("EStado actualizado correctamente a: " + datos.estado);
+				// Aquí puedes actualizar el valor mostrado en la tabla, si quieres
+			}
+		}
+        
+    });
+});

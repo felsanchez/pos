@@ -153,6 +153,9 @@ INICIO
              $_GET["ruta"] == "reportes" ||
              $_GET["ruta"] == "actividades" ||
              $_GET["ruta"] == "clientes" ||
+             $_GET["ruta"] == "ordenes" ||
+             $_GET["ruta"] == "crear-orden" ||
+             $_GET["ruta"] == "editar-orden" ||
              $_GET["ruta"] == "salir"){
 
             include "modulos/".$_GET["ruta"].".php";

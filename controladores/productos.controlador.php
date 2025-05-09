@@ -303,6 +303,36 @@ class ControladorProductos{
 				unlink($_GET["imagen"]);
 				rmdir('vistas/img/productos/'.$_GET["codigo"]);
 			}
+			
+
+			// Verificamos si el producto está asociado a alguna venta
+			$ventas = ModeloVentas::mdlMostrarVentas("ventas", null, null); // Obtiene todas las ventas
+
+			foreach ($ventas as $venta) {
+	
+				$productosVenta = json_decode($venta["productos"], true);
+	
+				foreach ($productosVenta as $producto) {
+					if ($producto["id"] == $datos) {
+	
+						echo '<script>
+							swal({
+								type: "error",
+								title: "¡No se puede eliminar!",
+								text: "Este producto está asociado a una o más ventas.",
+								showConfirmButton: true,
+								confirmButtonText: "Cerrar"
+							}).then((result) => {
+								if (result.value) {
+									window.location = "productos";
+								}
+							});
+						</script>';
+						return; // Cancelamos eliminación
+					}
+				}
+			}
+
 
 			$respuesta = ModeloProductos::mdlEliminarProducto($tabla, $datos);
 

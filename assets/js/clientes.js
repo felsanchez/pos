@@ -112,7 +112,7 @@ $(document).ready(function () {
     responsive: true,
     language: {
       url: "vistas/bower_components/datatables.net/Spanish.json",
-      search: "Palabra Clave:",
+      search: "Buscar:",
       lengthMenu: "Mostrar _MENU_ entradas",
       info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
       "sLoadingRecords": "Cargando...",
@@ -163,7 +163,7 @@ $(document).ready(function () {
     responsive: true,
     language: {
       url: "vistas/bower_components/datatables.net/Spanish.json",
-      search: "Palabra Clave:",
+      search: "Buscar:",
       lengthMenu: "Mostrar _MENU_ entradas",
       info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
       "sLoadingRecords": "Cargando...",

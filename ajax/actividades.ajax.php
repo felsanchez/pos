@@ -11,7 +11,6 @@ require_once "../controladores/actividades.controlador.php";
 require_once "../modelos/actividades.modelo.php";
 
 
-
 class AjaxActividades{
 
 	/*=============================================
@@ -55,7 +54,6 @@ class AjaxActividades{
         /*=============================================
         EDITAR Actividad
         =============================================*/
-
         if(isset($_POST["idActividad"])){
 
             $Actividad = new AjaxActividades();
@@ -63,3 +61,80 @@ class AjaxActividades{
             $Actividad -> ajaxEditarActividad();
 			//return;
         }
+
+
+		/*=============================================
+        Guardar Tipo de Actividad
+        =============================================*/
+		if (isset($_POST["idActividad"]) && isset($_POST["nuevoTipo"])) {
+			$datos = array(
+				"id" => $_POST["idActividad"],
+				"tipo" => $_POST["nuevoTipo"]
+			);
+		
+			$respuesta = ControladorActividades::ctrActualizarTipoActividad($datos);
+		
+			header('Content-Type: application/json');
+			echo json_encode($respuesta);
+			exit;
+		}
+		
+		
+		/*=============================================
+        Guardar Estado de Actividad
+        =============================================*/
+		/*if (isset($_POST["idActividad"]) && isset($_POST["nuevoEstado"])) {
+			$datos = array(
+				"id" => $_POST["idActividad"],
+				"estado" => $_POST["nuevoEstado"]
+			);
+			$respuesta = ControladorActividades::ctrActualizarEstadoActividad($datos);
+			header('Content-Type: application/json');
+			echo json_encode($respuesta);
+			exit;
+		}
+			*/		
+
+		if (isset($_POST["idActividad"]) && isset($_POST["nuevoEstado"])) {
+			$datos = array(
+				"id" => $_POST["idActividad"],
+				"estado" => $_POST["nuevoEstado"]
+			);
+		
+			$respuesta = ControladorActividades::ctrActualizarEstadoActividad($datos);
+		
+			// Siempre devolvemos un objeto JSON estructurado
+			if ($respuesta === "ok") {
+				echo json_encode([
+					"status" => "ok",
+					"idActividad" => $datos["id"],
+					"nuevoEstado" => $datos["estado"]
+				]);
+			} else {
+				echo json_encode([
+					"status" => "error",
+					"message" => "Error al actualizar estado"
+				]);
+			}
+		
+			exit;
+		}
+		
+
+
+		/*=============================================
+		PERMITE EDITAR Observacion
+		=============================================*/
+		
+		if (isset($_POST["accion"]) && $_POST["accion"] == "actualizarObservacion") {
+			$tabla = "actividades";
+			$datos = array(
+			"id" => $_POST["id"],
+			"observacion" => $_POST["observacion"]
+			);
+			$respuesta = ModeloActividades::mdlActualizarObservacion("actividades", $_POST["id"], $_POST["observacion"]);
+			echo json_encode($respuesta);
+		}
+			
+  
+  

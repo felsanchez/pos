@@ -132,32 +132,48 @@ class ControladorVentas{
 						   "impuesto"=>$_POST["nuevoPrecioImpuesto"],
 						   "neto"=>$_POST["nuevoPrecioNeto"],
 						   "total"=>$_POST["totalVenta"],
+						   "estado" => $_POST["estado"],
 						   "metodo_pago"=>$_POST["listaMetodoPago"]);
 
 			$respuesta = ModeloVentas::mdlIngresarVenta($tabla, $datos);
 
 			if ($respuesta == "ok") {
 
-			    	echo '<script>
-
-			    	localStorage.removeItem("rango");
-
-					swal({
-						type: "success",
-						title: "!La venta ha sigo guardada correctamente!",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						}).then((result)=>{
-							if(result.value){
-
-							   window.location = "ventas";
+				if ($_POST["estado"] == "orden") {
+			    		echo '<script>
+						localStorage.removeItem("rango");
+						swal({
+							type: "success",
+							title: "¡La orden ha sido guardada correctamente!",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then(function(result){
+							if (result.value) {
+								window.location = "ordenes";
 							}
-						})
-			     	</script>';
-		         }
+						});
+					</script>';
+				}
 
+					else {
+						echo '<script>
+						localStorage.removeItem("rango");
+						swal({
+							type: "success",
+							title: "!La venta ha sigo guardada correctamente!",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar",
+							}).then((result)=>{
+								if(result.value){
+
+								window.location = "ventas";
+								}
+							})
+						</script>';
+		         	}
+			}
+				 
 		}
-
 
 	}
 
@@ -255,8 +271,7 @@ class ControladorVentas{
 				print_r($_POST["listaProductos"]);
 			echo "</pre>";
 			*/
-			
-
+		
 
 			$listaProductos_2 = json_decode($_POST["listaProductos"], true);
 
@@ -322,10 +337,10 @@ class ControladorVentas{
 						   "impuesto"=>$_POST["nuevoPrecioImpuesto"],
 						   "neto"=>$_POST["nuevoPrecioNeto"],
 						   "total"=>$_POST["totalVenta"],
+						   "estado" => $_POST["estado"],
 						   "metodo_pago"=>$_POST["listaMetodoPago"]);
 
 			$respuesta = ModeloVentas::mdlEditarVenta($tabla, $datos);
-
 
 
 			if ($respuesta == "ok") {
@@ -472,25 +487,44 @@ static public function ctrEliminarVenta(){
 
 			if ($respuesta == "ok") {
 
-			    	echo '<script>
 
-			    	localStorage.removeItem("rango");
-
-					swal({
-						type: "success",
-						title: "!La venta ha sigo borrada correctamente!",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
-						}).then((result)=>{
-							if(result.value){
-
-							   window.location = "ventas";
+				if (isset($_GET["estado"]) && $_GET["estado"] == "orden") {
+					echo '<script>
+						localStorage.removeItem("rango");
+						swal({
+							type: "success",
+							title: "¡La orden ha sido eliminada correctamente!",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then(function(result){
+							if (result.value) {
+								window.location = "ordenes";
 							}
-						})
-			     	</script>';
-		    }
+						});
+					</script>';
+				}
 
+				else {
+
+			    	echo '<script>
+						localStorage.removeItem("rango");
+						swal({
+							type: "success",
+							title: "!La venta ha sigo borrada correctamente!",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar",
+							closeOnConfirm: false
+							}).then((result)=>{
+								if(result.value){
+								window.location = "ventas";
+								}
+							})
+			     	</script>';
+				}
+					
+
+
+		    }
 
 	}
 
@@ -500,16 +534,16 @@ static public function ctrEliminarVenta(){
 	/*=============================================
 	RANGO FECHAS
 	=============================================*/	
-
+	
 	static public function ctrRangoFechasVentas($fechaInicial, $fechaFinal){
 
 		$tabla = "ventas";
 
 		$respuesta = ModeloVentas::mdlRangoFechasVentas($tabla, $fechaInicial, $fechaFinal);
 
-		return $respuesta;
-		
+		return $respuesta;		
 	}
+	
 
 
 
@@ -704,9 +738,19 @@ static public function ctrEliminarVenta(){
 			return true;
 
 		}
-
 		
 	}
 
+	//Diferenciar entre venta y orden
+	static public function ctrRangoFechasVentasPorEstado($fechaInicial, $fechaFinal, $estado){
+
+		$tabla = "ventas";
+	
+		$respuesta = ModeloVentas::mdlRangoFechasVentasPorEstado($tabla, $fechaInicial, $fechaFinal, $estado);
+	
+		return $respuesta;
+	}
+	
+	
 
 }

@@ -1,14 +1,14 @@
-  <div class="content-wrapper">
+<div class="content-wrapper">
     <section class="content-header">
 
 
       <h1>
-        Crear venta
+        Crear orden de venta
       </h1>
 
       <ol class="breadcrumb">
         <li><a href="#"><i class="fa fa-dashboard"></i> Inicio</a></li>
-        <li class="active">Crear venta</li>
+        <li class="active">Crear orden</li>
       </ol>
 
     </section>
@@ -223,49 +223,47 @@
                         ENTRADA METODO DE PAGO
                         ======================================-->
 
-                        <div class="form-group row">
-                          
+                        <!--<div class="form-group row">                          
                           <div class="col-xs-6" style="padding-right:0px">
-
                               <div class="input-group">
-
                                 <select class="form-control" id="nuevoMetodoPago" name="nuevoMetodoPago" required>
-
                                   <option value="">Seleccione método de pago</option>
                                   <option value="Efectivo">Efectivo</option>
                                   <option value="TC">Tarjeta Crédito</option>
-                                  <option value="DEBE">DEBE</option>
-                                  
-
+                                  <option value="DEBE">DEBE</option>                                  
                                 </select>   
-
-                              </div>
-                            
+                              </div>                            
                           </div>
-
                           <div class="cajasMetodoPago"></div>
-
-                          <input type="hidden" id="listaMetodoPago" name="listaMetodoPago">
-
+                            <input type="hidden" id="listaMetodoPago" name="listaMetodoPago">
                         </div>
+                        -->
+
+                        <input type="hidden" id="nuevoMetodoPago" name="nuevoMetodoPago" value="DEBE">
+                        <input type="hidden" id="listaMetodoPago" name="listaMetodoPago" value='[{"metodo":"DEBE","total":0}]'>
+
+
 
                         <!--=====================================
                         ENTRADA ESTADO
                         ======================================-->
-                        <input type="hidden" name="estado" value="venta">
+                        <input type="hidden" name="estado" value="orden">
 
+                        
                         <br>
-                    
+
+                       
                    </div>
                   
                 </div>
 
 
+
                 <div class="box-footer">
 
-                  <button type="submit" class="btn btn-primary pull-right">Guardar venta</button>
+                  <button type="submit" class="btn btn-primary pull-right">Guardar orden</button>
 
-                  <button  class="btn btn-danger pull-left" onclick="location.href='ventas'">Cancelar</button>
+                  <button  class="btn btn-danger pull-left" onclick="location.href='ordenes'">Cancelar</button>
                   
                 </div>
 
@@ -484,9 +482,10 @@ MODAL AGREGAR CLIENTE
            <!-- Al guardar me reenvie a esta pagina de crear venta y no a la de clientes  -->
            <input type="hidden" name="origen" value="crear-venta">
 
-          <!--Crear estado venats-->
-           <input type="hidden" name="vistaOrigen" value="crear-venta">
-
+           <!--=====================================
+          Estado Orden
+          ======================================-->
+          <input type="hidden" name="vistaOrigen" value="crear-orden">
 
 
 

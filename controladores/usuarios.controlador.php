@@ -427,6 +427,49 @@ class ControladorUsuarios{
 				rmdir('vistas/img/usuarios/'.$_GET["usuario"]);
 			}
 
+
+			// Verificar si hay actividades asociados
+			$actividadesAsociados = ModeloActividades::mdlMostrarActividades("actividades", "id_user", $datos, "id");
+	
+			if (!empty($actividadesAsociados)) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡No se puede eliminar!",
+						text: "El usuario tiene actividades asociadas.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result) => {
+						if (result.value) {
+							window.location = "usuarios";
+						}
+					});
+				</script>';
+				return;
+			}
+
+
+			// Verificar si hay ventas asociados
+			$ventasAsociados = ModeloVentas::mdlMostrarVentas("ventas", "id_vendedor", $datos, "id");
+	
+			if (!empty($ventasAsociados)) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡No se puede eliminar!",
+						text: "El usuario tiene ventas asociadas.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result) => {
+						if (result.value) {
+							window.location = "usuarios";
+						}
+					});
+				</script>';
+				return;
+			}
+
+
 			$respuesta = ModeloUsuarios::mdlBorrarUsuario($tabla, $datos);
 
 			if($respuesta == "ok"){

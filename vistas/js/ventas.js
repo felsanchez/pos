@@ -760,7 +760,27 @@ $(".tablas").on("click", ".btnEliminarVenta", function(){
 
 		if(result.value){
 
-			window.location = "index.php?ruta=ventas&idVenta="+idVenta;
+			//window.location = "index.php?ruta=ventas&idVenta="+idVenta;
+
+			// Primero intentar con el parámetro 'ruta'
+			let ruta = new URLSearchParams(window.location.search).get('ruta');
+
+			// Si no existe 'ruta', obtener el nombre del archivo
+			if (!ruta) {
+				const path = window.location.pathname;
+				const archivo = path.substring(path.lastIndexOf("/") + 1);
+				ruta = archivo.split(".php")[0]; // ejemplo: ordenes.php -> ordenes
+			}
+
+			let url = "index.php?ruta=" + ruta + "&idVenta=" + idVenta;
+
+			if (ruta === "ordenes") {
+				url += "&estado=orden";
+			}
+
+			window.location = url;
+
+
 		}
 
 	})
@@ -801,15 +821,32 @@ RANGO DE FECHAS
       function (start, end) {
         $('#daterange-btn span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
 
-        var fechaInicial = start.format('YYYY-MM-DD');
+        //var fechaInicial = start.format('YYYY-MM-DD');
 
-        var fechaFinal = end.format('YYYY-MM-DD');
+        //var fechaFinal = end.format('YYYY-MM-DD');
+
+		var fechaInicial = start.startOf('day').format('YYYY-MM-DD HH:mm:ss');
+		var fechaFinal = end.endOf('day').format('YYYY-MM-DD HH:mm:ss');
 
         var capturarRango = $("#daterange-btn span").html();
         
         localStorage.setItem("capturarRango", capturarRango);
 
-        window.location = "index.php?ruta=ventas&fechaInicial="+fechaInicial+"&fechaFinal="+fechaFinal;
+
+		 // 1. Intentar obtener 'ruta' desde los parámetros
+		 const urlParams = new URLSearchParams(window.location.search);
+		 let ruta = urlParams.get('ruta');
+	 
+		 // 2. Si no existe 'ruta', deducirlo desde el pathname
+		 if (!ruta) {
+		   const path = window.location.pathname;
+		   const archivo = path.substring(path.lastIndexOf('/') + 1).replace('.php', '');
+		   ruta = archivo; // Por ejemplo: "orden" si estás en orden.php
+		 }
+	 
+		 window.location = "index.php?ruta=" + ruta + "&fechaInicial=" + fechaInicial + "&fechaFinal=" + fechaFinal;
+
+
       }
     )
 
@@ -817,11 +854,20 @@ RANGO DE FECHAS
 	CANCELAR RANGO DE FECHAS
 	=============================================*/
 
-	$(".daterangepicker.opensleft .range_inputs .cancelBtn").on("click", function(){
+	/*$(".daterangepicker.opensleft .range_inputs .cancelBtn").on("click", function(){
+
+		localStorage.removeItem("capturarRango");
+		localStorage.clear();
+		//window.location = "ventas";
+		window.location = "index.php?ruta=" + getRutaActual();
+	})*/
+
+	$(".daterangepicker.opensright .range_inputs .cancelBtn").on("click", function(){
 
 		localStorage.removeItem("capturarRango");
 		localStorage.clear();
 		window.location = "ventas";
+    	window.location = "index.php?ruta=" + getRutaActual();
 	})
 
 
@@ -868,3 +914,41 @@ $(".btnCancelarVenta").click(function(){
 
 	window.location = "index.php?ruta=ventas";
 }*/
+
+
+//FILTRO DE VENTAS
+/*
+let minDate, maxDate; 
+// Custom filtering function which will search data in column four between two values
+DataTable.ext.search.push(function (settings, data, dataIndex) {
+    let min = minDate.val();
+    let max = maxDate.val();
+    let date = new Date(data[4]);
+ 
+    if (
+        (min === null && max === null) ||
+        (min === null && date <= max) ||
+        (min <= date && max === null) ||
+        (min <= date && date <= max)
+    ) {
+        return true;
+    }
+    return false;
+});
+ 
+// Create date inputs
+minDate = new DateTime('#min', {
+    format: 'MMMM Do YYYY'
+});
+maxDate = new DateTime('#max', {
+    format: 'MMMM Do YYYY'
+});
+ 
+// DataTables initialisation
+let table = new DataTable('#example');
+ 
+// Refilter the table
+document.querySelectorAll('#min, #max').forEach((el) => {
+    el.addEventListener('change', () => table.draw());
+});
+*/

@@ -141,37 +141,84 @@ class ControladorCategorias{
 	BORRAR CATEGORIAS
 	=============================================*/
 
-	static public function ctrBorrarCategoria(){
+	static public function ctrBorrarCategoria() {
 
-		if(isset($_GET["idCategoria"])){
-
-			$tabla = "Categorias";
-			$datos = $_GET["idCategoria"];
-
-			$respuesta = ModeloCategorias::mdlBorrarCategoria($tabla, $datos);
-
-			if($respuesta == "ok"){
-
+		if(isset($_GET["idCategoria"])) {
+	
+			$tabla = "categorias";
+			$idCategoria = $_GET["idCategoria"];
+	
+			// Verificar si hay productos asociados a esta categoría
+			$productosAsociados = ModeloProductos::mdlMostrarProductos("productos", "id_categoria", $idCategoria, "id");
+	
+			if (!empty($productosAsociados)) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡No se puede eliminar!",
+						text: "La categoría tiene productos asociados.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result) => {
+						if (result.value) {
+							window.location = "categorias";
+						}
+					});
+				</script>';
+				return;
+			}
+	
+			$respuesta = ModeloCategorias::mdlBorrarCategoria($tabla, $idCategoria);
+	
+			if($respuesta == "ok") {
 				echo '<script>
 					swal({
 						type: "success",
-						title: "!La categoría ha sido borrada correctamente!",
+						title: "¡La categoría ha sido borrada correctamente!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
-
-						}).then((result)=>{
-
-							if(result.value){
-
-								window.location = "categorias";
-							}
-						});
+						confirmButtonText: "Cerrar"
+					}).then((result) => {
+						if (result.value) {
+							window.location = "categorias";
+						}
+					});
 				</script>';
 			}
-
 		}
 	}
+
+
+			/*
+			if(isset($_GET["idCategoria"])){
+
+				$tabla = "Categorias";
+				$datos = $_GET["idCategoria"];
+
+				$respuesta = ModeloCategorias::mdlBorrarCategoria($tabla, $datos);
+
+				if($respuesta == "ok"){
+
+					echo '<script>
+						swal({
+							type: "success",
+							title: "!La categoría ha sido borrada correctamente!",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar",
+							closeOnConfirm: false
+
+							}).then((result)=>{
+
+								if(result.value){
+
+									window.location = "categorias";
+								}
+							});
+					</script>';
+				}
+			}
+				*/
+
+	
 
 
 }

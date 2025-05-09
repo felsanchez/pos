@@ -1,10 +1,19 @@
-<?php
-$editarActividad = new ControladorActividades();
-$editarActividad -> ctrEditarActividad();
-?>
+<!-- Librería de estilos de Choices.js -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<!-- Ruta actividades.css -->
+<link rel="stylesheet" href="assets/css/actividades.css">
+
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.css' rel='stylesheet' />
+
 
 <div class="content-wrapper">
-    <section class="content-header">
+<section class="content-header">
+
+    <?php
+        $editarActividad = new ControladorActividades();
+        $editarActividad -> ctrEditarActividad();
+    ?>
 
       <h1>
         Administrar Actividades
@@ -23,16 +32,62 @@ $editarActividad -> ctrEditarActividad();
 
             <div class="box-header with-border">
 
-                <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarActividad">
-                    
+                <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarActividad">             
                     Agregar Actividad
-
                 </button>
 
             </div>
 
 
+            <!--Filtro Tipos-->
+            <?php
+                $filtroTipo = isset($_GET['filtroTipo']) ? $_GET['filtroTipo'] : '';  // Captura el valor del filtro tipo si existe
+                // Aplica el filtro para obtener las actividades correctas
+                $item = "tipo";
+                $valor = $filtroTipo;
+                $actividades = ControladorActividades::ctrMostrarActividades($item, $valor);
+            ?>
+
+           
             <div class="box-body table-responsive">
+
+
+            <!-- Filtro tipo -->
+            <div class="clearfix mb-2">
+            <div class="pull-right filtro-tipo-wrapper d-flex align-items-center" style="gap: 8px;">
+                <label for="filtroTipo" class="control-label mb-0">Filtra por TIPO:</label>
+                <select id="filtroTipo" onchange="filterTableTipo()" class="form-control filtro-tipo">
+                <option value="">Todos</option>
+                <option value="actividad" <?php if ($filtroTipo == 'actividad') echo 'selected'; ?>>Actividad</option>
+                <option value="Llamada Telefónica" <?php if ($filtroTipo == 'Llamada Telefónica') echo 'selected'; ?>>Llamada Telefónica</option>
+                <option value="reunión" <?php if ($filtroTipo == 'reunión') echo 'selected'; ?>>Reunión</option>
+                <option value="enviar mensaje" <?php if ($filtroTipo == 'enviar mensaje') echo 'selected'; ?>>Enviar Mensaje</option>
+                <option value="evento" <?php if ($filtroTipo == 'evento') echo 'selected'; ?>>Evento</option>
+                <option value="seguimiento" <?php if ($filtroTipo == 'seguimiento') echo 'selected'; ?>>Seguimiento</option>
+                <option value="promociones" <?php if ($filtroTipo == 'promociones') echo 'selected'; ?>>promociones</option>
+                <option value="soporte" <?php if ($filtroTipo == 'soporte') echo 'selected'; ?>>Soporte</option>
+                </select>
+            </div>
+            </div>
+            <br>
+            
+
+            <!-- Filtro estado -->
+            <div class="clearfix mb-2">
+                <div class="pull-right filtro-estado-wrapper d-flex align-items-center" style="gap: 8px;">
+                    <label for="filtroEstado" class="control-label mb-0">Filtra por ESTADO:</label>
+                    <select id="filtroEstado" class="form-control filtro-estado">
+                        <option value="">Todos</option>
+                        <option value="programada">Programada</option>
+                        <option value="completada">Completada</option>
+                        <option value="cancelada">Cancelada</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="en revisión">En Revisión</option>
+                    </select>
+                </div>
+            </div>
+
+
 
                 <table class="table table-bordered table-striped tablas" style="width: 95%">
                     
@@ -67,13 +122,24 @@ $editarActividad -> ctrEditarActividad();
                         <tr>
                             <td><?php echo $key + 1; ?></td>
                             <td><?php echo $value["descripcion"]; ?></td>
-                            <td><?php echo $value["tipo"]; ?></td>
+                            
+                            <td>
+                                <select class="form-control cambiarTipo" data-id="<?php echo $value["id"]; ?>">
+                                    <option value="actividad" <?php if($value["tipo"] == "actividad") echo "selected"; ?>>Actividad</option>
+                                    <option value="Llamada Telefónica" <?php if($value["tipo"] == "Llamada Telefónica") echo "selected"; ?>>Llamada Telefónica</option>
+                                    <option value="reunión" <?php if($value["tipo"] == "reunión") echo "selected"; ?>>Reunión</option>
+                                    <option value="enviar mensaje" <?php if($value["tipo"] == "enviar mensaje") echo "selected"; ?>>Enviar Mensaje</option>
+                                    <option value="evento" <?php if($value["tipo"] == "evento") echo "selected"; ?>>Evento</option>
+                                    <option value="seguimiento" <?php if($value["tipo"] == "seguimiento") echo "selected"; ?>>Seguimiento</option>
+                                    <option value="promociones" <?php if($value["tipo"] == "promociones") echo "selected"; ?>>Promociones</option>
+                                    <option value="soporte" <?php if($value["tipo"] == "soporte") echo "selected"; ?>>Soporte</option>
+                                </select>
+                            </td>
 
                             <?php 
                             $itemUsuario = "id";
                             $valorUsuario = $value["id_user"];
                             $respuestaUsuario = ControladorUsuarios::ctrMostrarUsuarios($itemUsuario, $valorUsuario);
-
                             if ($respuestaUsuario) {
                                 echo '<td>' . $respuestaUsuario["nombre"] . '</td>';
                             } else {
@@ -82,13 +148,22 @@ $editarActividad -> ctrEditarActividad();
                             ?>
 
                             <td><?php echo $value["fecha"]; ?></td>
-                            <td><?php echo $value["estado"]; ?></td>
+
+                            <td>
+                            <select class="form-control cambiarEstado" data-id="<?php echo $value["id"]; ?>">
+                                <option value="programada" <?php if($value["estado"] == "programada") echo "selected"; ?>>Programada</option>
+                                <option value="completada" <?php if($value["estado"] == "completada") echo "selected"; ?>>Completada</option>
+                                <option value="cancelada" <?php if($value["estado"] == "cancelada") echo "selected"; ?>>Cancelada</option>
+                                <option value="pendiente" <?php if($value["estado"] == "pendiente") echo "selected"; ?>>Pendiente</option>
+                                <option value="en-revision" <?php if($value["estado"] == "en-revision") echo "selected"; ?>>En Revisión</option>
+                            </select>
+                            </td>
+
 
                             <?php 
                             $itemCliente = "id";
                             $valorCliente = $value["id_cliente"];
                             $respuestaCliente = ControladorClientes::ctrMostrarClientes($itemCliente, $valorCliente);
-
                             if ($respuestaCliente) {
                                 echo '<td>' . $respuestaCliente["nombre"] . '</td>';
                             } else {
@@ -96,11 +171,13 @@ $editarActividad -> ctrEditarActividad();
                             }
                             ?>
 
-                            <td><?php echo $value["observacion"]; ?></td>
+                            <td contenteditable="true" class="celda-observacion" data-id="<?= $value['id']; ?>">
+                                <?= $value['observacion']; ?>
+                            </td>
 
                             <td>
-                            <div class="btn-group">
-                                <button class="btn btn-warning btnEditarActividad" data-toggle="modal" data-target="#modalEditarActividad" idActividad="<?php echo $value["id"]; ?>"><i class="fa fa-pencil"></i></button>
+                            <div class="btn-group">   
+                                <button class="btn btn-warning btnEditarActividad" data-id="<?php echo $actividad['id']; ?>" data-toggle="modal" data-target="#modalEditarActividad" idActividad="<?php echo $value["id"]; ?>"><i class="fa fa-pencil"></i></button>
                                 
                                 <button class="btn btn-danger btnEliminarActividad" idActividad="<?php echo $value["id"]; ?>"><i class="fa fa-times"></i></button>
                             </div>
@@ -119,6 +196,12 @@ $editarActividad -> ctrEditarActividad();
             </div>
 
         </div>
+
+        <!--Calendario-->
+        <div class="calendar-container">
+        <div id="calendar" style="width: 60%;"></div>
+        </div>
+
 
     </section>
 
@@ -165,7 +248,7 @@ MODAL AGREGAR actividad
                     
                         <div class="input-group">
                             
-                            <span class="input-group-addon"><i class="fa fa-product-hunt"></i></span>
+                            <span class="input-group-addon"><i class="fa fa-tasks"></i></span>
 
                             <input type="text" class="form-control input-lg" name="nuevaActividad" id="nuevaActividad" placeholder="Ingresar descripción" required>
 
@@ -175,17 +258,22 @@ MODAL AGREGAR actividad
 
                 <!-- entrada para tipo -->
                     
-                    <div class="form-group">
+                   <!-- <div class="form-group">
                     
                         <div class="input-group">
                             
-                            <span class="input-group-addon"><i class="fa fa-product-hunt"></i></span>
+                            <span class="input-group-addon"><i class="fa fa-filter"></i></span>
 
                             <input type="text" class="form-control input-lg" name="nuevoTipo" id="nuevoTipo" placeholder="Ingresar Tipo" required>
 
                         </div>
 
                     </div>
+                    -->
+
+                    <!-- entrada para tipo -->
+                    <input type="hidden" name="nuevoTipo" value="actividad">
+
 
                  <!-- entrada para usuario -->
 
@@ -193,7 +281,7 @@ MODAL AGREGAR actividad
             
                         <div class="input-group">
                     
-                            <span class="input-group-addon"><i class="fa fa-th"></i></span>
+                            <span class="input-group-addon"><i class="fa fa-user-plus"></i></span>
 
                             <select class="form-control input-lg" id="nuevoUsuario" name="nuevoUsuario" required>
                         
@@ -224,27 +312,31 @@ MODAL AGREGAR actividad
                             
                             <div class="input-group">
                                 
-                                <span class="input-group-addon"><i class="fa fa-product-hunt"></i></span>
+                                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
 
-                                <input type="date" class="form-control input-lg" name="nuevaFecha" id="nuevaFecha" placeholder="Ingresar Fecha" required>
+                                <input type="datetime-local" class="form-control input-lg" name="nuevaFecha" id="nuevaFecha" placeholder="Ingresar Fecha" required>
 
                             </div>
 
                         </div>
 
                         <!-- entrada para estado -->
-                    
+                    <!--
                         <div class="form-group">
                     
                             <div class="input-group">
                                 
-                                <span class="input-group-addon"><i class="fa fa-product-hunt"></i></span>
+                                <span class="input-group-addon"><i class="fa fa-check-square-o"></i></span>
 
                                 <input type="text" class="form-control input-lg" name="nuevoEstado" id="nuevoEstado" placeholder="Ingresar Estado" required>
 
                             </div>
 
                         </div>
+                            -->
+
+                        <!-- entrada para tipo -->
+                        <input type="hidden" name="nuevoEstado" value="actividad">
 
 
                         <!-- entrada para seleccionar cliente -->
@@ -253,7 +345,7 @@ MODAL AGREGAR actividad
                         
                                 <div class="input-group">
                             
-                                <span class="input-group-addon"><i class="fa fa-th"></i></span>
+                                <span class="input-group-addon"><i class="fa fa-user"></i></span>
 
                                     <select class="form-control input-lg" id="nuevoCliente" name="nuevoCliente" required>
                             
@@ -285,7 +377,7 @@ MODAL AGREGAR actividad
                                     
                                     <div class="input-group">
                                         
-                                        <span class="input-group-addon"><i class="fa fa-product-hunt"></i></span>
+                                        <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
 
                                         <input type="text" class="form-control input-lg" name="nuevaObservacion" id="nuevaObservacion" placeholder="Ingresar Observación">
 
@@ -348,7 +440,7 @@ MODAL EDITAR Actividad
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                 <h4 class="modal-title">Editar Actividad</h4>
 
-        </div>
+            </div>
 
       <!--=====================================
       CUERPO DEL MODAL
@@ -364,57 +456,60 @@ MODAL EDITAR Actividad
                     
                 <div class="input-group">
                     
-                    <span class="input-group-addon"><i class="fa fa-product-hunt"></i></span>
+                    <span class="input-group-addon"><i class="fa fa-tasks"></i></span>
 
                     <input type="text" class="form-control input-lg" name="editarActividad" id="editarActividad" placeholder="Ingresar descripción" required>
-                    <input type="hidden" id="idActividad" name="idActividad">
+                    <input type="hidden" name="idActividad" value="<?php echo !empty($actividad['id']) ? $actividad['id'] : ''; ?>">
 
                 </div>
 
             </div>
 
             <!-- entrada para tipo -->
-                
+               <!--
                 <div class="form-group">
                 
                     <div class="input-group">
                         
-                        <span class="input-group-addon"><i class="fa fa-product-hunt"></i></span>
+                        <span class="input-group-addon"><i class="fa fa-filter"></i></span>
 
                         <input type="text" class="form-control input-lg" name="editarTipo" id="editarTipo" required>
 
                     </div>
 
                 </div>
+                                    -->
+                <input type="hidden" name="editarTipo" id="editarTipo">
 
                              
             <!-- entrada para seleccionar usuario -->
 
             <div class="form-group">
             
-            <div class="input-group">
-        
-                <span class="input-group-addon"><i class="fa fa-th"></i></span>
-
-                <select class="form-control input-lg" id="editarUsuario" name="editarUsuario" required>
+                <div class="input-group">
             
-                    <option value="">Seleccionar Responsable</option>
+                    <span class="input-group-addon"><i class="fa fa-user-plus"></i></span>
 
-                    <?php
+                    <select class="form-control input-lg" id="editarUsuario" name="editarUsuario" required>
+                
+                        <option value="">Seleccionar Responsable</option>
 
-                    $item = null;
-                    $valor = null;
-                    $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
+                        <?php
 
-                    foreach ($usuarios as $key => $value) {
-                    
-                        echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';   
-                    }
+                        $item = null;
+                        $valor = null;
+                        $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
 
-                    ?>
+                        foreach ($usuarios as $key => $value) {
+                        
+                            echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';   
+                        }
 
-                </select>
+                        ?>
 
+                    </select>
+
+                </div>
             </div>
 
 
@@ -424,29 +519,32 @@ MODAL EDITAR Actividad
                         
                         <div class="input-group">
                             
-                            <span class="input-group-addon"><i class="fa fa-product-hunt"></i></span>
+                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
 
-                            <input type="date" class="form-control input-lg" name="editarFecha" id="editarFecha" placeholder="Ingresar Fecha" required>
+                            <input type="datetime-local" class="form-control input-lg" name="editarFecha" id="editarFecha" placeholder="Ingresar Fecha" required>
 
 
                         </div>
 
                     </div>
 
+
                     <!-- entrada para estado -->
-                
+                        <!--
                     <div class="form-group">
                 
                         <div class="input-group">
                             
-                            <span class="input-group-addon"><i class="fa fa-product-hunt"></i></span>
+                            <span class="input-group-addon"><i class="fa fa-check-square-o"></i></span>
 
                             <input type="text" class="form-control input-lg" name="editarEstado" id="editarEstado" placeholder="Ingresar Estado" required>
 
                         </div>
 
                     </div>
-
+                    -->
+                    <input type="hidden" name="editarEstado" id="editarEstado">
+                   
 
                     <!-- entrada para seleccionar cliente -->
                             
@@ -454,24 +552,24 @@ MODAL EDITAR Actividad
                         
                         <div class="input-group">
                     
-                        <span class="input-group-addon"><i class="fa fa-th"></i></span>
+                            <span class="input-group-addon"><i class="fa fa-user"></i></span>
 
-                            <select class="form-control input-lg" id="editarCliente" name="editarCliente" required>
-                    
-                            <option value="">Seleccionar Cliente</option>
+                                <select class="form-control input-lg" id="editarCliente" name="editarCliente" required>
+                        
+                                    <option value="">Seleccionar Cliente</option>
 
-                            <?php
-                                $item = null;
-                                $valor = null;
-                                $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+                                    <?php
+                                        $item = null;
+                                        $valor = null;
+                                        $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
 
-                                foreach ($clientes as $key => $value) {
-                            
-                                echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
-                                }
-                            ?>
+                                        foreach ($clientes as $key => $value) {
+                                    
+                                        echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
+                                        }
+                                    ?>
 
-                            </select>
+                                </select>
 
                         </div>
 
@@ -484,7 +582,7 @@ MODAL EDITAR Actividad
                                 
                                 <div class="input-group">
                                     
-                                    <span class="input-group-addon"><i class="fa fa-product-hunt"></i></span>
+                                    <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
 
                                     <input type="text" class="form-control input-lg" name="editarObservacion" id="editarObservacion" placeholder="Ingresar Observación">
 
@@ -516,9 +614,23 @@ MODAL EDITAR Actividad
 </div>
 
 
+<!-- FullCalendar JS -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js'></script>
+<!-- Idioma Esp FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/es.js"></script>
+
+
+  <!-- Choices.js para Campo estatus-->
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
   <!--Ruta actividades.js-->
   <script src="vistas/js/actividades.js"></script>
+  <script src="assets/js/actividades.js"></script>
+
+<!--sirve para dar estilos al select-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+
 
 
   <?php

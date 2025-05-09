@@ -36,8 +36,13 @@ class ControladorClientes{
 
 				$respuesta = ModeloClientes::mdlIngresarCliente($tabla, $datos);
 
+				// ➡ Determinar redirección según origen
+				$redireccion = $_POST["vistaOrigen"] ?? "ventas";
+
 
 				if ($respuesta == "ok") {
+
+					$redireccion = $_POST["vistaOrigen"] ?? "ventas";
 
 			    	echo '<script>
 					swal({
@@ -49,7 +54,7 @@ class ControladorClientes{
 						}).then((result)=>{
 							if(result.value){
 
-							   window.location = "clientes";
+							   window.location = "'.$redireccion.'";
 							}
 						})
 			     	</script>';
@@ -68,15 +73,13 @@ class ControladorClientes{
 
 							if(result.value){
 
-								window.location = "clientes";
+								window.location = "'.$redireccion.'";
 							}
 						})
 				</script>';
 			}
 
-
 		}
-
 
 	}
 
@@ -190,6 +193,49 @@ class ControladorClientes{
 			$tabla = "clientes";
 			$datos = $_GET["idCliente"];
 
+
+			// Verificar si hay actividades asociados
+			$actividadesAsociados = ModeloActividades::mdlMostrarActividades("actividades", "id_cliente", $datos, "id");
+	
+			if (!empty($actividadesAsociados)) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡No se puede eliminar!",
+						text: "El cliente tiene actividades asociadas.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result) => {
+						if (result.value) {
+							window.location = "clientes";
+						}
+					});
+				</script>';
+				return;
+			}
+
+
+			// Verificar si hay ventas asociados
+			$ventasAsociados = ModeloVentas::mdlMostrarVentas("ventas", "id_cliente", $datos, "id");
+	
+			if (!empty($ventasAsociados)) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡No se puede eliminar!",
+						text: "El cliente tiene ventas asociadas.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result) => {
+						if (result.value) {
+							window.location = "clientes";
+						}
+					});
+				</script>';
+				return;
+			}
+
+
 			$respuesta = ModeloClientes::mdlEliminarCliente($tabla, $datos);
 
 			if($respuesta == "ok"){
@@ -214,7 +260,6 @@ class ControladorClientes{
 
 		}
 	}
-
 
 
 }

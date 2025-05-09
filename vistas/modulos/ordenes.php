@@ -47,12 +47,12 @@ echo "</pre>";
     <section class="content-header">
 
       <h1>
-        Administrar ventas
+        Administrar orden de venta
       </h1>
 
       <ol class="breadcrumb">
         <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-        <li class="active">Administrar ventas</li>
+        <li class="active">Administrar Ordenes de Venta</li>
       </ol>
 
     </section>
@@ -64,9 +64,9 @@ echo "</pre>";
         <div class="box-header with-border">
 
 
-          <a href="crear-venta">
+          <a href="crear-orden">
             <button class="btn btn-primary">              
-               Agregar venta
+               Agregar orden
             </button>
           </a>
 
@@ -105,10 +105,7 @@ echo "</pre>";
               <i class="fa fa-caret-down"></i>
             </button>
 
-            <a href="index.php?ruta=ventas" class="btn btn-default">Todas</a>
-            <!--<a href="index.php?ruta=ventas&fechaInicial=<?php echo date('Y-m-d', strtotime('-1 day')); ?>&fechaFinal=<?php echo date('Y-m-d', strtotime('-1 day')); ?>" class="btn btn-default">Hoy</a>
-            <a href="index.php?ruta=ventas&fechaInicial=<?php echo date('Y-m-d', strtotime('-2 day')); ?>&fechaFinal=<?php echo date('Y-m-d', strtotime('-2 day')); ?>" class="btn btn-default">Ayer</a>
-            <a href="index.php?ruta=ventas&fechaInicial=<?php echo date('Y-m-01'); ?>&fechaFinal=<?php echo date('Y-m-d'); ?>" class="btn btn-default">Mes actual</a>-->
+            <a href="index.php?ruta=ordenes" class="btn btn-default">Todas</a>
           </div>
 
    
@@ -124,7 +121,7 @@ echo "</pre>";
                 <th>Código factura</th>
                 <th>Cliente</th>
                 <th>Vendedor</th>
-                <th>Forma de pago</th>
+                <!--<th>Forma de pago</th>-->
                 <th>Neto</th>
                 <th>Total</th>
                 <th>Fecha</th>
@@ -147,8 +144,8 @@ echo "</pre>";
                   }
 
                   //$respuesta = ControladorVentas::ctrRangoFechasVentas($fechaInicial, $fechaFinal);
-                  $respuesta = ControladorVentas::ctrRangoFechasVentasPorEstado($fechaInicial, $fechaFinal, "venta");
-
+                  $respuesta = ControladorVentas::ctrRangoFechasVentasPorEstado($fechaInicial, $fechaFinal, "orden");
+                  
 
                   foreach ($respuesta as $key => $value) {
                     
@@ -167,8 +164,7 @@ echo "</pre>";
                         $respuestaUsuario = ControladorUsuarios::ctrMostrarUsuarios($itemUsuario, $valorUsuario);
                         echo'<td>'.$respuestaUsuario["nombre"].'</td>
 
-                        <td>'.$value["metodo_pago"].'</td>
-
+                        
                         <td>$ '.number_format($value["neto"],2).'</td>
 
                         <td>$ '.number_format($value["total"],2).'</td>
@@ -188,9 +184,11 @@ echo "</pre>";
 
                           if($_SESSION["perfil"] =="Administrador"){
 
-                            echo'<button class="btn btn-warning btnEditarVenta" idVenta='.$value["id"].'"><i class="fa fa-eye"></i></button>
-
-                            <button class="btn btn-danger btnEliminarVenta" idVenta="'.$value["id"].'"><i class="fa fa-times"></i></button>';   
+                            //echo'<button class="btn btn-warning btnEditarVenta" idVenta='.$value["id"].'"><i class="fa fa-pencil"></i></button>
+                            echo '<a href="index.php?ruta=editar-orden&idVenta='.$value["id"].'" class="btn btn-warning"><i class="fa fa-line-chart"></i></a>
+                             
+                            <button class="btn btn-danger btnEliminarVenta" idVenta="'.$value["id"].'"><i class="fa fa-times"></i></button>';
+                      
                           } 
 
                           echo '</div>
@@ -248,12 +246,9 @@ $('#daterange-btn').daterangepicker(
   },
   function (start, end) {
     var fechaInicial = start.format('YYYY-MM-DD');
-    //var fechaFinal = end.format('YYYY-MM-DD');
-    var fechaFinal = end.endOf('day').format('YYYY-MM-DD HH:mm:ss');
-    var fechaInicial = start.startOf('day').format('YYYY-MM-DD HH:mm:ss');
+    var fechaFinal = end.format('YYYY-MM-DD');
 
-    var nuevaURL = 'index.php?ruta=ventas&fechaInicial=' + encodeURIComponent(fechaInicial) + '&fechaFinal=' + encodeURIComponent(fechaFinal);
-    //var nuevaURL = 'index.php?ruta=ventas&fechaInicial=' + fechaInicial + '&fechaFinal=' + fechaFinal;
+    var nuevaURL = 'index.php?ruta=ordenes&fechaInicial=' + fechaInicial + '&fechaFinal=' + fechaFinal;
     window.location.href = nuevaURL;
   }
 );

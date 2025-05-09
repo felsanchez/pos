@@ -151,6 +151,105 @@ class ModeloActividades{
 		$stmt = null;
 
 	}
+
+
+	/*=============================================
+	Guardar Tipo de Actividad
+	=============================================*/
+	public static function mdlActualizarTipoActividad($tabla, $datos) {
+		$conn = Conexion::conectar();
+	
+		if ($tabla !== 'actividades') {
+			return ["status" => "error", "message" => "Tabla no permitida"];
+		}
+	
+		$update = $conn->prepare("UPDATE actividades SET tipo = :tipo WHERE id = :id");
+		$update->bindParam(":tipo", $datos["tipo"], PDO::PARAM_STR);
+		$update->bindParam(":id", $datos["id"], PDO::PARAM_INT);
+	
+		if ($update->execute()) {
+			$select = $conn->prepare("SELECT * FROM actividades WHERE id = :id");
+			$select->bindParam(":id", $datos["id"], PDO::PARAM_INT);
+			$select->execute();
+			$actividad = $select->fetch(PDO::FETCH_ASSOC);
+	
+			return $actividad;
+		} else {
+			$errorInfo = $update->errorInfo();
+			return ["status" => "error", "message" => $errorInfo[2]];
+		}
+	}
+	
+	
+
+	/*=============================================
+	Guardar Estado de Actividad
+	=============================================*/
+	/*public static function mdlActualizarEstadoActividad($tabla, $datos) {
+		$conn = Conexion::conectar();
+		
+		// Validar la tabla
+		if ($tabla !== 'actividades') {
+			return ["status" => "error", "message" => "Tabla no permitida"];
+		}
+	
+		// Preparar la consulta
+		$update = $conn->prepare("UPDATE actividades SET estado = :estado WHERE id = :id");
+		$update->bindParam(":estado", $datos["estado"], PDO::PARAM_STR);
+		$update->bindParam(":id", $datos["id"], PDO::PARAM_INT);
+	
+		// Ejecutar la consulta
+		if ($update->execute()) {
+			// Si la actualización es exitosa, retornar un mensaje de éxito
+			return ["status" => "ok", "id" => $datos["id"], "nuevoEstado" => $datos["estado"]];
+		} else {
+			// Si hubo un error, retornar el mensaje de error
+			$errorInfo = $update->errorInfo();
+			return ["status" => "error", "message" => $errorInfo[2]];
+		}
+	}
+	*/
+	
+
+	/*=============================================
+	ACTUALIZAR Estado
+	=============================================*/
+	static public function mdlActualizarEstadoActividad($tabla, $datos) {
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET estado = :estado WHERE id = :id");
+	  
+		$stmt->bindParam(":estado", $datos["estado"], PDO::PARAM_STR);
+		$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
+	  
+		if($stmt->execute()) {
+		  return "ok";
+		} else {
+		  return "error"; // o usa: return $stmt->errorInfo();
+		}
+	  
+		//$stmt->close();
+		$stmt = null;
+	  }
+
+	
+	  	  /*=============================================
+		ACTUALIZAR Observacion
+		=============================================*/
+		static public function mdlActualizarObservacion($tabla, $id, $observacion) {
+			$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET observacion = :observacion WHERE id = :id");
+			$stmt->bindParam(":observacion", $observacion, PDO::PARAM_STR);
+			$stmt->bindParam(":id", $id, PDO::PARAM_INT);
+		
+			if ($stmt->execute()) {
+				return "ok";
+			} else {
+				return "error";
+			}
+		
+			$stmt = null;
+		}
+			
+	
+	
 	
 
 }

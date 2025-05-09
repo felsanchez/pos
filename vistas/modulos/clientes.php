@@ -1,7 +1,7 @@
 <!-- Librería de estilos de Choices.js -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
 
-<!-- Ruta contactos.css -->
+<!-- Ruta clientes.css -->
 <link rel="stylesheet" href="assets/css/clientes.css">
 
 
@@ -31,10 +31,8 @@
 
         <div class="box-header with-border">
 
-          <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarCliente">
-            
+          <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarCliente">            
              Agregar Nuevo
-
           </button>
 
         </div>
@@ -59,7 +57,7 @@
             <!-- filtro estatus-->
             <div class="clearfix mb-2">
               <div class="pull-right filtro-estatus-wrapper d-flex align-items-center" style="gap: 8px;">
-                <label for="filtroEstatus1" class="control-label mb-0">Estados:</label>
+                <label for="filtroEstatus1" class="control-label mb-0">Filtra por ESTADOS:</label>
                 <select id="filtroEstatus1" onchange="filterTable1()" class="form-control filtro-estatus">
                   <option value="">Todos</option>
                   <option value="contactado" <?php if ($filtroEstatus1 == 'contactado') echo 'selected'; ?>>Contactado</option>
@@ -70,7 +68,7 @@
               </div>
             </div>
 
-          <table class="table table-bordered table-striped tablas1">          
+          <table class="table table-bordered table-striped tablas1 tablas">          
               
             <thead>
               <tr>
@@ -101,13 +99,14 @@
               ?>
 
                   <?php 
-                  $key = 0;
-                  foreach ($clientes as $value): 
-                    if ($value["compras"] > 0): 
-                      $estatusClass = "estatus-" . str_replace(" ", "-", strtolower($value["estatus"]));
+                    $key = 1;
+                    foreach ($clientes as $value): 
+                        if ($value["compras"] > 0): 
+                            $estatus = $value["estatus"] ?? "";
+                            $estatusClass = "estatus-" . str_replace(" ", "-", strtolower($estatus));
                   ?>
 
-              
+
                 <tr>
                   <td><?php echo $key + 1; ?></td>
                   <td><?php echo $value["nombre"]; ?></td>
@@ -142,7 +141,9 @@
                     </div>
                   </td>
                 </tr>
-              <?php 
+              <?php
+
+              $key++;
                endif;
             endforeach; 
             ?>
@@ -190,7 +191,7 @@
             </div>
 
 
-              <table class="table table-bordered table-striped tablas2">          
+              <table class="table table-bordered table-striped tablas2 tablas">          
                   
                 <thead>
                   <tr>
@@ -221,7 +222,7 @@
                   ?>
 
                     <?php 
-                    $key = 0;
+                    $key = 1;
                     foreach ($clientes as $value): 
                       if ($value["compras"] == 0): 
                         $estatusClass = "estatus-" . str_replace(" ", "-", strtolower($value["estatus"]));
@@ -260,7 +261,9 @@
                         </div>
                       </td>
                     </tr>
-                  <?php 
+                  <?php
+
+                 $key++;
                  endif;
                  endforeach; 
                  ?>
@@ -422,6 +425,10 @@ MODAL AGREGAR CLIENTE
            <!-- entrada para estatus -->
            <input type="hidden" name="nuevoEstatus" value="nuevo">
 
+          <!-- crear estado clientes -->
+           <input type="hidden" name="vistaOrigen" value="clientes">
+
+
 
            <!-- Estatus 
             <div class="form-group"> 
@@ -558,7 +565,7 @@ MODAL EDITAR CLIENTE
               
               <span class="input-group-addon"><i class="fa fa-key"></i></span>
 
-              <input type="number" min="0" class="form-control input-lg" name="editarDocumentoId" id="editarDocumentoId" required>
+              <input type="number" min="0" class="form-control input-lg" name="editarDocumentoId" id="editarDocumentoId" placeholder="Documento" required>
 
              </div>
 
@@ -573,7 +580,7 @@ MODAL EDITAR CLIENTE
             
             <span class="input-group-addon"><i class="fa fa-phone"></i></span>
 
-            <input type="text" class="form-control input-lg" name="editarTelefono"  id="editarTelefono" data-inputmask="'mask':'(999) 999-9999'" data-mask required>
+            <input type="text" class="form-control input-lg" name="editarTelefono"  id="editarTelefono" data-inputmask="'mask':'(999) 999-9999'" data-mask placeholder="Celular" required>
 
            </div>
 
@@ -589,7 +596,7 @@ MODAL EDITAR CLIENTE
               <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
 
               <!--<input type="email" class="form-control input-lg" name="editarEmail" id="editarEmail" required>-->
-              <input type="email" class="form-control input-lg" name="editarEmail" id="editarEmail">
+              <input type="email" class="form-control input-lg" name="editarEmail" id="editarEmail" placeholder="Correo Electrónico">
 
              </div>
 
@@ -604,7 +611,7 @@ MODAL EDITAR CLIENTE
             
             <span class="input-group-addon"><i class="fa fa-building"></i></span>
 
-            <input type="text" class="form-control input-lg" name="editarDepartamento" id="editarDepartamento" required>
+            <input type="text" class="form-control input-lg" name="editarDepartamento" id="editarDepartamento" placeholder="Departamento" required>
 
            </div>
 
@@ -619,7 +626,7 @@ MODAL EDITAR CLIENTE
             
             <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
 
-            <input type="text" class="form-control input-lg" name="editarCiudad" id="editarCiudad" required>
+            <input type="text" class="form-control input-lg" name="editarCiudad" id="editarCiudad" placeholder="Ciudad" required>
 
            </div>
 
@@ -634,7 +641,7 @@ MODAL EDITAR CLIENTE
               
               <span class="input-group-addon"><i class="fa fa-home"></i></span>
 
-              <input type="text" class="form-control input-lg" name="editarDireccion" id="editarDireccion" required>
+              <input type="text" class="form-control input-lg" name="editarDireccion" id="editarDireccion" placeholder="Dirección" required>
 
              </div>
 
@@ -666,7 +673,7 @@ MODAL EDITAR CLIENTE
             
             <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
 
-            <input type="text" class="form-control input-lg" name="editarNota" id="editarNota">
+            <input type="text" class="form-control input-lg" name="editarNota" id="editarNota" placeholder="Notas">
 
            </div>
 
@@ -715,11 +722,8 @@ MODAL EDITAR CLIENTE
 <!-- Choices.js para Campo estatus-->
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
-
 <!--Ruta Clientes.js-->
 <script src="assets/js/clientes.js"></script>
-
-
 
 <!--sirve para dar estilos al select-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>

@@ -100,13 +100,17 @@ class ControladorActividades{
 
                     $tabla = "actividades";
 
-                    $datos = array("descripcion" => $_POST["editarActividad"],
-                                   "tipo" => $_POST["editarTipo"],
-                                   "id_user" => $_POST["editarUsuario"],
-                                   "fecha" => $_POST["editarFecha"],
-                                   "estado" => $_POST["editarEstado"],
-                                   "id_cliente" => $_POST["editarCliente"],
-                                   "observacion" => $_POST["editarObservacion"]);
+                    $datos = array(
+								"id" => $_POST["idActividad"],
+								"descripcion" => $_POST["editarActividad"],
+								"tipo" => $_POST["editarTipo"],
+								"id_user" => $_POST["editarUsuario"],
+								"fecha" => $_POST["editarFecha"],
+								"estado" => $_POST["editarEstado"],
+								"id_cliente" => $_POST["editarCliente"],
+								"observacion" => $_POST["editarObservacion"]);
+
+								//var_dump($datos);
     
                     $respuesta = ModeloActividades::mdlEditarActividad($tabla, $datos);
     
@@ -190,5 +194,23 @@ class ControladorActividades{
 		}
 	}
 
+
+	/*=============================================
+	Guardar Tipo de Actividad
+	=============================================*/
+	public static function ctrActualizarTipoActividad($datos) {
+		$tabla = "actividades";
+		return ModeloActividades::mdlActualizarTipoActividad($tabla, $datos);
+	}
+
+	
+	/*=============================================
+	Guardar Estado
+	=============================================*/
+	public static function ctrActualizarEstadoActividad($datos) {
+		$tabla = "actividades";
+		return ModeloActividades::mdlActualizarEstadoActividad($tabla, $datos);
+	}
+	
 
 }

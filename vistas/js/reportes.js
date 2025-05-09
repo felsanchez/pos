@@ -50,5 +50,6 @@ RANGO DE FECHAS
 
 		localStorage.removeItem("capturarRango2");
 		localStorage.clear();
-		window.location = "reportes";
+		//window.location = "ventas";
+    window.location = "index.php?ruta=" + getRutaActual();
 	})
