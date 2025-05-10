@@ -1,6 +1,30 @@
+<!--Estilo Filtro de fechas -->
+  <style>
+    .formulario-fechas-container {
+      max-width: 300px;
+      padding: 15px;
+      border-radius: 10px;
+      background-color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .formulario-fechas label {
+      font-weight: 600;
+      margin-top: 10px;
+    }
+    .formulario-fechas select,
+    .formulario-fechas input[type="date"] {
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    .d-none {
+      display: none !important;
+    }
+  </style>  
+  
+
   <div class="content-wrapper">
     <section class="content-header">
-
 
       <h1>
         Reportes de ventas
@@ -18,19 +42,6 @@
        <div class="box">
 
           <div class="box-header with-border">
-
-            
-              <!--Boton rango de fecha-->
-              <!--
-              <div class="input-group">
-                  <button type="button" class="btn btn-default" id="daterange-btn2">                  
-                    <span>
-                      <i class="fa fa-calendar"></i> Rango de fecha
-                    </span>
-                     <i class="fa fa-caret-down"></i>
-                  </button>
-              </div>
-              -->
 
 
             <div class="box-tools pull-right">
@@ -57,7 +68,7 @@
          <div class="box-body">
 
             <div class="row">
-       
+              
               <div class="col-xs-12">
               <?php
                   include "reportes/grafico-ventas.php";
@@ -90,35 +101,13 @@
               </form>
             </div>
 
-                  <!-- HPM1 estilo Filtro de fechas -->
-            <style>
-              .formulario-fechas-container {
-                max-width: 300px;
-                padding: 15px;
-                border-radius: 10px;
-                background-color: #ffffff;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                margin-bottom: 20px;
-              }
-              .formulario-fechas label {
-                font-weight: 600;
-                margin-top: 10px;
-              }
-              .formulario-fechas select,
-              .formulario-fechas input[type="date"] {
-                border-radius: 8px;
-                margin-bottom: 10px;
-              }
-              .d-none {
-                display: none !important;
-              }
-            </style>
-
-
             <!-- Análisis de ventas -->
+          <div id="contenedor-barras-formas-pago">
             <div class="col-12 col-md-12">
               <?php include "reportes/analisis-ventas1.php"; ?>
             </div>
+          </div>
+
 
               <div class="col-md-6 col-xs-12">      
                   <?php
@@ -148,4 +137,7 @@
     </section>
 
   </div>
+
+
+  
 

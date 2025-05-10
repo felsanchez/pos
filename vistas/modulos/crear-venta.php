@@ -233,9 +233,10 @@
 
                                   <option value="">Seleccione método de pago</option>
                                   <option value="Efectivo">Efectivo</option>
-                                  <option value="TC">Tarjeta Crédito</option>
-                                  <option value="DEBE">DEBE</option>
-                                  
+                                  <option value="TD">Tarjeta Débito</option>
+                                  <option value="TC">Tarjeta Crédito</option>                                  
+                                  <option value="Transferencia">Transferencia</option>
+                                  <option value="Cheque">Cheque</option>
 
                                 </select>   
 
@@ -272,16 +273,13 @@
                </form>
 
 
-
                <?php
                 
                 $guardarVenta = new ControladorVentas();
                 $guardarVenta -> ctrCrearVenta();
                 
                ?>
-            
-
-                
+             
               </div>
               
             </div>   

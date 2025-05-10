@@ -2,6 +2,8 @@
 require_once "../../../modelos/conexion.php"; // Ajusta la ruta según tu estructura
 $conn = Conexion::conectar(); // Asegúrate de tener esta línea
 
+
+
 // Obtener valores del formulario
 $tipo = $_POST['tipo'] ?? null;
 $fecha_inicio = $_POST['fecha_inicio'] ?? null;

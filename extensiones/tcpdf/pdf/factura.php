@@ -118,6 +118,7 @@ $pdf->writeHTML($bloque1, false, false, false, false, '');
 $bloque2 = <<<EOF
 
 <table>
+<br><br><br><br><br><br>
 
 <tr>
 
@@ -129,10 +130,22 @@ $bloque2 = <<<EOF
 
 <table style="font-size:10px; padding:5px 10px;">
 
+<br><br><br>
+
 	<tr>
 
-	<br><br><br>
+		<td style="border:1px solid #666; background-color:white; width:540px">Fecha: $fecha</td>
 
+	</tr>
+
+	<tr>
+
+		<td style="border:1px solid #666; background-color:white; width:540px">Vendedor: $respuestaVendedor[nombre]</td>
+
+	</tr>
+	<br>
+
+	<tr>
 
 		<td style="border:1px solid #666; background-color:white; width:390px">
 		
@@ -140,9 +153,9 @@ $bloque2 = <<<EOF
 
 		</td>
 
-		<td style="border:1px solid #666; background-color:white; width:150px; text-align:right">
+		<td style="border:1px solid #666; background-color:white; width:150px; text-align:left">
 		
-			Fecha: $fecha
+			Documento: $respuestaCliente[documento]
 			
 		</td>
 
@@ -150,7 +163,39 @@ $bloque2 = <<<EOF
 
 	<tr>
 
-		<td style="border:1px solid #666; background-color:white; width:540px">Vendedor: $respuestaVendedor[nombre]</td>
+		<td style="border:1px solid #666; background-color:white; width:180px; text-align:left">
+		
+			Departamento: $respuestaCliente[departamento]
+
+		</td>
+
+		<td style="border:1px solid #666; background-color:white; width:180px; text-align:left">
+		
+			Ciudad: $respuestaCliente[ciudad]
+			
+		</td>
+
+		<td style="border:1px solid #666; background-color:white; width:180px; text-align:left">
+		
+			Dirección: $respuestaCliente[direccion]
+			
+		</td>
+
+	</tr>
+
+	<tr>
+
+		<td style="border:1px solid #666; background-color:white; width:270px">
+		
+			E-mail: $respuestaCliente[email]
+
+		</td>
+
+		<td style="border:1px solid #666; background-color:white; width:270px">
+		
+			Celular: $respuestaCliente[telefono]
+			
+		</td>
 
 	</tr>
 
@@ -300,6 +345,7 @@ $pdf->writeHTML($bloque5, false, false, false, false, '');
 // ---------------------------------------------------------
 
 // HPM- codigo QR- estilo para código de barras- https://tcpdf.org/examples/example_050/
+/*
 $style = array(
     'border' => false,
     'vpadding' => 'auto',
@@ -310,8 +356,39 @@ $style = array(
     'module_height' => 1 // height of a single module in points
 );
 // QRCODE
-$pdf->write2DBarcode(('NumFac:'.$valorVenta.'        FecFac:'.$fecha.'        NitFac:8040047106'.'        DocAdq:'.$respuestaCliente[documento].'        ValFac:'.$neto.'        ValIva:'.$impuesto.'        ValOtroIm:0'.'        ValFacIm:'.$total), 'QRCODE,Q', 142, 6, 30, 45, $style, 'N');
-$pdf->Text(20, 145, '');
+$pdf->write2DBarcode(('NumFac:'.$valorVenta.'        
+FecFac:'.$fecha.'        
+NitFac:8040047106'.'        
+DocAdq:'.$respuestaCliente["documento"].'	       
+ValFac:'.$neto.'        ValIva:'.$impuesto.'        ValOtroIm:0'.'        ValFacIm:'.$total), 'QRCODE,Q', 142, 6, 30, 45, $style, 'N');
+$pdf->Text(20, 145, ''); 
+*/
+
+// Estilo para código QR
+$style = array(
+    'border' => false,
+    'vpadding' => 'auto',
+    'hpadding' => 'auto',
+    'fgcolor' => array(0,0,0),
+    'bgcolor' => false,
+    'module_width' => 1,
+    'module_height' => 1
+);
+
+// Contenido del código QR (incluye nombre del cliente)
+$contenidoQR = 
+'Inventory System
+NumFac:'.$valorVenta.'        
+FecFac:'.$fecha.'        
+NitFac:8040047106        
+NomAdq:'.$respuestaCliente["nombre"].'   	DocAdq:'.$respuestaCliente["documento"].'
+DepAdq:'.$respuestaCliente["departamento"].'   	CiudadAdq:'.$respuestaCliente["ciudad"].'		DirAdq:'.$respuestaCliente["direccion"].' 
+ValFac:'.$neto.'        
+ValIva:'.$impuesto.'             
+ValFacIm:'.$total;
+
+// Código QR con mayor tamaño y nivel de corrección más bajo
+$pdf->write2DBarcode($contenidoQR, 'QRCODE,L', 140, 22, 60, 60, $style, 'N');
 
 
 // ---------------------------------------------------------
@@ -323,7 +400,6 @@ $pdf->Output('factura.pdf');
 }
 
 }
-
 
 $factura = new imprimirFactura();
 $factura -> codigo = $_GET["codigo"];

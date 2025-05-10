@@ -105,7 +105,7 @@ echo "</pre>";
               <i class="fa fa-caret-down"></i>
             </button>
 
-            <a href="index.php?ruta=ventas" class="btn btn-default">Todas</a>
+            <a href="index.php?ruta=ventas" class="btn btn-default">Mostrar Todo</a>
             <!--<a href="index.php?ruta=ventas&fechaInicial=<?php echo date('Y-m-d', strtotime('-1 day')); ?>&fechaFinal=<?php echo date('Y-m-d', strtotime('-1 day')); ?>" class="btn btn-default">Hoy</a>
             <a href="index.php?ruta=ventas&fechaInicial=<?php echo date('Y-m-d', strtotime('-2 day')); ?>&fechaFinal=<?php echo date('Y-m-d', strtotime('-2 day')); ?>" class="btn btn-default">Ayer</a>
             <a href="index.php?ruta=ventas&fechaInicial=<?php echo date('Y-m-01'); ?>&fechaFinal=<?php echo date('Y-m-d'); ?>" class="btn btn-default">Mes actual</a>-->
@@ -178,20 +178,17 @@ echo "</pre>";
                         <td>
                           <div class="btn-group">
 
-                          <a class="btn btn-success" href="index.php?ruta=ventas&xml='.$value["codigo"].'">xml</a>
+                            <a class="btn btn-success" href="index.php?ruta=ventas&xml='.$value["codigo"].'">xml</a>
 
-                            <button class="btn btn-info btnImprimirFactura" codigoVenta="'.$value["codigo"].'">
+                              <button class="btn btn-info btnImprimirFactura" codigoVenta="'.$value["codigo"].'"><i class="fa fa-print"></i></button>';
 
-                              <i class="fa fa-print"></i>
 
-                            </button>';
+                            if($_SESSION["perfil"] =="Administrador"){
 
-                          if($_SESSION["perfil"] =="Administrador"){
+                              echo'<button class="btn btn-warning btnEditarVenta" idVenta='.$value["id"].'"><i class="fa fa-eye"></i></button>
 
-                            echo'<button class="btn btn-warning btnEditarVenta" idVenta='.$value["id"].'"><i class="fa fa-eye"></i></button>
-
-                            <button class="btn btn-danger btnEliminarVenta" idVenta="'.$value["id"].'"><i class="fa fa-times"></i></button>';   
-                          } 
+                              <button class="btn btn-danger btnEliminarVenta" idVenta="'.$value["id"].'"><i class="fa fa-times"></i></button>';   
+                            } 
 
                           echo '</div>
 

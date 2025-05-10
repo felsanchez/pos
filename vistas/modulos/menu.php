@@ -35,28 +35,35 @@
 
       if($_SESSION["perfil"] =="Administrador" || $_SESSION["perfil"] =="Especial"){
 
-           echo '<li>
 
-            <a href="categorias">   
+        echo '<li class="treeview">
+                <a href="">         
+                    <i class="fa fa-product-hunt"></i>
+                    <span>Productos</span>
+                    <span class="pull-right-container">
+                    <i class="fa fa-angle-left pull-right"></i>
+                    </span>
+                </a>
 
-              <i class="fa fa-th"></i>
-              <span>Categorías</span>
+                <ul class="treeview-menu">
+                  <li>
+                    <a href="productos">
+                      <i class="fa fa-circle-o"></i>
+                      <span>Productos</span>
+                    </a>
+                  </li>
 
-            </a>   
+                  <li>
+                    <a href="categorias">
+                      <i class="fa fa-circle-o"></i>
+                      <span>Categorias</span>
+                    </a>
+                  </li>';
+    
+          echo '</ul> 
 
-          </li>
+        </li>';
 
-
-           <li>
-
-            <a href="productos">   
-
-              <i class="fa fa-product-hunt"></i>
-              <span>Productos</span>
-
-            </a>   
-
-          </li>';
       }
 
 
@@ -116,7 +123,7 @@
                     </a>
                   </li>';
     
-         echo '</ul> 
+          echo '</ul> 
 
         </li>';
     }

@@ -613,7 +613,7 @@ $("#nuevoMetodoPago").change(function(){
                             
                 '<div class="input-group">'+
 
-                    '<input type="text" class="form-control" id="nuevoCodigoTransaccion" name="nuevoCodigoTransaccion" placeholder="Código transacción" required>'+
+                    '<input type="text" class="form-control" id="nuevoCodigoTransaccion" name="nuevoCodigoTransaccion" placeholder="Código transacción o Banco" required>'+
 
                     '<span class="input-group-addon"><i class="fa fa-lock"></i></span>'+                             
 
@@ -792,13 +792,22 @@ $(".tablas").on("click", ".btnEliminarVenta", function(){
 /*=============================================
 IMPRIMIR FACTURA
 =============================================*/
-
+/*
 $(".tablas").on("click", ".btnImprimirFactura", function(){
 
 	var codigoVenta = $(this).attr("codigoVenta");
 
 	window.open("extensiones/tcpdf/pdf/factura.php?codigo="+codigoVenta, "_blank");
 })
+	*/
+
+$(".tablas").off("click", ".btnImprimirFactura").on("click", ".btnImprimirFactura", function() {
+
+	var codigoVenta = $(this).attr("codigoVenta");
+
+	window.open("extensiones/tcpdf/pdf/factura.php?codigo=" + codigoVenta, "_blank");
+});
+
 
 
 /*=============================================
