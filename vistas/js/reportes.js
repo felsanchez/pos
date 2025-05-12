@@ -53,3 +53,63 @@ RANGO DE FECHAS
 		//window.location = "ventas";
     window.location = "index.php?ruta=" + getRutaActual();
 	})
+
+
+   /*=============================================
+	Filtro tipos de pagos
+	=============================================*/
+ document.getElementById("form-filtro-tipos-pago").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const form = e.target;
+  const formData = new FormData(form);
+
+  fetch("vistas/modulos/reportes/filtro_tipos_pago.php", {
+    method: "POST",
+    body: formData
+  })
+    .then(res => res.json())
+    .then(data => {
+      actualizarGraficoTiposPago(data);
+    })
+    .catch(err => {
+      console.error("Error al cargar los datos de tipos de pago:", err);
+    });
+});
+
+function actualizarGraficoTiposPago(datosMetodoPago) {
+  const contenedor = document.getElementById("contenedor-tipos-pago");
+  contenedor.innerHTML = ""; // Limpia contenido anterior
+
+  let maxTotal = 1;
+  for (let key in datosMetodoPago) {
+    if (datosMetodoPago[key] > maxTotal) {
+      maxTotal = datosMetodoPago[key];
+    }
+  }
+
+  const colores = {
+    "Efectivo": "primary",
+    "TD": "info",
+    "TC": "success",
+    "Transferencia": "warning",
+    "Cheque": "danger"
+  };
+
+  for (let metodo in datosMetodoPago) {
+    const total = datosMetodoPago[metodo];
+    const porcentaje = Math.round((total / maxTotal) * 100);
+    const nombre = metodo === "TD" ? "Tarjeta Débito" :
+                   metodo === "TC" ? "Tarjeta Crédito" : metodo;
+
+    contenedor.innerHTML += `
+      <div class="progress-group">
+        <span class="progress-text">${nombre}</span>
+        <span class="float-end"><b>${total.toLocaleString()}</b>/${maxTotal.toLocaleString()}</span>
+        <div class="progress progress-sm">
+          <div class="progress-bar text-bg-${colores[metodo] || 'secondary'}" style="width: ${porcentaje}%"></div>
+        </div>
+      </div>
+    `;
+  }
+}

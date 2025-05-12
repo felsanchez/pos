@@ -7,36 +7,34 @@ $ventas = ControladorVentas::ctrMostrarVentas($item, $valor);
 $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
 
 $arrayClientes = array();
-$arraylistaClientes = array();
+$sumaTotalClientes = array();
 
-foreach ($ventas as $key => $valueVentas) {
-  
-  foreach ($clientes as $key => $valueClientes) {
-    
-      if($valueClientes["id"] == $valueVentas["id_cliente"]){
+foreach ($ventas as $valueVentas) {
 
-        #Capturamos los Clientes en un array
-        array_push($arrayClientes, $valueClientes["nombre"]);
+  // ✅ Filtrar solo las ventas que tengan estado "venta"
+  if (!isset($valueVentas["estado"]) || $valueVentas["estado"] !== "venta") continue;
 
-        #Capturamos las nombres y los valores netos en un mismo array
-        $arraylistaClientes = array($valueClientes["nombre"] => $valueVentas["neto"]);
+  foreach ($clientes as $valueClientes) {
 
-        #Sumamos los netos de cada cliente
-        foreach ($arraylistaClientes as $key => $value) {
-          
-          $sumaTotalClientes[$key] += $value;
-        
-        }
+    if ($valueClientes["id"] == $valueVentas["id_cliente"]) {
 
-      }   
+      $nombreCliente = $valueClientes["nombre"];
+
+      $arrayClientes[] = $nombreCliente;
+
+      if (!isset($sumaTotalClientes[$nombreCliente])) {
+        $sumaTotalClientes[$nombreCliente] = 0;
+      }
+
+      $sumaTotalClientes[$nombreCliente] += floatval($valueVentas["total"]);
+    }
   }
-
 }
 
-#Evitamos repetir nombre
 $noRepetirNombres = array_unique($arrayClientes);
 
 ?>
+
 
 <!--=====================================
 VENDEDORES
@@ -46,7 +44,7 @@ VENDEDORES
 	
 	<div class="box-header with-border">
     
-    	<h3 class="box-title">Compradores</h3>
+    	<h3 class="box-title">Mejores Compradores</h3>
   
   	</div>
 

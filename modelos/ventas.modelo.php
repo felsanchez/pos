@@ -196,7 +196,7 @@ class ModeloVentas{
 
 	static public function mdlSumaTotalVentas($tabla){	
 
-		$stmt = Conexion::conectar()->prepare("SELECT SUM(neto) as total FROM $tabla");
+		$stmt = Conexion::conectar()->prepare("SELECT SUM(total) as total FROM $tabla WHERE estado = 'venta'");
 
 		$stmt -> execute();
 
@@ -209,10 +209,6 @@ class ModeloVentas{
 	}
 
 	//Diferenciar entre venta y orden
-	
-
-
-
 	static public function mdlRangoFechasVentasPorEstado($tabla, $fechaInicial, $fechaFinal, $estado){
 
 		if($fechaInicial == null){
@@ -244,7 +240,31 @@ class ModeloVentas{
 	}
 	
 	
-	
+	//Para los reportes
+	public static function mdlMostrarVentasAsociativo($tabla, $item, $valor)
+{
+    if ($item != null) {
+        $stmt = Conexion::conectar()->prepare("
+            SELECT v.*, u.nombre AS nombre_vendedor
+            FROM $tabla v
+            JOIN usuarios u ON v.id_vendedor = u.id
+            WHERE v.$item = :$item
+            ORDER BY v.id DESC
+        ");
+        $stmt->bindParam(":".$item, $valor, PDO::PARAM_STR);
+    } else {
+        $stmt = Conexion::conectar()->prepare("
+            SELECT v.*, u.nombre AS nombre_vendedor
+            FROM $tabla v
+            JOIN usuarios u ON v.id_vendedor = u.id
+            ORDER BY v.id DESC
+        ");
+    }
+
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
+
 
 
 

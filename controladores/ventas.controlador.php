@@ -750,7 +750,14 @@ static public function ctrEliminarVenta(){
 	
 		return $respuesta;
 	}
-	
+
+
+	//Para los reportes
+public static function ctrMostrarVentasAsociativo($tabla, $item, $valor)
+{
+    return ModeloVentas::mdlMostrarVentasAsociativo($tabla, $item, $valor);
+}
+
 	
 
 }

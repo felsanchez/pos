@@ -1,5 +1,7 @@
 <?php
 
+//NO SE USA ESTE CODIGO****************************************
+
 error_reporting(0);
 
 	if(isset($_GET["fechaInicial"])){

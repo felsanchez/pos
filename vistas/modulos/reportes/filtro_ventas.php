@@ -1,8 +1,6 @@
 <?php
-require_once "../../../modelos/conexion.php"; // Ajusta la ruta según tu estructura
-$conn = Conexion::conectar(); // Asegúrate de tener esta línea
-
-
+require_once "../../../modelos/conexion.php";
+$conn = Conexion::conectar();
 
 // Obtener valores del formulario
 $tipo = $_POST['tipo'] ?? null;
@@ -17,18 +15,18 @@ if (!$tipo) {
 }
 
 // Construir la condición de fecha
-$where = "";
+$condicionFecha = "";
 $params = [];
 
 switch ($tipo) {
   case 'hoy':
-    $where = "DATE(fecha) = CURDATE()";
+    $condicionFecha = "DATE(fecha) = CURDATE()";
     break;
   case 'ayer':
-    $where = "DATE(fecha) = CURDATE() - INTERVAL 1 DAY";
+    $condicionFecha = "DATE(fecha) = CURDATE() - INTERVAL 1 DAY";
     break;
   case 'mes':
-    $where = "MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())";
+    $condicionFecha = "MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())";
     break;
   case 'personalizado':
     if (!$fecha_inicio || !$fecha_fin) {
@@ -36,7 +34,7 @@ switch ($tipo) {
       echo json_encode(["error" => "Fechas personalizadas incompletas"]);
       exit;
     }
-    $where = "DATE(fecha) BETWEEN ? AND ?";
+    $condicionFecha = "DATE(fecha) BETWEEN ? AND ?";
     $params = [$fecha_inicio, $fecha_fin];
     break;
   default:
@@ -44,6 +42,9 @@ switch ($tipo) {
     echo json_encode(["error" => "Tipo de filtro no válido"]);
     exit;
 }
+
+// Agregar condición del estado
+$where = "estado = 'venta' AND $condicionFecha";
 
 // Consulta preparada
 $sql = "
@@ -56,17 +57,18 @@ $sql = "
   ORDER BY fecha ASC
 ";
 
-
 $stmt = $conn->prepare($sql);
 
+// Si hay parámetros (solo en personalizado)
 if ($params) {
   foreach ($params as $key => $value) {
-    $stmt->bindValue($key + 1, $value); // Los parámetros en PDO son 1-indexados si usas ?
+    $stmt->bindValue($key + 1, $value);
   }
 }
 
 $stmt->execute();
 
+// Procesar resultados
 $datos = [];
 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
   $datos[] = [
@@ -75,10 +77,10 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
   ];
 }
 
-
-////MOSTRAR EL VALOR TOTAL
+// Total general
 $totalVentas = array_sum(array_column($datos, 'total_ventas'));
 
+// Respuesta JSON
 echo json_encode([
   'datos' => $datos,
   'total' => $totalVentas

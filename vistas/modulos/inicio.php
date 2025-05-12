@@ -38,14 +38,17 @@
         <div class="col-lg-12">
         
           <?php
-
-            if($_SESSION["perfil"] =="Administrador"){
-
-              include "reportes/grafico-ventas.php";
-
-            }
-
-          ?>
+              if($_SESSION["perfil"] =="Administrador"){
+            ?>
+              <!--include "reportes/grafico-ventas.php";-->
+              <div id="contenedor-barras-formas-pago">
+                  <div class="col-12 col-md-12">
+                    <?php include "reportes/analisis-ventas1.php"; ?>
+                  </div>
+                </div> 
+          <?php
+                }
+            ?>        
 
         </div>
 

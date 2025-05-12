@@ -1,42 +1,42 @@
 <?php
 
+$tabla = "ventas";
 $item = null;
 $valor = null;
 
-$ventas = ControladorVentas::ctrMostrarVentas($item, $valor);
-$usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
+$ventas = ControladorVentas::ctrMostrarVentasAsociativo($tabla, $item, $valor);
 
-$arrayVendedores = array();
-$arraylistaVendedores = array();
+$sumaTotalVendedores = [];
 
-foreach ($ventas as $key => $valueVentas) {
+foreach ($ventas as $venta) {
 
-  foreach ($usuarios as $key => $valueUsuarios) {
+    /*
+    echo "<pre>";
+    print_r($venta);
+    echo "</pre>";
+    */
 
-    if($valueUsuarios["id"] == $valueVentas["id_vendedor"]){
+  if (!isset($venta["estado"])) continue;
+  if ($venta["estado"] !== "venta") continue;
 
-        #Capturamos los vendedores en un array
-        array_push($arrayVendedores, $valueUsuarios["nombre"]);
+  $nombre = $venta["nombre_vendedor"];
 
-        #Capturamos las nombres y los valores netos en un mismo array
-        $arraylistaVendedores = array($valueUsuarios["nombre"] => $valueVentas["neto"]);
+      /*
+      echo "<pre>";
+      echo "Vendedor: " . $nombre . "\n";
+      echo "Neto: ";
+      var_dump($venta["total"]);
+      echo "</pre>";
+      */
 
-         #Sumamos los netos de cada vendedor
-
-        foreach ($arraylistaVendedores as $key => $value) {
-
-            $sumaTotalVendedores[$key] += $value;
-
-         }
-
-    }
-  
+  if (!isset($sumaTotalVendedores[$nombre])) {
+    $sumaTotalVendedores[$nombre] = 0;
   }
 
+  $sumaTotalVendedores[$nombre] += $venta["total"];
 }
 
-#Evitamos repetir nombre
-$noRepetirNombres = array_unique($arrayVendedores);
+$noRepetirNombres = array_keys($sumaTotalVendedores);
 
 ?>
 
@@ -49,7 +49,7 @@ VENDEDORES
 	
 	<div class="box-header with-border">
     
-    	<h3 class="box-title">Vendedores</h3>
+    	<h3 class="box-title">Mejores Vendedores</h3>
   
   	</div>
 
