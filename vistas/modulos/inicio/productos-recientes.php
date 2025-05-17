@@ -56,8 +56,17 @@ $limite = min(6, count($productos));
 
   </div>
 
-  <div class="box-footer text-center">
-    <a href="productos" class="uppercase">Ver todos los productos</a>
-  </div>
+  
+  <?php
+    if($_SESSION["perfil"] =="Administrador"){
+    ?>
+
+    <div class="box-footer text-center">
+      <a href="productos" class="uppercase">Ver todos los productos</a>
+    </div>
+
+  <?php
+    }
+    ?>
 
 </div>

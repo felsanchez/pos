@@ -76,13 +76,15 @@ class ModeloActividades{
 
 	static public function mdlEditarActividad($tabla, $datos){
 
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET descripcion = :descripcion, tipo = :tipo, id_user = :id_user, fecha = :fecha, estado = :estado, id_cliente = :id_cliente, observacion = :observacion WHERE id = :id");
+		//var_dump($datos["fecha"]);
+
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET descripcion = :descripcion, tipo = :tipo, id_user = :id_user, estado = :estado, id_cliente = :id_cliente, observacion = :observacion WHERE id = :id");
 
 		$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
 		$stmt->bindParam(":descripcion", $datos["descripcion"], PDO::PARAM_STR);
 		$stmt->bindParam(":tipo", $datos["tipo"], PDO::PARAM_STR);
 		$stmt->bindParam(":id_user", $datos["id_user"], PDO::PARAM_STR);
-		$stmt->bindParam(":fecha", $datos["fecha"], PDO::PARAM_STR);
+		//$stmt->bindParam(":fecha", $datos["fecha"], PDO::PARAM_STR);
 		$stmt->bindParam(":estado", $datos["estado"], PDO::PARAM_STR);
 		$stmt->bindParam(":id_cliente", $datos["id_cliente"], PDO::PARAM_STR);
 		$stmt->bindParam(":observacion", $datos["observacion"], PDO::PARAM_STR);

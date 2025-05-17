@@ -153,7 +153,7 @@ MODAL AGREGAR USUARIO
               
               <span class="input-group-addon"><i class="fa fa-user"></i></span>
 
-              <input type="text" class="form-control input-lg" name="nuevoNombre" placeholder="Ingresar nombre" required>
+              <input type="text" class="form-control input-lg" name="nuevoNombre" placeholder="Ingresar nombre *" required>
 
              </div>
 
@@ -167,7 +167,7 @@ MODAL AGREGAR USUARIO
               
               <span class="input-group-addon"><i class="fa fa-key"></i></span>
 
-              <input type="text" class="form-control input-lg" name="nuevoUsuario" placeholder="Ingresar usuario (Sin espacios)" id="nuevoUsuario" required>
+              <input type="text" class="form-control input-lg" name="nuevoUsuario" placeholder="Ingresar usuario (Sin espacios) *" id="nuevoUsuario" required>
 
              </div>
 
@@ -181,7 +181,7 @@ MODAL AGREGAR USUARIO
               
               <span class="input-group-addon"><i class="fa fa-lock"></i></span>
 
-              <input type="password" class="form-control input-lg" name="nuevoPassword" placeholder="Ingresar contraseña" required>
+              <input type="password" class="form-control input-lg" name="nuevoPassword" placeholder="Ingresar contraseña *" required>
 
              </div>
 
@@ -195,7 +195,7 @@ MODAL AGREGAR USUARIO
             
                    <span class="input-group-addon"><i class="fa fa-users"></i></span>
 
-                        <select class="form-control input-lg" name="nuevoPerfil">
+                        <select class="form-control input-lg" name="nuevoPerfil" required>
               
                           <option value="">Seleccionar perfil</option>
                           <option value="Administrador">Administrador</option>

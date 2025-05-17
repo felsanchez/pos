@@ -6,85 +6,50 @@ class ControladorUsuarios{
 	Ingreso de Usuarios
 	=============================================*/
 
+	static public function ctrIngresoUsuario()
+{
+	if (isset($_POST["ingUsuario"])) {
 
-	static public function ctrIngresoUsuario(){
+		if (preg_match('/^[a-zA-Z0-9]+$/', $_POST["ingUsuario"]) &&
+			preg_match('/^[a-zA-Z0-9]+$/', $_POST["ingPassword"])) {
 
-		if(isset($_POST["ingUsuario"])){
+			$tabla = "usuarios";
+			$item = "usuario";
+			$valor = $_POST["ingUsuario"];
 
-			if(preg_match('/^[a-zA-Z0-9]+$/', $_POST["ingUsuario"]) &&
-			   preg_match('/^[a-zA-Z0-9]+$/', $_POST["ingPassword"])) {
+			$respuesta = ModeloUsuarios::MdlMostrarUsuarios($tabla, $item, $valor);
 
+			if ($respuesta && 
+				isset($respuesta["usuario"], $respuesta["password"]) && 
+				$respuesta["usuario"] == $_POST["ingUsuario"] &&
+				password_verify($_POST["ingPassword"], $respuesta["password"])) {
 
-			   	//$encriptar = crypt($_POST["ingPassword"], '$2a$07$usesomesillystringforsalt$');
+				if ($respuesta["estado"] == 1) {
 
-			   	$encriptar = password_hash($_POST["ingPassword"], PASSWORD_BCRYPT);
+					$_SESSION["iniciarSesion"] = "ok";
+					$_SESSION["id"] = $respuesta["id"];
+					$_SESSION["nombre"] = $respuesta["nombre"];
+					$_SESSION["usuario"] = $respuesta["usuario"];
+					$_SESSION["foto"] = $respuesta["foto"];
+					$_SESSION["perfil"] = $respuesta["perfil"];
 
-			   	$tabla = "usuarios";
+					date_default_timezone_set('America/Bogota');
+					$fechaActual = date('Y-m-d H:i:s');
 
-			    $item = "usuario";
-			    $valor = $_POST["ingUsuario"];
+					ModeloUsuarios::mdlActualizarUsuario($tabla, "ultimo_login", $fechaActual, "id", $respuesta["id"]);
 
-			    $respuesta = ModeloUsuarios::MdlMostrarUsuarios($tabla, $item, $valor);
+					echo '<script>window.location = "inicio";</script>';
+				} else {
+					echo '<br><div class="alert alert-danger">El usuario aún no está activado</div>';
+				}
 
-			    if($respuesta["usuario"] == $_POST["ingUsuario"] && password_verify($respuesta["password"], $encriptar)){
-
-			    	if($respuesta["estado"] == 1){
-
-					    $_SESSION["iniciarSesion"] = "ok";
-					    $_SESSION["id"] = $respuesta["id"];
-				    	$_SESSION["nombre"] = $respuesta["nombre"];
-				    	$_SESSION["usuario"] = $respuesta["usuario"];
-				    	$_SESSION["foto"] = $respuesta["foto"];
-				    	$_SESSION["perfil"] = $respuesta["perfil"];
-
-				    	/*=============================================
-						REGISTRAR FECHA PARA SABER EL ULTIMO LOGIN
-						=============================================*/
-
-						date_default_timezone_set('America/Bogota');
-
-						$fecha = date('Y-m-d');
-						$hora = date('H:i:s');
-
-						$fechaActual = $fecha.' '.$hora;
-
-						$item1 = "ultimo_login";
-						$valor1 = $fechaActual;
-
-						$item2 = "id";
-						$valor2 = $respuesta["id"];
-
-						$ultimo_login = ModeloUsuarios::mdlActualizarUsuario($tabla, $item1, $valor1, $item2, $valor2);
-
-						if($ultimo_login == "ok"){
-
-							echo '<script>
-
-								window.location = "inicio";
-									
-					    	</script>';
-						}
-
-					    	
-				    }
-				    else{
-
-			    		echo '<br><div class="alert alert-danger">El usuario aún no esta activado</div>';
-			         }
-
-			    }
-
-			    else{
-
-			    	echo '<br><div class="alert alert-danger">Error al ingresar, vuelve a intentarlo</div>';
-			    }
-
-
+			} else {
+				echo '<br><div class="alert alert-danger">Error al ingresar, vuelve a intentarlo</div>';
 			}
-
 		}
-
 	}
+}
+
 
 	/*=============================================
 	REGISTRO DE USUARIOS
@@ -417,6 +382,25 @@ class ControladorUsuarios{
 	static public function ctrBorrarUsuario(){
 
 		if(isset($_GET["idUsuario"])){
+
+
+			// ❗ Validar que no elimine su propio usuario
+			if ($_GET["idUsuario"] == $_SESSION["id"]) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡No puedes eliminar tu propio usuario!",
+						text: "Cierra la sesión e inicia con otro usuario para poder eliminar este.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result) => {
+						if (result.value) {
+							window.location = "usuarios";
+						}
+					});
+				</script>';
+				return;
+			}
 
 			$tabla = "usuarios";
 			$datos = $_GET["idUsuario"];

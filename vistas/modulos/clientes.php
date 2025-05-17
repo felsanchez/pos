@@ -324,7 +324,7 @@ MODAL AGREGAR CLIENTE
               
               <span class="input-group-addon"><i class="fa fa-user"></i></span>
 
-              <input type="text" class="form-control input-lg" name="nuevoCliente" id="nuevoCliente" placeholder="Ingresar nombre" required>
+              <input type="text" class="form-control input-lg" name="nuevoCliente" id="nuevoCliente" placeholder="Ingresar nombre *" required>
 
              </div>
 
@@ -339,7 +339,7 @@ MODAL AGREGAR CLIENTE
               
               <span class="input-group-addon"><i class="fa fa-key"></i></span>
 
-              <input type="number" min="0" max="9999999999" class="form-control input-lg" name="nuevoDocumentoId" placeholder="Ingresar documento" required>
+              <input type="number" min="0" max="9999999999" class="form-control input-lg" name="nuevoDocumentoId" placeholder="Ingresar documento *" required>
 
              </div>
 
@@ -354,7 +354,7 @@ MODAL AGREGAR CLIENTE
               
               <span class="input-group-addon"><i class="fa fa-phone"></i></span>
 
-              <input type="text" class="form-control input-lg" name="nuevoTelefono" placeholder="Ingresar teléfono" data-inputmask="'mask':'(999) 999-9999'" data-mask required>
+              <input type="text" class="form-control input-lg" name="nuevoTelefono" placeholder="Ingresar teléfono *" data-inputmask="'mask':'(999) 999-9999'" data-mask required>
 
              </div>
 
@@ -385,7 +385,7 @@ MODAL AGREGAR CLIENTE
             
             <span class="input-group-addon"><i class="fa fa-building"></i></span>
 
-            <input type="text" class="form-control input-lg" name="nuevoDepartamento" placeholder="Ingresar departamento" required>
+            <input type="text" class="form-control input-lg" name="nuevoDepartamento" placeholder="Ingresar departamento">
 
            </div>
 
@@ -400,7 +400,7 @@ MODAL AGREGAR CLIENTE
             
             <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
 
-            <input type="text" class="form-control input-lg" name="nuevoCiudad" placeholder="Ingresar Ciudad" required>
+            <input type="text" class="form-control input-lg" name="nuevoCiudad" placeholder="Ingresar Ciudad">
 
            </div>
 
@@ -415,7 +415,7 @@ MODAL AGREGAR CLIENTE
               
               <span class="input-group-addon"><i class="fa fa-home"></i></span>
 
-              <input type="text" class="form-control input-lg" name="nuevaDireccion" placeholder="Ingresar dirección" required>
+              <input type="text" class="form-control input-lg" name="nuevaDireccion" placeholder="Ingresar dirección *" required>
 
              </div>
 
@@ -611,7 +611,7 @@ MODAL EDITAR CLIENTE
             
             <span class="input-group-addon"><i class="fa fa-building"></i></span>
 
-            <input type="text" class="form-control input-lg" name="editarDepartamento" id="editarDepartamento" placeholder="Departamento" required>
+            <input type="text" class="form-control input-lg" name="editarDepartamento" id="editarDepartamento" placeholder="Departamento">
 
            </div>
 
@@ -626,7 +626,7 @@ MODAL EDITAR CLIENTE
             
             <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
 
-            <input type="text" class="form-control input-lg" name="editarCiudad" id="editarCiudad" placeholder="Ciudad" required>
+            <input type="text" class="form-control input-lg" name="editarCiudad" id="editarCiudad" placeholder="Ciudad">
 
            </div>
 
@@ -669,15 +669,19 @@ MODAL EDITAR CLIENTE
             
            <div class="form-group">
           
-          <div class="input-group">
-            
-            <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
+            <div class="input-group">
+              
+              <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
 
-            <input type="text" class="form-control input-lg" name="editarNota" id="editarNota" placeholder="Notas">
+              <input type="text" class="form-control input-lg" name="editarNota" id="editarNota" placeholder="Notas">
 
-           </div>
+            </div>
 
-         </div>
+          </div>
+
+
+           <!-- entrada para estatus -->
+           <input type="hidden" name="editarEstatus" id="editarEstatus">
 
           
 

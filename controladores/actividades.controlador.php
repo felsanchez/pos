@@ -100,20 +100,19 @@ class ControladorActividades{
 
                     $tabla = "actividades";
 
+					
                     $datos = array(
 								"id" => $_POST["idActividad"],
 								"descripcion" => $_POST["editarActividad"],
 								"tipo" => $_POST["editarTipo"],
 								"id_user" => $_POST["editarUsuario"],
-								"fecha" => $_POST["editarFecha"],
+								 // "fecha" => $fecha,
 								"estado" => $_POST["editarEstado"],
 								"id_cliente" => $_POST["editarCliente"],
 								"observacion" => $_POST["editarObservacion"]);
 
-								//var_dump($datos);
-    
-                    $respuesta = ModeloActividades::mdlEditarActividad($tabla, $datos);
-    
+								
+                    $respuesta = ModeloActividades::mdlEditarActividad($tabla, $datos);    
     
                     if ($respuesta == "ok") {
     
@@ -212,5 +211,6 @@ class ControladorActividades{
 		return ModeloActividades::mdlActualizarEstadoActividad($tabla, $datos);
 	}
 	
+
 
 }

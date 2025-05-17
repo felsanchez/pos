@@ -132,6 +132,7 @@ class ControladorVentas{
 						   "impuesto"=>$_POST["nuevoPrecioImpuesto"],
 						   "neto"=>$_POST["nuevoPrecioNeto"],
 						   "total"=>$_POST["totalVenta"],
+						   "notas" => $_POST["notas"],
 						   "estado" => $_POST["estado"],
 						   "metodo_pago"=>$_POST["listaMetodoPago"]);
 
@@ -337,6 +338,7 @@ class ControladorVentas{
 						   "impuesto"=>$_POST["nuevoPrecioImpuesto"],
 						   "neto"=>$_POST["nuevoPrecioNeto"],
 						   "total"=>$_POST["totalVenta"],
+						   "notas" => $_POST["notas"],
 						   "estado" => $_POST["estado"],
 						   "metodo_pago"=>$_POST["listaMetodoPago"]);
 
@@ -753,11 +755,16 @@ static public function ctrEliminarVenta(){
 
 
 	//Para los reportes
-public static function ctrMostrarVentasAsociativo($tabla, $item, $valor)
-{
-    return ModeloVentas::mdlMostrarVentasAsociativo($tabla, $item, $valor);
-}
+		public static function ctrMostrarVentasAsociativo($tabla, $item, $valor)
+		{
+			return ModeloVentas::mdlMostrarVentasAsociativo($tabla, $item, $valor);
+		}
 
 	
+		//Guardar notas
+	static public function ctrActualizarNotaVenta($datos) {
+		return ModeloVentas::mdlActualizarNotaVenta("ventas", $datos);
+	}
+
 
 }

@@ -154,7 +154,9 @@
                        BOTON PARA AGREGAR PRODUCTO
                        ======================================-->
 
-                       <button type="button" class="btn btn-default  btnAgregarProducto">Agregar producto</button>
+                       <!--
+                        <button type="button" class="btn btn-default  btnAgregarProducto">Agregar producto</button>
+                        -->
 
                        <hr>
 
@@ -262,8 +264,6 @@
                 <div class="box-footer">
 
                   <button type="submit" class="btn btn-primary pull-right">Guardar orden</button>
-
-                  <button  class="btn btn-danger pull-left" onclick="location.href='ordenes'">Cancelar</button>
                   
                 </div>
 
@@ -278,6 +278,7 @@
                 
                ?>
             
+            <button  class="btn btn-danger pull-left" onclick="location.href='ordenes'">Cancelar</button>
 
                 
               </div>
@@ -533,6 +534,23 @@ MODAL AGREGAR CLIENTE
      ?>
 
     </div>
+
+      <!--Verificar que tenga productos , antes de guardar la venta-->                          
+        <script>
+          document.querySelector('form').addEventListener('submit', function (e) {
+            const listaProductos = document.getElementById('listaProductos').value;
+            if (!listaProductos || listaProductos === '[]') {
+              e.preventDefault(); // Detiene el envío del formulario
+              Swal.fire({
+                icon: 'warning',
+                title: 'Sin productos',
+                text: 'Debe agregar al menos un producto para guardar la venta',
+                confirmButtonText: 'OK'
+              });
+              return false;
+            }
+          });
+        </script>
 
   </div>
 

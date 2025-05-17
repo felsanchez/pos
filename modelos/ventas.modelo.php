@@ -64,7 +64,7 @@ class ModeloVentas{
 
 	static public function mdlIngresarVenta($tabla, $datos){
 
-			$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(codigo, id_cliente, id_vendedor, productos, impuesto, neto, total, metodo_pago, estado) VALUES (:codigo, :id_cliente, :id_vendedor, :productos, :impuesto, :neto, :total, :metodo_pago, :estado)");
+			$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(codigo, id_cliente, id_vendedor, productos, impuesto, neto, total, metodo_pago, notas, estado) VALUES (:codigo, :id_cliente, :id_vendedor, :productos, :impuesto, :neto, :total, :metodo_pago, :notas, :estado)");
 
 			$stmt->bindParam(":codigo", $datos["codigo"], PDO::PARAM_INT);
 			$stmt->bindParam(":id_cliente", $datos["id_cliente"], PDO::PARAM_STR);
@@ -74,6 +74,7 @@ class ModeloVentas{
 			$stmt->bindParam(":neto", $datos["neto"], PDO::PARAM_STR);
 			$stmt->bindParam(":total", $datos["total"], PDO::PARAM_STR);
 			$stmt->bindParam(":metodo_pago", $datos["metodo_pago"], PDO::PARAM_STR);
+			$stmt->bindParam(":notas", $datos["notas"], PDO::PARAM_STR);
 			$stmt->bindParam(":estado", $datos["estado"], PDO::PARAM_STR);
 
 			if($stmt->execute()){
@@ -98,7 +99,7 @@ class ModeloVentas{
 
 	static public function mdlEditarVenta($tabla, $datos){
 
-			$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET codigo = :codigo, id_cliente = :id_cliente, id_vendedor = :id_vendedor, productos = :productos, impuesto = :impuesto, neto = :neto, total = :total, metodo_pago = :metodo_pago, estado = :estado WHERE codigo = :codigo");
+			$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET codigo = :codigo, id_cliente = :id_cliente, id_vendedor = :id_vendedor, productos = :productos, impuesto = :impuesto, neto = :neto, total = :total, metodo_pago = :metodo_pago, notas = :notas, estado = :estado WHERE codigo = :codigo");
 
 			$stmt->bindParam(":codigo", $datos["codigo"], PDO::PARAM_INT);
 			$stmt->bindParam(":id_cliente", $datos["id_cliente"], PDO::PARAM_STR);
@@ -108,6 +109,7 @@ class ModeloVentas{
 			$stmt->bindParam(":neto", $datos["neto"], PDO::PARAM_STR);
 			$stmt->bindParam(":total", $datos["total"], PDO::PARAM_STR);
 			$stmt->bindParam(":metodo_pago", $datos["metodo_pago"], PDO::PARAM_STR);
+			$stmt->bindParam(":notas", $datos["notas"], PDO::PARAM_STR);
 			$stmt->bindParam(":estado", $datos["estado"], PDO::PARAM_STR);
 
 			if($stmt->execute()){
@@ -265,6 +267,22 @@ class ModeloVentas{
     return $stmt->fetchAll();
 }
 
+
+	//Guardar notas
+	static public function mdlActualizarNotaVenta($tabla, $datos) {
+	$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET notas = :notas WHERE id = :id");
+
+	$stmt->bindParam(":notas", $datos["notas"], PDO::PARAM_STR);
+	$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
+
+	if ($stmt->execute()) {
+		return "ok";
+	} else {
+		return "error";
+	}
+
+	$stmt = null;
+	}
 
 
 

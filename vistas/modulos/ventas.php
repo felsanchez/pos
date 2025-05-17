@@ -127,7 +127,8 @@ echo "</pre>";
                 <th>Forma de pago</th>
                 <th>Neto</th>
                 <th>Total</th>
-                <th>Fecha</th>
+                <th>Notas</th>
+                <th>Fecha de creación</th>
                 <th>Acciones</th>
               </tr>             
             </thead>
@@ -173,26 +174,33 @@ echo "</pre>";
 
                         <td>$ '.number_format($value["total"],2).'</td>
 
+                        <td contenteditable="true" class="celda-nota" data-id="'.$value['id'].'">'.$value['notas'].'</td>
+
+
                         <td>'.$value["fecha"].'</td>
 
                         <td>
                           <div class="btn-group">
 
-                            <a class="btn btn-success" href="index.php?ruta=ventas&xml='.$value["codigo"].'">xml</a>
+                            <a class="btn btn-success" href="index.php?ruta=ventas&xml=' . $value["codigo"] . '">xml</a>
 
-                              <button class="btn btn-info btnImprimirFactura" codigoVenta="'.$value["codigo"].'"><i class="fa fa-print"></i></button>';
+                            <button class="btn btn-info btnImprimirFactura" codigoVenta="' . $value["codigo"] . '">
+                              <i class="fa fa-print"></i>
+                            </button>
 
+                            <button class="btn btn-warning btnEditarVenta" idVenta="' . $value["id"] . '">
+                              <i class="fa fa-eye"></i>
+                            </button>';
 
-                            if($_SESSION["perfil"] =="Administrador"){
+                            if ($_SESSION["perfil"] == "Administrador") {
+                              echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '">
+                                      <i class="fa fa-times"></i>
+                                    </button>';
+                            }
 
-                              echo'<button class="btn btn-warning btnEditarVenta" idVenta='.$value["id"].'"><i class="fa fa-eye"></i></button>
-
-                              <button class="btn btn-danger btnEliminarVenta" idVenta="'.$value["id"].'"><i class="fa fa-times"></i></button>';   
-                            } 
-
-                          echo '</div>
-
+                            echo '</div>
                         </td>
+
 
                       </tr>';
                   }
@@ -254,8 +262,33 @@ $('#daterange-btn').daterangepicker(
     window.location.href = nuevaURL;
   }
 );
-
 </script>
+
+<!--Guarddar notas-->
+<script>
+$(document).on('blur', '.celda-nota', function() {
+  const idVenta = $(this).data('id');
+  const nuevaNota = $(this).text().trim();
+
+  console.log("Guardando nota:", nuevaNota, "para ID:", idVenta); // <== prueba
+
+  $.ajax({
+    url: "ajax/datatable-ventas.ajax.php",
+    method: "POST",
+    data: {
+      idVentaNota: idVenta,
+      nuevaNota: nuevaNota
+    },
+    success: function(respuesta) {
+      console.log("Respuesta del servidor:", respuesta);
+    },
+    error: function() {
+      alert("Hubo un error al guardar la nota.");
+    }
+  });
+});
+</script>
+
 
 
   

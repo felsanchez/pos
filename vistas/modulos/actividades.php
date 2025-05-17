@@ -176,7 +176,13 @@
                             </td>
 
                             <td>
-                            <div class="btn-group">   
+                            <div class="btn-group"> 
+
+                                <!--<button class="btn btn-warning btnEditarActividad" 
+                                    idActividad="<?php echo $value["id"]; ?>">
+                                    <i class="fa fa-pencil"></i>
+                                </button>-->
+ 
                                 <button class="btn btn-warning btnEditarActividad" data-id="<?php echo $actividad['id']; ?>" data-toggle="modal" data-target="#modalEditarActividad" idActividad="<?php echo $value["id"]; ?>"><i class="fa fa-pencil"></i></button>
                                 
                                 <button class="btn btn-danger btnEliminarActividad" idActividad="<?php echo $value["id"]; ?>"><i class="fa fa-times"></i></button>
@@ -319,6 +325,7 @@ MODAL AGREGAR actividad
                             </div>
 
                         </div>
+
 
                         <!-- entrada para estado -->
                     <!--
@@ -514,19 +521,25 @@ MODAL EDITAR Actividad
 
 
                 <!-- entrada para fecha -->
-                
+                <!--
                     <div class="form-group">
                         
                         <div class="input-group">
                             
                             <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
 
-                            <input type="datetime-local" class="form-control input-lg" name="editarFecha" id="editarFecha" placeholder="Ingresar Fecha" required>
-
+                            <input type="datetime-local" class="form-control input-lg" name="editarFecha" id="editarFecha">
 
                         </div>
 
                     </div>
+                    -->
+
+
+
+                    
+
+                    
 
 
                     <!-- entrada para estado -->
@@ -613,24 +626,35 @@ MODAL EDITAR Actividad
 
 </div>
 
+<button onclick="$('#modalEditarActividad').modal('show')" class="btn btn-danger">Abrir modal manual</button>
+
 
 <!-- FullCalendar JS -->
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js'></script>
 <!-- Idioma Esp FullCalendar JS -->
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/es.js"></script>
 
-
   <!-- Choices.js para Campo estatus-->
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+
+<!-- ✅ jQuery primero -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- ✅ Popper.js (necesario para Bootstrap 4) -->
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+
+<!-- ✅ Bootstrap JS -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
 
   <!--Ruta actividades.js-->
   <script src="vistas/js/actividades.js"></script>
   <script src="assets/js/actividades.js"></script>
 
-<!--sirve para dar estilos al select-->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!--sirve para dar estilos al select-->
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>-->
 <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
-
 
 
   <?php
@@ -639,6 +663,36 @@ MODAL EDITAR Actividad
   ?>
 
 
+<script>
+success: function (respuesta) {
+    console.log("Respuesta AJAX:", respuesta);
+
+    $("#editarActividad").val(respuesta.descripcion);
+    $("#editarTipo").val(respuesta.tipo);
+    $("#editarUsuario").val(respuesta.id_user);
+    $("#editarCliente").val(respuesta.id_cliente);
+    $("#editarEstado").val(respuesta.estado);
+    $("#editarObservacion").val(respuesta.observacion);
+    $("input[name='idActividad']").val(respuesta.id);
+
+    if (respuesta.fecha && !isNaN(new Date(respuesta.fecha))) {
+        const fechaOriginal = new Date(respuesta.fecha);
+        const fechaFormateada = fechaOriginal.toISOString().slice(0, 16);
+        $("#editarFecha").val(fechaFormateada);
+    } else {
+        console.warn("Fecha inválida o vacía:", respuesta.fecha);
+        $("#editarFecha").val("");
+    }
+
+    // ✅ Solución clave: cerrar primero y abrir luego
+    $("#modalEditarActividad").modal("hide");
+
+    setTimeout(() => {
+        $("#modalEditarActividad").modal("show");
+    }, 300); // da tiempo para cerrar correctamente antes de abrir
+}
+
+</script>
 
 
 

@@ -319,8 +319,6 @@
                 <div class="box-footer">
 
                   <button type="submit" class="btn btn-primary pull-right">Guardar cambios</button>
-
-                  <button  class="btn btn-danger pull-left" onclick="location.href='ordenes'">Cancelar</button>
                   
                 </div>
 
@@ -334,6 +332,7 @@
 
              ?>
 
+              <button  class="btn btn-danger pull-left" onclick="location.href='ordenes'">Cancelar</button>
              
                 
               </div>

@@ -56,3 +56,19 @@ class tablaProductos{
 
 $activar = new TablaProductos();
 $activar -> mostrarTabla();
+
+
+
+//Guardar Notas
+if (isset($_POST["idVentaNota"])) {
+  require_once "../controladores/ventas.controlador.php";
+  require_once "../modelos/ventas.modelo.php";
+
+  $datos = [
+    "id" => $_POST["idVentaNota"],
+    "notas" => $_POST["nuevaNota"]
+  ];
+
+  $respuesta = ControladorVentas::ctrActualizarNotaVenta($datos);
+  echo json_encode($respuesta);
+}
