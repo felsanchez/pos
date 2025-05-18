@@ -16,12 +16,15 @@ class ControladorActividades{
 
 				$tabla = "actividades";
 
+				// Convertimos el valor "0" en NULL para el cliente
+				$idCliente = ($_POST["nuevoCliente"] == "0") ? null : $_POST["nuevoCliente"];
+
 				$datos = array("descripcion" => $_POST["nuevaActividad"],
 							   "tipo" => $_POST["nuevoTipo"],
 							   "id_user" => $_POST["nuevoUsuario"],
 					           "fecha" => $_POST["nuevaFecha"],
 							   "estado" => $_POST["nuevoEstado"],
-							   "id_cliente" => $_POST["nuevoCliente"],
+							   "id_cliente" => $idCliente,
 							   "observacion" => $_POST["nuevaObservacion"]);
 
 				$respuesta = ModeloActividades::mdlIngresarActividad($tabla, $datos);
@@ -100,7 +103,8 @@ class ControladorActividades{
 
                     $tabla = "actividades";
 
-					
+					$idCliente = ($_POST["editarCliente"] == "0") ? null : $_POST["editarCliente"];
+
                     $datos = array(
 								"id" => $_POST["idActividad"],
 								"descripcion" => $_POST["editarActividad"],
@@ -108,7 +112,8 @@ class ControladorActividades{
 								"id_user" => $_POST["editarUsuario"],
 								 // "fecha" => $fecha,
 								"estado" => $_POST["editarEstado"],
-								"id_cliente" => $_POST["editarCliente"],
+								//"id_cliente" => $_POST["editarCliente"],
+								"id_cliente" => $idCliente,
 								"observacion" => $_POST["editarObservacion"]);
 
 								

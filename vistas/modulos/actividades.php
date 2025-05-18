@@ -356,7 +356,8 @@ MODAL AGREGAR actividad
 
                                     <select class="form-control input-lg" id="nuevoCliente" name="nuevoCliente" required>
                             
-                                    <option value="">Seleccionar Cliente</option>
+                                    <!--<option value="">Seleccionar Cliente</option>-->
+                                    <option value="0">Sin cliente</option>
 
                                     <?php
 
@@ -465,7 +466,7 @@ MODAL EDITAR Actividad
                     
                     <span class="input-group-addon"><i class="fa fa-tasks"></i></span>
 
-                    <input type="text" class="form-control input-lg" name="editarActividad" id="editarActividad" placeholder="Ingresar descripción" required>
+                    <input type="text" class="form-control input-lg" name="editarActividad" id="editarActividad" placeholder="Ingresar descripción *" required>
                     <input type="hidden" name="idActividad" value="<?php echo !empty($actividad['id']) ? $actividad['id'] : ''; ?>">
 
                 </div>
@@ -497,10 +498,10 @@ MODAL EDITAR Actividad
             
                     <span class="input-group-addon"><i class="fa fa-user-plus"></i></span>
 
-                    <select class="form-control input-lg" id="editarUsuario" name="editarUsuario" required>
+                    <select class="form-control input-lg" id="editarUsuario" name="editarUsuario">
                 
                         <option value="">Seleccionar Responsable</option>
-
+                         
                         <?php
 
                         $item = null;
@@ -536,12 +537,6 @@ MODAL EDITAR Actividad
                     -->
 
 
-
-                    
-
-                    
-
-
                     <!-- entrada para estado -->
                         <!--
                     <div class="form-group">
@@ -567,9 +562,10 @@ MODAL EDITAR Actividad
                     
                             <span class="input-group-addon"><i class="fa fa-user"></i></span>
 
-                                <select class="form-control input-lg" id="editarCliente" name="editarCliente" required>
+                                <select class="form-control input-lg" id="editarCliente" name="editarCliente">
                         
-                                    <option value="">Seleccionar Cliente</option>
+                                    <!--<option value="">Seleccionar Cliente</option>-->
+                                    <option value="0">Sin cliente</option>
 
                                     <?php
                                         $item = null;

@@ -603,6 +603,11 @@ static public function ctrEliminarVenta(){
 
 				foreach ($ventas as $row => $item){
 
+					// Filtrar solo ventas con estado = 'venta'
+						if (!isset($item["estado"]) || $item["estado"] != "venta") {
+							continue;
+						}
+
 					$cliente = ControladorClientes::ctrMostrarClientes("id", $item["id_cliente"]);
 					$vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $item["id_vendedor"]);
 

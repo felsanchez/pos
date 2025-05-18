@@ -225,8 +225,10 @@
                     $key = 1;
                     foreach ($clientes as $value): 
                       if ($value["compras"] == 0): 
-                        $estatusClass = "estatus-" . str_replace(" ", "-", strtolower($value["estatus"]));
+                        $estatus = $value["estatus"] ?? "sin estatus";
+                        $estatusClass = "estatus-" . str_replace(" ", "-", strtolower($estatus));
                     ?>
+
 
                     <tr>
                       <td><?php echo $key + 1; ?></td>

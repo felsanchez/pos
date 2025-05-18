@@ -1,4 +1,9 @@
-
+<style>
+  .excelbtn{
+    z-index: 9999;
+  } 
+</style>
+  
   <div class="content-wrapper">
     <section class="content-header">
 
@@ -20,7 +25,7 @@
           <div class="box-header with-border">
 
 
-            <div class="box-tools pull-right">
+            <div class="box-tools pull-right excelbtn">
               <?php
                 if(isset($_GET["fechaInicial"])){
 
