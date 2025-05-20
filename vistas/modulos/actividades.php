@@ -87,8 +87,6 @@
                 </div>
             </div>
 
-
-
                 <table class="table table-bordered table-striped tablas" style="width: 95%">
                     
                     <thead>
@@ -105,8 +103,7 @@
 
                     </tr>             
                     </thead>
-
-                    
+   
                     <tbody>
 
                         <?php
@@ -622,7 +619,7 @@ MODAL EDITAR Actividad
 
 </div>
 
-<button onclick="$('#modalEditarActividad').modal('show')" class="btn btn-danger">Abrir modal manual</button>
+<!--<button onclick="$('#modalEditarActividad').modal('show')" class="btn btn-danger">Abrir modal manual</button>-->
 
 
 <!-- FullCalendar JS -->
@@ -689,7 +686,3 @@ success: function (respuesta) {
 }
 
 </script>
-
-
-
-

@@ -4,9 +4,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   $fechaInicio = $_POST["fecha_inicio"];
   $fechaFin = $_POST["fecha_fin"];
 
+  require_once "../../../modelos/conexion.php"; // Ajusta la ruta si es necesario
+
   try {
-    $conn = new PDO("mysql:host=localhost;dbname=pos", "root", "");
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $conn = Conexion::conectar();
+    //$conn = new PDO("mysql:host=localhost;dbname=pos", "root", "");
+    //$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     $stmt = $conn->prepare("
       SELECT metodo_pago, SUM(total) AS total

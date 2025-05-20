@@ -145,7 +145,13 @@ window.addEventListener('DOMContentLoaded', function () {
     }
 
   
-    fetch('/pos/vistas/modulos/reportes/filtro_ventas.php', {
+    //fetch('/pos/vistas/modulos/reportes/filtro_ventas.php', {
+    let rutaBase = window.location.hostname.includes("localhost") 
+      ? "/pos" 
+      : ""; // en producción no va "/pos"
+
+    fetch(`${rutaBase}/vistas/modulos/reportes/filtro_ventas.php`, {
+
       method: 'POST',
       body: formData
     })

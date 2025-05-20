@@ -1,3 +1,12 @@
+  <style>
+      @media (min-width: 769px) {
+        .solo-movil {
+          display: none !important;
+        }
+      }
+  </style>
+
+
 <div class="content-wrapper">
     <section class="content-header">
 
@@ -154,10 +163,9 @@
                        BOTON PARA AGREGAR PRODUCTO
                        ======================================-->
 
-                       <!--
-                        <button type="button" class="btn btn-default  btnAgregarProducto">Agregar producto</button>
-                        -->
-
+                       <!--BTN SE MUESTRA SOLO DESDE MOVIL-->
+                        <button type="button" class="btn btn-default btnAgregarProducto solo-movil">Agregar producto</button>
+                        
                        <hr>
 
                        <div class="row">

@@ -1,5 +1,7 @@
 <?php
 
+//date_default_timezone_set('America/Bogota');
+
 class ControladorVentas{
 
 	/*=============================================
@@ -123,6 +125,8 @@ class ControladorVentas{
 				$codigoVenta = 101; // Valor inicial
 			}
 
+			date_default_timezone_set('America/Bogota');
+			$fechaHoraActual = date('Y-m-d H:i:s');
 
 			$datos = array("id_vendedor"=>$_POST["idVendedor"],
 						   "id_cliente"=>$_POST["seleccionarCliente"],
@@ -134,6 +138,7 @@ class ControladorVentas{
 						   "total"=>$_POST["totalVenta"],
 						   "notas" => $_POST["notas"],
 						   "estado" => $_POST["estado"],
+						   "fecha" => $fechaHoraActual,
 						   "metodo_pago"=>$_POST["listaMetodoPago"]);
 
 			$respuesta = ModeloVentas::mdlIngresarVenta($tabla, $datos);
@@ -201,7 +206,7 @@ class ControladorVentas{
 					  }).then(function(result){
 								if (result.value) {
 
-								window.location = "ventas";
+								window.location = "ordenes";
 
 								}
 							})
@@ -210,9 +215,6 @@ class ControladorVentas{
 
 				return;
 			}
-
-		
-			
 
 			/*=============================================
 			FORMATEAR LA TABLA DE PRODUCTOS Y CLIENTES
@@ -331,6 +333,9 @@ class ControladorVentas{
 			GUARDAR CAMBIOS DE LA COMPRA
 			=============================================*/
 
+			date_default_timezone_set('America/Bogota');
+			$fechaHoraActual = date('Y-m-d H:i:s');
+
 			$datos = array("id_vendedor"=>$_POST["idVendedor"],
 						   "id_cliente"=>$_POST["seleccionarCliente"],
 						   "codigo"=>$_POST["editarVenta"],
@@ -340,6 +345,7 @@ class ControladorVentas{
 						   "total"=>$_POST["totalVenta"],
 						   "notas" => $_POST["notas"],
 						   "estado" => $_POST["estado"],
+						   "fecha" => $fechaHoraActual,
 						   "metodo_pago"=>$_POST["listaMetodoPago"]);
 
 			$respuesta = ModeloVentas::mdlEditarVenta($tabla, $datos);
@@ -359,7 +365,7 @@ class ControladorVentas{
 						}).then((result)=>{
 							if(result.value){
 
-							   window.location = "ventas";
+							   window.location = "ordenes";
 							}
 						})
 			     	</script>';

@@ -1,9 +1,18 @@
 <?php
-// Conexión a la base de datos
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 $conexion = new mysqli("localhost", "root", "", "pos");
+
+// Incluir la conexión centralizada
+//require_once "../modelos/conexion.php";
+
 if ($conexion->connect_error) {
     die("Conexión fallida: " . $conexion->connect_error);
 }
+
 
 // Consulta para obtener las actividades
 $sql = "SELECT id, descripcion, fecha FROM actividades";

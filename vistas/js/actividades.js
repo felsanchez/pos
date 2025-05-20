@@ -145,7 +145,7 @@ $(".tablas").on("change", ".cambiarEstado", function() {
 			if (datos.status === "error") {
 				alert("Hubo un error al actualizar");
 			} else {
-				alert("EStado actualizado correctamente a: " + datos.estado);
+				alert("Estado actualizado correctamente a: " + datos.estado);
 				// Aquí puedes actualizar el valor mostrado en la tabla, si quieres
 			}
 		}

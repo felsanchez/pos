@@ -1,3 +1,12 @@
+  <style>
+      @media (min-width: 769px) {
+        .solo-movil {
+          display: none !important;
+        }
+      }
+  </style>
+
+
 <div class="content-wrapper">
     <section class="content-header">
 
@@ -146,7 +155,6 @@
 
                           $listaProducto = json_decode($venta["productos"], true);
 
-
                           foreach ($listaProducto as $key => $value) {
 
                             $item = "id";
@@ -194,7 +202,6 @@
 
                           </div>';
 
-
                           }
 
 
@@ -208,7 +215,7 @@
                        BOTON PARA AGREGAR PRODUCTO
                        ======================================-->
 
-                       <button type="button" class="btn btn-default hidden-lg btnAgregarProducto">Agregar producto</button>
+                       <button type="button" class="btn btn-default btnAgregarProducto solo-movil">Agregar producto</button>
 
                        <hr>
 
@@ -287,8 +294,10 @@
 
                                   <option value="">Seleccione método de pago</option>
                                   <option value="Efectivo">Efectivo</option>
-                                  <option value="TC">Tarjeta Crédito</option>
-                                  <option value="DEBE">DEBE</option>
+                                  <option value="TD">Tarjeta Débito</option>
+                                  <option value="TC">Tarjeta Crédito</option>                                  
+                                  <option value="Transferencia">Transferencia</option>
+                                  <option value="Cheque">Cheque</option>
 
                                 </select>   
 
@@ -372,7 +381,6 @@
               </div>
               
             </div>
-
 
       </div>
 

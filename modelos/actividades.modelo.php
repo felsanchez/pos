@@ -250,8 +250,5 @@ class ModeloActividades{
 			$stmt = null;
 		}
 			
-	
-	
-	
 
 }
