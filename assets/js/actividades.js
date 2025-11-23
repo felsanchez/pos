@@ -58,16 +58,38 @@ $(document).ready(function() {
             }
         );
 
-        // Dispara redibujado al cambiar los selects
+        // Dispara redibujado al cambiar los selects (para tabla)
         $('#filtroTipo').on('change', function() {
             tablaActividades.draw();
+            filtrarTarjetasMovil(); // También filtrar tarjetas móviles
         });
 
         $('#filtroEstado').on('change', function() {
             tablaActividades.draw();
+            filtrarTarjetasMovil(); // También filtrar tarjetas móviles
         });
     }, 100);
 });
+
+// Función para filtrar tarjetas móviles
+function filtrarTarjetasMovil() {
+    const filtroTipo = $('#filtroTipo').val().toLowerCase();
+    const filtroEstado = $('#filtroEstado').val().toLowerCase();
+
+    $('.card-actividad').each(function() {
+        const tipoTarjeta = $(this).data('tipo');
+        const estadoTarjeta = $(this).data('estado');
+
+        const coincideTipo = (filtroTipo === "" || tipoTarjeta === filtroTipo);
+        const coincideEstado = (filtroEstado === "" || estadoTarjeta === filtroEstado);
+
+        if (coincideTipo && coincideEstado) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
+    });
+}
 
 
 

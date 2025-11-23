@@ -323,7 +323,7 @@
                         ? '<span class="badge" style="background-color: '.$colorEstado.'">'.ucfirst($estadoActual).'</span>'
                         : '<span class="text-muted">Sin estado</span>';
 
-                    echo '<div class="card-actividad">
+                    echo '<div class="card-actividad" data-tipo="'.strtolower($value["tipo"]).'" data-estado="'.strtolower($estadoActual).'">
 
                             <div class="card-actividad-header">
                                 <div class="card-actividad-descripcion">
