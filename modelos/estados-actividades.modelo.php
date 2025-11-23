@@ -37,7 +37,7 @@ class ModeloEstadosActividades{
 		$stmtNombre = Conexion::conectar()->prepare("SELECT id FROM $tabla WHERE nombre = :nombre AND activo = 1");
 		$stmtNombre -> bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
 		$stmtNombre -> execute();
-		$nombreExiste = $stmtNombre -> fetch(); 
+		$nombreExiste = $stmtNombre -> fetch();
 
 		if($nombreExiste){
 			return "duplicado";

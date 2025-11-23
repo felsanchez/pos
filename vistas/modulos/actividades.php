@@ -745,11 +745,6 @@ MODAL AGREGAR ESTADO ACTIVIDAD
 
       </form>
 
-      <?php
-        $crearEstadoActividad = new ControladorEstadosActividades();
-        $crearEstadoActividad -> ctrCrearEstado();
-      ?>
-
     </div>
   </div>
 </div>
@@ -863,11 +858,6 @@ MODAL GESTIONAR ESTADOS
 
               <!-- CAMPO OCULTO PARA ORIGEN -->
               <input type="hidden" name="origenModal" value="actividades">
-
-              <?php
-                $crearEstadoGestion = new ControladorEstadosActividades();
-                $crearEstadoGestion -> ctrCrearEstado();
-              ?>
 
             </form>
           </div>
@@ -992,13 +982,6 @@ MODAL EDITAR ESTADO
           <button type="submit" class="btn btn-primary">Guardar cambios</button>
         </div>
 
-        <?php
-
-          $editarEstadoActividad = new ControladorEstadosActividades();
-          $editarEstadoActividad -> ctrEditarEstado();
-
-        ?>
-
       </form>
 
     </div>
@@ -1027,6 +1010,12 @@ MODAL EDITAR ESTADO
 
     $eliminarEstado = new ControladorEstadosActividades();
     $eliminarEstado -> ctrEliminarEstado();
+
+    $crearEstado = new ControladorEstadosActividades();
+    $crearEstado -> ctrCrearEstado();
+
+    $editarEstado = new ControladorEstadosActividades();
+    $editarEstado -> ctrEditarEstado();
   ?>
 
 <!--=============CALENDARIO========================
