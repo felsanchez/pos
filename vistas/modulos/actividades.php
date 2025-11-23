@@ -123,7 +123,7 @@
             <div class="clearfix mb-2">
             <div class="pull-right filtro-tipo-wrapper d-flex align-items-center" style="gap: 8px;">
                 <label for="filtroTipo" class="control-label mb-0">Filtra por TIPO:</label>
-                <select id="filtroTipo" onchange="filterTableTipo()" class="form-control filtro-tipo">
+                <select id="filtroTipo" class="form-control filtro-tipo">
                 <option value="">Todos</option>
 
                 <?php
