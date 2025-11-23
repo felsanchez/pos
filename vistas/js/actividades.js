@@ -44,7 +44,14 @@ $(".tablas").on("click", ".btnEditarActividad", function(){
 			}
 
             $("#editarEstado").val(respuesta["estado"]);
-            $("#editarCliente").val(respuesta["id_cliente"]);
+
+            // Si no hay cliente, seleccionar "Sin cliente" (value="0")
+            if(!respuesta["id_cliente"] || respuesta["id_cliente"] == 0 || respuesta["id_cliente"] == null || respuesta["id_cliente"] == ""){
+                $("#editarCliente").val("0");
+            } else {
+                $("#editarCliente").val(respuesta["id_cliente"]);
+            }
+
             $("#editarObservacion").val(respuesta["observacion"]);
 
             // ✅ mostrar el modal
