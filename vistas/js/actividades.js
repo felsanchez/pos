@@ -274,3 +274,90 @@ $(".btnEliminarEstadoActividad").click(function(){
 	})
 
 })
+
+
+/*=============================================
+Editar Tipo desde Modal de Gestión
+=============================================*/
+$("#modalGestionarTipos").on("click", ".btnEditarTipoActividad", function(){
+
+	var idTipo = $(this).attr("idTipo");
+    console.log("ID Tipo: " + idTipo);
+
+	// Rellenar el input hidden
+	$('#modalEditarTipoActividad input[name="idTipo"]').val(idTipo);
+
+	var datos = new FormData();
+	datos.append("idTipo", idTipo);
+
+	$.ajax({
+
+		url:"ajax/tipos-actividades.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function(respuesta){
+
+			console.log("Respuesta AJAX Tipo:", respuesta);
+
+			$("#editarTipoNombre").val(respuesta["nombre"]);
+			$("#editarTipoOrden").val(respuesta["orden"]);
+
+		},
+		error: function(xhr, status, error){
+			console.error("Error AJAX:", error);
+			console.error("Status:", status);
+			console.error("Respuesta completa:", xhr.responseText);
+
+			swal({
+				type: "error",
+				title: "Error al cargar el tipo",
+				text: "No se pudieron cargar los datos del tipo"
+			});
+		}
+
+	})
+
+})
+
+/*=============================================
+Restaurar scroll al cerrar modal de edición de tipos
+=============================================*/
+$("#modalEditarTipoActividad").on("hidden.bs.modal", function(){
+	// Si el modal de gestión sigue abierto, restaurar la clase modal-open
+	if($("#modalGestionarTipos").hasClass("in")){
+		$("body").addClass("modal-open");
+	}
+});
+
+/*=============================================
+Eliminar Tipo
+=============================================*/
+$(document).on("click", ".btnEliminarTipoActividad", function(){
+
+	var idTipo = $(this).attr("idTipo");
+	var nombreTipo = $(this).attr("nombreTipo");
+
+	swal({
+		title: '¿Está seguro de borrar el tipo "'+nombreTipo+'"?',
+		text: "¡Si no lo está puede cancelar la acción!",
+		type: 'warning',
+		showCancelButton: true,
+		confirmButtonColor: '#3085d6',
+		cancelButtonColor: '#d33',
+		cancelButtonText: 'Cancelar',
+		confirmButtonText: 'Sí, borrar tipo!'
+	}).then(function(result){
+
+		if(result.value){
+
+			window.location = "index.php?ruta=actividades&idTipo="+idTipo+"&nombreTipo="+nombreTipo;
+
+		}
+
+	})
+
+})

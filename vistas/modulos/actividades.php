@@ -99,6 +99,10 @@
                     <i class="fa fa-flag"></i> Gestionar estados
                 </button>
 
+                <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarTipos">
+                    <i class="fa fa-tags"></i> Gestionar tipos
+                </button>
+
             </div>
 
 
@@ -991,6 +995,166 @@ MODAL EDITAR ESTADO
 </div>
 
 
+<!--=====================================
+MODAL GESTIONAR TIPOS
+======================================-->
+
+<div id="modalGestionarTipos" class="modal fade" role="dialog">
+
+  <div class="modal-dialog modal-lg">
+
+    <div class="modal-content">
+
+      <!--=====================================
+      CABEZA DEL MODAL
+      ======================================-->
+
+      <div class="modal-header" style="background:#3c8dbc; color: white">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Gestionar Tipos de Actividades</h4>
+      </div>
+
+      <!--=====================================
+      CUERPO DEL MODAL
+      ======================================-->
+
+      <div class="modal-body">
+
+        <!-- Formulario agregar tipo -->
+        <div class="panel panel-primary">
+          <div class="panel-heading">
+            <h3 class="panel-title">Agregar Nuevo Tipo</h3>
+          </div>
+          <div class="panel-body">
+            <form role="form" method="post" id="formAgregarTipo">
+              <div class="row">
+                <div class="col-md-9">
+                  <div class="form-group">
+                    <input type="text" class="form-control" name="nuevoTipoNombre" placeholder="Nombre del tipo *" required>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fa fa-plus"></i> Agregar
+                  </button>
+                </div>
+              </div>
+
+              <!-- CAMPO OCULTO PARA ORIGEN -->
+              <input type="hidden" name="origenModal" value="actividades">
+
+            </form>
+          </div>
+        </div>
+
+        <!-- Lista de tipos -->
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Tipos Existentes</h3>
+          </div>
+          <div class="panel-body">
+            <table class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nombre</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php
+                  $tiposGestion = ControladorTiposActividades::ctrMostrarTiposActividades(null, null);
+                  foreach ($tiposGestion as $key => $value) {
+                    echo '<tr>
+                      <td>'.($key+1).'</td>
+                      <td>'.ucfirst($value["nombre"]).'</td>
+                      <td>
+                        <button class="btn btn-warning btn-xs btnEditarTipoActividad" idTipo="'.$value["id"].'" data-toggle="modal" data-target="#modalEditarTipoActividad"><i class="fa fa-pencil"></i></button>
+                        <button class="btn btn-danger btn-xs btnEliminarTipoActividad" idTipo="'.$value["id"].'" nombreTipo="'.$value["nombre"].'"><i class="fa fa-times"></i></button>
+                      </td>
+                    </tr>';
+                  }
+                ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!--=====================================
+      PIE DEL MODAL
+      ======================================-->
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!--=====================================
+MODAL EDITAR TIPO
+======================================-->
+
+<div id="modalEditarTipoActividad" class="modal fade" role="dialog" data-backdrop="true" data-keyboard="true">
+
+  <div class="modal-dialog">
+
+    <div class="modal-content">
+
+      <form role="form" method="post">
+
+        <!--=====================================
+        CABEZA DEL MODAL
+        ======================================-->
+
+        <div class="modal-header" style="background:#3c8dbc; color: white">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Editar Tipo</h4>
+        </div>
+
+        <!--=====================================
+        CUERPO DEL MODAL
+        ======================================-->
+
+        <div class="modal-body">
+
+          <div class="box-body">
+
+            <div class="form-group">
+              <label>Nombre *</label>
+              <input type="text" class="form-control" name="editarTipoNombre" id="editarTipoNombre" required>
+              <input type="hidden" name="idTipo" id="idTipo">
+              <input type="hidden" name="editarTipoOrden" id="editarTipoOrden">
+              <input type="hidden" name="origenModal" value="actividades">
+            </div>
+
+          </div>
+
+        </div>
+
+        <!--=====================================
+        PIE DEL MODAL
+        ======================================-->
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
+          <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
+
+
 <!-- FullCalendar JS -->
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js'></script>
 <!-- Idioma Esp FullCalendar JS -->
@@ -1016,6 +1180,15 @@ MODAL EDITAR ESTADO
 
     $editarEstado = new ControladorEstadosActividades();
     $editarEstado -> ctrEditarEstado();
+
+    $eliminarTipo = new ControladorTiposActividades();
+    $eliminarTipo -> ctrEliminarTipo();
+
+    $crearTipo = new ControladorTiposActividades();
+    $crearTipo -> ctrCrearTipo();
+
+    $editarTipo = new ControladorTiposActividades();
+    $editarTipo -> ctrEditarTipo();
   ?>
 
 <!--=============CALENDARIO========================

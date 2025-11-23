@@ -123,6 +123,9 @@ class ControladorTiposActividades{
 
 		if(isset($_POST["editarTipoNombre"])){
 
+			// Detectar desde dónde se llamó el modal
+			$redireccion = isset($_POST["origenModal"]) && $_POST["origenModal"] == "actividades" ? "actividades" : "tipos-actividades";
+
 			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarTipoNombre"])){
 
 				$tabla = "tipos_actividades";
@@ -144,7 +147,7 @@ class ControladorTiposActividades{
 							confirmButtonText: "Cerrar"
 						}).then((result) => {
 							if(result.value){
-								window.location = "tipos-actividades";
+								window.location = "'.$redireccion.'";
 							}
 						});
 					</script>';
@@ -158,7 +161,7 @@ class ControladorTiposActividades{
 							confirmButtonText: "Cerrar"
 						}).then((result) => {
 							if(result.value){
-								window.location = "tipos-actividades";
+								window.location = "'.$redireccion.'";
 							}
 						});
 					</script>';
@@ -171,7 +174,7 @@ class ControladorTiposActividades{
 							confirmButtonText: "Cerrar"
 						}).then((result) => {
 							if(result.value){
-								window.location = "tipos-actividades";
+								window.location = "'.$redireccion.'";
 							}
 						});
 					</script>';
@@ -185,7 +188,7 @@ class ControladorTiposActividades{
 						confirmButtonText: "Cerrar"
 					}).then((result) => {
 						if(result.value){
-							window.location = "tipos-actividades";
+							window.location = "'.$redireccion.'";
 						}
 					});
 				</script>';
