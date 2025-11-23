@@ -81,3 +81,25 @@
       .tablas.datatable-ready {
         visibility: visible !important;
       }
+
+      /* Estilos para campo observación editable */
+      .celda-observacion {
+        background: #fff9e6;
+        padding: 8px;
+        border-radius: 3px;
+        cursor: text;
+        font-size: 13px;
+        color: #333;
+        min-height: 30px;
+      }
+
+      .celda-observacion:empty:before {
+        content: "Escribe una observación...";
+        color: #999;
+        font-style: italic;
+      }
+
+      .celda-observacion:focus {
+        outline: 2px solid #f39c12;
+        background: #fffef5;
+      }
