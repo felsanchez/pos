@@ -85,10 +85,32 @@ Ya no se usan selects, ahora son badges de solo lectura
 // EDITAR Observacion
 // Permitir edición directa en campo "Observacion"
 function inicializarEdicionObs() {
+    // Inicializar placeholder en celdas vacías
+    $('.celda-observacion').each(function() {
+        const texto = $(this).text().trim();
+        if (texto === '') {
+            $(this).attr('data-placeholder', 'true');
+        }
+    });
+
+    // Limpiar placeholder al hacer foco
+    $('.celda-observacion').off('focus').on('focus', function() {
+        $(this).removeAttr('data-placeholder');
+    });
+
+    // Evento blur para guardar y manejar placeholder
     $('.celda-observacion').off('blur').on('blur', function () {
       const id = $(this).data('id');
       const nuevaObservacion = $(this).text().trim();
-  
+
+      // Manejar placeholder
+      if (nuevaObservacion === '') {
+          $(this).attr('data-placeholder', 'true');
+      } else {
+          $(this).removeAttr('data-placeholder');
+      }
+
+      // Guardar en la base de datos
       $.ajax({
         url: 'ajax/actividades.ajax.php',
         method: 'POST',
@@ -98,10 +120,10 @@ function inicializarEdicionObs() {
           accion: 'actualizarObservacion'
         },
         success: function (respuesta) {
-          console.log('Nota actualizada:', respuesta);
+          console.log('Observación actualizada:', respuesta);
         },
         error: function () {
-          alert('Error al actualizar la nota');
+          alert('Error al actualizar la observación');
         }
       });
     });

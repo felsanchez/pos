@@ -91,12 +91,20 @@
         font-size: 13px;
         color: #333;
         min-height: 30px;
+        position: relative;
       }
 
-      .celda-observacion:empty:before {
+      /* Placeholder para cuando está vacío */
+      .celda-observacion:empty:before,
+      .celda-observacion[data-placeholder]:before {
         content: "Escribe una observación...";
         color: #999;
         font-style: italic;
+      }
+
+      /* Ocultar placeholder cuando tiene foco */
+      .celda-observacion:focus:before {
+        content: none;
       }
 
       .celda-observacion:focus {

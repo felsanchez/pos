@@ -254,9 +254,7 @@
                             }
                             ?>
 
-                            <td contenteditable="true" class="celda-observacion" data-id="<?= $value['id']; ?>">
-                                <?= $value['observacion']; ?>
-                            </td>
+                            <td contenteditable="true" class="celda-observacion" data-id="<?= $value['id']; ?>"><?= $value['observacion']; ?></td>
 
                             <td>
                             <div class="btn-group"> 
