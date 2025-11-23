@@ -77,6 +77,13 @@ class ModeloTiposActividades{
 
 	static public function mdlEditarTipo($tabla, $datos){
 
+        // PRIMERO: Obtener el nombre actual del tipo antes de editarlo
+		$stmtActual = Conexion::conectar()->prepare("SELECT nombre FROM $tabla WHERE id = :id");
+		$stmtActual -> bindParam(":id", $datos["id"], PDO::PARAM_INT);
+		$stmtActual -> execute();
+		$tipoActual = $stmtActual -> fetch();
+		$nombreAntiguo = $tipoActual["nombre"];
+
         // Verificar si el nombre ya existe en otro registro
 		$stmtNombre = Conexion::conectar()->prepare("SELECT id FROM $tabla WHERE nombre = :nombre AND id != :id AND activo = 1");
 		$stmtNombre -> bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
@@ -102,7 +109,7 @@ class ModeloTiposActividades{
 			$stmtUpdate -> execute();
 		}
 
-		// Actualizar el registro (SIN color)
+		// Actualizar el registro del tipo
 		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET nombre = :nombre, orden = :orden WHERE id = :id");
 
 		$stmt -> bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
@@ -110,6 +117,15 @@ class ModeloTiposActividades{
 		$stmt -> bindParam(":id", $datos["id"], PDO::PARAM_INT);
 
 		if($stmt -> execute()){
+
+			// IMPORTANTE: Si el nombre cambió, actualizar todas las actividades que usan ese tipo
+			if($nombreAntiguo != $datos["nombre"]){
+				$stmtActividades = Conexion::conectar()->prepare("UPDATE actividades SET tipo = :nombreNuevo WHERE LOWER(tipo) = LOWER(:nombreAntiguo)");
+				$stmtActividades -> bindParam(":nombreNuevo", $datos["nombre"], PDO::PARAM_STR);
+				$stmtActividades -> bindParam(":nombreAntiguo", $nombreAntiguo, PDO::PARAM_STR);
+				$stmtActividades -> execute();
+			}
+
 			return "ok";
 		}else{
 			return "error";

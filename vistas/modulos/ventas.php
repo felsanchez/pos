@@ -124,6 +124,29 @@
   border-left: 2px solid #3c8dbc;
 }
 
+.card-venta-observacion {
+  background: #fff9e6;
+  padding: 8px;
+  border-radius: 3px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+  border-left: 2px solid #f39c12;
+  cursor: text;
+  min-height: 30px;
+}
+
+.card-venta-observacion:empty:before {
+  content: "Escribe una observación...";
+  color: #999;
+  font-style: italic;
+}
+ 
+.card-venta-observacion:focus {
+  outline: 2px solid #f39c12;
+  background: #fffef5;
+}
+ 
 .card-venta-imagen-icono {
   display: inline-block;
   padding: 4px 8px;
@@ -155,6 +178,31 @@
   .cards-ventas {
     display: none !important;
   }
+}
+</style>
+
+<!-- Estilos para campo observación -->
+<style>
+.celda-observacion {
+  background: #fff9e6;
+  padding: 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  color: #666;
+  border-left: 2px solid #f39c12;
+  cursor: text;
+  min-height: 30px;
+}
+
+.celda-observacion:empty:before {
+  content: "Escribe una observación...";
+  color: #999;
+  font-style: italic;
+}
+
+ .celda-observacion:focus {
+  outline: 2px solid #f39c12;
+  background: #fffef5;
 }
 </style>
 
@@ -321,8 +369,8 @@
                 <th>Imagen</th>
                 <th>Neto</th>
                 <th>Total</th>
-                <th>Notas</th>
-                 <th><i class="fa fa-pencil"></i> Observación</th>
+                <th><i class="fa fa-magic"></i> Notas</th>
+                <th><i class="fa fa-pencil-square"></i> Observación</th>
                 <th>Fecha</th>
                 <th>Acciones</th>
               </tr>             
@@ -528,9 +576,12 @@
               // Notas solo visualización
               if(!empty($value["notas"])){
                 echo '<div class="card-venta-notas">
-                        <i class="fa fa-sticky-note-o"></i> '.$value["notas"].'
+                        <i class="fa fa-magic"></i> '.$value["notas"].'
                       </div>';
               }
+
+              // Observación editable
+               echo '<div class="card-venta-observacion celda-observacion" contenteditable="true" data-id="'.$value["id"].'">'.$value["observacion"].'</div>';
 
               echo '</div>';
             }
@@ -688,10 +739,9 @@ MODAL EDITAR CLIENTE
            <!-- entrada para nota -->            
            <div class="form-group">          
             <div class="input-group">              
-              <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
+              <span class="input-group-addon"><i class="fa fa-magic"></i></span>
               <input type="text" class="form-control input-lg" name="editarNota" id="editarNota" placeholder="Notas" readonly>
             </div>
-
           </div>
          </div>
        </div>
@@ -773,25 +823,6 @@ $(document).on('blur', '.celda-observacion', function() {
 
 <!-- Ampliar foto -->
 <script>
-// Ampliar imagen de venta al hacer clic
-$(document).on("click", ".img-ampliar-venta", function(){
-    var rutaImagen = $(this).attr("data-imagen");
-    
-    // Buscar el ID de la venta en la misma fila
-    var idVenta = $(this).closest("tr").find("td:last").text(); // Ajusta según tu estructura
-    
-    // Si tienes un botón con el ID, usa esto:
-    // var idVenta = $(this).closest("tr").find(".btnEliminarVenta").attr("idVenta");
-    
-    console.log("ID Venta:", idVenta); // Para debug
-    console.log("Ruta Imagen:", rutaImagen); // Para debug
-    
-    $("#imagenVentaAmpliada").attr("src", rutaImagen);
-    $("#idVentaImagen").val(idVenta);
-    $(".nuevaImagenVenta").val(""); // Limpiar el input file
-    $("#modalAmpliarImagenVenta").modal("show");
-});
-
 // Previsualizar nueva imagen cuando se selecciona
 $(".nuevaImagenVenta").change(function(){
     var imagen = this.files[0];
@@ -933,7 +964,7 @@ $(document).on("click", ".img-ampliar-venta", function(){
 
 <!-- Abrir modal de clientes desde ordenes -->
 <script>
-$("#example").on("click", ".btnVerClienteDesdeVenta", function(){
+$(document).on("click", ".btnVerClienteDesdeVenta", function(){
     
     var idCliente = $(this).attr("idCliente");
     

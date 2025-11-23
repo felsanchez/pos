@@ -38,14 +38,15 @@ $(document).ready(function() {
             const filtroTipo = $('#filtroTipo').val().toLowerCase();
             const filtroEstado = $('#filtroEstado').val().toLowerCase();
 
-            // Obtiene el texto del <option selected> en la columna Tipo (índice 2)
+            // Obtiene el texto directamente de las columnas (ya no son selects, sino texto plano)
+            // Columna Tipo (índice 2)
             const tipoTexto = $(tablaActividades.row(dataIndex).node())
-                .find('td:eq(2) select option:selected')
+                .find('td:eq(2)')
                 .text().trim().toLowerCase();
 
-            // Obtiene el texto del <option selected> en la columna Estado (índice 5)
+            // Columna Estado (índice 5) - dentro del badge
             const estadoTexto = $(tablaActividades.row(dataIndex).node())
-                .find('td:eq(5) select option:selected')
+                .find('td:eq(5) .badge')
                 .text().trim().toLowerCase();
 
             const coincideTipo = (filtroTipo === "" || tipoTexto === filtroTipo);
@@ -68,78 +69,13 @@ $(document).ready(function() {
 
 
 /*=============================================
-Dar colores al campo Estado
+Dar colores al campo Estado - DESACTIVADO
+Ya no se usan selects, ahora son badges de solo lectura
 =============================================*/
-// Función para aplicar el color al select de acuerdo al estado
-function aplicarColorEstado(select) {
-    const value = select.value;
-    const container = select.closest('.choices'); // Obtener el contenedor de Choices.js
-
-    if (!container) return;
-
-    // Eliminar clases anteriores que empiecen con "estado-"
-    container.className = container.className
-        .split(" ")
-        .filter(cls => !cls.startsWith("estado-"))
-        .join(" ");
-
-    // Agregar la nueva clase según el valor del estado
-    container.classList.add("estado-" + value.replace(/ /g, "-").toLowerCase());
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    // Inicializar Choices.js en cada select
-    //document.querySelectorAll('.cambiarEstado').forEach(function (select) {
-    document.querySelectorAll('.cambiarEstado:not(.cambiarEstadoActividad)').forEach(function (select) {
-        const choices = new Choices(select, {
-            searchEnabled: false,
-            itemSelectText: '',
-            position: 'auto',   // Posicionar automáticamente el dropdown (arriba o abajo según espacio disponible)
-            shouldSortItems: false
-        });
-
-        // Aplicar el color al inicializar el select
-        setTimeout(() => {
-            aplicarColorEstado(select);
-        }, 100);
-
-        // Cambiar el color dinámicamente al cambiar el valor del select
-        select.addEventListener('change', function () {
-            aplicarColorEstado(select);
-        });
-    });
-});
-
-
-// Script para guardar el estado por AJAX
-$(document).on("change", ".cambiarEstado", function () {
-    var idActividad = $(this).data("id");
-    var nuevoEstado = $(this).val();
-    var select = $(this)[0]; // Para usarlo en aplicarColorEstado
-
-    $.ajax({
-        url: "ajax/actividades.ajax.php",  // Asegúrate de que esta URL esté correcta
-        method: "POST",
-        data: {
-            idActividad: idActividad,
-            nuevoEstado: nuevoEstado
-        },
-        success: function (respuesta) {
-            console.log("Respuesta del servidor:", response);
-            //console.log("Respuesta del servidor:", respuesta);
-
-            if (respuesta.status === "ok") {
-                aplicarColorEstado(select); // Asegura aplicar color correcto después del cambio
-            } else {
-                alert("Error al guardar el estado");
-            }
-        },
-        error: function (xhr, status, error) {
-            console.error("AJAX Error:", error);
-            console.log("XHR responseText:", xhr.responseText);
-        }
-    });
-});
+/*
+// Código desactivado porque ya no se usan selects para Estado y Tipo
+// Ahora son badges de solo lectura que se editan desde el modal
+*/
 
 
 

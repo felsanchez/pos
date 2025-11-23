@@ -388,10 +388,10 @@ class ModeloVentas{
 	=============================================*/
 	static public function mdlEditarImagenVenta($tabla, $datos){
 
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET imagen = :imagen WHERE codigo = :codigo");
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET imagen = :imagen WHERE id = :id"); 
 
 		$stmt->bindParam(":imagen", $datos["imagen"], PDO::PARAM_STR);
-		$stmt->bindParam(":codigo", $datos["codigo"], PDO::PARAM_INT);
+		$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
 
 		if($stmt->execute()){
 

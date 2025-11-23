@@ -37,7 +37,7 @@ class ModeloEstadosActividades{
 		$stmtNombre = Conexion::conectar()->prepare("SELECT id FROM $tabla WHERE nombre = :nombre AND activo = 1");
 		$stmtNombre -> bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
 		$stmtNombre -> execute();
-		$nombreExiste = $stmtNombre -> fetch(); 
+		$nombreExiste = $stmtNombre -> fetch();
 
 		if($nombreExiste){
 			return "duplicado";
@@ -79,6 +79,13 @@ class ModeloEstadosActividades{
 
 	static public function mdlEditarEstado($tabla, $datos){
 
+        // PRIMERO: Obtener el nombre actual del estado antes de editarlo
+		$stmtActual = Conexion::conectar()->prepare("SELECT nombre FROM $tabla WHERE id = :id");
+		$stmtActual -> bindParam(":id", $datos["id"], PDO::PARAM_INT);
+		$stmtActual -> execute();
+		$estadoActual = $stmtActual -> fetch();
+		$nombreAntiguo = $estadoActual["nombre"];
+
         // Verificar si el nombre ya existe en otro registro
 		$stmtNombre = Conexion::conectar()->prepare("SELECT id FROM $tabla WHERE nombre = :nombre AND id != :id AND activo = 1");
 		$stmtNombre -> bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
@@ -104,7 +111,7 @@ class ModeloEstadosActividades{
 			$stmtUpdate -> execute();
 		}
 
-		// Actualizar el registro
+		// Actualizar el registro del estado
 		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET nombre = :nombre, color = :color, orden = :orden WHERE id = :id");
 
 		$stmt -> bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
@@ -113,6 +120,15 @@ class ModeloEstadosActividades{
 		$stmt -> bindParam(":id", $datos["id"], PDO::PARAM_INT);
 
 		if($stmt -> execute()){
+
+			// IMPORTANTE: Si el nombre cambió, actualizar todas las actividades que usan ese estado
+			if($nombreAntiguo != $datos["nombre"]){
+				$stmtActividades = Conexion::conectar()->prepare("UPDATE actividades SET estado = :nombreNuevo WHERE LOWER(estado) = LOWER(:nombreAntiguo)");
+				$stmtActividades -> bindParam(":nombreNuevo", $datos["nombre"], PDO::PARAM_STR);
+				$stmtActividades -> bindParam(":nombreAntiguo", $nombreAntiguo, PDO::PARAM_STR);
+				$stmtActividades -> execute();
+			}
+
 			return "ok";
 		}else{
 			return "error";
@@ -144,9 +160,7 @@ class ModeloEstadosActividades{
 
 
     /*=============================================
-
 	VERIFICAR SI ESTADO ESTÁ EN USO
-
 	=============================================*/
 
     

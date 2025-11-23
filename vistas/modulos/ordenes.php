@@ -186,11 +186,34 @@
 }
 </style>
 
+<!-- Estilos para campo observación -->
+<style>
+.celda-observacion {
+  background: #fff9e6;
+  padding: 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  color: #666;
+  border-left: 2px solid #f39c12;
+  cursor: text;
+  min-height: 30px;
+}
+
+.celda-observacion:empty:before {
+  content: "Escribe una observación...";
+  color: #999;
+  font-style: italic;
+}
+
+ .celda-observacion:focus {
+  outline: 2px solid #f39c12;
+  background: #fffef5;
+}
+</style>
 
 <!-- DateRangePicker -->
 <link rel="stylesheet" href="vistas/bower_components/bootstrap-daterangepicker/daterangepicker.css">
-  
-  
+    
   
   <?php
 
@@ -296,8 +319,8 @@ echo "</pre>";
                 <th>Forma de pago</th>
                 <th>Neto</th>
                 <th>Total</th>
-                <th>Notas</th>
-                <th><i class="fa fa-pencil"></i> Observación</th>
+                <th><i class="fa fa-magic"></i> Notas</th>
+                <th><i class="fa fa-pencil-square"></i> Observación</th>
                 <th>Fecha</th>
                 <th>Acciones</th>
               </tr>
@@ -512,18 +535,18 @@ echo "</pre>";
               // Notas
               if(!empty($value["notas"])){
                 echo '<div class="card-orden-notas">
-                        <i class="fa fa-sticky-note-o"></i> '.$value["notas"].'
+                        <i class="fa fa-magic"></i> '.$value["notas"].'
                       </div>';
               }
 
               // Observación editable
               if(!empty($value["observacion"])){
                 echo '<div class="card-orden-observacion celda-observacion" data-id="'.$value['id'].'" contenteditable="true">
-                        <i class="fa fa-pencil"></i> '.$value["observacion"].'
+                       '.$value["observacion"].'
                       </div>';
               } else {
                 echo '<div class="card-orden-observacion celda-observacion" data-id="'.$value['id'].'" contenteditable="true">
-                        <i class="fa fa-pencil"></i> <span style="color: #999;">Agregar observación...</span>
+                        <span style="color: #999;">Agregar observación...</span>
                       </div>';
               }
 
@@ -931,7 +954,7 @@ $(document).on("click", ".btnGuardarImagenOrden", function(){
 
 <!-- Abrir modal de clientes desde ordenes -->
 <script>
-$("#example").on("click", ".btnVerClienteDesdeVenta", function(){
+$(document).on("click", ".btnVerClienteDesdeVenta", function(){
     
     var idCliente = $(this).attr("idCliente");
     

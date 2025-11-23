@@ -1,76 +1,8 @@
-<!-- Librería de estilos de Choices.js -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
 <!-- Ruta actividades.css -->
 <link rel="stylesheet" href="assets/css/actividades.css">
 
 <!-- FullCalendar CSS -->
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.css' rel='stylesheet' />
-
-<!-- Estilos dinámicos para estados de actividades -->
-<style>
-<?php
-$estadosParaEstilos = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
-foreach($estadosParaEstilos as $estadoEstilo){
-    $nombreLimpio = str_replace(" ", "-", strtolower($estadoEstilo["nombre"]));
-    $color = $estadoEstilo["color"];
-
-    // Estilos para el contenedor cerrado de Choices.js (select cuando NO está abierto)
-    echo '.estado-act-'.$nombreLimpio.' .choices__inner,';
-    echo '.estado-act-'.$nombreLimpio.'.choices .choices__inner {';
-    echo '  background-color: '.$color.' !important;';
-    echo '  border-color: '.$color.' !important;';
-    echo '  color: #fff !important;';
-    echo '}';
-    echo "\n";
-
-    // Estilos para el select normal (antes de que Choices.js lo transforme)
-    echo 'select.estado-act-'.$nombreLimpio.' {';
-    echo '  background-color: '.$color.' !important;';
-    echo '  border-color: '.$color.' !important;';
-    echo '  color: #fff !important;';
-    echo '}';
-    echo "\n";
-
-    // Estilos para cada opción individual en el dropdown (basado SOLO en data-value, NO en clase del contenedor)
-    echo '.choices__list--dropdown .choices__item--selectable[data-value="'.$estadoEstilo["nombre"].'"] {';
-    echo '  background-color: '.$color.' !important;';
-    echo '  color: #fff !important;';
-    echo '  border: none !important;';
-    echo '}';
-    echo "\n";
-    echo '.choices__list--dropdown .choices__item--selectable[data-value="'.$estadoEstilo["nombre"].'"]:hover {';
-    echo '  background-color: '.adjustBrightnessActividad($color, -20).' !important;';
-    echo '  color: #fff !important;';
-    echo '}';
-    echo "\n";
-} 
-
-// Función helper para ajustar brillo (hover más oscuro)
-function adjustBrightnessActividad($hex, $steps) {
-    $steps = max(-255, min(255, $steps));
-    $hex = str_replace('#', '', $hex);
-    $r = hexdec(substr($hex, 0, 2));
-    $g = hexdec(substr($hex, 2, 2));
-    $b = hexdec(substr($hex, 4, 2));
-    $r = max(0, min(255, $r + $steps));
-    $g = max(0, min(255, $g + $steps));
-    $b = max(0, min(255, $b + $steps));
-    return '#'.str_pad(dechex($r), 2, '0', STR_PAD_LEFT).str_pad(dechex($g), 2, '0', STR_PAD_LEFT).str_pad(dechex($b), 2, '0', STR_PAD_LEFT);
-}
-?>
-</style> 
-
-<!-- Mapa de colores de estados para JavaScript -->
-<script>
-  window.estadosActividadesColores = {
-    <?php
-    foreach($estadosParaEstilos as $key => $estadoEstilo){
-      $coma = ($key < count($estadosParaEstilos) - 1) ? ',' : '';
-      echo '"'.strtolower($estadoEstilo["nombre"]).'": "'.$estadoEstilo["color"].'"'.$coma."\n";
-    }
-    ?>
-  };
-</script>
 
 
 <!-- Centrar filtro -->
@@ -132,40 +64,6 @@ function adjustBrightnessActividad($hex, $steps) {
 </style>
 
 
-<!-- Estilos para que el dropdown de Choices.js no se corte -->
-<style>
-/* Permitir que el dropdown se muestre fuera del contenedor de la tabla */
-.table-responsive {
-    overflow: visible !important;
-}
-
-/* Asegurar que el dropdown de Choices.js tenga z-index alto y se posicione correctamente */
-.choices__list--dropdown {
-    position: absolute !important;
-    z-index: 9999 !important;
-    max-height: none !important;
-    overflow: visible !important;
-} 
-
-/* El scroll solo en el contenedor interno de Choices.js */
-.choices__list--dropdown .choices__list {
-    max-height: 250px !important;
-    overflow-y: auto !important;
-}
- 
-/* Asegurar que el contenedor box-body permita overflow visible */
-.box-body {
-    overflow: visible !important;
-}
-
- /* Pero mantener scroll horizontal solo si es necesario en pantallas pequeñas */
-@media (max-width: 991px) {
-    .table-responsive {
-        overflow-x: auto !important;
-        overflow-y: visible !important;
-    }
-}
-</style>
 
 
 <div class="content-wrapper">
@@ -193,8 +91,16 @@ function adjustBrightnessActividad($hex, $steps) {
 
             <div class="box-header with-border">
 
-                <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarActividad">             
+                <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarActividad">
                     Agregar Actividad
+                </button>
+
+                <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
+                    <i class="fa fa-flag"></i> Gestionar estados
+                </button>
+
+                <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarTipos">
+                    <i class="fa fa-tags"></i> Gestionar tipos
                 </button>
 
             </div>
@@ -262,11 +168,10 @@ function adjustBrightnessActividad($hex, $steps) {
                     <tr>
                         <th style="width: 5px">#</th>
                         <th>Descripción</th>
-                        <th>Tipo <button class="btn btn-xs btn-primary" data-toggle="modal" data-target="#modalAgregarTipoActividad" title="Agregar nuevo tipo"><i class="fa fa-plus"></i></button></th>
-
+                       <th>Tipo</th>
                         <th>Responsable</th>
                         <th>Fecha</th>
-                        <th>Estado <button class="btn btn-xs btn-primary" data-toggle="modal" data-target="#modalAgregarEstadoActividad" title="Agregar nuevo estado"><i class="fa fa-plus"></i></button></th>
+                        <th>Estado</th>
                         <th>Cliente</th>
                         <th>Observación</th>
                         <th>Acciones</th> 
@@ -280,29 +185,22 @@ function adjustBrightnessActividad($hex, $steps) {
                         $item = null;
                         $valor = null;
                         $actividades = ControladorActividades::ctrMostrarActividades($item, $valor);
+
+                        // Obtener estados una sola vez para toda la tabla
+                        $estadosActividades = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
                         ?>
 
-                            <?php 
-                            foreach ($actividades as $key => $value):                       
+                            <?php
+                            foreach ($actividades as $key => $value):
                             ?>
 
                         <tr>
                             <td><?php echo $key + 1; ?></td>
                             <td><?php echo $value["descripcion"]; ?></td>
                             
-                            <td>
-                                <select class="form-control cambiarTipo" data-id="<?php echo $value["id"]; ?>">
-                                    <?php
-                                    $tiposActividades = ControladorTiposActividades::ctrMostrarTiposActividades(null, null);
-                                    foreach($tiposActividades as $tipo){
-                                        $selected = ($value["tipo"] == $tipo["nombre"]) ? "selected" : "";
-                                        echo '<option value="'.$tipo["nombre"].'" '.$selected.'>'.ucfirst($tipo["nombre"]).'</option>';
-                                    }
-                                    ?>
-                                </select>
-                            </td>
+                            <td><?php echo ucfirst($value["tipo"]); ?></td>
 
-                            <?php 
+                            <?php
                             $itemUsuario = "id";
                             $valorUsuario = $value["id_user"];
                             $respuestaUsuario = ControladorUsuarios::ctrMostrarUsuarios($itemUsuario, $valorUsuario);
@@ -317,25 +215,31 @@ function adjustBrightnessActividad($hex, $steps) {
 
                             <td>
                             <?php
+                            // Obtener el estado actual
                             $estadoActual = $value["estado"] ?? "";
-                            $estadoClass = "estado-act-" . str_replace(" ", "-", strtolower($estadoActual));
-                            ?>
 
-                            <select class="form-control cambiarEstado cambiarEstadoActividad <?php echo $estadoClass; ?>" data-id="<?php echo $value["id"]; ?>">
-                                <?php
-                                $estadosActividades = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
-                                foreach($estadosActividades as $estado){
-                                    $selected = ($value["estado"] == $estado["nombre"]) ? "selected" : "";
-                                    echo '<option value="'.$estado["nombre"].'" '.$selected.'>'.ucfirst($estado["nombre"]).'</option>';
+                            // Buscar el color del estado (comparación case-insensitive)
+                            $colorEstado = "#999"; // Color por defecto (gris)
+                            foreach($estadosActividades as $estado){
+                                if(strcasecmp($estado["nombre"], $estadoActual) == 0){
+                                    $colorEstado = $estado["color"];
+                                    break;
                                 }
-                                ?>
-                            </select>
+                            }
+
+                            // Mostrar badge con color
+                            if(!empty($estadoActual)){
+                                echo '<span class="badge" style="background-color: '.$colorEstado.'">'.ucfirst($estadoActual).'</span>';
+                            } else {
+                                echo '<span class="text-muted">Sin estado</span>';
+                            }
+                            ?>
 
                                 <!--BTN EDITAR Y ELIMINAR EN MOVIL-->
                                 <button class="btn btn-danger btnEliminarActividad btn-xs solo-movil" style="float: right;" idActividad="<?php echo $value["id"]; ?>"><i class="fa fa-times"></i></button>
 
                                 <button class="btn btn-warning btnEditarActividad btn-xs solo-movil" style="float: right;" data-id="<?php echo $actividad['id']; ?>" data-toggle="modal" data-target="#modalEditarActividad" idActividad="<?php echo $value["id"]; ?>"><i class="fa fa-pencil"></i></button>
-                                
+
                             </td>
 
 
@@ -444,22 +348,26 @@ MODAL AGREGAR actividad
                     </div>
 
                 <!-- entrada para tipo -->
-                    
-                   <!-- <div class="form-group">
-                    
-                        <div class="input-group">
-                            
-                            <span class="input-group-addon"><i class="fa fa-filter"></i></span>
 
-                            <input type="text" class="form-control input-lg" name="nuevoTipo" id="nuevoTipo" placeholder="Ingresar Tipo" required>
+                <div class="form-group">
 
-                        </div>
+                    <div class="input-group">
+
+                        <span class="input-group-addon"><i class="fa fa-info-circle"></i></span>
+
+                        <select class="form-control input-lg" name="nuevoTipo" id="nuevoTipo" required>
+                            <option value="">Seleccionar tipo</option>
+                            <?php
+                            $tiposModalAgregar = ControladorTiposActividades::ctrMostrarTiposActividades(null, null);
+                            foreach($tiposModalAgregar as $tipoModal){
+                                echo '<option value="'.$tipoModal["nombre"].'">'.ucfirst($tipoModal["nombre"]).'</option>';
+                            }
+                            ?>
+                        </select>
 
                     </div>
-                    -->
 
-                    <!-- entrada para tipo -->
-                    <input type="hidden" name="nuevoTipo" value="actividad">
+                </div>
 
 
                  <!-- entrada para usuario -->
@@ -509,22 +417,26 @@ MODAL AGREGAR actividad
 
 
                         <!-- entrada para estado -->
-                    <!--
-                        <div class="form-group">
-                    
-                            <div class="input-group">
-                                
-                                <span class="input-group-addon"><i class="fa fa-check-square-o"></i></span>
 
-                                <input type="text" class="form-control input-lg" name="nuevoEstado" id="nuevoEstado" placeholder="Ingresar Estado" required>
+                        <div class="form-group">
+
+                            <div class="input-group">
+
+                                <span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
+
+                                <select class="form-control input-lg" name="nuevoEstado" id="nuevoEstado" required>
+                                    <option value="">Seleccionar estado</option>
+                                    <?php
+                                    $estadosModalAgregar = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
+                                    foreach($estadosModalAgregar as $estadoModal){
+                                        echo '<option value="'.$estadoModal["nombre"].'">'.ucfirst($estadoModal["nombre"]).'</option>';
+                                    }
+                                    ?>
+                                </select>
 
                             </div>
 
                         </div>
-                            -->
-
-                        <!-- entrada para estado -->
-                        <input type="hidden" name="nuevoEstado" value="programada">
 
 
                         <!-- entrada para seleccionar cliente -->
@@ -792,123 +704,348 @@ MODAL EDITAR Actividad
 
 
 <!--=====================================
-MODAL AGREGAR ESTADO ACTIVIDAD
+MODAL GESTIONAR ESTADOS
 ======================================-->
-<div id="modalAgregarEstadoActividad" class="modal fade" role="dialog">
-  <div class="modal-dialog">
+
+<div id="modalGestionarEstados" class="modal fade" role="dialog">
+
+  <div class="modal-dialog modal-lg">
+
     <div class="modal-content">
+
+      <!--=====================================
+      CABEZA DEL MODAL
+      ======================================-->
+
+      <div class="modal-header" style="background:#3c8dbc; color: white">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Gestionar Estados de Actividades</h4>
+      </div>
+
+      <!--=====================================
+      CUERPO DEL MODAL
+      ======================================-->
+
+      <div class="modal-body">
+
+        <!-- Formulario agregar estado -->
+        <div class="panel panel-primary">
+          <div class="panel-heading">
+            <h3 class="panel-title">Agregar Nuevo Estado</h3>
+          </div>
+          <div class="panel-body">
+            <form role="form" method="post" id="formAgregarEstado">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <input type="text" class="form-control" name="nuevoEstadoNombre" placeholder="Nombre del estado *" required>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <input type="color" class="form-control" name="nuevoEstadoColor" value="#3c8dbc">
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fa fa-plus"></i> Agregar
+                  </button>
+                </div>
+              </div>
+
+              <!-- CAMPO OCULTO PARA ORIGEN -->
+              <input type="hidden" name="origenModal" value="actividades">
+
+            </form>
+          </div>
+        </div>
+
+        <!-- Lista de estados -->
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Estados Existentes</h3>
+          </div>
+          <div class="panel-body">
+            <table class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nombre</th>
+                  <th>Color</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php
+                  $estadosGestion = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
+                  foreach ($estadosGestion as $key => $value) {
+                    echo '<tr>
+                      <td>'.($key+1).'</td>
+                      <td><span class="badge" style="background-color: '.$value["color"].'">'.ucfirst($value["nombre"]).'</span></td>
+                      <td><input type="color" value="'.$value["color"].'" disabled style="width: 50px;"></td>
+                      <td>
+                        <button class="btn btn-warning btn-xs btnEditarEstadoActividad" idEstado="'.$value["id"].'" data-toggle="modal" data-target="#modalEditarEstadoActividad"><i class="fa fa-pencil"></i></button>
+                        <button class="btn btn-danger btn-xs btnEliminarEstadoActividad" idEstado="'.$value["id"].'" nombreEstado="'.$value["nombre"].'"><i class="fa fa-times"></i></button>
+                      </td>
+                    </tr>';
+                  }
+                ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!--=====================================
+      PIE DEL MODAL
+      ======================================-->
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Estilos para que el modal de edición quede encima del modal de gestión -->
+<style>
+/* Modal de gestión - nivel base */
+#modalGestionarEstados.modal {
+  z-index: 1050 !important;
+}
+
+#modalGestionarEstados + .modal-backdrop {
+  z-index: 1049 !important;
+}
+
+</style>
+
+<!--=====================================
+MODAL EDITAR ESTADO
+======================================-->
+
+<div id="modalEditarEstadoActividad" class="modal fade" role="dialog" data-backdrop="true" data-keyboard="true">
+
+  <div class="modal-dialog">
+
+    <div class="modal-content">
+
       <form role="form" method="post">
 
         <!--=====================================
         CABEZA DEL MODAL
         ======================================-->
+
         <div class="modal-header" style="background:#3c8dbc; color: white">
           <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title">Agregar Estado de Actividad</h4>
+          <h4 class="modal-title">Editar Estado</h4>
         </div>
 
         <!--=====================================
         CUERPO DEL MODAL
         ======================================-->
+
         <div class="modal-body">
+
           <div class="box-body">
 
-            <!-- ENTRADA PARA EL NOMBRE -->
             <div class="form-group">
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-check-circle"></i></span>
-                <input type="text" class="form-control input-lg" name="nuevoEstadoNombre" placeholder="Ingresar nombre del estado" required>
-              </div>
-            </div> 
-
-            <!-- ENTRADA PARA EL COLOR -->
-            <div class="form-group">
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-paint-brush"></i></span>
-                <input type="color" class="form-control input-lg" name="nuevoEstadoColor" value="#3c8dbc" required>              </div>
+              <label>Nombre *</label>
+              <input type="text" class="form-control" name="editarEstadoNombre" id="editarEstadoNombre" required>
+              <input type="hidden" name="idEstado" id="idEstado">
+              <input type="hidden" name="editarEstadoOrden" id="editarEstadoOrden">
+              <input type="hidden" name="origenModal" value="actividades">
             </div>
 
-            <!-- CAMPO OCULTO PARA ORIGEN -->
-            <input type="hidden" name="origenModal" value="actividades">
+            <div class="form-group">
+              <label>Color</label>
+              <input type="color" class="form-control" name="editarEstadoColor" id="editarEstadoColor">
+            </div>
 
           </div>
+
         </div>
 
         <!--=====================================
         PIE DEL MODAL
         ======================================-->
+
         <div class="modal-footer">
           <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
-          <button type="submit" class="btn btn-primary">Guardar Estado</button>
+          <button type="submit" class="btn btn-primary">Guardar cambios</button>
         </div>
 
       </form>
 
-      <?php
-        $crearEstadoActividad = new ControladorEstadosActividades();
-        $crearEstadoActividad -> ctrCrearEstado();
-      ?>
-
     </div>
+
   </div>
+
 </div>
 
 
 <!--=====================================
-MODAL AGREGAR TIPO ACTIVIDAD
+MODAL GESTIONAR TIPOS
 ======================================-->
-<div id="modalAgregarTipoActividad" class="modal fade" role="dialog">
-  <div class="modal-dialog">
+
+<div id="modalGestionarTipos" class="modal fade" role="dialog">
+
+  <div class="modal-dialog modal-lg">
+
     <div class="modal-content">
+
+      <!--=====================================
+      CABEZA DEL MODAL
+      ======================================-->
+
+      <div class="modal-header" style="background:#3c8dbc; color: white">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Gestionar Tipos de Actividades</h4>
+      </div>
+
+      <!--=====================================
+      CUERPO DEL MODAL
+      ======================================-->
+
+      <div class="modal-body">
+
+        <!-- Formulario agregar tipo -->
+        <div class="panel panel-primary">
+          <div class="panel-heading">
+            <h3 class="panel-title">Agregar Nuevo Tipo</h3>
+          </div>
+          <div class="panel-body">
+            <form role="form" method="post" id="formAgregarTipo">
+              <div class="row">
+                <div class="col-md-9">
+                  <div class="form-group">
+                    <input type="text" class="form-control" name="nuevoTipoNombre" placeholder="Nombre del tipo *" required>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fa fa-plus"></i> Agregar
+                  </button>
+                </div>
+              </div>
+
+              <!-- CAMPO OCULTO PARA ORIGEN -->
+              <input type="hidden" name="origenModal" value="actividades">
+
+            </form>
+          </div>
+        </div>
+
+        <!-- Lista de tipos -->
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Tipos Existentes</h3>
+          </div>
+          <div class="panel-body">
+            <table class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nombre</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php
+                  $tiposGestion = ControladorTiposActividades::ctrMostrarTiposActividades(null, null);
+                  foreach ($tiposGestion as $key => $value) {
+                    echo '<tr>
+                      <td>'.($key+1).'</td>
+                      <td>'.ucfirst($value["nombre"]).'</td>
+                      <td>
+                        <button class="btn btn-warning btn-xs btnEditarTipoActividad" idTipo="'.$value["id"].'" data-toggle="modal" data-target="#modalEditarTipoActividad"><i class="fa fa-pencil"></i></button>
+                        <button class="btn btn-danger btn-xs btnEliminarTipoActividad" idTipo="'.$value["id"].'" nombreTipo="'.$value["nombre"].'"><i class="fa fa-times"></i></button>
+                      </td>
+                    </tr>';
+                  }
+                ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!--=====================================
+      PIE DEL MODAL
+      ======================================-->
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!--=====================================
+MODAL EDITAR TIPO
+======================================-->
+
+<div id="modalEditarTipoActividad" class="modal fade" role="dialog" data-backdrop="true" data-keyboard="true">
+
+  <div class="modal-dialog">
+
+    <div class="modal-content">
+
       <form role="form" method="post">
 
         <!--=====================================
         CABEZA DEL MODAL
         ======================================-->
+
         <div class="modal-header" style="background:#3c8dbc; color: white">
           <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title">Agregar Tipo de Actividad</h4>
+          <h4 class="modal-title">Editar Tipo</h4>
         </div>
 
         <!--=====================================
         CUERPO DEL MODAL
         ======================================-->
+
         <div class="modal-body">
+
           <div class="box-body">
 
-            <!-- ENTRADA PARA EL NOMBRE -->
             <div class="form-group">
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-tag"></i></span>
-                <input type="text" class="form-control input-lg" name="nuevoTipoNombre" placeholder="Ingresar nombre del tipo" required>
-              </div>
+              <label>Nombre *</label>
+              <input type="text" class="form-control" name="editarTipoNombre" id="editarTipoNombre" required>
+              <input type="hidden" name="idTipo" id="idTipo">
+              <input type="hidden" name="editarTipoOrden" id="editarTipoOrden">
+              <input type="hidden" name="origenModal" value="actividades">
             </div>
 
-            <!-- CAMPO OCULTO PARA ORIGEN -->
-            <input type="hidden" name="origenModal" value="actividades">
-
           </div>
+
         </div>
 
         <!--=====================================
         PIE DEL MODAL
         ======================================-->
+
         <div class="modal-footer">
           <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
-          <button type="submit" class="btn btn-primary">Guardar Tipo</button>
+          <button type="submit" class="btn btn-primary">Guardar cambios</button>
         </div>
 
       </form>
 
-      <?php
-        $crearTipoActividad = new ControladorTiposActividades();
-        $crearTipoActividad -> ctrCrearTipo();
-      ?>
-
     </div>
-  </div>
-</div>
 
+  </div>
+
+</div>
 
 
 <!-- FullCalendar JS -->
@@ -916,161 +1053,35 @@ MODAL AGREGAR TIPO ACTIVIDAD
 <!-- Idioma Esp FullCalendar JS -->
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/es.js"></script>
 
-  <!-- Choices.js para Campo estatus-->
-<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-
-
-
-<!-- Script para inicializar Choices.js y aplicar colores a estados -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Función para aplicar color al contenedor según el estado seleccionado
-
-  function aplicarColorEstadoActividad(select) {
-    const value = select.value;
-    const container = select.closest('.choices'); 
-
-    if (!container) {
-      console.log('ERROR: No se encontró contenedor .choices');
-      return;
-    } 
-
-    // Eliminar clases anteriores que empiecen con "estado-act-"
-    container.className = container.className
-      .split(" ")
-      .filter(cls => !cls.startsWith("estado-act-"))
-      .join(" "); 
-
-    // Agregar la nueva clase
-    const nuevaClase = "estado-act-" + value.replace(/ /g, "-").toLowerCase();
-    container.classList.add(nuevaClase); 
-
-    // Aplicar estilos inline directamente usando el mapa de colores
-    const valueLower = value.toLowerCase();
-    const color = window.estadosActividadesColores ? window.estadosActividadesColores[valueLower] : null; 
-
-    if (color) {
-      const choicesInner = container.querySelector('.choices__inner');
-      if (choicesInner) {
-        // Aplicar con setProperty para poder usar !important
-        choicesInner.style.setProperty('background-color', color, 'important');
-        choicesInner.style.setProperty('border-color', color, 'important');
-        choicesInner.style.setProperty('color', '#fff', 'important');
-        console.log('✓ Color aplicado al contenedor:', nuevaClase, color);
-      }
-    }
-  } 
-
-    // Aplicar colores inline a las opciones del dropdown
-  function aplicarColoresOpcionesDropdown() {
-    console.log('=== Aplicando colores a opciones del dropdown ===');
-    console.log('Mapa de colores:', window.estadosActividadesColores); 
-
-    // Buscar TODAS las opciones, incluyendo las ocultas
-    const opcionesVisible = document.querySelectorAll('.choices__list--dropdown .choices__item--selectable');
-    const opcionesTodas = document.querySelectorAll('.choices__item--selectable');
-    const dropdowns = document.querySelectorAll('.choices__list--dropdown'); 
-
-    console.log('Dropdowns encontrados:', dropdowns.length);
-    console.log('Opciones visibles encontradas:', opcionesVisible.length);
-    console.log('Opciones totales encontradas:', opcionesTodas.length); 
-
-    // Usar todas las opciones, no solo las del dropdown
-    const opciones = opcionesTodas;
-
-    opciones.forEach(function(opcion) {
-      const valorEstado = opcion.getAttribute('data-value');
-      if (!valorEstado) return; 
-
-      console.log('Procesando opción:', valorEstado); 
-
-      // Buscar el color correspondiente en el mapa
-      const colorEstado = window.estadosActividadesColores[valorEstado.toLowerCase()];
-      console.log('Color encontrado para "' + valorEstado + '":', colorEstado);
-
-
-      if (colorEstado) {
-        // Aplicar estilos inline directamente
-        opcion.style.setProperty('background-color', colorEstado, 'important');
-        opcion.style.setProperty('color', '#fff', 'important');
-        opcion.style.setProperty('border', 'none', 'important');
-        console.log('✓ Colores aplicados a:', valorEstado);
-      } else {
-
-        console.warn('✗ No se encontró color para:', valorEstado);
-      }
-    });
-  } 
-
-  // Inicializar Choices.js y aplicar colores
-  function inicializarChoicesEstadoActividad() {
-    const selects = document.querySelectorAll('.cambiarEstadoActividad');
-
- 
-    selects.forEach(function(select) {
-      // Evitar reinicializar si ya tiene Choices.js
-      if (select.classList.contains('choices__input')) {
-        return;
-      } 
-
-      // Guardar las clases de estado del select original
-      const clasesEstado = Array.from(select.classList).filter(cls => cls.startsWith('estado-act-'));
- 
-      // Inicializar Choices.js
-      const choices = new Choices(select, {
-        searchEnabled: false,
-        itemSelectText: '',
-        shouldSort: false
-      });
-
-       // Aplicar color inicial después de que Choices.js cree el contenedor
-      setTimeout(() => {
-        const container = select.closest('.choices'); 
-
-        if (container && clasesEstado.length > 0) {
-          // Agregar las clases de estado al contenedor de Choices.js
-          clasesEstado.forEach(clase => {
-            container.classList.add(clase);
-          });
-        } 
-
-        // Aplicar estilos inline
-        aplicarColorEstadoActividad(select); 
-
-        // Aplicar colores a las opciones del dropdown
-        aplicarColoresOpcionesDropdown();
-      }, 100); 
-
-      // Cambiar color dinámicamente al cambiar el valor
-      select.addEventListener('change', function() {
-        aplicarColorEstadoActividad(this);
-      });
-
-      // Aplicar colores a opciones cuando se abre el dropdown
-      select.addEventListener('showDropdown', function() {
-        setTimeout(aplicarColoresOpcionesDropdown, 50);
-      }, false);
-    });
-  }
-    // Inicializar Choices.js al cargar la página
-  inicializarChoicesEstadoActividad(); 
-
-  // Reinicializar cuando DataTables recarga los datos
-  $('.tablas').on('draw.dt', function() {
-    setTimeout(inicializarChoicesEstadoActividad, 100);
-  });
-});
-</script>
 
 
 <!--Ruta actividades.js-->
 <script src="vistas/js/actividades.js"></script>
+<!-- Archivo actualizado para funcionar con badges en lugar de selects -->
 <script src="assets/js/actividades.js"></script>
 
 
   <?php
     $eliminarActividad = new ControladorActividades();
     $eliminarActividad -> ctrEliminarActividad();
+
+    $eliminarEstado = new ControladorEstadosActividades();
+    $eliminarEstado -> ctrEliminarEstado();
+
+    $crearEstado = new ControladorEstadosActividades();
+    $crearEstado -> ctrCrearEstado();
+
+    $editarEstado = new ControladorEstadosActividades();
+    $editarEstado -> ctrEditarEstado();
+
+    $eliminarTipo = new ControladorTiposActividades();
+    $eliminarTipo -> ctrEliminarTipo();
+
+    $crearTipo = new ControladorTiposActividades();
+    $crearTipo -> ctrCrearTipo();
+
+    $editarTipo = new ControladorTiposActividades();
+    $editarTipo -> ctrEditarTipo();
   ?>
 
 <!--=============CALENDARIO========================
@@ -1104,5 +1115,3 @@ success: function (respuesta) {
 }
 </script>
 -->
-
-
