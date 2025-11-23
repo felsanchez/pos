@@ -301,11 +301,11 @@
 <!--=====================================
 MODAL AGREGAR actividad
 ======================================-->
-  
+
 <!-- Modal -->
 <div id="modalAgregarActividad" class="modal fade" role="dialog">
 
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg">
 
     <div class="modal-content">
 
@@ -327,167 +327,141 @@ MODAL AGREGAR actividad
       ======================================-->
 
       <div class="modal-body">
-        
+
         <div class="box-body">
 
+            <div class="row">
 
-                <!-- entrada para la descripcion -->
-                    
+                <!-- Descripción -->
+                <div class="col-md-12">
                     <div class="form-group">
-                    
+                        <label>Descripción *</label>
                         <div class="input-group">
-                            
                             <span class="input-group-addon"><i class="fa fa-tasks"></i></span>
-
-                            <input type="text" class="form-control input-lg" name="nuevaActividad" id="nuevaActividad" placeholder="Ingresar descripción" required>
-
+                            <input type="text" class="form-control" name="nuevaActividad" id="nuevaActividad" placeholder="Descripción de la actividad" required>
                         </div>
-
                     </div>
-
-                <!-- entrada para tipo -->
-
-                <div class="form-group">
-
-                    <div class="input-group">
-
-                        <span class="input-group-addon"><i class="fa fa-info-circle"></i></span>
-
-                        <select class="form-control input-lg" name="nuevoTipo" id="nuevoTipo" required>
-                            <option value="">Seleccionar tipo</option>
-                            <?php
-                            $tiposModalAgregar = ControladorTiposActividades::ctrMostrarTiposActividades(null, null);
-                            foreach($tiposModalAgregar as $tipoModal){
-                                echo '<option value="'.$tipoModal["nombre"].'">'.ucfirst($tipoModal["nombre"]).'</option>';
-                            }
-                            ?>
-                        </select>
-
-                    </div>
-
                 </div>
 
+            </div>
 
-                 <!-- entrada para usuario -->
+            <div class="row">
 
+                <!-- Tipo -->
+                <div class="col-md-4">
                     <div class="form-group">
-            
+                        <label>Tipo *</label>
                         <div class="input-group">
-                    
-                            <span class="input-group-addon"><i class="fa fa-user-plus"></i></span>
-
-                            <select class="form-control input-lg" id="nuevoUsuario" name="nuevoUsuario" required>
-                        
-                                <option value="">Seleccionar Responsable</option>
-
+                            <span class="input-group-addon"><i class="fa fa-info-circle"></i></span>
+                            <select class="form-control" name="nuevoTipo" id="nuevoTipo" required>
+                                <option value="">Seleccionar tipo</option>
                                 <?php
+                                $tiposModalAgregar = ControladorTiposActividades::ctrMostrarTiposActividades(null, null);
+                                foreach($tiposModalAgregar as $tipoModal){
+                                    echo '<option value="'.$tipoModal["nombre"].'">'.ucfirst($tipoModal["nombre"]).'</option>';
+                                }
+                                ?>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Responsable -->
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Responsable *</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-user-plus"></i></span>
+                            <select class="form-control" id="nuevoUsuario" name="nuevoUsuario" required>
+                                <option value="">Seleccionar responsable</option>
+                                <?php
                                 $item = null;
                                 $valor = null;
                                 $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
-
                                 foreach ($usuarios as $key => $value) {
-                                
-                                    echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';   
+                                    echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
                                 }
-
                                 ?>
-
                             </select>
-
                         </div>
-
                     </div>
+                </div>
 
-                    <!-- entrada para fecha -->
-                    
-                        <div class="form-group">
-                            
-                            <div class="input-group">
-                                
-                                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-
-                                <input type="datetime-local" class="form-control input-lg" name="nuevaFecha" id="nuevaFecha" placeholder="Ingresar Fecha" required>
-
-                            </div>
-
+                <!-- Estado -->
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Estado *</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
+                            <select class="form-control" name="nuevoEstado" id="nuevoEstado" required>
+                                <option value="">Seleccionar estado</option>
+                                <?php
+                                $estadosModalAgregar = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
+                                foreach($estadosModalAgregar as $estadoModal){
+                                    echo '<option value="'.$estadoModal["nombre"].'">'.ucfirst($estadoModal["nombre"]).'</option>';
+                                }
+                                ?>
+                            </select>
                         </div>
+                    </div>
+                </div>
 
+            </div>
 
-                        <!-- entrada para estado -->
+            <div class="row">
 
-                        <div class="form-group">
-
-                            <div class="input-group">
-
-                                <span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
-
-                                <select class="form-control input-lg" name="nuevoEstado" id="nuevoEstado" required>
-                                    <option value="">Seleccionar estado</option>
-                                    <?php
-                                    $estadosModalAgregar = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
-                                    foreach($estadosModalAgregar as $estadoModal){
-                                        echo '<option value="'.$estadoModal["nombre"].'">'.ucfirst($estadoModal["nombre"]).'</option>';
-                                    }
-                                    ?>
-                                </select>
-
-                            </div>
-
+                <!-- Fecha -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Fecha *</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                            <input type="datetime-local" class="form-control" name="nuevaFecha" id="nuevaFecha" required>
                         </div>
+                    </div>
+                </div>
 
+                <!-- Cliente -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                            <select class="form-control" id="nuevoCliente" name="nuevoCliente" required>
+                                <option value="0">Sin cliente</option>
+                                <?php
+                                $item = null;
+                                $valor = null;
+                                $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+                                foreach ($clientes as $key => $value) {
+                                    echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
+                                }
+                                ?>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
-                        <!-- entrada para seleccionar cliente -->
+            </div>
 
-                            <div class="form-group">
-                        
-                                <div class="input-group">
-                            
-                                <span class="input-group-addon"><i class="fa fa-user"></i></span>
+            <div class="row">
 
-                                    <select class="form-control input-lg" id="nuevoCliente" name="nuevoCliente" required>
-                            
-                                    <!--<option value="">Seleccionar Cliente</option>-->
-                                    <option value="0">Sin cliente</option>
+                <!-- Observación -->
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>Observación</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
+                            <input type="text" class="form-control" name="nuevaObservacion" id="nuevaObservacion" placeholder="Observaciones adicionales">
+                        </div>
+                    </div>
+                </div>
 
-                                    <?php
-
-                                        $item = null;
-                                        $valor = null;
-                                        $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
-
-                                        foreach ($clientes as $key => $value) {
-                                    
-                                        echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
-                                        }
-
-                                    ?>
-
-                                    </select>
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- entrada para observacion -->
-                    
-                                <div class="form-group">
-                                    
-                                    <div class="input-group">
-                                        
-                                        <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
-
-                                        <input type="text" class="form-control input-lg" name="nuevaObservacion" id="nuevaObservacion" placeholder="Ingresar Observación">
-
-                                    </div>
-
-                                </div>
-               
-
-             </div>
+            </div>
 
         </div>
+
+      </div>
 
         <!--=====================================
         PIE DEL MODAL
