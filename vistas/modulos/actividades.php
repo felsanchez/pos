@@ -162,6 +162,9 @@
 
             <br><br>
 
+            <!-- TABLA PARA ESCRITORIO -->
+            <div class="tabla-actividades">
+
                 <table class="table table-bordered table-striped tablas" style="width: 100%">
                     
                     <thead>
@@ -277,8 +280,103 @@
 
   
                     </tbody>
-               
+
                 </table>
+
+            </div>
+            <!-- FIN TABLA PARA ESCRITORIO -->
+
+            <!-- CARDS PARA MÓVIL -->
+            <div class="cards-actividades">
+
+                <?php
+                $item = null;
+                $valor = null;
+                $actividades = ControladorActividades::ctrMostrarActividades($item, $valor);
+                $estadosActividades = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
+
+                foreach ($actividades as $key => $value):
+
+                    // Obtener nombre del responsable
+                    $itemUsuario = "id";
+                    $valorUsuario = $value["id_user"];
+                    $respuestaUsuario = ControladorUsuarios::ctrMostrarUsuarios($itemUsuario, $valorUsuario);
+                    $nombreResponsable = $respuestaUsuario ? $respuestaUsuario["nombre"] : "Sin asignar";
+
+                    // Obtener nombre del cliente
+                    $itemCliente = "id";
+                    $valorCliente = $value["id_cliente"];
+                    $respuestaCliente = ControladorClientes::ctrMostrarClientes($itemCliente, $valorCliente);
+                    $nombreCliente = $respuestaCliente ? $respuestaCliente["nombre"] : "Sin cliente";
+
+                    // Obtener color del estado
+                    $estadoActual = $value["estado"] ?? "";
+                    $colorEstado = "#999";
+                    foreach($estadosActividades as $estado){
+                        if(strcasecmp($estado["nombre"], $estadoActual) == 0){
+                            $colorEstado = $estado["color"];
+                            break;
+                        }
+                    }
+
+                    $estadoBadge = !empty($estadoActual)
+                        ? '<span class="badge" style="background-color: '.$colorEstado.'">'.ucfirst($estadoActual).'</span>'
+                        : '<span class="text-muted">Sin estado</span>';
+
+                    echo '<div class="card-actividad">
+
+                            <div class="card-actividad-header">
+                                <div class="card-actividad-descripcion">
+                                    '.$value["descripcion"].'
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-warning btn-xs btnEditarActividad" data-id="'.$value["id"].'" data-toggle="modal" data-target="#modalEditarActividad" idActividad="'.$value["id"].'">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-danger btn-xs btnEliminarActividad" idActividad="'.$value["id"].'">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="card-actividad-detalles">
+                                <div class="card-actividad-fila">
+                                    <div class="card-actividad-tipo">
+                                        <i class="fa fa-info-circle"></i> '.ucfirst($value["tipo"]).'
+                                    </div>
+                                    <div class="card-actividad-estado">
+                                        '.$estadoBadge.'
+                                    </div>
+                                </div>
+                                <div class="card-actividad-fila">
+                                    <div class="card-actividad-responsable">
+                                        <i class="fa fa-user-plus"></i> '.$nombreResponsable.'
+                                    </div>
+                                    <div class="card-actividad-fecha">
+                                        <i class="fa fa-calendar"></i> '.$value["fecha"].'
+                                    </div>
+                                </div>
+                                <div class="card-actividad-fila">
+                                    <div class="card-actividad-cliente">
+                                        <i class="fa fa-user"></i> '.$nombreCliente.'
+                                    </div>
+                                </div>
+                            </div>';
+
+                    // Observación
+                    if(!empty($value["observacion"])){
+                        echo '<div class="card-actividad-observacion">
+                                <i class="fa fa-pencil-square-o"></i> '.$value["observacion"].'
+                              </div>';
+                    }
+
+                    echo '</div>';
+
+                endforeach;
+                ?>
+
+            </div>
+            <!-- FIN CARDS PARA MÓVIL -->
 
             </div>
 

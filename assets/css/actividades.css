@@ -111,3 +111,99 @@
         outline: 2px solid #f39c12;
         background: #fffef5;
       }
+
+      /* Cards para móvil */
+      .cards-actividades {
+        display: none;
+      }
+
+      .card-actividad {
+        background: #fff;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 10px;
+        padding: 10px;
+        position: relative;
+        border-left: 4px solid #3c8dbc;
+      }
+
+      .card-actividad-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .card-actividad-descripcion {
+        font-size: 15px;
+        font-weight: bold;
+        color: #333;
+        margin: 0;
+        flex: 1;
+        padding-right: 10px;
+      }
+
+      .card-actividad-detalles {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+
+      .card-actividad-fila {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .card-actividad-tipo,
+      .card-actividad-responsable,
+      .card-actividad-fecha,
+      .card-actividad-cliente {
+        color: #666;
+        font-size: 12px;
+      }
+
+      .card-actividad-estado {
+        margin: 0;
+      }
+
+      .card-actividad-estado .badge {
+        font-size: 10px;
+        padding: 3px 6px;
+      }
+
+      .card-actividad-observacion {
+        background: #fff9e6;
+        padding: 6px 8px;
+        border-radius: 3px;
+        font-size: 12px;
+        color: #666;
+        font-style: italic;
+        margin-top: 4px;
+      }
+
+      .card-actividad-observacion:empty:before {
+        content: "Sin observación";
+        color: #999;
+      }
+
+      /* Responsive */
+      @media (max-width: 767px) {
+        .tabla-actividades {
+          display: none !important;
+        }
+        .cards-actividades {
+          display: block !important;
+        }
+      }
+
+      @media (min-width: 768px) {
+        .tabla-actividades {
+          display: block !important;
+        }
+        .cards-actividades {
+          display: none !important;
+        }
+      }
