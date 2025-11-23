@@ -8,9 +8,9 @@ EDITAR Actividades
 /*=============================================
 EDITAR Actividades
 =============================================*/
-$(".tablas").on("click", ".btnEditarActividad", function(){
+$(document).on("click", ".btnEditarActividad", function(){
 	var idActividad = $(this).attr("idActividad");
-    console.log("ID Actividad: " + idActividad); 
+    console.log("ID Actividad: " + idActividad);
 
 	// Rellenar el input hidden
     $('#modalEditarActividad input[name="idActividad"]').val(idActividad);
@@ -56,7 +56,7 @@ $(".tablas").on("click", ".btnEditarActividad", function(){
 
             // ✅ mostrar el modal
 			$('#modalEditarActividad').modal('show');
-            
+
 
 		},
 
@@ -64,7 +64,7 @@ $(".tablas").on("click", ".btnEditarActividad", function(){
             //console.error("Error en AJAX:", xhr.responseText);
         //}
 
-	}) 
+	})
 
 });
 
@@ -73,7 +73,7 @@ $(".tablas").on("click", ".btnEditarActividad", function(){
 /*=============================================
 ELIMINAR Actividad
 =============================================*/
-$(".tablas").on("click", ".btnEliminarActividad", function(){
+$(document).on("click", ".btnEliminarActividad", function(){
 	
 	var idActividad = $(this).attr("idActividad");
 
