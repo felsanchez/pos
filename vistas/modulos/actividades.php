@@ -162,7 +162,7 @@
 
             <br><br>
 
-                <table class="table table-bordered table-striped tablas" style="width: 95%">
+                <table class="table table-bordered table-striped tablas" style="width: 100%">
                     
                     <thead>
                     <tr>

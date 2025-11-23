@@ -15,6 +15,7 @@ $(document).ready(function() {
     } else {
         // No está inicializado, crear nueva instancia
         tablaActividades = $('.tablas').DataTable({
+            autoWidth: false,
             responsive: true,
             language: {
               url: "vistas/bower_components/datatables.net/Spanish.json",
@@ -28,6 +29,16 @@ $(document).ready(function() {
                 "sNext": "Siguiente",
                 "sPrevious": "Anterior"
               },
+            },
+            preDrawCallback: function() {
+                // Ocultar tabla antes de dibujarla por primera vez
+                if (!$(this).hasClass('datatable-ready')) {
+                    $(this).css('visibility', 'hidden');
+                }
+            },
+            initComplete: function() {
+                // Mostrar tabla solo cuando esté completamente inicializada
+                $(this).addClass('datatable-ready').css('visibility', 'visible');
             }
         });
     }
@@ -63,6 +74,16 @@ $(document).ready(function() {
 
     $('#filtroEstado').on('change', function() {
         tablaActividades.draw();
+    });
+
+    // Ajustar columnas cuando se cierran los modales, sin efecto visual
+    $('.modal').on('hidden.bs.modal', function() {
+        // Esperar a que el modal se cierre completamente
+        setTimeout(function() {
+            if (tablaActividades) {
+                tablaActividades.columns.adjust();
+            }
+        }, 200);
     });
 });
 

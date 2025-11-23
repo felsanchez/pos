@@ -12,9 +12,11 @@ Data Table
 // Inicializar todas las tablas con clase .tablas EXCEPTO .tablas1, .tablas2 y #example
 
 // (esas tienen inicialización personalizada)
-$(".tablas").not('.tablas1, .tablas2, #example').DataTable({ 
+$(".tablas").not('.tablas1, .tablas2, #example').DataTable({
 
-	"language": { 
+	"autoWidth": false,
+
+	"language": {
 
 		"sProcessing":     "Procesando...",
 		"sLengthMenu":     "Mostrar _MENU_ registros",
@@ -39,6 +41,18 @@ $(".tablas").not('.tablas1, .tablas2, #example').DataTable({
 			"sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
 			"sSortDescending": ": Activar para ordenar la columna de manera descendente"
 		}
+	},
+
+	"preDrawCallback": function() {
+		// Ocultar tabla antes de dibujarla por primera vez
+		if (!$(this).hasClass('datatable-ready')) {
+			$(this).css('visibility', 'hidden');
+		}
+	},
+
+	"initComplete": function() {
+		// Mostrar tabla solo cuando esté completamente inicializada
+		$(this).addClass('datatable-ready').css('visibility', 'visible');
 	}
 
  });
