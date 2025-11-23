@@ -1,90 +1,72 @@
 //FILTRO TIPOS Y ESTADO******************
 $(document).ready(function() {
-    // Verificar si DataTable ya está inicializado, si no, usar la instancia existente de plantilla.js
+    // Esperar un momento para asegurarnos de que plantilla.js ya inicializó la tabla
+    setTimeout(function() {
+        var tablaActividades;
 
-    var tablaActividades;
+        if ($.fn.DataTable.isDataTable('.tablas')) {
+            // Ya está inicializado por plantilla.js
+            tablaActividades = $('.tablas').DataTable();
 
- 
-
-    if ($.fn.DataTable.isDataTable('.tablas')) {
-
-        // Ya está inicializado por plantilla.js, usar la instancia existente
-
-        tablaActividades = $('.tablas').DataTable();
-
-    } else {
-        // No está inicializado, crear nueva instancia
-        tablaActividades = $('.tablas').DataTable({
-            autoWidth: false,
-            responsive: true,
-            language: {
-              url: "vistas/bower_components/datatables.net/Spanish.json",
-              search: "Buscar:",
-              lengthMenu: "Mostrar _MENU_ entradas",
-              info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-              "sLoadingRecords": "Cargando...",
-              "oPaginate": {
-                "sFirst": "Primero",
-                "sLast": "Último",
-                "sNext": "Siguiente",
-                "sPrevious": "Anterior"
-              },
-            },
-            preDrawCallback: function() {
-                // Ocultar tabla antes de dibujarla por primera vez
-                if (!$(this).hasClass('datatable-ready')) {
-                    $(this).css('visibility', 'hidden');
+            // Marcar como lista si aún no lo está
+            if (!$('.tablas').hasClass('datatable-ready')) {
+                $('.tablas').addClass('datatable-ready');
+            }
+        } else {
+            // No está inicializado, crear nueva instancia
+            tablaActividades = $('.tablas').DataTable({
+                autoWidth: false,
+                responsive: true,
+                language: {
+                    url: "vistas/bower_components/datatables.net/Spanish.json",
+                    search: "Buscar:",
+                    lengthMenu: "Mostrar _MENU_ entradas",
+                    info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                    "sLoadingRecords": "Cargando...",
+                    "oPaginate": {
+                        "sFirst": "Primero",
+                        "sLast": "Último",
+                        "sNext": "Siguiente",
+                        "sPrevious": "Anterior"
+                    },
+                },
+                initComplete: function() {
+                    $('.tablas').addClass('datatable-ready');
                 }
-            },
-            initComplete: function() {
-                // Mostrar tabla solo cuando esté completamente inicializada
-                $(this).addClass('datatable-ready').css('visibility', 'visible');
-            }
-        });
-    }
-
-    // Extiende el filtro de DataTables para tipo y estado
-    $.fn.dataTable.ext.search.push(
-        function(settings, data, dataIndex) {
-            const filtroTipo = $('#filtroTipo').val().toLowerCase();
-            const filtroEstado = $('#filtroEstado').val().toLowerCase();
-
-            // Obtiene el texto directamente de las columnas (ya no son selects, sino texto plano)
-            // Columna Tipo (índice 2)
-            const tipoTexto = $(tablaActividades.row(dataIndex).node())
-                .find('td:eq(2)')
-                .text().trim().toLowerCase();
-
-            // Columna Estado (índice 5) - dentro del badge
-            const estadoTexto = $(tablaActividades.row(dataIndex).node())
-                .find('td:eq(5) .badge')
-                .text().trim().toLowerCase();
-
-            const coincideTipo = (filtroTipo === "" || tipoTexto === filtroTipo);
-            const coincideEstado = (filtroEstado === "" || estadoTexto === filtroEstado);
-
-            return coincideTipo && coincideEstado;
+            });
         }
-    );
 
-    // Dispara redibujado al cambiar los selects
-    $('#filtroTipo').on('change', function() {
-        tablaActividades.draw();
-    });
+        // Extiende el filtro de DataTables para tipo y estado
+        $.fn.dataTable.ext.search.push(
+            function(settings, data, dataIndex) {
+                const filtroTipo = $('#filtroTipo').val().toLowerCase();
+                const filtroEstado = $('#filtroEstado').val().toLowerCase();
 
-    $('#filtroEstado').on('change', function() {
-        tablaActividades.draw();
-    });
+                // Obtiene el texto directamente de las columnas
+                const tipoTexto = $(tablaActividades.row(dataIndex).node())
+                    .find('td:eq(2)')
+                    .text().trim().toLowerCase();
 
-    // Ajustar columnas cuando se cierran los modales, sin efecto visual
-    $('.modal').on('hidden.bs.modal', function() {
-        // Esperar a que el modal se cierre completamente
-        setTimeout(function() {
-            if (tablaActividades) {
-                tablaActividades.columns.adjust();
+                const estadoTexto = $(tablaActividades.row(dataIndex).node())
+                    .find('td:eq(5) .badge')
+                    .text().trim().toLowerCase();
+
+                const coincideTipo = (filtroTipo === "" || tipoTexto === filtroTipo);
+                const coincideEstado = (filtroEstado === "" || estadoTexto === filtroEstado);
+
+                return coincideTipo && coincideEstado;
             }
-        }, 200);
-    });
+        );
+
+        // Dispara redibujado al cambiar los selects
+        $('#filtroTipo').on('change', function() {
+            tablaActividades.draw();
+        });
+
+        $('#filtroEstado').on('change', function() {
+            tablaActividades.draw();
+        });
+    }, 100);
 });
 
 

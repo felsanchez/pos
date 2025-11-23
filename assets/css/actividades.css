@@ -72,4 +72,12 @@
         align-items: center;     /* Centra verticalmente */
         background-color: white;
       }
-      
+
+      /* Ocultar tabla durante carga inicial para evitar reajuste visible de columnas */
+      .tablas:not(.datatable-ready) {
+        visibility: hidden !important;
+      }
+
+      .tablas.datatable-ready {
+        visibility: visible !important;
+      }
