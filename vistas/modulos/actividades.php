@@ -800,11 +800,6 @@ MODAL AGREGAR TIPO ACTIVIDAD
 
       </form>
 
-      <?php
-        $crearTipoActividad = new ControladorTiposActividades();
-        $crearTipoActividad -> ctrCrearTipo();
-      ?>
-
     </div>
   </div>
 </div>
