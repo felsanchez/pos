@@ -274,7 +274,7 @@ $(".btnEliminarEstadoActividad").click(function(){
 
 		if(result.value){
 
-			window.location = "index.php?ruta=actividades&idEstado="+idEstado+"&nombreEstado="+nombreEstado;
+			window.location = "index.php?ruta=actividades&idEstado="+idEstado+"&nombreEstado="+nombreEstado+"&origen=actividades";
 
 		}
 
@@ -361,7 +361,7 @@ $(document).on("click", ".btnEliminarTipoActividad", function(){
 
 		if(result.value){
 
-			window.location = "index.php?ruta=actividades&idTipo="+idTipo+"&nombreTipo="+nombreTipo;
+			window.location = "index.php?ruta=actividades&idTipo="+idTipo+"&nombreTipo="+nombreTipo+"&origen=actividades";
 
 		}
 

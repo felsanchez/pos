@@ -208,10 +208,13 @@ class ControladorEstadosActividades{
 
 			$tabla ="estados_actividades";
 			$id = $_GET["idEstado"];
-			$nombreEstado = $_GET["nombreEstado"]; 
+			$nombreEstado = $_GET["nombreEstado"];
+
+			// Detectar desde dónde se llamó la eliminación
+			$redireccion = isset($_GET["origen"]) && $_GET["origen"] == "actividades" ? "actividades" : "estados-actividades";
 
 			// Verificar si el estado está en uso
-			$enUso = ModeloEstadosActividades::mdlVerificarEstadoEnUso($nombreEstado); 
+			$enUso = ModeloEstadosActividades::mdlVerificarEstadoEnUso($nombreEstado);
 
 			if($enUso > 0){
 				echo '<script>
@@ -223,10 +226,10 @@ class ControladorEstadosActividades{
 						confirmButtonText: "Cerrar"
 					}).then((result) => {
 						if(result.value){
-							window.location = "estados-actividades";
+							window.location = "'.$redireccion.'";
 						}
 					});
-				</script>'; 
+				</script>';
 
 			} else {
 				$respuesta = ModeloEstadosActividades::mdlEliminarEstado($tabla, $id);
@@ -239,7 +242,7 @@ class ControladorEstadosActividades{
 							confirmButtonText: "Cerrar"
 						}).then((result) => {
 							if(result.value){
-								window.location = "estados-actividades";
+								window.location = "'.$redireccion.'";
 							}
 						});
 					</script>';

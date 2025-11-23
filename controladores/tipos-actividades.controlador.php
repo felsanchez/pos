@@ -206,10 +206,13 @@ class ControladorTiposActividades{
 
 			$tabla ="tipos_actividades";
 			$id = $_GET["idTipo"];
-			$nombreTipo = $_GET["nombreTipo"]; 
+			$nombreTipo = $_GET["nombreTipo"];
+
+			// Detectar desde dónde se llamó la eliminación
+			$redireccion = isset($_GET["origen"]) && $_GET["origen"] == "actividades" ? "actividades" : "tipos-actividades";
 
 			// Verificar si el tipo está en uso
-			$enUso = ModeloTiposActividades::mdlVerificarTipoEnUso($nombreTipo); 
+			$enUso = ModeloTiposActividades::mdlVerificarTipoEnUso($nombreTipo);
 
 			if($enUso > 0){
 				echo '<script>
@@ -221,13 +224,13 @@ class ControladorTiposActividades{
 						confirmButtonText: "Cerrar"
 					}).then((result) => {
 						if(result.value){
-							window.location = "tipos-actividades";
+							window.location = "'.$redireccion.'";
 						}
 					});
-				</script>'; 
+				</script>';
 
 			} else {
-				$respuesta = ModeloTiposActividades::mdlEliminarTipo($tabla, $id); 
+				$respuesta = ModeloTiposActividades::mdlEliminarTipo($tabla, $id);
 
 				if($respuesta == "ok"){
 
@@ -239,7 +242,7 @@ class ControladorTiposActividades{
 							confirmButtonText: "Cerrar"
 						}).then((result) => {
 							if(result.value){
-								window.location = "tipos-actividades";
+								window.location = "'.$redireccion.'";
 							}
 						});
 					</script>';
