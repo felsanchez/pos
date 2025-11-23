@@ -349,22 +349,26 @@ MODAL AGREGAR actividad
                     </div>
 
                 <!-- entrada para tipo -->
-                    
-                   <!-- <div class="form-group">
-                    
-                        <div class="input-group">
-                            
-                            <span class="input-group-addon"><i class="fa fa-filter"></i></span>
 
-                            <input type="text" class="form-control input-lg" name="nuevoTipo" id="nuevoTipo" placeholder="Ingresar Tipo" required>
+                <div class="form-group">
 
-                        </div>
+                    <div class="input-group">
+
+                        <span class="input-group-addon"><i class="fa fa-info-circle"></i></span>
+
+                        <select class="form-control input-lg" name="nuevoTipo" id="nuevoTipo" required>
+                            <option value="">Seleccionar tipo</option>
+                            <?php
+                            $tiposModalAgregar = ControladorTiposActividades::ctrMostrarTiposActividades(null, null);
+                            foreach($tiposModalAgregar as $tipoModal){
+                                echo '<option value="'.$tipoModal["nombre"].'">'.ucfirst($tipoModal["nombre"]).'</option>';
+                            }
+                            ?>
+                        </select>
 
                     </div>
-                    -->
 
-                    <!-- entrada para tipo -->
-                    <input type="hidden" name="nuevoTipo" value="actividad">
+                </div>
 
 
                  <!-- entrada para usuario -->
@@ -414,22 +418,26 @@ MODAL AGREGAR actividad
 
 
                         <!-- entrada para estado -->
-                    <!--
-                        <div class="form-group">
-                    
-                            <div class="input-group">
-                                
-                                <span class="input-group-addon"><i class="fa fa-check-square-o"></i></span>
 
-                                <input type="text" class="form-control input-lg" name="nuevoEstado" id="nuevoEstado" placeholder="Ingresar Estado" required>
+                        <div class="form-group">
+
+                            <div class="input-group">
+
+                                <span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
+
+                                <select class="form-control input-lg" name="nuevoEstado" id="nuevoEstado" required>
+                                    <option value="">Seleccionar estado</option>
+                                    <?php
+                                    $estadosModalAgregar = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
+                                    foreach($estadosModalAgregar as $estadoModal){
+                                        echo '<option value="'.$estadoModal["nombre"].'">'.ucfirst($estadoModal["nombre"]).'</option>';
+                                    }
+                                    ?>
+                                </select>
 
                             </div>
 
                         </div>
-                            -->
-
-                        <!-- entrada para estado -->
-                        <input type="hidden" name="nuevoEstado" value="programada">
 
 
                         <!-- entrada para seleccionar cliente -->
