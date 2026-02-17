@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -l:*)",
+      "Bash(cat:*)",
+      "Bash(\"C:\\xampp\\php\\php.exe\" -l \"c:\\xampp\\htdocs\\pos\\vistas\\modulos\\gastos.php\")",
+      "Bash(\"C:\\xampp\\php\\php.exe\" -l \"c:\\xampp\\htdocs\\pos\\ajax\\gastos-actualizar-nota.ajax.php\")",
+      "Bash(\"C:\\xampp\\php\\php.exe\" -l \"c:\\xampp\\htdocs\\pos\\modelos\\gastos.modelo.php\")",
+      "Bash(\"C:\\xampp\\php\\php.exe\" -l \"c:\\xampp\\htdocs\\pos\\vistas\\modulos\\usuarios.php\")",
+      "Bash(\"C:\\xampp\\php\\php.exe\" -l \"c:\\xampp\\htdocs\\pos\\controladores\\ventas.controlador.php\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,74 @@
+[
+    {
+        "id": 1,
+        "codigo": "11",
+        "nombre": "Registro civil",
+        "descripcion": "Registro civil de nacimiento",
+        "activo": 1,
+        "fecha_sincronizacion": "2025-11-28 23:41:05"
+    },
+    {
+        "id": 2,
+        "codigo": "12",
+        "nombre": "Tarjeta de identidad",
+        "descripcion": "Tarjeta de identidad",
+        "activo": 1,
+        "fecha_sincronizacion": "2025-11-28 23:41:05"
+    },
+    {
+        "id": 3,
+        "codigo": "13",
+        "nombre": "Cédula de ciudadanía",
+        "descripcion": "Cédula de ciudadanía",
+        "activo": 1,
+        "fecha_sincronizacion": "2025-11-28 23:41:05"
+    },
+    {
+        "id": 4,
+        "codigo": "21",
+        "nombre": "Tarjeta de extranjería",
+        "descripcion": "Tarjeta de extranjería",
+        "activo": 1,
+        "fecha_sincronizacion": "2025-11-28 23:41:05"
+    },
+    {
+        "id": 5,
+        "codigo": "22",
+        "nombre": "Cédula de extranjería",
+        "descripcion": "Cédula de extranjería",
+        "activo": 1,
+        "fecha_sincronizacion": "2025-11-28 23:41:05"
+    },
+    {
+        "id": 6,
+        "codigo": "31",
+        "nombre": "NIT",
+        "descripcion": "Número de Identificación Tributaria",
+        "activo": 1,
+        "fecha_sincronizacion": "2025-11-28 23:41:05"
+    },
+    {
+        "id": 7,
+        "codigo": "41",
+        "nombre": "Pasaporte",
+        "descripcion": "Pasaporte",
+        "activo": 1,
+        "fecha_sincronizacion": "2025-11-28 23:41:05"
+    },
+    {
+        "id": 8,
+        "codigo": "42",
+        "nombre": "Documento de identificación extranjero",
+        "descripcion": "Documento de identificación extranjero",
+        "activo": 1,
+        "fecha_sincronizacion": "2025-11-28 23:41:05"
+    },
+    {
+        "id": 9,
+        "codigo": "91",
+        "nombre": "NUIP",
+        "descripcion": "Número Único de Identificación Personal",
+        "activo": 1,
+        "fecha_sincronizacion": "2025-11-28 23:41:05"
+    }
+]

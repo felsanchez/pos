@@ -1,0 +1,731 @@
+<?php
+
+class ControladorFactus {
+
+	/*=============================================
+	OBTENER CONFIGURACIÓN DE FACTUS
+	=============================================*/
+	static public function ctrObtenerConfiguracion() {
+		$respuesta = ModeloFactus::mdlObtenerConfiguracion();
+		return $respuesta;
+	}
+
+	/*=============================================
+	ACTUALIZAR CONFIGURACIÓN DE FACTUS
+	=============================================*/
+	static public function ctrActualizarConfiguracion() {
+		if (isset($_POST["apiUrl"])) {
+
+			// Procesar checkbox de activo
+			$activo = isset($_POST["factusActivo"]) ? 1 : 0;
+
+			$datos = array(
+				"api_url" => $_POST["apiUrl"],
+				"client_id" => $_POST["clientId"],
+				"client_secret" => $_POST["clientSecret"],
+				"ambiente" => $_POST["ambiente"],
+				"activo" => $activo
+			);
+
+			$respuesta = ModeloFactus::mdlActualizarConfiguracion($datos);
+
+			if ($respuesta == "ok") {
+				echo '<script>
+					swal({
+						type: "success",
+						title: "La configuración de Factus ha sido actualizada correctamente",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(function(result) {
+						if (result.value) {
+							window.location = "configuracion-factus";
+						}
+					})
+				</script>';
+			} else {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error al actualizar la configuración",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					})
+				</script>';
+			}
+		}
+	}
+
+	/*=============================================
+	AUTENTICAR CON FACTUS API
+	=============================================*/
+	static public function ctrAutenticar() {
+		$config = ModeloFactus::mdlObtenerConfiguracion();
+
+		if (!$config || empty($config['client_id']) || empty($config['client_secret'])) {
+			return array(
+				"error" => true,
+				"mensaje" => "La configuración de Factus no está completa"
+			);
+		}
+
+		// Preparar datos para la autenticación OAuth2
+		$url = $config['api_url'] . '/oauth/token';
+
+		$datos = array(
+			"grant_type" => "client_credentials",
+			"client_id" => $config['client_id'],
+			"client_secret" => $config['client_secret']
+		);
+
+		// Realizar petición a la API de Factus
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($datos));
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+			'Content-Type: application/json'
+		));
+
+		$respuesta = curl_exec($ch);
+		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$curlError = curl_error($ch);
+		curl_close($ch);
+
+		// Si hay error de CURL
+		if ($curlError) {
+			return array(
+				"error" => true,
+				"mensaje" => "Error de conexión con Factus",
+				"detalles" => $curlError,
+				"codigo_http" => $httpCode
+			);
+		}
+
+		if ($httpCode == 200) {
+			$resultado = json_decode($respuesta, true);
+
+			if (isset($resultado['access_token'])) {
+				// Calcular fecha de expiración (típicamente 1 hora)
+				$expiracion = date('Y-m-d H:i:s', strtotime('+1 hour'));
+
+				$datosToken = array(
+					"access_token" => $resultado['access_token'],
+					"refresh_token" => $resultado['refresh_token'] ?? '',
+					"token_expiracion" => $expiracion
+				);
+
+				ModeloFactus::mdlActualizarTokens($datosToken);
+
+				return array(
+					"error" => false,
+					"mensaje" => "Autenticación exitosa",
+					"token" => $resultado['access_token']
+				);
+			} else {
+				return array(
+					"error" => true,
+					"mensaje" => "Respuesta de API sin token de acceso",
+					"detalles" => $respuesta,
+					"codigo_http" => $httpCode
+				);
+			}
+		}
+
+		// Intentar decodificar la respuesta de error
+		$resultadoError = json_decode($respuesta, true);
+		$mensajeError = "Error HTTP $httpCode";
+
+		if ($resultadoError && isset($resultadoError['error_description'])) {
+			$mensajeError = $resultadoError['error_description'];
+		} elseif ($resultadoError && isset($resultadoError['message'])) {
+			$mensajeError = $resultadoError['message'];
+		}
+
+		return array(
+			"error" => true,
+			"mensaje" => $mensajeError,
+			"detalles" => $respuesta,
+			"codigo_http" => $httpCode
+		);
+	}
+
+	/*=============================================
+	OBTENER TOKEN VÁLIDO (REFRESCA SI ES NECESARIO)
+	=============================================*/
+	static public function ctrObtenerToken() {
+		// Verificar si el token ha expirado
+		if (ModeloFactus::mdlTokenExpirado()) {
+			// Intentar refrescar el token
+			$resultado = self::ctrAutenticar();
+			if ($resultado['error']) {
+				return null;
+			}
+			return $resultado['token'];
+		}
+
+		return ModeloFactus::mdlObtenerAccessToken();
+	}
+
+	/*=============================================
+	PROBAR CONEXIÓN CON FACTUS
+	=============================================*/
+	static public function ctrProbarConexion() {
+		$resultado = self::ctrAutenticar();
+		return $resultado;
+	}
+
+	/*=============================================
+	SINCRONIZAR MUNICIPIOS DESDE FACTUS API
+	=============================================*/
+	static public function ctrSincronizarMunicipios() {
+		$config = ModeloFactus::mdlObtenerConfiguracion();
+
+		if (!$config || empty($config['client_id'])) {
+			return array(
+				"error" => true,
+				"mensaje" => "Factus no está configurado"
+			);
+		}
+
+		// Obtener token válido
+		$resultadoAuth = self::ctrAutenticar();
+		if ($resultadoAuth['error']) {
+			return array(
+				"error" => true,
+				"mensaje" => "Error de autenticación: " . $resultadoAuth['mensaje'],
+				"detalles" => isset($resultadoAuth['detalles']) ? $resultadoAuth['detalles'] : ''
+			);
+		}
+
+		$token = $resultadoAuth['token'];
+
+		// Consultar municipios desde la API de Factus
+		$url = $config['api_url'] . '/v1/municipalities';
+
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+			'Authorization: Bearer ' . $token,
+			'Content-Type: application/json',
+			'Accept: application/json'
+		));
+
+		$respuesta = curl_exec($ch);
+		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		curl_close($ch);
+
+		if ($httpCode == 200) {
+			$datos = json_decode($respuesta, true);
+
+			// La API puede devolver los datos directamente o en un campo 'data'
+			$municipios = null;
+			if (isset($datos['data']) && is_array($datos['data'])) {
+				$municipios = $datos['data'];
+			} elseif (is_array($datos) && isset($datos[0])) {
+				// Array directo de municipios
+				$municipios = $datos;
+			}
+
+			if ($municipios) {
+				try {
+					$resultado = ModeloFactus::mdlGuardarMunicipios($municipios);
+
+					// Registrar sincronización
+					$usuarioId = isset($_SESSION['id']) ? $_SESSION['id'] : null;
+					ModeloFactus::mdlRegistrarSincronizacion([
+						"tipo_dato" => "municipios",
+						"insertados" => $resultado['insertados'],
+						"actualizados" => $resultado['actualizados'],
+						"estado" => "exitoso",
+						"mensaje" => "Sincronización completada",
+						"usuario_id" => $usuarioId
+					]);
+
+					return array(
+						"error" => false,
+						"mensaje" => "Municipios sincronizados correctamente",
+						"insertados" => $resultado['insertados'],
+						"actualizados" => $resultado['actualizados']
+					);
+
+				} catch (Exception $e) {
+					return array(
+						"error" => true,
+						"mensaje" => "Error al guardar municipios: " . $e->getMessage()
+					);
+				}
+			}
+		}
+
+		return array(
+			"error" => true,
+			"mensaje" => "Error al obtener municipios desde Factus API",
+			"codigo_http" => $httpCode
+		);
+	}
+
+	/*=============================================
+	SINCRONIZAR TRIBUTOS DESDE FACTUS API
+	=============================================*/
+	static public function ctrSincronizarTributos() {
+		$config = ModeloFactus::mdlObtenerConfiguracion();
+
+		if (!$config || empty($config['client_id'])) {
+			return array(
+				"error" => true,
+				"mensaje" => "Factus no está configurado"
+			);
+		}
+
+		// Obtener token válido
+		$resultadoAuth = self::ctrAutenticar();
+		if ($resultadoAuth['error']) {
+			return array(
+				"error" => true,
+				"mensaje" => "Error de autenticación: " . $resultadoAuth['mensaje'],
+				"detalles" => isset($resultadoAuth['detalles']) ? $resultadoAuth['detalles'] : ''
+			);
+		}
+
+		$token = $resultadoAuth['token'];
+
+		// Consultar tributos desde la API de Factus
+		$url = $config['api_url'] . '/tributos/tributos-de-productos/';
+
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+			'Authorization: Bearer ' . $token,
+			'Content-Type: application/json'
+		));
+
+		$respuesta = curl_exec($ch);
+		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		curl_close($ch);
+
+		if ($httpCode == 200) {
+			$datos = json_decode($respuesta, true);
+
+			if (isset($datos['data']) && is_array($datos['data'])) {
+				try {
+					$resultado = ModeloFactus::mdlGuardarTributos($datos['data']);
+
+					// Registrar sincronización
+					$usuarioId = isset($_SESSION['id']) ? $_SESSION['id'] : null;
+					ModeloFactus::mdlRegistrarSincronizacion([
+						"tipo_dato" => "tributos",
+						"insertados" => $resultado['insertados'],
+						"actualizados" => $resultado['actualizados'],
+						"estado" => "exitoso",
+						"mensaje" => "Sincronización completada",
+						"usuario_id" => $usuarioId
+					]);
+
+					return array(
+						"error" => false,
+						"mensaje" => "Tributos sincronizados correctamente",
+						"insertados" => $resultado['insertados'],
+						"actualizados" => $resultado['actualizados']
+					);
+
+				} catch (Exception $e) {
+					return array(
+						"error" => true,
+						"mensaje" => "Error al guardar tributos: " . $e->getMessage()
+					);
+				}
+			}
+		}
+
+		return array(
+			"error" => true,
+			"mensaje" => "Error al obtener tributos desde Factus API",
+			"codigo_http" => $httpCode
+		);
+	}
+
+	/*=============================================
+	OBTENER ESTADO DE SINCRONIZACIONES
+	=============================================*/
+	static public function ctrObtenerEstadoSincronizaciones() {
+		$municipios = ModeloFactus::mdlObtenerUltimaSincronizacion('municipios');
+		$tributos = ModeloFactus::mdlObtenerUltimaSincronizacion('tributos');
+
+		return array(
+			"municipios" => $municipios,
+			"tributos" => $tributos
+		);
+	}
+
+	/*=============================================
+	GENERAR FACTURA ELECTRÓNICA
+	=============================================*/
+	static public function ctrGenerarFacturaElectronica($idVenta) {
+		// 1. Obtener datos de la venta
+		require_once "modelos/ventas.modelo.php";
+		require_once "modelos/clientes.modelo.php";
+		require_once "modelos/productos.modelo.php";
+
+		$venta = ModeloVentas::mdlMostrarVentas("ventas", "id", $idVenta);
+
+		if (!$venta) {
+			return array(
+				"error" => true,
+				"mensaje" => "Venta no encontrada"
+			);
+		}
+
+		// 2. Obtener token
+		$auth = self::ctrAutenticar();
+		if ($auth['error']) {
+			return array(
+				"error" => true,
+				"mensaje" => "Error de autenticación: " . $auth['mensaje']
+			);
+		}
+
+		// 3. Preparar datos de la factura según formato de Factus
+		$datosFactura = self::prepararDatosFactura($venta);
+
+		// 4. Enviar factura a Factus
+		$resultado = ModeloFactus::mdlCrearFacturaElectronica($auth['token'], $datosFactura);
+
+		// 5. Procesar respuesta
+		if ($resultado['http_code'] == 201 || $resultado['http_code'] == 200) {
+			$respuestaFactus = json_decode($resultado['respuesta'], true);
+
+			// Actualizar datos en la venta
+			$datosActualizar = array(
+				"estado_dian" => "Enviado",
+				"cufe" => $respuestaFactus['cufe'] ?? '',
+				"qr_data" => $respuestaFactus['qr_code'] ?? '',
+				"xml_dian" => $respuestaFactus['xml_url'] ?? '',
+				"pdf_dian" => $respuestaFactus['pdf_url'] ?? '',
+				"mensaje_dian" => $respuestaFactus['message'] ?? 'Factura generada exitosamente',
+				"fecha_envio_dian" => date('Y-m-d H:i:s')
+			);
+
+			ModeloFactus::mdlActualizarDatosFactura($idVenta, $datosActualizar);
+
+			return array(
+				"error" => false,
+				"mensaje" => "Factura electrónica generada exitosamente",
+				"datos" => $respuestaFactus
+			);
+		} else {
+			// Error al generar factura
+			$error = json_decode($resultado['respuesta'], true);
+
+			$datosActualizar = array(
+				"estado_dian" => "Error",
+				"cufe" => '',
+				"qr_data" => '',
+				"xml_dian" => '',
+				"pdf_dian" => '',
+				"mensaje_dian" => $error['message'] ?? $resultado['respuesta'],
+				"fecha_envio_dian" => date('Y-m-d H:i:s')
+			);
+
+			ModeloFactus::mdlActualizarDatosFactura($idVenta, $datosActualizar);
+
+			return array(
+				"error" => true,
+				"mensaje" => "Error al generar factura: " . ($error['message'] ?? 'Error desconocido'),
+				"codigo_http" => $resultado['http_code'],
+				"detalles" => $resultado['respuesta']
+					]);
+
+					return array(
+						"error" => false,
+						"mensaje" => "Municipios sincronizados correctamente",
+						"insertados" => $resultado['insertados'],
+						"actualizados" => $resultado['actualizados']
+					);
+
+				} catch (Exception $e) {
+					return array(
+						"error" => true,
+						"mensaje" => "Error al guardar municipios: " . $e->getMessage()
+					);
+				}
+			}
+		}
+
+		return array(
+			"error" => true,
+			"mensaje" => "Error al obtener municipios desde Factus API",
+			"codigo_http" => $httpCode
+		);
+	}
+
+	/*=============================================
+	SINCRONIZAR TRIBUTOS DESDE FACTUS API
+	=============================================*/
+	static public function ctrSincronizarTributos() {
+		$config = ModeloFactus::mdlObtenerConfiguracion();
+
+		if (!$config || empty($config['client_id'])) {
+			return array(
+				"error" => true,
+				"mensaje" => "Factus no está configurado"
+			);
+		}
+
+		// Obtener token válido
+		$resultadoAuth = self::ctrAutenticar();
+		if ($resultadoAuth['error']) {
+			return array(
+				"error" => true,
+				"mensaje" => "Error de autenticación: " . $resultadoAuth['mensaje'],
+				"detalles" => isset($resultadoAuth['detalles']) ? $resultadoAuth['detalles'] : ''
+			);
+		}
+
+		$token = $resultadoAuth['token'];
+
+		// Consultar tributos desde la API de Factus
+		$url = $config['api_url'] . '/tributos/tributos-de-productos/';
+
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+			'Authorization: Bearer ' . $token,
+			'Content-Type: application/json'
+		));
+
+		$respuesta = curl_exec($ch);
+		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		curl_close($ch);
+
+		if ($httpCode == 200) {
+			$datos = json_decode($respuesta, true);
+
+			if (isset($datos['data']) && is_array($datos['data'])) {
+				try {
+					$resultado = ModeloFactus::mdlGuardarTributos($datos['data']);
+
+					// Registrar sincronización
+					$usuarioId = isset($_SESSION['id']) ? $_SESSION['id'] : null;
+					ModeloFactus::mdlRegistrarSincronizacion([
+						"tipo_dato" => "tributos",
+						"insertados" => $resultado['insertados'],
+						"actualizados" => $resultado['actualizados'],
+						"estado" => "exitoso",
+						"mensaje" => "Sincronización completada",
+						"usuario_id" => $usuarioId
+					]);
+
+					return array(
+						"error" => false,
+						"mensaje" => "Tributos sincronizados correctamente",
+						"insertados" => $resultado['insertados'],
+						"actualizados" => $resultado['actualizados']
+					);
+
+				} catch (Exception $e) {
+					return array(
+						"error" => true,
+						"mensaje" => "Error al guardar tributos: " . $e->getMessage()
+					);
+				}
+			}
+		}
+
+		return array(
+			"error" => true,
+			"mensaje" => "Error al obtener tributos desde Factus API",
+			"codigo_http" => $httpCode
+		);
+	}
+
+	/*=============================================
+	OBTENER ESTADO DE SINCRONIZACIONES
+	=============================================*/
+	static public function ctrObtenerEstadoSincronizaciones() {
+		$municipios = ModeloFactus::mdlObtenerUltimaSincronizacion('municipios');
+		$tributos = ModeloFactus::mdlObtenerUltimaSincronizacion('tributos');
+
+		return array(
+			"municipios" => $municipios,
+			"tributos" => $tributos
+		);
+	}
+
+	/*=============================================
+	GENERAR FACTURA ELECTRÓNICA
+	=============================================*/
+	static public function ctrGenerarFacturaElectronica($idVenta) {
+		// 1. Obtener datos de la venta
+		require_once "modelos/ventas.modelo.php";
+		require_once "modelos/clientes.modelo.php";
+		require_once "modelos/productos.modelo.php";
+
+		$venta = ModeloVentas::mdlMostrarVentas("ventas", "id", $idVenta);
+
+		if (!$venta) {
+			return array(
+				"error" => true,
+				"mensaje" => "Venta no encontrada"
+			);
+		}
+
+		// 2. Obtener token
+		$auth = self::ctrAutenticar();
+		if ($auth['error']) {
+			return array(
+				"error" => true,
+				"mensaje" => "Error de autenticación: " . $auth['mensaje']
+			);
+		}
+
+		// 3. Preparar datos de la factura según formato de Factus
+		$datosFactura = self::prepararDatosFactura($venta);
+
+		// 4. Enviar factura a Factus
+		$resultado = ModeloFactus::mdlCrearFacturaElectronica($auth['token'], $datosFactura);
+
+		// 5. Procesar respuesta
+		if ($resultado['http_code'] == 201 || $resultado['http_code'] == 200) {
+			$respuestaFactus = json_decode($resultado['respuesta'], true);
+
+			// Actualizar datos en la venta
+			$datosActualizar = array(
+				"estado_dian" => "Enviado",
+				"cufe" => $respuestaFactus['cufe'] ?? '',
+				"qr_data" => $respuestaFactus['qr_code'] ?? '',
+				"xml_dian" => $respuestaFactus['xml_url'] ?? '',
+				"pdf_dian" => $respuestaFactus['pdf_url'] ?? '',
+				"mensaje_dian" => $respuestaFactus['message'] ?? 'Factura generada exitosamente',
+				"fecha_envio_dian" => date('Y-m-d H:i:s')
+			);
+
+			ModeloFactus::mdlActualizarDatosFactura($idVenta, $datosActualizar);
+
+			return array(
+				"error" => false,
+				"mensaje" => "Factura electrónica generada exitosamente",
+				"datos" => $respuestaFactus
+			);
+		} else {
+			// Error al generar factura
+			$error = json_decode($resultado['respuesta'], true);
+
+			$datosActualizar = array(
+				"estado_dian" => "Error",
+				"cufe" => '',
+				"qr_data" => '',
+				"xml_dian" => '',
+				"pdf_dian" => '',
+				"mensaje_dian" => $error['message'] ?? $resultado['respuesta'],
+				"fecha_envio_dian" => date('Y-m-d H:i:s')
+			);
+
+			ModeloFactus::mdlActualizarDatosFactura($idVenta, $datosActualizar);
+
+			return array(
+				"error" => true,
+				"mensaje" => "Error al generar factura: " . ($error['message'] ?? 'Error desconocido'),
+				"codigo_http" => $resultado['http_code'],
+				"detalles" => $resultado['respuesta']
+			);
+		}
+	}
+
+	/*=============================================
+	PREPARAR DATOS DE FACTURA PARA FACTUS
+	=============================================*/
+	private static function prepararDatosFactura($venta) {
+		require_once "modelos/clientes.modelo.php";
+		require_once "modelos/productos.modelo.php";
+		require_once "modelos/configuracion.modelo.php";
+
+		// Obtener datos del cliente
+		$cliente = ModeloClientes::mdlMostrarClientes("clientes", "id", $venta['id_cliente']);
+
+		// Obtener configuración de la empresa
+		$config = ModeloConfiguracion::mdlObtenerConfiguracion();
+
+		// Decodificar productos de la venta
+		$productosVenta = json_decode($venta['productos'], true);
+		$items = array();
+
+		foreach ($productosVenta as $productoVenta) {
+			// Obtener datos completos del producto desde la BD
+			$productoBD = ModeloProductos::mdlMostrarProductos("productos", "id", $productoVenta['id'], "id");
+
+			// Usar datos reales del producto o valores por defecto
+			$tributoId = isset($productoBD['tributo_id']) && !empty($productoBD['tributo_id'])
+				? intval($productoBD['tributo_id'])
+				: 1; // IVA 19% por defecto
+
+			$unidadMedida = isset($productoBD['unidad_medida_codigo']) && !empty($productoBD['unidad_medida_codigo'])
+				? intval($productoBD['unidad_medida_codigo'])
+				: 70; // Unidad por defecto
+
+			$items[] = array(
+				"code_reference" => $productoVenta['codigo'] ?? '',
+				"name" => $productoVenta['descripcion'],
+				"quantity" => intval($productoVenta['cantidad']),
+				"discount_rate" => floatval($productoVenta['descuento'] ?? 0),
+				"price" => floatval($productoVenta['precio']),
+				"tax_rate" => strval(floatval($productoVenta['impuesto'] ?? 19)) . ".00",
+				"unit_measure_id" => $unidadMedida,
+				"standard_code_id" => 1,
+				"is_excluded" => 0,
+				"tribute_id" => $tributoId,
+				"withholding_taxes" => array()
+			);
+		}
+
+		// Usar tipo de documento y municipio reales del cliente
+		$tipoDocumentoId = isset($cliente['tipo_documento_id']) && !empty($cliente['tipo_documento_id'])
+			? intval($cliente['tipo_documento_id'])
+			: 3; // NIT por defecto
+
+		$municipioId = isset($cliente['municipio_id']) && !empty($cliente['municipio_id'])
+			? intval($cliente['municipio_id'])
+			: 980; // Bogotá por defecto según tabla factus_municipios
+
+		// Usar método de pago DIAN de la venta
+		$metodoPagoDianId = isset($venta['metodo_pago_dian_id']) && !empty($venta['metodo_pago_dian_id'])
+			? strval($venta['metodo_pago_dian_id'])
+			: "10"; // Efectivo por defecto
+
+		// Preparar estructura de factura según API de Factus
+		$factura = array(
+			"document" => "01", // 01 = Factura de venta
+			"numbering_range_id" => 1, // ID del rango de numeración (debe existir en Factus)
+			"reference_code" => "VENTA-" . $venta['codigo'],
+			"observation" => $venta['notas'] ?? '',
+			"payment_method_code" => $metodoPagoDianId,
+			"establishment" => array(
+				"name" => $config['nombre_empresa'] ?? 'Mi Empresa',
+				"address" => $config['direccion_empresa'] ?? 'Dirección',
+				"phone_number" => $config['telefono_empresa'] ?? '1234567',
+				"email" => $config['email_empresa'] ?? 'empresa@example.com',
+				"municipality_id" => 980 // Bogotá
+			),
+			"customer" => array(
+				"identification" => $cliente['documento'] ?? '',
+				"dv" => "0",
+				"company" => "",
+				"trade_name" => "",
+				"names" => $cliente['nombre'],
+				"address" => $cliente['direccion'] ?? '',
+				"email" => $cliente['email'] ?? '',
+				"phone" => $cliente['telefono'] ?? '',
+				"legal_organization_id" => "2",
+				"tribute_id" => "21",
+				"identification_document_id" => $tipoDocumentoId,
+				"municipality_id" => strval($municipioId)
+			),
+			"items" => $items
+		);
+
+		return $factura;
+	}
+}

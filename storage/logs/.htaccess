@@ -1,0 +1,7 @@
+# Denegar acceso web directo al directorio de logs
+# Los logs solo deben ser accesibles mediante PHP
+
+<Files "*">
+    Order allow,deny
+    Deny from all
+</Files>

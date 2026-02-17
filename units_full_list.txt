@@ -1,0 +1,8 @@
+Total unidades encontradas: 6
+Listado de unidades:
+ID: 70 | Code: 94 | Name: unidad
+ID: 414 | Code: KGM | Name: kilogramo
+ID: 449 | Code: LBR | Name: libra
+ID: 499 | Code: MLT | Name: mililitro
+ID: 512 | Code: MTR | Name: metro
+ID: 874 | Code: GLL | Name: galón

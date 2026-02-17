@@ -1,0 +1,64 @@
+/* Estilos para campo notas editable en gastos - DESKTOP */
+.celda-notas-gasto {
+  background: #fff9e6;
+  padding: 8px;
+  border-radius: 3px;
+  cursor: text;
+  font-size: 13px;
+  color: #333;
+  min-height: 30px;
+  position: relative;
+  word-wrap: break-word;
+}
+
+/* En tabla desktop, limitar ancho */
+table .celda-notas-gasto {
+  max-width: 200px;
+}
+
+/* Placeholder para cuando está vacío */
+.celda-notas-gasto:empty:before {
+  content: "Escribe una nota...";
+  color: #999;
+  font-style: italic;
+}
+
+/* Ocultar placeholder cuando tiene foco */
+.celda-notas-gasto:focus:before {
+  content: none;
+}
+
+.celda-notas-gasto:focus {
+  outline: 2px solid #f39c12;
+  background: #fffef5;
+}
+
+/* Indicador visual de guardando */
+.celda-notas-gasto.guardando {
+  background: #e6f7ff;
+  opacity: 0.7;
+}
+
+/* Estilos específicos para versión MÓVIL */
+.card-gasto-notas {
+  background: #fff9e6;
+  padding: 8px;
+  border-radius: 3px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #333;
+  border-left: 2px solid #f39c12;
+  cursor: text;
+  min-height: 30px;
+}
+
+.card-gasto-notas:empty:before {
+  content: "Escribe una nota...";
+  color: #999;
+  font-style: italic;
+}
+
+.card-gasto-notas:focus {
+  outline: 2px solid #f39c12;
+  background: #fffef5;
+}

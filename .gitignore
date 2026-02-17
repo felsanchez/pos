@@ -1,0 +1,44 @@
+# Credenciales y configuración sensible
+.env
+ 
+# Archivos de debug y diagnóstico
+debug*.txt
+debug*.php
+diagnostico*.php 
+
+# Archivos temporales de PHP
+*.log
+*.tmp
+*.cache
+storage/logs/*.log
+
+# Archivos de imágenes subidas (descomentar si son muchas)
+# vistas/img/productos/*
+# vistas/img/usuarios/*
+ 
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+ 
+# Composer (si lo usas)
+vendor/
+composer.lock 
+
+# Node modules (si usas npm)
+node_modules/
+package-lock.json
+
+# Backups de base de datos
+*.sql
+*.sql.gz
+*.sql.zip
+backups/

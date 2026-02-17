@@ -1,0 +1,28 @@
+AJAX MarcarComoLeida: UserID:  - NotifID: 89
+Response: ok
+AJAX MarcarComoLeida: UserID:  - NotifID: 89
+Response: ok
+AJAX MarcarComoLeida: UserID:  - NotifID: 88
+Response: ok
+AJAX MarcarComoLeida: UserID:  - NotifID: 88
+Response: ok
+AJAX MarcarComoLeida: UserID: 14 - NotifID: 89
+Response: ok
+AJAX MarcarComoLeida: UserID: 17 - NotifID: 88
+Response: ok
+AJAX MarcarComoLeida: UserID: 14 - NotifID: 92
+Response: ok
+AJAX MarcarComoLeida: UserID: 14 - NotifID: 95
+Response: ok
+AJAX MarcarComoLeida: UserID: 14 - NotifID: 90
+Response: ok
+AJAX MarcarComoLeida: UserID: 14 - NotifID: 96
+Response: ok
+AJAX MarcarComoLeida: UserID: 14 - NotifID: 97
+Response: ok
+AJAX MarcarComoLeida: UserID: 14 - NotifID: 100
+Response: ok
+AJAX MarcarComoLeida: UserID: 14 - NotifID: 102
+Response: ok
+AJAX MarcarComoLeida: UserID: 14 - NotifID: 103
+Response: ok

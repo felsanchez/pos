@@ -1,0 +1,59 @@
+Options All -Indexes
+
+RewriteEngine On
+
+# Redirige /leads a /clientes.php (debe ir antes de la regla general)
+RewriteRule ^leads$ clientes.php [L]
+
+
+# Condiciones para evitar reescribir archivos y directorios reales
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+ 
+
+# Regla general: convierte rutas amigables a parámetros GET
+RewriteRule ^([-a-zA-Z0-9]+)$ index.php?ruta=$1 [L,QSA]
+
+# =============================================
+# HEADERS DE SEGURIDAD HTTP
+# =============================================
+
+<IfModule mod_headers.c>
+    # Previene MIME type sniffing
+    Header set X-Content-Type-Options "nosniff"
+    
+    # Protección contra clickjacking (permite frames del mismo origen)
+    Header set X-Frame-Options "SAMEORIGIN"
+    
+    # Activa protección XSS del navegador
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # Política de referrer (no envía URL completa a otros sitios)
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Política de permisos (desactiva características no usadas)
+    Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    
+    # Content Security Policy (política básica)
+    # Permite recursos del mismo origen y algunos CDNs necesarios
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://ajax.googleapis.com https://maxcdn.bootstrapcdn.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://maxcdn.bootstrapcdn.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https:"
+    
+    # Fuerza HTTPS (descomentar solo si usas HTTPS)
+    # Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# =============================================
+# PROTECCIÓN DE ARCHIVOS SENSIBLES
+# =============================================
+
+# Bloquear acceso a archivos .env
+<Files ".env">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Bloquear acceso a archivos de configuración
+<FilesMatch "\.(ini|log|conf)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

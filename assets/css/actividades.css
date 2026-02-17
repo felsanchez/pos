@@ -1,0 +1,200 @@
+/*Campo estatus*/
+/* NOTA: Los colores de estados ahora se generan dinámicamente desde PHP en actividades.php */
+/* No agregar reglas CSS estáticas aquí para colores de estados */
+
+/* Aumentar grosor del borde del dropdown */
+.choices.is-open .choices__list--dropdown {
+    border-width: 2px !important;
+    border-color: #999 !important;
+    border-radius: 15px;
+    border-style: inset;
+}
+  
+  /*Buscador estatus**/
+  .filtro-tipo-container {
+    margin-bottom: 20px;
+  }
+  .filtro-tipo-container label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .filtro-tipo-wrapper {
+    min-width: 250px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .filtro-tipo {
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .filtro-tipo-wrapper label {
+    font-weight: 400 !important;
+  }
+  
+
+    /*Buscador estatus**/
+    .filtro-estado-container {
+        margin-bottom: 20px;
+      }
+      .filtro-estado-container label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      
+      .filtro-estado-wrapper {
+        min-width: 250px;
+    
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .filtro-estado {
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+    
+      .filtro-estado-wrapper label {
+        font-weight: 400 !important;
+      }
+
+
+      .calendar-container {
+        display: flex;
+        justify-content: center; /* Centra horizontalmente */
+        align-items: center;     /* Centra verticalmente */
+        background-color: white;
+      }
+      
+      /* Ocultar tabla durante carga inicial para evitar reajuste visible de columnas */
+      .tablas:not(.datatable-ready) {
+        visibility: hidden !important;
+      }
+      .tablas.datatable-ready {
+        visibility: visible !important;
+      }
+
+      /* Estilos para campo observación editable */
+      .celda-observacion {
+        background: #fff9e6;
+        padding: 8px;
+        border-radius: 3px;
+        cursor: text;
+        font-size: 13px;
+        color: #333;
+        min-height: 30px;
+       position: relative;
+
+      }
+
+      /* Placeholder para cuando está vacío */
+      .celda-observacion:empty:before,
+      .celda-observacion[data-placeholder]:before {
+        content: "Escribe una observación...";
+        color: #999;
+        font-style: italic;
+      }
+
+       /* Ocultar placeholder cuando tiene foco */
+      .celda-observacion:focus:before {
+        content: none;
+      }
+ 
+      .celda-observacion:focus {
+        outline: 2px solid #f39c12;
+        background: #fffef5;
+      }
+
+
+      /* Cards para móvil */
+
+      .cards-actividades {
+        display: none;
+      }
+
+      .card-actividad {
+        background: #fff;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 10px;
+        padding: 10px;
+        position: relative;
+        border-left: 4px solid #3c8dbc;
+      }
+
+      .card-actividad.actividad-hoy {
+        border-left: 5px solid #28a745 !important;
+        background-color: #f0f9f4;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+      }
+
+      .card-actividad-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .card-actividad-descripcion {
+        font-size: 15px;
+        font-weight: bold;
+        color: #333;
+        margin: 0;
+        flex: 1;
+        padding-right: 10px;
+      }
+
+      .card-actividad-detalles {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+
+       .card-actividad-fila {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      } 
+
+      .card-actividad-tipo,
+      .card-actividad-responsable,
+      .card-actividad-fecha,
+      .card-actividad-cliente {
+        color: #666;
+        font-size: 12px;
+      }
+ 
+      .card-actividad-estado {
+        margin: 0;
+      }
+
+      .card-actividad-estado .badge {
+        font-size: 10px;
+        padding: 3px 6px;
+      }
+
+      .card-actividad-observacion {
+        background: #fff9e6;
+        padding: 6px 8px;
+        border-radius: 3px;
+        font-size: 12px;
+        color: #666;
+        font-style: italic;
+        margin-top: 4px;
+      }
+
+      .card-actividad-observacion:empty:before {
+        content: "Sin observación";
+        color: #999;
+      }
+
+      /* DataTables responsive ahora maneja la visualización móvil */
