@@ -197,8 +197,9 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "configuracion-factus" ||
         $_GET["ruta"] == "notificaciones" ||
         $_GET["ruta"] == "logs" ||
-        $_GET["ruta"] == "configuracion-facturacion" ||
         $_GET["ruta"] == "seguimiento-leads" ||
+        $_GET["ruta"] == "ver-nota-credito" ||
+        $_GET["ruta"] == "crear-nota-credito" ||
         $_GET["ruta"] == "salir"
       ) {
 

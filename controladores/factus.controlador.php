@@ -663,7 +663,9 @@ AUTENTICAR CON FACTUS API
 				"mensaje_dian" => $respuestaFactus['message'] ?? 'Factura generada exitosamente',
 				"fecha_envio_dian" => date('Y-m-d H:i:s'),
 				// 🔹 CAPTURAR EL NÚMERO OFICIAL DE FACTURA
-				"numero_factura" => $respuestaFactus['data']['bill']['number'] ?? $respuestaFactus['data']['number'] ?? $respuestaFactus['number'] ?? ''
+				"numero_factura" => $respuestaFactus['data']['bill']['number'] ?? $respuestaFactus['data']['number'] ?? $respuestaFactus['number'] ?? '',
+				// 🔹 CAPTURAR EL ID INTERNO DE FACTUS (Requerido para Notas Crédito)
+				"factus_bill_id" => $respuestaFactus['data']['bill']['id'] ?? $respuestaFactus['data']['id'] ?? null
 			);
 
 			ModeloFactus::mdlActualizarDatosFactura($idVenta, $datosActualizar);
@@ -1042,9 +1044,9 @@ AUTENTICAR CON FACTUS API
 	}
 
 	/*=============================================
-	GENERAR NOTA CRÉDITO
+	GENERAR NOTA CRÉDITO (API FACTUS)
 	=============================================*/
-	static public function ctrGenerarNotaCredito($idVenta, $motivo, $tipo = 'anulacion_total')
+	static public function ctrGenerarNotaCredito($idVenta, $motivo, $tipo = "anulacion_total", $listaProductos = null, $idCliente = null, $motivoDescripcion = null, $metodoPago = "Efectivo", $observacion = "")
 	{
 		// 1. Validar venta original
 		require_once __DIR__ . "/../modelos/ventas.modelo.php";
@@ -1092,7 +1094,7 @@ AUTENTICAR CON FACTUS API
 		$token = $auth['token'];
 
 		// 3. Preparar datos de NC
-		$datosNC = self::prepararDatosNotaCredito($venta, $motivo, $tipo);
+		$datosNC = self::prepararDatosNotaCredito($venta, $motivo, $tipo, $listaProductos, $idCliente, $motivoDescripcion, $metodoPago, $observacion);
 
 		if (isset($datosNC['error'])) {
 			return $datosNC;
@@ -1115,13 +1117,13 @@ AUTENTICAR CON FACTUS API
 				"monto_total" => $venta["total"],
 				"estado_dian" => "enviada",
 				"numero_nota_credito" => $respuestaFactus['data']['credit_note']['number'] ?? '',
-				"cufe_nc" => $respuestaFactus['data']['cufe'] ?? '',
-				"qr_data_nc" => $respuestaFactus['data']['qr_code'] ?? '',
-				"xml_dian_nc" => $respuestaFactus['data']['xml_url'] ?? '',
-				"pdf_dian_nc" => $respuestaFactus['data']['pdf_url'] ?? '',
+				"cufe_nc" => $respuestaFactus['data']['credit_note']['cude'] ?? $respuestaFactus['data']['cufe'] ?? '',
+				"qr_data_nc" => $respuestaFactus['data']['credit_note']['qr'] ?? $respuestaFactus['data']['qr_code'] ?? '',
+				"xml_dian_nc" => $respuestaFactus['data']['credit_note']['xml_url'] ?? '',
+				"pdf_dian_nc" => $respuestaFactus['data']['credit_note']['public_url'] ?? $respuestaFactus['data']['pdf_url'] ?? '',
 				"mensaje_dian" => $respuestaFactus['message'] ?? 'NC generada exitosamente',
 				"fecha_envio_dian" => date('Y-m-d H:i:s'),
-				"id_usuario" => $_SESSION['id'] ?? 1
+				"id_usuario" => $_SESSION['id'] ?? 14
 			];
 
 			// Guardar en BD
@@ -1166,7 +1168,7 @@ AUTENTICAR CON FACTUS API
 	/*=============================================
 	PREPARAR DATOS DE NOTA CRÉDITO (JSON PARA FACTUS)
 	=============================================*/
-	private static function prepararDatosNotaCredito($venta, $motivo, $tipo)
+	private static function prepararDatosNotaCredito($venta, $motivo, $tipo, $listaProductos = null, $idCliente = null, $motivoDescripcion = null, $metodoPago = "Efectivo", $observacion = "")
 	{
 		// Obtener datos relacionados (similar a prepararDatosFactura)
 		require_once __DIR__ . "/../modelos/clientes.modelo.php";
@@ -1205,8 +1207,9 @@ AUTENTICAR CON FACTUS API
 				break;
 		}
 
-		// Preparar items (productos) - usar los mismos de la factura original
-		$productosVenta = json_decode($venta['productos'], true);
+		// Preparar items (productos)
+		// Si recibimos lista filtrada, usamos esa, si no, la original
+		$productosVenta = !empty($listaProductos) ? $listaProductos : json_decode($venta['productos'], true);
 		$items = [];
 
 		foreach ($productosVenta as $key => $productoVenta) {
@@ -1279,17 +1282,50 @@ AUTENTICAR CON FACTUS API
 			$codesCliente = ['R-99-PN'];
 		}
 
+
+		// VALIDACIÓN DE ID FACTUS (Requerido para NC)
+		if (empty($venta['factus_bill_id'])) {
+			return [
+				'status' => 'error',
+				'message' => 'Esta factura no tiene un ID de Factus asociado (factus_bill_id). No es posible generar Nota Crédito para facturas procesadas antes de esta actualización.'
+			];
+		}
+
 		// Generar código de referencia para la NC (ej: "NC-FEFG66")
 		$referenciaNC = "NC-" . $venta["numero_factura"];
 
+		// ============================================
+		// LÓGICA DE MOTIVO / DESCRIPCIÓN
+		// ============================================
+		$discrepancyCodes = [
+			1 => "Devolución de parte de los bienes; no aceptación de partes del servicio",
+			2 => "Anulación de factura electrónica",
+			3 => "Rebaja total aplicada",
+			4 => "Descuento total aplicado",
+			5 => "Rescisión: nulidad por falta de requisitos",
+			6 => "Otros"
+		];
+
+		// Si el motivo viene como texto (ej desde select), asegurar que es int
+		$discrepancyCode = intval($motivo);
+
+		// Determinar descripción final
+		// Si hay una descripción personalizada (viene de 'Otros' o input usuario), usarla
+		$descripcionDefecto = $discrepancyCodes[$discrepancyCode] ?? "Otros";
+		$descripcionFinal = (!empty($motivoDescripcion)) ? $motivoDescripcion : $descripcionDefecto;
+
+		$correctionConceptId = $discrepancyCode;
+
 		$notaCredito = [
 			"numbering_range_id" => intval($rangoNC['id_factus']),
+			"bill_id" => intval($venta['factus_bill_id']), // REQUERIDO: ID interno de Factus
 			"reference_code" => $referenciaNC, // REQUERIDO: Código de referencia de la NC
 			"bill_reference" => $venta["numero_factura"], // CAMPO CLAVE: Referencia a factura original
 			"discrepancy_response_code" => $discrepancyCode,
+			"discrepancy_response_description" => $descripcionFinal,
 			"correction_concept_id" => $correctionConceptId,
 			"correction_concept_code" => $correctionConceptId, // REQUERIDO: Same as correction_concept_id
-			"observation" => $motivo,
+			"observation" => (!empty($observacion)) ? $observacion : $descripcionFinal,
 			"send_email" => true,
 
 			"establishment" => [
@@ -1323,6 +1359,53 @@ AUTENTICAR CON FACTUS API
 			],
 
 			"items" => $items
+		];
+
+		// Mapeo básico de métodos de pago (Igual que en factura)
+		$paymentMethodCode = "10"; // Default Efectivo
+
+		switch ($metodoPago) {
+			case "Efectivo":
+				$paymentMethodCode = "10";
+				break;
+			case "TC":
+				$paymentMethodCode = "48";
+				break;
+			case "TD":
+				$paymentMethodCode = "49";
+				break;
+			case "Transf":
+				$paymentMethodCode = "47";
+				break;
+			case "Cheque":
+				$paymentMethodCode = "20";
+				break;
+			case "Consignacion":
+				$paymentMethodCode = "42";
+				break; // Consignación bancaria
+			case "Bonos":
+				$paymentMethodCode = "71";
+				break;
+			case "Vales":
+				$paymentMethodCode = "72";
+				break;
+			case "Otros":
+				$paymentMethodCode = "ZZ";
+				break; // Mutuo acuerdo / Otros
+			case "No Definido":
+				$paymentMethodCode = "1";
+				break; // Instrumento no definido
+			default:
+				$paymentMethodCode = "10";
+				break;
+		}
+
+		$notaCredito["payment_methods"] = [
+			[
+				"code" => $paymentMethodCode,
+				"payment_method" => $metodoPago, // Descripción simple
+				"payment_due_date" => date('Y-m-d')
+			]
 		];
 
 		return $notaCredito;

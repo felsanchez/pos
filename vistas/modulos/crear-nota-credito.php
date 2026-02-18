@@ -1,0 +1,368 @@
+<?php
+
+if ($_SESSION["perfil"] == "Especial") {
+    echo '<script>
+    window.location = "inicio";
+  </script>';
+    return;
+}
+
+// 1. Obtener datos de la venta original
+if (!isset($_GET["idVenta"])) {
+    echo '<script>
+    window.location = "facturas-electronicas";
+  </script>';
+    return;
+}
+
+$idVenta = $_GET["idVenta"];
+$venta = ControladorVentas::ctrMostrarVentas("id", $idVenta);
+$cliente = ControladorClientes::ctrMostrarClientes("id", $venta["id_cliente"]);
+$vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $venta["id_vendedor"]);
+$configuracion = ModeloConfiguracion::mdlObtenerConfiguracion();
+
+// Decodificar productos
+$productos = json_decode($venta["productos"], true);
+
+// Verificar configuración de Factus para rangos
+$rangoNC = ModeloFactus::mdlObtenerRangoNC();
+if (!$rangoNC) {
+    echo '<script>
+        swal({
+            type: "error",
+            title: "No hay rango de Nota Crédito activo",
+            text: "Por favor configure un rango de numeración para Notas Crédito en Configuración Factus.",
+            showConfirmButton: true
+        }).then(function(result){
+            window.location = "facturas-electronicas";
+        });
+    </script>';
+    return;
+}
+
+// Importar modelos
+require_once "modelos/productos.modelo.php";
+
+?>
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            Crear Nota Crédito
+            <small>Factura #
+                <?php echo $venta["numero_factura"]; ?>
+            </small>
+        </h1>
+        <ol class="breadcrumb">
+            <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
+            <li><a href="facturas-electronicas">Facturas Electrónicas</a></li>
+            <li class="active">Crear Nota Crédito</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+
+            <!--=====================================
+      EL FORMULARIO
+      ======================================-->
+            <div class="col-lg-12 col-xs-12">
+
+                <div class="box box-danger">
+
+                    <div class="box-header with-border"></div>
+
+                    <form role="form" method="post" class="formularioNotaCredito" id="formNotaCredito">
+
+                        <div class="box-body">
+
+                            <div class="box">
+
+                                <!--=====================================
+                ENCABEZADO
+                ======================================-->
+                                <div class="row">
+                                    <!-- Factura Referencia -->
+                                    <div class="col-xs-12 col-md-4">
+                                        <div class="form-group">
+                                            <label>Factura Referencia</label>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i class="fa fa-file-text"></i></span>
+                                                <input type="text" class="form-control"
+                                                    value="<?php echo $venta["numero_factura"]; ?>" readonly>
+                                                <input type="hidden" name="idVenta" value="<?php echo $venta["id"]; ?>">
+                                                <input type="hidden" name="numeroFactura"
+                                                    value="<?php echo $venta["numero_factura"]; ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Cliente -->
+                                    <div class="col-xs-12 col-md-4">
+                                        <div class="form-group">
+                                            <label>Cliente</label>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i class="fa fa-users"></i></span>
+                                                <select class="form-control" id="seleccionarCliente"
+                                                    name="seleccionarCliente" required>
+                                                    <option value="<?php echo $cliente['id']; ?>">
+                                                        <?php echo $cliente['nombre']; ?>
+                                                    </option>
+                                                    <?php
+                                                    $item = null;
+                                                    $valor = null;
+                                                    $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+                                                    foreach ($clientes as $key => $value) {
+                                                        if ($value["id"] != $cliente["id"]) {
+                                                            echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                                                        }
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Vendedor -->
+                                    <div class="col-xs-12 col-md-4">
+                                        <div class="form-group">
+                                            <label>Vendedor Original</label>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                                                <input type="text" class="form-control"
+                                                    value="<?php echo $vendedor["nombre"]; ?>" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--=====================================
+
+
+                            <hr>
+
+                            <!--=====================================
+                CONFIGURACIÓN DE LA NOTA
+                ======================================-->
+                            <div class="row">
+                                <!-- Tipo de Nota -->
+                                <div class="col-xs-12 col-md-6">
+                                    <div class="form-group">
+                                        <label>Tipo de Nota Crédito *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-addon"><i class="fa fa-list"></i></span>
+                                            <select class="form-control" name="tipoNota" id="tipoNota" required>
+                                                <option value="devolucion_parcial">Devolución Parcial de Bienes
+                                                    (Recomendado para ajustes)</option>
+                                                <option value="anulacion_total">Anulación Total (Devolver toda la
+                                                    factura)</option>
+                                                <option value="ajuste_precio">Ajuste de Precio (Rebaja sin
+                                                    devolución de mercancía)</option>
+                                                <option value="descuento_posterior">Descuento Comercial (Descuento
+                                                    posterior)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Motivo -->
+                                <div class="col-xs-12 col-md-6">
+                                    <div class="form-group">
+                                        <label>Motivo *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-addon"><i class="fa fa-comment"></i></span>
+                                            <select class="form-control" name="motivoNota" id="motivoNota" required>
+                                                <option value="1">Devolución de parte de los bienes; no aceptación
+                                                    de partes del servicio</option>
+                                                <option value="2">Anulación de factura electrónica</option>
+                                                <option value="3">Rebaja total aplicada</option>
+                                                <option value="4">Descuento total aplicado</option>
+                                                <option value="5">Rescisión: nulidad por falta de requisitos
+                                                </option>
+                                                <option value="6">Otros</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Descripción Otro Motivo (Oculto por defecto) -->
+                                <div class="col-xs-12 col-md-12" id="divOtroMotivo" style="display: none;">
+                                    <div class="form-group">
+                                        <label>Descripción del Motivo *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-addon"><i class="fa fa-pencil"></i></span>
+                                            <input type="text" class="form-control" name="motivoDescripcion"
+                                                id="motivoDescripcion"
+                                                placeholder="Especifique el motivo de la nota crédito">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <br>
+
+                        <!--=====================================
+                                ENTRADA MÉTODO DE PAGO
+                                ======================================-->
+                        <div class="row">
+                            <div class="col-xs-12 col-md-12">
+                                <div class="form-group">
+                                    <label>Método de Pago *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-addon"><i class="fa fa-credit-card"></i></span>
+                                        <select class="form-control" id="nuevoMetodoPago" name="nuevoMetodoPago"
+                                            required>
+                                            <option value="">Seleccione método de pago</option>
+                                            <option value="Efectivo">Efectivo</option>
+                                            <option value="TC">Tarjeta Crédito</option>
+                                            <option value="TD">Tarjeta Débito</option>
+                                            <option value="Transf">Transferencia</option>
+                                            <option value="Cheque">Cheque</option>
+                                            <option value="Consignacion">Consignación</option>
+                                            <option value="Bonos">Bonos</option>
+                                            <option value="Vales">Vales</option>
+                                            <option value="Otros">Otros</option>
+                                            <option value="No Definido">No Definido</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!--=====================================
+                                ENTRADA OBSERVACIONES
+                                ======================================-->
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <div class="form-group">
+                                    <label>Observaciones (Opcional)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-addon"><i class="fa fa-commenting"></i></span>
+                                        <textarea class="form-control" name="observacion" id="observacion" rows="3"
+                                            placeholder="Escriba observaciones adicionales aquí..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!--=====================================
+                TABLA DE PRODUCTOS
+                ======================================-->
+                        <h4>Seleccione los productos a devolver o ajustar:</h4>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped" id="tablaProductosNC">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px; text-align: center;"><input type="checkbox"
+                                                id="checkTodo" checked></th>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th style="width: 100px;">Cant. Orig.</th>
+                                        <th style="width: 120px;">Cant. Devolver</th>
+                                        <th>Precio Unit.</th>
+                                        <th>Subtotal Devolución</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    foreach ($productos as $key => $prod) {
+                                        // Buscamos info extra del producto si es necesario (ej. impuestos)
+                                        // Por ahora usamos los datos guardados en la venta para integridad
+                                        $totalFila = $prod["precio"] * $prod["cantidad"]; // Precio incluye impuesto según lógica pos
+                                    
+                                        // Recuperar código si falta
+                                        $codigoProducto = $prod["codigo"] ?? "";
+                                        if (empty($codigoProducto)) {
+                                            $infoP = ModeloProductos::mdlMostrarProductos("productos", "id", $prod["id"], "id");
+                                            $codigoProducto = $infoP["codigo"] ?? "";
+                                        }
+                                        ?>
+                                        <tr>
+                                            <td class="text-center">
+                                                <input type="checkbox" class="checkProducto" name="productosSeleccionados[]"
+                                                    value="<?php echo $key; ?>" checked>
+                                            </td>
+                                            <td><?php echo $codigoProducto; ?></td>
+                                            <td><?php echo $prod["descripcion"]; ?></td>
+                                            <td>
+                                                <input type="text" class="form-control input-sm"
+                                                    value="<?php echo $prod["cantidad"]; ?>" readonly>
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control input-sm cantidadDevolver"
+                                                    name="cantidad_<?php echo $key; ?>" min="1"
+                                                    max="<?php echo $prod["cantidad"]; ?>"
+                                                    value="<?php echo $prod["cantidad"]; ?>"
+                                                    data-precio="<?php echo $prod["precio"]; ?>"
+                                                    data-key="<?php echo $key; ?>">
+                                            </td>
+                                            <td>$<?php echo number_format($prod["precio"], 2); ?></td>
+                                            <td class="subtotalFila">
+                                                $<?php echo number_format($prod["total"], 2); ?></td>
+
+                                            <!-- Inputs ocultos para enviar datos -->
+                                            <input type="hidden" name="idProducto_<?php echo $key; ?>"
+                                                value="<?php echo $prod["id"]; ?>">
+                                            <input type="hidden" name="codigo_<?php echo $key; ?>"
+                                                value="<?php echo $codigoProducto; ?>">
+                                            <input type="hidden" name="descripcion_<?php echo $key; ?>"
+                                                value="<?php echo $prod["descripcion"]; ?>">
+                                            <input type="hidden" name="precio_<?php echo $key; ?>"
+                                                value="<?php echo $prod["precio"]; ?>">
+                                            <input type="hidden" name="totalOriginal_<?php echo $key; ?>"
+                                                value="<?php echo $prod["total"]; ?>">
+                                        </tr>
+                                        <?php
+                                    }
+                                    ?>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-xs-12 col-md-4 pull-right">
+                                <table class="table table-condensed table-bordered" style="background:#f9f9f9;">
+                                    <tr>
+                                        <td style="font-weight: bold;">Total Devolución</td>
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i
+                                                        class="ion ion-social-usd"></i></span>
+                                                <input type="text" class="form-control input-lg" id="nuevoTotalNC"
+                                                    name="nuevoTotalNC" readonly
+                                                    style="font-weight: bold; font-size: 1.2em;">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Input oculto para lista final de JSON si se requiere procesar con JS antes de enviar -->
+                        <input type="hidden" name="listaProductosNC" id="listaProductosNC">
+
+                </div>
+            </div>
+
+            <div class="box-footer">
+                <button type="button" class="btn btn-default pull-left"
+                    onclick="window.location='facturas-electronicas'">Cancelar</button>
+                <button type="submit" class="btn btn-danger pull-right">Generar Nota Crédito</button>
+            </div>
+
+            </form>
+
+        </div>
+
+</div>
+
+</div>
+</section>
+</div>
+
+<!-- Importar Script específico para NC -->
+<script src="vistas/js/notas-credito.js?v=<?php echo time(); ?>"></script>

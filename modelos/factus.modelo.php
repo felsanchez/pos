@@ -574,6 +574,10 @@ class ModeloFactus
             $sql .= ", numero_factura = :numero_factura";
         }
 
+        if (isset($datos["factus_bill_id"])) {
+            $sql .= ", factus_bill_id = :factus_bill_id";
+        }
+
         $sql .= " WHERE id = :id";
 
         $stmt = Conexion::conectar()->prepare($sql);
@@ -597,6 +601,10 @@ class ModeloFactus
 
         if (isset($datos["numero_factura"])) {
             $stmt->bindParam(":numero_factura", $datos["numero_factura"], PDO::PARAM_STR);
+        }
+
+        if (isset($datos["factus_bill_id"])) {
+            $stmt->bindParam(":factus_bill_id", $datos["factus_bill_id"], PDO::PARAM_INT);
         }
 
         return $stmt->execute();
@@ -1139,6 +1147,22 @@ class ModeloFactus
         $stmt->execute();
         $resultado = $stmt->fetch();
         return $resultado['total'] > 0;
+    }
+
+    /*=============================================
+    OBTENER NOTA CRÉDITO POR VENTA
+    =============================================*/
+    static public function mdlObtenerNotaCredito($idVenta)
+    {
+        $stmt = Conexion::conectar()->prepare(
+            "SELECT * FROM notas_credito 
+             WHERE id_venta_original = :id_venta 
+             AND estado_dian IN ('enviada', 'aceptada') 
+             ORDER BY id DESC LIMIT 1"
+        );
+        $stmt->bindParam(":id_venta", $idVenta, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch();
     }
 
     /*=============================================

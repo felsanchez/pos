@@ -629,14 +629,17 @@ if ($xml) {
                              ' . (!empty($value["qr_data"]) ? '<a class="btn btn-success" href="' . $value["qr_data"] . '" target="_blank" data-toggle="tooltip" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>' : '') . '
 
                              ' . (
-                  (in_array($value["estado_dian"], ['enviada', 'aceptada']) && !ModeloFactus::mdlTieneNotaCredito($value["id"]))
-                  ? '<button class="btn btn-danger btnGenerarNC" 
-																idVenta="' . $value["id"] . '" 
-																numeroFactura="' . $value["numero_factura"] . '" 
-																title="Generar Nota Crédito">
-														<i class="fa fa-undo"></i>
-													</button>'
-                  : ''
+                  ($nc = ModeloFactus::mdlObtenerNotaCredito($value["id"]))
+                  ? '<a class="btn btn-danger" href="index.php?ruta=ver-nota-credito&idVenta=' . $value["id"] . '" title="Ver Nota Crédito ' . $nc['numero_nota_credito'] . '">
+                          <i class="fa fa-eye"></i> NC
+                     </a>'
+                  : ((in_array($value["estado_dian"], ['enviada', 'aceptada']))
+                    ? '<a class="btn btn-danger" 
+                                href="index.php?ruta=crear-nota-credito&idVenta=' . $value["id"] . '"
+                                title="Generar Nota Crédito">
+                            <i class="fa fa-undo"></i>
+                        </a>'
+                    : '')
                 ) . '
 
                              <button class="btn btn-info btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver Detalles">
@@ -850,13 +853,13 @@ MODAL GENERAR NOTA CRÉDITO
       </div>
       <div class="modal-body">
         <input type="hidden" id="ncIdVenta">
-        
+
         <div class="alert alert-info">
           <p><strong>Factura:</strong> <span id="ncNumeroFactura"></span></p>
           <p><strong>Cliente:</strong> <span id="ncCliente"></span></p>
           <p><strong>Total:</strong> $<span id="ncTotal"></span></p>
         </div>
-        
+
         <div class="form-group">
           <label>Tipo de Nota Crédito:</label>
           <select class="form-control" id="ncTipo">
@@ -866,15 +869,16 @@ MODAL GENERAR NOTA CRÉDITO
             <option value="descuento_posterior">Descuento Posterior</option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label>Motivo <span class="text-danger">*</span>:</label>
-          <textarea class="form-control" id="ncMotivo" rows="3" 
-                    placeholder="Ej: Error en digitación de precio, producto defectuoso, etc."></textarea>
+          <textarea class="form-control" id="ncMotivo" rows="3"
+            placeholder="Ej: Error en digitación de precio, producto defectuoso, etc."></textarea>
         </div>
-        
+
         <div class="alert alert-warning">
-          <i class="fa fa-warning"></i> Esta acción generará una Nota Crédito oficial ante la DIAN y <strong>no puede revertirse</strong>.
+          <i class="fa fa-warning"></i> Esta acción generará una Nota Crédito oficial ante la DIAN y <strong>no puede
+            revertirse</strong>.
         </div>
       </div>
       <div class="modal-footer">
