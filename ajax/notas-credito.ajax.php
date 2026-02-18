@@ -4,7 +4,6 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
-ini_set('error_log', 'debug_php_errors.log');
 
 session_start();
 
@@ -33,7 +32,6 @@ class AjaxNotasCredito
 
             $idVenta = $_POST["idVenta"];
             $motivo = $_POST["motivo"];
-            $tipo = $_POST["tipo"] ?? 'anulacion_total';
             $listaProductos = isset($_POST["listaProductos"]) ? json_decode($_POST["listaProductos"], true) : null;
             $idCliente = $_POST["idCliente"] ?? null;
             $motivoDescripcion = $_POST["motivoDescripcion"] ?? null;
@@ -42,8 +40,12 @@ class AjaxNotasCredito
 
             // Capturar salida de controlador si la hay (echo, print_r) para evitar romper JSON
             ob_start();
-            $respuesta = ControladorFactus::ctrGenerarNotaCredito($idVenta, $motivo, $tipo, $listaProductos, $idCliente, $motivoDescripcion, $metodoPago, $observacion);
-            ob_get_clean(); // Descartar salida no deseada
+            $respuesta = ControladorFactus::ctrGenerarNotaCredito($idVenta, $motivo, $listaProductos, $idCliente, $motivoDescripcion, $metodoPago, $observacion);
+            $debugOutput = ob_get_clean(); // Descartar salida no deseada
+
+            if (!empty($debugOutput)) {
+                file_put_contents("debug_nc_output_error.txt", $debugOutput);
+            }
 
             echo json_encode($respuesta);
 

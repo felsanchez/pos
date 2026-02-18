@@ -1046,7 +1046,7 @@ AUTENTICAR CON FACTUS API
 	/*=============================================
 	GENERAR NOTA CRÉDITO (API FACTUS)
 	=============================================*/
-	static public function ctrGenerarNotaCredito($idVenta, $motivo, $tipo = "anulacion_total", $listaProductos = null, $idCliente = null, $motivoDescripcion = null, $metodoPago = "Efectivo", $observacion = "")
+	static public function ctrGenerarNotaCredito($idVenta, $motivo, $listaProductos = null, $idCliente = null, $motivoDescripcion = null, $metodoPago = "Efectivo", $observacion = "")
 	{
 		// 1. Validar venta original
 		require_once __DIR__ . "/../modelos/ventas.modelo.php";
@@ -1094,7 +1094,7 @@ AUTENTICAR CON FACTUS API
 		$token = $auth['token'];
 
 		// 3. Preparar datos de NC
-		$datosNC = self::prepararDatosNotaCredito($venta, $motivo, $tipo, $listaProductos, $idCliente, $motivoDescripcion, $metodoPago, $observacion);
+		$datosNC = self::prepararDatosNotaCredito($venta, $motivo, $listaProductos, $idCliente, $motivoDescripcion, $metodoPago, $observacion);
 
 		if (isset($datosNC['error'])) {
 			return $datosNC;
@@ -1111,10 +1111,11 @@ AUTENTICAR CON FACTUS API
 			$datosGuardar = [
 				"id_venta_original" => $idVenta,
 				"numero_factura_original" => $venta["numero_factura"],
-				"tipo_nota" => $tipo,
+				"tipo_nota" => "NC_referencia",
 				"motivo" => $motivo,
-				"productos" => $venta["productos"], // Guardar productos originales
+				"productos" => json_encode($listaProductos), // Guardar productos de la NC
 				"monto_total" => $venta["total"],
+				"id_cliente" => !empty($idCliente) ? $idCliente : $venta["id_cliente"],
 				"estado_dian" => "enviada",
 				"numero_nota_credito" => $respuestaFactus['data']['credit_note']['number'] ?? '',
 				"cufe_nc" => $respuestaFactus['data']['credit_note']['cude'] ?? $respuestaFactus['data']['cufe'] ?? '',
@@ -1156,9 +1157,27 @@ AUTENTICAR CON FACTUS API
 		} else {
 			// Error del API
 			$error = json_decode($resultado['respuesta'], true);
+
+			// Log detallado para debug
+			file_put_contents("debug_nc_api_error.txt", date('Y-m-d H:i:s') . "\nHTTP: " . $resultado['http_code'] . "\nResponse: " . $resultado['respuesta'] . "\n\n", FILE_APPEND);
+
+			// Extraer errores de validación si existen
+			$mensajeError = $error['message'] ?? 'Error desconocido';
+			if (isset($error['errors']) && is_array($error['errors'])) {
+				$detallesError = [];
+				foreach ($error['errors'] as $campo => $mensajes) {
+					if (is_array($mensajes)) {
+						$detallesError[] = $campo . ": " . implode(", ", $mensajes);
+					} else {
+						$detallesError[] = $campo . ": " . $mensajes;
+					}
+				}
+				$mensajeError .= " | Detalles: " . implode(" | ", $detallesError);
+			}
+
 			return [
 				"error" => true,
-				"mensaje" => "Error al generar NC: " . ($error['message'] ?? 'Error desconocido'),
+				"mensaje" => "Error al generar NC: " . $mensajeError,
 				"codigo_http" => $resultado['http_code'],
 				"detalles" => $resultado['respuesta']
 			];
@@ -1168,14 +1187,16 @@ AUTENTICAR CON FACTUS API
 	/*=============================================
 	PREPARAR DATOS DE NOTA CRÉDITO (JSON PARA FACTUS)
 	=============================================*/
-	private static function prepararDatosNotaCredito($venta, $motivo, $tipo, $listaProductos = null, $idCliente = null, $motivoDescripcion = null, $metodoPago = "Efectivo", $observacion = "")
+	private static function prepararDatosNotaCredito($venta, $motivo, $listaProductos = null, $idCliente = null, $motivoDescripcion = null, $metodoPago = "Efectivo", $observacion = "")
 	{
 		// Obtener datos relacionados (similar a prepararDatosFactura)
 		require_once __DIR__ . "/../modelos/clientes.modelo.php";
 		require_once __DIR__ . "/../modelos/productos.modelo.php";
 		require_once __DIR__ . "/../modelos/configuracion.modelo.php";
 
-		$cliente = ModeloClientes::mdlMostrarClientes("clientes", "id", $venta['id_cliente']);
+		// Usar cliente editado si se proporcionó, si no, el original de la venta
+		$clienteId = !empty($idCliente) ? $idCliente : $venta['id_cliente'];
+		$cliente = ModeloClientes::mdlMostrarClientes("clientes", "id", $clienteId);
 		$config = ModeloConfiguracion::mdlObtenerConfiguracion();
 		$configFactus = ModeloFactus::mdlObtenerConfiguracion();
 		$rangoNC = ModeloFactus::mdlObtenerRangoNC();
@@ -1187,23 +1208,29 @@ AUTENTICAR CON FACTUS API
 			];
 		}
 
-		// Mapeo de tipo de NC a códigos DIAN
-		$discrepancyCode = "1"; // Default: Anulación
-		$correctionConceptId = "2"; // Default: Anulación de factura electrónica
+		// Mapeo de motivo a códigos DIAN (según documentación Factus API)
+		// El motivo ya es el correction_concept_id de Factus (1-6)
+		$correctionConceptId = intval($motivo); // Valor directo del motivo
+		$discrepancyCode = "2"; // Default
 
-		switch ($tipo) {
-			case 'anulacion_total':
-				$discrepancyCode = "1";
-				$correctionConceptId = "2";
-				break;
-			case 'devolucion_parcial':
+		// discrepancy_response se mapea según el motivo
+		switch ($motivo) {
+			case '1': // Devolución parcial de los bienes y/o no aceptación parcial del servicio
 				$discrepancyCode = "2";
-				$correctionConceptId = "1"; // Devolución parcial de bienes
 				break;
-			case 'ajuste_precio':
-			case 'descuento_posterior':
+			case '2': // Anulación de factura electrónica
+				$discrepancyCode = "1";
+				break;
+			case '3': // Rebaja o descuento parcial o total
+			case '4': // Ajuste de precio
 				$discrepancyCode = "3";
-				$correctionConceptId = "3"; // Rebaja total aplicada
+				break;
+			case '5': // Descuento comercial por pronto pago
+			case '6': // Descuento comercial por volumen de ventas
+				$discrepancyCode = "2";
+				break;
+			default:
+				$discrepancyCode = "2";
 				break;
 		}
 
@@ -1268,7 +1295,7 @@ AUTENTICAR CON FACTUS API
 		// Preparar customer (igual que en factura)
 		$municipioClienteId = $cliente['municipio_id'] ?? '';
 		$tipoDocCliente = !empty($cliente['tipo_documento_id']) ? intval($cliente['tipo_documento_id']) : 6;
-		$tipoPersonaCliente = !empty($cliente['tipo_persona']) ? intval($cliente['tipo_persona']) : 1;
+		$tipoPersonaCliente = isset($cliente['tipo_persona']) && in_array(intval($cliente['tipo_persona']), [1, 2]) ? intval($cliente['tipo_persona']) : 2;
 
 		// Responsabilidades fiscales del cliente
 		$inputRespCliente = $cliente['responsabilidades_fiscales'] ?? 'R-99-PN';
@@ -1298,12 +1325,12 @@ AUTENTICAR CON FACTUS API
 		// LÓGICA DE MOTIVO / DESCRIPCIÓN
 		// ============================================
 		$discrepancyCodes = [
-			1 => "Devolución de parte de los bienes; no aceptación de partes del servicio",
+			1 => "Devolución parcial de los bienes y/o no aceptación parcial del servicio",
 			2 => "Anulación de factura electrónica",
-			3 => "Rebaja total aplicada",
-			4 => "Descuento total aplicado",
-			5 => "Rescisión: nulidad por falta de requisitos",
-			6 => "Otros"
+			3 => "Rebaja o descuento parcial o total",
+			4 => "Ajuste de precio",
+			5 => "Descuento comercial por pronto pago",
+			6 => "Descuento comercial por volumen de ventas"
 		];
 
 		// Si el motivo viene como texto (ej desde select), asegurar que es int
@@ -1363,6 +1390,7 @@ AUTENTICAR CON FACTUS API
 
 		// Mapeo básico de métodos de pago (Igual que en factura)
 		$paymentMethodCode = "10"; // Default Efectivo
+
 
 		switch ($metodoPago) {
 			case "Efectivo":

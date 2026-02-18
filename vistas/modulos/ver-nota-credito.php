@@ -19,7 +19,9 @@ if (!$notaCredito || !$venta) {
     return;
 }
 
-$cliente = ControladorClientes::ctrMostrarClientes("id", $venta["id_cliente"]);
+// Usar el cliente de la NC si está guardado, si no, el de la venta original
+$clienteId = !empty($notaCredito["id_cliente"]) ? $notaCredito["id_cliente"] : $venta["id_cliente"];
+$cliente = ControladorClientes::ctrMostrarClientes("id", $clienteId);
 $vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $venta["id_vendedor"]);
 $configuracion = ModeloConfiguracion::mdlObtenerConfiguracion();
 
@@ -121,31 +123,35 @@ $listaProducto = json_decode($notaCredito["productos"], true);
                                     </b><br>
                                     <b>Factura Relacionada:</b>
                                     <?php echo $notaCredito["numero_factura_original"]; ?><br>
-                                    <b>Tipo:</b>
+                                    <b>Motivo:</b>
                                     <?php
-                                    $tipoNota = $notaCredito["tipo_nota"];
-                                    $textoTipo = "Anulación Total"; // Default
-                                    switch ($tipoNota) {
-                                        case "anulacion_total":
-                                            $textoTipo = "Anulación Total";
+                                    $motivoNC = $notaCredito["motivo"];
+                                    $textoMotivo = "Otro";
+                                    switch ($motivoNC) {
+                                        case "1":
+                                            $textoMotivo = "Devolución parcial de los bienes y/o no aceptación parcial del servicio";
                                             break;
-                                        case "devolucion_parcial":
-                                            $textoTipo = "Devolución Parcial";
+                                        case "2":
+                                            $textoMotivo = "Anulación de factura electrónica";
                                             break;
-                                        case "ajuste_precio":
-                                            $textoTipo = "Ajuste de Precio";
+                                        case "3":
+                                            $textoMotivo = "Rebaja o descuento parcial o total";
                                             break;
-                                        case "descuento_posterior":
-                                            $textoTipo = "Descuento Posterior";
+                                        case "4":
+                                            $textoMotivo = "Ajuste de precio";
+                                            break;
+                                        case "5":
+                                            $textoMotivo = "Descuento comercial por pronto pago";
+                                            break;
+                                        case "6":
+                                            $textoMotivo = "Descuento comercial por volumen de ventas";
                                             break;
                                     }
-                                    echo $textoTipo;
+                                    echo $textoMotivo;
                                     ?><br>
                                     <b>CUDE:</b> <span style="font-size: 10px;">
                                         <?php echo $notaCredito["cufe_nc"]; ?>
                                     </span><br>
-                                    <b>Motivo:</b>
-                                    <?php echo $notaCredito["motivo"]; ?><br>
                                     <b>Estado DIAN:</b>
                                     <?php echo ucfirst($notaCredito["estado_dian"]); ?>
                                 </div>

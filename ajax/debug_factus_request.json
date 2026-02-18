@@ -1,10 +1,10 @@
 {
     "numbering_range_id": 1040,
-    "reference_code": "FEFG10353",
+    "reference_code": "FEFG76",
     "observation": "",
     "payment_form": "1",
-    "payment_due_date": "2026-03-19",
-    "payment_method_code": "49",
+    "payment_due_date": "2026-03-20",
+    "payment_method_code": "42",
     "operation_type": 10,
     "send_email": true,
     "establishment": {
@@ -50,7 +50,7 @@
             "note": "",
             "code_reference": "ITEM-1",
             "name": "prueba04 IVA0 LBR",
-            "quantity": 1,
+            "quantity": 2,
             "discount_rate": "0.00",
             "price": "100.000000",
             "tax_rate": "0.00",
@@ -64,15 +64,15 @@
             "scheme_id": "1",
             "note": "",
             "code_reference": "ITEM-2",
-            "name": "prueba02 INC10 GRM",
-            "quantity": 1,
+            "name": "prueba06 IVA5 MLT",
+            "quantity": 2,
             "discount_rate": "0.00",
             "price": "100.000000",
-            "tax_rate": "10.00",
-            "unit_measure_id": 70,
+            "tax_rate": "5.00",
+            "unit_measure_id": 499,
             "standard_code_id": 1,
             "is_excluded": 0,
-            "tribute_id": 4,
+            "tribute_id": 1,
             "withholding_taxes": []
         }
     ]

@@ -5,18 +5,7 @@ $(document).ready(function () {
         recalcularTotalNC();
     }
 
-    // 1.1 Evento: Cambio en Motivo (Mostrar/Ocultar input "Otro")
-    $("#motivoNota").change(function () {
-        var motivo = $(this).val();
-        if (motivo == "6") { // 6 = Otros
-            $("#divOtroMotivo").show();
-            $("#motivoDescripcion").prop("required", true);
-        } else {
-            $("#divOtroMotivo").hide();
-            $("#motivoDescripcion").prop("required", false);
-            $("#motivoDescripcion").val(""); // Limpiar
-        }
-    });
+
 
     // 1.2 Evento: Checkbox "Seleccionar Todo"
     $("#checkTodo").on("change", function () {
@@ -130,22 +119,10 @@ $(document).ready(function () {
         // console.log("Productos a enviar impl:", listaProductos);
 
         var idVenta = $("input[name='idVenta']").val();
+        var numeroFactura = $("input[name='numeroFactura']").val();
         var motivo = $("#motivoNota").val();
-        var tipoNota = $("#tipoNota").val();
         var idCliente = $("#seleccionarCliente").val();
-        var motivoDescripcion = $("#motivoDescripcion").val(); // Capture custom description
 
-        // Validar si es "Otros" y no escribió nada
-        if (motivo == "6" && motivoDescripcion.trim() == "") {
-            swal({
-                type: "error",
-                title: "Error",
-                text: "Por favor especifique la descripción del motivo."
-            });
-            return;
-        }
-
-        var motivoDescripcion = $("#motivoDescripcion").val(); // Capture custom description
         var metodoPago = $("#nuevoMetodoPago").val();
         var observacion = $("#observacion").val();
 
@@ -154,16 +131,6 @@ $(document).ready(function () {
                 type: "error",
                 title: "Error",
                 text: "Seleccione un método de pago."
-            });
-            return;
-        }
-
-        // Validar si es "Otros" y no escribió nada
-        if (motivo == "6" && motivoDescripcion.trim() == "") {
-            swal({
-                type: "error",
-                title: "Error",
-                text: "Por favor especifique la descripción del motivo."
             });
             return;
         }
@@ -192,10 +159,8 @@ $(document).ready(function () {
                 datos.append("idVenta", idVenta);
                 datos.append("numeroFactura", numeroFactura);
                 datos.append("motivo", motivo);
-                datos.append("tipo", tipoNota);
-                datos.append("idCliente", idCliente); // Send client ID
-                datos.append("motivoDescripcion", motivoDescripcion);
-                datos.append("metodoPago", metodoPago); // Send payment method
+                datos.append("idCliente", idCliente);
+                datos.append("metodoPago", metodoPago);
                 datos.append("observacion", observacion); // Send observation
                 datos.append("listaProductos", JSON.stringify(listaProductos));
 

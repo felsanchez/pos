@@ -1086,12 +1086,12 @@ class ModeloFactus
 				id_venta_original, numero_factura_original, tipo_nota, motivo,
 				productos, monto_total, estado_dian, numero_nota_credito,
 				cufe_nc, qr_data_nc, xml_dian_nc, pdf_dian_nc, mensaje_dian,
-				fecha_envio_dian, id_usuario
+				fecha_envio_dian, id_usuario, id_cliente
 			) VALUES (
 				:id_venta, :num_factura, :tipo, :motivo,
 				:productos, :monto, :estado, :num_nc,
 				:cufe, :qr, :xml, :pdf, :mensaje,
-				:fecha_envio, :usuario
+				:fecha_envio, :usuario, :id_cliente
 			)"
         );
 
@@ -1110,6 +1110,7 @@ class ModeloFactus
         $stmt->bindParam(":mensaje", $datos["mensaje_dian"], PDO::PARAM_STR);
         $stmt->bindParam(":fecha_envio", $datos["fecha_envio_dian"], PDO::PARAM_STR);
         $stmt->bindParam(":usuario", $datos["id_usuario"], PDO::PARAM_INT);
+        $stmt->bindParam(":id_cliente", $datos["id_cliente"], PDO::PARAM_INT);
 
         if ($stmt->execute()) {
             return "ok";

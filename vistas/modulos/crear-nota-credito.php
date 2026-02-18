@@ -51,6 +51,7 @@ require_once "modelos/productos.modelo.php";
             Crear Nota Crédito
             <small>Factura #
                 <?php echo $venta["numero_factura"]; ?>
+                <input type="hidden" name="numeroFactura" value="<?php echo $venta["numero_factura"]; ?>">
             </small>
         </h1>
         <ol class="breadcrumb">
@@ -146,25 +147,6 @@ require_once "modelos/productos.modelo.php";
                 CONFIGURACIÓN DE LA NOTA
                 ======================================-->
                             <div class="row">
-                                <!-- Tipo de Nota -->
-                                <div class="col-xs-12 col-md-6">
-                                    <div class="form-group">
-                                        <label>Tipo de Nota Crédito *</label>
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="fa fa-list"></i></span>
-                                            <select class="form-control" name="tipoNota" id="tipoNota" required>
-                                                <option value="devolucion_parcial">Devolución Parcial de Bienes
-                                                    (Recomendado para ajustes)</option>
-                                                <option value="anulacion_total">Anulación Total (Devolver toda la
-                                                    factura)</option>
-                                                <option value="ajuste_precio">Ajuste de Precio (Rebaja sin
-                                                    devolución de mercancía)</option>
-                                                <option value="descuento_posterior">Descuento Comercial (Descuento
-                                                    posterior)</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
 
                                 <!-- Motivo -->
                                 <div class="col-xs-12 col-md-6">
@@ -173,31 +155,19 @@ require_once "modelos/productos.modelo.php";
                                         <div class="input-group">
                                             <span class="input-group-addon"><i class="fa fa-comment"></i></span>
                                             <select class="form-control" name="motivoNota" id="motivoNota" required>
-                                                <option value="1">Devolución de parte de los bienes; no aceptación
-                                                    de partes del servicio</option>
+                                                <option value="1">Devolución parcial de los bienes y/o no aceptación
+                                                    parcial del servicio</option>
                                                 <option value="2">Anulación de factura electrónica</option>
-                                                <option value="3">Rebaja total aplicada</option>
-                                                <option value="4">Descuento total aplicado</option>
-                                                <option value="5">Rescisión: nulidad por falta de requisitos
-                                                </option>
-                                                <option value="6">Otros</option>
+                                                <option value="3">Rebaja o descuento parcial o total</option>
+                                                <option value="4">Ajuste de precio</option>
+                                                <option value="5">Descuento comercial por pronto pago</option>
+                                                <option value="6">Descuento comercial por volumen de ventas</option>
                                             </select>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Descripción Otro Motivo (Oculto por defecto) -->
-                                <div class="col-xs-12 col-md-12" id="divOtroMotivo" style="display: none;">
-                                    <div class="form-group">
-                                        <label>Descripción del Motivo *</label>
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="fa fa-pencil"></i></span>
-                                            <input type="text" class="form-control" name="motivoDescripcion"
-                                                id="motivoDescripcion"
-                                                placeholder="Especifique el motivo de la nota crédito">
-                                        </div>
-                                    </div>
-                                </div>
+
                             </div>
                         </div>
 
