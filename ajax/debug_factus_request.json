@@ -1,10 +1,10 @@
 {
     "numbering_range_id": 1190,
-    "reference_code": "SETP990000161",
-    "observation": "",
+    "reference_code": "SETP990000162",
+    "observation": "obs factura 001",
     "payment_form": "1",
-    "payment_due_date": "2026-03-22",
-    "payment_method_code": "71",
+    "payment_due_date": "2026-03-23",
+    "payment_method_code": "42",
     "operation_type": 10,
     "send_email": true,
     "establishment": {
@@ -49,16 +49,157 @@
             "scheme_id": "1",
             "note": "",
             "code_reference": "ITEM-1",
+            "name": "prueba01 Exc GLL",
+            "quantity": 3,
+            "discount_rate": "10.00",
+            "price": "100.000000",
+            "tax_rate": "0.00",
+            "unit_measure_id": 874,
+            "standard_code_id": 1,
+            "is_excluded": 0,
+            "tribute_id": 7,
+            "withholding_taxes": [
+                {
+                    "code": "06",
+                    "withholding_tax_rate": "2.00"
+                }
+            ]
+        },
+        {
+            "scheme_id": "1",
+            "note": "",
+            "code_reference": "ITEM-2",
+            "name": "prueba02 INC10 GRM",
+            "quantity": 3,
+            "discount_rate": "10.00",
+            "price": "100.000000",
+            "tax_rate": "10.00",
+            "unit_measure_id": 70,
+            "standard_code_id": 1,
+            "is_excluded": 0,
+            "tribute_id": 4,
+            "withholding_taxes": [
+                {
+                    "code": "06",
+                    "withholding_tax_rate": "2.00"
+                }
+            ]
+        },
+        {
+            "scheme_id": "1",
+            "note": "",
+            "code_reference": "ITEM-3",
+            "name": "prueba03 INC8 KGM",
+            "quantity": 3,
+            "discount_rate": "10.00",
+            "price": "100.000000",
+            "tax_rate": "8.00",
+            "unit_measure_id": 414,
+            "standard_code_id": 1,
+            "is_excluded": 0,
+            "tribute_id": 4,
+            "withholding_taxes": [
+                {
+                    "code": "06",
+                    "withholding_tax_rate": "2.00"
+                }
+            ]
+        },
+        {
+            "scheme_id": "1",
+            "note": "",
+            "code_reference": "ITEM-4",
+            "name": "prueba05 IVA19 MTR",
+            "quantity": 3,
+            "discount_rate": "10.00",
+            "price": "100.000000",
+            "tax_rate": "19.00",
+            "unit_measure_id": 512,
+            "standard_code_id": 1,
+            "is_excluded": 0,
+            "tribute_id": 1,
+            "withholding_taxes": [
+                {
+                    "code": "05",
+                    "withholding_tax_rate": "100.00"
+                },
+                {
+                    "code": "06",
+                    "withholding_tax_rate": "2.00"
+                }
+            ]
+        },
+        {
+            "scheme_id": "1",
+            "note": "",
+            "code_reference": "ITEM-5",
             "name": "prueba04 IVA0 LBR",
-            "quantity": 1,
-            "discount_rate": "0.00",
+            "quantity": 3,
+            "discount_rate": "10.00",
             "price": "100.000000",
             "tax_rate": "0.00",
             "unit_measure_id": 449,
             "standard_code_id": 1,
             "is_excluded": 0,
             "tribute_id": 1,
-            "withholding_taxes": []
+            "withholding_taxes": [
+                {
+                    "code": "05",
+                    "withholding_tax_rate": "100.00"
+                },
+                {
+                    "code": "06",
+                    "withholding_tax_rate": "2.00"
+                }
+            ]
+        },
+        {
+            "scheme_id": "1",
+            "note": "",
+            "code_reference": "ITEM-6",
+            "name": "prueba06 IVA5 MLT",
+            "quantity": 3,
+            "discount_rate": "10.00",
+            "price": "100.000000",
+            "tax_rate": "5.00",
+            "unit_measure_id": 499,
+            "standard_code_id": 1,
+            "is_excluded": 0,
+            "tribute_id": 1,
+            "withholding_taxes": [
+                {
+                    "code": "05",
+                    "withholding_tax_rate": "100.00"
+                },
+                {
+                    "code": "06",
+                    "withholding_tax_rate": "2.00"
+                }
+            ]
+        },
+        {
+            "scheme_id": "1",
+            "note": "",
+            "code_reference": "ITEM-7",
+            "name": "prueba07 IV19 UND",
+            "quantity": 2,
+            "discount_rate": "10.00",
+            "price": "85.000000",
+            "tax_rate": "19.00",
+            "unit_measure_id": 70,
+            "standard_code_id": 1,
+            "is_excluded": 0,
+            "tribute_id": 1,
+            "withholding_taxes": [
+                {
+                    "code": "05",
+                    "withholding_tax_rate": "100.00"
+                },
+                {
+                    "code": "06",
+                    "withholding_tax_rate": "2.00"
+                }
+            ]
         }
     ]
 }

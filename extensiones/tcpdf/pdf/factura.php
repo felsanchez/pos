@@ -161,6 +161,8 @@ class imprimirFactura
 		$bloque2 .= '<div style="font-size:9px; line-height:16px; color:#555;">';
 		$bloque2 .= '<strong>Cliente:</strong> ' . $respuestaCliente["nombre"] . '<br>';
 		$bloque2 .= '<strong>Documento:</strong> ' . $respuestaCliente["documento"] . '<br>';
+		$bloque2 .= '<strong>Dirección:</strong> ' . $respuestaCliente["direccion"] . '<br>';
+		$bloque2 .= '<strong>Municipio:</strong> ' . $respuestaCliente["ciudad"] . '<br>';
 		$bloque2 .= '<strong>Teléfono:</strong> ' . $respuestaCliente["telefono"] . '<br>';
 		$bloque2 .= '<strong>Email:</strong> ' . $respuestaCliente["email"];
 		$bloque2 .= '</div>';
@@ -247,50 +249,105 @@ EOF;
 
 
 		//---------------------------------------------------------
-// BLOQUE 5 - TOTALES
-//---------------------------------------------------------
+		// BLOQUE 5 - TOTALES (Recálculo Exacto)
+		//---------------------------------------------------------
+
+		$valorBrutoRecalculado = 0; // Base Imponible Bruta (Antes de descuentos)
+		$subtotalRecalculado = 0;   // Base Imponible Neta (Después de descuentos)
+		$impuestoGeneral = 0;
+
+		$tipoDescuento = $respuestaVenta["tipo_descuento"] ?? "";
+		$valorDescuentoGlobal = $respuestaVenta["valor_descuento"] ?? 0;
+		$montoDescuentoTotal = $respuestaVenta["monto_descuento"] ?? 0;
+		$totalVentaOriginal = $respuestaVenta["total"];
+		$totalOriginalEstimado = $totalVentaOriginal + $montoDescuentoTotal;
+
+		foreach ($productos as $prod) {
+			$totalProductoConImpuesto = floatval($prod["total"]);
+			$impuestoPorcentaje = 0;
+
+			if (isset($prod["impuesto"])) {
+				$impuestoPorcentaje = floatval($prod["impuesto"]);
+			} else {
+				$infoP = ModeloProductos::mdlMostrarProductos("productos", "id", $prod["id"], "id");
+				$impuestoPorcentaje = isset($infoP["impuesto_porcentaje"]) ? floatval($infoP["impuesto_porcentaje"]) : 19;
+			}
+
+			$baseItemBruta = $totalProductoConImpuesto / (1 + ($impuestoPorcentaje / 100));
+			$valorBrutoRecalculado += $baseItemBruta;
+
+			$descuentoItem = 0;
+			if ($tipoDescuento == "porcentaje") {
+				$descuentoItem = $totalProductoConImpuesto * ($valorDescuentoGlobal / 100);
+			} else if ($tipoDescuento == "fijo" && $totalOriginalEstimado > 0) {
+				$descuentoItem = $valorDescuentoGlobal * ($totalProductoConImpuesto / $totalOriginalEstimado);
+			}
+
+			$precioConDescuento = $totalProductoConImpuesto - $descuentoItem;
+			$baseItemNeta = $precioConDescuento / (1 + ($impuestoPorcentaje / 100));
+			$impuestoItem = $precioConDescuento - $baseItemNeta;
+
+			$subtotalRecalculado += $baseItemNeta;
+			$impuestoGeneral += $impuestoItem;
+		}
+
+		$totalVentaCalculado = $subtotalRecalculado + $impuestoGeneral;
+		$descuentoBase = $valorBrutoRecalculado - $subtotalRecalculado;
+
+		// Retenciones
+		$totalRetenciones = 0;
+		if (!empty($respuestaVenta["retenciones"])) {
+			$retencionesArr = json_decode($respuestaVenta["retenciones"], true);
+			foreach ($retencionesArr as $ret) {
+				$totalRetenciones += $ret['monto'];
+			}
+		}
+		$valorNetoPagar = $totalVentaCalculado - $totalRetenciones;
 
 		$pdf->Ln(5);
 
-		$bloque5 = <<<EOF
+		$htmlTotales = '
+		<table cellpadding="5">
+			<tr>
+				<td style="width:65%;"></td>
+				<td style="width:35%;">
+					<table cellpadding="4">
+						<tr>
+							<td style="width:50%; font-size:9px; color:#555; text-align:left; border-bottom:1px solid #e0e0e0;">Subtotal:</td>
+							<td style="width:50%; font-size:9px; color:#333; text-align:right; border-bottom:1px solid #e0e0e0;">$ ' . number_format($valorBrutoRecalculado, 2) . '</td>
+						</tr>';
 
-<table cellpadding="5">
-	<tr>
-		<td style="width:65%;"></td>
-		<td style="width:35%;">
-			<table cellpadding="4">
-				<tr>
-					<td style="width:50%; font-size:9px; color:#555; text-align:left; border-bottom:1px solid #e0e0e0;">
-						Subtotal:
-					</td>
-					<td style="width:50%; font-size:9px; color:#333; text-align:right; border-bottom:1px solid #e0e0e0;">
-						$ $neto
-					</td>
-				</tr>
-				<tr>
-					<td style="width:50%; font-size:9px; color:#555; text-align:left; border-bottom:1px solid #e0e0e0;">
-						Impuesto:
-					</td>
-					<td style="width:50%; font-size:9px; color:#333; text-align:right; border-bottom:1px solid #e0e0e0;">
-						$ $impuesto
-					</td>
-				</tr>
-				<tr style="background:#667eea; color:white;">
-					<td style="width:50%; font-size:11px; font-weight:bold; text-align:left; padding:6px;">
-						TOTAL:
-					</td>
-					<td style="width:50%; font-size:11px; font-weight:bold; text-align:right; padding:6px;">
-						$ $total
-					</td>
-				</tr>
-			</table>
-		</td>
-	</tr>
-</table>
+		if ($montoDescuentoTotal > 0) {
+			$htmlTotales .= '
+						<tr>
+							<td style="width:50%; font-size:9px; color:#555; text-align:left; border-bottom:1px solid #e0e0e0;">Descuento:</td>
+							<td style="width:50%; font-size:9px; color:#333; text-align:right; border-bottom:1px solid #e0e0e0;">$ ' . number_format($descuentoBase, 2) . '</td>
+						</tr>';
+		}
 
-EOF;
+		$htmlTotales .= '
+						<tr>
+							<td style="width:50%; font-size:9px; color:#555; text-align:left; border-bottom:1px solid #e0e0e0;">Valor Bruto:</td>
+							<td style="width:50%; font-size:9px; color:#333; text-align:right; border-bottom:1px solid #e0e0e0;">$ ' . number_format($subtotalRecalculado, 2) . '</td>
+						</tr>
+						<tr>
+							<td style="width:50%; font-size:9px; color:#555; text-align:left; border-bottom:1px solid #e0e0e0;">Impuesto:</td>
+							<td style="width:50%; font-size:9px; color:#333; text-align:right; border-bottom:1px solid #e0e0e0;">$ ' . number_format($impuestoGeneral, 2) . '</td>
+						</tr>
+						<tr>
+							<td style="width:50%; font-size:9px; color:#555; text-align:left; border-bottom:1px solid #e0e0e0;">Total:</td>
+							<td style="width:50%; font-size:9px; color:#333; text-align:right; border-bottom:1px solid #e0e0e0;">$ ' . number_format($totalVentaCalculado, 2) . '</td>
+						</tr>
+						<tr style="background:#667eea; color:white;">
+							<td style="width:50%; font-size:11px; font-weight:bold; text-align:left; padding:6px;">VALOR NETO:</td>
+							<td style="width:50%; font-size:11px; font-weight:bold; text-align:right; padding:6px;">$ ' . number_format($valorNetoPagar, 2) . '</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>';
 
-		$pdf->writeHTML($bloque5, false, false, false, false, '');
+		$pdf->writeHTML($htmlTotales, false, false, false, false, '');
 
 		//---------------------------------------------------------
 // BLOQUE 6 - CÓDIGO QR Y FOOTER
@@ -303,7 +360,7 @@ EOF;
 		}
 
 		// Contenido del código QR simplificado y legible usando concatenación
-		$contenidoQR = "GRUPO FEJ TECHNOLOGIES\n";
+		$contenidoQR = $nombreEmpresa . "\n";
 		$contenidoQR .= "----------------------------\n";
 		$contenidoQR .= "FACTURA No: " . $valorVenta . "\n";
 		$contenidoQR .= "Fecha: " . $fecha . "\n";
@@ -318,11 +375,14 @@ EOF;
 		$contenidoQR .= "PRODUCTOS\n";
 		$contenidoQR .= "----------------------------\n";
 		$contenidoQR .= $listaProductosQR . "\n";
-		$contenidoQR .= "TOTALES\n";
-		$contenidoQR .= "----------------------------\n";
-		$contenidoQR .= "Subtotal: $" . $neto . "\n";
-		$contenidoQR .= "IVA: $" . $impuesto . "\n";
-		$contenidoQR .= "TOTAL: $" . $total . "\n";
+		$contenidoQR .= "Subtotal: $" . number_format($valorBrutoRecalculado, 2) . "\n";
+		if ($montoDescuentoTotal > 0) {
+			$contenidoQR .= "Descuento: $" . number_format($descuentoBase, 2) . "\n";
+		}
+		$contenidoQR .= "Valor Bruto: $" . number_format($subtotalRecalculado, 2) . "\n";
+		$contenidoQR .= "Impuesto: $" . number_format($impuestoGeneral, 2) . "\n";
+		$contenidoQR .= "TOTAL: $" . number_format($totalVentaCalculado, 2) . "\n";
+		$contenidoQR .= "VALOR NETO: $" . number_format($valorNetoPagar, 2) . "\n";
 		$contenidoQR .= "----------------------------";
 
 		// Estilo para código QR

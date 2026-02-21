@@ -42,7 +42,8 @@ class ModeloFactus
 				dv = :dv,
 				responsabilidades_fiscales = :responsabilidades_fiscales,
 				tipo_persona = :tipo_persona,
-				bloqueo_datos_emisor = :bloqueo_datos_emisor
+				bloqueo_datos_emisor = :bloqueo_datos_emisor,
+				logo_empresa = :logo_empresa
 			WHERE id = 1"
         );
 
@@ -67,6 +68,7 @@ class ModeloFactus
         $stmt->bindParam(":responsabilidades_fiscales", $datos["responsabilidades_fiscales"], PDO::PARAM_STR);
         $stmt->bindParam(":tipo_persona", $datos["tipo_persona"], PDO::PARAM_STR);
         $stmt->bindParam(":bloqueo_datos_emisor", $datos["bloqueo_datos_emisor"], PDO::PARAM_INT);
+        $stmt->bindParam(":logo_empresa", $datos["logo_empresa"], PDO::PARAM_STR);
 
         if ($stmt->execute()) {
             return "ok";

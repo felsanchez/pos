@@ -57,38 +57,37 @@ class ControladorConfiguracion
 				}
 
 				/*=============================================
-				DE ACUERDO AL TIPO DE IMAGEN APLICAMOS LAS FUNCIONES POR DEFECTO DE PHP
+				PROCESAR IMAGEN CON FALLBACK SI NO EXISTE GD
 				=============================================*/
 
-				if ($_FILES["nuevoLogo"]["type"] == "image/jpeg") {
+				if (function_exists('imagecreatefromjpeg') && function_exists('imagecreatetruecolor')) {
 
+					if ($_FILES["nuevoLogo"]["type"] == "image/jpeg") {
+						$aleatorio = mt_rand(100, 999);
+						$rutaLogo = $directorio . $aleatorio . ".jpg";
+						$origen = imagecreatefromjpeg($_FILES["nuevoLogo"]["tmp_name"]);
+						$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+						imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
+						imagejpeg($destino, $rutaLogo);
+					}
+
+					if ($_FILES["nuevoLogo"]["type"] == "image/png") {
+						$aleatorio = mt_rand(100, 999);
+						$rutaLogo = $directorio . $aleatorio . ".png";
+						$origen = imagecreatefrompng($_FILES["nuevoLogo"]["tmp_name"]);
+						$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+						imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
+						imagepng($destino, $rutaLogo);
+					}
+
+				} else {
+
+					// Fallback: Mover el archivo directamente si GD no está activo
 					$aleatorio = mt_rand(100, 999);
+					$extension = ($_FILES["nuevoLogo"]["type"] == "image/png") ? ".png" : ".jpg";
+					$rutaLogo = $directorio . $aleatorio . $extension;
 
-					$rutaLogo = $directorio . $aleatorio . ".jpg";
-
-					$origen = imagecreatefromjpeg($_FILES["nuevoLogo"]["tmp_name"]);
-
-					$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
-
-					imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
-
-					imagejpeg($destino, $rutaLogo);
-
-				}
-
-				if ($_FILES["nuevoLogo"]["type"] == "image/png") {
-
-					$aleatorio = mt_rand(100, 999);
-
-					$rutaLogo = $directorio . $aleatorio . ".png";
-
-					$origen = imagecreatefrompng($_FILES["nuevoLogo"]["tmp_name"]);
-
-					$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
-
-					imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
-
-					imagepng($destino, $rutaLogo);
+					move_uploaded_file($_FILES["nuevoLogo"]["tmp_name"], $rutaLogo);
 
 				}
 
@@ -145,6 +144,66 @@ class ControladorConfiguracion
 					// 1. Obtener config actual para no borrar otros datos (token, etc.)
 					$configFactus = ModeloFactus::mdlObtenerConfiguracion();
 
+					/*=============================================
+					VALIDAR LOGO FACTUS
+					=============================================*/
+
+					$rutaLogoFactus = isset($configFactus["logo_empresa"]) ? $configFactus["logo_empresa"] : "";
+
+					if (isset($_FILES["nuevoLogoFactus"]["tmp_name"]) && !empty($_FILES["nuevoLogoFactus"]["tmp_name"])) {
+
+						list($ancho, $alto) = getimagesize($_FILES["nuevoLogoFactus"]["tmp_name"]);
+
+						$nuevoAncho = 500;
+						$nuevoAlto = 500;
+
+						$directorio = "vistas/img/configuracion/";
+
+						if (!file_exists($directorio)) {
+							mkdir($directorio, 0755, true);
+						}
+
+						if (!empty($configFactus["logo_empresa"]) && file_exists($configFactus["logo_empresa"])) {
+							unlink($configFactus["logo_empresa"]);
+						}
+
+						/*=============================================
+						PROCESAR IMAGEN CON FALLBACK SI NO EXISTE GD
+						=============================================*/
+
+						if (function_exists('imagecreatefromjpeg') && function_exists('imagecreatetruecolor')) {
+
+							if ($_FILES["nuevoLogoFactus"]["type"] == "image/jpeg") {
+								$aleatorio = mt_rand(100, 999);
+								$rutaLogoFactus = $directorio . "factus_" . $aleatorio . ".jpg";
+								$origen = imagecreatefromjpeg($_FILES["nuevoLogoFactus"]["tmp_name"]);
+								$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+								imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
+								imagejpeg($destino, $rutaLogoFactus);
+							}
+
+							if ($_FILES["nuevoLogoFactus"]["type"] == "image/png") {
+								$aleatorio = mt_rand(100, 999);
+								$rutaLogoFactus = $directorio . "factus_" . $aleatorio . ".png";
+								$origen = imagecreatefrompng($_FILES["nuevoLogoFactus"]["tmp_name"]);
+								$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+								imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
+								imagepng($destino, $rutaLogoFactus);
+							}
+
+						} else {
+
+							// Fallback: Mover el archivo directamente si GD no está activo
+							$aleatorio = mt_rand(100, 999);
+							$extension = ($_FILES["nuevoLogoFactus"]["type"] == "image/png") ? ".png" : ".jpg";
+							$rutaLogoFactus = $directorio . "factus_" . $aleatorio . $extension;
+
+							move_uploaded_file($_FILES["nuevoLogoFactus"]["tmp_name"], $rutaLogoFactus);
+
+						}
+
+					}
+
 					$datosFactus = array(
 						"api_url" => $configFactus['api_url'],
 						"client_id" => $configFactus['client_id'],
@@ -174,7 +233,10 @@ class ControladorConfiguracion
 						"tipo_persona" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['tipo_persona'] : (isset($_POST["tipopersonafactus"]) ? $_POST["tipopersonafactus"] : '2'),
 
 						// Mantener bloqueo actual
-						"bloqueo_datos_emisor" => $configFactus['bloqueo_datos_emisor']
+						"bloqueo_datos_emisor" => $configFactus['bloqueo_datos_emisor'],
+
+						// Nuevo Logo Factus
+						"logo_empresa" => $rutaLogoFactus
 					);
 
 					ModeloFactus::mdlActualizarConfiguracion($datosFactus);

@@ -529,6 +529,30 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                     usarán los datos generales de la empresa.</p>
 
                   <div class="row">
+                    <!-- Logo Factus -->
+                    <div class="col-md-12">
+                      <div class="form-group text-center">
+                        <label>Logo para Facturación Electrónica</label>
+                        <div class="panel panel-default">
+                          <div class="panel-body">
+                            <?php if (isset($configFactus["logo_empresa"]) && !empty($configFactus["logo_empresa"]) && file_exists($configFactus["logo_empresa"])): ?>
+                              <img src="<?php echo $configFactus["logo_empresa"]; ?>" class="img-responsive"
+                                id="previsualizarLogoFactus" style="max-width: 200px; margin: 0 auto;">
+                            <?php else: ?>
+                              <img src="vistas/img/plantilla/logo-blanco-bloque.png" class="img-responsive"
+                                id="previsualizarLogoFactus" style="max-width: 200px; margin: 0 auto;">
+                            <?php endif; ?>
+                          </div>
+                        </div>
+                        <input type="file" class="form-control" name="nuevoLogoFactus" id="nuevoLogoFactus"
+                          accept="image/*" <?php echo $disabled; ?>>
+                        <p class="help-block">Formatos: JPG, PNG (Máx: 500x500px). Este logo se usará solo para Factus.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row">
                     <!-- Tipo Persona -->
                     <div class="col-md-4">
                       <div class="form-group">
@@ -833,6 +857,56 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
           var rutaImagen = event.target.result;
 
           $("#previsualizarLogo").attr("src", rutaImagen);
+
+        })
+
+      }
+
+    })
+
+  });
+</script>
+
+<script>
+  $(document).ready(function () {
+
+    $("#nuevoLogoFactus").change(function () {
+
+      var imagen = this.files[0];
+
+      // Validar formato
+      if (imagen["type"] != "image/jpeg" && imagen["type"] != "image/png") {
+
+        $("#nuevoLogoFactus").val("");
+
+        swal({
+          title: "Error al subir la imagen",
+          text: "¡La imagen debe estar en formato JPG o PNG!",
+          type: "error",
+          confirmButtonText: "¡Cerrar!"
+        });
+
+      } else if (imagen["size"] > 2000000) {
+
+        $("#nuevoLogoFactus").val("");
+
+        swal({
+          title: "Error al subir la imagen",
+          text: "¡La imagen no debe pesar más de 2MB!",
+          type: "error",
+          confirmButtonText: "¡Cerrar!"
+        });
+
+      } else {
+
+        var datosImagen = new FileReader;
+        datosImagen.readAsDataURL(imagen);
+
+        $(datosImagen).on("load", function (event) {
+
+          var rutaImagen = event.target.result;
+
+          $("#previsualizarLogoFactus").attr("src", rutaImagen);
 
         })
 

@@ -50,7 +50,10 @@ class ControladorFactus
 				"responsabilidades_fiscales" => isset($_POST["responsabilidadesfactus"]) ? json_encode($_POST["responsabilidadesfactus"]) : $configConfig['responsabilidades_fiscales'],
 				"tipo_persona" => isset($_POST["tipopersonafactus"]) ? $_POST["tipopersonafactus"] : $configConfig['tipo_persona'],
 
-				"bloqueo_datos_emisor" => isset($_POST["habilitarEdicionFactusGlobal"]) ? 0 : 1 // Checkbox checked = 0 (Desbloqueado)
+				"bloqueo_datos_emisor" => isset($_POST["habilitarEdicionFactusGlobal"]) ? 0 : 1, // Checkbox checked = 0 (Desbloqueado)
+
+				// Preserve logo_empresa
+				"logo_empresa" => $configConfig['logo_empresa']
 			);
 
 			$respuesta = ModeloFactus::mdlActualizarConfiguracion($datos);

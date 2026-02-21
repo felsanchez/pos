@@ -100,11 +100,16 @@ if (empty($cufeFactura) && !empty($venta["qr_data"])) {
                             <div class="row">
                                 <div class="col-xs-12">
                                     <h2 class="page-header">
-                                        <i class="fa fa-globe"></i>
+                                        <?php if (isset($configFactus['logo_empresa']) && !empty($configFactus['logo_empresa']) && file_exists($configFactus['logo_empresa'])): ?>
+                                            <img src="<?php echo $configFactus['logo_empresa']; ?>"
+                                                style="max-height: 60px; margin-right: 15px; vertical-align: middle; margin-top: -10px;">
+                                        <?php else: ?>
+                                            <i class="fa fa-globe"></i>
+                                        <?php endif; ?>
                                         <?php
                                         echo isset($configFactus['nombre_empresa']) && !empty($configFactus['nombre_empresa']) ? $configFactus['nombre_empresa'] : ($configuracion["nombre_empresa"] ?? 'Empresa');
                                         ?>
-                                        <small class="pull-right">Fecha Emisión:
+                                        <small class="pull-right" style="margin-top: 20px;">Fecha Emisión:
                                             <?php echo $notaCredito["fecha_envio_dian"] ?? date('Y-m-d'); ?>
                                         </small>
                                     </h2>
@@ -382,12 +387,16 @@ if (empty($cufeFactura) && !empty($venta["qr_data"])) {
                             <!-- this row will not appear when printing -->
                             <div class="row no-print">
                                 <div class="col-xs-12">
-                                    <?php if ($notaCredito["pdf_dian_nc"]): ?>
-                                        <a href="<?php echo $notaCredito["pdf_dian_nc"]; ?>" target="_blank" class="btn
-                                        btn-primary pull-right" style="margin-right: 5px;">
-                                            <i class="fa fa-download"></i> Descargar PDF Oficial
-                                        </a>
-                                    <?php endif; ?>
+                                    <a href="descargar-xml-nc.php?xml=<?php echo $notaCredito["numero_nota_credito"]; ?>"
+                                        target="_blank" class="btn pull-right"
+                                        style="margin-right: 5px; background-color: #00c0ef; color: white; border-color: #00acd6;">
+                                        <i class="fa fa-file-code-o"></i> Descargar XML
+                                    </a>
+
+                                    <a href="extensiones/tcpdf/pdf/descargar-pdf-nota-credito.php?idVenta=<?php echo $idVenta; ?>"
+                                        target="_blank" class="btn btn-success pull-right" style="margin-right: 5px;">
+                                        <i class="fa fa-file-pdf-o"></i> Descargar PDF
+                                    </a>
 
                                     <a href="facturas-electronicas" class="btn btn-default pull-right"
                                         style="margin-right: 5px;">

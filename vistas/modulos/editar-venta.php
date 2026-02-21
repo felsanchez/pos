@@ -157,11 +157,16 @@ $configFactus = ControladorFactus::ctrObtenerConfiguracion();
     <div class="row">
       <div class="col-xs-12">
         <h2 class="page-header">
-          <i class="fa fa-globe"></i>
+          <?php if (isset($configFactus['logo_empresa']) && !empty($configFactus['logo_empresa']) && file_exists($configFactus['logo_empresa'])): ?>
+            <img src="<?php echo $configFactus['logo_empresa']; ?>"
+              style="max-height: 60px; margin-right: 15px; vertical-align: middle; margin-top: -10px;">
+          <?php else: ?>
+            <i class="fa fa-globe"></i>
+          <?php endif; ?>
           <?php
           echo isset($configFactus['nombre_empresa']) && !empty($configFactus['nombre_empresa']) ? $configFactus['nombre_empresa'] : ($configuracion["nombre_empresa"] ?? 'Empresa');
           ?>
-          <small class="pull-right">Fecha: <?php echo $venta["fecha"] ?? ''; ?></small>
+          <small class="pull-right" style="margin-top: 20px;">Fecha: <?php echo $venta["fecha"] ?? ''; ?></small>
         </h2>
       </div>
       <!-- /.col -->
@@ -531,17 +536,24 @@ $configFactus = ControladorFactus::ctrObtenerConfiguracion();
     <!-- this row will not appear when printing -->
     <div class="row no-print">
       <div class="col-xs-12">
-        <button type="button" class="btn btn-primary pull-right" onclick="history.back()">
-          <i class="fa fa-arrow-left"></i> Atras
-        </button>
-
         <!-- Boton XML -->
         <?php if (!empty($venta["numero_factura"])): ?>
-          <a class="btn btn-success pull-right" style="margin-right: 5px;"
+          <a class="btn pull-right"
+            style="margin-right: 5px; background-color: #00c0ef; color: white; border-color: #00c0ef;"
             href="descargar-xml.php?xml=<?php echo $venta["numero_factura"]; ?>" target="_blank">
             <i class="fa fa-file-code-o"></i> Descargar XML
           </a>
         <?php endif; ?>
+
+        <!-- Boton PDF -->
+        <a class="btn btn-success pull-right" style="margin-right: 5px;"
+          href="extensiones/tcpdf/pdf/descargar-pdf-detalle.php?idVenta=<?php echo $venta["id"]; ?>" target="_blank">
+          <i class="fa fa-file-pdf-o"></i> Descargar PDF
+        </a>
+
+        <button type="button" class="btn btn-default pull-right" onclick="history.back()" style="margin-right: 5px;">
+          <i class="fa fa-arrow-left"></i> Volver
+        </button>
       </div>
     </div>
   </section>
