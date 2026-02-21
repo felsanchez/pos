@@ -498,8 +498,10 @@ if ($xml) {
 
               // 🔹 FILTRO ESPECÍFICO PARA FACTURAS ELECTRÓNICAS
               // Solo mostrar ventas que tienen factura electrónica generada O que sean borradores (creada sin enviar)
+              // Solo mostrar ventas que tienen factura electrónica generada O que sean borradores/pendientes
               $respuesta = array_filter($respuesta, function ($venta) {
-                return !empty($venta["numero_factura"]) || (isset($venta["estado_dian"]) && $venta["estado_dian"] == "creada");
+                $estadoDian = isset($venta["estado_dian"]) ? $venta["estado_dian"] : "";
+                return !empty($venta["numero_factura"]) || in_array($estadoDian, ["creada", "pendiente"]);
               });
 
               // Si hay filtro por cliente, filtrar el resultado
