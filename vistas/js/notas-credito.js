@@ -70,17 +70,33 @@ $(document).ready(function () {
 
     // 4. Función: Recalcular Total Global
     function recalcularTotalNC() {
-        var total = 0;
+        var totalFinal = 0;
+        var totalBase = 0;
+        var totalImpuesto = 0;
 
         $(".checkProducto:checked").each(function () {
             var fila = $(this).closest("tr");
             var cantidad = fila.find(".cantidadDevolver").val();
-            var precio = fila.find(".cantidadDevolver").data("precio");
+            var precioUnitarioConImpuesto = fila.find(".cantidadDevolver").data("precio"); // Precio es Intra-Impuesto
+            var tasaImpuesto = fila.find(".cantidadDevolver").data("impuesto") || 0;
 
-            total += (cantidad * precio);
+            // Subtotal es cantidad * precio (incluye impuesto)
+            var subtotalConImpuesto = cantidad * precioUnitarioConImpuesto;
+
+            // Calcular base y monto de impuesto (Back-out tax)
+            // Formula: Base = Total / (1 + Tasa/100)
+            var baseItem = subtotalConImpuesto / (1 + (tasaImpuesto / 100));
+            var impuestoItem = subtotalConImpuesto - baseItem;
+
+            totalFinal += subtotalConImpuesto;
+            totalBase += baseItem;
+            totalImpuesto += impuestoItem;
         });
 
-        $("#nuevoTotalNC").val($.number(total, 2));
+        $("#nuevoTotalBase").val($.number(totalBase, 2));
+        $("#nuevoTotalSubtotal").val($.number(totalBase, 2)); // Subtotal = Base
+        $("#nuevoTotalImpuesto").val($.number(totalImpuesto, 2));
+        $("#nuevoTotalNC").val($.number(totalFinal, 2));
     }
 
     // 5. Envío del Formulario (AJAX)
@@ -109,9 +125,10 @@ $(document).ready(function () {
                 id: $("input[name='idProducto_" + key + "']").val(),
                 codigo: $("input[name='codigo_" + key + "']").val(),
                 descripcion: $("input[name='descripcion_" + key + "']").val(),
-                precio: $("input[name='precio_" + key + "']").val(), // Precio unitario
+                precio: $("input[name='precio_" + key + "']").val(),
+                impuesto: fila.find(".cantidadDevolver").data("impuesto") || 0, // Tasa de impuesto
                 cantidad: cantidad,
-                total: cantidad * $("input[name='precio_" + key + "']").val() // Total recalculado
+                total: cantidad * $("input[name='precio_" + key + "']").val()
             });
         });
 
@@ -161,7 +178,7 @@ $(document).ready(function () {
                 datos.append("motivo", motivo);
                 datos.append("idCliente", idCliente);
                 datos.append("metodoPago", metodoPago);
-                datos.append("observacion", observacion); // Send observation
+                datos.append("observacion", observacion);
                 datos.append("listaProductos", JSON.stringify(listaProductos));
 
                 $.ajax({

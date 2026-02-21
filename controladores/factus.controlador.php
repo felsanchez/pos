@@ -1124,7 +1124,9 @@ AUTENTICAR CON FACTUS API
 				"pdf_dian_nc" => $respuestaFactus['data']['credit_note']['public_url'] ?? $respuestaFactus['data']['pdf_url'] ?? '',
 				"mensaje_dian" => $respuestaFactus['message'] ?? 'NC generada exitosamente',
 				"fecha_envio_dian" => date('Y-m-d H:i:s'),
-				"id_usuario" => $_SESSION['id'] ?? 14
+				"id_usuario" => $_SESSION['id'] ?? 14,
+				"observacion" => $observacion,
+				"metodo_pago" => $metodoPago
 			];
 
 			// Guardar en BD
@@ -1260,9 +1262,8 @@ AUTENTICAR CON FACTUS API
 			// Obtener unidad de medida
 			$idUnidadMedida = !empty($productoBD['codigo_unidad']) ? intval($productoBD['codigo_unidad']) : 70;
 
-			// Precio base (sin impuesto)
-			$precioConImpuesto = floatval($productoVenta['precio']) / floatval($productoVenta['cantidad']);
-			$precioBase = $precioConImpuesto / (1 + ($tasaImpuesto / 100));
+			// Precio base - similar a la lógica de factura (se usa el precio directamente)
+			$precioBase = floatval($productoVenta['precio']);
 
 			$items[] = [
 				"scheme_id" => "1",
@@ -1391,7 +1392,6 @@ AUTENTICAR CON FACTUS API
 		// Mapeo básico de métodos de pago (Igual que en factura)
 		$paymentMethodCode = "10"; // Default Efectivo
 
-
 		switch ($metodoPago) {
 			case "Efectivo":
 				$paymentMethodCode = "10";
@@ -1428,13 +1428,8 @@ AUTENTICAR CON FACTUS API
 				break;
 		}
 
-		$notaCredito["payment_methods"] = [
-			[
-				"code" => $paymentMethodCode,
-				"payment_method" => $metodoPago, // Descripción simple
-				"payment_due_date" => date('Y-m-d')
-			]
-		];
+		$notaCredito["payment_method_code"] = $paymentMethodCode;
+		$notaCredito["payment_due_date"] = date('Y-m-d');
 
 		return $notaCredito;
 	}

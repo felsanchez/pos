@@ -127,6 +127,8 @@ $cliente = ControladorClientes::ctrMostrarClientes($itemCliente, $valorCliente);
 
 // Obtener datos de la empresa
 $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
+// Obtener configuración de Factus para datos del emisor
+$configFactus = ControladorFactus::ctrObtenerConfiguracion();
 ?>
 
 <div class="content-wrapper">
@@ -155,7 +157,10 @@ $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
     <div class="row">
       <div class="col-xs-12">
         <h2 class="page-header">
-          <i class="fa fa-globe"></i> <?php echo $configuracion["nombre_empresa"] ?? 'Empresa'; ?>
+          <i class="fa fa-globe"></i>
+          <?php
+          echo isset($configFactus['nombre_empresa']) && !empty($configFactus['nombre_empresa']) ? $configFactus['nombre_empresa'] : ($configuracion["nombre_empresa"] ?? 'Empresa');
+          ?>
           <small class="pull-right">Fecha: <?php echo $venta["fecha"] ?? ''; ?></small>
         </h2>
       </div>
@@ -167,11 +172,21 @@ $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
         <span
           style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #d2d6de; display: block; margin-bottom: 10px; width: fit-content;">Empresa</span>
         <address>
-          <strong><?php echo $configuracion["nombre_empresa"] ?? 'Nombre Empresa'; ?></strong><br>
-          NIT: <?php echo $configuracion["nit"] ?? ''; ?><br>
-          <?php echo $configuracion["direccion"] ?? ''; ?><br>
-          Teléfono: <?php echo $configuracion["telefono"] ?? ''; ?><br>
-          Email: <?php echo $configuracion["correo"] ?? ''; ?>
+          <?php
+          // Lógica para etiqueta de Nombre/Razón Social
+          $labelNombre = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1') ? 'Razón Social' : 'Nombre Empresa';
+          $nombreEmisor = isset($configFactus['nombre_empresa']) && !empty($configFactus['nombre_empresa']) ? $configFactus['nombre_empresa'] : ($configuracion["nombre_empresa"] ?? 'Nombre Empresa');
+          $nitEmisor = isset($configFactus['nit_empresa']) && !empty($configFactus['nit_empresa']) ? $configFactus['nit_empresa'] : ($configuracion["nit"] ?? '');
+          $direccionEmisor = isset($configFactus['direccion_empresa']) && !empty($configFactus['direccion_empresa']) ? $configFactus['direccion_empresa'] : ($configuracion["direccion"] ?? '');
+          $telefonoEmisor = isset($configFactus['telefono_empresa']) && !empty($configFactus['telefono_empresa']) ? $configFactus['telefono_empresa'] : ($configuracion["telefono"] ?? '');
+          $emailEmisor = isset($configFactus['email_empresa']) && !empty($configFactus['email_empresa']) ? $configFactus['email_empresa'] : ($configuracion["correo"] ?? '');
+          ?>
+          <strong><?php echo $labelNombre; ?>:</strong><br>
+          <?php echo $nombreEmisor; ?><br>
+          <strong>NIT:</strong> <?php echo $nitEmisor; ?><br>
+          <strong>Dirección:</strong> <?php echo $direccionEmisor; ?><br>
+          <strong>Teléfono:</strong> <?php echo $telefonoEmisor; ?><br>
+          <strong>Email:</strong> <?php echo $emailEmisor; ?>
         </address>
       </div>
       <!-- /.col -->
@@ -179,11 +194,12 @@ $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
         <span
           style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #d2d6de; display: block; margin-bottom: 10px; width: fit-content;">Cliente</span>
         <address>
-          <strong><?php echo $cliente["nombre"] ?? ''; ?></strong><br>
-          <?php echo $cliente["documento"] ?? ''; ?><br>
-          <?php echo $cliente["direccion"] ?? ''; ?><br>
-          Tel: <?php echo $cliente["telefono"] ?? ''; ?><br>
-          Email: <?php echo $cliente["email"] ?? ''; ?>
+          <strong>Cliente:</strong> <?php echo $cliente["nombre"] ?? ''; ?><br>
+          <strong>Documento:</strong> <?php echo $cliente["documento"] ?? ''; ?><br>
+          <strong>Dirección:</strong> <?php echo $cliente["direccion"] ?? ''; ?><br>
+          <strong>Ciudad:</strong> <?php echo $cliente["ciudad"] ?? ''; ?><br>
+          <strong>Teléfono:</strong> <?php echo $cliente["telefono"] ?? ''; ?><br>
+          <strong>Email:</strong> <?php echo $cliente["email"] ?? ''; ?>
         </address>
       </div>
       <!-- /.col -->
@@ -298,6 +314,48 @@ $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
           <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
             <?php echo $venta["observacion"]; ?>
           </p>
+        <?php endif; ?>
+
+        <!-- QR Code -->
+        <?php if (!empty($venta["qr_data"])): ?>
+          <p class="lead" style="margin-top: 20px;">Código QR DIAN:</p>
+          <?php
+          $qrData = trim($venta["qr_data"]);
+          $qrBase64 = "";
+
+          // Attempt to generate QR locally
+          // Path relative to vistas/modulos/editar-venta.php -> pos root
+          $tcpdfPath = __DIR__ . "/../../extensiones/tcpdf/tcpdf_barcodes_2d.php";
+
+          if (file_exists($tcpdfPath)) {
+            require_once($tcpdfPath);
+            if (class_exists('TCPDF2DBarcode')) {
+              try {
+                $barcodeobj = new TCPDF2DBarcode($qrData, 'QRCODE,H');
+                $svgCode = $barcodeobj->getBarcodeSVGcode(5, 5, 'black');
+                if (!empty($svgCode)) {
+                  $qrBase64 = base64_encode($svgCode);
+                }
+              } catch (Exception $e) {
+                // Silent fail
+              }
+            }
+          }
+          ?>
+
+          <?php if (!empty($qrBase64)): ?>
+            <img src="data:image/svg+xml;base64,<?php echo $qrBase64; ?>" width="150" height="150" title="QR Factura"
+              alt="QR Factura" style="display:block; margin-bottom:10px; border:1px solid #ddd;" />
+          <?php else: ?>
+            <img src="https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=<?php echo rawurlencode($qrData); ?>"
+              width="150" height="150" title="QR Factura (Fallback)" alt="QR Factura"
+              style="display:block; margin-bottom:10px;" />
+          <?php endif; ?>
+
+          <small style="color: #666; font-size: 14px; word-break: break-all;">
+            <a href="<?php echo $venta["qr_data"]; ?>" target="_blank">Ver validación DIAN</a>
+          </small>
+          <br>
         <?php endif; ?>
 
         <!-- CUFE (Facturación Electrónica signature) -->

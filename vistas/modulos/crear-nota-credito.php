@@ -71,7 +71,27 @@ require_once "modelos/productos.modelo.php";
 
                 <div class="box box-danger">
 
-                    <div class="box-header with-border"></div>
+                    <div class="box-header with-border">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="callout callout-info" style="margin-bottom:0; padding: 8px 15px;">
+                                    <strong><i class="fa fa-file-text-o"></i> Número de Nota Crédito:</strong>
+                                    <span class="label label-primary"
+                                        style="font-size: 1.1em; padding: 4px 10px; margin-left: 8px;">
+                                        <?php
+                                        $prefijo = $rangoNC["prefijo"] ?? "NC";
+                                        $proximoNumero = ($rangoNC["numero_actual"] ?? 0) + 1;
+                                        echo htmlspecialchars($prefijo . $proximoNumero);
+                                        ?>
+                                    </span>
+                                    <small style="color: white; margin-left: 10px;">
+                                        (Rango: <?php echo htmlspecialchars($rangoNC["numero_desde"]); ?> -
+                                        <?php echo htmlspecialchars($rangoNC["numero_hasta"]); ?>)
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <form role="form" method="post" class="formularioNotaCredito" id="formNotaCredito">
 
@@ -148,20 +168,25 @@ require_once "modelos/productos.modelo.php";
                 ======================================-->
                             <div class="row">
 
-                                <!-- Motivo -->
+                                <!-- Método de Pago -->
                                 <div class="col-xs-12 col-md-6">
                                     <div class="form-group">
-                                        <label>Motivo *</label>
+                                        <label>Método de Pago *</label>
                                         <div class="input-group">
-                                            <span class="input-group-addon"><i class="fa fa-comment"></i></span>
-                                            <select class="form-control" name="motivoNota" id="motivoNota" required>
-                                                <option value="1">Devolución parcial de los bienes y/o no aceptación
-                                                    parcial del servicio</option>
-                                                <option value="2">Anulación de factura electrónica</option>
-                                                <option value="3">Rebaja o descuento parcial o total</option>
-                                                <option value="4">Ajuste de precio</option>
-                                                <option value="5">Descuento comercial por pronto pago</option>
-                                                <option value="6">Descuento comercial por volumen de ventas</option>
+                                            <span class="input-group-addon"><i class="fa fa-credit-card"></i></span>
+                                            <select class="form-control" id="nuevoMetodoPago" name="nuevoMetodoPago"
+                                                required>
+                                                <option value="">Seleccione método de pago</option>
+                                                <option value="Efectivo">Efectivo</option>
+                                                <option value="TC">Tarjeta Crédito</option>
+                                                <option value="TD">Tarjeta Débito</option>
+                                                <option value="Transf">Transferencia</option>
+                                                <option value="Cheque">Cheque</option>
+                                                <option value="Consignacion">Consignación</option>
+                                                <option value="Bonos">Bonos</option>
+                                                <option value="Vales">Vales</option>
+                                                <option value="Otros">Otros</option>
+                                                <option value="No Definido">No Definido</option>
                                             </select>
                                         </div>
                                     </div>
@@ -174,27 +199,22 @@ require_once "modelos/productos.modelo.php";
                         <br>
 
                         <!--=====================================
-                                ENTRADA MÉTODO DE PAGO
+                                MOTIVO
                                 ======================================-->
                         <div class="row">
                             <div class="col-xs-12 col-md-12">
                                 <div class="form-group">
-                                    <label>Método de Pago *</label>
+                                    <label>Motivo *</label>
                                     <div class="input-group">
-                                        <span class="input-group-addon"><i class="fa fa-credit-card"></i></span>
-                                        <select class="form-control" id="nuevoMetodoPago" name="nuevoMetodoPago"
-                                            required>
-                                            <option value="">Seleccione método de pago</option>
-                                            <option value="Efectivo">Efectivo</option>
-                                            <option value="TC">Tarjeta Crédito</option>
-                                            <option value="TD">Tarjeta Débito</option>
-                                            <option value="Transf">Transferencia</option>
-                                            <option value="Cheque">Cheque</option>
-                                            <option value="Consignacion">Consignación</option>
-                                            <option value="Bonos">Bonos</option>
-                                            <option value="Vales">Vales</option>
-                                            <option value="Otros">Otros</option>
-                                            <option value="No Definido">No Definido</option>
+                                        <span class="input-group-addon"><i class="fa fa-comment"></i></span>
+                                        <select class="form-control" name="motivoNota" id="motivoNota" required>
+                                            <option value="1">Devolución parcial de los bienes y/o no aceptación parcial
+                                                del servicio</option>
+                                            <option value="2">Anulación de factura electrónica</option>
+                                            <option value="3">Rebaja o descuento parcial o total</option>
+                                            <option value="4">Ajuste de precio</option>
+                                            <option value="5">Descuento comercial por pronto pago</option>
+                                            <option value="6">Descuento comercial por volumen de ventas</option>
                                         </select>
                                     </div>
                                 </div>
@@ -268,6 +288,7 @@ require_once "modelos/productos.modelo.php";
                                                     max="<?php echo $prod["cantidad"]; ?>"
                                                     value="<?php echo $prod["cantidad"]; ?>"
                                                     data-precio="<?php echo $prod["precio"]; ?>"
+                                                    data-impuesto="<?php echo $prod["impuesto"]; ?>"
                                                     data-key="<?php echo $key; ?>">
                                             </td>
                                             <td>$<?php echo number_format($prod["precio"], 2); ?></td>
@@ -296,6 +317,42 @@ require_once "modelos/productos.modelo.php";
                         <div class="row">
                             <div class="col-xs-12 col-md-4 pull-right">
                                 <table class="table table-condensed table-bordered" style="background:#f9f9f9;">
+                                    <tr>
+                                        <td style="font-weight: bold;">Valor Bruto</td>
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i
+                                                        class="ion ion-social-usd"></i></span>
+                                                <input type="text" class="form-control input-lg" id="nuevoTotalBase"
+                                                    name="nuevoTotalBase" readonly
+                                                    style="font-weight: bold; font-size: 1.2em;">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">Subtotal</td>
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i
+                                                        class="ion ion-social-usd"></i></span>
+                                                <input type="text" class="form-control input-lg" id="nuevoTotalSubtotal"
+                                                    name="nuevoTotalSubtotal" readonly
+                                                    style="font-weight: bold; font-size: 1.2em;">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">Impuestos</td>
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i
+                                                        class="ion ion-social-usd"></i></span>
+                                                <input type="text" class="form-control input-lg" id="nuevoTotalImpuesto"
+                                                    name="nuevoTotalImpuesto" readonly
+                                                    style="font-weight: bold; font-size: 1.2em;">
+                                            </div>
+                                        </td>
+                                    </tr>
                                     <tr>
                                         <td style="font-weight: bold;">Total Devolución</td>
                                         <td>

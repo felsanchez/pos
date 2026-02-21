@@ -249,18 +249,37 @@ class AjaxFactus
 				$segundos = isset($resultado['expires_in']) ? $resultado['expires_in'] : 3600;
 				$fechaExpiracion = date('Y-m-d H:i:s', time() + $segundos);
 
-				// Guardar tokens en la base de datos
+				// Guardar tokens Y configuración en la base de datos
+				$ambiente = $_POST["ambiente"] ?? ((strpos($apiUrl, 'sandbox') !== false) ? 'sandbox' : 'produccion');
+				$username = $_POST["username"] ?? '';
+				$password = $_POST["password"] ?? '';
+				$rangoNumeracionId = $_POST["rangoNumeracionId"] ?? '';
+
 				$stmt = Conexion::conectar()->prepare(
 					"UPDATE factus_config 
 					SET access_token = :access_token,
 						refresh_token = :refresh_token,
-						token_expiracion = :token_expiracion
+						token_expiracion = :token_expiracion,
+						api_url = :api_url,
+						client_id = :client_id,
+						client_secret = :client_secret,
+						ambiente = :ambiente,
+						username = :username,
+						password = :password,
+						rango_numeracion_id = :rango_numeracion_id
 					WHERE id = 1"
 				);
 
 				$stmt->bindParam(":access_token", $resultado['access_token'], PDO::PARAM_STR);
 				$stmt->bindParam(":refresh_token", $resultado['refresh_token'], PDO::PARAM_STR);
 				$stmt->bindParam(":token_expiracion", $fechaExpiracion, PDO::PARAM_STR);
+				$stmt->bindParam(":api_url", $apiUrl, PDO::PARAM_STR);
+				$stmt->bindParam(":client_id", $clientId, PDO::PARAM_STR);
+				$stmt->bindParam(":client_secret", $clientSecret, PDO::PARAM_STR);
+				$stmt->bindParam(":ambiente", $ambiente, PDO::PARAM_STR);
+				$stmt->bindParam(":username", $username, PDO::PARAM_STR);
+				$stmt->bindParam(":password", $password, PDO::PARAM_STR);
+				$stmt->bindParam(":rango_numeracion_id", $rangoNumeracionId, PDO::PARAM_STR);
 
 				if ($stmt->execute()) {
 					echo json_encode(array(

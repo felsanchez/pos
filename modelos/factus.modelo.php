@@ -1086,12 +1086,12 @@ class ModeloFactus
 				id_venta_original, numero_factura_original, tipo_nota, motivo,
 				productos, monto_total, estado_dian, numero_nota_credito,
 				cufe_nc, qr_data_nc, xml_dian_nc, pdf_dian_nc, mensaje_dian,
-				fecha_envio_dian, id_usuario, id_cliente
+				fecha_envio_dian, id_usuario, id_cliente, observacion, metodo_pago
 			) VALUES (
 				:id_venta, :num_factura, :tipo, :motivo,
 				:productos, :monto, :estado, :num_nc,
 				:cufe, :qr, :xml, :pdf, :mensaje,
-				:fecha_envio, :usuario, :id_cliente
+				:fecha_envio, :usuario, :id_cliente, :observacion, :metodo_pago
 			)"
         );
 
@@ -1111,6 +1111,8 @@ class ModeloFactus
         $stmt->bindParam(":fecha_envio", $datos["fecha_envio_dian"], PDO::PARAM_STR);
         $stmt->bindParam(":usuario", $datos["id_usuario"], PDO::PARAM_INT);
         $stmt->bindParam(":id_cliente", $datos["id_cliente"], PDO::PARAM_INT);
+        $stmt->bindParam(":observacion", $datos["observacion"], PDO::PARAM_STR);
+        $stmt->bindParam(":metodo_pago", $datos["metodo_pago"], PDO::PARAM_STR);
 
         if ($stmt->execute()) {
             return "ok";
@@ -1120,20 +1122,57 @@ class ModeloFactus
     }
 
     /*=============================================
-    OBTENER RANGO DE NOTAS CRÉDITO
-    =============================================*/
+OBTENER RANGO DE NOTAS CRÉDITO
+=============================================*/
     static public function mdlObtenerRangoNC()
     {
+        // Obtener el rango de factura configurado para saber en qué ambiente estamos
+        $config = self::mdlObtenerConfiguracion();
+        $rangoFacturaId = $config['rango_numeracion_id'] ?? null;
+
+        if ($rangoFacturaId) {
+            // Buscar el rango de factura configurado para obtener su id_factus
+            $stmtFactura = Conexion::conectar()->prepare(
+                "SELECT id_factus FROM factus_rangos WHERE id_factus = :rango_id LIMIT 1"
+            );
+            $stmtFactura->bindParam(":rango_id", $rangoFacturaId, PDO::PARAM_INT);
+            $stmtFactura->execute();
+            $rangoFactura = $stmtFactura->fetch();
+
+            if ($rangoFactura) {
+                $facturaIdFactus = intval($rangoFactura['id_factus']);
+                // Los rangos del mismo ambiente tienen id_factus consecutivos
+                // El rango NC suele ser facturaId + 1
+                // Buscar el rango NC más cercano al rango de factura configurado
+                $stmt = Conexion::conectar()->prepare(
+                    "SELECT * FROM factus_rangos 
+                 WHERE documento = 'Nota Crédito' 
+                 AND estado = 1 
+                 AND ABS(id_factus - :factura_id) <= 5
+                 ORDER BY ABS(id_factus - :factura_id2) ASC
+                 LIMIT 1"
+                );
+                $stmt->bindParam(":factura_id", $facturaIdFactus, PDO::PARAM_INT);
+                $stmt->bindParam(":factura_id2", $facturaIdFactus, PDO::PARAM_INT);
+                $stmt->execute();
+                $resultado = $stmt->fetch();
+                if ($resultado) {
+                    return $resultado;
+                }
+            }
+        }
+
+        // Fallback: devolver el último rango NC activo (el más reciente sincronizado)
         $stmt = Conexion::conectar()->prepare(
             "SELECT * FROM factus_rangos 
-			 WHERE documento = 'Nota Crédito' 
-			 AND estado = 1 
-			 LIMIT 1"
+         WHERE documento = 'Nota Crédito' 
+         AND estado = 1 
+         ORDER BY id DESC
+         LIMIT 1"
         );
         $stmt->execute();
         return $stmt->fetch();
     }
-
     /*=============================================
     VERIFICAR SI UNA VENTA YA TIENE NOTA CRÉDITO
     =============================================*/

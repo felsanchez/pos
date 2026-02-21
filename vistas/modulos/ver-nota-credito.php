@@ -24,9 +24,41 @@ $clienteId = !empty($notaCredito["id_cliente"]) ? $notaCredito["id_cliente"] : $
 $cliente = ControladorClientes::ctrMostrarClientes("id", $clienteId);
 $vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $venta["id_vendedor"]);
 $configuracion = ModeloConfiguracion::mdlObtenerConfiguracion();
+// Obtener configuración de Factus para datos del emisor
+$configFactus = ControladorFactus::ctrObtenerConfiguracion();
+
+// DEBUG: Force check 
+if (!$configFactus) {
+    echo "<!-- DEBUG: ConfigFactus is FALSE -->";
+} else {
+    echo "<!-- DEBUG: ConfigFactus OK. Name: " . ($configFactus['nombre_empresa'] ?? 'NULL') . " -->";
+}
 
 // Productos de la NC (normalmente los mismos de la venta, o subconjunto)
 $listaProducto = json_decode($notaCredito["productos"], true);
+
+// Construir mapa de impuesto por ID de producto desde la venta original
+// (Los productos guardados en notas_credito no incluyen el % de impuesto)
+$productosVenta = json_decode($venta["productos"], true);
+$impuestoMap = [];
+if (is_array($productosVenta)) {
+    foreach ($productosVenta as $pv) {
+        $impuestoMap[$pv["id"]] = isset($pv["impuesto"]) ? floatval($pv["impuesto"]) : 0;
+    }
+}
+
+// Fallback: Si el CUFE de la factura no está guardado, intentar extraerlo del QR
+$cufeFactura = $venta["cufe"];
+if (empty($cufeFactura) && !empty($venta["qr_data"])) {
+    // Ejemplo QR: https://catalogo-vpfe.dian.gov.co/...searchqr?documentkey=el_cufe_es_esto
+    $parts = parse_url($venta["qr_data"], PHP_URL_QUERY);
+    if ($parts) {
+        parse_str($parts, $query);
+        if (isset($query['documentkey'])) {
+            $cufeFactura = $query['documentkey'];
+        }
+    }
+}
 
 ?>
 
@@ -69,7 +101,9 @@ $listaProducto = json_decode($notaCredito["productos"], true);
                                 <div class="col-xs-12">
                                     <h2 class="page-header">
                                         <i class="fa fa-globe"></i>
-                                        <?php echo $configuracion["nombre_empresa"] ?? 'Empresa'; ?>
+                                        <?php
+                                        echo isset($configFactus['nombre_empresa']) && !empty($configFactus['nombre_empresa']) ? $configFactus['nombre_empresa'] : ($configuracion["nombre_empresa"] ?? 'Empresa');
+                                        ?>
                                         <small class="pull-right">Fecha Emisión:
                                             <?php echo $notaCredito["fecha_envio_dian"] ?? date('Y-m-d'); ?>
                                         </small>
@@ -83,16 +117,21 @@ $listaProducto = json_decode($notaCredito["productos"], true);
                                     <span
                                         style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #d2d6de; display: block; margin-bottom: 10px; width: fit-content;">Emisor</span>
                                     <address>
-                                        <strong>
-                                            <?php echo $configuracion["nombre_empresa"] ?? 'Nombre Empresa'; ?>
-                                        </strong><br>
-                                        NIT:
-                                        <?php echo $configuracion["nit"] ?? ''; ?><br>
-                                        <?php echo $configuracion["direccion"] ?? ''; ?><br>
-                                        Teléfono:
-                                        <?php echo $configuracion["telefono"] ?? ''; ?><br>
-                                        Email:
-                                        <?php echo $configuracion["correo"] ?? ''; ?>
+                                        <?php
+                                        // Lógica para etiqueta de Nombre/Razón Social
+                                        $labelNombre = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1') ? 'Razón Social' : 'Nombre Empresa';
+                                        $nombreEmisor = isset($configFactus['nombre_empresa']) && !empty($configFactus['nombre_empresa']) ? $configFactus['nombre_empresa'] : ($configuracion["nombre_empresa"] ?? 'Nombre Empresa');
+                                        $nitEmisor = isset($configFactus['nit_empresa']) && !empty($configFactus['nit_empresa']) ? $configFactus['nit_empresa'] : ($configuracion["nit"] ?? '');
+                                        $direccionEmisor = isset($configFactus['direccion_empresa']) && !empty($configFactus['direccion_empresa']) ? $configFactus['direccion_empresa'] : ($configuracion["direccion"] ?? '');
+                                        $telefonoEmisor = isset($configFactus['telefono_empresa']) && !empty($configFactus['telefono_empresa']) ? $configFactus['telefono_empresa'] : ($configuracion["telefono"] ?? '');
+                                        $emailEmisor = isset($configFactus['email_empresa']) && !empty($configFactus['email_empresa']) ? $configFactus['email_empresa'] : ($configuracion["correo"] ?? '');
+                                        ?>
+                                        <strong><?php echo $labelNombre; ?>:</strong><br>
+                                        <?php echo $nombreEmisor; ?><br>
+                                        <strong>NIT:</strong> <?php echo $nitEmisor; ?><br>
+                                        <strong>Dirección:</strong> <?php echo $direccionEmisor; ?><br>
+                                        <strong>Teléfono:</strong> <?php echo $telefonoEmisor; ?><br>
+                                        <strong>Email:</strong> <?php echo $emailEmisor; ?>
                                     </address>
                                 </div>
 
@@ -100,17 +139,13 @@ $listaProducto = json_decode($notaCredito["productos"], true);
                                     <span
                                         style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #d2d6de; display: block; margin-bottom: 10px; width: fit-content;">Cliente</span>
                                     <address>
-                                        <strong>
-                                            <?php echo $cliente["nombre"] ?? 'Consumidor Final'; ?>
-                                        </strong><br>
-                                        Documento:
-                                        <?php echo $cliente["documento"] ?? ''; ?><br>
-                                        Dirección:
-                                        <?php echo $cliente["direccion"] ?? ''; ?><br>
-                                        Tel:
-                                        <?php echo $cliente["telefono"] ?? ''; ?><br>
-                                        Email:
-                                        <?php echo $cliente["email"] ?? ''; ?>
+                                        <strong>Cliente:</strong>
+                                        <?php echo $cliente["nombre"] ?? 'Consumidor Final'; ?><br>
+                                        <strong>Documento:</strong> <?php echo $cliente["documento"] ?? ''; ?><br>
+                                        <strong>Dirección:</strong> <?php echo $cliente["direccion"] ?? ''; ?><br>
+                                        <strong>Ciudad:</strong> <?php echo $cliente["ciudad"] ?? ''; ?><br>
+                                        <strong>Teléfono:</strong> <?php echo $cliente["telefono"] ?? ''; ?><br>
+                                        <strong>Email:</strong> <?php echo $cliente["email"] ?? ''; ?>
                                     </address>
                                 </div>
 
@@ -149,11 +184,29 @@ $listaProducto = json_decode($notaCredito["productos"], true);
                                     }
                                     echo $textoMotivo;
                                     ?><br>
-                                    <b>CUDE:</b> <span style="font-size: 10px;">
-                                        <?php echo $notaCredito["cufe_nc"]; ?>
-                                    </span><br>
+
                                     <b>Estado DIAN:</b>
-                                    <?php echo ucfirst($notaCredito["estado_dian"]); ?>
+                                    <?php echo ucfirst($notaCredito["estado_dian"]); ?><br>
+
+                                    <?php if (!empty($notaCredito["metodo_pago"])): ?>
+                                        <b>Método de Pago:</b>
+                                        <?php
+                                        $metodoPagoNombres = [
+                                            "Efectivo" => "Efectivo",
+                                            "TC" => "Tarjeta Crédito",
+                                            "TD" => "Tarjeta Débito",
+                                            "Transf" => "Transferencia",
+                                            "Cheque" => "Cheque",
+                                            "Consignacion" => "Consignación",
+                                            "Bonos" => "Bonos",
+                                            "Vales" => "Vales",
+                                            "Otros" => "Otros",
+                                            "No Definido" => "No Definido",
+                                        ];
+                                        $codigoMP = $notaCredito["metodo_pago"];
+                                        echo htmlspecialchars($metodoPagoNombres[$codigoMP] ?? $codigoMP);
+                                        ?><br>
+                                    <?php endif; ?>
                                 </div>
                             </div>
 
@@ -189,17 +242,87 @@ $listaProducto = json_decode($notaCredito["productos"], true);
                                 <!-- QR Column -->
                                 <div class="col-xs-6">
                                     <p class="lead">Código QR DIAN:</p>
-                                    <?php if (!empty($notaCredito["qr_data_nc"])): ?>
-                                        <img src="https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=<?php echo urlencode($notaCredito["qr_data_nc"]); ?>&choe=UTF-8"
-                                            title="QR Factura Electrónica" />
+                                    <?php if (!empty($notaCredito["qr_data_nc"])):
+                                        $qrData = trim($notaCredito["qr_data_nc"]);
+                                        $qrBase64 = "";
+
+                                        // Attempt to generate QR locally
+                                        // Path relative to vistas/modulos/ver-nota-credito.php -> pos root
+                                        $tcpdfPath = __DIR__ . "/../../extensiones/tcpdf/tcpdf_barcodes_2d.php";
+
+                                        if (file_exists($tcpdfPath)) {
+                                            require_once($tcpdfPath);
+                                            // Check class exists to be safe
+                                            if (class_exists('TCPDF2DBarcode')) {
+                                                // Use SVG which doesn't require GD library
+                                                try {
+                                                    $barcodeobj = new TCPDF2DBarcode($qrData, 'QRCODE,H');
+                                                    // Get SVG code
+                                                    $svgCode = $barcodeobj->getBarcodeSVGcode(5, 5, 'black');
+                                                    if (!empty($svgCode)) {
+                                                        $qrBase64 = base64_encode($svgCode);
+                                                    }
+                                                } catch (Exception $e) {
+                                                    // Silent fail to fallback
+                                                }
+                                            }
+                                        }
+                                        ?>
+
+                                        <?php if (!empty($qrBase64)): ?>
+                                            <img src="data:image/svg+xml;base64,<?php echo $qrBase64; ?>" width="150"
+                                                height="150" title="QR Nota Crédito" alt="QR Nota Crédito"
+                                                style="display:block; margin-bottom:10px; border:1px solid #ddd;" />
+                                        <?php else: ?>
+                                            <!-- Fallback to Google Charts -->
+                                            <img src="https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=<?php echo rawurlencode($qrData); ?>"
+                                                width="150" height="150" title="QR Nota Crédito (Fallback)"
+                                                alt="QR Nota Crédito" style="display:block; margin-bottom:10px;" />
+                                        <?php endif; ?>
                                         <br>
-                                        <small style="color: #666; font-size: 10px; word-break: break-all;">
+
+                                        <small style="color: #666; font-size: 14px; word-break: break-all;">
                                             <a href="<?php echo $notaCredito["qr_data_nc"]; ?>" target="_blank">Ver
                                                 validación DIAN</a>
                                         </small>
+                                        <br>
+
+                                        <!-- Box for CUFE (Invoice) & CUDE (Credit Note) -->
+                                        <div
+                                            style="margin-top: 10px; border: 1px solid #d2d6de; padding: 10px; border-radius: 5px; background-color: #f9fafc;">
+
+                                            <!-- CUFE Factura -->
+                                            <?php if (!empty($cufeFactura)): ?>
+                                                <div style="margin-bottom: 5px;">
+                                                    <b style="color: #555;">CUFE (Factura):</b><br>
+                                                    <span
+                                                        style="font-size: 11px; word-break: break-all; display: block; line-height: 1.2; color: #333;">
+                                                        <?php echo $cufeFactura; ?>
+                                                    </span>
+                                                </div>
+                                                <hr style="margin: 5px 0; border: 0; border-top: 1px solid #ddd;">
+                                            <?php endif; ?>
+
+                                            <!-- CUDE Nota Crédito -->
+                                            <div>
+                                                <b style="color: #555;">CUDE (Nota Crédito):</b><br>
+                                                <span
+                                                    style="font-size: 11px; word-break: break-all; display: block; line-height: 1.2; color: #333;">
+                                                    <?php echo $notaCredito["cufe_nc"]; ?>
+                                                </span>
+                                            </div>
+
+                                        </div>
                                     <?php else: ?>
                                         <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
                                             QR no disponible.
+                                        </p>
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($notaCredito["observacion"])): ?>
+                                        <p class="lead" style="margin-top: 20px; font-size: 16px;">Observaciones:</p>
+                                        <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
+                                            <?php echo nl2br($notaCredito["observacion"]); ?>
                                         </p>
                                     <?php endif; ?>
                                 </div>
@@ -210,10 +333,46 @@ $listaProducto = json_decode($notaCredito["productos"], true);
                                     <div class="table-responsive">
                                         <table class="table">
                                             <tr>
-                                                <th style="width:50%">Total Devolución:</th>
+                                                <th style="width:50%">Valor Bruto:</th>
                                                 <td>$
-                                                    <?php echo number_format($notaCredito["monto_total"], 2); ?>
+                                                    <?php
+                                                    $totalBase = 0;
+                                                    $totalImpuesto = 0;
+
+                                                    foreach ($listaProducto as $prod) {
+                                                        // Lógica alineada con Factus: El precio en BD es Intra-Impuesto
+                                                        $precioUnitarioConImpuesto = floatval($prod["precio"]);
+                                                        $cantidad = floatval($prod["cantidad"]);
+                                                        $tasaImpuesto = isset($prod["impuesto"]) && $prod["impuesto"] !== ""
+                                                            ? floatval($prod["impuesto"])
+                                                            : ($impuestoMap[$prod["id"]] ?? 0);
+
+                                                        // Subtotal es cantidad * precio (incluye impuesto)
+                                                        $subtotalItem = $precioUnitarioConImpuesto * $cantidad;
+
+                                                        // Back-out tax
+                                                        $baseItem = $subtotalItem / (1 + ($tasaImpuesto / 100));
+                                                        $impuestoItem = $subtotalItem - $baseItem;
+
+                                                        $totalBase += $baseItem;
+                                                        $totalImpuesto += $impuestoItem;
+                                                    }
+
+                                                    echo number_format($totalBase, 2);
+                                                    ?>
                                                 </td>
+                                            </tr>
+                                            <tr>
+                                                <th>Subtotal:</th>
+                                                <td>$ <?php echo number_format($totalBase, 2); ?></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Impuestos:</th>
+                                                <td>$ <?php echo number_format($totalImpuesto, 2); ?></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Total Devolución:</th>
+                                                <td>$ <?php echo number_format($totalBase + $totalImpuesto, 2); ?></td>
                                             </tr>
                                         </table>
                                     </div>

@@ -581,6 +581,8 @@ $(document).ready(function() {
 		var clientSecret = $('input[name="clientSecret"]').val();
 		var username = $('input[name="username"]').val();
 		var password = $('input[name="password"]').val();
+		var ambiente = $('#ambiente').val();
+		var rangoNumeracionId = $('select[name="rangoNumeracionId"]').val();
 
 		// Validar que los campos estén completos
 		if (!apiUrl || !clientId || !clientSecret) {
@@ -618,7 +620,9 @@ $(document).ready(function() {
 						clientId: clientId,
 						clientSecret: clientSecret,
 						username: username,
-						password: password
+						password: password,
+						ambiente: ambiente,
+						rangoNumeracionId: rangoNumeracionId
 					},
 					dataType: 'json',
 					success: function(response) {
