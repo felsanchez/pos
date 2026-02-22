@@ -576,6 +576,10 @@ class ModeloFactus
             $sql .= ", numero_factura = :numero_factura";
         }
 
+        if (isset($datos["codigo"])) {
+            $sql .= ", codigo = :codigo";
+        }
+
         if (isset($datos["factus_bill_id"])) {
             $sql .= ", factus_bill_id = :factus_bill_id";
         }
@@ -603,6 +607,10 @@ class ModeloFactus
 
         if (isset($datos["numero_factura"])) {
             $stmt->bindParam(":numero_factura", $datos["numero_factura"], PDO::PARAM_STR);
+        }
+
+        if (isset($datos["codigo"])) {
+            $stmt->bindParam(":codigo", $datos["codigo"], PDO::PARAM_STR);
         }
 
         if (isset($datos["factus_bill_id"])) {
@@ -1003,15 +1011,20 @@ class ModeloFactus
             }
         }
 
-        // Usamos el MAYOR entre: Local (BD), Config (Cached), y API Live
-        $ultimoUsado = max($ultimoLocal, $numeroActualApi, $numeroApiReal);
+        // Calculamos el siguiente propuesto por cada fuente
+        $siguienteLocal = $ultimoLocal + 1;
+        $siguienteApiCached = $numeroActualApi + 1;
+        $siguienteApiLive = $numeroApiReal; // Si la API ya reporta un número mayor, lo usamos como el "siguiente" a usar
 
-        // Si el ultimo usado es menor que el "desde", forzamos el "desde" - 1
-        if ($ultimoUsado < $numeroDesde) {
-            $ultimoUsado = $numeroDesde - 1;
+        // El siguiente real será el mayor de los siguientes propuestos
+        $ultimoSugerido = max($siguienteLocal, $siguienteApiCached, $siguienteApiLive);
+
+        // Si el sugerido es menor que el "desde", forzamos el "desde"
+        if ($ultimoSugerido < $numeroDesde) {
+            $ultimoSugerido = $numeroDesde;
         }
 
-        return $ultimoUsado + 1;
+        return $ultimoSugerido;
     }
 
     /*=============================================

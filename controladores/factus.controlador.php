@@ -639,13 +639,13 @@ AUTENTICAR CON FACTUS API
 			if ($resultado['http_code'] == 201 || $resultado['http_code'] == 200) {
 				$exito = true;
 			} elseif ($resultado['http_code'] == 409) {
-				// 409 Conflict: Probablemente consecutivo ya usado o pendiente
-				// Continuar al siguiente intento del bucle para incrementar consecutivo
-				$debugMsg = "Error 409 en intento #$intentos. Retrying...\n";
+				// 409 Conflict: Con el código de referencia único, esto solo pasaría si reintentamos la misma fila ID
+				// pero Factus ya la tiene. En este caso no incrementamos, solo fallamos o logueamos.
+				$debugMsg = "Error 409: El documento ya existe en Factus con esta referencia única.\n";
 				file_put_contents("debug_retry_409.txt", $debugMsg, FILE_APPEND);
-				continue;
+				break;
 			} else {
-				// Otro error (400, 422, 500), no tiene sentido reintentar incrementando
+				// Otro error (400, 422, 500)
 				break;
 			}
 		}
@@ -670,6 +670,14 @@ AUTENTICAR CON FACTUS API
 				// 🔹 CAPTURAR EL ID INTERNO DE FACTUS (Requerido para Notas Crédito)
 				"factus_bill_id" => $respuestaFactus['data']['bill']['id'] ?? $respuestaFactus['data']['id'] ?? null
 			);
+
+			// 🔹 SINCRONIZAR CÓDIGO INTERNO CON NÚMERO DIAN (Siempre que Factus nos dé un número oficial)
+			if (!empty($datosActualizar["numero_factura"])) {
+				preg_match('/(\d+)$/', $datosActualizar["numero_factura"], $matches);
+				if (isset($matches[1])) {
+					$datosActualizar["codigo"] = $matches[1];
+				}
+			}
 
 			ModeloFactus::mdlActualizarDatosFactura($idVenta, $datosActualizar);
 
@@ -928,7 +936,7 @@ AUTENTICAR CON FACTUS API
 
 		$factura = array(
 			"numbering_range_id" => $rangoId,
-			"reference_code" => $rango['prefijo'] . $venta['codigo'],
+			"reference_code" => $rango['prefijo'] . '-V-' . $venta['id'],
 			"observation" => implode(" | ", array_filter([$venta['notas'] ?? '', $venta['observacion'] ?? ''])),
 			"payment_form" => $formaPagoDian,
 			"payment_due_date" => $fechaVencimiento,

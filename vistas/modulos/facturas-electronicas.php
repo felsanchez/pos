@@ -524,7 +524,7 @@ if ($xml) {
                 echo '<tr>
                         <td>' . ($key + 1) . '</td>
 
-                         <td>' . ($value["numero_factura"] != "" ? $value["numero_factura"] : $value["codigo"]) . '</td>';
+                         <td>' . ($value["numero_factura"] != "" ? $value["numero_factura"] : '<span class="text-orange"><b>(Borrador)</b> ' . $value["codigo"] . '</span>') . '</td>';
 
                 // Usar nombres que ya vienen del JOIN en la consulta SQL
                 $nombreCliente = !empty($value["nombre_cliente"]) ? $value["nombre_cliente"] : "Cliente no encontrado";
