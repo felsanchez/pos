@@ -84,7 +84,7 @@
               <th style="width: 10px"></th>
               <th style="width: 10px">#</th>
               <th>Nombre</th>
-              <th>Marca</th>
+              <th>Nombre Comercial</th>
               <th>Celular</th>
               <th>Correo</th>
               <th>Dirección</th>
@@ -188,31 +188,100 @@ MODAL AGREGAR Proveedor
       ======================================-->
 
         <div class="modal-body">
-
           <div class="box-body">
+
+            <?php
+            $tiposDocumento = ControladorFactus::ctrMostrarTiposDocumento();
+            $municipios = ModeloFactus::mdlObtenerMunicipios();
+            ?>
+
+            <div class="row">
+              <!-- Tipo Documento -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Tipo de Documento *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-id-card"></i></span>
+                    <select class="form-control" name="nuevoTipoDocumento" required>
+                      <option value="">Seleccionar tipo</option>
+                      <?php foreach ($tiposDocumento as $key => $value): ?>
+                        <option value="<?php echo $value["id"]; ?>"><?php echo $value["nombre"]; ?></option>
+                      <?php endforeach; ?>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Documento -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Documento *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-hashtag"></i></span>
+                    <input type="text" class="form-control" name="nuevoDocumento" placeholder="Número de documento"
+                      required>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div class="row">
 
               <!-- Nombre -->
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>Nombre *</label>
+                  <label>Nombre / Razón Social *</label>
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-user"></i></span>
-                    <input type="text" class="form-control" name="nuevoProveedor" placeholder="Nombre del proveedor"
+                    <input type="text" class="form-control" name="nuevoProveedor" placeholder="Nombre completo"
                       required>
                   </div>
                 </div>
               </div>
 
-              <!-- Marca -->
+              <!-- Nombre Comercial -->
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>Marca *</label>
+                  <label>Nombre Comercial / Marca</label>
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-tag"></i></span>
-                    <input type="text" class="form-control" name="nuevaMarca" placeholder="Marca del proveedor"
-                      required>
+                    <input type="text" class="form-control" name="nuevaMarca" placeholder="Nombre comercial (opcional)">
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="row">
+
+              <!-- Organización -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Tipo de Organización *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-building"></i></span>
+                    <select class="form-control" name="nuevaOrganizacion" required>
+                      <option value="1">Persona Jurídica</option>
+                      <option value="2" selected>Persona Natural</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Municipio -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Municipio *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
+                    <select class="form-control select2" name="nuevoMunicipio" style="width: 100%;" required>
+                      <option value="">Seleccionar municipio</option>
+                      <?php foreach ($municipios as $key => $value): ?>
+                        <option value="<?php echo $value["id_factus"]; ?>">
+                          <?php echo $value["nombre"] . ' - ' . $value["departamento"]; ?>
+                        </option>
+                      <?php endforeach; ?>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -318,15 +387,44 @@ MODAL EDITAR Proveedor
       ======================================-->
 
         <div class="modal-body">
-
           <div class="box-body">
+
+            <div class="row">
+              <!-- Tipo Documento -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Tipo de Documento *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-id-card"></i></span>
+                    <select class="form-control" name="editarTipoDocumento" id="editarTipoDocumento" required>
+                      <option value="">Seleccionar tipo</option>
+                      <?php foreach ($tiposDocumento as $key => $value): ?>
+                        <option value="<?php echo $value["id"]; ?>"><?php echo $value["nombre"]; ?></option>
+                      <?php endforeach; ?>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Documento -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Documento *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-hashtag"></i></span>
+                    <input type="text" class="form-control" name="editarDocumento" id="editarDocumento"
+                      placeholder="Número de documento" required>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div class="row">
 
               <!-- Nombre -->
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>Nombre *</label>
+                  <label>Nombre / Razón Social *</label>
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-user"></i></span>
                     <input type="text" class="form-control" name="editarProveedor" id="editarProveedor"
@@ -336,14 +434,51 @@ MODAL EDITAR Proveedor
                 </div>
               </div>
 
-              <!-- Marca -->
+              <!-- Nombre Comercial -->
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>Marca *</label>
+                  <label>Nombre Comercial / Marca</label>
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-tag"></i></span>
                     <input type="text" class="form-control" name="editarMarca" id="editarMarca"
-                      placeholder="Marca del proveedor" required>
+                      placeholder="Nombre comercial (opcional)">
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="row">
+
+              <!-- Organización -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Tipo de Organización *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-building"></i></span>
+                    <select class="form-control" name="editarOrganizacion" id="editarOrganizacion" required>
+                      <option value="1">Persona Jurídica</option>
+                      <option value="2">Persona Natural</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Municipio -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Municipio *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
+                    <select class="form-control select2" name="editarMunicipio" id="editarMunicipio"
+                      style="width: 100%;" required>
+                      <option value="">Seleccionar municipio</option>
+                      <?php foreach ($municipios as $key => $value): ?>
+                        <option value="<?php echo $value["id_factus"]; ?>">
+                          <?php echo $value["nombre"] . ' - ' . $value["departamento"]; ?>
+                        </option>
+                      <?php endforeach; ?>
+                    </select>
                   </div>
                 </div>
               </div>

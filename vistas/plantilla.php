@@ -200,6 +200,9 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "seguimiento-leads" ||
         $_GET["ruta"] == "ver-nota-credito" ||
         $_GET["ruta"] == "crear-nota-credito" ||
+        $_GET["ruta"] == "documentos-soporte" ||
+        $_GET["ruta"] == "crear-documento-soporte" ||
+        $_GET["ruta"] == "ver-documento-soporte" ||
         $_GET["ruta"] == "salir"
       ) {
 
@@ -235,6 +238,7 @@ CUERPO DOCUMENTO
   <script src="vistas/js/actividades.js"></script>
   <script src="vistas/js/proveedores.js"></script>
   <script src="vistas/js/variantes.js"></script>
+  <script src="vistas/js/documentos-soporte.js"></script>
 
   <script src="vistas/js/reportes.js"></script>
   <script src="vistas/js/historial-stock.js?v=<?php echo time(); ?>"></script>

@@ -44,7 +44,7 @@ class imprimirDetalleVenta
 
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetAuthor('Sistema POS');
-        $pdf->SetTitle('Detalle de Venta #' . $venta["codigo"]);
+        $pdf->SetTitle('Factura Electrónica #' . $venta["codigo"]);
 
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
@@ -93,10 +93,11 @@ class imprimirDetalleVenta
         $htmlHeader = $style . '<div class="invoice">';
         $htmlHeader .= '<table style="width:100%; border-bottom: 2px solid #3c8dbc; padding-bottom:10px;">
             <tr>
-                <td style="width:70%; vertical-align:middle;">
+                <td style="width:50%; vertical-align:middle;">
                     <span style="font-size:18px; font-weight:bold; color:#444;">' . $htmlLogo . $nombreEmpresa . '</span>
                 </td>
-                <td style="width:30%; text-align:right; vertical-align:bottom;">
+                <td style="width:50%; text-align:right; vertical-align:middle;">
+                    <span style="font-size:16px; font-weight:bold; color:#3c8dbc;">FACTURA ELECTRÓNICA</span><br>
                     <span style="font-size:10px; color:#666;">Fecha: ' . $venta["fecha"] . '</span>
                 </td>
             </tr>
@@ -123,7 +124,7 @@ class imprimirDetalleVenta
                 </td>
                 <td style="width:34%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Detalles</span><br><br>
-                    <strong>Factura #' . ($venta["codigo"] ?? '') . '</strong><br><br>
+                    <strong>Factura Electrónica #' . ($venta["codigo"] ?? '') . '</strong><br><br>
                     <strong>Vendedor:</strong> ' . ($vendedor["nombre"] ?? '') . '<br>
                     <strong>Método de Pago:</strong> ' . ($venta["metodo_pago"] ?? '') . '
                 </td>
@@ -264,7 +265,7 @@ class imprimirDetalleVenta
         $pdf->writeHTMLCell(75, '', 125, $startY, $htmlRight, 0, 1, false, true, 'R', true);
 
         ob_end_clean();
-        $pdf->Output('detalle-venta-' . $venta["codigo"] . '.pdf', 'I');
+        $pdf->Output('factura-electronica-' . $venta["codigo"] . '.pdf', 'I');
     }
 }
 

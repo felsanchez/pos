@@ -4,7 +4,7 @@ if ($mysqli->connect_error) {
     die("Connection failed: " . $mysqli->connect_error);
 }
 
-$query = "SELECT * FROM ranges_factus";
+$query = "SELECT * FROM factus_rangos";
 $result = $mysqli->query($query);
 
 while ($row = $result->fetch_assoc()) {

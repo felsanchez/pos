@@ -173,6 +173,46 @@ class AjaxFactus
 	}
 
 	/*=============================================
+	FIRMAR DOCUMENTO SOPORTE
+	=============================================*/
+	public function ajaxFirmarDocumentoSoporte()
+	{
+		if (!isset($_POST["accion"]) || $_POST["accion"] != "firmarDS") {
+			echo json_encode(array("error" => true, "mensaje" => "Acción no válida"));
+			return;
+		}
+
+		if (!isset($_POST["idDS"]) || empty($_POST["idDS"])) {
+			echo json_encode(array("error" => true, "mensaje" => "ID de documento soporte no proporcionado"));
+			return;
+		}
+
+		$idDS = $_POST["idDS"];
+		$resultado = ControladorFactus::ctrFirmarDocumentoSoporte($idDS);
+		echo json_encode($resultado);
+	}
+
+	/*=============================================
+	ELIMINAR DOCUMENTO SOPORTE
+	=============================================*/
+	public function ajaxEliminarDocumentoSoporte()
+	{
+		if (!isset($_POST["accion"]) || $_POST["accion"] != "eliminarDS") {
+			echo json_encode(array("error" => true, "mensaje" => "Acción no válida"));
+			return;
+		}
+
+		if (!isset($_POST["idDS"]) || empty($_POST["idDS"])) {
+			echo json_encode(array("error" => true, "mensaje" => "ID de documento soporte no proporcionado"));
+			return;
+		}
+
+		$idDS = $_POST["idDS"];
+		$resultado = ControladorFactus::ctrEliminarDocumentoSoporte($idDS);
+		echo json_encode($resultado);
+	}
+
+	/*=============================================
 	AUTENTICAR Y OBTENER TOKENS
 	=============================================*/
 	public function ajaxAutenticar()
@@ -340,6 +380,12 @@ if (isset($_POST["accion"])) {
 			break;
 		case "generarFactura":
 			$factus->ajaxGenerarFacturaElectronica();
+			break;
+		case "firmarDS":
+			$factus->ajaxFirmarDocumentoSoporte();
+			break;
+		case "eliminarDS":
+			$factus->ajaxEliminarDocumentoSoporte();
 			break;
 		default:
 			echo json_encode(array("error" => true, "mensaje" => "Acción no válida"));

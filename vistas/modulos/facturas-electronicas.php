@@ -610,14 +610,6 @@ if ($xml) {
 
                             <!--<a class="btn btn-success" href="index.php?ruta=ventas&xml=' . $value["codigo"] . '">xml</a>-->
                             
-                            ' . (!empty($value["numero_factura"]) ?
-                  '<a class="btn btn-default" href="descargar-xml.php?xml=' . $value["numero_factura"] . '" target="_blank" title="Descargar XML">
-                                  <i class="fa fa-file-code-o"></i>
-                                </a>' : '') . '
-
-                            <button class="btn btn-info btnImprimirFactura" codigoVenta="' . $value["codigo"] . '">
-                              <i class="fa fa-print"></i>
-                            </button>
 
                             ' . ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
                   '<button class="btn btn-success btnFirmarFactura" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
@@ -709,13 +701,6 @@ if ($xml) {
                         </div>
                         <div class="card-venta-acciones">
                           <div class="btn-group">
-                            ' . (!empty($value["numero_factura"]) ?
-              '<a class="btn btn-default btn-xs" href="descargar-xml.php?xml=' . $value["numero_factura"] . '" target="_blank" title="Descargar XML">
-                                  <i class="fa fa-file-code-o"></i>
-                                </a>' : '') . '
-                            <button class="btn btn-info btn-xs btnImprimirFactura" codigoVenta="' . $value["codigo"] . '">
-                              <i class="fa fa-print"></i>
-                            </button>
                              ' . ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
               '<button class="btn btn-success btn-xs btnFirmarFactura" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
                                 <i class="fa fa-paper-plane"></i>

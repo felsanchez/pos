@@ -4,11 +4,11 @@ if ($mysqli->connect_error) {
     die("Connection failed: " . $mysqli->connect_error);
 }
 
-$query = "SELECT * FROM ranges_factus";
+$query = "SELECT * FROM factus_rangos";
 $result = $mysqli->query($query);
 
 while ($row = $result->fetch_assoc()) {
-    echo "ID: " . $row['id'] . " | Name: " . $row['document_name'] . " | Document: " . $row['document'] . " | Prefix: " . $row['prefix'] . "\n";
+    echo "ID Factus: " . $row['id_factus'] . " | Documento: " . $row['documento'] . " | Prefijo: " . $row['prefijo'] . " | Resolucion: " . $row['resolucion'] . "\n";
 }
 
 $mysqli->close();

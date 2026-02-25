@@ -411,6 +411,17 @@ class ModeloFactus
     }
 
     /*=============================================
+    MOSTRAR MUNICIPIO POR ID
+    =============================================*/
+    static public function mdlMostrarMunicipioPorId($id)
+    {
+        $stmt = Conexion::conectar()->prepare("SELECT nombre FROM factus_municipios WHERE id_factus = :id");
+        $stmt->bindParam(":id", $id, PDO::PARAM_STR);
+        $stmt->execute();
+        return $stmt->fetch();
+    }
+
+    /*=============================================
     OBTENER UNIDADES DE MEDIDA
     =============================================*/
     static public function mdlObtenerUnidadesMedida()
@@ -793,7 +804,7 @@ class ModeloFactus
             return "72";
 
         // Otros (1) -> Instrumento no definido
-        if (strpos($nombreNorm, 'otro') !== false)
+        if (strpos($nombreNorm, 'otro') !== false || strpos($nombreNorm, 'definido') !== false)
             return "1";
 
         // Default si no coincide nada (Efectivo)
@@ -1232,6 +1243,220 @@ OBTENER RANGO DE NOTAS CRÉDITO
         );
         $stmt->bindParam(":numero", $nuevoNumero, PDO::PARAM_INT);
         $stmt->bindParam(":id", $rangoId, PDO::PARAM_INT);
+
+        if ($stmt->execute()) {
+            return "ok";
+        } else {
+            return "error";
+        }
+    }
+
+    /*=============================================
+    OBTENER RANGO DE DOCUMENTO SOPORTE
+    =============================================*/
+    static public function mdlObtenerRangoDS()
+    {
+        $config = self::mdlObtenerConfiguracion();
+        $rangoFacturaId = $config['rango_numeracion_id'] ?? null;
+
+        if ($rangoFacturaId) {
+            $stmt = Conexion::conectar()->prepare(
+                "SELECT * FROM factus_rangos 
+                 WHERE documento LIKE '%Documento Soporte%' 
+                 AND documento NOT LIKE '%Nota de Ajuste%'
+                 AND estado = 1 
+                 AND ABS(id_factus - :factura_id) <= 10
+                 ORDER BY ABS(id_factus - :factura_id2) ASC
+                 LIMIT 1"
+            );
+            $stmt->bindParam(":factura_id", $rangoFacturaId, PDO::PARAM_INT);
+            $stmt->bindParam(":factura_id2", $rangoFacturaId, PDO::PARAM_INT);
+            $stmt->execute();
+            $resultado = $stmt->fetch();
+            if ($resultado) {
+                return $resultado;
+            }
+        }
+
+        // Fallback: último activo
+        $stmt = Conexion::conectar()->prepare(
+            "SELECT * FROM factus_rangos 
+             WHERE documento LIKE '%Documento Soporte%' 
+             AND documento NOT LIKE '%Nota de Ajuste%'
+             AND estado = 1 
+             ORDER BY id DESC LIMIT 1"
+        );
+        $stmt->execute();
+        return $stmt->fetch();
+    }
+
+    /*=============================================
+    CREAR DOCUMENTO SOPORTE EN FACTUS API
+    =============================================*/
+    static public function mdlCrearDocumentoSoporte($token, $datosDS)
+    {
+        $config = self::mdlObtenerConfiguracion();
+        $url = $config['api_url'] . '/v1/support-documents/validate';
+
+        $debugFile = 'debug_ds_' . date('Y-m-d_His') . '.txt';
+        $logMsg = "=== SOLICITUD DOCUMENTO SOPORTE ===\n";
+        $logMsg .= "URL: $url\n";
+        $logMsg .= "Datos DS: " . json_encode($datosDS, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n\n";
+        file_put_contents($debugFile, $logMsg, FILE_APPEND);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($datosDS));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Authorization: Bearer ' . $token,
+            'Content-Type: application/json',
+            'Accept: application/json'
+        ));
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+
+        $respuesta = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        $logMsg = "=== API RESPONSE (Code: $httpCode) ===\n";
+        $logMsg .= "Error CURL: " . $curlError . "\n";
+        $logMsg .= "Response: " . $respuesta . "\n\n";
+        file_put_contents($debugFile, $logMsg, FILE_APPEND);
+
+        return array(
+            'http_code' => $httpCode,
+            'respuesta' => $respuesta,
+            'error_curl' => $curlError
+        );
+    }
+
+    /*=============================================
+    GUARDAR DOCUMENTO SOPORTE EN BASE DE DATOS
+    =============================================*/
+    static public function mdlGuardarDocumentoSoporte($datos)
+    {
+        $db = Conexion::conectar();
+        $stmt = $db->prepare(
+            "INSERT INTO documentos_soporte (
+				numero_ds, id_proveedor, fecha_emision, metodo_pago,
+				productos, monto_total, estado_dian, cuds,
+				qr_data, pdf_dian, xml_dian, mensaje_dian,
+				factus_id, id_usuario, tipo_descuento, valor_descuento,
+				monto_descuento, retenciones
+			) VALUES (
+				:numero, :proveedor, :fecha, :metodo,
+				:productos, :monto, :estado, :cuds,
+				:qr, :pdf, :xml, :mensaje,
+				:factus_id, :usuario, :tipo_desc, :valor_desc,
+				:monto_desc, :retenciones
+			)"
+        );
+
+        $stmt->bindParam(":numero", $datos["numero_ds"], PDO::PARAM_STR);
+        $stmt->bindParam(":proveedor", $datos["id_proveedor"], PDO::PARAM_INT);
+        $stmt->bindParam(":fecha", $datos["fecha_emision"], PDO::PARAM_STR);
+        $stmt->bindParam(":metodo", $datos["metodo_pago"], PDO::PARAM_STR);
+        $stmt->bindParam(":productos", $datos["productos"], PDO::PARAM_STR);
+        $stmt->bindParam(":monto", $datos["monto_total"], PDO::PARAM_STR);
+        $stmt->bindParam(":estado", $datos["estado_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":cuds", $datos["cuds"], PDO::PARAM_STR);
+        $stmt->bindParam(":qr", $datos["qr_data"], PDO::PARAM_STR);
+        $stmt->bindParam(":pdf", $datos["pdf_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":xml", $datos["xml_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":mensaje", $datos["mensaje_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":factus_id", $datos["factus_id"], PDO::PARAM_INT);
+        $stmt->bindParam(":usuario", $datos["id_usuario"], PDO::PARAM_INT);
+        $stmt->bindParam(":tipo_desc", $datos["tipo_descuento"], PDO::PARAM_STR);
+        $stmt->bindParam(":valor_desc", $datos["valor_descuento"], PDO::PARAM_STR);
+        $stmt->bindParam(":monto_desc", $datos["monto_descuento"], PDO::PARAM_STR);
+        $stmt->bindParam(":retenciones", $datos["retenciones"], PDO::PARAM_STR);
+
+        if ($stmt->execute()) {
+            return $db->lastInsertId();
+        } else {
+            return "error";
+        }
+    }
+
+    /*=============================================
+    MOSTRAR DOCUMENTOS SOPORTE
+    =============================================*/
+    static public function mdlMostrarDocumentosSoporte($item, $valor)
+    {
+        if ($item != null) {
+            $stmt = Conexion::conectar()->prepare("SELECT * FROM documentos_soporte WHERE $item = :$item ORDER BY id DESC");
+            $stmt->bindParam(":" . $item, $valor, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetch();
+        } else {
+            $stmt = Conexion::conectar()->prepare("SELECT * FROM documentos_soporte ORDER BY id DESC");
+            $stmt->execute();
+            return $stmt->fetchAll();
+        }
+    }
+
+    /*=============================================
+    MOSTRAR ÚLTIMO DOCUMENTO SOPORTE
+    =============================================*/
+    static public function mdlMostrarUltimoDocumentoSoporte()
+    {
+        $stmt = Conexion::conectar()->prepare("SELECT * FROM documentos_soporte ORDER BY id DESC LIMIT 1");
+        $stmt->execute();
+        return $stmt->fetch();
+    }
+
+    /*=============================================
+    ELIMINAR DOCUMENTO SOPORTE
+    =============================================*/
+    static public function mdlEliminarDocumentoSoporte($id)
+    {
+        $stmt = Conexion::conectar()->prepare("DELETE FROM documentos_soporte WHERE id = :id");
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+
+        if ($stmt->execute()) {
+            return "ok";
+        } else {
+            return "error";
+        }
+    }
+
+    /*=============================================
+    ACTUALIZAR DATOS DE DOCUMENTO SOPORTE
+    =============================================*/
+    static public function mdlActualizarDatosDocumentoSoporte($idDS, $datos)
+    {
+        $sql = "UPDATE documentos_soporte SET
+                estado_dian = :estado_dian,
+                cuds = :cuds,
+                qr_data = :qr_data,
+                xml_dian = :xml_dian,
+                pdf_dian = :pdf_dian,
+                mensaje_dian = :mensaje_dian,
+                factus_id = :factus_id";
+
+        if (isset($datos["numero_ds"])) {
+            $sql .= ", numero_ds = :numero_ds";
+        }
+
+        $sql .= " WHERE id = :id";
+
+        $stmt = Conexion::conectar()->prepare($sql);
+
+        $stmt->bindParam(":estado_dian", $datos["estado_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":cuds", $datos["cuds"], PDO::PARAM_STR);
+        $stmt->bindParam(":qr_data", $datos["qr_data"], PDO::PARAM_STR);
+        $stmt->bindParam(":xml_dian", $datos["xml_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":pdf_dian", $datos["pdf_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":mensaje_dian", $datos["mensaje_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":factus_id", $datos["factus_id"], PDO::PARAM_INT);
+        $stmt->bindParam(":id", $idDS, PDO::PARAM_INT);
+
+        if (isset($datos["numero_ds"])) {
+            $stmt->bindParam(":numero_ds", $datos["numero_ds"], PDO::PARAM_STR);
+        }
 
         if ($stmt->execute()) {
             return "ok";

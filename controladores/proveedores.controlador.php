@@ -1,33 +1,42 @@
 <?php
 
-class ControladorProveedores{
+class ControladorProveedores
+{
 
 	/*=============================================
 	CREAR PROVEEDOR
 	=============================================*/
 
-	static public function ctrCrearProveedor(){
+	static public function ctrCrearProveedor()
+	{
 
-		if(isset($_POST["nuevoProveedor"])){
+		if (isset($_POST["nuevoProveedor"])) {
 
-			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoProveedor"]) &&
-                preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevaMarca"]) &&
-                preg_match('/^[0-9]+$/', $_POST["nuevoCelular"])                
-                ){
+			if (
+				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoProveedor"]) &&
+				($_POST["nuevaMarca"] == "" || preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevaMarca"])) &&
+				preg_match('/^[0-9]+$/', $_POST["nuevoCelular"])
+			) {
 
 				$tabla = "proveedores";
 
 				$datos = $_POST["nuevoProveedor"];
-                
-                $datos = array("nombre" => $_POST["nuevoProveedor"],
-                               "marca" => $_POST["nuevaMarca"],
-                               "celular" => $_POST["nuevoCelular"],
-                               "correo" => $_POST["nuevoCorreo"],
-                               "direccion" => $_POST["nuevaDireccion"]);
-							   
+
+				$datos = array(
+					"nombre" => $_POST["nuevoProveedor"],
+					"documento" => $_POST["nuevoDocumento"],
+					"tipo_documento_id" => $_POST["nuevoTipoDocumento"],
+					"marca" => $_POST["nuevaMarca"],
+					"celular" => $_POST["nuevoCelular"],
+					"correo" => $_POST["nuevoCorreo"],
+					"direccion" => $_POST["nuevaDireccion"],
+					"municipio_id" => $_POST["nuevoMunicipio"],
+					"organizacion_id" => $_POST["nuevaOrganizacion"]
+				);
+
 				$respuesta = ModeloProveedores::mdlIngresarProveedor($tabla, $datos);
 
-				if($respuesta == "ok"){
+				if ($respuesta == "ok") {
 
 					echo '<script>
 					swal({
@@ -47,8 +56,7 @@ class ControladorProveedores{
 				</script>';
 				}
 
-			}
-			else{
+			} else {
 
 				echo '<script>
 					swal({
@@ -75,7 +83,8 @@ class ControladorProveedores{
 	MOSTRAR PROVEEDORES
 	=============================================*/
 
-	static public function ctrMostrarProveedores($item, $valor){
+	static public function ctrMostrarProveedores($item, $valor)
+	{
 
 		$tabla = "proveedores";
 
@@ -89,27 +98,35 @@ class ControladorProveedores{
 	EDITAR PROVEEDORES
 	=============================================*/
 
-	static public function ctrEditarProveedor(){
+	static public function ctrEditarProveedor()
+	{
 
-		if(isset($_POST["editarProveedor"])){
+		if (isset($_POST["editarProveedor"])) {
 
-			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarProveedor"]) &&
-                preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarMarca"]) &&
-                preg_match('/^[0-9]+$/', $_POST["editarCelular"])                
-                ){
+			if (
+				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarProveedor"]) &&
+				($_POST["editarMarca"] == "" || preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarMarca"])) &&
+				preg_match('/^[0-9]+$/', $_POST["editarCelular"])
+			) {
 
 				$tabla = "proveedores";
 
-				$datos = array("id" => $_POST["idProveedor"],
-                              "nombre" => $_POST["editarProveedor"],
-                               "marca" => $_POST["editarMarca"],
-                               "celular" => $_POST["editarCelular"],
-                               "correo" => $_POST["editarCorreo"],
-                               "direccion" => $_POST["editarDireccion"]);
+				$datos = array(
+					"id" => $_POST["idProveedor"],
+					"nombre" => $_POST["editarProveedor"],
+					"documento" => $_POST["editarDocumento"],
+					"tipo_documento_id" => $_POST["editarTipoDocumento"],
+					"marca" => $_POST["editarMarca"],
+					"celular" => $_POST["editarCelular"],
+					"correo" => $_POST["editarCorreo"],
+					"direccion" => $_POST["editarDireccion"],
+					"municipio_id" => $_POST["editarMunicipio"],
+					"organizacion_id" => $_POST["editarOrganizacion"]
+				);
 
 				$respuesta = ModeloProveedores::mdlEditarProveedor($tabla, $datos);
 
-				if($respuesta == "ok"){
+				if ($respuesta == "ok") {
 
 					echo '<script>
 					swal({
@@ -129,8 +146,7 @@ class ControladorProveedores{
 				</script>';
 				}
 
-			}
-			else{
+			} else {
 
 				echo '<script>
 					swal({
@@ -158,16 +174,17 @@ class ControladorProveedores{
 	BORRAR PROVEEDORES
 	=============================================*/
 
-	static public function ctrBorrarProveedor() {
+	static public function ctrBorrarProveedor()
+	{
 
-		if(isset($_GET["idProveedor"])) {
-	
+		if (isset($_GET["idProveedor"])) {
+
 			$tabla = "proveedores";
 			$idProveedor = $_GET["idProveedor"];
-	
+
 			// Verificar si hay productos asociados a esta proveedores
 			$productosAsociados = ModeloProductos::mdlMostrarProductos("productos", "id_proveedor", $idProveedor, "id");
-	
+
 			if (!empty($productosAsociados)) {
 				echo '<script>
 					swal({
@@ -184,10 +201,10 @@ class ControladorProveedores{
 				</script>';
 				return;
 			}
-	
+
 			$respuesta = ModeloProveedores::mdlBorrarProveedor($tabla, $idProveedor);
-	
-			if($respuesta == "ok") {
+
+			if ($respuesta == "ok") {
 				echo '<script>
 					swal({
 						type: "success",
@@ -204,7 +221,7 @@ class ControladorProveedores{
 		}
 	}
 
-	
+
 
 
 }

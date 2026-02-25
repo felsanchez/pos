@@ -279,6 +279,33 @@
                 </li>
             </ul>
         </li>';
+      }
+
+      if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") {
+
+        echo '<li class="treeview">
+            <a href="">
+                <i class="fa fa-file-powerpoint-o"></i>
+                <span>Documento Soporte</span>
+                <span class="pull-right-container">
+                    <i class="fa fa-angle-left pull-right"></i>
+                </span>
+            </a>
+            <ul class="treeview-menu">
+                <li>
+                    <a href="documentos-soporte">
+                        <i class="fa fa-circle-o"></i>
+                        <span>Administrar Doc. Soporte</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="crear-documento-soporte">
+                        <i class="fa fa-circle-o"></i>
+                        <span>Emitir Doc. Soporte</span>
+                    </a>
+                </li>
+            </ul>
+        </li>';
 
       }
 

@@ -126,6 +126,16 @@ $(document).ready(function () {
 			}
 		});
 	}
+
+	// Inicializar Select2 al abrir los modales
+	$('#modalAgregarProveedor, #modalEditarProveedor').on('shown.bs.modal', function () {
+		if ($(".select2").length > 0) {
+			$(".select2").select2({
+				placeholder: "Seleccionar opción",
+				allowClear: true
+			});
+		}
+	});
 });
 
 
@@ -158,10 +168,14 @@ $(".tablaProveedores").on("click", ".btnEditarProveedor", function () {
 			//console.log("Respuesta AJAX:", respuesta);
 
 			$("#editarProveedor").val(respuesta["nombre"]);
+			$("#editarDocumento").val(respuesta["documento"]);
+			$("#editarTipoDocumento").val(respuesta["tipo_documento_id"]);
 			$("#editarMarca").val(respuesta["marca"]);
 			$("#editarCelular").val(respuesta["celular"]);
 			$("#editarCorreo").val(respuesta["correo"]);
 			$("#editarDireccion").val(respuesta["direccion"]);
+			$("#editarMunicipio").val(respuesta["municipio_id"]).trigger('change');
+			$("#editarOrganizacion").val(respuesta["organizacion_id"]);
 
 			// ✅ mostrar el modal
 			//$('#modalEditarProveedor').modal('show');

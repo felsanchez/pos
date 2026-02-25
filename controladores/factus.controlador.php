@@ -1444,4 +1444,292 @@ AUTENTICAR CON FACTUS API
 
 		return $notaCredito;
 	}
+	/*=============================================
+	MOSTRAR DOCUMENTOS SOPORTE
+	=============================================*/
+	static public function ctrMostrarDocumentosSoporte($item, $valor)
+	{
+		return ModeloFactus::mdlMostrarDocumentosSoporte($item, $valor);
+	}
+
+	/*=============================================
+	MOSTRAR ÚLTIMO DOCUMENTO SOPORTE
+	=============================================*/
+	static public function ctrMostrarUltimoDocumentoSoporte()
+	{
+		return ModeloFactus::mdlMostrarUltimoDocumentoSoporte();
+	}
+
+	/*=============================================
+	GENERAR DOCUMENTO SOPORTE (FACTUS API)
+	=============================================*/
+	static public function ctrCrearDocumentoSoporte()
+	{
+		if (isset($_POST["seleccionarProveedor"])) {
+
+			// 1. Validar productos
+			if (empty($_POST["listaProductosDS"])) {
+				return array("error" => true, "mensaje" => "No hay productos en el documento");
+			}
+
+			// 🟢 GUARDAR COMO BORRADOR
+			$datosGuardar = [
+				"numero_ds" => "", // No tiene número oficial aún
+				"id_proveedor" => $_POST["seleccionarProveedor"],
+				"fecha_emision" => date('Y-m-d H:i:s'),
+				"metodo_pago" => $_POST["nuevoMetodoPagoDS"],
+				"productos" => $_POST["listaProductosDS"],
+				"monto_total" => $_POST["totalDS"],
+				"estado_dian" => "borrador",
+				"cuds" => "",
+				"qr_data" => "",
+				"pdf_dian" => "",
+				"xml_dian" => "",
+				"mensaje_dian" => "Documento guardado localmente (Borrador). Pendiente de firma.",
+				"factus_id" => null,
+				"id_usuario" => $_POST["idUsuario"],
+				"tipo_descuento" => $_POST["tipoDescuentoDS"] ?? null,
+				"valor_descuento" => $_POST["valorDescuentoDS"] ?? 0,
+				"monto_descuento" => $_POST["montoDescuentoDS"] ?? 0,
+				"retenciones" => $_POST["datosRetencionesDS"] ?? null
+			];
+
+			$idNuevoDS = ModeloFactus::mdlGuardarDocumentoSoporte($datosGuardar);
+
+			if (is_numeric($idNuevoDS)) {
+				return array(
+					"error" => false,
+					"mensaje" => "Documento Soporte guardado como borrador correctamente",
+					"numero" => "DS-" . $idNuevoDS
+				);
+			} else {
+				return array("error" => true, "mensaje" => "Error al guardar el borrador localmente");
+			}
+		}
+	}
+
+	/*=============================================
+	FIRMAR Y ENVIAR DOCUMENTO SOPORTE A FACTUS
+	=============================================*/
+	static public function ctrFirmarDocumentoSoporte($idDS)
+	{
+		// 1. Obtener datos del borrador
+		$ds = ModeloFactus::mdlMostrarDocumentosSoporte("id", $idDS);
+
+		if (!$ds) {
+			return array("error" => true, "mensaje" => "Documento Soporte no encontrado");
+		}
+
+		if ($ds["estado_dian"] != "borrador") {
+			return array("error" => true, "mensaje" => "El documento ya ha sido enviado o no está en estado borrador");
+		}
+
+		// 2. Autenticar
+		$auth = self::ctrAutenticar();
+		if ($auth['error']) {
+			return $auth;
+		}
+
+		// 3. Preparar datos para Factus (adaptando el POST que espera prepararDatosDocumentoSoporte)
+		$postSimulado = [
+			"seleccionarProveedor" => $ds["id_proveedor"],
+			"listaProductosDS" => $ds["productos"],
+			"totalDS" => $ds["monto_total"],
+			"nuevoMetodoPagoDS" => $ds["metodo_pago"],
+			"idUsuario" => $ds["id_usuario"],
+			"tipoDescuentoDS" => $ds["tipo_descuento"],
+			"valorDescuentoDS" => $ds["valor_descuento"],
+			"montoDescuentoDS" => $ds["monto_descuento"],
+			"datosRetencionesDS" => $ds["retenciones"]
+		];
+
+		$datosFactus = self::prepararDatosDocumentoSoporte($postSimulado);
+
+		if (isset($datosFactus['error'])) {
+			return $datosFactus;
+		}
+
+		// 4. Enviar a Factus
+		$resultado = ModeloFactus::mdlCrearDocumentoSoporte($auth['token'], $datosFactus);
+
+		// 5. Procesar respuesta
+		if ($resultado['http_code'] == 201 || $resultado['http_code'] == 200) {
+			$respuestaFactus = json_decode($resultado['respuesta'], true);
+
+			$datosActualizar = [
+				"numero_ds" => $respuestaFactus['data']['support_document']['number'] ?? '',
+				"estado_dian" => "enviada",
+				"cuds" => $respuestaFactus['data']['support_document']['cuds'] ?? '',
+				"qr_data" => $respuestaFactus['data']['support_document']['qr'] ?? '',
+				"pdf_dian" => $respuestaFactus['data']['support_document']['public_url'] ?? '',
+				"xml_dian" => $respuestaFactus['data']['support_document']['xml_url'] ?? '',
+				"mensaje_dian" => $respuestaFactus['message'] ?? 'Documento Soporte firmado y enviado exitosamente',
+				"factus_id" => $respuestaFactus['data']['support_document']['id'] ?? null
+			];
+
+			$actualizado = ModeloFactus::mdlActualizarDatosDocumentoSoporte($idDS, $datosActualizar);
+
+			if ($actualizado == "ok") {
+				// Actualizar consecutivo local
+				$rangoDS = ModeloFactus::mdlObtenerRangoDS();
+				if ($rangoDS && !empty($datosActualizar["numero_ds"])) {
+					$numeroDS = preg_replace('/[^0-9]/', '', $datosActualizar["numero_ds"]);
+					if ($numeroDS && is_numeric($numeroDS)) {
+						ModeloFactus::mdlActualizarNumeroActualRangoNC($rangoDS['id_factus'], intval($numeroDS));
+					}
+				}
+
+				return array("error" => false, "mensaje" => "Documento Soporte firmado y enviado correctamente", "numero" => $datosActualizar["numero_ds"]);
+			} else {
+				return array("error" => true, "mensaje" => "Error al actualizar datos locales después de firmar");
+			}
+		} else {
+			$error = json_decode($resultado['respuesta'], true);
+			return array("error" => true, "mensaje" => "Error API Factus: " . ($error['message'] ?? 'Desconocido'), "detalles" => $resultado['respuesta']);
+		}
+	}
+
+	/*=============================================
+	PREPARAR DATOS DOCUMENTO SOPORTE (JSON)
+	=============================================*/
+	public static function prepararDatosDocumentoSoporte($post)
+	{
+		require_once __DIR__ . "/../modelos/proveedores.modelo.php";
+		require_once __DIR__ . "/../modelos/productos.modelo.php";
+
+		$proveedor = ModeloProveedores::mdlMostrarProveedores("proveedores", "id", $post['seleccionarProveedor']);
+		$configFactus = ModeloFactus::mdlObtenerConfiguracion();
+		$rangoDS = ModeloFactus::mdlObtenerRangoDS();
+
+		if (!$rangoDS) {
+			return array("error" => true, "mensaje" => "No hay rango de Documento Soporte activo");
+		}
+
+		$productosDS = json_decode($post['listaProductosDS'], true);
+		$items = [];
+
+		// variables para prorrateo de descuento
+		$tipoDescuento = $post["tipoDescuentoDS"] ?? "";
+		$valorDescuentoGlobal = floatval($post["valorDescuentoDS"] ?? 0);
+		$montoDescuentoDS = floatval($post["montoDescuentoDS"] ?? 0);
+
+		// Calcular base total para prorrateo si el descuento es fijo
+		$totalBaseProrrateo = 0;
+		if ($tipoDescuento == "fijo") {
+			foreach ($productosDS as $pd) {
+				$totalBaseProrrateo += (floatval($pd['precio']) * intval($pd['cantidad']));
+			}
+		}
+
+		// Retenciones globales para aplicar a los items
+		$retencionesDS = !empty($post["datosRetencionesDS"]) ? json_decode($post["datosRetencionesDS"], true) : [];
+
+		foreach ($productosDS as $key => $pd) {
+			$productoBD = ModeloProductos::mdlMostrarProductos("productos", "id", $pd['id'], "id");
+
+			// 🔹 Documento Soporte: Siempre se emite por compras a no responsables de IVA
+			// Por lo tanto, el item debe ser excluido (no causa IVA)
+			$tasaImpuesto = 0.00;
+			$codeTributo = 7; // No causa impuesto (Standar para DS)
+
+			// 🔹 CALCULO DESCUENTO ITEM
+			$tasaDescuentoItem = 0;
+			if ($tipoDescuento == "porcentaje") {
+				$tasaDescuentoItem = $valorDescuentoGlobal;
+			} elseif ($tipoDescuento == "fijo" && $montoDescuentoDS > 0 && $totalBaseProrrateo > 0) {
+				$tasaDescuentoItem = ($montoDescuentoDS / $totalBaseProrrateo) * 100;
+			}
+
+			// 🟠 PREPARAR RETENCIONES PARA EL ITEM
+			$withholdingTaxesItem = array();
+			if (!empty($retencionesDS)) {
+				foreach ($retencionesDS as $ret) {
+					$codigoRetencion = "06"; // Default ReteRenta
+					$nombreRetencion = $ret['tipo'];
+
+					// ReteIVA (Code 05) NO aplica en DS porque no hay IVA
+					if (stripos($nombreRetencion, 'IVA') !== false) {
+						continue; // saltar ReteIVA en DS
+					} elseif (stripos($nombreRetencion, 'ICA') !== false) {
+						$codigoRetencion = "07"; // ReteICA
+					} elseif (stripos($nombreRetencion, 'Renta') !== false) {
+						$codigoRetencion = "06"; // ReteRenta
+					}
+
+					$withholdingTaxesItem[] = [
+						"code" => $codigoRetencion,
+						"withholding_tax_rate" => number_format(floatval($ret['porcentaje']), 2, '.', '')
+					];
+				}
+			}
+
+			// Obtener Unidad de Medida dinámica
+			$unidadMedidaRes = isset($productoBD['unidad_medida_id']) && !empty($productoBD['unidad_medida_id']) ? intval($productoBD['unidad_medida_id']) : 70;
+			$idUnidadMedidaItem = ModeloFactus::mdlObtenerIdUnidadMedida($unidadMedidaRes);
+
+			$items[] = [
+				"scheme_id" => "1",
+				"name" => $pd['descripcion'],
+				"code_reference" => !empty($productoBD['codigo']) ? $productoBD['codigo'] : ("ITEM-" . ($key + 1)),
+				"quantity" => intval($pd['cantidad']),
+				"discount_rate" => number_format($tasaDescuentoItem, 2, '.', ''),
+				"price" => number_format(floatval($pd['precio']), 2, '.', ''),
+				"tax_rate" => number_format($tasaImpuesto, 2, '.', ''),
+				"unit_measure_id" => $idUnidadMedidaItem,
+				"standard_code_id" => 1,
+				"is_excluded" => 1, // En DS siempre es excluido
+				"tribute_id" => $codeTributo,
+				"withholding_taxes" => $withholdingTaxesItem
+			];
+		}
+
+
+		// Datos del Proveedor (En la API de DS se llama 'provider')
+		$tipoOrganizacion = $proveedor['organizacion_id'] ?? "2";
+		$tipoDocumentoId = isset($proveedor['tipo_documento_id']) && !empty($proveedor['tipo_documento_id']) ? intval($proveedor['tipo_documento_id']) : 3;
+
+		// Calcular DV si es Nit (6 o 31 generalmente en este sistema) o Persona Jurídica
+		$dv = "";
+		if ($tipoOrganizacion == "1" || $tipoDocumentoId == 31 || $tipoDocumentoId == 6) {
+			$dv = strval(ModeloFactus::mdlCalcularDV($proveedor['documento']));
+		}
+
+		// Mapear método de pago dinámico
+		$nombreMetodoPago = isset($post["nuevoMetodoPagoDS"]) ? $post["nuevoMetodoPagoDS"] : "Efectivo";
+		$metodoPagoCode = ModeloFactus::mdlObtenerCodigoMedioPago($nombreMetodoPago);
+
+		return [
+			"numbering_range_id" => intval($rangoDS['id_factus']),
+			"reference_code" => "DS-" . time(),
+			"observation" => "Emisión de Documento Soporte",
+			"payment_form" => "1",
+			"payment_due_date" => date('Y-m-d'),
+			"payment_method_code" => $metodoPagoCode,
+			"operation_type" => 10,
+			"provider" => [
+				"identification" => $proveedor['documento'],
+				"dv" => $dv,
+				"company" => ($tipoOrganizacion == "1") ? $proveedor['nombre'] : '',
+				"trade_name" => $proveedor['marca'] ?? $proveedor['nombre'], // nombre comercial
+				"names" => $proveedor['nombre'],
+				"address" => $proveedor['direccion'] ?? 'Dirección',
+				"email" => $proveedor['correo'] ?? 'correo@ejemplo.com',
+				"phone" => $proveedor['celular'] ?? '000000',
+				"legal_organization_id" => strval($tipoOrganizacion),
+				"tribute_id" => "21", // ZZ No responsable de IVA
+				"identification_document_id" => strval($tipoDocumentoId),
+				"municipality_id" => strval($proveedor['municipio_id'] ?? '169'),
+				"country_code" => "CO"
+			],
+			"items" => $items
+		];
+	}
+
+	/*=============================================
+	ELIMINAR DOCUMENTO SOPORTE
+	=============================================*/
+	static public function ctrEliminarDocumentoSoporte($id)
+	{
+		return ModeloFactus::mdlEliminarDocumentoSoporte($id);
+	}
 }
