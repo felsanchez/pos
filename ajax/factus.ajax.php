@@ -351,6 +351,11 @@ class AjaxFactus
 			));
 		}
 	}
+	public function ajaxCrearNotaAjusteDS()
+	{
+		$resultado = ControladorFactus::ctrCrearNotaAjusteDS();
+		echo json_encode($resultado);
+	}
 }
 
 /*=============================================
@@ -386,6 +391,9 @@ if (isset($_POST["accion"])) {
 			break;
 		case "eliminarDS":
 			$factus->ajaxEliminarDocumentoSoporte();
+			break;
+		case "crearNotaAjusteDS":
+			$factus->ajaxCrearNotaAjusteDS();
 			break;
 		default:
 			echo json_encode(array("error" => true, "mensaje" => "Acción no válida"));

@@ -803,9 +803,9 @@ class ModeloFactus
         if (strpos($nombreNorm, 'vale') !== false)
             return "72";
 
-        // Otros (1) -> Instrumento no definido
+        // Otros (ZZ) -> Instrumento no definido / Acuerdo mutuo
         if (strpos($nombreNorm, 'otro') !== false || strpos($nombreNorm, 'definido') !== false)
-            return "1";
+            return "ZZ";
 
         // Default si no coincide nada (Efectivo)
         return "10";
@@ -1103,6 +1103,46 @@ class ModeloFactus
     }
 
     /*=============================================
+    CREAR NOTA DE AJUSTE DS EN FACTUS API
+    =============================================*/
+    static public function mdlCrearNotaAjusteDS($token, $datosNota)
+    {
+        $apiUrl = self::mdlObtenerConfiguracion()['api_url'];
+        $url = $apiUrl . "/v1/adjustment-notes/validate";
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($datosNota));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Authorization: Bearer ' . $token,
+            'Accept: application/json',
+            'Content-Type: application/json'
+        ));
+
+        $respuesta = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        // DEBUG: Log API response
+        $debugFile = __DIR__ . '/../ajax/debug_nota_ajuste_' . date('Y-m-d_His') . '.txt';
+        $logMsg = "=== API REQUEST AJUSTE ===\n";
+        $logMsg .= "URL: " . $url . "\n";
+        $logMsg .= "Payload: " . json_encode($datosNota) . "\n\n";
+        $logMsg .= "=== API RESPONSE AJUSTE (Code: $httpCode) ===\n";
+        $logMsg .= "Error CURL: " . $curlError . "\n";
+        $logMsg .= "Response: " . $respuesta . "\n\n";
+        file_put_contents($debugFile, $logMsg, FILE_APPEND);
+
+        return array(
+            "respuesta" => $respuesta,
+            "http_code" => $httpCode
+        );
+    }
+
+    /*=============================================
     GUARDAR NOTA CRÉDITO EN BASE DE DATOS
     =============================================*/
     static public function mdlGuardarNotaCredito($datos)
@@ -1137,6 +1177,51 @@ class ModeloFactus
         $stmt->bindParam(":fecha_envio", $datos["fecha_envio_dian"], PDO::PARAM_STR);
         $stmt->bindParam(":usuario", $datos["id_usuario"], PDO::PARAM_INT);
         $stmt->bindParam(":id_cliente", $datos["id_cliente"], PDO::PARAM_INT);
+        $stmt->bindParam(":observacion", $datos["observacion"], PDO::PARAM_STR);
+        $stmt->bindParam(":metodo_pago", $datos["metodo_pago"], PDO::PARAM_STR);
+
+        if ($stmt->execute()) {
+            return "ok";
+        } else {
+            return "error";
+        }
+    }
+
+    /*=============================================
+    GUARDAR NOTA DE AJUSTE DS EN BASE DE DATOS
+    =============================================*/
+    static public function mdlGuardarNotaAjusteDS($datos)
+    {
+        $stmt = Conexion::conectar()->prepare(
+            "INSERT INTO notas_ajuste_ds (
+				id_ds_original, numero_ds_original, tipo_nota, motivo,
+				productos, monto_total, estado_dian, numero_nota_ajuste,
+				cuds_ajuste, qr_data, xml_dian, pdf_dian, mensaje_dian,
+				fecha_envio_dian, id_usuario, id_proveedor, observacion, metodo_pago
+			) VALUES (
+				:id_ds, :num_ds, :tipo, :motivo,
+				:productos, :monto, :estado, :num_nota,
+				:cuds, :qr, :xml, :pdf, :mensaje,
+				:fecha_envio, :usuario, :id_proveedor, :observacion, :metodo_pago
+			)"
+        );
+
+        $stmt->bindParam(":id_ds", $datos["id_ds_original"], PDO::PARAM_INT);
+        $stmt->bindParam(":num_ds", $datos["numero_ds_original"], PDO::PARAM_STR);
+        $stmt->bindParam(":tipo", $datos["tipo_nota"], PDO::PARAM_STR);
+        $stmt->bindParam(":motivo", $datos["motivo"], PDO::PARAM_STR);
+        $stmt->bindParam(":productos", $datos["productos"], PDO::PARAM_STR);
+        $stmt->bindParam(":monto", $datos["monto_total"], PDO::PARAM_STR);
+        $stmt->bindParam(":estado", $datos["estado_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":num_nota", $datos["numero_nota_ajuste"], PDO::PARAM_STR);
+        $stmt->bindParam(":cuds", $datos["cuds_ajuste"], PDO::PARAM_STR);
+        $stmt->bindParam(":qr", $datos["qr_data"], PDO::PARAM_STR);
+        $stmt->bindParam(":xml", $datos["xml_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":pdf", $datos["pdf_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":mensaje", $datos["mensaje_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":fecha_envio", $datos["fecha_envio_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":usuario", $datos["id_usuario"], PDO::PARAM_INT);
+        $stmt->bindParam(":id_proveedor", $datos["id_proveedor"], PDO::PARAM_INT);
         $stmt->bindParam(":observacion", $datos["observacion"], PDO::PARAM_STR);
         $stmt->bindParam(":metodo_pago", $datos["metodo_pago"], PDO::PARAM_STR);
 
@@ -1298,7 +1383,7 @@ OBTENER RANGO DE NOTAS CRÉDITO
         $config = self::mdlObtenerConfiguracion();
         $url = $config['api_url'] . '/v1/support-documents/validate';
 
-        $debugFile = 'debug_ds_' . date('Y-m-d_His') . '.txt';
+        $debugFile = __DIR__ . '/../ajax/debug_ds_' . date('Y-m-d_His') . '.txt';
         $logMsg = "=== SOLICITUD DOCUMENTO SOPORTE ===\n";
         $logMsg .= "URL: $url\n";
         $logMsg .= "Datos DS: " . json_encode($datosDS, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n\n";
@@ -1420,6 +1505,60 @@ OBTENER RANGO DE NOTAS CRÉDITO
             return "ok";
         } else {
             return "error";
+        }
+    }
+
+    /*=============================================
+    OBTENER RANGO PARA NOTA DE AJUSTE DS
+    =============================================*/
+    static public function mdlObtenerRangoAjusteDS()
+    {
+        // Priorizar el id_factus 1193 que es el real en Sandbox
+        $stmt = Conexion::conectar()->prepare("SELECT * FROM factus_rangos WHERE id_factus = 1193 AND estado = 1 LIMIT 1");
+        $stmt->execute();
+        $rango = $stmt->fetch();
+
+        if (!$rango) {
+            $stmt = Conexion::conectar()->prepare("SELECT * FROM factus_rangos WHERE documento LIKE '%Ajuste%' AND estado = 1 LIMIT 1");
+            $stmt->execute();
+            $rango = $stmt->fetch();
+        }
+
+        if (!$rango) {
+            // Si no hay específico, buscamos el de Nota Crédito como fallback extremo
+            $stmt = Conexion::conectar()->prepare("SELECT * FROM factus_rangos WHERE documento LIKE '%credit-note%' AND estado = 1 LIMIT 1");
+            $stmt->execute();
+            $rango = $stmt->fetch();
+        }
+
+        return $rango;
+    }
+
+    /*=============================================
+    VERIFICAR SI UN DOCUMENTO SOPORTE TIENE NOTA DE AJUSTE
+    =============================================*/
+    static public function mdlObtenerNotaAjusteDS($idDS)
+    {
+        $stmt = Conexion::conectar()->prepare("SELECT * FROM notas_ajuste_ds WHERE id_ds_original = :id_ds");
+        $stmt->bindParam(":id_ds", $idDS, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch();
+    }
+
+    /*=============================================
+    MOSTRAR NOTAS DE AJUSTE DS
+    =============================================*/
+    static public function mdlMostrarNotasAjusteDS($item, $valor)
+    {
+        if ($item != null) {
+            $stmt = Conexion::conectar()->prepare("SELECT * FROM notas_ajuste_ds WHERE $item = :$item");
+            $stmt->bindParam(":" . $item, $valor, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetch();
+        } else {
+            $stmt = Conexion::conectar()->prepare("SELECT * FROM notas_ajuste_ds ORDER BY id DESC");
+            $stmt->execute();
+            return $stmt->fetchAll();
         }
     }
 

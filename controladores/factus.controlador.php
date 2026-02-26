@@ -1461,6 +1461,22 @@ AUTENTICAR CON FACTUS API
 	}
 
 	/*=============================================
+	OBTENER NOTA DE AJUSTE POR DS
+	=============================================*/
+	static public function ctrObtenerNotaAjusteDS($idDS)
+	{
+		return ModeloFactus::mdlObtenerNotaAjusteDS($idDS);
+	}
+
+	/*=============================================
+	MOSTRAR NOTAS DE AJUSTE DS
+	=============================================*/
+	static public function ctrMostrarNotasAjusteDS($item, $valor)
+	{
+		return ModeloFactus::mdlMostrarNotasAjusteDS($item, $valor);
+	}
+
+	/*=============================================
 	GENERAR DOCUMENTO SOPORTE (FACTUS API)
 	=============================================*/
 	static public function ctrCrearDocumentoSoporte()
@@ -1731,5 +1747,217 @@ AUTENTICAR CON FACTUS API
 	static public function ctrEliminarDocumentoSoporte($id)
 	{
 		return ModeloFactus::mdlEliminarDocumentoSoporte($id);
+	}
+
+	/*=============================================
+	GENERAR NOTA DE AJUSTE DS (API FACTUS)
+	=============================================*/
+	static public function ctrCrearNotaAjusteDS()
+	{
+		if (isset($_POST["idDS"])) {
+
+			$idDS = $_POST["idDS"];
+			$motivo = $_POST["tipoNota"];
+			$motivoDescripcion = $_POST["motivoDesc"];
+			$productosAjuste = json_decode($_POST["listaProductosDS"], true);
+			$metodoPago = $_POST["metodoPagoDS"] ?? "Efectivo";
+
+			// 1. Obtener datos del DS original
+			$originalDS = ModeloFactus::mdlMostrarDocumentosSoporte("id", $idDS);
+
+			if (!$originalDS) {
+				return array("error" => true, "mensaje" => "Documento Soporte original no encontrado");
+			}
+
+			// 2. Autenticar
+			$auth = self::ctrAutenticar();
+			if ($auth['error']) {
+				return $auth;
+			}
+
+			// 3. Preparar datos para la API
+			$datosNota = self::prepararDatosNotaAjusteDS($originalDS, $motivo, $motivoDescripcion, $productosAjuste, $metodoPago);
+
+			// 4. Enviar a Factus
+			$resultado = ModeloFactus::mdlCrearNotaAjusteDS($auth['token'], $datosNota);
+
+			if ($resultado['http_code'] == 201 || $resultado['http_code'] == 200) {
+
+				$respuesta = json_decode($resultado['respuesta'], true);
+				$data = $respuesta['data'] ?? [];
+
+				// Resiliencia: Buscar los datos tanto en la raíz de 'data' como dentro de 'adjustment_note'
+				$adjData = $data['adjustment_note'] ?? $data;
+
+				// 5. Guardar en BD
+				$datosGuardar = [
+					"id_ds_original" => $idDS,
+					"numero_ds_original" => $originalDS["numero_ds"],
+					"tipo_nota" => $motivo,
+					"motivo" => $motivoDescripcion,
+					"productos" => json_encode($productosAjuste),
+					"monto_total" => $_POST["totalDS"],
+					"estado_dian" => "enviada",
+					"numero_nota_ajuste" => $adjData['number'] ?? $adjData['number_adjustment_note'] ?? '',
+					"cuds_ajuste" => $adjData['cuds'] ?? $adjData['uuid'] ?? '',
+					"qr_data" => $adjData['qr'] ?? $adjData['qr_code'] ?? '',
+					"xml_dian" => $adjData['xml'] ?? $adjData['xml_url'] ?? '',
+					"pdf_dian" => $adjData['pdf'] ?? $adjData['pdf_url'] ?? $adjData['public_url'] ?? '',
+					"mensaje_dian" => $respuesta['message'] ?? 'Nota de Ajuste generada correctamente',
+					"fecha_envio_dian" => date('Y-m-d H:i:s'),
+					"id_usuario" => $_POST["idUsuario"],
+					"id_proveedor" => $originalDS["id_proveedor"],
+					"observacion" => $_POST["nuevaObservacionDS"] ?? '',
+					"metodo_pago" => $metodoPago
+				];
+
+				$guardar = ModeloFactus::mdlGuardarNotaAjusteDS($datosGuardar);
+
+				if ($guardar == "ok") {
+
+					// Actualizar consecutivo
+					$numeroNota = $datosGuardar["numero_nota_ajuste"];
+					if (!empty($numeroNota)) {
+						preg_match('/(\d+)$/', $numeroNota, $matches);
+						$nuevoNumero = $matches[1] ?? null;
+						if ($nuevoNumero) {
+							$rango = ModeloFactus::mdlObtenerRangoAjusteDS();
+							ModeloFactus::mdlActualizarNumeroActualRangoNC($rango['id_factus'], intval($nuevoNumero));
+						}
+					}
+
+					return array(
+						"error" => false,
+						"mensaje" => "Nota de Ajuste generada y guardada correctamente",
+						"numero" => $numeroNota
+					);
+				} else {
+					return array("error" => true, "mensaje" => "Nota enviada pero falló el guardado local. CUDS: " . ($respuesta['data']['cufe'] ?? 'N/A'));
+				}
+			} else {
+				$respError = json_decode($resultado['respuesta'], true);
+				$httpCode = $resultado['http_code'];
+				$errorMsg = $respError['message'] ?? $resultado['respuesta'];
+
+				// Mensaje especial para el error 409 (nota pendiente en Factus)
+				if ($httpCode == 409) {
+					$errorMsg = "Ya existe una Nota de Ajuste pendiente para este Documento Soporte en el sistema de Factus. " .
+						"Por favor, ingrese al portal de Factus (https://sandbox.factus.com.co) y finalice o elimine " .
+						"la nota pendiente antes de crear una nueva.";
+				}
+
+				return array(
+					"error" => true,
+					"mensaje" => "Error API Factus ($httpCode): $errorMsg"
+				);
+			}
+		}
+	}
+
+	/*=============================================
+	PREPARAR DATOS DE NOTA DE AJUSTE DS (JSON PARA FACTUS)
+	=============================================*/
+	static public function prepararDatosNotaAjusteDS($originalDS, $motivo, $motivoDescripcion, $itemsAjuste, $metodoPago = "Efectivo")
+	{
+		$rango = ModeloFactus::mdlObtenerRangoAjusteDS();
+
+		if (!$rango) {
+			return array("error" => true, "mensaje" => "No se encontró un rango de numeración para Notas de Ajuste DS");
+		}
+
+		// Mapear código de método de pago para Factus
+		$metodoPagoCode = ModeloFactus::mdlObtenerCodigoMedioPago($metodoPago);
+
+		// Calcular tasa de descuento original si existe para evitar VLR02 (Valor superior al original)
+		$tasaDescuentoOriginal = 0;
+		$montoDescuentoOriginal = floatval($originalDS["monto_descuento"] ?? 0);
+		$subtotalBrutoOriginal = floatval($originalDS["monto_total"] ?? 0) + $montoDescuentoOriginal;
+
+		if ($montoDescuentoOriginal > 0 && $subtotalBrutoOriginal > 0) {
+			$tasaDescuentoOriginal = ($montoDescuentoOriginal / $subtotalBrutoOriginal) * 100;
+		}
+
+		// Preparar retenciones originales para aplicar a los items
+		$retencionesOriginales = !empty($originalDS["retenciones"]) ? json_decode($originalDS["retenciones"], true) : [];
+		$withholdingTaxesItem = array();
+		if (!empty($retencionesOriginales)) {
+			foreach ($retencionesOriginales as $ret) {
+				$codigoRetencion = "06"; // Default ReteRenta
+				$nombreRetencion = $ret['tipo'];
+				if (stripos($nombreRetencion, 'ICA') !== false) {
+					$codigoRetencion = "07";
+				} elseif (stripos($nombreRetencion, 'Renta') !== false) {
+					$codigoRetencion = "06";
+				}
+
+				$withholdingTaxesItem[] = [
+					"code" => $codigoRetencion,
+					"withholding_tax_rate" => number_format(floatval($ret['porcentaje']), 2, '.', '')
+				];
+			}
+		}
+
+		// Mapear items
+		$items = [];
+		foreach ($itemsAjuste as $item) {
+			$items[] = [
+				"code_reference" => strval($item['id']),
+				"name" => $item['descripcion'],
+				"quantity" => number_format(floatval($item['cantidad']), 2, '.', ''),
+				"discount_rate" => number_format($tasaDescuentoOriginal, 2, '.', ''),
+				"price" => number_format(floatval($item['precio']), 2, '.', ''),
+				"tax_rate" => "0.00",
+				"unit_measure_id" => 70,
+				"standard_code_id" => 1,
+				"is_excluded" => 1,
+				"tribute_id" => 7,
+				"withholding_taxes" => $withholdingTaxesItem
+			];
+		}
+
+		// Obtener datos frescos del proveedor para sobrescribir los municipio/depto del DS original
+		require_once __DIR__ . '/../modelos/proveedores.modelo.php';
+		$proveedor = ModeloProveedores::mdlMostrarProveedores("proveedores", "id", $originalDS["id_proveedor"]);
+
+		$tipoOrganizacion = $proveedor['organizacion_id'] ?? "2";
+		$tipoDocumentoId = isset($proveedor['tipo_documento_id']) && !empty($proveedor['tipo_documento_id']) ? intval($proveedor['tipo_documento_id']) : 3;
+		$dv = "";
+		if ($tipoOrganizacion == "1" || $tipoDocumentoId == 31 || $tipoDocumentoId == 6) {
+			$dv = strval(ModeloFactus::mdlCalcularDV($proveedor['documento']));
+		}
+
+		$providerBlock = [
+			"identification" => $proveedor['documento'],
+			"dv" => $dv,
+			"company" => ($tipoOrganizacion == "1") ? $proveedor['nombre'] : '',
+			"trade_name" => $proveedor['marca'] ?? $proveedor['nombre'],
+			"names" => $proveedor['nombre'],
+			"address" => $proveedor['direccion'] ?? 'Dirección',
+			"email" => $proveedor['correo'] ?? 'correo@ejemplo.com',
+			"phone" => $proveedor['celular'] ?? '000000',
+			"legal_organization_id" => strval($tipoOrganizacion),
+			"tribute_id" => "21",
+			"identification_document_id" => strval($tipoDocumentoId),
+			"municipality_id" => strval($proveedor['municipio_id'] ?? '169'),
+			"country_code" => "CO"
+		];
+
+		return [
+			"support_document_id" => intval($originalDS["factus_id"] ?? 0),
+			"numbering_range_id" => intval($rango['id_factus']),
+			"reference_code" => "NA-" . $originalDS["numero_ds"] . "-" . time(),
+			"billing_reference" => [
+				"number" => $originalDS["numero_ds"],
+				"uuid" => $originalDS["cuds"],
+				"issue_date" => date('Y-m-d', strtotime($originalDS["fecha_emision"]))
+			],
+			"correction_concept_code" => strval($motivo),
+			"observation" => $motivoDescripcion,
+			"payment_form" => "1",
+			"payment_due_date" => date('Y-m-d'),
+			"payment_method_code" => $metodoPagoCode,
+			"provider" => $providerBlock,
+			"items" => $items
+		];
 	}
 }

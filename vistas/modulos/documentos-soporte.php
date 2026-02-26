@@ -71,13 +71,16 @@
                                     <td>$ ' . number_format($value["monto_total"], 0) . '</td>
                                     <td>
                                         <div class="btn-group">
-                                            <a href="index.php?ruta=ver-documento-soporte&idDS=' . $value["id"] . '" class="btn btn-default btn-xs" title="Ver Detalle Local"><i class="fa fa-eye"></i></a>';
+                                            <a href="index.php?ruta=ver-documento-soporte&idDS=' . $value["id"] . '" class="btn btn-info" title="Ver Detalle"><i class="fa fa-eye"></i></a>';
 
                                 if ($value["estado_dian"] == "borrador") {
-                                    echo '<button class="btn btn-primary btn-xs btnFirmarDS" idDS="' . $value["id"] . '" title="Firmar y Enviar a Factus"><i class="fa fa-pencil-square-o"></i></button>';
-                                    echo '<button class="btn btn-danger btn-xs btnEliminarDS" idDS="' . $value["id"] . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
+                                    echo '<button class="btn btn-primary btnFirmarDS" idDS="' . $value["id"] . '" title="Firmar y Enviar a Factus"><i class="fa fa-pencil-square-o"></i></button>';
+                                    echo '<button class="btn btn-danger btnEliminarDS" idDS="' . $value["id"] . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
                                 } else {
-                                    echo '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . $value["cuds"] . '" target="_blank" class="btn btn-warning btn-xs" title="Ver en DIAN"><i class="fa fa-globe"></i></a>';
+                                    if ($value["estado_dian"] == "aceptada" || $value["estado_dian"] == "enviada") {
+                                        echo '<a href="index.php?ruta=crear-nota-ajuste-ds&idDS=' . $value["id"] . '" class="btn btn-warning" title="Crear Nota de Ajuste"><i class="fa fa-exchange"></i></a>';
+                                    }
+                                    echo '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . $value["cuds"] . '" target="_blank" class="btn btn-warning" title="Ver en DIAN"><i class="fa fa-globe"></i></a>';
                                 }
 
                                 echo '</div>

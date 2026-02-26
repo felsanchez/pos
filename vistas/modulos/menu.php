@@ -304,6 +304,12 @@
                         <span>Emitir Doc. Soporte</span>
                     </a>
                 </li>
+                <li>
+                    <a href="notas-ajuste-ds">
+                        <i class="fa fa-circle-o"></i>
+                        <span>Administrar Notas Ajuste</span>
+                    </a>
+                </li>
             </ul>
         </li>';
 

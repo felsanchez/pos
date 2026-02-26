@@ -203,6 +203,9 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "documentos-soporte" ||
         $_GET["ruta"] == "crear-documento-soporte" ||
         $_GET["ruta"] == "ver-documento-soporte" ||
+        $_GET["ruta"] == "crear-nota-ajuste-ds" ||
+        $_GET["ruta"] == "ver-nota-ajuste-ds" ||
+        $_GET["ruta"] == "notas-ajuste-ds" ||
         $_GET["ruta"] == "salir"
       ) {
 
