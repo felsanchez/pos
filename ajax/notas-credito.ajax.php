@@ -38,9 +38,18 @@ class AjaxNotasCredito
             $metodoPago = $_POST["metodoPago"] ?? "Efectivo";
             $observacion = $_POST["observacion"] ?? "";
 
+<<<<<<< HEAD
             // Capturar salida de controlador si la hay (echo, print_r) para evitar romper JSON
             ob_start();
             $respuesta = ControladorFactus::ctrGenerarNotaCredito($idVenta, $motivo, $listaProductos, $idCliente, $motivoDescripcion, $metodoPago, $observacion);
+=======
+            // Por defecto crear como borrador
+            $firmar = false;
+
+            // Capturar salida de controlador si la hay (echo, print_r) para evitar romper JSON
+            ob_start();
+            $respuesta = ControladorFactus::ctrGenerarNotaCredito($idVenta, $motivo, $listaProductos, $idCliente, $motivoDescripcion, $metodoPago, $observacion, $firmar);
+>>>>>>> 085e8812 (documentos soporte v8)
             $debugOutput = ob_get_clean(); // Descartar salida no deseada
 
             if (!empty($debugOutput)) {
@@ -56,6 +65,44 @@ class AjaxNotasCredito
             ]);
         }
     }
+<<<<<<< HEAD
+=======
+    /*=============================================
+    FIRMAR NOTA CRÉDITO BORRADOR
+    =============================================*/
+    public function ajaxFirmarNotaCredito()
+    {
+        ob_clean();
+
+        try {
+            if (!isset($_POST["idNota"])) {
+                echo json_encode([
+                    "error" => true,
+                    "mensaje" => "ID de nota requerido"
+                ]);
+                return;
+            }
+
+            $idNota = $_POST["idNota"];
+
+            ob_start();
+            $respuesta = ControladorFactus::ctrFirmarNotaCredito($idNota);
+            $debugOutput = ob_get_clean();
+
+            if (!empty($debugOutput)) {
+                file_put_contents("debug_nc_firmar_error.txt", $debugOutput);
+            }
+
+            echo json_encode($respuesta);
+
+        } catch (Exception $e) {
+            echo json_encode([
+                "error" => true,
+                "mensaje" => "Error interno del servidor: " . $e->getMessage()
+            ]);
+        }
+    }
+>>>>>>> 085e8812 (documentos soporte v8)
 }
 
 /*=============================================
@@ -65,4 +112,15 @@ if (isset($_POST["accion"]) && $_POST["accion"] == "generarNotaCredito") {
     $generarNC = new AjaxNotasCredito();
     $generarNC->ajaxGenerarNotaCredito();
 }
+<<<<<<< HEAD
+=======
+
+/*=============================================
+FIRMAR NOTA CRÉDITO
+=============================================*/
+if (isset($_POST["accion"]) && $_POST["accion"] == "firmarNotaCredito") {
+    $firmarNC = new AjaxNotasCredito();
+    $firmarNC->ajaxFirmarNotaCredito();
+}
+>>>>>>> 085e8812 (documentos soporte v8)
 ?>

@@ -1,0 +1,21 @@
+{
+    "status": "OK",
+    "message": "Solicitud exitosa",
+    "data": {
+        "id": 1191,
+        "document": "22",
+        "document_name": "Nota Cr\u00e9dito",
+        "prefix": "NC",
+        "from": 0,
+        "to": 16000000,
+        "current": 37,
+        "resolution_number": "",
+        "start_date": "2019-01-19",
+        "end_date": "2030-01-19",
+        "technical_key": null,
+        "is_expired": false,
+        "is_active": 1,
+        "created_at": "2026-01-15T15:53:47Z",
+        "updated_at": "2026-03-01T04:20:25Z"
+    }
+}

@@ -432,7 +432,11 @@ if ($xml) {
                 <th>Imagen</th>
 
                 <th>Total</th>
+<<<<<<< HEAD
                 <!--<th>Estado DIAN</th>-->
+=======
+                <th>Estado DIAN</th>
+>>>>>>> 085e8812 (documentos soporte v8)
                 <th><i class="fa fa-magic"></i> Notas</th>
                 <th><i class="fa fa-pencil-square"></i> Observación</th>
                 <th>Fecha</th>
@@ -555,6 +559,7 @@ if ($xml) {
                 echo '<td>' . $moneda . ' ' . number_format($value["total"], 2) . '</td>';
 
                 // Estado DIAN
+<<<<<<< HEAD
                 /*
                 $estadoDian = isset($value["estado_dian"]) ? $value["estado_dian"] : 'pendiente';
                 $badgeDian = '';
@@ -569,6 +574,20 @@ if ($xml) {
                 }
                 echo '<td>' . $badgeDian . '</td>';
                 */
+=======
+                $estadoDian = isset($value["estado_dian"]) ? $value["estado_dian"] : 'pendiente';
+                $badgeDian = '';
+                if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
+                  $badgeDian = '<button class="btn btn-success btn-xs">Exitosa</button>';
+                } elseif ($estadoDian == 'borrador' || $estadoDian == 'creada' || $estadoDian == 'pendiente') {
+                  $badgeDian = '<button class="btn btn-warning btn-xs">Borrador</button>';
+                } elseif ($estadoDian == 'rechazada') {
+                  $badgeDian = '<button class="btn btn-danger btn-xs">Rechazada</button>';
+                } else {
+                  $badgeDian = '<button class="btn btn-danger btn-xs">Pendiente</button>';
+                }
+                echo '<td>' . $badgeDian . '</td>';
+>>>>>>> 085e8812 (documentos soporte v8)
 
                 echo '<td>' . $value['notas'] . '</td>';
 
@@ -622,6 +641,7 @@ if ($xml) {
 
                              ' . (!empty($value["qr_data"]) ? '<a class="btn btn-success" href="' . $value["qr_data"] . '" target="_blank" data-toggle="tooltip" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>' : '') . '
 
+<<<<<<< HEAD
                              ' . (
                   ($nc = ModeloFactus::mdlObtenerNotaCredito($value["id"]))
                   ? '<a class="btn btn-danger" href="index.php?ruta=ver-nota-credito&idVenta=' . $value["id"] . '" title="Ver Nota Crédito ' . $nc['numero_nota_credito'] . '">
@@ -640,6 +660,19 @@ if ($xml) {
                                <i class="fa fa-eye"></i>
                              </button>';
 
+=======
+                                                           <button class="btn btn-info btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver Detalles">
+                               <i class="fa fa-eye"></i>
+                             </button>';
+
+                // Botón de las Notas Crédito (solo si la factura tiene NC)
+                if (ModeloFactus::mdlTieneNotaCredito($value["id"])) {
+                  echo '<button class="btn btn-warning btnVerNotasCredito" idVenta="' . $value["id"] . '" data-toggle="modal" data-target="#modalNotasCredito" title="Ver Notas Crédito">
+                                       <i class="fa fa-list"></i>
+                                     </button>';
+                }
+
+>>>>>>> 085e8812 (documentos soporte v8)
                 if ($_SESSION["perfil"] == "Administrador") {
                   // Solo mostrar botón eliminar si la factura NO ha sido firmada/enviada
                   $estadosNoEliminables = ['enviada', 'rechazada', 'aceptada'];
@@ -1321,4 +1354,54 @@ MODAL EDITAR CLIENTE
       }
     });
   });
+<<<<<<< HEAD
 </script>
+=======
+</script>
+
+<!--=====================================
+MODAL VER NOTAS DE CRÉDITO
+======================================-->
+<div id="modalNotasCredito" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <!-- CABEZA DEL MODAL -->
+      <div class="modal-header" style="background:#f39c12; color:white">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title"><i class="fa fa-list"></i> Notas Crédito Asociadas</h4>
+      </div>
+
+      <!-- CUERPO DEL MODAL -->
+      <div class="modal-body">
+        <div class="box-body">
+
+          <!-- TABLA NOTAS CRÉDITO -->
+          <table class="table table-bordered table-striped dt-responsive" width="100%">
+            <thead>
+              <tr>
+                <th style="width:10px">#</th>
+                <th>Código</th>
+                <th>Fecha</th>
+                <th>Monto</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyNotasCredito">
+              <!-- Filas inyectadas por AJAX -->
+            </tbody>
+          </table>
+
+        </div>
+      </div>
+
+      <!-- PIE DEL MODAL -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default pull-right" data-dismiss="modal">Cerrar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+>>>>>>> 085e8812 (documentos soporte v8)

@@ -1,0 +1,38 @@
+{
+    "notas_credito": [
+        {
+            "id": 37,
+            "numero_nota_credito": "",
+            "estado_dian": "borrador"
+        },
+        {
+            "id": 36,
+            "numero_nota_credito": "NC33",
+            "estado_dian": "enviada"
+        },
+        {
+            "id": 35,
+            "numero_nota_credito": "NC32",
+            "estado_dian": "enviada"
+        }
+    ],
+    "rango_credit_note": [],
+    "rango_all": [
+        {
+            "id": 1,
+            "id_factus": 1041,
+            "documento": "Nota Cr\u00e9dito",
+            "prefijo": "NC",
+            "numero_actual": 10,
+            "estado": 1
+        },
+        {
+            "id": 29,
+            "id_factus": 1191,
+            "documento": "Nota Cr\u00e9dito",
+            "prefijo": "NC",
+            "numero_actual": 33,
+            "estado": 1
+        }
+    ]
+}

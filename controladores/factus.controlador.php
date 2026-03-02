@@ -93,6 +93,25 @@ class ControladorFactus
 	}
 
 	/*=============================================
+<<<<<<< HEAD
+=======
+	OBTENER TODAS LAS NOTAS CRÉDITO POR VENTA
+	=============================================*/
+	static public function ctrObtenerNotasCreditoPorVenta($idVenta)
+	{
+		return ModeloFactus::mdlObtenerNotasCreditoPorVenta($idVenta);
+	}
+
+	/*=============================================
+	OBTENER TODAS LAS NOTAS DE AJUSTE POR DOCUMENTO SOPORTE
+	=============================================*/
+	static public function ctrObtenerNotasAjusteDSPorDS($idDS)
+	{
+		return ModeloFactus::mdlObtenerNotasAjusteDSPorDS($idDS);
+	}
+
+	/*=============================================
+>>>>>>> 085e8812 (documentos soporte v8)
 AUTENTICAR CON FACTUS API
 =============================================*/
 	static public function ctrAutenticar()
@@ -1057,7 +1076,11 @@ AUTENTICAR CON FACTUS API
 	/*=============================================
 	GENERAR NOTA CRÉDITO (API FACTUS)
 	=============================================*/
+<<<<<<< HEAD
 	static public function ctrGenerarNotaCredito($idVenta, $motivo, $listaProductos = null, $idCliente = null, $motivoDescripcion = null, $metodoPago = "Efectivo", $observacion = "")
+=======
+	static public function ctrGenerarNotaCredito($idVenta, $motivo, $listaProductos = null, $idCliente = null, $motivoDescripcion = null, $metodoPago = "Efectivo", $observacion = "", $firmar = false)
+>>>>>>> 085e8812 (documentos soporte v8)
 	{
 		// 1. Validar venta original
 		require_once __DIR__ . "/../modelos/ventas.modelo.php";
@@ -1086,6 +1109,7 @@ AUTENTICAR CON FACTUS API
 			];
 		}
 
+<<<<<<< HEAD
 		// Verificar que no tenga ya una NC
 		if (ModeloFactus::mdlTieneNotaCredito($idVenta)) {
 			return [
@@ -1094,6 +1118,73 @@ AUTENTICAR CON FACTUS API
 			];
 		}
 
+=======
+		// Verificar que tenga el ID interno de Factus (facturas muy antiguas no lo tienen)
+		if (empty($venta["factus_bill_id"])) {
+			return [
+				"error" => true,
+				"mensaje" => "Esta factura es muy antigua y no tiene el ID interno de Factus guardado. Por lo tanto, no se puede generar una Nota Crédito de forma automática desde aquí. Intente generar la nota directamente desde el portal de Factus."
+			];
+		}
+
+		// Eliminar restricción para permitir múltiples notas de crédito a una misma factura
+		// 🔹 SI NO SE REQUIERE FIRMAR, GUARDAR COMO BORRADOR
+		if (!$firmar) {
+
+			// Tomar el número actual del rango según Factus
+			$numeroNC = "";
+			$rangoNC = ModeloFactus::mdlObtenerRangoNC(); // Obtener el rango para el prefijo
+
+			if ($rangoNC) {
+				$prefijo = $rangoNC["prefijo"];
+				$siguienteNumero = ModeloFactus::mdlObtenerSiguienteConsecutivoNC();
+				$numeroNC = $prefijo . $siguienteNumero;
+			}
+
+			$datosGuardar = [
+				"id_venta_original" => $idVenta,
+				"numero_factura_original" => $venta["numero_factura"],
+				"tipo_nota" => "NC_referencia",
+				"motivo" => $motivo,
+				"productos" => json_encode($listaProductos),
+				"monto_total" => $venta["total"],
+				"id_cliente" => !empty($idCliente) ? $idCliente : $venta["id_cliente"],
+				"estado_dian" => "borrador", // Guardado como borrador
+				"numero_nota_credito" => $numeroNC, // Se asigna el consecutivo local
+				"cufe_nc" => '',
+				"qr_data_nc" => '',
+				"xml_dian_nc" => '',
+				"pdf_dian_nc" => '',
+				"mensaje_dian" => 'Nota Crédito guardada localmente (Borrador). Pendiente por firmar.',
+				"fecha_envio_dian" => null,
+				"id_usuario" => $_SESSION['id'] ?? 14,
+				"observacion" => $observacion,
+				"metodo_pago" => $metodoPago
+			];
+
+			$guardado = ModeloFactus::mdlGuardarNotaCredito($datosGuardar);
+
+			if ($guardado == "ok") {
+				// Actualizar el consecutivo localmente para que la próxima tome el siguiente
+				if ($rangoNC && !empty($numeroNC)) {
+					$nuevoNumeroActual = $siguienteNumero + 1;
+					ModeloFactus::mdlActualizarNumeroActualRango($rangoNC["id_factus"], intval($nuevoNumeroActual));
+				}
+
+				return [
+					"error" => false,
+					"mensaje" => "Nota Crédito guardada correctamente como borrador",
+					"numero_nc" => $numeroNC
+				];
+			} else {
+				return [
+					"error" => true,
+					"mensaje" => "Error interno al guardar la Nota Crédito como borrador"
+				];
+			}
+		}
+
+>>>>>>> 085e8812 (documentos soporte v8)
 		// 2. Autenticar
 		$auth = self::ctrAutenticar();
 		if ($auth['error']) {
@@ -1148,23 +1239,40 @@ AUTENTICAR CON FACTUS API
 				$rangoNC = ModeloFactus::mdlObtenerRangoNC();
 				if ($rangoNC && !empty($datosGuardar["numero_nota_credito"])) {
 					// Extraer número del formato "NC1"
+<<<<<<< HEAD
 					$numeroNC = preg_replace('/[^0-9]/', '', $datosGuardar["numero_nota_credito"]);
 					if ($numeroNC && is_numeric($numeroNC)) {
 						ModeloFactus::mdlActualizarNumeroActualRangoNC($rangoNC['id_factus'], intval($numeroNC));
+=======
+					preg_match('/(\d+)$/', $datosGuardar["numero_nota_credito"], $matches);
+					$nuevoNumero = isset($matches[1]) ? $matches[1] : null;
+
+					if ($nuevoNumero && is_numeric($nuevoNumero)) {
+						ModeloFactus::mdlActualizarNumeroActualRango($rangoNC["id_factus"], intval($nuevoNumero));
+>>>>>>> 085e8812 (documentos soporte v8)
 					}
 				}
 
 				return [
 					"error" => false,
+<<<<<<< HEAD
 					"mensaje" => "Nota Crédito generada exitosamente",
 					"numero_nc" => $datosGuardar["numero_nota_credito"],
 					"cufe" => $datosGuardar["cufe_nc"],
+=======
+					"mensaje" => "Nota Crédito generada y enviada a la DIAN exitosamente",
+					"numero_nc" => $datosGuardar["numero_nota_credito"],
+>>>>>>> 085e8812 (documentos soporte v8)
 					"datos" => $respuestaFactus
 				];
 			} else {
 				return [
 					"error" => true,
+<<<<<<< HEAD
 					"mensaje" => "Error al guardar la Nota Crédito en base de datos"
+=======
+					"mensaje" => "Se envió a DIAN pero hubo error guardando en base de datos local"
+>>>>>>> 085e8812 (documentos soporte v8)
 				];
 			}
 		} else {
@@ -1198,6 +1306,54 @@ AUTENTICAR CON FACTUS API
 	}
 
 	/*=============================================
+<<<<<<< HEAD
+=======
+	ELIMINAR NOTA CRÉDITO BORRADOR
+	=============================================*/
+	static public function ctrEliminarNotaCredito()
+	{
+		if (isset($_GET["idEliminarNota"])) {
+
+			// Verificar que la nota exista y sea tipo borrador
+			$nota = ModeloFactus::mdlMostrarNotasCredito("notas_credito", "id", $_GET["idEliminarNota"]);
+
+			if ($nota && $nota["estado_dian"] == "borrador") {
+
+				$respuesta = ModeloFactus::mdlEliminarNotaCredito($_GET["idEliminarNota"]);
+
+				if ($respuesta == "ok") {
+					echo '<script>
+					swal({
+						type: "success",
+						title: "El borrador ha sido borrado correctamente",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+						}).then(function(result){
+									if (result.value) {
+									window.location = "notas-credito";
+									}
+								})
+					</script>';
+				}
+			} else {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "No se puede eliminar esta nota porque ya fue enviada a la DIAN",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+						}).then(function(result){
+									if (result.value) {
+									window.location = "notas-credito";
+									}
+								})
+					</script>';
+			}
+		}
+	}
+
+	/*=============================================
+>>>>>>> 085e8812 (documentos soporte v8)
 	PREPARAR DATOS DE NOTA CRÉDITO (JSON PARA FACTUS)
 	=============================================*/
 	private static function prepararDatosNotaCredito($venta, $motivo, $listaProductos = null, $idCliente = null, $motivoDescripcion = null, $metodoPago = "Efectivo", $observacion = "")
@@ -1591,7 +1747,11 @@ AUTENTICAR CON FACTUS API
 				if ($rangoDS && !empty($datosActualizar["numero_ds"])) {
 					$numeroDS = preg_replace('/[^0-9]/', '', $datosActualizar["numero_ds"]);
 					if ($numeroDS && is_numeric($numeroDS)) {
+<<<<<<< HEAD
 						ModeloFactus::mdlActualizarNumeroActualRangoNC($rangoDS['id_factus'], intval($numeroDS));
+=======
+						ModeloFactus::mdlActualizarNumeroActualRango($rangoDS['id_factus'], intval($numeroDS));
+>>>>>>> 085e8812 (documentos soporte v8)
 					}
 				}
 
@@ -1600,12 +1760,124 @@ AUTENTICAR CON FACTUS API
 				return array("error" => true, "mensaje" => "Error al actualizar datos locales después de firmar");
 			}
 		} else {
+<<<<<<< HEAD
 			$error = json_decode($resultado['respuesta'], true);
+=======
+			// Hubo un error devuelto por la API
+			$error = json_decode($resultado['respuesta'], true);
+
+>>>>>>> 085e8812 (documentos soporte v8)
 			return array("error" => true, "mensaje" => "Error API Factus: " . ($error['message'] ?? 'Desconocido'), "detalles" => $resultado['respuesta']);
 		}
 	}
 
 	/*=============================================
+<<<<<<< HEAD
+=======
+	FIRMAR Y ENVIAR NOTA CRÉDITO BORRADOR (API FACTUS)
+	=============================================*/
+	static public function ctrFirmarNotaCredito($idNota)
+	{
+		// 1. Obtener datos de la Nota Crédito local
+		$notaCredito = ModeloFactus::mdlMostrarNotasCredito("notas_credito", "id", $idNota);
+
+		if (!$notaCredito) {
+			return ["error" => true, "mensaje" => "La nota crédito no existe en la base de datos"];
+		}
+
+		if ($notaCredito["estado_dian"] != "borrador") {
+			return ["error" => true, "mensaje" => "La nota crédito ya no es un borrador (Estado actual: " . $notaCredito["estado_dian"] . ")"];
+		}
+
+		// 2. Obtener datos de la venta original asociada
+		require_once __DIR__ . "/../modelos/ventas.modelo.php";
+		$venta = ModeloVentas::mdlMostrarVentas("ventas", "id", $notaCredito["id_venta_original"]);
+
+		if (!$venta) {
+			return ["error" => true, "mensaje" => "No se encontró la factura de venta original asociada a esta nota"];
+		}
+
+		// Reconstruir listaProductos a partir del JSON guardado en la nota
+		$listaProductos = json_decode($notaCredito["productos"], true);
+
+		// 3. Autenticar
+		$auth = self::ctrAutenticar();
+		if ($auth['error']) {
+			return ["error" => true, "mensaje" => $auth['mensaje']];
+		}
+		$token = $auth['token'];
+
+		// 4. Preparar payload para Factus reutilizando la función de mapeo
+		$datosNC = self::prepararDatosNotaCredito(
+			$venta,
+			$notaCredito["motivo"],
+			$listaProductos,
+			$notaCredito["id_cliente"],
+			"", // motivoDescripcion opcional
+			$notaCredito["metodo_pago"] ?? "Efectivo",
+			$notaCredito["observacion"]
+		);
+
+		if (isset($datosNC['error'])) {
+			return $datosNC;
+		}
+
+		// 5. Enviar a Factus
+		$resultado = ModeloFactus::mdlCrearNotaCredito($token, $datosNC);
+
+		// 6. Procesar respuesta
+		if ($resultado['http_code'] == 201 || $resultado['http_code'] == 200) {
+			$respuestaFactus = json_decode($resultado['respuesta'], true);
+
+			// Actualizar registro local
+			$datosActualizar = [
+				"estado_dian" => "enviada",
+				"numero_nota_credito" => $respuestaFactus['data']['credit_note']['number'] ?? '',
+				"cufe_nc" => $respuestaFactus['data']['credit_note']['cude'] ?? $respuestaFactus['data']['cufe'] ?? '',
+				"qr_data_nc" => $respuestaFactus['data']['credit_note']['qr'] ?? $respuestaFactus['data']['qr_code'] ?? '',
+				"xml_dian_nc" => $respuestaFactus['data']['credit_note']['xml_url'] ?? '',
+				"pdf_dian_nc" => $respuestaFactus['data']['credit_note']['public_url'] ?? $respuestaFactus['data']['pdf_url'] ?? '',
+				"mensaje_dian" => $respuestaFactus['message'] ?? 'NC firmada y enviada a DIAN',
+				"fecha_envio_dian" => date('Y-m-d H:i:s')
+			];
+
+			$actualizado = ModeloFactus::mdlActualizarNotaCredito($idNota, $datosActualizar);
+
+			if ($actualizado == "ok") {
+				// Actualizar consecutivo del rango NC
+				$rangoNC = ModeloFactus::mdlObtenerRangoNC();
+				if ($rangoNC && !empty($datosActualizar["numero_nota_credito"])) {
+					preg_match('/(\d+)$/', $datosActualizar["numero_nota_credito"], $matches);
+					$nuevoNumero = isset($matches[1]) ? $matches[1] : null;
+
+					if ($nuevoNumero && is_numeric($nuevoNumero)) {
+						ModeloFactus::mdlActualizarNumeroActualRango($rangoNC["id_factus"], intval($nuevoNumero));
+					}
+				}
+
+				return [
+					"error" => false,
+					"mensaje" => "Nota Crédito enviada a la DIAN exitosamente",
+					"numero_nc" => $datosActualizar["numero_nota_credito"]
+				];
+			} else {
+				return [
+					"error" => true,
+					"mensaje" => "Enviada a DIAN, pero error actualizando base de datos local"
+				];
+			}
+		} else {
+			// Hubo un error devuelto por la API
+			$error = json_decode($resultado['respuesta'], true);
+			return [
+				"error" => true,
+				"mensaje" => "Error al firmar NC en DIAN: " . ($error['message'] ?? 'Error desconocido')
+			];
+		}
+	}
+
+	/*=============================================
+>>>>>>> 085e8812 (documentos soporte v8)
 	PREPARAR DATOS DOCUMENTO SOPORTE (JSON)
 	=============================================*/
 	public static function prepararDatosDocumentoSoporte($post)
@@ -1734,7 +2006,11 @@ AUTENTICAR CON FACTUS API
 				"legal_organization_id" => strval($tipoOrganizacion),
 				"tribute_id" => "21", // ZZ No responsable de IVA
 				"identification_document_id" => strval($tipoDocumentoId),
+<<<<<<< HEAD
 				"municipality_id" => strval($proveedor['municipio_id'] ?? '169'),
+=======
+				"municipality_id" => strval(!empty($proveedor['municipio_id']) ? $proveedor['municipio_id'] : ($configFactus['municipio_id'] ?? '981')),
+>>>>>>> 085e8812 (documentos soporte v8)
 				"country_code" => "CO"
 			],
 			"items" => $items
@@ -1769,6 +2045,7 @@ AUTENTICAR CON FACTUS API
 				return array("error" => true, "mensaje" => "Documento Soporte original no encontrado");
 			}
 
+<<<<<<< HEAD
 			// 2. Autenticar
 			$auth = self::ctrAutenticar();
 			if ($auth['error']) {
@@ -1851,6 +2128,182 @@ AUTENTICAR CON FACTUS API
 					"mensaje" => "Error API Factus ($httpCode): $errorMsg"
 				);
 			}
+=======
+			// 1.5. Obtener rango y generar número consecutivo para el borrador
+			$rango = ModeloFactus::mdlObtenerRangoAjusteDS();
+			$numeroRango = "";
+
+			if ($rango) {
+				$prefijo = $rango["prefijo"];
+
+				// Tomar el número actual del rango según Factus
+				$numeroRangoBase = intval($rango["numero_actual"]);
+
+				// Buscar si tenemos notas de ajuste locales (borradores o enviadas) con un número mayor
+				$con = Conexion::conectar();
+				$stmt = $con->prepare("SELECT numero_nota_ajuste FROM notas_ajuste_ds WHERE numero_nota_ajuste LIKE :prefijo ORDER BY CAST(REPLACE(numero_nota_ajuste, :prefijo2, '') AS UNSIGNED) DESC LIMIT 1");
+				$prefijoLike = $prefijo . '%';
+				$stmt->bindParam(":prefijo", $prefijoLike, PDO::PARAM_STR);
+				$stmt->bindParam(":prefijo2", $prefijo, PDO::PARAM_STR);
+				$stmt->execute();
+				$ultimaNota = $stmt->fetch();
+
+				if ($ultimaNota && !empty($ultimaNota["numero_nota_ajuste"])) {
+					$ultimoNumeroLocal = intval(str_replace($prefijo, "", $ultimaNota["numero_nota_ajuste"]));
+					if ($ultimoNumeroLocal > $numeroRangoBase) {
+						$numeroRangoBase = $ultimoNumeroLocal;
+					}
+				}
+
+				// Sumamos 1 al mayor número encontrado
+				$numeroActual = $numeroRangoBase + 1;
+				$numeroRango = $prefijo . $numeroActual;
+
+				// Actualizar el número actual en BD para el rango
+				ModeloFactus::mdlActualizarNumeroActualRangoNC($rango["id_factus"], $numeroActual);
+			}
+
+			// 2. Guardar en BD como borrador
+			$datosGuardar = [
+				"id_ds_original" => $idDS,
+				"numero_ds_original" => $originalDS["numero_ds"],
+				"tipo_nota" => $motivo,
+				"motivo" => $motivoDescripcion,
+				"productos" => json_encode($productosAjuste),
+				"monto_total" => $_POST["totalDS"],
+				"estado_dian" => "borrador",
+				"numero_nota_ajuste" => $numeroRango,
+				"cuds_ajuste" => "",
+				"qr_data" => "",
+				"xml_dian" => "",
+				"pdf_dian" => "",
+				"mensaje_dian" => "Nota de Ajuste guardada localmente (Borrador). Pendiente de firma.",
+				"fecha_envio_dian" => date('Y-m-d H:i:s'),
+				"id_usuario" => $_POST["idUsuario"],
+				"id_proveedor" => $originalDS["id_proveedor"],
+				"observacion" => $_POST["nuevaObservacionDS"] ?? '',
+				"metodo_pago" => $metodoPago
+			];
+
+			$idNuevaNota = ModeloFactus::mdlGuardarNotaAjusteDS($datosGuardar);
+
+			if ($idNuevaNota == "ok" || is_numeric($idNuevaNota)) {
+				return array(
+					"error" => false,
+					"mensaje" => "Nota de Ajuste guardada como borrador correctamente",
+					"numero" => $numeroRango ? $numeroRango : "Borrador"
+				);
+			} else {
+				return array("error" => true, "mensaje" => "Error al guardar el borrador localmente");
+			}
+		}
+	}
+
+	/*=============================================
+	FIRMAR Y ENVIAR NOTA DE AJUSTE A FACTUS
+	=============================================*/
+	static public function ctrFirmarNotaAjusteDS($idNota)
+	{
+		// 1. Obtener datos de la nota borrador
+		$nota = ModeloFactus::mdlMostrarNotasAjusteDS("id", $idNota);
+
+		if (!$nota) {
+			return array("error" => true, "mensaje" => "Nota de Ajuste no encontrada");
+		}
+
+		if ($nota["estado_dian"] != "borrador") {
+			return array("error" => true, "mensaje" => "La nota ya ha sido enviada o no está en estado borrador");
+		}
+
+		// 1.5 Obtener DS Original
+		$originalDS = ModeloFactus::mdlMostrarDocumentosSoporte("id", $nota["id_ds_original"]);
+		if (!$originalDS) {
+			return array("error" => true, "mensaje" => "Documento Soporte original no encontrado");
+		}
+
+		// 2. Autenticar
+		$auth = self::ctrAutenticar();
+		if ($auth['error']) {
+			return $auth;
+		}
+
+		// 3. Preparar datos para la API
+		$productosAjuste = json_decode($nota["productos"], true);
+		$datosNota = self::prepararDatosNotaAjusteDS($originalDS, $nota["tipo_nota"], $nota["motivo"], $productosAjuste, $nota["metodo_pago"]);
+
+		if (isset($datosNota['error'])) {
+			return $datosNota;
+		}
+
+		// 4. Enviar a Factus
+		$resultado = ModeloFactus::mdlCrearNotaAjusteDS($auth['token'], $datosNota);
+
+		if ($resultado['http_code'] == 201 || $resultado['http_code'] == 200) {
+
+			$respuesta = json_decode($resultado['respuesta'], true);
+			$data = $respuesta['data'] ?? [];
+			$adjData = $data['adjustment_note'] ?? $data;
+
+			// 5. Actualizar en BD local
+			$datosActualizar = [
+				"estado_dian" => "enviada",
+				"numero_nota_ajuste" => $adjData['number'] ?? $adjData['number_adjustment_note'] ?? '',
+				"cuds_ajuste" => $adjData['cuds'] ?? $adjData['uuid'] ?? '',
+				"qr_data" => $adjData['qr'] ?? $adjData['qr_code'] ?? '',
+				"xml_dian" => $adjData['xml'] ?? $adjData['xml_url'] ?? '',
+				"pdf_dian" => $adjData['pdf'] ?? $adjData['pdf_url'] ?? $adjData['public_url'] ?? '',
+				"mensaje_dian" => $respuesta['message'] ?? 'Nota de Ajuste generada y firmada correctamente',
+				"fecha_envio_dian" => date('Y-m-d H:i:s')
+			];
+
+			$actualizado = ModeloFactus::mdlActualizarDatosNotaAjusteDS($idNota, $datosActualizar);
+
+			if ($actualizado == "ok") {
+				// Actualizar consecutivo del rango
+				$rango = ModeloFactus::mdlObtenerRangoAjusteDS();
+				if ($rango && !empty($datosActualizar["numero_nota_ajuste"])) {
+					$numeroNota = preg_replace('/[^0-9]/', '', $datosActualizar["numero_nota_ajuste"]);
+					if ($numeroNota && is_numeric($numeroNota)) {
+						ModeloFactus::mdlActualizarNumeroActualRangoNC($rango['id_factus'], intval($numeroNota));
+					}
+				}
+
+				return array(
+					"error" => false,
+					"mensaje" => "Nota de Ajuste firmada y enviada correctamente",
+					"numero" => $datosActualizar["numero_nota_ajuste"]
+				);
+			} else {
+				return array("error" => true, "mensaje" => "Nota enviada pero falló la actualización local. CUDS: " . ($adjData['cuds'] ?? 'N/A'));
+			}
+		} else {
+			$respError = json_decode($resultado['respuesta'], true);
+			$httpCode = $resultado['http_code'];
+			$errorMsg = $respError['message'] ?? $resultado['respuesta'];
+
+			if ($httpCode == 409) {
+				$errorMsg = "Ya existe una Nota de Ajuste pendiente en Factus para este Documento. Por favor, ingrese al portal y elimínela.";
+			}
+
+			return array(
+				"error" => true,
+				"mensaje" => "Error API Factus ($httpCode): $errorMsg"
+			);
+		}
+	}
+
+	/*=============================================
+	ELIMINAR NOTA DE AJUSTE DS (SOLO BORRADOR)
+	=============================================*/
+	static public function ctrEliminarNotaAjusteDS($id)
+	{
+		// Verificar que el estado en la base de datos sea 'borrador'
+		$nota = ModeloFactus::mdlMostrarNotasAjusteDS("id", $id);
+		if ($nota && $nota["estado_dian"] == "borrador") {
+			return ModeloFactus::mdlEliminarNotaAjusteDS($id);
+		} else {
+			return "error_estado";
+>>>>>>> 085e8812 (documentos soporte v8)
 		}
 	}
 
@@ -1938,7 +2391,23 @@ AUTENTICAR CON FACTUS API
 			"legal_organization_id" => strval($tipoOrganizacion),
 			"tribute_id" => "21",
 			"identification_document_id" => strval($tipoDocumentoId),
+<<<<<<< HEAD
 			"municipality_id" => strval($proveedor['municipio_id'] ?? '169'),
+=======
+			"municipality_id" => strval(
+				(function ($prov_mun) {
+					$mun_id = '981';
+					if (!empty($prov_mun)) {
+						$stmt = Conexion::conectar()->prepare("SELECT id_factus FROM factus_municipios WHERE id = :id OR id_factus = :id_factus LIMIT 1");
+						$stmt->execute([':id' => $prov_mun, ':id_factus' => $prov_mun]);
+						$mun = $stmt->fetch();
+						if ($mun)
+							$mun_id = strval($mun['id_factus']);
+					}
+					return $mun_id;
+				})(!empty($proveedor['municipio_id']) ? $proveedor['municipio_id'] : (ModeloFactus::mdlObtenerConfiguracion()['municipio_id'] ?? '981'))
+			),
+>>>>>>> 085e8812 (documentos soporte v8)
 			"country_code" => "CO"
 		];
 
@@ -1960,4 +2429,20 @@ AUTENTICAR CON FACTUS API
 			"items" => $items
 		];
 	}
+<<<<<<< HEAD
+=======
+
+	/*=============================================
+	MOSTRAR NOTAS CREDITO
+	=============================================*/
+	static public function ctrMostrarNotasCredito($item, $valor)
+	{
+		$tabla = "notas_credito";
+		// Check if the table exists. If we don't know yet if it's called `factus_notas_credito` or just `notas_credito`,
+		// I will use `factus_notas_credito` according to standard plugin naming, but I might need to verify.
+		// assuming standard structure:
+		$respuesta = ModeloFactus::mdlMostrarNotasCredito($tabla, $item, $valor);
+		return $respuesta;
+	}
+>>>>>>> 085e8812 (documentos soporte v8)
 }

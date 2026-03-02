@@ -20,6 +20,7 @@ require_once "../../../modelos/factus.modelo.php";
 
 class imprimirNotaCredito
 {
+<<<<<<< HEAD
     public $idVenta;
 
     public function traerImpresionDetalle()
@@ -36,15 +37,46 @@ class imprimirNotaCredito
         $clienteId = !empty($notaCredito["id_cliente"]) ? $notaCredito["id_cliente"] : $venta["id_cliente"];
         $cliente = ControladorClientes::ctrMostrarClientes("id", $clienteId);
         $vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $venta["id_vendedor"]);
+=======
+    public $idNota;
+
+    public function traerImpresionDetalle()
+    {
+        $idNota = $this->idNota;
+        // Cargar NC por su propio ID
+        $notaCredito = ModeloFactus::mdlMostrarNotasCredito("notas_credito", "id", $idNota);
+        if (!$notaCredito) {
+            die("Nota de crédito no encontrada.");
+        }
+
+        // Cargar venta original para datos extra
+        require_once "../../../modelos/ventas.modelo.php";
+        $venta = ModeloVentas::mdlMostrarVentas("ventas", "id", $notaCredito["id_venta_original"]);
+
+        // Cliente y Vendedor
+        $clienteId = !empty($notaCredito["id_cliente"]) ? $notaCredito["id_cliente"] : ($venta["id_cliente"] ?? null);
+        $cliente = $clienteId ? ControladorClientes::ctrMostrarClientes("id", $clienteId) : [];
+        $vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $notaCredito["id_usuario"]);
+>>>>>>> 085e8812 (documentos soporte v8)
         $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
         $configFactus = ControladorFactus::ctrObtenerConfiguracion();
 
         // Construir mapa de impuesto por ID de producto desde la venta original
+<<<<<<< HEAD
         $productosVenta = json_decode($venta["productos"], true);
         $impuestoMap = [];
         if (is_array($productosVenta)) {
             foreach ($productosVenta as $pv) {
                 $impuestoMap[$pv["id"]] = isset($pv["impuesto"]) ? floatval($pv["impuesto"]) : 0;
+=======
+        $impuestoMap = [];
+        if ($venta && !empty($venta["productos"])) {
+            $productosVenta = json_decode($venta["productos"], true);
+            if (is_array($productosVenta)) {
+                foreach ($productosVenta as $pv) {
+                    $impuestoMap[$pv["id"]] = isset($pv["impuesto"]) ? floatval($pv["impuesto"]) : 0;
+                }
+>>>>>>> 085e8812 (documentos soporte v8)
             }
         }
 
@@ -73,7 +105,11 @@ class imprimirNotaCredito
         }
 
         // --- CUFE FACTURA ---
+<<<<<<< HEAD
         $cufeFactura = $venta["cufe"];
+=======
+        $cufeFactura = $venta["cufe"] ?? '';
+>>>>>>> 085e8812 (documentos soporte v8)
         if (empty($cufeFactura) && !empty($venta["qr_data"])) {
             $parts = parse_url($venta["qr_data"], PHP_URL_QUERY);
             if ($parts) {
@@ -282,8 +318,17 @@ class imprimirNotaCredito
     }
 }
 
+<<<<<<< HEAD
 if (isset($_GET["idVenta"])) {
     $imprimir = new imprimirNotaCredito();
     $imprimir->idVenta = $_GET["idVenta"];
     $imprimir->traerImpresionDetalle();
+=======
+if (isset($_GET["idNota"])) {
+    $imprimir = new imprimirNotaCredito();
+    $imprimir->idNota = $_GET["idNota"];
+    $imprimir->traerImpresionDetalle();
+} else {
+    die("Parámetro idNota requerido.");
+>>>>>>> 085e8812 (documentos soporte v8)
 }

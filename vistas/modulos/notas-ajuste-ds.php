@@ -24,9 +24,15 @@ if ($_SESSION["perfil"] == "Especial") {
     <section class="content">
         <div class="box">
             <div class="box-header with-border">
+<<<<<<< HEAD
                 <a href="documentos-soporte">
                     <button class="btn btn-primary">
                         Generar Nueva Nota de Ajuste (Desde DS)
+=======
+                <a href="crear-nota-ajuste-ds">
+                    <button class="btn btn-primary">
+                        Generar Nueva Nota de Ajuste
+>>>>>>> 085e8812 (documentos soporte v8)
                     </button>
                 </a>
             </div>
@@ -63,8 +69,17 @@ if ($_SESSION["perfil"] == "Especial") {
                                     <td>$ ' . number_format((float) ($value["monto_total"] ?? 0), 2) . '</td>
                                     <td>' . $value["fecha_envio_dian"] . '</td>';
 
+<<<<<<< HEAD
                             if ($value["estado_dian"] == "enviada") {
                                 echo '<td><button class="btn btn-success btn-xs">Exitosa</button></td>';
+=======
+                            if ($value["estado_dian"] == "aceptada" || $value["estado_dian"] == "enviada") {
+                                echo '<td><button class="btn btn-success btn-xs">Exitosa</button></td>';
+                            } else if ($value["estado_dian"] == "borrador") {
+                                echo '<td><button class="btn btn-warning btn-xs">Borrador</button></td>';
+                            } else if ($value["estado_dian"] == "rechazada") {
+                                echo '<td><button class="btn btn-danger btn-xs">Rechazada</button></td>';
+>>>>>>> 085e8812 (documentos soporte v8)
                             } else {
                                 echo '<td><button class="btn btn-danger btn-xs">Pendiente</button></td>';
                             }
@@ -73,6 +88,7 @@ if ($_SESSION["perfil"] == "Especial") {
                                         <div class="btn-group">
                                             <a href="index.php?ruta=ver-nota-ajuste-ds&idNota=' . $value["id"] . '" class="btn btn-info"><i class="fa fa-eye"></i></a>';
 
+<<<<<<< HEAD
                             // Botón PDF si tiene URL
                             if (!empty($value["pdf_dian"])) {
                                 echo '<a href="' . $value["pdf_dian"] . '" target="_blank" class="btn btn-danger"><i class="fa fa-file-pdf-o"></i></a>';
@@ -81,6 +97,26 @@ if ($_SESSION["perfil"] == "Especial") {
                             // Botón XML si tiene URL
                             if (!empty($value["xml_dian"])) {
                                 echo '<a href="' . $value["xml_dian"] . '" target="_blank" class="btn btn-primary"><i class="fa fa-file-code-o"></i></a>';
+=======
+                            if ($value["estado_dian"] == "borrador") {
+                                // Botón Firmar
+                                echo '<button class="btn btn-success btnFirmarNotaAjusteDS" idNota="' . $value["id"] . '" title="Firmar y Enviar a DIAN"><i class="fa fa-paper-plane"></i></button>';
+                                // Botón Eliminar
+                                echo '<button class="btn btn-danger btnEliminarNotaAjusteDS" idNota="' . $value["id"] . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
+                            } else {
+                                // Botón PDF si tiene URL
+                                if (!empty($value["pdf_dian"])) {
+                                    echo '<a href="' . $value["pdf_dian"] . '" target="_blank" class="btn btn-danger" title="Ver PDF Factus"><i class="fa fa-file-pdf-o"></i></a>';
+                                }
+
+                                // Botón XML si tiene URL
+                                if (!empty($value["xml_dian"])) {
+                                    echo '<a href="' . $value["xml_dian"] . '" target="_blank" class="btn btn-primary" title="Ver XML Factus"><i class="fa fa-file-code-o"></i></a>';
+                                }
+
+                                // Botón para ver en la DIAN
+                                echo '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . $value["cuds_ajuste"] . '" target="_blank" class="btn btn-warning" title="Ver en DIAN"><i class="fa fa-globe"></i></a>';
+>>>>>>> 085e8812 (documentos soporte v8)
                             }
 
                             echo '</div>
@@ -95,4 +131,10 @@ if ($_SESSION["perfil"] == "Especial") {
             </div>
         </div>
     </section>
+<<<<<<< HEAD
 </div>
+=======
+</div>
+
+<script src="vistas/js/notas-ajuste-ds.js?v=<?php echo time(); ?>"></script>
+>>>>>>> 085e8812 (documentos soporte v8)

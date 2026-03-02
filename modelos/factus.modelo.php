@@ -791,7 +791,11 @@ class ModeloFactus
         )
             return "48";
 
+<<<<<<< HEAD
         // Tarjeta Débito (49) -> Maestro
+=======
+        // Tarjeta Débito (49) -> confirmado por respuesta API Factus
+>>>>>>> 085e8812 (documentos soporte v8)
         if (strpos($nombreNorm, 'debito') !== false || strpos($nombreNorm, 'maestro') !== false)
             return "49";
 
@@ -803,9 +807,15 @@ class ModeloFactus
         if (strpos($nombreNorm, 'vale') !== false)
             return "72";
 
+<<<<<<< HEAD
         // Otros (ZZ) -> Instrumento no definido / Acuerdo mutuo
         if (strpos($nombreNorm, 'otro') !== false || strpos($nombreNorm, 'definido') !== false)
             return "ZZ";
+=======
+        // Otros -> usar Efectivo (10) como fallback ya que 'ZZ' es rechazado por Factus
+        if (strpos($nombreNorm, 'otro') !== false || strpos($nombreNorm, 'definido') !== false)
+            return "10";
+>>>>>>> 085e8812 (documentos soporte v8)
 
         // Default si no coincide nada (Efectivo)
         return "10";
@@ -1028,7 +1038,16 @@ class ModeloFactus
         $siguienteApiLive = $numeroApiReal; // Si la API ya reporta un número mayor, lo usamos como el "siguiente" a usar
 
         // El siguiente real será el mayor de los siguientes propuestos
+<<<<<<< HEAD
         $ultimoSugerido = max($siguienteLocal, $siguienteApiCached, $siguienteApiLive);
+=======
+        // Priorizamos la API REAL si la tenemos (Live)
+        if (isset($json['data']['current']) || isset($json['data']['current_number'])) {
+            $ultimoSugerido = max($siguienteLocal, $siguienteApiLive);
+        } else {
+            $ultimoSugerido = max($siguienteLocal, $siguienteApiCached);
+        }
+>>>>>>> 085e8812 (documentos soporte v8)
 
         // Si el sugerido es menor que el "desde", forzamos el "desde"
         if ($ultimoSugerido < $numeroDesde) {
@@ -1039,6 +1058,256 @@ class ModeloFactus
     }
 
     /*=============================================
+<<<<<<< HEAD
+=======
+    OBTENER SIGUIENTE CONSECUTIVO NOTA CRÉDITO
+    =============================================*/
+    static public function mdlObtenerSiguienteConsecutivoNC()
+    {
+        $rango = self::mdlObtenerRangoNC();
+
+        if (!$rango) {
+            return 1;
+        }
+
+        $rangoId = $rango["id_factus"];
+        $numeroDesde = $rango["numero_desde"];
+        $numeroActualApi = isset($rango["numero_actual"]) ? $rango["numero_actual"] : 0;
+        $prefijo = $rango["prefijo"];
+
+        // Buscar el número máximo en la tabla local notas_credito
+        $stmt = Conexion::conectar()->prepare("
+            SELECT numero_nota_credito 
+            FROM notas_credito 
+            WHERE numero_nota_credito LIKE :prefijo 
+            ORDER BY CAST(REPLACE(numero_nota_credito, :prefijo2, '') AS UNSIGNED) DESC 
+            LIMIT 1
+        ");
+        $prefijoLike = $prefijo . '%';
+        $stmt->bindParam(":prefijo", $prefijoLike, PDO::PARAM_STR);
+        $stmt->bindParam(":prefijo2", $prefijo, PDO::PARAM_STR);
+        $stmt->execute();
+        $ultimaNota = $stmt->fetch();
+
+        $ultimoLocal = 0;
+        if ($ultimaNota && !empty($ultimaNota["numero_nota_credito"])) {
+            $soloNumeros = preg_replace('/[^0-9]/', '', str_replace($prefijo, '', $ultimaNota["numero_nota_credito"]));
+            $ultimoLocal = intval($soloNumeros);
+        }
+
+        // Consultar a la API el estado REAL del rango
+        $token = self::mdlObtenerAccessToken();
+        $numeroApiReal = $numeroActualApi;
+
+        if ($token && !empty($rangoId)) {
+            $config = self::mdlObtenerConfiguracion();
+            $url = $config['api_url'] . '/v1/numbering-ranges/' . $rangoId;
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                'Authorization: Bearer ' . $token,
+                'Accept: application/json'
+            ));
+            $res = curl_exec($ch);
+            $json = json_decode($res, true);
+            curl_close($ch);
+
+            if (isset($json['data']['current'])) {
+                $numeroApiReal = intval($json['data']['current']);
+            } elseif (isset($json['data']['current_number'])) {
+                $numeroApiReal = intval($json['data']['current_number']);
+            }
+        }
+
+        $siguienteLocal = $ultimoLocal + 1;
+        $siguienteApiCached = $numeroActualApi + 1;
+        $siguienteApiLive = $numeroApiReal; // La API suele devolver el último usado o el próximo, comparamos
+
+        if (isset($json['data']['current']) || isset($json['data']['current_number'])) {
+            $ultimoSugerido = max($siguienteLocal, $siguienteApiLive);
+        } else {
+            $ultimoSugerido = max($siguienteLocal, $siguienteApiCached);
+        }
+
+        if ($ultimoSugerido < $numeroDesde) {
+            $ultimoSugerido = $numeroDesde;
+        }
+
+        return $ultimoSugerido;
+    }
+
+    /*=============================================
+    OBTENER SIGUIENTE CONSECUTIVO DOCUMENTO SOPORTE
+    =============================================*/
+    static public function mdlObtenerSiguienteConsecutivoDS()
+    {
+        // Obtener el rango activo de Factura para saber el ambiente, 
+        // pero necesitamos el rango de Documento Soporte
+        $stmtRango = Conexion::conectar()->prepare("SELECT * FROM factus_rangos WHERE documento = 'Documento Soporte' AND estado = 1 LIMIT 1");
+        $stmtRango->execute();
+        $rango = $stmtRango->fetch();
+
+        if (!$rango) {
+            return 1;
+        }
+
+        $rangoId = $rango["id_factus"];
+        $numeroDesde = $rango["numero_desde"];
+        $numeroActualApi = isset($rango["numero_actual"]) ? $rango["numero_actual"] : 0;
+        $prefijo = $rango["prefijo"];
+
+        // Buscar el número máximo en la tabla local ventas (donde se guardan los DS)
+        $stmt = Conexion::conectar()->prepare("
+            SELECT numero_factura 
+            FROM ventas 
+            WHERE numero_factura LIKE :prefijo 
+            ORDER BY id DESC 
+            LIMIT 20
+        ");
+        $prefijoLike = $prefijo . '%';
+        $stmt->bindParam(":prefijo", $prefijoLike, PDO::PARAM_STR);
+        $stmt->execute();
+        $documentos = $stmt->fetchAll();
+
+        $ultimoLocal = 0;
+        foreach ($documentos as $doc) {
+            $soloNumeros = preg_replace('/[^0-9]/', '', str_replace($prefijo, '', $doc["numero_factura"]));
+            $num = intval($soloNumeros);
+            if ($num > $ultimoLocal) {
+                $ultimoLocal = $num;
+            }
+        }
+
+        // Consultar a la API el estado REAL del rango
+        $token = self::mdlObtenerAccessToken();
+        $numeroApiReal = $numeroActualApi;
+
+        if ($token && !empty($rangoId)) {
+            $config = self::mdlObtenerConfiguracion();
+            $url = $config['api_url'] . '/v1/numbering-ranges/' . $rangoId;
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                'Authorization: Bearer ' . $token,
+                'Accept: application/json'
+            ));
+            $res = curl_exec($ch);
+            $json = json_decode($res, true);
+            curl_close($ch);
+
+            if (isset($json['data']['current'])) {
+                $numeroApiReal = intval($json['data']['current']);
+            } elseif (isset($json['data']['current_number'])) {
+                $numeroApiReal = intval($json['data']['current_number']);
+            }
+        }
+
+        $siguienteLocal = $ultimoLocal + 1;
+        $siguienteApiCached = $numeroActualApi + 1;
+        $siguienteApiLive = $numeroApiReal;
+
+        if (isset($json['data']['current']) || isset($json['data']['current_number'])) {
+            $ultimoSugerido = max($siguienteLocal, $siguienteApiLive);
+        } else {
+            $ultimoSugerido = max($siguienteLocal, $siguienteApiCached);
+        }
+
+        if ($ultimoSugerido < $numeroDesde) {
+            $ultimoSugerido = $numeroDesde;
+        }
+
+        return $ultimoSugerido;
+    }
+
+    /*=============================================
+    OBTENER SIGUIENTE CONSECUTIVO NOTA AJUSTE DS
+    =============================================*/
+    static public function mdlObtenerSiguienteConsecutivoNotaAjusteDS()
+    {
+        $stmtRango = Conexion::conectar()->prepare("SELECT * FROM factus_rangos WHERE documento = 'Nota de Ajuste' AND estado = 1 LIMIT 1");
+        $stmtRango->execute();
+        $rango = $stmtRango->fetch();
+
+        if (!$rango) {
+            return 1;
+        }
+
+        $rangoId = $rango["id_factus"];
+        $numeroDesde = $rango["numero_desde"];
+        $numeroActualApi = isset($rango["numero_actual"]) ? $rango["numero_actual"] : 0;
+        $prefijo = $rango["prefijo"];
+
+        // Buscar el número máximo en la tabla local notas_ajuste_ds
+        $stmt = Conexion::conectar()->prepare("
+            SELECT numero_nota_ajuste 
+            FROM notas_ajuste_ds 
+            WHERE numero_nota_ajuste LIKE :prefijo 
+            ORDER BY id DESC 
+            LIMIT 20
+        ");
+        $prefijoLike = $prefijo . '%';
+        $stmt->bindParam(":prefijo", $prefijoLike, PDO::PARAM_STR);
+        $stmt->execute();
+        $notas = $stmt->fetchAll();
+
+        $ultimoLocal = 0;
+        foreach ($notas as $nota) {
+            $soloNumeros = preg_replace('/[^0-9]/', '', str_replace($prefijo, '', $nota["numero_nota_ajuste"]));
+            $num = intval($soloNumeros);
+            if ($num > $ultimoLocal) {
+                $ultimoLocal = $num;
+            }
+        }
+
+        // Consultar a la API el estado REAL del rango
+        $token = self::mdlObtenerAccessToken();
+        $numeroApiReal = $numeroActualApi;
+
+        if ($token && !empty($rangoId)) {
+            $config = self::mdlObtenerConfiguracion();
+            $url = $config['api_url'] . '/v1/numbering-ranges/' . $rangoId;
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                'Authorization: Bearer ' . $token,
+                'Accept: application/json'
+            ));
+            $res = curl_exec($ch);
+            $json = json_decode($res, true);
+            curl_close($ch);
+
+            if (isset($json['data']['current'])) {
+                $numeroApiReal = intval($json['data']['current']);
+            } elseif (isset($json['data']['current_number'])) {
+                $numeroApiReal = intval($json['data']['current_number']);
+            }
+        }
+
+        $siguienteLocal = $ultimoLocal + 1;
+        $siguienteApiCached = $numeroActualApi + 1;
+        $siguienteApiLive = $numeroApiReal;
+
+        if (isset($json['data']['current']) || isset($json['data']['current_number'])) {
+            $ultimoSugerido = max($siguienteLocal, $siguienteApiLive);
+        } else {
+            $ultimoSugerido = max($siguienteLocal, $siguienteApiCached);
+        }
+
+        if ($ultimoSugerido < $numeroDesde) {
+            $ultimoSugerido = $numeroDesde;
+        }
+
+        return $ultimoSugerido;
+    }
+
+    /*=============================================
+>>>>>>> 085e8812 (documentos soporte v8)
     MOSTRAR TIPOS DE DOCUMENTO (DESDE BASE DE DATOS LOCAL)
     =============================================*/
     static public function mdlMostrarTiposDocumento()
@@ -1192,6 +1461,7 @@ class ModeloFactus
     =============================================*/
     static public function mdlGuardarNotaAjusteDS($datos)
     {
+<<<<<<< HEAD
         $stmt = Conexion::conectar()->prepare(
             "INSERT INTO notas_ajuste_ds (
 				id_ds_original, numero_ds_original, tipo_nota, motivo,
@@ -1221,11 +1491,79 @@ class ModeloFactus
         $stmt->bindParam(":mensaje", $datos["mensaje_dian"], PDO::PARAM_STR);
         $stmt->bindParam(":fecha_envio", $datos["fecha_envio_dian"], PDO::PARAM_STR);
         $stmt->bindParam(":usuario", $datos["id_usuario"], PDO::PARAM_INT);
+=======
+        $con = Conexion::conectar();
+        $stmt = $con->prepare("INSERT INTO notas_ajuste_ds
+			(id_ds_original, numero_ds_original, tipo_nota, motivo, productos, monto_total, estado_dian, numero_nota_ajuste, cuds_ajuste, qr_data, xml_dian, pdf_dian, mensaje_dian, fecha_envio_dian, id_usuario, id_proveedor, observacion, metodo_pago)
+			VALUES
+			(:id_ds_original, :numero_ds_original, :tipo_nota, :motivo, :productos, :monto_total, :estado_dian, :numero_nota_ajuste, :cuds_ajuste, :qr_data, :xml_dian, :pdf_dian, :mensaje_dian, :fecha_envio_dian, :id_usuario, :id_proveedor, :observacion, :metodo_pago)");
+
+        $stmt->bindParam(":id_ds_original", $datos["id_ds_original"], PDO::PARAM_INT);
+        $stmt->bindParam(":numero_ds_original", $datos["numero_ds_original"], PDO::PARAM_STR);
+        $stmt->bindParam(":tipo_nota", $datos["tipo_nota"], PDO::PARAM_STR);
+        $stmt->bindParam(":motivo", $datos["motivo"], PDO::PARAM_STR);
+        $stmt->bindParam(":productos", $datos["productos"], PDO::PARAM_STR);
+        $stmt->bindParam(":monto_total", $datos["monto_total"], PDO::PARAM_STR);
+        $stmt->bindParam(":estado_dian", $datos["estado_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":numero_nota_ajuste", $datos["numero_nota_ajuste"], PDO::PARAM_STR);
+        $stmt->bindParam(":cuds_ajuste", $datos["cuds_ajuste"], PDO::PARAM_STR);
+        $stmt->bindParam(":qr_data", $datos["qr_data"], PDO::PARAM_STR);
+        $stmt->bindParam(":xml_dian", $datos["xml_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":pdf_dian", $datos["pdf_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":mensaje_dian", $datos["mensaje_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":fecha_envio_dian", $datos["fecha_envio_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":id_usuario", $datos["id_usuario"], PDO::PARAM_INT);
+>>>>>>> 085e8812 (documentos soporte v8)
         $stmt->bindParam(":id_proveedor", $datos["id_proveedor"], PDO::PARAM_INT);
         $stmt->bindParam(":observacion", $datos["observacion"], PDO::PARAM_STR);
         $stmt->bindParam(":metodo_pago", $datos["metodo_pago"], PDO::PARAM_STR);
 
         if ($stmt->execute()) {
+<<<<<<< HEAD
+=======
+            return $con->lastInsertId();
+        } else {
+            return "error";
+        }
+    }
+
+    /*=============================================
+    ACTUALIZAR DATOS DE NOTA DE AJUSTE DS
+    =============================================*/
+    static public function mdlActualizarDatosNotaAjusteDS($idNota, $datos)
+    {
+        $sql = "UPDATE notas_ajuste_ds SET
+                estado_dian = :estado_dian,
+                cuds_ajuste = :cuds_ajuste,
+                qr_data = :qr_data,
+                xml_dian = :xml_dian,
+                pdf_dian = :pdf_dian,
+                mensaje_dian = :mensaje_dian,
+                fecha_envio_dian = :fecha_envio_dian";
+
+        if (isset($datos["numero_nota_ajuste"]) && !empty($datos["numero_nota_ajuste"])) {
+            $sql .= ", numero_nota_ajuste = :numero_nota_ajuste";
+        }
+
+        $sql .= " WHERE id = :id";
+
+        $stmt = Conexion::conectar()->prepare($sql);
+
+        $stmt->bindParam(":estado_dian", $datos["estado_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":cuds_ajuste", $datos["cuds_ajuste"], PDO::PARAM_STR);
+        $stmt->bindParam(":qr_data", $datos["qr_data"], PDO::PARAM_STR);
+        $stmt->bindParam(":xml_dian", $datos["xml_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":pdf_dian", $datos["pdf_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":mensaje_dian", $datos["mensaje_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":fecha_envio_dian", $datos["fecha_envio_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":id", $idNota, PDO::PARAM_INT);
+
+        if (isset($datos["numero_nota_ajuste"]) && !empty($datos["numero_nota_ajuste"])) {
+            $stmt->bindParam(":numero_nota_ajuste", $datos["numero_nota_ajuste"], PDO::PARAM_STR);
+        }
+
+        if ($stmt->execute()) {
+>>>>>>> 085e8812 (documentos soporte v8)
             return "ok";
         } else {
             return "error";
@@ -1317,6 +1655,24 @@ OBTENER RANGO DE NOTAS CRÉDITO
     }
 
     /*=============================================
+<<<<<<< HEAD
+=======
+    OBTENER TODAS LAS NOTAS CRÉDITO POR VENTA
+    =============================================*/
+    static public function mdlObtenerNotasCreditoPorVenta($idVenta)
+    {
+        $stmt = Conexion::conectar()->prepare(
+            "SELECT * FROM notas_credito 
+             WHERE id_venta_original = :id_venta 
+             ORDER BY id DESC"
+        );
+        $stmt->bindParam(":id_venta", $idVenta, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /*=============================================
+>>>>>>> 085e8812 (documentos soporte v8)
     ACTUALIZAR NÚMERO ACTUAL DEL RANGO NC
     =============================================*/
     static public function mdlActualizarNumeroActualRangoNC($rangoId, $nuevoNumero)
@@ -1546,6 +1902,40 @@ OBTENER RANGO DE NOTAS CRÉDITO
     }
 
     /*=============================================
+<<<<<<< HEAD
+=======
+    VERIFICAR SI UN DOCUMENTO SOPORTE TIENE ALGUNA NOTA DE AJUSTE
+    =============================================*/
+    static public function mdlTieneNotaAjusteDS($idDS)
+    {
+        $stmt = Conexion::conectar()->prepare(
+            "SELECT COUNT(*) as total FROM notas_ajuste_ds 
+             WHERE id_ds_original = :id_ds
+             AND estado_dian IN ('enviada', 'aceptada')"
+        );
+        $stmt->bindParam(":id_ds", $idDS, PDO::PARAM_INT);
+        $stmt->execute();
+        $resultado = $stmt->fetch();
+        return $resultado['total'] > 0;
+    }
+
+    /*=============================================
+    OBTENER TODAS LAS NOTAS DE AJUSTE POR DOCUMENTO SOPORTE
+    =============================================*/
+    static public function mdlObtenerNotasAjusteDSPorDS($idDS)
+    {
+        $stmt = Conexion::conectar()->prepare(
+            "SELECT * FROM notas_ajuste_ds 
+             WHERE id_ds_original = :id_ds 
+             ORDER BY id DESC"
+        );
+        $stmt->bindParam(":id_ds", $idDS, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /*=============================================
+>>>>>>> 085e8812 (documentos soporte v8)
     MOSTRAR NOTAS DE AJUSTE DS
     =============================================*/
     static public function mdlMostrarNotasAjusteDS($item, $valor)
@@ -1604,4 +1994,101 @@ OBTENER RANGO DE NOTAS CRÉDITO
         }
     }
 
+<<<<<<< HEAD
+=======
+    /*=============================================
+    ELIMINAR NOTA DE AJUSTE DS
+    =============================================*/
+    static public function mdlEliminarNotaAjusteDS($id)
+    {
+        $stmt = Conexion::conectar()->prepare("DELETE FROM notas_ajuste_ds WHERE id = :id");
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+
+        if ($stmt->execute()) {
+            return "ok";
+        } else {
+            return "error";
+        }
+    }
+
+    /*=============================================
+    MOSTRAR NOTAS CREDITO
+    =============================================*/
+    static public function mdlMostrarNotasCredito($tabla, $item, $valor)
+    {
+        if ($item != null) {
+            $stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE $item = :$item");
+            $stmt->bindParam(":" . $item, $valor, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetch();
+        } else {
+            $stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla ORDER BY id DESC");
+            $stmt->execute();
+            return $stmt->fetchAll();
+        }
+    }
+    /*=============================================
+    ACTUALIZAR DATOS DE NOTA CREDITO
+    =============================================*/
+    static public function mdlActualizarNotaCredito($idNota, $datos)
+    {
+        $sql = "UPDATE notas_credito SET
+                estado_dian = :estado_dian,
+                cufe_nc = :cufe_nc,
+                qr_data_nc = :qr_data_nc,
+                xml_dian_nc = :xml_dian_nc,
+                pdf_dian_nc = :pdf_dian_nc,
+                mensaje_dian = :mensaje_dian,
+                fecha_envio_dian = :fecha_envio_dian";
+
+        if (isset($datos["numero_nota_credito"])) {
+            $sql .= ", numero_nota_credito = :numero_nota_credito";
+        }
+
+        $sql .= " WHERE id = :id";
+
+        $stmt = Conexion::conectar()->prepare($sql);
+
+        $stmt->bindParam(":estado_dian", $datos["estado_dian"], PDO::PARAM_STR);
+        $stmt->bindParam(":cufe_nc", $datos["cufe_nc"], PDO::PARAM_STR);
+        $stmt->bindParam(":qr_data_nc", $datos["qr_data_nc"], PDO::PARAM_STR);
+        $stmt->bindParam(":xml_dian_nc", $datos["xml_dian_nc"], PDO::PARAM_STR);
+        $stmt->bindParam(":pdf_dian_nc", $datos["pdf_dian_nc"], PDO::PARAM_STR);
+        $stmt->bindParam(":mensaje_dian", $datos["mensaje_dian"], PDO::PARAM_STR);
+
+        if ($datos["fecha_envio_dian"] === null) {
+            $stmt->bindValue(":fecha_envio_dian", null, PDO::PARAM_NULL);
+        } else {
+            $stmt->bindParam(":fecha_envio_dian", $datos["fecha_envio_dian"], PDO::PARAM_STR);
+        }
+
+        $stmt->bindParam(":id", $idNota, PDO::PARAM_INT);
+
+        if (isset($datos["numero_nota_credito"])) {
+            $stmt->bindParam(":numero_nota_credito", $datos["numero_nota_credito"], PDO::PARAM_STR);
+        }
+
+        if ($stmt->execute()) {
+            return "ok";
+        } else {
+            return "error";
+        }
+    }
+
+    /*=============================================
+    ELIMINAR NOTA CREDITO
+    =============================================*/
+    static public function mdlEliminarNotaCredito($id)
+    {
+        $stmt = Conexion::conectar()->prepare("DELETE FROM notas_credito WHERE id = :id");
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+
+        if ($stmt->execute()) {
+            return "ok";
+        } else {
+            return "error";
+        }
+    }
+
+>>>>>>> 085e8812 (documentos soporte v8)
 }

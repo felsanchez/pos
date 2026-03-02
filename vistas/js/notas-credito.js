@@ -198,7 +198,11 @@ $(document).ready(function () {
                                 showConfirmButton: true
                             }).then((result) => {
                                 if (result.value) {
+<<<<<<< HEAD
                                     window.location = "facturas-electronicas";
+=======
+                                    window.location = "notas-credito";
+>>>>>>> 085e8812 (documentos soporte v8)
                                 }
                             });
                         } else {
@@ -224,3 +228,182 @@ $(document).ready(function () {
     });
 
 });
+<<<<<<< HEAD
+=======
+
+/*=============================================
+SELECCIONAR FACTURA ELECTRÓNICA PARA NOTA CRÉDITO
+=============================================*/
+$("#seleccionarFacturaReferencia").change(function () {
+    var idVenta = $(this).val();
+    if (idVenta) {
+        window.location = "index.php?ruta=crear-nota-credito&idVenta=" + idVenta;
+    }
+});
+
+/*=============================================
+FIRMAR NOTA CRÉDITO BORRADOR
+=============================================*/
+$(".tablas").on("click", ".btnFirmarNotaCredito", function () {
+    var idNota = $(this).attr("idNota");
+
+    swal({
+        title: '¿Firmar y enviar Nota Crédito a la DIAN?',
+        text: "Esta acción no se puede deshacer. La nota será reportada oficialmente.",
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Sí, firmar y enviar'
+    }).then(function (result) {
+        if (result.value) {
+
+            swal({
+                title: 'Procesando...',
+                text: 'Firmando y enviando a la DIAN/Factus',
+                onOpen: () => { swal.showLoading() }
+            });
+
+            var datos = new FormData();
+            datos.append("idNota", idNota);
+            datos.append("accion", "firmarNotaCredito");
+
+            $.ajax({
+                url: "ajax/notas-credito.ajax.php",
+                method: "POST",
+                data: datos,
+                cache: false,
+                contentType: false,
+                processData: false,
+                dataType: "json",
+                success: function (respuesta) {
+
+                    if (!respuesta.error) {
+                        swal({
+                            type: "success",
+                            title: "¡Nota Crédito Firmada!",
+                            text: respuesta.mensaje,
+                            showConfirmButton: true
+                        }).then((result) => {
+                            if (result.value) {
+                                window.location = "notas-credito";
+                            }
+                        })
+                    } else {
+                        swal({
+                            type: "error",
+                            title: "Error API Factus",
+                            text: respuesta.mensaje,
+                            showConfirmButton: true
+                        })
+                    }
+                },
+                error: function (jqXHR, status, error) {
+                    swal({
+                        type: "error",
+                        title: "Error de Servidor",
+                        text: "Ocurrió un error al intentar firmar la nota.",
+                        showConfirmButton: true
+                    })
+                }
+            })
+        }
+    })
+})
+
+/*=============================================
+ELIMINAR NOTA CRÉDITO BORRADOR
+=============================================*/
+$(".tablas").on("click", ".btnEliminarNotaCredito", function () {
+    var idNota = $(this).attr("idNota");
+
+    swal({
+        title: '¿Está seguro de borrar la Nota Crédito?',
+        text: "¡Si no lo está puede cancelar la acción!",
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Sí, borrar nota'
+    }).then(function (result) {
+        if (result.value) {
+            window.location = "index.php?ruta=notas-credito&idEliminarNota=" + idNota;
+        }
+    })
+})
+
+/*=============================================
+VER LISTA DE NOTAS CRÉDITO POR FACTURA (MODAL)
+=============================================*/
+$(".tablas, .tarjetas").on("click", ".btnVerNotasCredito", function () {
+    var idVenta = $(this).attr("idVenta");
+    var datos = new FormData();
+    datos.append("accion", "obtenerNotasCreditoVenta");
+    datos.append("idVenta", idVenta);
+
+    $.ajax({
+        url: "ajax/factus.ajax.php",
+        method: "POST",
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function (respuesta) {
+
+            $("#tbodyNotasCredito").empty(); // Limpiar contenido previo
+
+            if (respuesta.length > 0) {
+                var filas = "";
+
+                respuesta.forEach(function (nota, index) {
+
+                    var numero = index + 1;
+                    var codigo = nota["numero_nota_credito"] ? nota["numero_nota_credito"] : "Borrador";
+
+                    // Formatear monto
+                    var montoFormateado = new Intl.NumberFormat('es-CO', {
+                        style: 'currency',
+                        currency: 'COP'
+                    }).format(nota["monto_total"]);
+
+                    // Formatear Estado DIAN
+                    var estadoBadge = "";
+                    if (nota["estado_dian"] == "borrador") {
+                        estadoBadge = '<button class="btn btn-warning btn-xs">Borrador</button>';
+                    } else if (nota["estado_dian"] == "aceptada" || nota["estado_dian"] == "enviada") {
+                        estadoBadge = '<button class="btn btn-success btn-xs">Exitosa</button>';
+                    } else if (nota["estado_dian"] == "rechazada") {
+                        estadoBadge = '<button class="btn btn-danger btn-xs">Rechazada</button>';
+                    } else {
+                        estadoBadge = '<button class="btn btn-danger btn-xs">Pendiente</button>';
+                    }
+
+                    // Botón para ver detalle de esta nota en específico
+                    var botonVer = '<a href="index.php?ruta=ver-nota-credito&idNota=' + nota["id"] + '" class="btn btn-info btn-sm" title="Ver Detalle"><i class="fa fa-eye"></i> Ver Nota</a>';
+
+                    // Construir fila
+                    filas += '<tr>' +
+                        '<td>' + numero + '</td>' +
+                        '<td>' + codigo + '</td>' +
+                        '<td>' + nota["fecha_creacion"] + '</td>' +
+                        '<td>' + montoFormateado + '</td>' +
+                        '<td>' + estadoBadge + '</td>' +
+                        '<td>' + botonVer + '</td>' +
+                        '</tr>';
+                });
+
+                $("#tbodyNotasCredito").append(filas);
+            } else {
+                $("#tbodyNotasCredito").append('<tr><td colspan="6" class="text-center">No se encontraron notas crédito para esta factura.</td></tr>');
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error("Error al obtener las notas: ", error);
+        }
+    });
+
+})
+>>>>>>> 085e8812 (documentos soporte v8)

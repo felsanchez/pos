@@ -213,6 +213,61 @@ class AjaxFactus
 	}
 
 	/*=============================================
+<<<<<<< HEAD
+=======
+	FIRMAR NOTA DE AJUSTE DS
+	=============================================*/
+	public function ajaxFirmarNotaAjusteDS()
+	{
+		if (!isset($_POST["accion"]) || $_POST["accion"] != "firmarNotaAjusteDS") {
+			echo json_encode(array("error" => true, "mensaje" => "Acción no válida"));
+			return;
+		}
+
+		if (!isset($_POST["idNota"]) || empty($_POST["idNota"])) {
+			echo json_encode(array("error" => true, "mensaje" => "ID de nota no proporcionado"));
+			return;
+		}
+
+		$idNota = $_POST["idNota"];
+		$resultado = ControladorFactus::ctrFirmarNotaAjusteDS($idNota);
+		echo json_encode($resultado);
+	}
+
+	/*=============================================
+	OBTENER TODAS LAS NOTAS CRÉDITO POR VENTA
+	=============================================*/
+	public function ajaxObtenerNotasCreditoVenta()
+	{
+		if (!isset($_POST["idVenta"])) {
+			echo json_encode(["error" => "No se recibió el ID de la venta"]);
+			return;
+		}
+
+		$idVenta = $_POST["idVenta"];
+		$notas = ControladorFactus::ctrObtenerNotasCreditoPorVenta($idVenta);
+
+		echo json_encode($notas);
+	}
+
+	/*=============================================
+	OBTENER TODAS LAS NOTAS DE AJUSTE POR DOCUMENTO SOPORTE
+	=============================================*/
+	public function ajaxObtenerNotasAjusteDS()
+	{
+		if (!isset($_POST["idDS"])) {
+			echo json_encode(["error" => "No se recibió el ID del Documento Soporte"]);
+			return;
+		}
+
+		$idDS = $_POST["idDS"];
+		$notas = ControladorFactus::ctrObtenerNotasAjusteDSPorDS($idDS);
+
+		echo json_encode($notas);
+	}
+
+	/*=============================================
+>>>>>>> 085e8812 (documentos soporte v8)
 	AUTENTICAR Y OBTENER TOKENS
 	=============================================*/
 	public function ajaxAutenticar()
@@ -356,6 +411,36 @@ class AjaxFactus
 		$resultado = ControladorFactus::ctrCrearNotaAjusteDS();
 		echo json_encode($resultado);
 	}
+<<<<<<< HEAD
+=======
+	/*=============================================
+	ELIMINAR NOTA DE AJUSTE DS (BORRADOR)
+	=============================================*/
+	public function ajaxEliminarNotaAjusteDS()
+	{
+		if (!isset($_POST["accion"]) || $_POST["accion"] != "eliminarNotaAjusteDS") {
+			echo json_encode(array("error" => true, "mensaje" => "Acción no válida"));
+			return;
+		}
+
+		if (!isset($_POST["idNota"]) || empty($_POST["idNota"])) {
+			echo json_encode(array("error" => true, "mensaje" => "ID de nota no proporcionado"));
+			return;
+		}
+
+		$idNota = $_POST["idNota"];
+		$resultado = ControladorFactus::ctrEliminarNotaAjusteDS($idNota);
+
+		if ($resultado == "ok") {
+			echo json_encode(array("error" => false, "mensaje" => "Borrador de Nota de Ajuste eliminado correctamente"));
+		} else if ($resultado == "error_estado") {
+			echo json_encode(array("error" => true, "mensaje" => "No se puede eliminar la nota porque ya fue enviada a la DIAN"));
+		} else {
+			echo json_encode(array("error" => true, "mensaje" => "Error al eliminar la nota de ajuste de la base de datos"));
+		}
+	}
+
+>>>>>>> 085e8812 (documentos soporte v8)
 }
 
 /*=============================================
@@ -395,6 +480,21 @@ if (isset($_POST["accion"])) {
 		case "crearNotaAjusteDS":
 			$factus->ajaxCrearNotaAjusteDS();
 			break;
+<<<<<<< HEAD
+=======
+		case "firmarNotaAjusteDS":
+			$factus->ajaxFirmarNotaAjusteDS();
+			break;
+		case "eliminarNotaAjusteDS":
+			$factus->ajaxEliminarNotaAjusteDS();
+			break;
+		case "obtenerNotasCreditoVenta":
+			$factus->ajaxObtenerNotasCreditoVenta();
+			break;
+		case "obtenerNotasAjusteDS":
+			$factus->ajaxObtenerNotasAjusteDS();
+			break;
+>>>>>>> 085e8812 (documentos soporte v8)
 		default:
 			echo json_encode(array("error" => true, "mensaje" => "Acción no válida"));
 			break;

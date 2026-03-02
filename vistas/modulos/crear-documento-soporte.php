@@ -122,7 +122,11 @@ if (isset($respuesta) && $respuesta["error"] == false) {
                                                 <span class="input-group-addon"><i class="fa fa-key"></i></span>
                                                 <?php
                                                 $prefijo = $rangoDS["prefijo"] ?? "DS";
+<<<<<<< HEAD
                                                 $proximo = ($rangoDS["numero_actual"] ?? 0) + 1;
+=======
+                                                $proximo = ModeloFactus::mdlObtenerSiguienteConsecutivoDS();
+>>>>>>> 085e8812 (documentos soporte v8)
                                                 $numeroSugerido = $prefijo . $proximo;
                                                 ?>
                                                 <input type="text" class="form-control" id="nuevoCodigoDS"
@@ -147,11 +151,19 @@ if (isset($respuesta) && $respuesta["error"] == false) {
                                                     $item = null;
                                                     $valor = null;
                                                     $proveedores = ControladorProveedores::ctrMostrarProveedores($item, $valor);
+<<<<<<< HEAD
                                                     
                                                     // Obtener tipos de documento para mapear el nombre
                                                     $tiposDocumento = ControladorFactus::ctrMostrarTiposDocumento();
                                                     $mapaTipos = [];
                                                     foreach($tiposDocumento as $td){
+=======
+
+                                                    // Obtener tipos de documento para mapear el nombre
+                                                    $tiposDocumento = ControladorFactus::ctrMostrarTiposDocumento();
+                                                    $mapaTipos = [];
+                                                    foreach ($tiposDocumento as $td) {
+>>>>>>> 085e8812 (documentos soporte v8)
                                                         $mapaTipos[$td["id"]] = strtoupper($td["nombre"]);
                                                     }
 

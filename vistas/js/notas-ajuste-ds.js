@@ -84,6 +84,7 @@ $(".formularioNotaAjusteDS").submit(function (e) {
     }
 
     swal({
+<<<<<<< HEAD
         title: "¿Está seguro de generar esta Nota de Ajuste?",
         text: "¡Esta acción enviará la información a la DIAN!",
         type: "warning",
@@ -92,12 +93,26 @@ $(".formularioNotaAjusteDS").submit(function (e) {
         cancelButtonColor: "#d33",
         cancelButtonText: "Cancelar",
         confirmButtonText: "Sí, generar nota"
+=======
+        title: "¿Está seguro de guardar este borrador?",
+        text: "La Nota de Ajuste se guardará localmente y podrá enviarla a la DIAN después.",
+        type: "info",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        cancelButtonText: "Cancelar",
+        confirmButtonText: "Sí, guardar borrador"
+>>>>>>> 085e8812 (documentos soporte v8)
     }).then(function (result) {
         if (result.value) {
 
             // Mostrar cargando
             swal({
+<<<<<<< HEAD
                 title: "Enviando a la DIAN...",
+=======
+                title: "Guardando...",
+>>>>>>> 085e8812 (documentos soporte v8)
                 text: "Por favor espere mientras procesamos el documento",
                 allowOutsideClick: false,
                 onBeforeOpen: () => {
@@ -131,7 +146,11 @@ $(".formularioNotaAjusteDS").submit(function (e) {
                             text: respuesta.mensaje,
                             showConfirmButton: true
                         }).then(function (result) {
+<<<<<<< HEAD
                             window.location = "documentos-soporte";
+=======
+                            window.location = "notas-ajuste-ds";
+>>>>>>> 085e8812 (documentos soporte v8)
                         });
                     } else {
                         swal({
@@ -154,3 +173,219 @@ $(".formularioNotaAjusteDS").submit(function (e) {
         }
     });
 });
+<<<<<<< HEAD
+=======
+
+/*=============================================
+FIRMAR NOTA DE AJUSTE DS
+=============================================*/
+$(document).on("click", ".btnFirmarNotaAjusteDS", function () {
+    var idNota = $(this).attr("idNota");
+
+    swal({
+        title: "¿Está seguro de firmar y enviar esta Nota de Ajuste a la DIAN?",
+        text: "¡Esta acción no se puede deshacer y el documento será oficial!",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#f39c12",
+        cancelButtonColor: "#d33",
+        cancelButtonText: "Cancelar",
+        confirmButtonText: "Sí, firmar y enviar"
+    }).then(function (result) {
+        if (result.value) {
+            swal({
+                title: "Firmando y Enviando a la DIAN...",
+                text: "Esto puede tardar unos segundos. Por favor espere.",
+                allowOutsideClick: false,
+                onBeforeOpen: () => {
+                    swal.showLoading();
+                }
+            });
+
+            var datos = new FormData();
+            datos.append("accion", "firmarNotaAjusteDS");
+            datos.append("idNota", idNota);
+
+            $.ajax({
+                url: "ajax/factus.ajax.php",
+                method: "POST",
+                data: datos,
+                cache: false,
+                contentType: false,
+                processData: false,
+                dataType: "json",
+                success: function (respuesta) {
+                    if (!respuesta.error) {
+                        swal({
+                            type: "success",
+                            title: "¡Nota Firmada!",
+                            text: respuesta.mensaje,
+                            showConfirmButton: true
+                        }).then(function (result) {
+                            window.location = "notas-ajuste-ds";
+                        });
+                    } else {
+                        swal({
+                            type: "error",
+                            title: "Error al firmar",
+                            text: respuesta.mensaje,
+                            showConfirmButton: true
+                        });
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    swal({
+                        type: "error",
+                        title: "¡Error de comunicación!",
+                        text: "No se pudo conectar con el servidor",
+                        showConfirmButton: true
+                    });
+                }
+            });
+        }
+    });
+});
+
+/*=============================================
+ELIMINAR NOTA DE AJUSTE DS
+=============================================*/
+$(document).on("click", ".btnEliminarNotaAjusteDS", function () {
+    var idNota = $(this).attr("idNota");
+
+    swal({
+        title: "¿Está seguro de eliminar el borrador de esta Nota de Ajuste?",
+        text: "¡Si no lo está, puede cancelar la acción!",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        cancelButtonText: "Cancelar",
+        confirmButtonText: "Sí, borrar nota"
+    }).then(function (result) {
+        if (result.value) {
+            var datos = new FormData();
+            datos.append("accion", "eliminarNotaAjusteDS");
+            datos.append("idNota", idNota);
+
+            $.ajax({
+                url: "ajax/factus.ajax.php",
+                method: "POST",
+                data: datos,
+                cache: false,
+                contentType: false,
+                processData: false,
+                dataType: "json",
+                success: function (respuesta) {
+                    if (!respuesta.error) {
+                        swal({
+                            type: "success",
+                            title: "¡Borrador Eliminado!",
+                            text: respuesta.mensaje,
+                            showConfirmButton: true
+                        }).then(function (result) {
+                            window.location = "notas-ajuste-ds";
+                        });
+                    } else {
+                        swal({
+                            type: "error",
+                            title: "Error al eliminar",
+                            text: respuesta.mensaje,
+                            showConfirmButton: true
+                        });
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    swal({
+                        type: "error",
+                        title: "¡Error de comunicación!",
+                        text: "No se pudo conectar con el servidor",
+                        showConfirmButton: true
+                    });
+                }
+            });
+        }
+    });
+});
+
+/*=============================================
+SELECCIONAR DOCUMENTO SOPORTE PARA NOTA DE AJUSTE
+=============================================*/
+$("#seleccionarDSReferencia").change(function () {
+    var idDS = $(this).val();
+    if (idDS) {
+        window.location = "index.php?ruta=crear-nota-ajuste-ds&idDS=" + idDS;
+    }
+});
+
+/*=============================================
+VER LISTA DE NOTAS DE AJUSTE POR DOCUMENTO SOPORTE (MODAL)
+=============================================*/
+$(".tablaDocumentosSoporte, .tarjetas").on("click", ".btnVerNotasAjusteDS", function () {
+    var idDS = $(this).attr("idDS");
+    var datos = new FormData();
+    datos.append("accion", "obtenerNotasAjusteDS");
+    datos.append("idDS", idDS);
+
+    $.ajax({
+        url: "ajax/factus.ajax.php",
+        method: "POST",
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function (respuesta) {
+
+            $("#tbodyNotasAjusteDS").empty(); // Limpiar contenido previo
+
+            if (respuesta.length > 0) {
+                var filas = "";
+
+                respuesta.forEach(function (nota, index) {
+
+                    var numero = index + 1;
+                    var codigo = nota["numero_nota_ajuste"] ? nota["numero_nota_ajuste"] : "Borrador";
+
+                    // Formatear monto
+                    var montoFormateado = new Intl.NumberFormat('es-CO', {
+                        style: 'currency',
+                        currency: 'COP'
+                    }).format(nota["monto_total"]);
+
+                    // Formatear Estado DIAN
+                    var estadoBadge = "";
+                    if (nota["estado_dian"] == "borrador") {
+                        estadoBadge = '<button class="btn btn-warning btn-xs">Borrador</button>';
+                    } else if (nota["estado_dian"] == "aceptada" || nota["estado_dian"] == "enviada") {
+                        estadoBadge = '<button class="btn btn-success btn-xs">Exitosa</button>';
+                    } else if (nota["estado_dian"] == "rechazada") {
+                        estadoBadge = '<button class="btn btn-danger btn-xs">Rechazada</button>';
+                    } else {
+                        estadoBadge = '<button class="btn btn-danger btn-xs">Pendiente</button>';
+                    }
+
+                    // Botón para ver detalle de esta nota en específico
+                    var botonVer = '<a href="index.php?ruta=ver-nota-ajuste-ds&idNota=' + nota["id"] + '" class="btn btn-info btn-sm" title="Ver Detalle"><i class="fa fa-eye"></i> Ver Nota</a>';
+
+                    // Construir fila
+                    filas += '<tr>' +
+                        '<td>' + numero + '</td>' +
+                        '<td>' + codigo + '</td>' +
+                        '<td>' + nota["fecha_creacion"] + '</td>' +
+                        '<td>' + montoFormateado + '</td>' +
+                        '<td>' + estadoBadge + '</td>' +
+                        '<td>' + botonVer + '</td>' +
+                        '</tr>';
+                });
+
+                $("#tbodyNotasAjusteDS").append(filas);
+            } else {
+                $("#tbodyNotasAjusteDS").append('<tr><td colspan="6" class="text-center">No se encontraron notas de ajuste para este documento soporte.</td></tr>');
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error("Error al obtener las notas: ", error);
+        }
+    });
+});
+>>>>>>> 085e8812 (documentos soporte v8)

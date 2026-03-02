@@ -123,7 +123,13 @@ $listaProducto = json_decode($nota["productos"], true);
                                         "5" => "Otros"
                                     ];
                                     echo $conceptos[$nota["tipo_nota"]] ?? "No definido";
+<<<<<<< HEAD
                                     ?>
+=======
+                                    ?><br>
+                                    <b>Medio de Pago:</b>
+                                    <?php echo htmlspecialchars($nota["metodo_pago"] ?? "No definido"); ?>
+>>>>>>> 085e8812 (documentos soporte v8)
                                 </div>
                             </div>
 

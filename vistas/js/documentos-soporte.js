@@ -450,3 +450,78 @@ $(document).on("click", ".btnEliminarDS", function () {
         }
     });
 });
+<<<<<<< HEAD
+=======
+
+/*=============================================
+VER LISTA DE NOTAS DE AJUSTE POR DOCUMENTO SOPORTE (MODAL)
+=============================================*/
+$(".tablaDocumentosSoporte, .tarjetas").on("click", ".btnVerNotasAjusteDS", function () {
+    var idDS = $(this).attr("idDS");
+    var datos = new FormData();
+    datos.append("accion", "obtenerNotasAjusteDS");
+    datos.append("idDS", idDS);
+
+    $.ajax({
+        url: "ajax/factus.ajax.php",
+        method: "POST",
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function (respuesta) {
+
+            $("#tbodyNotasAjusteDS").empty(); // Limpiar contenido previo
+
+            if (respuesta.length > 0) {
+                var filas = "";
+
+                respuesta.forEach(function (nota, index) {
+
+                    var numero = index + 1;
+                    var codigo = nota["numero_nota_ajuste"] ? nota["numero_nota_ajuste"] : "Borrador";
+
+                    // Formatear monto
+                    var montoFormateado = new Intl.NumberFormat('es-CO', {
+                        style: 'currency',
+                        currency: 'COP'
+                    }).format(nota["monto_total"]);
+
+                    // Formatear Estado DIAN
+                    var estadoBadge = "";
+                    if (nota["estado_dian"] == "borrador") {
+                        estadoBadge = '<button class="btn btn-warning btn-xs">Borrador</button>';
+                    } else if (nota["estado_dian"] == "aceptada" || nota["estado_dian"] == "enviada") {
+                        estadoBadge = '<button class="btn btn-success btn-xs">Exitosa</button>';
+                    } else if (nota["estado_dian"] == "rechazada") {
+                        estadoBadge = '<button class="btn btn-danger btn-xs">Rechazada</button>';
+                    } else {
+                        estadoBadge = '<button class="btn btn-danger btn-xs">Pendiente</button>';
+                    }
+
+                    // Botón para ver detalle de esta nota en específico
+                    var botonVer = '<a href="index.php?ruta=ver-nota-ajuste-ds&idNota=' + nota["id"] + '" class="btn btn-info btn-sm" title="Ver Detalle"><i class="fa fa-eye"></i> Ver Nota</a>';
+
+                    // Construir fila
+                    filas += '<tr>' +
+                        '<td>' + numero + '</td>' +
+                        '<td>' + codigo + '</td>' +
+                        '<td>' + nota["fecha_creacion"] + '</td>' +
+                        '<td>' + montoFormateado + '</td>' +
+                        '<td>' + estadoBadge + '</td>' +
+                        '<td>' + botonVer + '</td>' +
+                        '</tr>';
+                });
+
+                $("#tbodyNotasAjusteDS").append(filas);
+            } else {
+                $("#tbodyNotasAjusteDS").append('<tr><td colspan="6" class="text-center">No se encontraron notas de ajuste para este documento soporte.</td></tr>');
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error("Error al obtener las notas: ", error);
+        }
+    });
+});
+>>>>>>> 085e8812 (documentos soporte v8)
