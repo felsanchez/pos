@@ -213,8 +213,6 @@ class AjaxFactus
 	}
 
 	/*=============================================
-<<<<<<< HEAD
-=======
 	FIRMAR NOTA DE AJUSTE DS
 	=============================================*/
 	public function ajaxFirmarNotaAjusteDS()
@@ -267,7 +265,6 @@ class AjaxFactus
 	}
 
 	/*=============================================
->>>>>>> 085e8812 (documentos soporte v8)
 	AUTENTICAR Y OBTENER TOKENS
 	=============================================*/
 	public function ajaxAutenticar()
@@ -411,8 +408,6 @@ class AjaxFactus
 		$resultado = ControladorFactus::ctrCrearNotaAjusteDS();
 		echo json_encode($resultado);
 	}
-<<<<<<< HEAD
-=======
 	/*=============================================
 	ELIMINAR NOTA DE AJUSTE DS (BORRADOR)
 	=============================================*/
@@ -440,7 +435,6 @@ class AjaxFactus
 		}
 	}
 
->>>>>>> 085e8812 (documentos soporte v8)
 }
 
 /*=============================================
@@ -480,8 +474,6 @@ if (isset($_POST["accion"])) {
 		case "crearNotaAjusteDS":
 			$factus->ajaxCrearNotaAjusteDS();
 			break;
-<<<<<<< HEAD
-=======
 		case "firmarNotaAjusteDS":
 			$factus->ajaxFirmarNotaAjusteDS();
 			break;
@@ -494,7 +486,6 @@ if (isset($_POST["accion"])) {
 		case "obtenerNotasAjusteDS":
 			$factus->ajaxObtenerNotasAjusteDS();
 			break;
->>>>>>> 085e8812 (documentos soporte v8)
 		default:
 			echo json_encode(array("error" => true, "mensaje" => "Acción no válida"));
 			break;

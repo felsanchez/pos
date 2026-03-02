@@ -8,15 +8,6 @@ if ($_SESSION["perfil"] == "Especial") {
 }
 
 // Obtener datos
-<<<<<<< HEAD
-$idVenta = $_GET["idVenta"];
-$notaCredito = ModeloFactus::mdlObtenerNotaCredito($idVenta);
-$venta = ControladorVentas::ctrMostrarVentas("id", $idVenta);
-
-if (!$notaCredito || !$venta) {
-    echo '<script>
-    window.location = "facturas-electronicas";
-=======
 if (!isset($_GET["idNota"])) {
     echo '<script>window.location = "notas-credito";</script>';
     return;
@@ -28,45 +19,10 @@ $notaCredito = ControladorFactus::ctrMostrarNotasCredito("id", $idNota);
 if (!$notaCredito) {
     echo '<script>
     window.location = "notas-credito";
->>>>>>> 085e8812 (documentos soporte v8)
   </script>';
     return;
 }
 
-<<<<<<< HEAD
-// Usar el cliente de la NC si está guardado, si no, el de la venta original
-$clienteId = !empty($notaCredito["id_cliente"]) ? $notaCredito["id_cliente"] : $venta["id_cliente"];
-$cliente = ControladorClientes::ctrMostrarClientes("id", $clienteId);
-$vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $venta["id_vendedor"]);
-$configuracion = ModeloConfiguracion::mdlObtenerConfiguracion();
-// Obtener configuración de Factus para datos del emisor
-$configFactus = ControladorFactus::ctrObtenerConfiguracion();
-
-// DEBUG: Force check 
-if (!$configFactus) {
-    echo "<!-- DEBUG: ConfigFactus is FALSE -->";
-} else {
-    echo "<!-- DEBUG: ConfigFactus OK. Name: " . ($configFactus['nombre_empresa'] ?? 'NULL') . " -->";
-}
-
-// Productos de la NC (normalmente los mismos de la venta, o subconjunto)
-$listaProducto = json_decode($notaCredito["productos"], true);
-
-// Construir mapa de impuesto por ID de producto desde la venta original
-// (Los productos guardados en notas_credito no incluyen el % de impuesto)
-$productosVenta = json_decode($venta["productos"], true);
-$impuestoMap = [];
-if (is_array($productosVenta)) {
-    foreach ($productosVenta as $pv) {
-        $impuestoMap[$pv["id"]] = isset($pv["impuesto"]) ? floatval($pv["impuesto"]) : 0;
-    }
-}
-
-// Fallback: Si el CUFE de la factura no está guardado, intentar extraerlo del QR
-$cufeFactura = $venta["cufe"];
-if (empty($cufeFactura) && !empty($venta["qr_data"])) {
-    // Ejemplo QR: https://catalogo-vpfe.dian.gov.co/...searchqr?documentkey=el_cufe_es_esto
-=======
 // Datos relacionados
 $clienteId = !empty($notaCredito["id_cliente"]) ? $notaCredito["id_cliente"] : null;
 $cliente = $clienteId ? ControladorClientes::ctrMostrarClientes("id", $clienteId) : [];
@@ -95,7 +51,6 @@ if ($venta && !empty($venta["productos"])) {
 // CUFE de la factura original
 $cufeFactura = $venta["cufe"] ?? '';
 if (empty($cufeFactura) && !empty($venta["qr_data"])) {
->>>>>>> 085e8812 (documentos soporte v8)
     $parts = parse_url($venta["qr_data"], PHP_URL_QUERY);
     if ($parts) {
         parse_str($parts, $query);
@@ -105,10 +60,7 @@ if (empty($cufeFactura) && !empty($venta["qr_data"])) {
     }
 }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 085e8812 (documentos soporte v8)
 ?>
 
 <div class="content-wrapper">
@@ -119,11 +71,7 @@ if (empty($cufeFactura) && !empty($venta["qr_data"])) {
         </h1>
         <ol class="breadcrumb">
             <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-<<<<<<< HEAD
-            <li><a href="facturas-electronicas">Facturas Electrónicas</a></li>
-=======
             <li><a href="notas-credito">Notas Crédito</a></li>
->>>>>>> 085e8812 (documentos soporte v8)
             <li class="active">Ver Nota Crédito</li>
         </ol>
     </section>
@@ -136,16 +84,15 @@ if (empty($cufeFactura) && !empty($venta["qr_data"])) {
                 <div class="box box-primary">
                     <div class="box-header with-border">
                         <h3 class="box-title">Nota Crédito:
-                            <?php echo $notaCredito["numero_nota_credito"]; ?>
+                            <span
+                                class="<?php echo ($notaCredito["estado_dian"] == "borrador" ? 'text-yellow' : ''); ?>">
+                                <?php echo $notaCredito["numero_nota_credito"]; ?>
+                            </span>
                         </h3>
                         <div class="box-tools pull-right">
                             <button type="button" class="btn btn-box-tool" data-widget="collapse"><i
                                     class="fa fa-minus"></i></button>
-<<<<<<< HEAD
-                            <a href="facturas-electronicas" class="btn btn-box-tool"><i class="fa fa-times"></i></a>
-=======
                             <a href="notas-credito" class="btn btn-box-tool"><i class="fa fa-times"></i></a>
->>>>>>> 085e8812 (documentos soporte v8)
                         </div>
                     </div>
 
@@ -216,7 +163,10 @@ if (empty($cufeFactura) && !empty($venta["qr_data"])) {
                                         style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #d2d6de; display: block; margin-bottom: 10px; width: fit-content;">Detalles
                                         NC</span>
                                     <b>Nota Crédito #
-                                        <?php echo $notaCredito["numero_nota_credito"]; ?>
+                                        <span
+                                            class="<?php echo ($notaCredito["estado_dian"] == "borrador" ? 'text-yellow' : ''); ?>">
+                                            <?php echo $notaCredito["numero_nota_credito"]; ?>
+                                        </span>
                                     </b><br>
                                     <b>Factura Relacionada:</b>
                                     <?php echo $notaCredito["numero_factura_original"]; ?><br>
@@ -444,26 +394,13 @@ if (empty($cufeFactura) && !empty($venta["qr_data"])) {
                             <!-- this row will not appear when printing -->
                             <div class="row no-print">
                                 <div class="col-xs-12">
-<<<<<<< HEAD
-                                    <a href="descargar-xml-nc.php?xml=<?php echo $notaCredito["numero_nota_credito"]; ?>"
-                                        target="_blank" class="btn pull-right"
-                                        style="margin-right: 5px; background-color: #00c0ef; color: white; border-color: #00acd6;">
-                                        <i class="fa fa-file-code-o"></i> Descargar XML
-                                    </a>
-
-                                    <a href="extensiones/tcpdf/pdf/descargar-pdf-nota-credito.php?idVenta=<?php echo $idVenta; ?>"
-=======
 
                                     <!-- Descargar PDF (vista interna - TCPDF) -->
                                     <a href="extensiones/tcpdf/pdf/descargar-pdf-nota-credito.php?idNota=<?php echo $idNota; ?>"
->>>>>>> 085e8812 (documentos soporte v8)
                                         target="_blank" class="btn btn-success pull-right" style="margin-right: 5px;">
                                         <i class="fa fa-file-pdf-o"></i> Descargar PDF
                                     </a>
 
-<<<<<<< HEAD
-                                    <a href="facturas-electronicas" class="btn btn-default pull-right"
-=======
                                     <!-- Descargar XML (desde Factus API usando número de la NC) -->
                                     <?php if (!empty($notaCredito["numero_nota_credito"])): ?>
                                         <a href="descargar-xml-nc.php?xml=<?php echo urlencode($notaCredito["numero_nota_credito"]); ?>"
@@ -474,7 +411,6 @@ if (empty($cufeFactura) && !empty($venta["qr_data"])) {
                                     <?php endif; ?>
 
                                     <a href="notas-credito" class="btn btn-default pull-right"
->>>>>>> 085e8812 (documentos soporte v8)
                                         style="margin-right: 5px;">
                                         <i class="fa fa-arrow-left"></i> Volver
                                     </a>

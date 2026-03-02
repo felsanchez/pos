@@ -272,15 +272,9 @@
                     </a>
                 </li>
                 <li>
-<<<<<<< HEAD
-                    <a href="crear-factura-electronica">
-                        <i class="fa fa-circle-o"></i>
-                        <span>Crear Factura</span>
-=======
                     <a href="notas-credito">
                         <i class="fa fa-circle-o"></i>
                         <span>Notas Crédito</span>
->>>>>>> 085e8812 (documentos soporte v8)
                     </a>
                 </li>
             </ul>
@@ -301,21 +295,6 @@
                 <li>
                     <a href="documentos-soporte">
                         <i class="fa fa-circle-o"></i>
-<<<<<<< HEAD
-                        <span>Administrar Doc. Soporte</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="crear-documento-soporte">
-                        <i class="fa fa-circle-o"></i>
-                        <span>Emitir Doc. Soporte</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="notas-ajuste-ds">
-                        <i class="fa fa-circle-o"></i>
-                        <span>Administrar Notas Ajuste</span>
-=======
                         <span>Documentos soporte</span>
                     </a>
                 </li>
@@ -324,7 +303,6 @@
                     <a href="notas-ajuste-ds">
                         <i class="fa fa-circle-o"></i>
                         <span>Notas de ajuste</span>
->>>>>>> 085e8812 (documentos soporte v8)
                     </a>
                 </li>
             </ul>

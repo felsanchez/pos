@@ -131,7 +131,6 @@ require_once "modelos/sanitizer.php";
 
 <!--=====================================
 CUERPO DOCUMENTO
-======================================-->
 
 <!--<body class="hold-transition skin-blue sidebar-collapse sidebar-mini login-page">-->
 <!-- Site wrapper -->
@@ -198,10 +197,7 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "notificaciones" ||
         $_GET["ruta"] == "logs" ||
         $_GET["ruta"] == "seguimiento-leads" ||
-<<<<<<< HEAD
-=======
         $_GET["ruta"] == "notas-credito" ||
->>>>>>> 085e8812 (documentos soporte v8)
         $_GET["ruta"] == "ver-nota-credito" ||
         $_GET["ruta"] == "crear-nota-credito" ||
         $_GET["ruta"] == "documentos-soporte" ||

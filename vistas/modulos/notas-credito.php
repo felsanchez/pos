@@ -57,7 +57,7 @@ if ($_SESSION["perfil"] == "Especial") {
 
                             echo '<tr>
                                     <td>' . ($key + 1) . '</td>
-                                    <td>' . $value["numero_nota_credito"] . '</td>
+                                    <td' . ($value["estado_dian"] == "borrador" ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . $value["numero_nota_credito"] . '</td>
                                     <td>' . $value["numero_factura_original"] . '</td>
                                     <td>' . ($cliente["nombre"] ?? "N/A") . '</td>
                                     <td>$ ' . number_format((float) ($value["monto_total"] ?? 0), 2) . '</td>

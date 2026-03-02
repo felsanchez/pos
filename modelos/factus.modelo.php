@@ -791,11 +791,7 @@ class ModeloFactus
         )
             return "48";
 
-<<<<<<< HEAD
-        // Tarjeta Débito (49) -> Maestro
-=======
         // Tarjeta Débito (49) -> confirmado por respuesta API Factus
->>>>>>> 085e8812 (documentos soporte v8)
         if (strpos($nombreNorm, 'debito') !== false || strpos($nombreNorm, 'maestro') !== false)
             return "49";
 
@@ -807,15 +803,9 @@ class ModeloFactus
         if (strpos($nombreNorm, 'vale') !== false)
             return "72";
 
-<<<<<<< HEAD
-        // Otros (ZZ) -> Instrumento no definido / Acuerdo mutuo
-        if (strpos($nombreNorm, 'otro') !== false || strpos($nombreNorm, 'definido') !== false)
-            return "ZZ";
-=======
         // Otros -> usar Efectivo (10) como fallback ya que 'ZZ' es rechazado por Factus
         if (strpos($nombreNorm, 'otro') !== false || strpos($nombreNorm, 'definido') !== false)
             return "10";
->>>>>>> 085e8812 (documentos soporte v8)
 
         // Default si no coincide nada (Efectivo)
         return "10";
@@ -1038,16 +1028,12 @@ class ModeloFactus
         $siguienteApiLive = $numeroApiReal; // Si la API ya reporta un número mayor, lo usamos como el "siguiente" a usar
 
         // El siguiente real será el mayor de los siguientes propuestos
-<<<<<<< HEAD
-        $ultimoSugerido = max($siguienteLocal, $siguienteApiCached, $siguienteApiLive);
-=======
         // Priorizamos la API REAL si la tenemos (Live)
         if (isset($json['data']['current']) || isset($json['data']['current_number'])) {
             $ultimoSugerido = max($siguienteLocal, $siguienteApiLive);
         } else {
             $ultimoSugerido = max($siguienteLocal, $siguienteApiCached);
         }
->>>>>>> 085e8812 (documentos soporte v8)
 
         // Si el sugerido es menor que el "desde", forzamos el "desde"
         if ($ultimoSugerido < $numeroDesde) {
@@ -1058,8 +1044,6 @@ class ModeloFactus
     }
 
     /*=============================================
-<<<<<<< HEAD
-=======
     OBTENER SIGUIENTE CONSECUTIVO NOTA CRÉDITO
     =============================================*/
     static public function mdlObtenerSiguienteConsecutivoNC()
@@ -1123,11 +1107,16 @@ class ModeloFactus
 
         $siguienteLocal = $ultimoLocal + 1;
         $siguienteApiCached = $numeroActualApi + 1;
-        $siguienteApiLive = $numeroApiReal; // La API suele devolver el último usado o el próximo, comparamos
+        // El campo 'current' de Factus ya representa el PRÓXIMO número a asignar (no el último usado)
+        // Por lo tanto NO se suma +1
+        $siguienteApiLive = $numeroApiReal;
 
         if (isset($json['data']['current']) || isset($json['data']['current_number'])) {
-            $ultimoSugerido = max($siguienteLocal, $siguienteApiLive);
+            // Tenemos dato en vivo: la API es la fuente de verdad del consecutivo real
+            // NO tomamos max() con el local porque el local puede tener borradores no enviados
+            $ultimoSugerido = $siguienteApiLive;
         } else {
+            // Sin respuesta de API, usar el mayor entre local y cache
             $ultimoSugerido = max($siguienteLocal, $siguienteApiCached);
         }
 
@@ -1307,7 +1296,6 @@ class ModeloFactus
     }
 
     /*=============================================
->>>>>>> 085e8812 (documentos soporte v8)
     MOSTRAR TIPOS DE DOCUMENTO (DESDE BASE DE DATOS LOCAL)
     =============================================*/
     static public function mdlMostrarTiposDocumento()
@@ -1461,37 +1449,6 @@ class ModeloFactus
     =============================================*/
     static public function mdlGuardarNotaAjusteDS($datos)
     {
-<<<<<<< HEAD
-        $stmt = Conexion::conectar()->prepare(
-            "INSERT INTO notas_ajuste_ds (
-				id_ds_original, numero_ds_original, tipo_nota, motivo,
-				productos, monto_total, estado_dian, numero_nota_ajuste,
-				cuds_ajuste, qr_data, xml_dian, pdf_dian, mensaje_dian,
-				fecha_envio_dian, id_usuario, id_proveedor, observacion, metodo_pago
-			) VALUES (
-				:id_ds, :num_ds, :tipo, :motivo,
-				:productos, :monto, :estado, :num_nota,
-				:cuds, :qr, :xml, :pdf, :mensaje,
-				:fecha_envio, :usuario, :id_proveedor, :observacion, :metodo_pago
-			)"
-        );
-
-        $stmt->bindParam(":id_ds", $datos["id_ds_original"], PDO::PARAM_INT);
-        $stmt->bindParam(":num_ds", $datos["numero_ds_original"], PDO::PARAM_STR);
-        $stmt->bindParam(":tipo", $datos["tipo_nota"], PDO::PARAM_STR);
-        $stmt->bindParam(":motivo", $datos["motivo"], PDO::PARAM_STR);
-        $stmt->bindParam(":productos", $datos["productos"], PDO::PARAM_STR);
-        $stmt->bindParam(":monto", $datos["monto_total"], PDO::PARAM_STR);
-        $stmt->bindParam(":estado", $datos["estado_dian"], PDO::PARAM_STR);
-        $stmt->bindParam(":num_nota", $datos["numero_nota_ajuste"], PDO::PARAM_STR);
-        $stmt->bindParam(":cuds", $datos["cuds_ajuste"], PDO::PARAM_STR);
-        $stmt->bindParam(":qr", $datos["qr_data"], PDO::PARAM_STR);
-        $stmt->bindParam(":xml", $datos["xml_dian"], PDO::PARAM_STR);
-        $stmt->bindParam(":pdf", $datos["pdf_dian"], PDO::PARAM_STR);
-        $stmt->bindParam(":mensaje", $datos["mensaje_dian"], PDO::PARAM_STR);
-        $stmt->bindParam(":fecha_envio", $datos["fecha_envio_dian"], PDO::PARAM_STR);
-        $stmt->bindParam(":usuario", $datos["id_usuario"], PDO::PARAM_INT);
-=======
         $con = Conexion::conectar();
         $stmt = $con->prepare("INSERT INTO notas_ajuste_ds
 			(id_ds_original, numero_ds_original, tipo_nota, motivo, productos, monto_total, estado_dian, numero_nota_ajuste, cuds_ajuste, qr_data, xml_dian, pdf_dian, mensaje_dian, fecha_envio_dian, id_usuario, id_proveedor, observacion, metodo_pago)
@@ -1513,14 +1470,11 @@ class ModeloFactus
         $stmt->bindParam(":mensaje_dian", $datos["mensaje_dian"], PDO::PARAM_STR);
         $stmt->bindParam(":fecha_envio_dian", $datos["fecha_envio_dian"], PDO::PARAM_STR);
         $stmt->bindParam(":id_usuario", $datos["id_usuario"], PDO::PARAM_INT);
->>>>>>> 085e8812 (documentos soporte v8)
         $stmt->bindParam(":id_proveedor", $datos["id_proveedor"], PDO::PARAM_INT);
         $stmt->bindParam(":observacion", $datos["observacion"], PDO::PARAM_STR);
         $stmt->bindParam(":metodo_pago", $datos["metodo_pago"], PDO::PARAM_STR);
 
         if ($stmt->execute()) {
-<<<<<<< HEAD
-=======
             return $con->lastInsertId();
         } else {
             return "error";
@@ -1563,7 +1517,6 @@ class ModeloFactus
         }
 
         if ($stmt->execute()) {
->>>>>>> 085e8812 (documentos soporte v8)
             return "ok";
         } else {
             return "error";
@@ -1571,8 +1524,8 @@ class ModeloFactus
     }
 
     /*=============================================
-OBTENER RANGO DE NOTAS CRÉDITO
-=============================================*/
+    OBTENER RANGO DE NOTAS CRÉDITO
+    =============================================*/
     static public function mdlObtenerRangoNC()
     {
         // Obtener el rango de factura configurado para saber en qué ambiente estamos
@@ -1622,6 +1575,8 @@ OBTENER RANGO DE NOTAS CRÉDITO
         $stmt->execute();
         return $stmt->fetch();
     }
+
+
     /*=============================================
     VERIFICAR SI UNA VENTA YA TIENE NOTA CRÉDITO
     =============================================*/
@@ -1655,8 +1610,6 @@ OBTENER RANGO DE NOTAS CRÉDITO
     }
 
     /*=============================================
-<<<<<<< HEAD
-=======
     OBTENER TODAS LAS NOTAS CRÉDITO POR VENTA
     =============================================*/
     static public function mdlObtenerNotasCreditoPorVenta($idVenta)
@@ -1672,7 +1625,6 @@ OBTENER RANGO DE NOTAS CRÉDITO
     }
 
     /*=============================================
->>>>>>> 085e8812 (documentos soporte v8)
     ACTUALIZAR NÚMERO ACTUAL DEL RANGO NC
     =============================================*/
     static public function mdlActualizarNumeroActualRangoNC($rangoId, $nuevoNumero)
@@ -1902,8 +1854,6 @@ OBTENER RANGO DE NOTAS CRÉDITO
     }
 
     /*=============================================
-<<<<<<< HEAD
-=======
     VERIFICAR SI UN DOCUMENTO SOPORTE TIENE ALGUNA NOTA DE AJUSTE
     =============================================*/
     static public function mdlTieneNotaAjusteDS($idDS)
@@ -1935,7 +1885,6 @@ OBTENER RANGO DE NOTAS CRÉDITO
     }
 
     /*=============================================
->>>>>>> 085e8812 (documentos soporte v8)
     MOSTRAR NOTAS DE AJUSTE DS
     =============================================*/
     static public function mdlMostrarNotasAjusteDS($item, $valor)
@@ -1994,8 +1943,6 @@ OBTENER RANGO DE NOTAS CRÉDITO
         }
     }
 
-<<<<<<< HEAD
-=======
     /*=============================================
     ELIMINAR NOTA DE AJUSTE DS
     =============================================*/
@@ -2090,5 +2037,4 @@ OBTENER RANGO DE NOTAS CRÉDITO
         }
     }
 
->>>>>>> 085e8812 (documentos soporte v8)
 }

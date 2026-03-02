@@ -1,17 +1,10 @@
 {
     "numbering_range_id": 1190,
-<<<<<<< HEAD
-    "reference_code": "SETP-V-728",
+    "reference_code": "SETP-V-737",
     "observation": "",
     "payment_form": "1",
-    "payment_due_date": "2026-03-24",
-=======
-    "reference_code": "SETP-V-731",
-    "observation": "",
-    "payment_form": "1",
-    "payment_due_date": "2026-03-31",
->>>>>>> 085e8812 (documentos soporte v8)
-    "payment_method_code": "49",
+    "payment_due_date": "2026-04-01",
+    "payment_method_code": "10",
     "operation_type": 10,
     "send_email": true,
     "establishment": {
@@ -56,17 +49,6 @@
             "scheme_id": "1",
             "note": "",
             "code_reference": "ITEM-1",
-<<<<<<< HEAD
-            "name": "prueba02 INC10 GRM",
-            "quantity": 1,
-            "discount_rate": "0.00",
-            "price": "100.000000",
-            "tax_rate": "10.00",
-            "unit_measure_id": 70,
-            "standard_code_id": 1,
-            "is_excluded": 0,
-            "tribute_id": 4,
-=======
             "name": "prueba06 IVA5 MLT",
             "quantity": 1,
             "discount_rate": "0.00",
@@ -76,7 +58,6 @@
             "standard_code_id": 1,
             "is_excluded": 0,
             "tribute_id": 1,
->>>>>>> 085e8812 (documentos soporte v8)
             "withholding_taxes": []
         }
     ]

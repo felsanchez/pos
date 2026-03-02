@@ -93,8 +93,6 @@ class ControladorFactus
 	}
 
 	/*=============================================
-<<<<<<< HEAD
-=======
 	OBTENER TODAS LAS NOTAS CRÉDITO POR VENTA
 	=============================================*/
 	static public function ctrObtenerNotasCreditoPorVenta($idVenta)
@@ -111,9 +109,8 @@ class ControladorFactus
 	}
 
 	/*=============================================
->>>>>>> 085e8812 (documentos soporte v8)
-AUTENTICAR CON FACTUS API
-=============================================*/
+	AUTENTICAR CON FACTUS API
+	=============================================*/
 	static public function ctrAutenticar()
 	{
 		// 🔹 PRIMERO: Intentar usar el token guardado en la BD
@@ -1076,11 +1073,7 @@ AUTENTICAR CON FACTUS API
 	/*=============================================
 	GENERAR NOTA CRÉDITO (API FACTUS)
 	=============================================*/
-<<<<<<< HEAD
-	static public function ctrGenerarNotaCredito($idVenta, $motivo, $listaProductos = null, $idCliente = null, $motivoDescripcion = null, $metodoPago = "Efectivo", $observacion = "")
-=======
 	static public function ctrGenerarNotaCredito($idVenta, $motivo, $listaProductos = null, $idCliente = null, $motivoDescripcion = null, $metodoPago = "Efectivo", $observacion = "", $firmar = false)
->>>>>>> 085e8812 (documentos soporte v8)
 	{
 		// 1. Validar venta original
 		require_once __DIR__ . "/../modelos/ventas.modelo.php";
@@ -1109,16 +1102,6 @@ AUTENTICAR CON FACTUS API
 			];
 		}
 
-<<<<<<< HEAD
-		// Verificar que no tenga ya una NC
-		if (ModeloFactus::mdlTieneNotaCredito($idVenta)) {
-			return [
-				"error" => true,
-				"mensaje" => "Esta factura ya tiene una Nota Crédito generada"
-			];
-		}
-
-=======
 		// Verificar que tenga el ID interno de Factus (facturas muy antiguas no lo tienen)
 		if (empty($venta["factus_bill_id"])) {
 			return [
@@ -1165,11 +1148,8 @@ AUTENTICAR CON FACTUS API
 			$guardado = ModeloFactus::mdlGuardarNotaCredito($datosGuardar);
 
 			if ($guardado == "ok") {
-				// Actualizar el consecutivo localmente para que la próxima tome el siguiente
-				if ($rangoNC && !empty($numeroNC)) {
-					$nuevoNumeroActual = $siguienteNumero + 1;
-					ModeloFactus::mdlActualizarNumeroActualRango($rangoNC["id_factus"], intval($nuevoNumeroActual));
-				}
+				// NO actualizamos numero_actual aquí porque el borrador no consume
+				// un número real de Factus. Solo actualizamos al FIRMAR.
 
 				return [
 					"error" => false,
@@ -1184,7 +1164,6 @@ AUTENTICAR CON FACTUS API
 			}
 		}
 
->>>>>>> 085e8812 (documentos soporte v8)
 		// 2. Autenticar
 		$auth = self::ctrAutenticar();
 		if ($auth['error']) {
@@ -1239,40 +1218,24 @@ AUTENTICAR CON FACTUS API
 				$rangoNC = ModeloFactus::mdlObtenerRangoNC();
 				if ($rangoNC && !empty($datosGuardar["numero_nota_credito"])) {
 					// Extraer número del formato "NC1"
-<<<<<<< HEAD
-					$numeroNC = preg_replace('/[^0-9]/', '', $datosGuardar["numero_nota_credito"]);
-					if ($numeroNC && is_numeric($numeroNC)) {
-						ModeloFactus::mdlActualizarNumeroActualRangoNC($rangoNC['id_factus'], intval($numeroNC));
-=======
 					preg_match('/(\d+)$/', $datosGuardar["numero_nota_credito"], $matches);
 					$nuevoNumero = isset($matches[1]) ? $matches[1] : null;
 
 					if ($nuevoNumero && is_numeric($nuevoNumero)) {
 						ModeloFactus::mdlActualizarNumeroActualRango($rangoNC["id_factus"], intval($nuevoNumero));
->>>>>>> 085e8812 (documentos soporte v8)
 					}
 				}
 
 				return [
 					"error" => false,
-<<<<<<< HEAD
-					"mensaje" => "Nota Crédito generada exitosamente",
-					"numero_nc" => $datosGuardar["numero_nota_credito"],
-					"cufe" => $datosGuardar["cufe_nc"],
-=======
 					"mensaje" => "Nota Crédito generada y enviada a la DIAN exitosamente",
 					"numero_nc" => $datosGuardar["numero_nota_credito"],
->>>>>>> 085e8812 (documentos soporte v8)
 					"datos" => $respuestaFactus
 				];
 			} else {
 				return [
 					"error" => true,
-<<<<<<< HEAD
-					"mensaje" => "Error al guardar la Nota Crédito en base de datos"
-=======
 					"mensaje" => "Se envió a DIAN pero hubo error guardando en base de datos local"
->>>>>>> 085e8812 (documentos soporte v8)
 				];
 			}
 		} else {
@@ -1306,8 +1269,6 @@ AUTENTICAR CON FACTUS API
 	}
 
 	/*=============================================
-<<<<<<< HEAD
-=======
 	ELIMINAR NOTA CRÉDITO BORRADOR
 	=============================================*/
 	static public function ctrEliminarNotaCredito()
@@ -1353,7 +1314,6 @@ AUTENTICAR CON FACTUS API
 	}
 
 	/*=============================================
->>>>>>> 085e8812 (documentos soporte v8)
 	PREPARAR DATOS DE NOTA CRÉDITO (JSON PARA FACTUS)
 	=============================================*/
 	private static function prepararDatosNotaCredito($venta, $motivo, $listaProductos = null, $idCliente = null, $motivoDescripcion = null, $metodoPago = "Efectivo", $observacion = "")
@@ -1486,8 +1446,8 @@ AUTENTICAR CON FACTUS API
 			];
 		}
 
-		// Generar código de referencia para la NC (ej: "NC-FEFG66")
-		$referenciaNC = "NC-" . $venta["numero_factura"];
+		// Generar código de referencia único para la NC (incluye timestamp para evitar duplicados en Factus)
+		$referenciaNC = "NC-" . $venta["numero_factura"] . "-" . time();
 
 		// ============================================
 		// LÓGICA DE MOTIVO / DESCRIPCIÓN
@@ -1747,11 +1707,7 @@ AUTENTICAR CON FACTUS API
 				if ($rangoDS && !empty($datosActualizar["numero_ds"])) {
 					$numeroDS = preg_replace('/[^0-9]/', '', $datosActualizar["numero_ds"]);
 					if ($numeroDS && is_numeric($numeroDS)) {
-<<<<<<< HEAD
-						ModeloFactus::mdlActualizarNumeroActualRangoNC($rangoDS['id_factus'], intval($numeroDS));
-=======
 						ModeloFactus::mdlActualizarNumeroActualRango($rangoDS['id_factus'], intval($numeroDS));
->>>>>>> 085e8812 (documentos soporte v8)
 					}
 				}
 
@@ -1760,20 +1716,14 @@ AUTENTICAR CON FACTUS API
 				return array("error" => true, "mensaje" => "Error al actualizar datos locales después de firmar");
 			}
 		} else {
-<<<<<<< HEAD
-			$error = json_decode($resultado['respuesta'], true);
-=======
 			// Hubo un error devuelto por la API
 			$error = json_decode($resultado['respuesta'], true);
 
->>>>>>> 085e8812 (documentos soporte v8)
 			return array("error" => true, "mensaje" => "Error API Factus: " . ($error['message'] ?? 'Desconocido'), "detalles" => $resultado['respuesta']);
 		}
 	}
 
 	/*=============================================
-<<<<<<< HEAD
-=======
 	FIRMAR Y ENVIAR NOTA CRÉDITO BORRADOR (API FACTUS)
 	=============================================*/
 	static public function ctrFirmarNotaCredito($idNota)
@@ -1877,7 +1827,6 @@ AUTENTICAR CON FACTUS API
 	}
 
 	/*=============================================
->>>>>>> 085e8812 (documentos soporte v8)
 	PREPARAR DATOS DOCUMENTO SOPORTE (JSON)
 	=============================================*/
 	public static function prepararDatosDocumentoSoporte($post)
@@ -2006,11 +1955,7 @@ AUTENTICAR CON FACTUS API
 				"legal_organization_id" => strval($tipoOrganizacion),
 				"tribute_id" => "21", // ZZ No responsable de IVA
 				"identification_document_id" => strval($tipoDocumentoId),
-<<<<<<< HEAD
-				"municipality_id" => strval($proveedor['municipio_id'] ?? '169'),
-=======
 				"municipality_id" => strval(!empty($proveedor['municipio_id']) ? $proveedor['municipio_id'] : ($configFactus['municipio_id'] ?? '981')),
->>>>>>> 085e8812 (documentos soporte v8)
 				"country_code" => "CO"
 			],
 			"items" => $items
@@ -2045,90 +1990,6 @@ AUTENTICAR CON FACTUS API
 				return array("error" => true, "mensaje" => "Documento Soporte original no encontrado");
 			}
 
-<<<<<<< HEAD
-			// 2. Autenticar
-			$auth = self::ctrAutenticar();
-			if ($auth['error']) {
-				return $auth;
-			}
-
-			// 3. Preparar datos para la API
-			$datosNota = self::prepararDatosNotaAjusteDS($originalDS, $motivo, $motivoDescripcion, $productosAjuste, $metodoPago);
-
-			// 4. Enviar a Factus
-			$resultado = ModeloFactus::mdlCrearNotaAjusteDS($auth['token'], $datosNota);
-
-			if ($resultado['http_code'] == 201 || $resultado['http_code'] == 200) {
-
-				$respuesta = json_decode($resultado['respuesta'], true);
-				$data = $respuesta['data'] ?? [];
-
-				// Resiliencia: Buscar los datos tanto en la raíz de 'data' como dentro de 'adjustment_note'
-				$adjData = $data['adjustment_note'] ?? $data;
-
-				// 5. Guardar en BD
-				$datosGuardar = [
-					"id_ds_original" => $idDS,
-					"numero_ds_original" => $originalDS["numero_ds"],
-					"tipo_nota" => $motivo,
-					"motivo" => $motivoDescripcion,
-					"productos" => json_encode($productosAjuste),
-					"monto_total" => $_POST["totalDS"],
-					"estado_dian" => "enviada",
-					"numero_nota_ajuste" => $adjData['number'] ?? $adjData['number_adjustment_note'] ?? '',
-					"cuds_ajuste" => $adjData['cuds'] ?? $adjData['uuid'] ?? '',
-					"qr_data" => $adjData['qr'] ?? $adjData['qr_code'] ?? '',
-					"xml_dian" => $adjData['xml'] ?? $adjData['xml_url'] ?? '',
-					"pdf_dian" => $adjData['pdf'] ?? $adjData['pdf_url'] ?? $adjData['public_url'] ?? '',
-					"mensaje_dian" => $respuesta['message'] ?? 'Nota de Ajuste generada correctamente',
-					"fecha_envio_dian" => date('Y-m-d H:i:s'),
-					"id_usuario" => $_POST["idUsuario"],
-					"id_proveedor" => $originalDS["id_proveedor"],
-					"observacion" => $_POST["nuevaObservacionDS"] ?? '',
-					"metodo_pago" => $metodoPago
-				];
-
-				$guardar = ModeloFactus::mdlGuardarNotaAjusteDS($datosGuardar);
-
-				if ($guardar == "ok") {
-
-					// Actualizar consecutivo
-					$numeroNota = $datosGuardar["numero_nota_ajuste"];
-					if (!empty($numeroNota)) {
-						preg_match('/(\d+)$/', $numeroNota, $matches);
-						$nuevoNumero = $matches[1] ?? null;
-						if ($nuevoNumero) {
-							$rango = ModeloFactus::mdlObtenerRangoAjusteDS();
-							ModeloFactus::mdlActualizarNumeroActualRangoNC($rango['id_factus'], intval($nuevoNumero));
-						}
-					}
-
-					return array(
-						"error" => false,
-						"mensaje" => "Nota de Ajuste generada y guardada correctamente",
-						"numero" => $numeroNota
-					);
-				} else {
-					return array("error" => true, "mensaje" => "Nota enviada pero falló el guardado local. CUDS: " . ($respuesta['data']['cufe'] ?? 'N/A'));
-				}
-			} else {
-				$respError = json_decode($resultado['respuesta'], true);
-				$httpCode = $resultado['http_code'];
-				$errorMsg = $respError['message'] ?? $resultado['respuesta'];
-
-				// Mensaje especial para el error 409 (nota pendiente en Factus)
-				if ($httpCode == 409) {
-					$errorMsg = "Ya existe una Nota de Ajuste pendiente para este Documento Soporte en el sistema de Factus. " .
-						"Por favor, ingrese al portal de Factus (https://sandbox.factus.com.co) y finalice o elimine " .
-						"la nota pendiente antes de crear una nueva.";
-				}
-
-				return array(
-					"error" => true,
-					"mensaje" => "Error API Factus ($httpCode): $errorMsg"
-				);
-			}
-=======
 			// 1.5. Obtener rango y generar número consecutivo para el borrador
 			$rango = ModeloFactus::mdlObtenerRangoAjusteDS();
 			$numeroRango = "";
@@ -2303,7 +2164,6 @@ AUTENTICAR CON FACTUS API
 			return ModeloFactus::mdlEliminarNotaAjusteDS($id);
 		} else {
 			return "error_estado";
->>>>>>> 085e8812 (documentos soporte v8)
 		}
 	}
 
@@ -2391,9 +2251,6 @@ AUTENTICAR CON FACTUS API
 			"legal_organization_id" => strval($tipoOrganizacion),
 			"tribute_id" => "21",
 			"identification_document_id" => strval($tipoDocumentoId),
-<<<<<<< HEAD
-			"municipality_id" => strval($proveedor['municipio_id'] ?? '169'),
-=======
 			"municipality_id" => strval(
 				(function ($prov_mun) {
 					$mun_id = '981';
@@ -2407,7 +2264,6 @@ AUTENTICAR CON FACTUS API
 					return $mun_id;
 				})(!empty($proveedor['municipio_id']) ? $proveedor['municipio_id'] : (ModeloFactus::mdlObtenerConfiguracion()['municipio_id'] ?? '981'))
 			),
->>>>>>> 085e8812 (documentos soporte v8)
 			"country_code" => "CO"
 		];
 
@@ -2429,8 +2285,6 @@ AUTENTICAR CON FACTUS API
 			"items" => $items
 		];
 	}
-<<<<<<< HEAD
-=======
 
 	/*=============================================
 	MOSTRAR NOTAS CREDITO
@@ -2444,5 +2298,4 @@ AUTENTICAR CON FACTUS API
 		$respuesta = ModeloFactus::mdlMostrarNotasCredito($tabla, $item, $valor);
 		return $respuesta;
 	}
->>>>>>> 085e8812 (documentos soporte v8)
 }
