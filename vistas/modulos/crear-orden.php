@@ -212,75 +212,74 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                 <div class="row">
 
                   <!--=====================================
-                        ENTRADA IMPUESTOS Y TOTAL
+                        ENTRADA VALOR BRUTO, SUBTOTAL, IMPUESTOS Y TOTAL
                         ======================================-->
 
-                  <div class="col-xs-12 pull-left">
-
-                    <table class="table">
-
-                      <thead>
-                        <tr>
-                          <th>Subtotal</th>
-                          <th>Impuesto</th>
-                          <th>Total</th>
-                        </tr>
-
-                      </thead>
-
+                  <div class="col-xs-12 col-md-6 pull-right">
+                    <table class="table table-condensed table-bordered" style="background:#f9f9f9;">
                       <tbody>
-
+                        <!-- Subtotal (precio sin impuesto) -->
                         <tr>
-
-                          <td style="width: 35%">
-
+                          <td style="vertical-align: middle; font-weight: bold; width: 40%">Subtotal</td>
+                          <td style="width: 60%">
                             <div class="input-group">
-
-                              <input type="text" class="form-control input-lg" id="nuevoSubtotalVenta"
-                                name="nuevoSubtotalVenta" placeholder="00000" readonly>
-
+                              <span class="input-group-addon"><i class="ion ion-social-usd"></i></span>
+                              <input type="text" class="form-control" id="nuevoValorBruto" name="nuevoValorBruto"
+                                placeholder="0" readonly>
                             </div>
-
                           </td>
-
-                          <td style="width: 25%">
-
-                            <div class="input-group">
-
-                              <input type="number" class="form-control input-lg" min="0" id="nuevoImpuestoVenta"
-                                name="nuevoImpuestoVenta" value="<?php echo $impuestoDefecto; ?>">
-
-                              <input type="hidden" name="nuevoPrecioImpuesto" id="nuevoPrecioImpuesto" required>
-
-                              <input type="hidden" name="nuevoPrecioNeto" id="nuevoPrecioNeto" required>
-
-                              <!--<span class="input-group-addon"><i class="fa fa-percent"></i></span>-->
-
-                            </div>
-
-                          </td>
-
-                          <td style="width: 40%">
-
-                            <div class="input-group">
-
-                              <!--<span class="input-group-addon"><i class="ion ion-social-usd"></i></span> -->
-                              <input type="text" class="form-control input-lg" id="nuevoTotalVenta"
-                                name="nuevoTotalVenta" total="" placeholder="00000" readonly required>
-
-                              <input type="hidden" name="totalVenta" id="totalVenta">
-
-                            </div>
-
-                          </td>
-
                         </tr>
-
+                        <!-- Valor Bruto -->
+                        <tr>
+                          <td style="vertical-align: middle; font-weight: bold;">Valor Bruto</td>
+                          <td>
+                            <div class="input-group">
+                              <span class="input-group-addon"><i class="ion ion-social-usd"></i></span>
+                              <input type="text" class="form-control" id="nuevoSubtotalVenta" name="nuevoSubtotalVenta"
+                                placeholder="0" readonly>
+                            </div>
+                          </td>
+                        </tr>
+                        <!-- Impuestos IVA -->
+                        <tr>
+                          <td style="vertical-align: middle; font-weight: bold;">Impuestos IVA</td>
+                          <td>
+                            <div class="input-group">
+                              <span class="input-group-addon"><i class="ion ion-social-usd"></i></span>
+                              <input type="text" class="form-control" id="nuevoImpuestoVenta" name="nuevoImpuestoVenta"
+                                placeholder="0" readonly>
+                            </div>
+                          </td>
+                        </tr>
+                        <!-- Impuestos INC -->
+                        <tr>
+                          <td style="vertical-align: middle; font-weight: bold;">Impuestos INC</td>
+                          <td>
+                            <div class="input-group">
+                              <span class="input-group-addon"><i class="ion ion-social-usd"></i></span>
+                              <input type="text" class="form-control" id="nuevoImpuestoINCVenta"
+                                name="nuevoImpuestoINCVenta" placeholder="0" readonly>
+                            </div>
+                          </td>
+                        </tr>
+                        <!-- Total -->
+                        <tr>
+                          <td style="vertical-align: middle; font-weight: bold; font-size: 1.2em;">Total</td>
+                          <td>
+                            <div class="input-group">
+                              <span class="input-group-addon"><i class="ion ion-social-usd"></i></span>
+                              <input type="text" class="form-control input-lg" id="nuevoTotalVenta"
+                                name="nuevoTotalVenta" total="" placeholder="0" readonly required
+                                style="font-weight: bold; font-size: 1.2em;">
+                              <input type="hidden" name="totalVenta" id="totalVenta">
+                              <input type="hidden" name="nuevoPrecioImpuesto" id="nuevoPrecioImpuesto" value="0"
+                                required>
+                              <input type="hidden" name="nuevoPrecioNeto" id="nuevoPrecioNeto" required>
+                            </div>
+                          </td>
+                        </tr>
                       </tbody>
-
                     </table>
-
-
                   </div>
 
                 </div>

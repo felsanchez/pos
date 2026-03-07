@@ -507,4 +507,86 @@ $(document).ready(function () {
             }
         });
     });
+
+    /*=============================================
+    ABRIR MODAL ENVIAR EMAIL DS
+    =============================================*/
+    $(document).on("click", ".btnEnviarEmailDS", function () {
+        var idDS = $(this).attr("idDS");
+        var nombreProveedor = $(this).attr("nombreProveedor");
+        var emailProveedor = $(this).attr("emailProveedor");
+
+        $("#idDSEmailDS").val(idDS);
+        $("#nombreProveedorEmailDS").val(nombreProveedor);
+        $("#emailDestinoDS").val(emailProveedor);
+
+        $("#modalEnviarEmailDS").modal("show");
+    });
+
+    /*=============================================
+    ENVIAR CORREO DS (CONFIRMADO)
+    =============================================*/
+    $(document).on("click", ".btnEnviarCorreoConfirmadoDS", function () {
+        var idDS = $("#idDSEmailDS").val();
+        var emailDestino = $("#emailDestinoDS").val();
+
+        if (emailDestino == "") {
+            swal({
+                type: "error",
+                title: "Error",
+                text: "El correo electrónico es obligatorio"
+            });
+            return;
+        }
+
+        swal({
+            title: 'Enviando correo...',
+            text: 'Por favor espere mientras se genera el PDF y se envía el correo.',
+            allowOutsideClick: false,
+            onOpen: () => {
+                swal.showLoading();
+            }
+        });
+
+        var datos = new FormData();
+        datos.append("idDS", idDS);
+        datos.append("emailDestino", emailDestino);
+
+        $.ajax({
+            url: "ajax/facturacion.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function (respuesta) {
+                if (respuesta.status == "success") {
+                    swal({
+                        type: "success",
+                        title: "¡Enviado!",
+                        text: respuesta.mensaje,
+                        confirmButtonText: "Cerrar"
+                    }).then((result) => {
+                        if (result.value) {
+                            $("#modalEnviarEmailDS").modal("hide");
+                        }
+                    });
+                } else {
+                    swal({
+                        type: "error",
+                        title: "Error",
+                        text: respuesta.mensaje
+                    });
+                }
+            },
+            error: function () {
+                swal({
+                    type: "error",
+                    title: "Error de comunicación",
+                    text: "No se pudo conectar con el servidor para enviar el correo."
+                });
+            }
+        });
+    });
 });

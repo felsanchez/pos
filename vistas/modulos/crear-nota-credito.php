@@ -26,6 +26,32 @@ if (isset($_GET["idVenta"])) {
     }
 }
 
+// ---------------------------------------------------------
+// VALIDACIÓN DE CONSECUTIVO (DRAFT BLOCKING)
+// ---------------------------------------------------------
+$ultimaNota = ControladorFactus::ctrMostrarUltimaNotaCredito();
+
+if ($ultimaNota) {
+    $estadosValidos = ['enviada', 'aceptada'];
+    if (!in_array($ultimaNota["estado_dian"], $estadosValidos) || empty($ultimaNota["numero_nota_credito"])) {
+        echo '
+        <script>
+          swal({
+            type: "warning",
+            title: "Bloqueo de Consecutivo",
+            text: "No se puede crear una nueva Nota Crédito porque la anterior aún no ha sido FIRMADA y ENVIADA a la DIAN o es un borrador. Debe firmar los documentos en orden secuencial.",
+            showConfirmButton: true,
+            confirmButtonText: "Ir a Notas Crédito"
+          }).then(function (result) {
+            if (result.value) {
+              window.location = "notas-credito";
+            }
+          });
+        </script>';
+        return;
+    }
+}
+
 $configuracion = ModeloConfiguracion::mdlObtenerConfiguracion();
 
 // Verificar configuración de Factus para rangos

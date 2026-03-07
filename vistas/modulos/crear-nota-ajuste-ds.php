@@ -24,6 +24,32 @@ if (isset($_GET["idDS"])) {
     }
 }
 
+// ---------------------------------------------------------
+// VALIDACIÓN DE CONSECUTIVO (DRAFT BLOCKING)
+// ---------------------------------------------------------
+$ultimaNota = ControladorFactus::ctrMostrarUltimaNotaAjusteDS();
+
+if ($ultimaNota) {
+    $estadosValidos = ['enviada', 'aceptada'];
+    if (!in_array($ultimaNota["estado_dian"], $estadosValidos) || empty($ultimaNota["numero_nota_ajuste"])) {
+        echo '
+        <script>
+          swal({
+            type: "warning",
+            title: "Bloqueo de Consecutivo",
+            text: "No se puede crear una nueva Nota de Ajuste porque la anterior aún no ha sido FIRMADA y ENVIADA a la DIAN o es un borrador. Debe firmar los documentos en orden secuencial.",
+            showConfirmButton: true,
+            confirmButtonText: "Ir a Notas de Ajuste"
+          }).then(function (result) {
+            if (result.value) {
+              window.location = "notas-ajuste-ds";
+            }
+          });
+        </script>';
+        return;
+    }
+}
+
 // Verificar rango de Notas de Ajuste
 $rangoAjuste = ModeloFactus::mdlObtenerRangoAjusteDS();
 

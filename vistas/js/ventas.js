@@ -1841,3 +1841,84 @@ $(document).on("click", ".btnEditarCliente, .btnVerClienteDesdeVenta", function 
 	})
 
 })
+
+/*=============================================
+ABRIR MODAL ENVIAR EMAIL
+=============================================*/
+$(document).on("click", ".btnEnviarEmail", function () {
+	var idVenta = $(this).attr("idVenta");
+	var nombreCliente = $(this).attr("nombreCliente");
+	var emailCliente = $(this).attr("emailCliente");
+
+	$("#emailIdVenta").val(idVenta);
+	$("#emailNombreCliente").val(nombreCliente);
+	$("#emailDestino").val(emailCliente);
+
+	$("#modalEnviarEmail").modal("show");
+});
+
+/*=============================================
+ENVIAR EMAIL POR AJAX
+=============================================*/
+$("#formEnviarEmail").submit(function (e) {
+	e.preventDefault();
+
+	var idVenta = $("#emailIdVenta").val();
+	var emailDestino = $("#emailDestino").val();
+
+	swal({
+		title: "Enviando Correo...",
+		text: "Por favor espere mientras se genera el PDF y se envía el correo.",
+		allowOutsideClick: false,
+		onBeforeOpen: () => {
+			swal.showLoading();
+		}
+	});
+
+	var datos = new FormData();
+	datos.append("idVenta", idVenta);
+	datos.append("emailDestino", emailDestino);
+
+	$.ajax({
+		url: "ajax/facturacion.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			if (respuesta.status == "success") {
+				swal({
+					type: "success",
+					title: "¡Enviado!",
+					text: respuesta.mensaje,
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then(function (result) {
+					if (result.value) {
+						$("#modalEnviarEmail").modal("hide");
+					}
+				});
+			} else {
+				swal({
+					type: "error",
+					title: "Error",
+					text: respuesta.mensaje,
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				});
+			}
+		},
+		error: function (xhr, status, error) {
+			console.error("AJAX Error:", error);
+			swal({
+				type: "error",
+				title: "Error de comunicación",
+				text: "No se pudo conectar con el servidor para enviar el correo.",
+				showConfirmButton: true,
+				confirmButtonText: "Cerrar"
+			});
+		}
+	});
+});

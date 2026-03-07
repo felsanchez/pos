@@ -9,13 +9,13 @@ class ControladorCorreo
     /*=============================================
     ENVIAR CORREO
     =============================================*/
-    static public function ctrEnviarCorreo($destinatario, $asunto, $mensaje)
+    static public function ctrEnviarCorreo($destinatario, $asunto, $mensaje, $adjunto = null)
     {
 
         // Cargar las clases de PHPMailer manualmente
-        require_once "extensiones/phpmailer/src/Exception.php";
-        require_once "extensiones/phpmailer/src/PHPMailer.php";
-        require_once "extensiones/phpmailer/src/SMTP.php";
+        require_once __DIR__ . "/../extensiones/phpmailer/src/Exception.php";
+        require_once __DIR__ . "/../extensiones/phpmailer/src/PHPMailer.php";
+        require_once __DIR__ . "/../extensiones/phpmailer/src/SMTP.php";
 
         $mail = new PHPMailer(true);
 
@@ -33,6 +33,11 @@ class ControladorCorreo
             // Destinatarios
             $mail->setFrom('kontrolpos01@gmail.com', 'Sistema POS');
             $mail->addAddress($destinatario);     // Añadir un destinatario
+
+            // Adjuntos
+            if ($adjunto != null && file_exists($adjunto)) {
+                $mail->addAttachment($adjunto);
+            }
 
             // Contenido
             $mail->isHTML(true);                                  // Formato de correo HTML

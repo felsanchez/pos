@@ -46,18 +46,43 @@ if ($_SESSION["perfil"] == "Especial") {
                         </tr>
                     </thead>
                     <tbody>
-
                         <?php
 
+                        // Obtener el siguiente consecutivo base (SIN incluir borradores actuales) y prefijo
+                        $proximoBase = ModeloFactus::mdlObtenerSiguienteConsecutivoNotaAjusteDS(false);
+                        $rangoAjuste = ModeloFactus::mdlObtenerRangoAjusteDS();
+                        $prefijoAjuste = $rangoAjuste ? $rangoAjuste["prefijo"] : "NA";
+
                         $notas = ControladorFactus::ctrMostrarNotasAjusteDS(null, null);
+
+                        // Contar cuántos borradores hay para asignarles un número secuencial en la vista
+                        $totalBorradores = 0;
+                        if ($notas) {
+                            foreach ($notas as $n) {
+                                if ($n["estado_dian"] == "borrador")
+                                    $totalBorradores++;
+                            }
+                        }
+
+                        $borradorCount = 0;
 
                         foreach ($notas as $key => $value) {
 
                             $proveedor = ControladorProveedores::ctrMostrarProveedores("id", $value["id_proveedor"]);
 
+                            $numeroMostrar = $value["numero_nota_ajuste"];
+
+                            if ($value["estado_dian"] == "borrador") {
+                                // Es un borrador. Calculamos su número sugerido.
+                                // Si hay 3 borradores, el más antiguo (abajo en la tabla) es el $proximoBase
+                                $numSugerido = $proximoBase + ($totalBorradores - 1 - $borradorCount);
+                                $numeroMostrar = $prefijoAjuste . $numSugerido;
+                                $borradorCount++;
+                            }
+
                             echo '<tr>
                                     <td>' . ($key + 1) . '</td>
-                                    <td' . ($value["estado_dian"] == "borrador" ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . $value["numero_nota_ajuste"] . '</td>
+                                    <td' . ($value["estado_dian"] == "borrador" ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . $numeroMostrar . '</td>
                                     <td>' . $value["numero_ds_original"] . '</td>
                                     <td>' . ($proveedor["nombre"] ?? "N/A") . '</td>
                                     <td>$ ' . number_format((float) ($value["monto_total"] ?? 0), 2) . '</td>
@@ -95,6 +120,11 @@ if ($_SESSION["perfil"] == "Especial") {
 
                                 // Botón para ver en la DIAN
                                 echo '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . $value["cuds_ajuste"] . '" target="_blank" class="btn btn-warning" title="Ver en DIAN"><i class="fa fa-globe"></i></a>';
+
+                                // Botón para enviar por correo (Solo si está aceptada o enviada)
+                                if ($value["estado_dian"] == "aceptada" || $value["estado_dian"] == "enviada") {
+                                    echo '<button class="btn btn-success btnEnviarEmailNA" idNA="' . $value["id"] . '" nombreProveedor="' . ($proveedor["nombre"] ?? "N/A") . '" emailProveedor="' . ($proveedor["correo"] ?? '') . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
+                                }
                             }
 
                             echo '</div>
@@ -109,6 +139,45 @@ if ($_SESSION["perfil"] == "Especial") {
             </div>
         </div>
     </section>
+</div>
+
+<!--=====================================
+MODAL ENVIAR EMAIL NOTA AJUSTE
+======================================-->
+<div id="modalEnviarEmailNA" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#3c8dbc; color:white">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Enviar Nota de Ajuste por Correo</h4>
+            </div>
+            <div class="modal-body">
+                <div class="box-body">
+                    <div class="form-group">
+                        <label for="nombreProveedorEmailNA">Proveedor:</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                            <input type="text" class="form-control" id="nombreProveedorEmailNA" readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Correo del Proveedor:</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                            <input type="email" class="form-control" id="emailDestinoNA"
+                                placeholder="Ingrese el correo">
+                            <input type="hidden" id="idNA_Email">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
+                <button type="button" class="btn btn-primary btnEnviarCorreoConfirmadoNA">Enviar Correo</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="vistas/js/notas-ajuste-ds.js?v=<?php echo time(); ?>"></script>

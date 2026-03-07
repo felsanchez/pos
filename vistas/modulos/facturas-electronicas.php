@@ -497,11 +497,10 @@ if ($xml) {
               $respuesta = ControladorVentas::ctrRangoFechasVentasPorEstado($fechaInicial, $fechaFinal, "venta");
 
               // 🔹 FILTRO ESPECÍFICO PARA FACTURAS ELECTRÓNICAS
-              // Solo mostrar ventas que tienen factura electrónica generada O que sean borradores (creada sin enviar)
-              // Solo mostrar ventas que tienen factura electrónica generada O que sean borradores/pendientes
+              // Solo mostrar ventas con factura emitida (numero_factura) O borradores FE (tienen resolucion_id)
+              // Las ventas regulares NO tienen resolucion_id ni numero_factura
               $respuesta = array_filter($respuesta, function ($venta) {
-                $estadoDian = isset($venta["estado_dian"]) ? $venta["estado_dian"] : "";
-                return !empty($venta["numero_factura"]) || in_array($estadoDian, ["creada", "pendiente"]);
+                return !empty($venta["numero_factura"]) || !empty($venta["resolucion_id"]);
               });
 
               // Si hay filtro por cliente, filtrar el resultado
@@ -620,9 +619,17 @@ if ($xml) {
 
                              ' . (!empty($value["qr_data"]) ? '<a class="btn btn-success" href="' . $value["qr_data"] . '" target="_blank" data-toggle="tooltip" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>' : '') . '
 
-                                                           <button class="btn btn-info btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver Detalles">
+                               <button class="btn btn-info btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver Detalles">
                                <i class="fa fa-eye"></i>
                              </button>';
+
+                if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
+                  echo ' <button class="btn btn-primary btnEnviarEmail" idVenta="' . $value["id"] . '" nombreCliente="' . $nombreCliente . '" emailCliente="' . $value["email_cliente"] . '" title="Enviar por Correo">
+                                <i class="fa fa-envelope"></i>
+                              </button>';
+                }
+
+                echo ' ';
 
                 // Botón de las Notas Crédito (solo si la factura tiene NC)
                 if (ModeloFactus::mdlTieneNotaCredito($value["id"])) {
@@ -1316,45 +1323,99 @@ MODAL EDITAR CLIENTE
 
 <!--=====================================
 MODAL VER NOTAS DE CRÉDITO
+======================================-->
 <div id="modalNotasCredito" class="modal fade" role="dialog">
   <div class="modal-dialog">
     <div class="modal-content">
 
       <!-- CABEZA DEL MODAL -->
-<div class="modal-header" style="background:#f39c12; color:white">
-  <button type="button" class="close" data-dismiss="modal">&times;</button>
-  <h4 class="modal-title"><i class="fa fa-list"></i> Notas Crédito Asociadas</h4>
-</div>
+      <div class="modal-header" style="background:#f39c12; color:white">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title"><i class="fa fa-list"></i> Notas Crédito Asociadas</h4>
+      </div>
 
-<!-- CUERPO DEL MODAL -->
-<div class="modal-body">
-  <div class="box-body">
+      <!-- CUERPO DEL MODAL -->
+      <div class="modal-body">
+        <div class="box-body">
 
-    <!-- TABLA NOTAS CRÉDITO -->
-    <table class="table table-bordered table-striped dt-responsive" width="100%">
-      <thead>
-        <tr>
-          <th style="width:10px">#</th>
-          <th>Código</th>
-          <th>Fecha</th>
-          <th>Monto</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="tbodyNotasCredito">
-        <!-- Filas inyectadas por AJAX -->
-      </tbody>
-    </table>
+          <!-- TABLA NOTAS CRÉDITO -->
+          <table class="table table-bordered table-striped dt-responsive" width="100%">
+            <thead>
+              <tr>
+                <th style="width:10px">#</th>
+                <th>Código</th>
+                <th>Fecha</th>
+                <th>Monto</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyNotasCredito">
+              <!-- Filas inyectadas por AJAX -->
+            </tbody>
+          </table>
 
+        </div>
+      </div>
+
+      <!-- PIE DEL MODAL -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default pull-right" data-dismiss="modal">Cerrar</button>
+      </div>
+
+    </div>
   </div>
 </div>
 
-<!-- PIE DEL MODAL -->
-<div class="modal-footer">
-  <button type="button" class="btn btn-default pull-right" data-dismiss="modal">Cerrar</button>
-</div>
+<!--=====================================
+MODAL ENVIAR EMAIL
+======================================-->
 
-</div>
-</div>
+<div id="modalEnviarEmail" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form role="form" method="post" id="formEnviarEmail">
+
+        <!-- CABEZA DEL MODAL -->
+        <div class="modal-header" style="background:#3c8dbc; color:white">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Enviar Factura por Correo</h4>
+        </div>
+
+        <!-- CUERPO DEL MODAL -->
+        <div class="modal-body">
+          <div class="box-body">
+
+            <!-- ENTRADA PARA EL NOMBRE DEL CLIENTE -->
+            <div class="form-group">
+              <label>Cliente</label>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                <input type="text" class="form-control input-lg" id="emailNombreCliente" readonly>
+                <input type="hidden" id="emailIdVenta">
+              </div>
+            </div>
+
+            <!-- ENTRADA PARA EL EMAIL -->
+            <div class="form-group">
+              <label>Correo Electrónico</label>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                <input type="email" class="form-control input-lg" id="emailDestino" placeholder="Ingresar correo"
+                  required>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- PIE DEL MODAL -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
+          <button type="submit" class="btn btn-primary">Enviar PDF</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
 </div>

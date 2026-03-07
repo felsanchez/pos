@@ -1147,11 +1147,11 @@ class ModeloFactus
         $numeroActualApi = isset($rango["numero_actual"]) ? $rango["numero_actual"] : 0;
         $prefijo = $rango["prefijo"];
 
-        // Buscar el número máximo en la tabla local ventas (donde se guardan los DS)
+        // Buscar el número máximo en la tabla local documentos_soporte
         $stmt = Conexion::conectar()->prepare("
-            SELECT numero_factura 
-            FROM ventas 
-            WHERE numero_factura LIKE :prefijo 
+            SELECT numero_ds as numero_factura 
+            FROM documentos_soporte 
+            WHERE numero_ds LIKE :prefijo 
             ORDER BY id DESC 
             LIMIT 20
         ");
@@ -1215,11 +1215,9 @@ class ModeloFactus
     /*=============================================
     OBTENER SIGUIENTE CONSECUTIVO NOTA AJUSTE DS
     =============================================*/
-    static public function mdlObtenerSiguienteConsecutivoNotaAjusteDS()
+    static public function mdlObtenerSiguienteConsecutivoNotaAjusteDS($incluirBorradores = true)
     {
-        $stmtRango = Conexion::conectar()->prepare("SELECT * FROM factus_rangos WHERE documento = 'Nota de Ajuste' AND estado = 1 LIMIT 1");
-        $stmtRango->execute();
-        $rango = $stmtRango->fetch();
+        $rango = self::mdlObtenerRangoAjusteDS();
 
         if (!$rango) {
             return 1;
@@ -1231,13 +1229,15 @@ class ModeloFactus
         $prefijo = $rango["prefijo"];
 
         // Buscar el número máximo en la tabla local notas_ajuste_ds
-        $stmt = Conexion::conectar()->prepare("
-            SELECT numero_nota_ajuste 
-            FROM notas_ajuste_ds 
-            WHERE numero_nota_ajuste LIKE :prefijo 
-            ORDER BY id DESC 
-            LIMIT 20
-        ");
+        $sql = "SELECT numero_nota_ajuste FROM notas_ajuste_ds WHERE numero_nota_ajuste LIKE :prefijo";
+
+        if (!$incluirBorradores) {
+            $sql .= " AND estado_dian != 'borrador'";
+        }
+
+        $sql .= " ORDER BY id DESC LIMIT 20";
+
+        $stmt = Conexion::conectar()->prepare($sql);
         $prefijoLike = $prefijo . '%';
         $stmt->bindParam(":prefijo", $prefijoLike, PDO::PARAM_STR);
         $stmt->execute();
@@ -1821,13 +1821,14 @@ class ModeloFactus
     =============================================*/
     static public function mdlObtenerRangoAjusteDS()
     {
-        // Priorizar el id_factus 1193 que es el real en Sandbox
-        $stmt = Conexion::conectar()->prepare("SELECT * FROM factus_rangos WHERE id_factus = 1193 AND estado = 1 LIMIT 1");
+        // Buscar específicamente el de Documento Soporte, priorizando el ID más alto (generalmente el más reciente/válido)
+        $stmt = Conexion::conectar()->prepare("SELECT * FROM factus_rangos WHERE documento = 'Nota de Ajuste Documento Soporte' AND estado = 1 ORDER BY id_factus DESC LIMIT 1");
         $stmt->execute();
         $rango = $stmt->fetch();
 
         if (!$rango) {
-            $stmt = Conexion::conectar()->prepare("SELECT * FROM factus_rangos WHERE documento LIKE '%Ajuste%' AND estado = 1 LIMIT 1");
+            // Fallback por si el nombre varía ligeramente
+            $stmt = Conexion::conectar()->prepare("SELECT * FROM factus_rangos WHERE documento LIKE 'Nota de Ajuste%Soporte%' AND estado = 1 ORDER BY id_factus DESC LIMIT 1");
             $stmt->execute();
             $rango = $stmt->fetch();
         }
@@ -2037,4 +2038,277 @@ class ModeloFactus
         }
     }
 
+    /*=============================================
+    MOSTRAR ÚLTIMA NOTA DE AJUSTE DS
+    =============================================*/
+    static public function mdlMostrarUltimaNotaAjusteDS($tabla)
+    {
+        $stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla ORDER BY id DESC LIMIT 1");
+        $stmt->execute();
+        return $stmt->fetch();
+    }
+
+    /*=============================================
+    MOSTRAR ÚLTIMA NOTA CRÉDITO
+    =============================================*/
+    static public function mdlMostrarUltimaNotaCredito($tabla)
+    {
+        $stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla ORDER BY id DESC LIMIT 1");
+        $stmt->execute();
+        return $stmt->fetch();
+    }
+
+    /*=============================================
+    OBTENER KPIs PARA REPORTES
+    =============================================*/
+    static public function mdlObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero = "todos")
+    {
+        $db = Conexion::conectar();
+
+        // Ajustar fechas para incluir todo el día
+        $inicio = $fechaInicial . " 00:00:00";
+        $fin = $fechaFinal . " 23:59:59";
+
+        $filtroCliente = ($tercero != "todos" && ($categoria == "todos" || $categoria == "facturas" || $categoria == "nc")) ? " AND id_cliente = :tc " : "";
+        $filtroProveedor = ($tercero != "todos" && ($categoria == "ds" || $categoria == "na")) ? " AND id_proveedor = :tp " : "";
+
+        // 1. VENTAS (Facturadas y aceptadas)
+        $stmtVentas = $db->prepare("SELECT SUM(total) as t, SUM(impuesto) as i, COUNT(*) as c 
+                                    FROM ventas 
+                                    WHERE estado_dian IN ('aceptada', 'enviada') 
+                                    AND (fecha BETWEEN :s1 AND :e1 OR fecha_envio_dian BETWEEN :s2 AND :e2)" . $filtroCliente);
+        $stmtVentas->bindParam(":s1", $inicio, PDO::PARAM_STR);
+        $stmtVentas->bindParam(":e1", $fin, PDO::PARAM_STR);
+        $stmtVentas->bindParam(":s2", $inicio, PDO::PARAM_STR);
+        $stmtVentas->bindParam(":e2", $fin, PDO::PARAM_STR);
+        if ($filtroCliente != "")
+            $stmtVentas->bindParam(":tc", $tercero, PDO::PARAM_INT);
+        $stmtVentas->execute();
+        $resVentas = $stmtVentas->fetch();
+
+        // 2. NOTAS CRÉDITO (Reducciones de venta)
+        $stmtNC = $db->prepare("SELECT SUM(monto_total) as t, COUNT(*) as c 
+                                FROM notas_credito 
+                                WHERE estado_dian IN ('aceptada', 'enviada') 
+                                AND IFNULL(fecha_envio_dian, fecha_creacion) BETWEEN :s3 AND :e3" . $filtroCliente);
+        $stmtNC->bindParam(":s3", $inicio, PDO::PARAM_STR);
+        $stmtNC->bindParam(":e3", $fin, PDO::PARAM_STR);
+        if ($filtroCliente != "")
+            $stmtNC->bindParam(":tc", $tercero, PDO::PARAM_INT);
+        $stmtNC->execute();
+        $resNC = $stmtNC->fetch();
+
+        // 3. DOCUMENTOS SOPORTE (Gastos/Compras)
+        $stmtDS = $db->prepare("SELECT SUM(monto_total) as t, COUNT(*) as c 
+                                FROM documentos_soporte 
+                                WHERE estado_dian IN ('aceptada', 'enviada') 
+                                AND fecha_emision BETWEEN :s4 AND :e4" . $filtroProveedor);
+        $stmtDS->bindParam(":s4", $inicio, PDO::PARAM_STR);
+        $stmtDS->bindParam(":e4", $fin, PDO::PARAM_STR);
+        if ($filtroProveedor != "")
+            $stmtDS->bindParam(":tp", $tercero, PDO::PARAM_INT);
+        $stmtDS->execute();
+        $resDS = $stmtDS->fetch();
+
+        // 4. NOTAS DE AJUSTE DS (Reducciones de DS)
+        $stmtNA = $db->prepare("SELECT SUM(monto_total) as t, COUNT(*) as c 
+                                FROM notas_ajuste_ds 
+                                WHERE estado_dian IN ('aceptada', 'enviada') 
+                                AND IFNULL(fecha_envio_dian, fecha_registro) BETWEEN :s5 AND :e5" . $filtroProveedor);
+        $stmtNA->bindParam(":s5", $inicio, PDO::PARAM_STR);
+        $stmtNA->bindParam(":e5", $fin, PDO::PARAM_STR);
+        if ($filtroProveedor != "")
+            $stmtNA->bindParam(":tp", $tercero, PDO::PARAM_INT);
+        $stmtNA->execute();
+        $resNA = $stmtNA->fetch();
+
+        $totalVentasLiquido = 0;
+        $totalIva = 0;
+        $totalDSLiquido = 0;
+        $totalDocs = 0;
+
+        // Venta (Solo Facturas)
+        if ($categoria == "todos" || $categoria == "facturas") {
+            $totalVentasLiquido += ($resVentas["t"] ?? 0);
+            $totalIva += ($resVentas["i"] ?? 0);
+            $totalDocs += ($resVentas["c"] ?? 0);
+        }
+
+        // Notas Crédito (Restan a venta)
+        if ($categoria == "todos" || $categoria == "nc") {
+            $totalVentasLiquido -= ($resNC["t"] ?? 0);
+            $totalDocs += ($resNC["c"] ?? 0);
+        }
+
+        // Doc Soporte (Solo DS)
+        if ($categoria == "todos" || $categoria == "ds") {
+            $totalDSLiquido += ($resDS["t"] ?? 0);
+            $totalDocs += ($resDS["c"] ?? 0);
+        }
+
+        // Notas Ajuste (Restan a DS)
+        if ($categoria == "todos" || $categoria == "na") {
+            $totalDSLiquido -= ($resNA["t"] ?? 0);
+            $totalDocs += ($resNA["c"] ?? 0);
+        }
+
+        return [
+            "totalVentas" => $totalVentasLiquido,
+            "totalIva" => $totalIva,
+            "totalDS" => $totalDSLiquido,
+            "totalDocs" => $totalDocs
+        ];
+    }
+
+    /*=============================================
+    OBTENER DATOS PARA GRÁFICO DE VENTAS
+    =============================================*/
+    static public function mdlObtenerVentasGrafico($fechaInicial, $fechaFinal, $categoria, $tercero = "todos")
+    {
+        $db = Conexion::conectar();
+        $inicio = $fechaInicial . " 00:00:00";
+        $fin = $fechaFinal . " 23:59:59";
+
+        $filtroCliente = ($tercero != "todos" && ($categoria == "todos" || $categoria == "facturas" || $categoria == "nc")) ? " AND id_cliente = :tc " : "";
+        $filtroProveedor = ($tercero != "todos" && ($categoria == "ds" || $categoria == "na")) ? " AND id_proveedor = :tp " : "";
+
+        if ($categoria == "ds") {
+            $stmt = $db->prepare("SELECT DATE(fecha_emision) as dia, SUM(monto_total) as total 
+                                  FROM documentos_soporte 
+                                  WHERE estado_dian IN ('aceptada', 'enviada') 
+                                  AND fecha_emision BETWEEN :s1 AND :e1 " . $filtroProveedor . "
+                                  GROUP BY DATE(fecha_emision) 
+                                  ORDER BY DATE(fecha_emision) ASC");
+        } else if ($categoria == "nc") {
+            $stmt = $db->prepare("SELECT DATE(IFNULL(fecha_envio_dian, fecha_creacion)) as dia, SUM(monto_total) as total 
+                                  FROM notas_credito 
+                                  WHERE estado_dian IN ('aceptada', 'enviada') 
+                                  AND IFNULL(fecha_envio_dian, fecha_creacion) BETWEEN :s1 AND :e1 " . $filtroCliente . "
+                                  GROUP BY DATE(IFNULL(fecha_envio_dian, fecha_creacion)) 
+                                  ORDER BY DATE(IFNULL(fecha_envio_dian, fecha_creacion)) ASC");
+        } else if ($categoria == "na") {
+            $stmt = $db->prepare("SELECT DATE(IFNULL(fecha_envio_dian, fecha_registro)) as dia, SUM(monto_total) as total 
+                                  FROM notas_ajuste_ds 
+                                  WHERE estado_dian IN ('aceptada', 'enviada') 
+                                  AND IFNULL(fecha_envio_dian, fecha_registro) BETWEEN :s1 AND :e1 " . $filtroProveedor . "
+                                  GROUP BY DATE(IFNULL(fecha_envio_dian, fecha_registro)) 
+                                  ORDER BY DATE(IFNULL(fecha_envio_dian, fecha_registro)) ASC");
+        } else {
+            // Para "todos" o "facturas", mostramos tendencia de ventas facturadas
+            $stmt = $db->prepare("SELECT DATE(fecha) as dia, SUM(total) as total 
+                                  FROM ventas 
+                                  WHERE estado_dian IN ('aceptada', 'enviada') 
+                                  AND fecha BETWEEN :s1 AND :e1 " . $filtroCliente . "
+                                  GROUP BY DATE(fecha) 
+                                  ORDER BY DATE(fecha) ASC");
+        }
+
+        $stmt->bindParam(":s1", $inicio, PDO::PARAM_STR);
+        $stmt->bindParam(":e1", $fin, PDO::PARAM_STR);
+
+        if ($categoria == "ds" || $categoria == "na") {
+            if ($filtroProveedor != "")
+                $stmt->bindParam(":tp", $tercero, PDO::PARAM_INT);
+        } else {
+            if ($filtroCliente != "")
+                $stmt->bindParam(":tc", $tercero, PDO::PARAM_INT);
+        }
+
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /*=============================================
+    MOSTRAR REPORTE DETALLADO (LISTADO CONSOLIDADO)
+    =============================================*/
+    static public function mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero = "todos")
+    {
+        $db = Conexion::conectar();
+        $inicio = $fechaInicial . " 00:00:00";
+        $fin = $fechaFinal . " 23:59:59";
+
+        $filtroCliente = ($tercero != "todos" && ($categoria == "todos" || $categoria == "facturas" || $categoria == "nc")) ? " AND id_cliente = :tc " : "";
+        $filtroProveedor = ($tercero != "todos" && ($categoria == "ds" || $categoria == "na")) ? " AND id_proveedor = :tp " : "";
+
+        $queryVentas = "(SELECT 'Factura' as tipo, numero_factura as numero, IFNULL(cl.nombre, 'Venta General') as tercero, IFNULL(us.nombre, 'Sistema/Varios') as vendedor, v.fecha as fecha, total as monto, estado_dian as estado, v.id as id_doc
+             FROM ventas v
+             LEFT JOIN clientes cl ON v.id_cliente = cl.id
+             LEFT JOIN usuarios us ON v.id_vendedor = us.id
+             WHERE v.estado_dian IN ('aceptada', 'enviada')
+             AND (v.fecha BETWEEN :i1 AND :f1 OR v.fecha_envio_dian BETWEEN :i2 AND :f2) " . str_replace(":tc", ":tc1", $filtroCliente) . ")";
+
+        $queryNC = "(SELECT 'Nota Crédito' as tipo, numero_nota_credito as numero, IFNULL(cl.nombre, 'Sin Cliente') as tercero, IFNULL(us.nombre, 'Sistema') as vendedor, IFNULL(fecha_envio_dian, fecha_creacion) as fecha, monto_total as monto, estado_dian as estado, nc.id as id_doc
+             FROM notas_credito nc
+             LEFT JOIN clientes cl ON nc.id_cliente = cl.id
+             LEFT JOIN usuarios us ON nc.id_usuario = us.id
+             WHERE nc.estado_dian IN ('aceptada', 'enviada')
+             AND IFNULL(nc.fecha_envio_dian, nc.fecha_creacion) BETWEEN :i3 AND :f3 " . str_replace(":tc", ":tc2", $filtroCliente) . ")";
+
+        $queryDS = "(SELECT 'Doc. Soporte' as tipo, numero_ds as numero, IFNULL(pr.nombre, 'Empresa General') as tercero, IFNULL(us.nombre, 'Admin') as vendedor, fecha_emision as fecha, monto_total as monto, estado_dian as estado, ds.id as id_doc
+             FROM documentos_soporte ds
+             LEFT JOIN proveedores pr ON ds.id_proveedor = pr.id
+             LEFT JOIN usuarios us ON ds.id_usuario = us.id
+             WHERE ds.estado_dian IN ('aceptada', 'enviada')
+             AND ds.fecha_emision BETWEEN :i4 AND :f4 " . str_replace(":tp", ":tp1", $filtroProveedor) . ")";
+
+        $queryNA = "(SELECT 'Nota Ajuste DS' as tipo, numero_nota_ajuste as numero, IFNULL(pr.nombre, 'Sin Proveedor') as tercero, IFNULL(us.nombre, 'Admin') as vendedor, IFNULL(fecha_envio_dian, fecha_registro) as fecha, monto_total as monto, estado_dian as estado, na.id as id_doc
+             FROM notas_ajuste_ds na
+             LEFT JOIN proveedores pr ON na.id_proveedor = pr.id
+             LEFT JOIN usuarios us ON na.id_usuario = us.id
+             WHERE na.estado_dian IN ('aceptada', 'enviada')
+             AND IFNULL(na.fecha_envio_dian, na.fecha_registro) BETWEEN :i5 AND :f5 " . str_replace(":tp", ":tp2", $filtroProveedor) . ")";
+
+        $uniones = [];
+        if ($categoria == "todos" || $categoria == "facturas") {
+            $uniones[] = $queryVentas;
+        }
+
+        if ($categoria == "todos" || $categoria == "nc") {
+            $uniones[] = $queryNC;
+        }
+
+        if ($categoria == "todos" || $categoria == "ds") {
+            $uniones[] = $queryDS;
+        }
+
+        if ($categoria == "todos" || $categoria == "na") {
+            $uniones[] = $queryNA;
+        }
+
+        $sql = implode(" UNION ALL ", $uniones) . " ORDER BY fecha DESC";
+        $stmt = $db->prepare($sql);
+
+        if ($categoria == "todos" || $categoria == "facturas") {
+            $stmt->bindParam(":i1", $inicio, PDO::PARAM_STR);
+            $stmt->bindParam(":f1", $fin, PDO::PARAM_STR);
+            $stmt->bindParam(":i2", $inicio, PDO::PARAM_STR);
+            $stmt->bindParam(":f2", $fin, PDO::PARAM_STR);
+            if ($filtroCliente != "")
+                $stmt->bindParam(":tc1", $tercero, PDO::PARAM_INT);
+        }
+
+        if ($categoria == "todos" || $categoria == "nc") {
+            $stmt->bindParam(":i3", $inicio, PDO::PARAM_STR);
+            $stmt->bindParam(":f3", $fin, PDO::PARAM_STR);
+            if ($filtroCliente != "")
+                $stmt->bindParam(":tc2", $tercero, PDO::PARAM_INT);
+        }
+
+        if ($categoria == "todos" || $categoria == "ds") {
+            $stmt->bindParam(":i4", $inicio, PDO::PARAM_STR);
+            $stmt->bindParam(":f4", $fin, PDO::PARAM_STR);
+            if ($filtroProveedor != "")
+                $stmt->bindParam(":tp1", $tercero, PDO::PARAM_INT);
+        }
+
+        if ($categoria == "todos" || $categoria == "na") {
+            $stmt->bindParam(":i5", $inicio, PDO::PARAM_STR);
+            $stmt->bindParam(":f5", $fin, PDO::PARAM_STR);
+            if ($filtroProveedor != "")
+                $stmt->bindParam(":tp2", $tercero, PDO::PARAM_INT);
+        }
+
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
 }

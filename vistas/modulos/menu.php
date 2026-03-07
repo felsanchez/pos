@@ -277,6 +277,12 @@
                         <span>Notas Crédito</span>
                     </a>
                 </li>
+                <li>
+                    <a href="reportes-facturacion">
+                        <i class="fa fa-circle-o"></i>
+                        <span>Reportes</span>
+                    </a>
+                </li>
             </ul>
         </li>';
       }

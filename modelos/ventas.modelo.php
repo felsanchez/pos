@@ -284,10 +284,9 @@ class ModeloVentas
 	//Obtener el siguiente código de venta
 	static public function mdlObtenerSiguienteConsecutivo($tabla)
 	{
-		// 🔹 NUEVA LÓGICA ROBUSTA: Obtener el máximo código real existente en ventas
-		// Esto previene duplicados si la tabla 'consecutivos' se desincroniza
-
-		$stmt = Conexion::conectar()->prepare("SELECT MAX(codigo) as max_codigo FROM $tabla");
+		// Obtener el máximo código solo de VENTAS REGULARES (sin factura electrónica)
+		// Las FE tienen su propio consecutivo (mdlObtenerSiguienteConsecutivoFactus)
+		$stmt = Conexion::conectar()->prepare("SELECT MAX(codigo) as max_codigo FROM $tabla WHERE (numero_factura IS NULL OR numero_factura = '')");
 		$stmt->execute();
 		$resultado = $stmt->fetch();
 		$stmt = null;
@@ -296,7 +295,7 @@ class ModeloVentas
 			// El siguiente consecutivo es el máximo encontrado + 1
 			return $resultado["max_codigo"] + 1;
 		} else {
-			// Si no hay ventas, iniciar desde 10001
+			// Si no hay ventas regulares, iniciar desde 10001
 			return 10001;
 		}
 	}
@@ -322,6 +321,7 @@ class ModeloVentas
 
 			$stmt = Conexion::conectar()->prepare("SELECT v.*,
 													c.nombre AS nombre_cliente,
+													c.email AS email_cliente,
 													u.nombre AS nombre_vendedor
 													FROM $tabla v
 													LEFT JOIN clientes c ON v.id_cliente = c.id
@@ -340,6 +340,7 @@ class ModeloVentas
 
 			$stmt = Conexion::conectar()->prepare("SELECT v.*,
 													c.nombre AS nombre_cliente,
+													c.email AS email_cliente,
 													u.nombre AS nombre_vendedor
 													FROM $tabla v
 													LEFT JOIN clientes c ON v.id_cliente = c.id
@@ -367,6 +368,7 @@ class ModeloVentas
 
 				$stmt = Conexion::conectar()->prepare("SELECT v.*,
 														c.nombre AS nombre_cliente,
+														c.email AS email_cliente,
 														u.nombre AS nombre_vendedor
 														FROM $tabla v
 														LEFT JOIN clientes c ON v.id_cliente = c.id
@@ -379,6 +381,7 @@ class ModeloVentas
 
 				$stmt = Conexion::conectar()->prepare("SELECT v.*,
 														c.nombre AS nombre_cliente,
+														c.email AS email_cliente,
 														u.nombre AS nombre_vendedor
 														FROM $tabla v
 														LEFT JOIN clientes c ON v.id_cliente = c.id
@@ -404,6 +407,7 @@ class ModeloVentas
 	{
 		$stmt = Conexion::conectar()->prepare("SELECT v.*,
 												c.nombre AS nombre_cliente,
+												c.email AS email_cliente,
 												u.nombre AS nombre_vendedor
 												FROM $tabla v
 												LEFT JOIN clientes c ON v.id_cliente = c.id

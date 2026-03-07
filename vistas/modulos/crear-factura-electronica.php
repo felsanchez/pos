@@ -139,6 +139,33 @@ if ($ultimaVenta) {
                   </div>
                 </div>
 
+                <!-- Forma de Pago DIAN -->
+                <div class="row">
+                  <div class="col-xs-12 col-md-6">
+                    <div class="form-group">
+                      <label><i class="fa fa-credit-card"></i> Forma de Pago</label>
+                      <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-exchange"></i></span>
+                        <select class="form-control" id="forma_pago_dian" name="forma_pago_dian">
+                          <option value="1" selected>Contado (Pago inmediato)</option>
+                          <option value="2">Crédito (Pago a plazo)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-xs-12 col-md-6" id="campo_fecha_vencimiento" style="display:none;">
+                    <div class="form-group">
+                      <label><i class="fa fa-calendar"></i> Fecha de Vencimiento</label>
+                      <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                        <input type="date" class="form-control" id="fecha_vencimiento_fe" name="fecha_vencimiento"
+                          placeholder="YYYY-MM-DD">
+                      </div>
+                      <small class="text-muted">Requerido para pago a crédito</small>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Cliente -->
                 <div class="row">
                   <div class="col-xs-12">
@@ -629,6 +656,39 @@ MODAL AGREGAR CLIENTE
           });
           return false;
         }
+      });
+    </script>
+
+    <!-- FORMA DE PAGO: mostrar/ocultar fecha vencimiento -->
+    <script>
+      $(document).ready(function () {
+
+        // Toggle del campo fecha de vencimiento
+        $('#forma_pago_dian').on('change', function () {
+          if ($(this).val() === '2') {
+            $('#campo_fecha_vencimiento').slideDown(200);
+            $('#fecha_vencimiento_fe').attr('required', true);
+          } else {
+            $('#campo_fecha_vencimiento').slideUp(200);
+            $('#fecha_vencimiento_fe').removeAttr('required').val('');
+          }
+        });
+
+        // Validar al enviar: si es crédito, exigir fecha
+        $(document).on('submit', '.formularioVenta', function (e) {
+          if ($('#forma_pago_dian').val() === '2' && !$('#fecha_vencimiento_fe').val()) {
+            e.preventDefault();
+            swal({
+              type: 'warning',
+              title: 'Fecha de Vencimiento requerida',
+              text: 'Para facturas a crédito debe ingresar la fecha de vencimiento.',
+              showConfirmButton: true,
+              confirmButtonText: 'Aceptar'
+            });
+            return false;
+          }
+        });
+
       });
     </script>
 

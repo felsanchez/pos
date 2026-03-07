@@ -2020,8 +2020,8 @@ class ControladorFactus
 				$numeroActual = $numeroRangoBase + 1;
 				$numeroRango = $prefijo . $numeroActual;
 
-				// Actualizar el número actual en BD para el rango
-				ModeloFactus::mdlActualizarNumeroActualRangoNC($rango["id_factus"], $numeroActual);
+				// COMENTADO: No actualizar el contador hasta que se firme
+				// ModeloFactus::mdlActualizarNumeroActualRangoNC($rango["id_factus"], $numeroActual);
 			}
 
 			// 2. Guardar en BD como borrador
@@ -2297,5 +2297,109 @@ class ControladorFactus
 		// assuming standard structure:
 		$respuesta = ModeloFactus::mdlMostrarNotasCredito($tabla, $item, $valor);
 		return $respuesta;
+	}
+
+	/*=============================================
+	MOSTRAR ÚLTIMA NOTA DE AJUSTE DS
+	=============================================*/
+	static public function ctrMostrarUltimaNotaAjusteDS()
+	{
+		$tabla = "notas_ajuste_ds";
+		return ModeloFactus::mdlMostrarUltimaNotaAjusteDS($tabla);
+	}
+
+	/*=============================================
+	MOSTRAR ÚLTIMA NOTA CRÉDITO
+	=============================================*/
+	static public function ctrMostrarUltimaNotaCredito()
+	{
+		$tabla = "notas_credito";
+		return ModeloFactus::mdlMostrarUltimaNotaCredito($tabla);
+	}
+
+	/*=============================================
+	OBTENER KPIs PARA REPORTES
+	=============================================*/
+	static public function ctrObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero = "todos")
+	{
+		$respuesta = ModeloFactus::mdlObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero);
+		return $respuesta;
+	}
+
+	/*=============================================
+	OBTENER DATOS PARA GRÁFICO DE VENTAS
+	=============================================*/
+	static public function ctrObtenerVentasGrafico($fechaInicial, $fechaFinal, $categoria, $tercero = "todos")
+	{
+		$respuesta = ModeloFactus::mdlObtenerVentasGrafico($fechaInicial, $fechaFinal, $categoria, $tercero);
+		return $respuesta;
+	}
+
+	/*=============================================
+	MOSTRAR REPORTE DETALLADO
+	=============================================*/
+	static public function ctrMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero = "todos")
+	{
+		$respuesta = ModeloFactus::mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero);
+		return $respuesta;
+	}
+
+	/*=============================================
+	DESCARGAR REPORTE EXCEL (FACTURACIÓN)
+	=============================================*/
+	public function ctrDescargarReporteFacturacion()
+	{
+		if (isset($_GET["reporte"])) {
+
+			$fechaInicial = $_GET["fechaInicial"] ?? null;
+			$fechaFinal = $_GET["fechaFinal"] ?? null;
+			$categoria = $_GET["categoria"] ?? "todos";
+			$tercero = $_GET["tercero"] ?? "todos";
+
+			// Obtener datos
+			$reporte = ModeloFactus::mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero);
+
+			/*=============================================
+			CREAMOS EL ARCHIVO DE EXCEL
+			=============================================*/
+			$fi_name = $fechaInicial ? $fechaInicial : "Inicio";
+			$ff_name = $fechaFinal ? $fechaFinal : "Fin";
+			$Name = $_GET["reporte"] . '_' . $categoria . '_' . $fi_name . '_al_' . $ff_name . '.xls';
+
+			header('Expires: 0');
+			header('Cache-control: private');
+			header("Content-type: application/vnd.ms-excel"); // Archivo de Excel
+			header("Cache-Control: cache, must-revalidate");
+			header('Content-Description: File Transfer');
+			header('Last-Modified: ' . date('D, d M Y H:i:s'));
+			header("Pragma: public");
+			header('Content-Disposition:; filename="' . $Name . '"');
+			header("Content-Transfer-Encoding: binary");
+
+			echo utf8_decode("<table border='0'> 
+				<tr> 
+				<td style='font-weight:bold; border:1px solid #eee;'>TIPO DOCUMENTO</td> 
+				<td style='font-weight:bold; border:1px solid #eee;'>NÚMERO</td>
+				<td style='font-weight:bold; border:1px solid #eee;'>CLIENTE / PROVEEDOR</td>
+				<td style='font-weight:bold; border:1px solid #eee;'>VENDEDOR / USUARIO</td>
+				<td style='font-weight:bold; border:1px solid #eee;'>FECHA Y HORA</td>
+				<td style='font-weight:bold; border:1px solid #eee;'>MONTO TOTAL</td>
+				<td style='font-weight:bold; border:1px solid #eee;'>ESTADO DIAN</td>		
+				</tr>");
+
+			foreach ($reporte as $row => $item) {
+				echo utf8_decode("<tr>
+							<td style='border:1px solid #eee;'>" . $item["tipo"] . "</td> 
+							<td style='border:1px solid #eee;'>" . $item["numero"] . "</td>
+							<td style='border:1px solid #eee;'>" . $item["tercero"] . "</td>
+							<td style='border:1px solid #eee;'>" . $item["vendedor"] . "</td>
+							<td style='border:1px solid #eee;'>" . $item["fecha"] . "</td>
+							<td style='border:1px solid #eee;'>" . number_format((float) $item["monto"], 2, '.', '') . "</td>
+							<td style='border:1px solid #eee;'>" . ucfirst((string) $item["estado"]) . "</td>
+						</tr>");
+			}
+
+			echo "</table>";
+		}
 	}
 }

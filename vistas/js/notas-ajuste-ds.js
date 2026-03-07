@@ -366,4 +366,86 @@ $(document).ready(function () {
             }
         });
     });
+
+    /*=============================================
+    ABRIR MODAL ENVIAR EMAIL NA
+    =============================================*/
+    $(document).on("click", ".btnEnviarEmailNA", function () {
+        var idNA = $(this).attr("idNA");
+        var emailProveedor = $(this).attr("emailProveedor");
+        var nombreProveedor = $(this).attr("nombreProveedor");
+
+        $("#idNA_Email").val(idNA);
+        $("#emailDestinoNA").val(emailProveedor);
+        $("#nombreProveedorEmailNA").val(nombreProveedor);
+        $("#modalEnviarEmailNA").modal("show");
+    });
+
+    /*=============================================
+    ENVIAR CORREO NA (CONFIRMADO)
+    =============================================*/
+    $(document).on("click", ".btnEnviarCorreoConfirmadoNA", function () {
+        var idNA = $("#idNA_Email").val();
+        var emailDestino = $("#emailDestinoNA").val();
+
+        if (emailDestino == "") {
+            swal({
+                title: "Error",
+                text: "Por favor ingrese un correo de destino",
+                type: "error",
+                confirmButtonText: "¡Cerrar!"
+            });
+            return;
+        }
+
+        // Mostrar loading
+        swal({
+            title: "Enviando...",
+            text: "Por favor espere mientras se envía el correo",
+            allowOutsideClick: false,
+            onOpen: () => {
+                swal.showLoading();
+            }
+        });
+
+        var datos = new FormData();
+        datos.append("idNA", idNA);
+        datos.append("emailDestino", emailDestino);
+
+        $.ajax({
+            url: "ajax/facturacion.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function (respuesta) {
+                if (respuesta.status == "success") {
+                    swal({
+                        title: "¡Enviado!",
+                        text: respuesta.mensaje,
+                        type: "success",
+                        confirmButtonText: "¡Cerrar!"
+                    });
+                    $("#modalEnviarEmailNA").modal("hide");
+                } else {
+                    swal({
+                        title: "Error",
+                        text: respuesta.mensaje,
+                        type: "error",
+                        confirmButtonText: "¡Cerrar!"
+                    });
+                }
+            },
+            error: function () {
+                swal({
+                    title: "Error de comunicación",
+                    text: "No se pudo conectar con el servidor para enviar el correo.",
+                    type: "error",
+                    confirmButtonText: "¡Cerrar!"
+                });
+            }
+        });
+    });
 });

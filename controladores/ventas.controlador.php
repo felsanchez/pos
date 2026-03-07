@@ -1274,35 +1274,6 @@ class ControladorVentas
 
 			$traerVenta = ModeloVentas::mdlMostrarVentas($tabla, $item, $valor);
 
-			/*=============================================
-			VALIDAR QUE SEA LA ÚLTIMA VENTA (PARA MANTENER CONSECUTIVO)
-			=============================================*/
-			$ultimaVenta = ModeloVentas::mdlMostrarUltimaVenta($tabla);
-
-			if ($ultimaVenta["id"] > $traerVenta["id"]) {
-				echo '<script>
-
-					swal({
-						  type: "error",
-						  title: "Error al eliminar",
-						  text: "No se puede eliminar la factura ' . $traerVenta["codigo"] . ' porque existen facturas posteriores (ej: ' . $ultimaVenta["codigo"] . '). Debe eliminar las facturas en orden descendente para mantener el consecutivo.",
-						  showConfirmButton: true,
-						  confirmButtonText: "Cerrar"
-						  }).then(function(result){
-								if (result.value) {
-									// Limpiar solo el parámetro idVenta de la URL para mantener filtros y evitar recargas accidentales
-									if (window.history.replaceState) {
-										var url = new URL(window.location.href);
-										url.searchParams.delete("idVenta");
-										window.history.replaceState(null, "", url.toString());
-									}
-								}
-							})
-
-					</script>';
-
-				return;
-			}
 
 
 			/*=============================================
@@ -1953,6 +1924,10 @@ class ControladorVentas
 				"extra" => null,
 				"retenciones" => isset($_POST["datosRetenciones"]) ? $_POST["datosRetenciones"] : null,
 				"resolucion_id" => isset($_POST["resolucion_id"]) ? $_POST["resolucion_id"] : null,
+				"forma_pago_dian" => isset($_POST["forma_pago_dian"]) ? $_POST["forma_pago_dian"] : "1",
+				"fecha_vencimiento" => isset($_POST["fecha_vencimiento"]) && !empty($_POST["fecha_vencimiento"]) ? $_POST["fecha_vencimiento"] : null,
+				"orden_compra" => null,
+				"metodo_pago_dian_id" => null,
 				"estado_dian" => 'pendiente',
 				"fecha_envio_dian" => null
 			);

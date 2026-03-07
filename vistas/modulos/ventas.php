@@ -363,6 +363,7 @@ if ($xml) {
               </select>
             </div>
 
+
             <!-- Botón Rango de Fecha -->
             <button type="button" class="btn btn-default" id="daterange-btn">
               <span>
@@ -509,6 +510,12 @@ if ($xml) {
                   return $venta["id_vendedor"] == $usuarioId;
                 });
               }
+
+              // Filtrar SIEMPRE para excluir facturas electrónicas (tienen numero_factura)
+              // Las FE tienen su propia vista dedicada
+              $respuesta = array_filter($respuesta, function ($venta) {
+                return empty($venta['numero_factura']);
+              });
 
 
               foreach ($respuesta as $key => $value) {
