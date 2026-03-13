@@ -1,0 +1,5 @@
+﻿id	descripcion	unidad_medida_id	unidad_medida_codigo
+104	camisa grande	NULL	94
+105	pantalon moda	NULL	94
+109	producto prueba 001	NULL	94
+110	pantalon bonito1	NULL	94

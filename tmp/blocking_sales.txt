@@ -1,0 +1,30 @@
+Array
+(
+    [0] => Array
+        (
+            [id] => 765
+            [codigo] => 990000186
+            [numero_factura] => 
+            [estado_dian] => 
+            [estado] => venta
+        )
+
+    [1] => Array
+        (
+            [id] => 638
+            [codigo] => 54
+            [numero_factura] => 
+            [estado_dian] => pendiente
+            [estado] => venta
+        )
+
+    [2] => Array
+        (
+            [id] => 618
+            [codigo] => 48
+            [numero_factura] => 
+            [estado_dian] => pendiente
+            [estado] => venta
+        )
+
+)

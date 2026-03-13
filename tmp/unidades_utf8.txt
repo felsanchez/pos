@@ -1,0 +1,8 @@
+﻿id	codigo	nombre	codigo_dian	activo	fecha_sincronizacion
+1	70	unidad	94	1	2026-01-16 06:16:24
+2	414	kilogramo	KGM	1	2026-01-16 06:16:24
+3	449	libra	LBR	1	2026-01-16 06:16:24
+4	499	mililitro	MLT	1	2026-01-16 06:16:24
+5	512	metro	MTR	1	2026-01-16 06:16:24
+6	874	galón	GLL	1	2026-01-16 06:16:24
+7	880	gramo	GRM	1	2026-01-16 06:16:24

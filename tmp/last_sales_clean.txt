@@ -1,0 +1,93 @@
+Array
+(
+    [0] => Array
+        (
+            [id] => 765
+            [codigo] => 990000186
+            [numero_factura] => 
+            [estado_dian] => 
+            [estado] => venta
+        )
+
+    [1] => Array
+        (
+            [id] => 743
+            [codigo] => 990000185
+            [numero_factura] => SETP990000185
+            [estado_dian] => enviada
+            [estado] => venta
+        )
+
+    [2] => Array
+        (
+            [id] => 742
+            [codigo] => 990000184
+            [numero_factura] => SETP990000184
+            [estado_dian] => enviada
+            [estado] => venta
+        )
+
+    [3] => Array
+        (
+            [id] => 741
+            [codigo] => 990000181
+            [numero_factura] => SETP990000181
+            [estado_dian] => enviada
+            [estado] => venta
+        )
+
+    [4] => Array
+        (
+            [id] => 737
+            [codigo] => 990000180
+            [numero_factura] => SETP990000180
+            [estado_dian] => enviada
+            [estado] => venta
+        )
+
+    [5] => Array
+        (
+            [id] => 736
+            [codigo] => 990000179
+            [numero_factura] => SETP990000179
+            [estado_dian] => enviada
+            [estado] => venta
+        )
+
+    [6] => Array
+        (
+            [id] => 735
+            [codigo] => 990000178
+            [numero_factura] => SETP990000178
+            [estado_dian] => enviada
+            [estado] => venta
+        )
+
+    [7] => Array
+        (
+            [id] => 734
+            [codigo] => 990000177
+            [numero_factura] => SETP990000177
+            [estado_dian] => enviada
+            [estado] => venta
+        )
+
+    [8] => Array
+        (
+            [id] => 731
+            [codigo] => 990000176
+            [numero_factura] => SETP990000176
+            [estado_dian] => enviada
+            [estado] => venta
+        )
+
+    [9] => Array
+        (
+            [id] => 728
+            [codigo] => 990000174
+            [numero_factura] => SETP990000174
+            [estado_dian] => enviada
+            [estado] => venta
+        )
+
+)

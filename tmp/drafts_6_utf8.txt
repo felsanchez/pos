@@ -1,0 +1,7 @@
+﻿id	codigo	numero_factura	resolucion_id	estado_dian	fecha
+638	54	NULL	35	pendiente	2026-03-07 23:01:03
+636	53	NULL	35	pendiente	2026-03-07 22:50:28
+634	52	NULL	35	pendiente	2026-03-07 22:05:15
+631	50	NULL	35	pendiente	2026-03-07 06:28:07
+619	49	NULL	35	pendiente	2026-03-07 06:19:01
+404	8	NULL	4	enviada	2026-01-28 02:07:43

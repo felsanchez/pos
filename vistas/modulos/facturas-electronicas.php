@@ -518,12 +518,38 @@ if ($xml) {
               }
 
 
+              // Pre-procesar borradores para numeración predictiva
+              $borradoresTotal = 0;
+              foreach ($respuesta as $v) {
+                if (empty($v["numero_factura"]) && in_array(($v["estado_dian"] ?? 'pendiente'), ['pendiente', 'creada', 'borrador'])) {
+                  $borradoresTotal++;
+                }
+              }
+
+              $siguienteConsecutivoBase = ModeloFactus::mdlObtenerSiguienteConsecutivoFactus();
+              $borradoresEncontrados = 0;
+
               foreach ($respuesta as $key => $value) {
 
-                echo '<tr>
-                        <td>' . ($key + 1) . '</td>
+                // Lógica de numeración predictiva para borradores
+                if (!empty($value["numero_factura"])) {
+                  $numeroMostrar = $value["numero_factura"];
+                  $esBorrador = false;
+                } else {
+                  // Es borrador: Calculamos número predicho si es un estado de borrador real
+                  if (in_array(($value["estado_dian"] ?? 'pendiente'), ['pendiente', 'creada', 'borrador'])) {
+                    $numeroMostrar = $prefijoDian . ($siguienteConsecutivoBase - 1 - $borradoresEncontrados);
+                    $esBorrador = true;
+                    $borradoresEncontrados++;
+                  } else {
+                    // Otros casos (ej. rechazada sin numero): Mostramos codigo local o marcador
+                    $numeroMostrar = $prefijoDian . $value["codigo"];
+                    $esBorrador = false;
+                  }
+                }
 
-                         <td' . ($value["numero_factura"] == "" ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . ($value["numero_factura"] != "" ? $value["numero_factura"] : $prefijoDian . $value["codigo"]) . '</td>';
+                echo '<td>' . ($key + 1) . '</td>
+                      <td' . ($esBorrador ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . $numeroMostrar . '</td>';
 
                 // Usar nombres que ya vienen del JOIN en la consulta SQL
                 $nombreCliente = !empty($value["nombre_cliente"]) ? $value["nombre_cliente"] : "Cliente no encontrado";
@@ -639,8 +665,8 @@ if ($xml) {
                 }
 
                 if ($_SESSION["perfil"] == "Administrador") {
-                  // Solo mostrar botón eliminar si la factura NO ha sido firmada/enviada
-                  $estadosNoEliminables = ['enviada', 'rechazada', 'aceptada'];
+                  // Solo mostrar botón eliminar si la factura NO ha sido firmada/aceptada
+                  $estadosNoEliminables = ['enviada', 'aceptada'];
                   if (!in_array($value["estado_dian"], $estadosNoEliminables)) {
                     echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '">
                                         <i class="fa fa-times"></i>
@@ -691,11 +717,31 @@ if ($xml) {
               //$badgeDian = '<span class="badge bg-gray">DIAN: Pendiente</span>';
             }
 
+            // Numeración predictiva para móvil
+            if (!empty($value["numero_factura"])) {
+              $numeroMostrarMovil = $value["numero_factura"];
+            } else {
+              // Buscar el índice del borrador actual en la lista filtrada de borradores reales
+              $mismaVenta = array_filter($respuesta, function ($v) {
+                return empty($v["numero_factura"]) && in_array(($v["estado_dian"] ?? 'pendiente'), ['pendiente', 'creada', 'borrador']);
+              });
+              $idsBorradores = array_values(array_map(function ($v) {
+                return $v["id"];
+              }, $mismaVenta));
+              $indexBorrador = array_search($value["id"], $idsBorradores);
+
+              if ($indexBorrador !== false) {
+                $numeroMostrarMovil = $prefijoDian . ($siguienteConsecutivoBase - 1 - $indexBorrador);
+              } else {
+                $numeroMostrarMovil = $prefijoDian . $value["codigo"];
+              }
+            }
+
             echo '<div class="card-venta">
 
                       <div class="card-venta-header">
                         <div class="card-venta-codigo">
-                          ' . $formatoCodigoVenta . $value["codigo"] . ' ' . $badgeDian . '
+                          ' . $numeroMostrarMovil . ' ' . $badgeDian . '
                         </div>
                         <div class="card-venta-acciones">
                           <div class="btn-group">
@@ -713,8 +759,8 @@ if ($xml) {
                             </button>';
 
             if ($_SESSION["perfil"] == "Administrador") {
-              // Solo mostrar botón eliminar si la factura NO ha sido firmada/enviada
-              $estadosNoEliminables = ['enviada', 'rechazada', 'aceptada'];
+              // Solo mostrar botón eliminar si la factura NO ha sido firmada/aceptada
+              $estadosNoEliminables = ['enviada', 'aceptada'];
               if (!in_array($value["estado_dian"], $estadosNoEliminables)) {
                 echo '<button class="btn btn-danger btn-xs btnEliminarVenta" idVenta="' . $value["id"] . '">
                           <i class="fa fa-times"></i>

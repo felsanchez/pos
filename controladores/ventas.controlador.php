@@ -1773,6 +1773,16 @@ class ControladorVentas
 		return ModeloVentas::mdlMostrarUltimaVentaPorEstado($tabla, $estado);
 	}
 
+	/*=============================================
+	MOSTRAR ULTIMA FACTURA ELECTRÓNICA
+	=============================================*/
+	static public function ctrMostrarUltimaFacturaElectronica()
+	{
+		$tabla = "ventas";
+		$respuesta = ModeloVentas::mdlMostrarUltimaFacturaElectronica($tabla);
+		return $respuesta;
+	}
+
 
 	//Guardar notas
 	static public function ctrActualizarNotaVenta($datos)
@@ -1847,6 +1857,8 @@ class ControladorVentas
 					array_push($totalProductosComprados, $value["cantidad"]);
 
 					// Verificar si es variante
+
+					// Verificar si es variante
 					if (isset($value["esVariante"]) && $value["esVariante"] == "1") {
 						$tablaVariantes = "productos_variantes";
 						$idVariante = $value["idVariante"];
@@ -1899,7 +1911,7 @@ class ControladorVentas
 			ModeloClientes::mdlActualizarCliente($tablaClientes, $item1b, $valor1b, $valor);
 
 			/*=============================================
-			3. GUARDAR VENTA
+			3. GUARDAR VENTA (O CONVERTIR SI ES ORDEN)
 			=============================================*/
 			date_default_timezone_set('America/Bogota');
 			$fechaHoraActual = date('Y-m-d H:i:s');
@@ -1907,7 +1919,7 @@ class ControladorVentas
 			$datos = array(
 				"id_vendedor" => $_POST["idVendedor"],
 				"id_cliente" => $_POST["seleccionarCliente"],
-				"codigo" => $codigoVenta,
+				"codigo" => $_POST["nuevaVenta"], // USAR EL CÓDIGO DE FACTUS COMO CÓDIGO INTERNO
 				"productos" => $_POST["listaProductos"],
 				"impuesto" => $_POST["nuevoPrecioImpuesto"],
 				"neto" => $_POST["nuevoPrecioNeto"],
@@ -1929,9 +1941,24 @@ class ControladorVentas
 				"orden_compra" => null,
 				"metodo_pago_dian_id" => null,
 				"estado_dian" => 'pendiente',
-				"fecha_envio_dian" => null
+				"cufe" => null,
+				"qr_data" => null,
+				"xml_dian" => null,
+				"pdf_dian" => null,
+				"mensaje_dian" => "Pendiente de envío",
+				"fecha_envio_dian" => null,
+				"numero_factura" => null
 			);
 
+			// 🔹 SI ES CONVERSIÓN DE ORDEN, ELIMINAR LA ORDEN ORIGINAL E INSERTAR LA FE
+			if (isset($_POST["editarVenta"]) && !empty($_POST["editarVenta"])) {
+				$ventaOriginal = ModeloVentas::mdlMostrarVentas($tabla, "codigo", $_POST["editarVenta"]);
+				if ($ventaOriginal) {
+					ModeloVentas::mdlEliminarVenta($tabla, $ventaOriginal["id"]);
+				}
+			}
+
+			// INSERTAR COMO UNA NUEVA VENTA (TIPO FE)
 			$respuesta = ModeloVentas::mdlIngresarVenta($tabla, $datos);
 
 			if ($respuesta == "ok") {
@@ -1943,133 +1970,40 @@ class ControladorVentas
 				4. ENVIAR A FACTUS
 				=============================================*/
 
-				// Preparar Items Factus
-				$itemsFactus = array();
-				foreach ($listaProductos as $prod) {
-					// Consultar datos reales del producto para obtener el código (SKU) y tributos
-					$productoInfo = ModeloProductos::mdlMostrarProductos("productos", "id", $prod["id"], "id");
-					$codigoReferencia = $productoInfo && !empty($productoInfo["codigo"]) ? $productoInfo["codigo"] : "GEN-001";
+				/*=============================================
+				4. ENVIAR A FACTUS (Refactorizado para usar lógica unificada)
+				=============================================*/
+				require_once "factus.controlador.php";
 
-					// Lógica de Impuestos
-					$tasaImpuesto = isset($productoInfo["tasa_impuesto"]) && $productoInfo["tasa_impuesto"] !== "" ? $productoInfo["tasa_impuesto"] : 19.00;
-					$tributoId = isset($productoInfo["tributo_id"]) && $productoInfo["tributo_id"] !== "" ? $productoInfo["tributo_id"] : 1;
-					$esExcluido = isset($productoInfo["es_excluido"]) ? $productoInfo["es_excluido"] : 0;
-
-					$itemsFactus[] = array(
-						"code_reference" => $codigoReferencia,
-						"name" => $prod["descripcion"],
-						"quantity" => $prod["cantidad"],
-						"discount_rate" => 0,
-						"price" => $prod["precio"],
-						"tax_rate" => number_format((float) $tasaImpuesto, 2, '.', ''),
-						"unit_measure_id" => isset($productoInfo["unidad_medida_id"]) && !empty($productoInfo["unidad_medida_id"]) ? $productoInfo["unidad_medida_id"] : 70,
-						"standard_code_id" => 1,
-						"is_excluded" => $esExcluido,
-						"tribute_id" => $tributoId,
-						"withholding_taxes" => []
-					);
-				}
-
-				// Cliente
-				// Mapeo básico de tipo de documento (3 = Cédula, 6 = RUT - por ahora default 3)
-				$clienteFactus = array(
-					"identification" => $traerCliente["documento"],
-					"dv" => $traerCliente["dv"] ?? null,
-					"company" => null,
-					"trade_name" => null,
-					"names" => $traerCliente["nombre"],
-					"address" => $traerCliente["direccion"],
-					"email" => $traerCliente["email"],
-					"phone" => $traerCliente["telefono"],
-					"legal_organization_id" => "2",
-					"tribute_id" => "21",
-					"identification_document_id" => "3"
-				);
-
-				// Obtener ID real de Factus para el rango
-				$rangoFactus = ModeloFactus::mdlObtenerRangoActivo();
-				$idRangoFactus = $rangoFactus["id_factus"];
-
-				// Obtener código de medio de pago DIAN
-				$codigoMedioPago = ModeloFactus::mdlObtenerCodigoMedioPago($_POST["listaMetodoPago"]);
-
-				// Payload
-				$facturaPayload = array(
-					"numbering_range_id" => $idRangoFactus,
-					"reference_code" => $codigoVenta,
-					"observation" => $_POST["notas"],
-					"payment_form" => "1",
-					"payment_method_code" => $codigoMedioPago,
-					"customer" => $clienteFactus,
-					"items" => $itemsFactus
-				);
-
-				// Enviar API
-				// Garantizar que el token sea válido (refrescar si expiró)
-				$token = ModeloFactus::mdlGarantizarTokenValido();
-
-				if (!$token) {
-					// Si falló el refresco (ej: refresh token expirado), notificar error grave
-					echo '<script>
-						swal({
-						  type: "error",
-						  title: "Error de Autenticación Factus",
-						  text: "El token ha expirado y no se pudo renovar. Por favor, vuelva a iniciar sesión en Configuración Factus.",
-						  showConfirmButton: true,
-						  confirmButtonText: "Cerrar"
-						  })
-					</script>';
-					return;
-				}
 				// Recuperar ID venta
 				$ventaGuardada = ModeloVentas::mdlMostrarVentas($tabla, "codigo", $codigoVenta);
 				$idVenta = $ventaGuardada["id"];
 
-				$respuestaApi = ModeloFactus::mdlCrearFacturaElectronica($token, $facturaPayload);
-				$dataApi = json_decode($respuestaApi["respuesta"], true);
+				// Generar factura electrónica utilizando el controlador unificado
+				// Se usa false para guardar como borrador (SIN FIRMAR)
+				$resultadoFactura = ControladorFactus::ctrGenerarFacturaElectronica($idVenta, false);
 
-				if (isset($dataApi["data"]["bill"]["cufe"])) {
+				if (!$resultadoFactura["error"]) {
 					// EXITO
-					$datosActualizacion = array(
-						"estado_dian" => "aceptada",
-						"cufe" => $dataApi["data"]["bill"]["cufe"],
-						"qr_data" => $dataApi["data"]["bill"]["qr"],
-						"xml_dian" => $dataApi["data"]["bill"]["xml_url"] ?? "",
-						"pdf_dian" => $dataApi["data"]["bill"]["public_url"] ?? "",
-						"mensaje_dian" => "Factura Aprobada",
-						"fecha_envio_dian" => date('Y-m-d H:i:s')
-					);
-					ModeloFactus::mdlActualizarDatosFactura($idVenta, $datosActualizacion);
-
 					echo '<script>
 						swal({
 						  type: "success",
-						  title: "Factura Electrónica EXITOSA",
-                          html: "<h3>CUFE Generado</h3><p>La factura ha sido validada por la DIAN.</p>",
+						  title: "Factura Electrónica GUARDADA (Borrador)",
+                          html: "<h3>' . $resultadoFactura["mensaje"] . '</h3><p>La factura ha sido guardada correctamente como borrador. Puede firmarla desde el listado de facturas.</p>",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
 						  }).then(function(result){
 									if (result.value) {
-									window.location = "ventas";
+									window.location = "facturas-electronicas";
 									}
 								})
 						</script>';
 				} else {
 					// ERROR
-					$errorMsg = $dataApi["message"] ?? "Error desconocido en Factus";
-					if (isset($dataApi["data"]["errors"]))
-						$errorMsg .= " " . json_encode($dataApi["data"]["errors"]);
-
-					$datosActualizacion = array(
-						"estado_dian" => "rechazada",
-						"cufe" => null,
-						"qr_data" => null,
-						"xml_dian" => null,
-						"pdf_dian" => null,
-						"mensaje_dian" => substr($errorMsg, 0, 250),
-						"fecha_envio_dian" => date('Y-m-d H:i:s')
-					);
-					ModeloFactus::mdlActualizarDatosFactura($idVenta, $datosActualizacion);
+					$errorMsg = $resultadoFactura["mensaje"];
+					if (isset($resultadoFactura["errores"]) && !empty($resultadoFactura["errores"])) {
+						$errorMsg .= " " . implode(", ", $resultadoFactura["errores"]);
+					}
 
 					echo '<script>
 						swal({
@@ -2080,7 +2014,7 @@ class ControladorVentas
 						  confirmButtonText: "Cerrar"
 						  }).then(function(result){
 									if (result.value) {
-									window.location = "ventas";
+									window.location = "facturas-electronicas";
 									}
 								})
 						</script>';

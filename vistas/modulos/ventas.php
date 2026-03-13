@@ -511,10 +511,10 @@ if ($xml) {
                 });
               }
 
-              // Filtrar SIEMPRE para excluir facturas electrónicas (tienen numero_factura)
+              // Filtrar SIEMPRE para excluir facturas electrónicas (tienen numero_factura o resolucion_id)
               // Las FE tienen su propia vista dedicada
               $respuesta = array_filter($respuesta, function ($venta) {
-                return empty($venta['numero_factura']);
+                return empty($venta['numero_factura']) && empty($venta['resolucion_id']);
               });
 
 

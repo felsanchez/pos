@@ -1,0 +1,21 @@
+﻿Field	Type	Null	Key	Default	Extra
+id	int(11)	NO	PRI	NULL	auto_increment
+id_categoria	int(11)	NO	MUL	NULL	
+codigo	text	NO		NULL	
+descripcion	text	NO		NULL	
+imagen	text	NO		NULL	
+stock	int(11)	NO		NULL	
+id_proveedor	int(11)	YES	MUL	NULL	
+tiene_variantes	tinyint(1)	YES		0	
+precio_compra	float	NO		NULL	
+precio_venta	float	NO		NULL	
+ventas	int(11)	NO		NULL	
+fecha	timestamp	NO		current_timestamp()	on update current_timestamp()
+unidad_medida_id	int(11)	YES		70	
+codigo_estandar_id	int(11)	YES		1	
+es_excluido	tinyint(1)	YES		0	
+tributo_id	int(11)	YES	MUL	1	
+unidad_medida_codigo	varchar(10)	YES	MUL	94	
+tasa_impuesto	decimal(5,2)	YES		19.00	
+notas_facturacion	text	YES		NULL	
+scheme_id	varchar(10)	YES		NULL	

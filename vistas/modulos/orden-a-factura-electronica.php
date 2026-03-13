@@ -1,0 +1,478 @@
+<?php
+// Obtener configuración del sistema
+$configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
+$impuestoDefecto = !empty($configuracion["impuesto_defecto"]) ? $configuracion["impuesto_defecto"] : 0;
+$mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracion["medios_pago"]) : array("Efectivo", "Tarjeta Débito", "Tarjeta Crédito", "Nequi", "Bancolombia", "Cheque");
+
+// Obtener datos de Factus (Rango y Prefijo)
+$rangoFactus = ModeloFactus::mdlObtenerRangoActivo();
+$prefijoFactus = $rangoFactus ? $rangoFactus["prefijo"] : "FE";
+$resolucionId = $rangoFactus ? $rangoFactus["id"] : 0;
+
+// Obtener la orden a convertir
+$item = "id";
+$valor = $_GET["idVenta"];
+$venta = ControladorVentas::ctrMostrarVentas($item, $valor);
+
+// Datos del vendedor y cliente
+$vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $venta["id_vendedor"]);
+$cliente = ControladorClientes::ctrMostrarClientes("id", $venta["id_cliente"]);
+
+// Obtener el siguiente código de Factus
+$siguienteNumero = ModeloFactus::mdlObtenerSiguienteConsecutivoFactus();
+// DEBUG
+// echo "Siguiente: " . $siguienteNumero;
+
+// Lista de productos de la orden
+$listaProducto = json_decode($venta["productos"], true);
+$totalProductos = 0;
+?>
+
+<style>
+    @media (min-width: 769px) {
+        .solo-movil {
+            display: none !important;
+        }
+    }
+</style>
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            <i class="fa fa-file-text-o" style="color:#605ca8;"></i>
+            Convertir Orden a Factura Electrónica
+        </h1>
+        <ol class="breadcrumb">
+            <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
+            <li><a href="ordenes">Órdenes</a></li>
+            <li class="active">Convertir a FE</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+
+            <!--=====================================
+            EL FORMULARIO
+            ======================================-->
+
+            <div class="col-lg-5 col-xs-12">
+                <div class="box box-success">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">
+                            <span class="label label-warning" style="font-size:13px;">Orden #
+                                <?php echo $venta["codigo"]; ?>
+                            </span>
+                            &nbsp;→&nbsp;
+                            <span class="label label-primary" style="font-size:13px; background:#605ca8;">Factura
+                                Electrónica</span>
+                        </h3>
+                    </div>
+
+                    <form role="form" method="post" class="formularioVenta">
+                        <div class="box-body">
+                            <div class="box">
+
+                                <!--=====================================
+                      ENCABEZADO: VENDEDOR, CÓDIGO DIAN, RESOLUCIÓN
+                      ======================================-->
+
+                                <div class="row">
+                                    <!-- Vendedor -->
+                                    <div class="col-xs-12 col-md-4">
+                                        <div class="form-group">
+                                            <label>Vendedor</label>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                                                <input type="text" class="form-control"
+                                                    value="<?php echo $vendedor["nombre"]; ?>" readonly>
+                                                <input type="hidden" name="idVendedor"
+                                                    value="<?php echo $vendedor["id"]; ?>">
+                                                <input type="hidden" name="rutaOrigen"
+                                                    value="orden-a-factura-electronica">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Prefijo DIAN -->
+                                    <div class="col-xs-12 col-md-4">
+                                        <div class="form-group">
+                                            <label>Prefijo DIAN</label>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i class="fa fa-barcode"></i></span>
+                                                <input type="text" class="form-control"
+                                                    value="<?php echo $prefijoFactus; ?>" readonly>
+                                                <input type="hidden" name="resolucion_id"
+                                                    value="<?php echo $resolucionId; ?>">
+                                                <input type="hidden" name="formatoCodigoVenta"
+                                                    value="<?php echo $prefijoFactus; ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Código FE -->
+                                    <div class="col-xs-12 col-md-4">
+                                        <div class="form-group">
+                                            <label>Código FE</label>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i class="fa fa-key"></i></span>
+                                                <input type="text" class="form-control" id="nuevaVenta"
+                                                    name="nuevaVenta" value="<?php echo $siguienteNumero; ?>" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Forma de Pago DIAN -->
+                                <div class="row">
+                                    <div class="col-xs-12 col-md-6">
+                                        <div class="form-group">
+                                            <label><i class="fa fa-credit-card"></i> Forma de Pago</label>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i class="fa fa-exchange"></i></span>
+                                                <select class="form-control" id="forma_pago_dian"
+                                                    name="forma_pago_dian">
+                                                    <option value="1" selected>Contado (Pago inmediato)</option>
+                                                    <option value="2">Crédito (Pago a plazo)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-12 col-md-6" id="campo_fecha_vencimiento" style="display:none;">
+                                        <div class="form-group">
+                                            <label><i class="fa fa-calendar"></i> Fecha de Vencimiento</label>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                                <input type="date" class="form-control" id="fecha_vencimiento_fe"
+                                                    name="fecha_vencimiento" placeholder="YYYY-MM-DD">
+                                            </div>
+                                            <small class="text-muted">Requerido para pago a crédito</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Cliente (pre-cargado de la orden) -->
+                                <div class="row">
+                                    <div class="col-xs-12">
+                                        <div class="form-group">
+                                            <label>Cliente</label>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i class="fa fa-users"></i></span>
+                                                <select class="form-control" id="seleccionarCliente"
+                                                    name="seleccionarCliente" required>
+                                                    <option value="<?php echo $cliente["id"]; ?>" selected>
+                                                        <?php echo $cliente["nombre"]; ?>
+                                                    </option>
+                                                    <?php
+                                                    $clientes = ControladorClientes::ctrMostrarClientes(null, null);
+                                                    foreach ($clientes as $c) {
+                                                        if ($c["id"] != $cliente["id"]) {
+                                                            echo '<option value="' . $c["id"] . '">' . $c["nombre"] . '</option>';
+                                                        }
+                                                    }
+                                                    ?>
+                                                </select>
+                                                <span class="input-group-addon">
+                                                    <button type="button" class="btn btn-default btn-xs"
+                                                        data-toggle="modal" data-target="#modalAgregarCliente"
+                                                        data-dismiss="modal">Agregar cliente</button>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!--=====================================
+                      PRODUCTOS PRE-CARGADOS DE LA ORDEN
+                      ======================================-->
+
+                                <div class="form-group row nuevoProducto">
+                                    <?php
+                                    foreach ($listaProducto as $key => $val) {
+                                        $totalProductos += $val["total"];
+                                        $prod = ControladorProductos::ctrMostrarProductos("id", $val["id"], "id");
+                                        $stockAntiguo = $prod["stock"] + $val["cantidad"];
+
+                                        // Obtener información del tributo para Factus
+                                        $impuestoPorcentaje = 0;
+                                        $impuestoNombre = "Exento";
+                                        $impuestoNombreCorto = "EXE";
+
+                                        if (isset($prod["tributo_id"]) && $prod["tributo_id"] != 0) {
+                                            $tributo = ModeloFactus::mdlMostrarTributo($prod["tributo_id"]);
+                                            if ($tributo) {
+                                                $impuestoPorcentaje = $tributo["porcentaje_defecto"];
+                                                $impuestoNombre = $tributo["nombre"];
+                                                // Extraer nombre corto (ej: IVA, INC)
+                                                $partesNombre = explode(' ', $impuestoNombre);
+                                                $impuestoNombreCorto = $partesNombre[0];
+                                            }
+                                        }
+
+                                        $camposVariante = '';
+                                        if (isset($val["esVariante"]) && $val["esVariante"] == "1") {
+                                            $camposVariante = '<input type="hidden" class="esVariante" value="1">
+                                         <input type="hidden" class="idVarianteProducto" value="' . $val["idVariante"] . '">
+                                         <input type="hidden" class="skuVariante" value="' . $val["skuVariante"] . '">';
+                                        }
+
+                                        echo '<div class="row" style="padding:5px 15px">
+                                            <!-- Descripción -->
+                                            <div class="col-xs-5" style="padding-right:0px">
+                                                <div class="input-group">
+                                                    <span class="input-group-addon"><button type="button" class="btn btn-danger btn-xs quitarProducto" idProducto="' . $val["id"] . '"><i class="fa fa-times"></i></button></span>
+                                                    <input type="text" class="form-control nuevaDescripcionProducto" idProducto="' . $val["id"] . '" name="agregarProducto" value="' . $val["descripcion"] . '" readonly required>
+                                                    ' . $camposVariante . '
+                                                </div>
+                                            </div>
+
+                                            <!-- Impuesto -->
+                                            <div class="col-xs-2 ingresoImpuesto">
+                                                <input type="text" class="form-control nuevoImpuestoProducto" name="nuevoImpuestoProducto" value="' . $impuestoNombreCorto . ' ' . $impuestoPorcentaje . '%" porcentaje="' . $impuestoPorcentaje . '" impuestoNombre="' . $impuestoNombre . '" readonly required>
+                                            </div>
+
+                                            <!-- Cantidad -->
+                                            <div class="col-xs-2">
+                                                <input type="number" class="form-control nuevaCantidadProducto" name="nuevaCantidadProducto" min="1" value="' . $val["cantidad"] . '" stock="' . $stockAntiguo . '" nuevoStock="' . $val["stock"] . '" required>
+                                            </div>
+
+                                            <!-- Precio -->
+                                            <div class="col-xs-3 ingresoPrecio" style="padding-left:0px">
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control nuevoPrecioProducto" precioReal="' . $prod["precio_venta"] . '" name="nuevoPrecioProducto" value="' . $val["total"] . '" readonly required>
+                                                </div>
+                                            </div>
+                                        </div>';
+                                    }
+                                    ?>
+                                </div>
+
+                                <input type="hidden" id="listaProductos" name="listaProductos">
+
+                                <button type="button" class="btn btn-default btnAgregarProducto">Agregar
+                                    producto</button>
+
+                                <hr>
+
+                                <!--=====================================
+                      TOTALES (mismo diseño que crear-venta)
+                      ======================================-->
+
+                                <div class="row">
+                                    <div class="col-xs-12 col-md-6 pull-right">
+                                        <table class="table table-condensed table-bordered" style="background:#f9f9f9;">
+                                            <tbody>
+                                                <tr>
+                                                    <td style="vertical-align:middle; font-weight:bold; width:40%">
+                                                        Subtotal</td>
+                                                    <td style="width:60%">
+                                                        <div class="input-group">
+                                                            <span class="input-group-addon"><i
+                                                                    class="ion ion-social-usd"></i></span>
+                                                            <input type="text" class="form-control" id="nuevoValorBruto"
+                                                                name="nuevoValorBruto" placeholder="0"
+                                                                value="<?php echo $totalProductos; ?>" readonly>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="vertical-align:middle; font-weight:bold;">Valor Bruto
+                                                    </td>
+                                                    <td>
+                                                        <div class="input-group">
+                                                            <span class="input-group-addon"><i
+                                                                    class="ion ion-social-usd"></i></span>
+                                                            <input type="text" class="form-control"
+                                                                id="nuevoSubtotalVenta" name="nuevoSubtotalVenta"
+                                                                placeholder="0" value="<?php echo $totalProductos; ?>"
+                                                                readonly>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="vertical-align:middle; font-weight:bold;">Impuestos IVA
+                                                    </td>
+                                                    <td>
+                                                        <div class="input-group">
+                                                            <span class="input-group-addon"><i
+                                                                    class="ion ion-social-usd"></i></span>
+                                                            <input type="text" class="form-control"
+                                                                id="nuevoImpuestoVenta" name="nuevoImpuestoVenta"
+                                                                placeholder="0"
+                                                                value="<?php echo $venta['impuesto']; ?>" readonly>
+                                                            <input type="hidden" name="nuevoPrecioImpuesto"
+                                                                id="nuevoPrecioImpuesto"
+                                                                value="<?php echo $venta['impuesto']; ?>" required>
+                                                            <input type="hidden" name="nuevoPrecioNeto"
+                                                                id="nuevoPrecioNeto"
+                                                                value="<?php echo $venta['neto']; ?>" required>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="vertical-align:middle; font-weight:bold;">Impuestos INC
+                                                    </td>
+                                                    <td>
+                                                        <div class="input-group">
+                                                            <span class="input-group-addon"><i
+                                                                    class="ion ion-social-usd"></i></span>
+                                                            <input type="text" class="form-control"
+                                                                id="nuevoImpuestoINCVenta" name="nuevoImpuestoINCVenta"
+                                                                placeholder="0" readonly>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td
+                                                        style="vertical-align:middle; font-weight:bold; font-size:1.2em;">
+                                                        Total</td>
+                                                    <td>
+                                                        <div class="input-group">
+                                                            <span class="input-group-addon"><i
+                                                                    class="ion ion-social-usd"></i></span>
+                                                            <input type="text" class="form-control input-lg"
+                                                                id="nuevoTotalVenta" name="nuevoTotalVenta" total=""
+                                                                value="<?php echo $venta['total']; ?>" readonly required
+                                                                style="font-weight:bold; font-size:1.2em;">
+                                                            <input type="hidden" name="totalVenta" id="totalVenta"
+                                                                value="<?php echo $venta['total']; ?>">
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <!--=====================================
+                      MÉTODO DE PAGO
+                      ======================================-->
+
+                                <div class="form-group row">
+                                    <div class="col-xs-6" style="padding-right:0px">
+                                        <div class="input-group">
+                                            <select class="form-control" id="nuevoMetodoPago" name="nuevoMetodoPago"
+                                                required>
+                                                <option value="">Seleccione método de pago</option>
+                                                <?php
+                                                foreach ($mediosPago as $medio) {
+                                                    $medio = trim($medio);
+                                                    $sel = ($medio == $venta["metodo_pago"]) ? 'selected' : '';
+                                                    echo '<option value="' . $medio . '" ' . $sel . '>' . $medio . '</option>';
+                                                }
+                                                ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="cajasMetodoPago"></div>
+                                    <input type="hidden" id="listaMetodoPago" name="listaMetodoPago">
+                                </div>
+
+                                <!-- Notas -->
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <span class="input-group-addon"><i class="fa fa-sticky-note"></i></span>
+                                        <input type="text" class="form-control" name="notas"
+                                            placeholder="Notas (opcional)" value="<?php echo $venta['notas']; ?>">
+                                    </div>
+                                </div>
+
+                                <!-- Identificador para actualizar la orden original -->
+                                <input type="hidden" name="editarVenta" value="<?php echo $venta["codigo"]; ?>">
+                                <!-- Trigger para ctrCrearVentaFactus -->
+                                <input type="hidden" name="guardarVentaFactus" value="1">
+                                <!-- Estado: siempre venta (FE borrador) -->
+                                <input type="hidden" name="estado" value="venta">
+                                <!-- Descuento heredado de la orden -->
+                                <input type="hidden" name="tipoDescuento"
+                                    value="<?php echo $venta['tipo_descuento']; ?>">
+                                <input type="hidden" name="valorDescuento"
+                                    value="<?php echo $venta['valor_descuento']; ?>">
+                                <input type="hidden" name="montoDescuento"
+                                    value="<?php echo $venta['monto_descuento']; ?>">
+
+                                <br>
+                            </div>
+                        </div>
+
+                        <div class="box-footer">
+                            <button type="submit" class="btn btn-primary pull-right"
+                                style="background:#605ca8; border-color:#605ca8;">
+                                <i class="fa fa-file-text-o"></i> Crear Factura Electrónica
+                            </button>
+                        </div>
+                    </form>
+
+                    <?php
+                    $guardarFE = new ControladorVentas();
+                    $guardarFE->ctrCrearVentaFactus();
+                    ?>
+
+                    <button class="btn btn-danger pull-left" onclick="location.href='ordenes'">Cancelar</button>
+                </div>
+            </div>
+
+            <!--=====================================
+            LA TABLA DE PRODUCTOS (CATÁLOGO)
+            ======================================-->
+
+            <div class="col-lg-7 hidden-md hidden-sm hidden-xs">
+                <div class="box box-warning">
+                    <div class="box-header with-border"></div>
+                    <div class="box-body">
+                        <table class="table table-bordered table-striped tablaVentas">
+                            <thead>
+                                <tr>
+                                    <th style="width:10px">#</th>
+                                    <th>Imagen</th>
+                                    <th>Código</th>
+                                    <th>Descripción</th>
+                                    <th>Stock</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</div>
+
+<!--=====================================
+    SCRIPT: Forma de Pago toggle + validación
+    ======================================-->
+<script>
+    $(document).ready(function () {
+
+        // Toggle campo fecha de vencimiento
+        $('#forma_pago_dian').on('change', function () {
+            if ($(this).val() === '2') {
+                $('#campo_fecha_vencimiento').slideDown(200);
+                $('#fecha_vencimiento_fe').attr('required', true);
+            } else {
+                $('#campo_fecha_vencimiento').slideUp(200);
+                $('#fecha_vencimiento_fe').removeAttr('required').val('');
+            }
+        });
+
+        // Validar al enviar
+        $(document).on('submit', '.formularioVenta', function (e) {
+            var listaProductos = $('#listaProductos').val();
+            if (!listaProductos || listaProductos === '[]') {
+                e.preventDefault();
+                swal({ type: 'error', title: 'Sin productos', text: 'Debe agregar al menos un producto.', showConfirmButton: true, confirmButtonText: 'Cerrar' });
+                return false;
+            }
+            if ($('#forma_pago_dian').val() === '2' && !$('#fecha_vencimiento_fe').val()) {
+                e.preventDefault();
+                swal({ type: 'warning', title: 'Fecha de Vencimiento requerida', text: 'Para facturas a crédito debe ingresar la fecha de vencimiento.', showConfirmButton: true, confirmButtonText: 'Aceptar' });
+                return false;
+            }
+        });
+
+    });
+</script>

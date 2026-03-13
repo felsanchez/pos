@@ -190,6 +190,7 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "ordenes" ||
         $_GET["ruta"] == "crear-orden" ||
         $_GET["ruta"] == "editar-orden" ||
+        $_GET["ruta"] == "orden-a-factura-electronica" ||
         $_GET["ruta"] == "cliente-ventas" ||
         $_GET["ruta"] == "actividades-cuadro" ||
         $_GET["ruta"] == "ordenes-visita" ||
@@ -273,7 +274,8 @@ CUERPO DOCUMENTO
           e.preventDefault();
           window.location.href = href;
         }
-      });   });
+      });
+    });
   </script>
 
 </body>

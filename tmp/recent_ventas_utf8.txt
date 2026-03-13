@@ -1,0 +1,6 @@
+﻿id	codigo	productos	estado_dian	mensaje_dian
+751	51	[{"id":"117","descripcion":"prueba06 IVA5 MLT","cantidad":"1","stock":"23","precio":"100","total":"100","impuesto":"5"}]	pendiente	NULL
+750	50	[{"id":"118","descripcion":"prueba07 IV19 UND","cantidad":"3","stock":"15","precio":"85","total":"255","impuesto":"19"},{"id":"111","descripcion":"camisa bonita1","cantidad":"1","stock":"49","precio":"30000","total":"30000"},{"id":"118","descripcion":"prueba07 IV19 UND","cantidad":"1","stock":"17","precio":"85","total":"85"}]	pendiente	Pendiente de envío
+743	990000185	[{"id":"118","descripcion":"prueba07 IV19 UND","cantidad":"1","stock":"18","precio":"85","total":"85","impuesto":"19"},{"id":"117","descripcion":"prueba06 IVA5 MLT","cantidad":"1","stock":"23","precio":"100","total":"100","impuesto":"5"}]	enviada	Documento con el código de referencia SETP-V-743 registrado y validado con éxito
+742	990000184	[{"id":"118","descripcion":"prueba07 IV19 UND","cantidad":"1","stock":"19","precio":"85","total":"85","impuesto":"19"}]	enviada	Documento con el código de referencia SETP-V-742 registrado y validado con éxito
+741	990000181	[{"id":"118","descripcion":"prueba07 IV19 UND","cantidad":"1","stock":"20","precio":"85","total":"85","impuesto":"19"}]	enviada	Documento con el código de referencia SETP-V-741 registrado y validado con éxito

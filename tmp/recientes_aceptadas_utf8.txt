@@ -1,0 +1,6 @@
+﻿id	codigo	numero_factura	resolucion_id	estado_dian	fecha
+361	6	NULL	4	aceptada	2026-01-26 06:20:53
+393	8	NULL	4	aceptada	2026-01-28 01:52:52
+395	8	NULL	4	aceptada	2026-01-28 01:53:53
+397	8	NULL	4	aceptada	2026-01-28 01:56:15
+399	8	NULL	4	aceptada	2026-01-28 01:59:30

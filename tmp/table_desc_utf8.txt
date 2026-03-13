@@ -1,0 +1,13 @@
+﻿Field	Type	Null	Key	Default	Extra
+id	int(11)	NO	PRI	NULL	auto_increment
+id_factus	int(11)	NO	UNI	NULL	
+documento	varchar(50)	YES		NULL	
+prefijo	varchar(10)	YES		NULL	
+numero_desde	int(11)	YES		NULL	
+numero_hasta	int(11)	YES		NULL	
+numero_actual	int(11)	YES		0	
+resolucion	varchar(100)	YES		NULL	
+fecha_resolucion	date	YES		NULL	
+llave_tecnica	text	YES		NULL	
+estado	tinyint(1)	YES		1	
+fecha_sincronizacion	timestamp	NO		current_timestamp()	

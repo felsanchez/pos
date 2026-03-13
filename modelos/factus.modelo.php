@@ -187,17 +187,19 @@ class ModeloFactus
             $data = json_decode($response, true);
             if (isset($data['access_token'])) {
                 // Calcular nueva fecha de expiración
-                // expires_in suele ser segundos (ej: 86400)
                 $expiresIn = $data['expires_in'] ?? 3600;
                 $expirationDate = date('Y-m-d H:i:s', time() + $expiresIn);
 
                 return self::mdlActualizarTokens([
                     'access_token' => $data['access_token'],
-                    'refresh_token' => $data['refresh_token'] ?? $refreshToken, // A veces rota, a veces no
+                    'refresh_token' => $data['refresh_token'] ?? $refreshToken,
                     'token_expiracion' => $expirationDate
                 ]) === "ok";
             }
         }
+
+        // LOG ERROR
+        file_put_contents("debug_token_refresh_error.txt", date('Y-m-d H:i:s') . " - HTTP: $httpCode - Response: $response\n", FILE_APPEND);
 
         return false;
     }
@@ -961,11 +963,10 @@ class ModeloFactus
         $prefijoLike = $prefijo . '%';
 
         $stmt = Conexion::conectar()->prepare("
-			SELECT numero_factura
+			SELECT numero_factura, codigo, resolucion_id
 			FROM ventas 
-			WHERE numero_factura IS NOT NULL 
-			AND numero_factura != ''
-			AND numero_factura LIKE :prefijo
+			WHERE (numero_factura IS NOT NULL AND numero_factura != '' AND numero_factura LIKE :prefijo)
+            OR (resolucion_id IS NOT NULL AND resolucion_id != 0)
 			ORDER BY id DESC
 		");
 
@@ -976,15 +977,21 @@ class ModeloFactus
         // Extraer el número máximo en PHP
         $ultimoLocal = 0;
         foreach ($facturas as $factura) {
-            $numeroFactura = $factura["numero_factura"];
+            $numeroFactura = !empty($factura["numero_factura"]) ? $factura["numero_factura"] : $factura["codigo"];
+
+            if (empty($numeroFactura))
+                continue;
 
             // 1. Quitar el prefijo para dejar solo la parte numérica (o con guiones)
-            // Usamos str_replace limitando a 1 reemplazo para evitar quitar partes internas
-            $soloParteNumerica = substr($numeroFactura, strlen($prefijo));
+            // Si el número empieza con el prefijo, lo quitamos. 
+            // Si es un borrador (codigo), probablemente ya sea solo el número.
+            if (strpos($numeroFactura, $prefijo) === 0) {
+                $soloParteNumerica = substr($numeroFactura, strlen($prefijo));
+            } else {
+                $soloParteNumerica = $numeroFactura;
+            }
 
-            // 2. Limpiar caracteres no numéricos si quedan (ej: guiones extra)
-            // Aunque idealmente el número debería ser limpio.
-            // Si el formato es PREFIJO-NUMERO, al quitar PREFIJO queda -NUMERO
+            // 2. Limpiar caracteres no numéricos
             $soloNumeros = preg_replace('/[^0-9]/', '', $soloParteNumerica);
 
             if (!empty($soloNumeros)) {
@@ -1015,7 +1022,7 @@ class ModeloFactus
             $json = json_decode($res, true);
             curl_close($ch);
 
-            if (isset($json['data']['current'])) { // Nota: API doc dice 'current' o 'current_number', verificamos 'current' segun mdlGuardarRangos
+            if (isset($json['data']['current'])) {
                 $numeroApiReal = intval($json['data']['current']);
             } elseif (isset($json['data']['current_number'])) {
                 $numeroApiReal = intval($json['data']['current_number']);
@@ -1024,8 +1031,8 @@ class ModeloFactus
 
         // Calculamos el siguiente propuesto por cada fuente
         $siguienteLocal = $ultimoLocal + 1;
-        $siguienteApiCached = $numeroActualApi + 1;
-        $siguienteApiLive = $numeroApiReal; // Si la API ya reporta un número mayor, lo usamos como el "siguiente" a usar
+        $siguienteApiCached = $numeroActualApi;
+        $siguienteApiLive = $numeroApiReal; // Ya tiene el +1 si vino de la API
 
         // El siguiente real será el mayor de los siguientes propuestos
         // Priorizamos la API REAL si la tenemos (Live)
@@ -1034,6 +1041,9 @@ class ModeloFactus
         } else {
             $ultimoSugerido = max($siguienteLocal, $siguienteApiCached);
         }
+
+        $logMsg = date("Y-m-d H:i:s") . " | RangoId: " . ($rango['id_factus'] ?? 'N/A') . " | Prefijo: $prefijo | Local: $ultimoLocal | NextLocal: $siguienteLocal | ApiLive: $siguienteApiLive | Desde: $numeroDesde | Siguiente: $ultimoSugerido\n";
+        file_put_contents(__DIR__ . "/../tmp/log_numbering.txt", $logMsg, FILE_APPEND);
 
         // Si el sugerido es menor que el "desde", forzamos el "desde"
         if ($ultimoSugerido < $numeroDesde) {

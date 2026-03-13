@@ -568,19 +568,24 @@ if ($xml) {
                   }
                 }
 
-                // Botón 3: Editado / Alistado
                 $alistado = isset($value["seguimiento_alistado"]) ? $value["seguimiento_alistado"] : 0;
                 if ($alistado == 1) {
-                  // Estado Enviado (Verde o Success) - Pero ENLACE
                   echo '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-success" title="Pedido Alistado / Editado" style="width: auto !important;">
                               Enviado (A) <i class="fa fa-line-chart"></i>
                             </a>';
                 } else {
-                  // Estado Pendiente (Warning) - ENLACE
                   echo '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-warning" title="Editar Orden" style="width: auto !important;">
                               Pendiente <i class="fa fa-line-chart"></i>
                             </a>';
                 }
+
+                // Botón 4: Convertir a Factura Electrónica
+                echo ' <a href="index.php?ruta=orden-a-factura-electronica&idVenta=' . $value["id"] . '" 
+                            class="btn btn-xs btn-primary" 
+                            title="Convertir a Factura Electrónica" 
+                            style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;">
+                            <i class="fa fa-file-text-o"></i> FE
+                        </a>';
 
                 echo '</td>';
 

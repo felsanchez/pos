@@ -816,7 +816,14 @@ class ControladorFactus
 			}
 			$unidadMedida = isset($productoBD['unidad_medida_id']) && !empty($productoBD['unidad_medida_id']) ? intval($productoBD['unidad_medida_id']) : 70;
 
-			$precioBase = floatval($productoVenta['precio']);
+			$precioBruto = floatval($productoVenta['precio']);
+
+			// 🔹 CORRECCIÓN FAX07: Calcular el Precio Neto (Base) dado que POS usa precio con impuestos
+			if ($tasaImpuesto > 0) {
+				$precioNeto = $precioBruto / (1 + ($tasaImpuesto / 100));
+			} else {
+				$precioNeto = $precioBruto;
+			}
 
 			// 🔹 CALCULO DESCUENTO
 			$tasaDescuentoItem = 0;
@@ -891,7 +898,7 @@ class ControladorFactus
 				"name" => $productoVenta['descripcion'],
 				"quantity" => intval($productoVenta['cantidad']),
 				"discount_rate" => number_format($tasaDescuentoItem, 2, '.', ''), // TASA CALCULADA
-				"price" => number_format($precioBase, 6, '.', ''), // AUMENTAR PRECISIÓN A 6 DECIMALES
+				"price" => number_format($precioNeto, 6, '.', ''), // AUMENTAR PRECISIÓN A 6 DECIMALES
 				"tax_rate" => number_format($tasaImpuesto, 2, '.', ''),
 				"unit_measure_id" => $idUnidadMedida,
 				"standard_code_id" => 1,
@@ -952,7 +959,7 @@ class ControladorFactus
 
 		$factura = array(
 			"numbering_range_id" => $rangoId,
-			"reference_code" => $rango['prefijo'] . '-V-' . $venta['id'],
+			"reference_code" => (string) $venta['id'],
 			"observation" => implode(" | ", array_filter([$venta['notas'] ?? '', $venta['observacion'] ?? ''])),
 			"payment_form" => $formaPagoDian,
 			"payment_due_date" => $fechaVencimiento,
@@ -1286,7 +1293,7 @@ class ControladorFactus
 					echo '<script>
 					swal({
 						type: "success",
-						title: "El borrador ha sido borrado correctamente",
+						title: "La nota credito ha sido borrada correctamente",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 						}).then(function(result){

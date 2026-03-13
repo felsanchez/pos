@@ -281,21 +281,26 @@ class ModeloVentas
 	}
 
 
-	//Obtener el siguiente código de venta
+	//Obtener el siguiente código de venta real desde la tabla de consecutivos
 	static public function mdlObtenerSiguienteConsecutivo($tabla)
 	{
-		// Obtener el máximo código solo de VENTAS REGULARES (sin factura electrónica)
-		// Las FE tienen su propio consecutivo (mdlObtenerSiguienteConsecutivoFactus)
-		$stmt = Conexion::conectar()->prepare("SELECT MAX(codigo) as max_codigo FROM $tabla WHERE (numero_factura IS NULL OR numero_factura = '')");
+		$stmt = Conexion::conectar()->prepare("SELECT ultimo_numero FROM consecutivos WHERE tabla = :tabla");
+		$stmt->bindParam(":tabla", $tabla, PDO::PARAM_STR);
 		$stmt->execute();
 		$resultado = $stmt->fetch();
 		$stmt = null;
 
-		if ($resultado && $resultado["max_codigo"] != null) {
-			// El siguiente consecutivo es el máximo encontrado + 1
-			return $resultado["max_codigo"] + 1;
+		if ($resultado) {
+			return $resultado["ultimo_numero"] + 1;
 		} else {
-			// Si no hay ventas regulares, iniciar desde 10001
+			// Si no existe el registro en consecutivos, intentar recuperar el max de ventas regulares
+			$stmt = Conexion::conectar()->prepare("SELECT MAX(codigo) as max_codigo FROM ventas WHERE (numero_factura IS NULL OR numero_factura = '')");
+			$stmt->execute();
+			$resultadoMax = $stmt->fetch();
+
+			if ($resultadoMax && $resultadoMax["max_codigo"] != null) {
+				return $resultadoMax["max_codigo"] + 1;
+			}
 			return 10001;
 		}
 	}
@@ -524,10 +529,25 @@ class ModeloVentas
 	/*=============================================
 	MOSTRAR ULTIMA VENTA POR ESTADO
 	=============================================*/
+	/*=============================================
+	MOSTRAR ULTIMA VENTA POR ESTADO
+	=============================================*/
 	static public function mdlMostrarUltimaVentaPorEstado($tabla, $estado)
 	{
 		$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE estado = :estado ORDER BY id DESC LIMIT 1");
 		$stmt->bindParam(":estado", $estado, PDO::PARAM_STR);
+		$stmt->execute();
+		return $stmt->fetch();
+		$stmt = null;
+	}
+
+	/*=============================================
+	MOSTRAR ULTIMA FACTURA ELECTRÓNICA
+	=============================================*/
+	static public function mdlMostrarUltimaFacturaElectronica($tabla)
+	{
+		// Buscamos la última venta que tenga una resolución ID (lo que la identifica como FE)
+		$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE estado = 'venta' AND resolucion_id IS NOT NULL AND resolucion_id != 0 ORDER BY id DESC LIMIT 1");
 		$stmt->execute();
 		return $stmt->fetch();
 		$stmt = null;

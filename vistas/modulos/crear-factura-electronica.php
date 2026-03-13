@@ -13,9 +13,9 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 // ---------------------------------------------------------
 // VALIDACIÓN DE CONSECUTIVO (NO PERMITIR CREAR SI LA ANTERIOR NO ESTÁ FIRMADA)
 // ---------------------------------------------------------
-// Buscamos específicamente la última PRE-FACTURA o FACTURA (estado='venta')
-// Ignoramos 'orden' porque no entran en el consecutivo DIAN estricto de firmas.
-$ultimaVenta = ControladorVentas::ctrMostrarUltimaVentaPorEstado("venta");
+// Buscamos específicamente la última FACTURA ELECTRÓNICA (con resolución DIAN)
+// Ignoramos ventas POS normales y órdenes.
+$ultimaVenta = ControladorVentas::ctrMostrarUltimaFacturaElectronica();
 
 if ($ultimaVenta) {
   // Si la última venta NO tiene número de factura o no está enviada/aceptada, bloquear.

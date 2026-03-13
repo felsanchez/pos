@@ -1,0 +1,13 @@
+﻿id	id_factus	prefijo	estado	numero_desde	numero_actual	documento
+1	1041	NC	1	NULL	10	Nota Crédito
+2	1042	ND	1	NULL	1	Nota Débito
+3	1043	NA	1	NULL	1	Nota de Ajuste Documento Soporte
+4	1040	FEFG	1	1	78	Factura de Venta
+29	1191	NC	1	0	45	Nota Crédito
+30	1192	ND	1	0	1	Nota Débito
+31	1193	NA	1	0	64	Nota de Ajuste Documento Soporte
+32	1194	NEF	1	0	1	Nómina
+33	1195	NAN	1	0	1	Nota de Ajuste Nómina
+34	1196	NEN	1	0	1	Nota de eliminación de nómina
+35	1190	SETP	1	990000000	990000185	Factura de Venta
+120	1410	SEDS	1	984000000	984000041	Documento Soporte

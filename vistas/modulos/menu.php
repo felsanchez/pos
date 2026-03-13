@@ -169,35 +169,17 @@
 
       if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") {
 
-        echo '<li class="treeview">
-                <a href="">         
-                    <i class="fa fa-shopping-cart"></i>
-                    <span>Ordenes</span>
-                    <span class="pull-right-container">
-                    <i class="fa fa-angle-left pull-right"></i>
-                    </span>
-                </a>
+        echo '<li>
 
-                <ul class="treeview-menu">
-                  <li>
-                    <a href="ordenes">
-                      <i class="fa fa-circle-o"></i>
-                      <span>Administrar ordenes</span>
-                    </a>
-                  </li>
+            <a href="ordenes">   
 
-                  <li>
-                    <a href="crear-orden">
-                      <i class="fa fa-circle-o"></i>
-                      <span>Crear ordenes</span>
-                    </a>
-                  </li>';
+              <i class="fa fa-shopping-cart"></i>
+              <span>Ordenes</span>
 
-        echo '</ul> 
+            </a>   
 
-        </li>';
+          </li>';
       }
-
 
 
 
@@ -232,12 +214,7 @@
                       </a>
                     </li>
 
-                    <li>
-                      <a href="crear-venta">
-                        <i class="fa fa-circle-o"></i>
-                        <span>Crear ventas</span>
-                      </a>
-                    </li>';
+';
 
         if ($_SESSION["perfil"] == "Administrador") {
 
