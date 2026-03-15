@@ -284,6 +284,15 @@ $(document).ready(function () {
         $("#listaProductosDS").val(JSON.stringify(listaProductos));
     }
 
+    // Función para quitar el loader
+    function quitarLoaderDS() {
+        if ($("#loader-table-ds").length > 0) {
+            $("#loader-table-ds").fadeOut(400, function () {
+                $(this).remove();
+            });
+        }
+    }
+
     /*=============================================
     TABLA DOCUMENTOS SOPORTE (ADMINISTRACIÓN)
     =============================================*/
@@ -302,8 +311,22 @@ $(document).ready(function () {
                     "sNext": "Siguiente",
                     "sPrevious": "Anterior"
                 }
+            },
+            "preDrawCallback": function () {
+                // Ocultar tabla antes de dibujarla por primera vez
+                if (!$(this).hasClass('datatable-ready')) {
+                    $(this).css('visibility', 'hidden');
+                }
+            },
+            "initComplete": function () {
+                // Mostrar tabla solo cuando esté completamente inicializada
+                $(this).addClass('datatable-ready').css('visibility', 'visible');
+                quitarLoaderDS();
             }
         });
+
+        // Respaldo adicional: Si por alguna razón pasan 4 segundos y sigue el spinner, quitarlo
+        setTimeout(quitarLoaderDS, 4000);
     }
 
     /*=============================================
@@ -333,8 +356,8 @@ $(document).ready(function () {
         var idDS = $(this).attr("idDS");
 
         swal({
-            title: "¿Está seguro de firmar y enviar este Documento Soporte?",
-            text: "¡Esta acción enviará el documento a Factus y la DIAN!",
+            title: "¿Está seguro de firmar este Documento Soporte?",
+            text: "¡Esta acción no se puede deshacer y el documento será oficial!",
             type: "warning",
             showCancelButton: true,
             confirmButtonColor: "#3c8dbc",
@@ -344,7 +367,7 @@ $(document).ready(function () {
         }).then(function (result) {
             if (result.value) {
                 swal({
-                    title: "Enviando...",
+                    title: "Enviando",
                     text: "Por favor espere mientras se firma el documento",
                     allowOutsideClick: false,
                     onBeforeOpen: () => {
@@ -368,8 +391,8 @@ $(document).ready(function () {
                         if (!respuesta.error) {
                             swal({
                                 type: "success",
-                                title: "¡Éxito!",
-                                text: respuesta.mensaje,
+                                title: "Exito",
+                                text: "Documento soporte firmado correctamente",
                                 showConfirmButton: true,
                                 confirmButtonText: "Cerrar"
                             }).then(function (result) {
@@ -425,8 +448,7 @@ $(document).ready(function () {
                         if (!respuesta.error) {
                             swal({
                                 type: "success",
-                                title: "¡Éxito!",
-                                text: "El borrador ha sido eliminado correctamente",
+                                title: "El Documento ha sido eliminado correctamente",
                                 showConfirmButton: true,
                                 confirmButtonText: "Cerrar"
                             }).then(function (result) {

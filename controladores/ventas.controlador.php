@@ -6,8 +6,8 @@ class ControladorVentas
 {
 
 	/*=============================================
-	MOSTRAR VENTAS
-	=============================================*/
+	 MOSTRAR VENTAS
+	 =============================================*/
 
 	static public function ctrMostrarVentas($item, $valor)
 	{
@@ -20,8 +20,8 @@ class ControladorVentas
 	}
 
 	/*=============================================
-	CONTAR VENTAS
-	=============================================*/
+	 CONTAR VENTAS
+	 =============================================*/
 	static public function ctrContarVentas()
 	{
 		$tabla = "ventas";
@@ -31,8 +31,8 @@ class ControladorVentas
 	}
 
 	/*=============================================
-	CONTAR ORDENES
-	=============================================*/
+	 CONTAR ORDENES
+	 =============================================*/
 	static public function ctrContarOrdenes()
 	{
 		$tabla = "ventas";
@@ -43,8 +43,8 @@ class ControladorVentas
 
 
 	/*=============================================
-	CREAR VENTAS
-	=============================================*/
+	 CREAR VENTAS
+	 =============================================*/
 
 	static public function ctrCrearVenta()
 	{
@@ -167,7 +167,8 @@ class ControladorVentas
 						window.location = "facturas-electronicas";
 					});
 				</script>';
-			} else {
+			}
+			else {
 				echo '<script>
 					swal({
 						type: "error",
@@ -213,8 +214,8 @@ class ControladorVentas
 			}
 
 			/*=============================================
-			ACTUALIZAR LAS COMPRAS DEL CLIENTE Y REDUCIR EL STOCK Y AUMENTAR LAS VENTAS DE LOS PRODUCTOS
-			=============================================*/
+			 ACTUALIZAR LAS COMPRAS DEL CLIENTE Y REDUCIR EL STOCK Y AUMENTAR LAS VENTAS DE LOS PRODUCTOS
+			 =============================================*/
 
 			$listaProductos = json_decode($_POST["listaProductos"], true);
 
@@ -335,7 +336,8 @@ class ControladorVentas
 						$nuevasVentas = $value["cantidad"] + $traerProducto["ventas"];
 						ModeloProductos::mdlActualizarProducto($tablaProductos, "ventas", $nuevasVentas, $value["id"]);
 
-					} else {
+					}
+					else {
 						// Es un producto normal - restar stock de productos
 						$tablaProductos = "productos";
 						$item = "id";
@@ -397,8 +399,8 @@ class ControladorVentas
 
 
 			/*=============================================
-			GUARDAR LA COMPRA
-			=============================================*/
+			 GUARDAR LA COMPRA
+			 =============================================*/
 
 			// Ya se generó $codigoVenta y $tabla al inicio (antes del bucle de productos)
 
@@ -471,8 +473,8 @@ class ControladorVentas
 				}
 
 				/*=============================================
-				GENERAR FACTURA ELECTRÓNICA SI ESTÁ ACTIVADA
-				=============================================*/
+				 GENERAR FACTURA ELECTRÓNICA SI ESTÁ ACTIVADA
+				 =============================================*/
 				if ((isset($_POST["activarFacturaElectronica"]) && $_POST["activarFacturaElectronica"] == "1") || isset($_POST["guardarVentaFactus"])) {
 					// Obtener el ID de la venta recién insertada
 					$ultimaVenta = ModeloVentas::mdlMostrarVentas("ventas", "codigo", $codigoVenta);
@@ -563,20 +565,18 @@ class ControladorVentas
 							}
 						});
 					</script>';
-				} else {
+				}
+				else {
 
 					// MENSAJE PERSONALIZADO SI ES FACTURA ELECTRÓNICA
 					$tituloMensaje = "!La venta ha sigo guardada correctamente!";
+					$textoMensaje = "";
+					
 					if ((isset($_POST["activarFacturaElectronica"]) && $_POST["activarFacturaElectronica"] == "1") || isset($_POST["guardarVentaFactus"])) {
 
-						$tituloMensaje = "¡Factura Electrónica generada exitosamente!";
+						$tituloMensaje = "Factura Electrónica GUARDADA";
+						$textoMensaje = "La factura ha sido guardada correctamente como borrador";
 
-						// Si tenemos respuesta detallada de Factus, la usamos
-						if (isset($resultadoFactura) && !empty($resultadoFactura['datos']['mensaje_dian'])) {
-							$tituloMensaje = $resultadoFactura['datos']['mensaje_dian'];
-						} elseif (isset($resultadoFactura) && !empty($resultadoFactura['mensaje'])) {
-							$tituloMensaje = $resultadoFactura['mensaje'];
-						}
 						if (isset($resultadoFactura) && $resultadoFactura['error']) {
 							// Construir mensaje de error con lista de errores
 							$mensajeError = $resultadoFactura['mensaje'];
@@ -612,6 +612,7 @@ class ControladorVentas
 						swal({
 							type: "success",
 							title: "' . $tituloMensaje . '",
+							text: "' . $textoMensaje . '",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar",
 							}).then((result)=>{
@@ -629,8 +630,8 @@ class ControladorVentas
 	}
 
 	/*=============================================
-	CREAR VENTA API (PARA WEBHOOKS/INTEGRACIONES)
-	=============================================*/
+	 CREAR VENTA API (PARA WEBHOOKS/INTEGRACIONES)
+	 =============================================*/
 	static public function ctrCrearVentaAPI($datos)
 	{
 		// Validar datos mínimos
@@ -663,7 +664,8 @@ class ControladorVentas
 				ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $nuevoStockBase, $value["id"]);
 				ModeloProductos::mdlActualizarProducto($tablaProductos, "ventas", $value["cantidad"] + $traerProducto["ventas"], $value["id"]);
 
-			} else {
+			}
+			else {
 				// Producto normal
 				$tablaProductos = "productos";
 				$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, "id", $value["id"], "id");
@@ -694,7 +696,8 @@ class ControladorVentas
 		if ($respuesta == "ok") {
 			ModeloVentas::mdlActualizarConsecutivo($tabla, $datos["codigo"]);
 			return ["status" => "success", "codigo" => $datos["codigo"]];
-		} else {
+		}
+		else {
 			return ["status" => "error", "message" => "Error al guardar en base de datos"];
 		}
 	}
@@ -702,8 +705,8 @@ class ControladorVentas
 
 
 	/*=============================================
-	EDITAR VENTAS
-	=============================================*/
+	 EDITAR VENTAS
+	 =============================================*/
 
 	static public function ctrEditarVenta()
 	{
@@ -735,8 +738,8 @@ class ControladorVentas
 			$traerVenta = ModeloVentas::mdlMostrarVentas($tabla, $item, $valor);
 
 			/*=============================================
-			SI ERA ORDEN Y PASA A VENTA
-			=============================================*/
+			 SI ERA ORDEN Y PASA A VENTA
+			 =============================================*/
 			if ($traerVenta["estado"] == "orden" && $_POST["estado"] == "venta") {
 
 				$listaProductos = json_decode($_POST["listaProductos"], true);
@@ -841,7 +844,8 @@ class ControladorVentas
 						ModeloProductos::mdlActualizarProducto($tablaProductos, "ventas", $nuevasVentas, $value["id"]);
 
 
-					} else {
+					}
+					else {
 						// Es un producto normal - descontar stock de productos
 						$tablaProductos = "productos";
 						$itemProd = "id";
@@ -895,8 +899,8 @@ class ControladorVentas
 			}
 
 			/*=============================================
-			SI YA ERA VENTA Y SE EDITA
-			=============================================*/
+			 SI YA ERA VENTA Y SE EDITA
+			 =============================================*/
 			if ($traerVenta["estado"] == "venta" && $_POST["estado"] == "venta") {
 
 				$productos = json_decode($traerVenta["productos"], true);
@@ -940,7 +944,8 @@ class ControladorVentas
 						$nuevasVentas = $traerProducto["ventas"] - $value["cantidad"];
 						ModeloProductos::mdlActualizarProducto($tablaProductos, "ventas", $nuevasVentas, $value["id"]);
 
-					} else {
+					}
+					else {
 						// Es un producto normal - devolver stock al producto
 						$tablaProductos = "productos";
 						$item = "id";
@@ -1028,7 +1033,8 @@ class ControladorVentas
 						$nuevasVentas = $value["cantidad"] + $traerProducto["ventas"];
 						ModeloProductos::mdlActualizarProducto($tablaProductos, "ventas", $nuevasVentas, $value["id"]);
 
-					} else {
+					}
+					else {
 						// Es un producto normal - descontar stock del producto
 						$tablaProductos_2 = "productos";
 						$item_2 = "id";
@@ -1082,8 +1088,8 @@ class ControladorVentas
 			}
 
 			/*=============================================
-			GUARDAR CAMBIOS DE LA COMPRA
-			=============================================*/
+			 GUARDAR CAMBIOS DE LA COMPRA
+			 =============================================*/
 			date_default_timezone_set('America/Bogota');
 			$fechaHoraActual = date('Y-m-d H:i:s');
 
@@ -1095,7 +1101,8 @@ class ControladorVentas
 				if (!empty($traerVenta["notas"]) && strpos($traerVenta["notas"], 'Creado por Agente IA') !== false) {
 					// Preservar el texto original "Creado por Agente IA"
 					$origenTexto = "Creado por Agente IA";
-				} else {
+				}
+				else {
 					// Determinar si es orden de Agente IA o manual
 					$origenTexto = "Desde orden";
 					if (!empty($traerVenta["extra"]) && strpos($traerVenta["extra"], 'n8n') !== false) {
@@ -1106,7 +1113,8 @@ class ControladorVentas
 				if (!empty($notasFinales)) {
 					$notasFinales = $notasFinales . " | " . $origenTexto;
 
-				} else {
+				}
+				else {
 					$notasFinales = $origenTexto;
 				}
 			}
@@ -1116,7 +1124,8 @@ class ControladorVentas
 				$textoRecibe = "Recibe: " . $_POST["recibe"];
 				if (!empty($notasFinales)) {
 					$notasFinales = $notasFinales . " - " . $textoRecibe;
-				} else {
+				}
+				else {
 					$notasFinales = $textoRecibe;
 				}
 			}
@@ -1160,21 +1169,21 @@ class ControladorVentas
 			$respuesta = ModeloVentas::mdlEditarVenta($tabla, $datos);
 
 			/*if ($respuesta == "ok") {
-				echo '<script>
-					localStorage.removeItem("rango");
-					swal({
-						type: "success",
-						title: "!La venta ha sigo CREADA correctamente!",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						}).then((result)=>{
-							if(result.value){
-								window.location = "ordenes";
-							}
-						})
-				</script>';
-			}
-			*/
+			 echo '<script>
+			 localStorage.removeItem("rango");
+			 swal({
+			 type: "success",
+			 title: "!La venta ha sigo CREADA correctamente!",
+			 showConfirmButton: true,
+			 confirmButtonText: "Cerrar",
+			 }).then((result)=>{
+			 if(result.value){
+			 window.location = "ordenes";
+			 }
+			 })
+			 </script>';
+			 }
+			 */
 
 			if ($respuesta == "ok") {
 
@@ -1232,7 +1241,8 @@ class ControladorVentas
 				// Log del resultado (opcional)
 				if ($httpCode != 200) {
 					error_log("Error al enviar webhook: HTTP " . $httpCode . " - " . $resultado);
-				} else {
+				}
+				else {
 					error_log("Webhook enviado exitosamente para venta: " . $_POST["editarVenta"]);
 				}
 
@@ -1259,8 +1269,8 @@ class ControladorVentas
 
 
 	/*=============================================
-	ELIMINAR VENTA
-	=============================================*/
+	 ELIMINAR VENTA
+	 =============================================*/
 
 	static public function ctrEliminarVenta()
 	{
@@ -1277,8 +1287,8 @@ class ControladorVentas
 
 
 			/*=============================================
-			ACTUALIZAR FECHA ULTIMA COMPRA
-			=============================================*/
+			 ACTUALIZAR FECHA ULTIMA COMPRA
+			 =============================================*/
 
 			$tablaClientes = "clientes";
 
@@ -1307,7 +1317,8 @@ class ControladorVentas
 					$valorIdCliente = $traerVenta["id_cliente"];
 
 					$comprasCliente = ModeloClientes::mdlActualizarCliente($tablaClientes, $item, $valor, $valorIdCliente);
-				} else {
+				}
+				else {
 					$item = "ultima_compra";
 					$valor = $guardarFechas[count($guardarFechas) - 1];
 					$valorIdCliente = $traerVenta["id_cliente"];
@@ -1315,7 +1326,8 @@ class ControladorVentas
 					$comprasCliente = ModeloClientes::mdlActualizarCliente($tablaClientes, $item, $valor, $valorIdCliente);
 				}
 
-			} else {
+			}
+			else {
 
 				$item = "ultima_compra";
 				$valor = "0000-00-00 00:00:00";
@@ -1326,8 +1338,8 @@ class ControladorVentas
 
 
 			/*=============================================
-			FORMATEAR LA TABLA DE PRODUCTOS Y CLIENTES
-			=============================================*/
+			 FORMATEAR LA TABLA DE PRODUCTOS Y CLIENTES
+			 =============================================*/
 
 			$productos = json_decode($traerVenta["productos"], true);
 
@@ -1407,7 +1419,8 @@ class ControladorVentas
 					$valor1a = $traerProducto["ventas"] - $value["cantidad"];
 					$nuevasVentas = ModeloProductos::mdlActualizarProducto($tablaProductos, $item1a, $valor1a, $valor);
 
-				} else {
+				}
+				else {
 
 					// Es un producto normal - devolver stock normal
 					$tablaProductos = "productos";
@@ -1461,8 +1474,8 @@ class ControladorVentas
 
 
 			/*=============================================
-			ELIMINAR VENTA
-			=============================================*/
+			 ELIMINAR VENTA
+			 =============================================*/
 
 			$respuesta = ModeloVentas::mdlEliminarVenta($tabla, $_GET["idVenta"]);
 
@@ -1483,7 +1496,8 @@ class ControladorVentas
 							}
 						});
 					</script>';
-				} else {
+				}
+				else {
 
 					$rutaRedireccion = (isset($_GET["ruta"]) && !empty($_GET["ruta"])) ? $_GET["ruta"] : "ventas";
 
@@ -1518,8 +1532,8 @@ class ControladorVentas
 
 
 	/*=============================================
-	RANGO FECHAS
-	=============================================*/
+	 RANGO FECHAS
+	 =============================================*/
 
 	static public function ctrRangoFechasVentas($fechaInicial, $fechaFinal)
 	{
@@ -1532,8 +1546,8 @@ class ControladorVentas
 
 
 	/*=============================================
-	DESCARGAR EXCEL
-	=============================================*/
+	 DESCARGAR EXCEL
+	 =============================================*/
 
 	public function ctrDescargarReporte()
 	{
@@ -1546,7 +1560,8 @@ class ControladorVentas
 
 				$ventas = ModeloVentas::mdlRangoFechasVentas($tabla, $_GET["fechaInicial"], $_GET["fechaFinal"]);
 
-			} else {
+			}
+			else {
 
 				$item = null;
 				$valor = null;
@@ -1558,8 +1573,8 @@ class ControladorVentas
 
 
 			/*=============================================
-			CREAMOS EL ARCHIVO DE EXCEL
-			=============================================*/
+			 CREAMOS EL ARCHIVO DE EXCEL
+			 =============================================*/
 			$Name = $_GET["reporte"] . '.xls';
 
 			header('Expires: 0');
@@ -1595,7 +1610,7 @@ class ControladorVentas
 				}
 
 				// Filtrar por usuario si existe el parámetro
-				if (isset($_GET["usuario"]) && $_GET["usuario"] != "" && (string) $item["id_vendedor"] != (string) $_GET["usuario"]) {
+				if (isset($_GET["usuario"]) && $_GET["usuario"] != "" && (string)$item["id_vendedor"] != (string)$_GET["usuario"]) {
 					continue;
 				}
 
@@ -1640,8 +1655,8 @@ class ControladorVentas
 
 
 	/*=============================================
-	SUMA TOTAL VENTAS
-	=============================================*/
+	 SUMA TOTAL VENTAS
+	 =============================================*/
 
 	static public function ctrSumaTotalVentas()
 	{
@@ -1656,8 +1671,8 @@ class ControladorVentas
 
 
 	/*=============================================
-	DESCARGAR XML
-	=============================================*/
+	 DESCARGAR XML
+	 =============================================*/
 	static public function ctrDescargarXML()
 	{
 		//http://php.net/manual/es/book.xmlwriter.php
@@ -1694,22 +1709,16 @@ class ControladorVentas
 
 			$objetoXML->setIndentString("\t"); // carácter \t, que corresponde a una tabulación
 
-			$objetoXML->startDocument('1.0', 'utf-8');// Inicio del documento
+			$objetoXML->startDocument('1.0', 'utf-8'); // Inicio del documento
 
 
 			/*$objetoXML->startElement("etiquetaPrincipal");// Inicio del nodo raíz
-
-				 $objetoXML->writeAttribute("atributoEtiquetaPPal", "valor atributo etiqueta PPal"); // Atributo etiqueta principal
-
-				$objetoXML->startElement("etiquetaInterna");// Inicio del nodo hijo
-
-					$objetoXML->writeAttribute("atributoEtiquetaInterna", "valor atributo etiqueta Interna"); // Atributo etiqueta interna
-
-					$objetoXML->text("Texto interno");
-
-				$objetoXML->endElement(); // Final del nodo hijo
-
-			$objetoXML->endElement(); // Final del nodo raíz */
+			 $objetoXML->writeAttribute("atributoEtiquetaPPal", "valor atributo etiqueta PPal"); // Atributo etiqueta principal
+			 $objetoXML->startElement("etiquetaInterna");// Inicio del nodo hijo
+			 $objetoXML->writeAttribute("atributoEtiquetaInterna", "valor atributo etiqueta Interna"); // Atributo etiqueta interna
+			 $objetoXML->text("Texto interno");
+			 $objetoXML->endElement(); // Final del nodo hijo
+			 $objetoXML->endElement(); // Final del nodo raíz */
 
 
 			$objetoXML->writeRaw('<fe:Invoice xmlns:fe="http://www.dian.gov.co/contratos/facturaelectronica/v1" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:clm54217="urn:un:unece:uncefact:codelist:specification:54217:2001" xmlns:clm66411="urn:un:unece:uncefact:codelist:specification:66411:2001" xmlns:clmIANAMIMEMediaType="urn:un:unece:uncefact:codelist:specification:IANAMIMEMediaType:2003" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:qdt="urn:oasis:names:specification:ubl:schema:xsd:QualifiedDatatypes-2" xmlns:sts="http://www.dian.gov.co/contratos/facturaelectronica/v1/Structures" xmlns:udt="urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.dian.gov.co/contratos/facturaelectronica/v1 ../xsd/DIAN_UBL.xsd urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2 ../../ubl2/common/UnqualifiedDataTypeSchemaModule-2.0.xsd urn:oasis:names:specification:ubl:schema:xsd:QualifiedDatatypes-2 ../../ubl2/common/UBL-QualifiedDatatypes-2.0.xsd">');
@@ -1774,8 +1783,8 @@ class ControladorVentas
 	}
 
 	/*=============================================
-	MOSTRAR ULTIMA FACTURA ELECTRÓNICA
-	=============================================*/
+	 MOSTRAR ULTIMA FACTURA ELECTRÓNICA
+	 =============================================*/
 	static public function ctrMostrarUltimaFacturaElectronica()
 	{
 		$tabla = "ventas";
@@ -1799,8 +1808,8 @@ class ControladorVentas
 
 
 	/*=============================================
-	EDITAR IMAGEN DE VENTA
-	=============================================*/
+	 EDITAR IMAGEN DE VENTA
+	 =============================================*/
 	static public function ctrEditarImagenVenta($datos)
 	{
 
@@ -1811,8 +1820,8 @@ class ControladorVentas
 	}
 
 	/*=============================================
-	ACTUALIZAR SEGUIMIENTO
-	=============================================*/
+	 ACTUALIZAR SEGUIMIENTO
+	 =============================================*/
 	static public function ctrActualizarSeguimiento($datos)
 	{
 		$tabla = "ventas";
@@ -1821,8 +1830,8 @@ class ControladorVentas
 	}
 
 	/*=============================================
-	CREAR VENTA FACTURACIÓN ELECTRÓNICA
-	=============================================*/
+	 CREAR VENTA FACTURACIÓN ELECTRÓNICA
+	 =============================================*/
 	static public function ctrCrearVentaFactus()
 	{
 		if (isset($_POST["guardarVentaFactus"])) {
@@ -1845,8 +1854,8 @@ class ControladorVentas
 			}
 
 			/*=============================================
-			2. GESTIÓN DE STOCK Y CLIENTES
-			=============================================*/
+			 2. GESTIÓN DE STOCK Y CLIENTES
+			 =============================================*/
 			$listaProductos = json_decode($_POST["listaProductos"], true);
 			$codigoVenta = $_POST["nuevaVenta"];
 			$tabla = "ventas";
@@ -1878,7 +1887,8 @@ class ControladorVentas
 						$nuevasVentas = $value["cantidad"] + $traerProducto["ventas"];
 						ModeloProductos::mdlActualizarProducto($tablaProductos, "ventas", $nuevasVentas, $value["id"]);
 
-					} else {
+					}
+					else {
 						$tablaProductos = "productos";
 						$item = "id";
 						$valor = $value["id"];
@@ -1911,8 +1921,8 @@ class ControladorVentas
 			ModeloClientes::mdlActualizarCliente($tablaClientes, $item1b, $valor1b, $valor);
 
 			/*=============================================
-			3. GUARDAR VENTA (O CONVERTIR SI ES ORDEN)
-			=============================================*/
+			 3. GUARDAR VENTA (O CONVERTIR SI ES ORDEN)
+			 =============================================*/
 			date_default_timezone_set('America/Bogota');
 			$fechaHoraActual = date('Y-m-d H:i:s');
 
@@ -1967,12 +1977,12 @@ class ControladorVentas
 				ControladorNotificaciones::ctrVerificarStockProductos();
 
 				/*=============================================
-				4. ENVIAR A FACTUS
-				=============================================*/
+				 4. ENVIAR A FACTUS
+				 =============================================*/
 
 				/*=============================================
-				4. ENVIAR A FACTUS (Refactorizado para usar lógica unificada)
-				=============================================*/
+				 4. ENVIAR A FACTUS (Refactorizado para usar lógica unificada)
+				 =============================================*/
 				require_once "factus.controlador.php";
 
 				// Recuperar ID venta
@@ -1988,8 +1998,8 @@ class ControladorVentas
 					echo '<script>
 						swal({
 						  type: "success",
-						  title: "Factura Electrónica GUARDADA (Borrador)",
-                          html: "<h3>' . $resultadoFactura["mensaje"] . '</h3><p>La factura ha sido guardada correctamente como borrador. Puede firmarla desde el listado de facturas.</p>",
+						  title: "Factura Electrónica GUARDADA",
+						  text: "La factura ha sido guardada correctamente como borrador",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
 						  }).then(function(result){
@@ -1998,7 +2008,8 @@ class ControladorVentas
 									}
 								})
 						</script>';
-				} else {
+				}
+				else {
 					// ERROR
 					$errorMsg = $resultadoFactura["mensaje"];
 					if (isset($resultadoFactura["errores"]) && !empty($resultadoFactura["errores"])) {
@@ -2020,7 +2031,8 @@ class ControladorVentas
 						</script>';
 				}
 
-			} else {
+			}
+			else {
 				echo '<script>
 					swal({
 						  type: "error",

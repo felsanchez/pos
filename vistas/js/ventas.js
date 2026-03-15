@@ -1,3 +1,27 @@
+$(document).ready(function () {
+	// Función para quitar el loader de Facturas Electrónicas
+	function quitarLoaderFE() {
+		if ($("#loader-table-fe").length > 0) {
+			$("#loader-table-fe").fadeOut(400, function () {
+				$(this).remove();
+			});
+		}
+	}
+
+	// 1. Escuchar el evento de inicialización de DataTables de la tabla de Facturas Electrónicas (#example)
+	$(document).on('init.dt', '#example', function () {
+		console.log("DataTables inicializado (evento delegado) para Facturas Electrónicas");
+		quitarLoaderFE();
+	});
+
+	// 2. Respaldo: Si la tabla ya tiene la clase 'datatable-ready', quitar loader
+	if ($('#example').hasClass('datatable-ready')) {
+		quitarLoaderFE();
+	}
+
+	// 3. Respaldo adicional: Si por alguna razón pasan 4 segundos y sigue el spinner, quitarlo
+	setTimeout(quitarLoaderFE, 4000);
+});
 
 /*=============================================
 VARIABLE LOCAL STORAGE
@@ -1181,7 +1205,7 @@ $("#nuevoMetodoPago").change(function () {
 
 			'<div class="input-group">' +
 
-			'<input type="text" class="form-control" id="nuevoCodigoTransaccion" name="nuevoCodigoTransaccion" placeholder="Ingrese el valor o código de transacción" required>' +
+			'<input type="text" class="form-control" id="nuevoCodigoTransaccion" name="nuevoCodigoTransaccion" placeholder="Ingrese el valor o código de transacción">' +
 
 			'<span class="input-group-addon"><i class="fa fa-lock"></i></span>' +
 
@@ -1189,6 +1213,9 @@ $("#nuevoMetodoPago").change(function () {
 
 			'</div>'
 		)
+
+		// Llamar listarMetodos() inmediatamente para que no quede vacío si el código es opcional
+		listarMetodos()
 
 	}
 
@@ -1291,13 +1318,17 @@ LISTAR METODO DE PAGO
 function listarMetodos() {
 
 	var listarMetodos = "";
+	var metodo = $("#nuevoMetodoPago").val();
 
-	if ($("#nuevoMetodoPago").val() == "Efectivo") {
+	if (metodo == "Efectivo") {
 		$("#listaMetodoPago").val("Efectivo");
-	}
-
-	else {
-		$("#listaMetodoPago").val($("#nuevoMetodoPago").val() + "-" + $("#nuevoCodigoTransaccion").val());
+	} else {
+		var transaccion = $("#nuevoCodigoTransaccion").val();
+		if (transaccion && transaccion.trim() !== "") {
+			$("#listaMetodoPago").val(metodo + "-" + transaccion);
+		} else {
+			$("#listaMetodoPago").val(metodo);
+		}
 	}
 
 }
@@ -1539,8 +1570,8 @@ $(document).on("click", ".btnFirmarFactura", function () {
 	var boton = $(this);
 
 	swal({
-		title: '¿Confirmar firma y envío a DIAN?',
-		text: "La factura será enviada a la DIAN para su validación oficial. Esta acción no se puede deshacer.",
+		title: '¿Está seguro de firmar esta Factura?',
+		text: "¡Esta acción no se puede deshacer y el documento será oficial!",
 		type: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
@@ -1555,6 +1586,15 @@ $(document).on("click", ".btnFirmarFactura", function () {
 			boton.prop('disabled', true);
 			var htmlOriginal = boton.html();
 			boton.html('<i class="fa fa-spinner fa-spin"></i>');
+
+			swal({
+				title: "Enviando",
+				text: "Por favor espere mientras se firma el documento",
+				allowOutsideClick: false,
+				onBeforeOpen: () => {
+					swal.showLoading()
+				}
+			});
 
 			var datos = new FormData();
 			datos.append("accion", "generarFactura");
@@ -1574,8 +1614,8 @@ $(document).on("click", ".btnFirmarFactura", function () {
 
 						swal({
 							type: "success",
-							title: "¡Factura Firmada y Enviada!",
-							text: respuesta.mensaje || "La factura ha sido aceptada por la DIAN",
+							title: "Exito",
+							text: "Factura firmada correctamente",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
 						}).then(function (result) {

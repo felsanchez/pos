@@ -8,6 +8,7 @@ $(document).ready(function () {
     if ($.fn.select2) {
         $("#seleccionarClienteReporte").select2({ width: '100%' });
         $("#seleccionarProveedorReporte").select2({ width: '100%' });
+        $("#seleccionarUsuarioReporte").select2({ width: '100%', placeholder: 'Todos los usuarios' });
     }
 
     /*=============================================
@@ -72,6 +73,7 @@ $(document).ready(function () {
     $("#btnFiltrarReportes").click(function () {
         var categoria = $("#seleccionarCategoriaReporte").val();
         var tercero = "todos";
+        var idUsuario = $("#seleccionarUsuarioReporte").val() || "todos";
 
         if (categoria == "ds" || categoria == "na") {
             tercero = $("#seleccionarProveedorReporte").val();
@@ -79,22 +81,44 @@ $(document).ready(function () {
             tercero = $("#seleccionarClienteReporte").val();
         }
 
-        cargarDashboard(fechaInicial, fechaFinal, categoria, tercero);
+        cargarDashboard(fechaInicial, fechaFinal, categoria, tercero, idUsuario);
     });
 
-    function cargarDashboard(fi, ff, cat, tercero) {
-        cargarKPIs(fi, ff, cat, tercero);
-        cargarGrafico(fi, ff, cat, tercero);
-        initializeTable(fi, ff, cat, tercero);
+    $("#btnLimpiarFiltrosReportes").click(function () {
+        // Restablecer fecha a los últimos 30 días
+        fechaInicial = moment().subtract(29, 'days').format('YYYY-MM-DD');
+        fechaFinal = moment().format('YYYY-MM-DD');
+        $("#daterange-btn-reportes span").html('<i class="fa fa-calendar"></i> Rango de fecha');
+        localStorage.removeItem("capturarRangoReportes");
+
+        // Restablecer selects
+        $("#seleccionarCategoriaReporte").val("todos").trigger("change");
+        $("#seleccionarClienteReporte").val("todos").trigger("change");
+        $("#seleccionarProveedorReporte").val("todos").trigger("change");
+        if ($.fn.select2) {
+            $("#seleccionarUsuarioReporte").val(null).trigger("change");
+        } else {
+            $("#seleccionarUsuarioReporte").val("todos");
+        }
+
+        // Recargar datos sin filtros
+        cargarDashboard(fechaInicial, fechaFinal, "todos", "todos", "todos");
+    });
+
+    function cargarDashboard(fi, ff, cat, tercero, idUsuario) {
+        idUsuario = idUsuario || "todos";
+        cargarKPIs(fi, ff, cat, tercero, idUsuario);
+        cargarGrafico(fi, ff, cat, tercero, idUsuario);
+        initializeTable(fi, ff, cat, tercero, idUsuario);
     }
 
     /*=============================================
     CARGAR DATOS INICIALES
     =============================================*/
     var categoriaInicial = $("#seleccionarCategoriaReporte").val();
-    cargarDashboard(fechaInicial, fechaFinal, categoriaInicial, "todos");
+    cargarDashboard(fechaInicial, fechaFinal, categoriaInicial, "todos", "todos");
 
-    function cargarKPIs(fechaInicial, fechaFinal, categoria, tercero) {
+    function cargarKPIs(fechaInicial, fechaFinal, categoria, tercero, idUsuario) {
         $.ajax({
             url: "ajax/facturacion.ajax.php",
             method: "POST",
@@ -103,7 +127,8 @@ $(document).ready(function () {
                 fechaInicial: fechaInicial,
                 fechaFinal: fechaFinal,
                 categoria: categoria,
-                tercero: tercero
+                tercero: tercero,
+                idUsuario: idUsuario || "todos"
             },
             dataType: "json",
             success: function (respuesta) {
@@ -117,7 +142,7 @@ $(document).ready(function () {
 
     var lineChart = null;
 
-    function cargarGrafico(fechaInicial, fechaFinal, categoria, tercero) {
+    function cargarGrafico(fechaInicial, fechaFinal, categoria, tercero, idUsuario) {
         $.ajax({
             url: "ajax/facturacion.ajax.php",
             method: "POST",
@@ -126,7 +151,8 @@ $(document).ready(function () {
                 fechaInicial: fechaInicial,
                 fechaFinal: fechaFinal,
                 categoria: categoria,
-                tercero: tercero
+                tercero: tercero,
+                idUsuario: idUsuario || "todos"
             },
             dataType: "json",
             success: function (respuesta) {
@@ -211,7 +237,7 @@ $(document).ready(function () {
 
     var table = null;
 
-    function initializeTable(fi, ff, cat, tercero) {
+    function initializeTable(fi, ff, cat, tercero, idUsuario) {
 
         if ($.fn.DataTable.isDataTable(".tablaReporteFacturacion")) {
             $(".tablaReporteFacturacion").DataTable().clear().destroy();
@@ -228,7 +254,8 @@ $(document).ready(function () {
                     "fechaInicial": fi,
                     "fechaFinal": ff,
                     "categoria": cat,
-                    "tercero": tercero
+                    "tercero": tercero,
+                    "idUsuario": idUsuario || "todos"
                 }
             },
             "deferRender": true,
@@ -285,6 +312,7 @@ $(document).ready(function () {
         var ff = fechaFinal;
         var cat = $("#seleccionarCategoriaReporte").val();
         var tercero = "todos";
+        var idUsuario = $("#seleccionarUsuarioReporte").val() || "todos";
 
         if (cat == "ds" || cat == "na") {
             tercero = $("#seleccionarProveedorReporte").val();
@@ -294,7 +322,7 @@ $(document).ready(function () {
 
         var url = "vistas/modulos/descargar-reporte-facturacion.php?reporte=reporte_facturacion";
         url += "&fechaInicial=" + fi + "&fechaFinal=" + ff;
-        url += "&categoria=" + cat + "&tercero=" + tercero;
+        url += "&categoria=" + cat + "&tercero=" + tercero + "&idUsuario=" + idUsuario;
 
         window.open(url, '_blank');
     });

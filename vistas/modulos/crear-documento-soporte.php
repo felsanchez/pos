@@ -44,8 +44,8 @@ if (isset($respuesta) && $respuesta["error"] == false) {
     echo '<script>
       swal({
         type: "success",
-        title: "¡El Documento Soporte ha sido generado correctamente!",
-        text: "Número: ' . $respuesta["numero"] . '",
+        title: "¡Documento Soporte generado correctamente!",
+        //text: "Número: ' . $respuesta["numero"] . '",
         showConfirmButton: true,
         confirmButtonText: "Cerrar"
       }).then(function(result){
@@ -301,7 +301,7 @@ if (isset($respuesta) && $respuesta["error"] == false) {
                         </div>
 
                         <div class="box-footer">
-                            <button type="submit" class="btn btn-primary pull-right">Emitir Documento</button>
+                            <button type="submit" class="btn btn-primary pull-right">Guardar</button>
                         </div>
 
                     </form>

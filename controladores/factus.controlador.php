@@ -613,7 +613,7 @@ class ControladorFactus
 
 			return array(
 				"error" => false,
-				"mensaje" => "Factura guardada correctamente (Borrador)",
+				"mensaje" => "Factura guardada correctamente",
 				"datos" => []
 			);
 		}
@@ -1147,7 +1147,7 @@ class ControladorFactus
 				"pdf_dian_nc" => '',
 				"mensaje_dian" => 'Nota Crédito guardada localmente (Borrador). Pendiente por firmar.',
 				"fecha_envio_dian" => null,
-				"id_usuario" => $_SESSION['id'] ?? 14,
+				"id_usuario" => !empty($_SESSION['id']) ? $_SESSION['id'] : (!empty($_POST['idUsuario']) ? intval($_POST['idUsuario']) : null),
 				"observacion" => $observacion,
 				"metodo_pago" => $metodoPago
 			];
@@ -1212,7 +1212,7 @@ class ControladorFactus
 				"pdf_dian_nc" => $respuestaFactus['data']['credit_note']['public_url'] ?? $respuestaFactus['data']['pdf_url'] ?? '',
 				"mensaje_dian" => $respuestaFactus['message'] ?? 'NC generada exitosamente',
 				"fecha_envio_dian" => date('Y-m-d H:i:s'),
-				"id_usuario" => $_SESSION['id'] ?? 14,
+				"id_usuario" => !empty($_SESSION['id']) ? $_SESSION['id'] : (!empty($_POST['idUsuario']) ? intval($_POST['idUsuario']) : null),
 				"observacion" => $observacion,
 				"metodo_pago" => $metodoPago
 			];
@@ -1293,7 +1293,7 @@ class ControladorFactus
 					echo '<script>
 					swal({
 						type: "success",
-						title: "La nota credito ha sido borrada correctamente",
+						title: "El Documento ha sido eliminado correctamente",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 						}).then(function(result){
@@ -2047,7 +2047,7 @@ class ControladorFactus
 				"pdf_dian" => "",
 				"mensaje_dian" => "Nota de Ajuste guardada localmente (Borrador). Pendiente de firma.",
 				"fecha_envio_dian" => date('Y-m-d H:i:s'),
-				"id_usuario" => $_POST["idUsuario"],
+				"id_usuario" => !empty($_SESSION['id']) ? $_SESSION['id'] : (!empty($_POST['idUsuario']) ? intval($_POST['idUsuario']) : null),
 				"id_proveedor" => $originalDS["id_proveedor"],
 				"observacion" => $_POST["nuevaObservacionDS"] ?? '',
 				"metodo_pago" => $metodoPago
@@ -2327,27 +2327,27 @@ class ControladorFactus
 	/*=============================================
 	OBTENER KPIs PARA REPORTES
 	=============================================*/
-	static public function ctrObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero = "todos")
+	static public function ctrObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos")
 	{
-		$respuesta = ModeloFactus::mdlObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero);
+		$respuesta = ModeloFactus::mdlObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero, $idUsuario);
 		return $respuesta;
 	}
 
 	/*=============================================
 	OBTENER DATOS PARA GRÁFICO DE VENTAS
 	=============================================*/
-	static public function ctrObtenerVentasGrafico($fechaInicial, $fechaFinal, $categoria, $tercero = "todos")
+	static public function ctrObtenerVentasGrafico($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos")
 	{
-		$respuesta = ModeloFactus::mdlObtenerVentasGrafico($fechaInicial, $fechaFinal, $categoria, $tercero);
+		$respuesta = ModeloFactus::mdlObtenerVentasGrafico($fechaInicial, $fechaFinal, $categoria, $tercero, $idUsuario);
 		return $respuesta;
 	}
 
 	/*=============================================
 	MOSTRAR REPORTE DETALLADO
 	=============================================*/
-	static public function ctrMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero = "todos")
+	static public function ctrMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos")
 	{
-		$respuesta = ModeloFactus::mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero);
+		$respuesta = ModeloFactus::mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero, $idUsuario);
 		return $respuesta;
 	}
 
@@ -2362,9 +2362,10 @@ class ControladorFactus
 			$fechaFinal = $_GET["fechaFinal"] ?? null;
 			$categoria = $_GET["categoria"] ?? "todos";
 			$tercero = $_GET["tercero"] ?? "todos";
+			$idUsuario = $_GET["idUsuario"] ?? "todos";
 
 			// Obtener datos
-			$reporte = ModeloFactus::mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero);
+			$reporte = ModeloFactus::mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero, $idUsuario);
 
 			/*=============================================
 			CREAMOS EL ARCHIVO DE EXCEL

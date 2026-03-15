@@ -1,10 +1,10 @@
 {
     "numbering_range_id": 1190,
-    "reference_code": "821",
+    "reference_code": "847",
     "observation": "",
     "payment_form": "1",
-    "payment_due_date": "0000-00-00",
-    "payment_method_code": "48",
+    "payment_due_date": "2026-04-14",
+    "payment_method_code": "10",
     "operation_type": 10,
     "send_email": true,
     "establishment": {
@@ -49,15 +49,15 @@
             "scheme_id": "1",
             "note": "",
             "code_reference": "ITEM-1",
-            "name": "prueba01 Exc GLL",
+            "name": "prueba05 IVA19 MTR",
             "quantity": 1,
             "discount_rate": "0.00",
-            "price": "100.000000",
-            "tax_rate": "0.00",
-            "unit_measure_id": 874,
+            "price": "84.033613",
+            "tax_rate": "19.00",
+            "unit_measure_id": 512,
             "standard_code_id": 1,
             "is_excluded": 0,
-            "tribute_id": 7,
+            "tribute_id": 1,
             "withholding_taxes": []
         }
     ]

@@ -1020,10 +1020,11 @@ class AjaxFacturacion
     OBTENER KPIs PARA REPORTES
     =============================================*/
     public $tercero;
+    public $idUsuario;
 
     public function ajaxObtenerKPIsReporte()
     {
-        $respuesta = ControladorFactus::ctrObtenerKPIsReporte($this->fechaInicial, $this->fechaFinal, $this->categoria, $this->tercero);
+        $respuesta = ControladorFactus::ctrObtenerKPIsReporte($this->fechaInicial, $this->fechaFinal, $this->categoria, $this->tercero, $this->idUsuario);
         echo json_encode($respuesta);
     }
 
@@ -1032,7 +1033,7 @@ class AjaxFacturacion
     =============================================*/
     public function ajaxObtenerVentasGrafico()
     {
-        $respuesta = ControladorFactus::ctrObtenerVentasGrafico($this->fechaInicial, $this->fechaFinal, $this->categoria, $this->tercero);
+        $respuesta = ControladorFactus::ctrObtenerVentasGrafico($this->fechaInicial, $this->fechaFinal, $this->categoria, $this->tercero, $this->idUsuario);
         echo json_encode($respuesta);
     }
 
@@ -1041,7 +1042,7 @@ class AjaxFacturacion
     =============================================*/
     public function ajaxMostrarReporteDetallado()
     {
-        $respuesta = ControladorFactus::ctrMostrarReporteDetallado($this->fechaInicial, $this->fechaFinal, $this->categoria, $this->tercero);
+        $respuesta = ControladorFactus::ctrMostrarReporteDetallado($this->fechaInicial, $this->fechaFinal, $this->categoria, $this->tercero, $this->idUsuario);
 
         $datos = [];
 
@@ -1117,6 +1118,7 @@ if (isset($_POST["accion"]) && $_POST["accion"] == "obtenerKPIsReporte") {
     $reporte->fechaFinal = $_POST["fechaFinal"];
     $reporte->categoria = $_POST["categoria"] ?? "todos";
     $reporte->tercero = $_POST["tercero"] ?? "todos";
+    $reporte->idUsuario = $_POST["idUsuario"] ?? "todos";
     $reporte->ajaxObtenerKPIsReporte();
 }
 
@@ -1126,6 +1128,7 @@ if (isset($_POST["accion"]) && $_POST["accion"] == "obtenerVentasGrafico") {
     $reporte->fechaFinal = $_POST["fechaFinal"];
     $reporte->categoria = $_POST["categoria"] ?? "todos";
     $reporte->tercero = $_POST["tercero"] ?? "todos";
+    $reporte->idUsuario = $_POST["idUsuario"] ?? "todos";
     $reporte->ajaxObtenerVentasGrafico();
 }
 
@@ -1135,5 +1138,6 @@ if (isset($_POST["accion"]) && $_POST["accion"] == "mostrarReporteDetallado") {
     $reporte->fechaFinal = $_POST["fechaFinal"];
     $reporte->categoria = $_POST["categoria"] ?? "todos";
     $reporte->tercero = $_POST["tercero"] ?? "todos";
+    $reporte->idUsuario = $_POST["idUsuario"] ?? "todos";
     $reporte->ajaxMostrarReporteDetallado();
 }

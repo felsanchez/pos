@@ -128,6 +128,7 @@ require_once "modelos/productos.modelo.php";
                     </div>
 
                     <form role="form" method="post" class="formularioNotaCredito" id="formNotaCredito">
+                        <input type="hidden" name="idUsuarioSesion" id="idUsuarioSesion" value="<?php echo $_SESSION['id'] ?? ''; ?>">
 
                         <div class="box-body">
 
@@ -438,7 +439,7 @@ require_once "modelos/productos.modelo.php";
                     <button type="button" class="btn btn-default pull-left"
                         onclick="window.location='notas-credito'">Cancelar</button>
                     <?php if ($idVenta && $venta): ?>
-                        <button type="submit" class="btn btn-primary pull-right">Guardar Borrador de Nota Crédito</button>
+                        <button type="submit" class="btn btn-primary pull-right">Guardar</button>
                     <?php endif; ?>
                 </div>
 

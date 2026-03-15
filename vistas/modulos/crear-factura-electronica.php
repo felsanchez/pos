@@ -407,8 +407,7 @@ if ($ultimaVenta) {
 
 
             <div class="box-footer">
-              <button type="submit" name="guardarVentaFactus" class="btn btn-primary pull-right">Guardar
-                (Borrador)</button>
+              <button type="submit" name="guardarVentaFactus" class="btn btn-primary pull-right">Guardar</button>
             </div>
 
           </form>

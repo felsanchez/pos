@@ -33,7 +33,7 @@
                   </button>
                 </div>
               </div>
-              <div class="col-md-4" style="margin-bottom: 10px;">
+              <div class="col-md-2" style="margin-bottom: 10px;">
                 <div class="input-group">
                   <span class="input-group-addon" style="background-color: #f4f4f4;"><i class="fa fa-filter"></i>
                     Categoría</span>
@@ -46,7 +46,7 @@
                   </select>
                 </div>
               </div>
-              <div class="col-md-4" style="margin-bottom: 10px;">
+              <div class="col-md-3" style="margin-bottom: 10px;">
                 <div class="input-group" style="width: 100%;">
                   <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
                       class="fa fa-users"></i></span>
@@ -70,9 +70,27 @@
                   </select>
                 </div>
               </div>
-              <div class="col-md-1" style="margin-bottom: 10px;">
-                <button type="button" class="btn btn-primary" id="btnFiltrarReportes" style="width: 100%;">
-                  <i class="fa fa-search"></i>
+              <div class="col-md-3" style="margin-bottom: 10px;">
+                <div class="input-group" style="width: 100%;">
+                  <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
+                      class="fa fa-user"></i></span>
+                  <select class="form-control" id="seleccionarUsuarioReporte" style="width: 100%;">
+                    <option value="todos">Todos los usuarios</option>
+                    <?php
+                    $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
+                    foreach ($usuarios as $key => $value) {
+                      echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                    }
+                    ?>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-1" style="margin-bottom: 10px; display: flex; gap: 5px;">
+                <button type="button" class="btn btn-primary" id="btnFiltrarReportes" style="flex: 1;">
+                  <i class="fa fa-search"></i> Buscar
+                </button>
+                <button type="button" class="btn btn-default" id="btnLimpiarFiltrosReportes" style="flex: 1;" title="Limpiar filtros">
+                  <i class="fa fa-refresh"></i>
                 </button>
               </div>
             </div>

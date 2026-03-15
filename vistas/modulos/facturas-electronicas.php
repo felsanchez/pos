@@ -313,7 +313,7 @@ if ($xml) {
 
         <a href="crear-factura-electronica">
           <button class="btn btn-primary">
-            Crear factura
+            Crear Factura Electrónica
           </button>
         </a>
 
@@ -418,6 +418,49 @@ if ($xml) {
       </div>
 
       <div class="box-body">
+
+        <style>
+          .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            background: #fff;
+            margin-bottom: 20px;
+            transition: opacity 0.3s ease;
+          }
+
+          .loader-container i {
+            font-size: 45px;
+            color: #3c8dbc;
+            margin-bottom: 15px;
+          }
+
+          .loader-container span {
+            font-size: 16px;
+            color: #666;
+            font-weight: 500;
+          }
+
+          /* Hide table while loading to prevent layout jump */
+          .tablas:not(.datatable-ready) {
+            visibility: hidden;
+            height: 0;
+            overflow: hidden;
+            opacity: 0;
+          }
+
+          .tablas.datatable-ready {
+            transition: opacity 0.5s ease;
+            opacity: 1;
+          }
+        </style>
+
+        <div id="loader-table-fe" class="loader-container">
+          <i class="fa fa-refresh fa-spin"></i>
+          <span>Cargando Facturas Electrónicas...</span>
+        </div>
 
         <div class="tabla-ventas table-responsive">
           <table id="example" class="table table-bordered table-striped tablas display nowrap">
@@ -627,14 +670,16 @@ if ($xml) {
 
                 echo '</td>
 
-
                         <td>
                           <div class="btn-group">
 
-                            <!--<a class="btn btn-success" href="index.php?ruta=ventas&xml=' . $value["codigo"] . '">xml</a>-->
-                            
+                               <button class="btn btn-info btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver Detalles">
+                                <i class="fa fa-eye"></i>
+                               </button>
 
-                            ' . ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
+                             ' . (!empty($value["qr_data"]) ? '<a class="btn btn-success" href="' . $value["qr_data"] . '" target="_blank" data-toggle="tooltip" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>' : '') . '
+
+                             ' . ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
                   '<button class="btn btn-success btnFirmarFactura" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
                                 <i class="fa fa-paper-plane"></i>
                              </button>' : '') . '
@@ -642,12 +687,7 @@ if ($xml) {
                   '<a class="btn btn-warning" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador">
                                 <i class="fa fa-pencil"></i>
                              </a>' : '') . '
-
-                             ' . (!empty($value["qr_data"]) ? '<a class="btn btn-success" href="' . $value["qr_data"] . '" target="_blank" data-toggle="tooltip" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>' : '') . '
-
-                               <button class="btn btn-info btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver Detalles">
-                               <i class="fa fa-eye"></i>
-                             </button>';
+                             ';
 
                 if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
                   echo ' <button class="btn btn-primary btnEnviarEmail" idVenta="' . $value["id"] . '" nombreCliente="' . $nombreCliente . '" emailCliente="' . $value["email_cliente"] . '" title="Enviar por Correo">
@@ -668,8 +708,8 @@ if ($xml) {
                   // Solo mostrar botón eliminar si la factura NO ha sido firmada/aceptada
                   $estadosNoEliminables = ['enviada', 'aceptada'];
                   if (!in_array($value["estado_dian"], $estadosNoEliminables)) {
-                    echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '">
-                                        <i class="fa fa-times"></i>
+                    echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar Borrador">
+                                        <i class="fa fa-trash"></i>
                                       </button>';
                   }
                 }
@@ -745,7 +785,26 @@ if ($xml) {
                         </div>
                         <div class="card-venta-acciones">
                           <div class="btn-group">
-                             ' . ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
+                            <button class="btn btn-info btn-xs btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver Detalles">
+                              <i class="fa fa-eye"></i>
+                            </button>
+
+                            ' . (!empty($value["qr_data"]) ? '<a class="btn btn-success btn-xs" href="' . $value["qr_data"] . '" target="_blank" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>' : '') . '';
+
+            if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
+              echo ' <button class="btn btn-primary btn-xs btnEnviarEmail" idVenta="' . $value["id"] . '" nombreCliente="' . $nombreCliente . '" emailCliente="' . $value["email_cliente"] . '" title="Enviar por Correo">
+                                <i class="fa fa-envelope"></i>
+                              </button>';
+            }
+
+            // Botón de las Notas Crédito movil
+            if (ModeloFactus::mdlTieneNotaCredito($value["id"])) {
+              echo '<button class="btn btn-warning btn-xs btnVerNotasCredito" idVenta="' . $value["id"] . '" data-toggle="modal" data-target="#modalNotasCredito" title="Ver Notas Crédito">
+                                   <i class="fa fa-list"></i>
+                                 </button>';
+            }
+
+            echo ' ' . ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
               '<button class="btn btn-success btn-xs btnFirmarFactura" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
                                 <i class="fa fa-paper-plane"></i>
                              </button>' : '') . '
@@ -753,17 +812,14 @@ if ($xml) {
               '<a class="btn btn-warning btn-xs" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador">
                                 <i class="fa fa-pencil"></i>
                              </a>' : '') . '
-                            ' . (!empty($value["qr_data"]) ? '<a class="btn btn-success btn-xs" href="' . $value["qr_data"] . '" target="_blank" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>' : '') . '
-                            <button class="btn btn-warning btn-xs btnEditarVenta" idVenta="' . $value["id"] . '">
-                              <i class="fa fa-eye"></i>
-                            </button>';
+';
 
             if ($_SESSION["perfil"] == "Administrador") {
               // Solo mostrar botón eliminar si la factura NO ha sido firmada/aceptada
               $estadosNoEliminables = ['enviada', 'aceptada'];
               if (!in_array($value["estado_dian"], $estadosNoEliminables)) {
-                echo '<button class="btn btn-danger btn-xs btnEliminarVenta" idVenta="' . $value["id"] . '">
-                          <i class="fa fa-times"></i>
+                echo '<button class="btn btn-danger btn-xs btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar Borrador">
+                          <i class="fa fa-trash"></i>
                         </button>';
               }
             }
@@ -1129,28 +1185,24 @@ MODAL EDITAR CLIENTE
         endDate: end
       },
       function (start, end) {
-        // Actualizar texto del botón SIEMPRE con rango completo (Igual que ventas.js)
-        $('#daterange-btn-factus span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+        // Actualizar texto del botón visualmente
+        var textoRango = start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY');
+        $('#daterange-btn-factus span').html(textoRango);
 
-        // Guardar en LocalStorage
-        var capturarRango = $("#daterange-btn-factus span").html();
-        localStorage.setItem("capturarRangoFactus", capturarRango);
-
-        // Lógica de fechas idéntica a ventas.php (respetando startOf/endOf)
-        var fechaInicial = start.format('YYYY-MM-DD');
-        var fechaFinal = end.endOf('day').format('YYYY-MM-DD HH:mm:ss');
-        var fechaInicialCompleta = start.startOf('day').format('YYYY-MM-DD HH:mm:ss');
-
-        var nuevaURL = 'index.php?ruta=facturas-electronicas&fechaInicial=' + encodeURIComponent(fechaInicialCompleta) + '&fechaFinal=' + encodeURIComponent(fechaFinal);
-        window.location.href = nuevaURL;
+        // Actualizar inputs ocultos que se enviarán con el form
+        var fechaInicialFormato = start.startOf('day').format('YYYY-MM-DD HH:mm:ss');
+        var fechaFinalFormato = end.endOf('day').format('YYYY-MM-DD HH:mm:ss');
+        
+        $('#fechaInicial').val(fechaInicialFormato);
+        $('#fechaFinal').val(fechaFinalFormato);
       }
     );
 
-    // 3. Manejar Cancelar
+    // 3. Manejar Cancelar/Limpiar Rango
     $('#daterange-btn-factus').on('cancel.daterangepicker', function (ev, picker) {
-      localStorage.removeItem("capturarRangoFactus");
-      localStorage.clear(); // Ojo: clear borra todo, cuidado. Mejor solo removeItem.
-      window.location.href = 'index.php?ruta=facturas-electronicas';
+      $('#daterange-btn-factus span').html('<i class="fa fa-calendar"></i> Rango de fecha');
+      $('#fechaInicial').val('');
+      $('#fechaFinal').val('');
     });
   });
 </script>
@@ -1276,7 +1328,7 @@ MODAL EDITAR CLIENTE
           }).then(function (result) {
             if (result.value) {
               $("#modalAmpliarImagenVenta").modal("hide");
-              window.location = "ventas";
+              window.location = "facturas-electronicas";
             }
           });
         } else {

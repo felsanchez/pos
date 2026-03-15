@@ -428,21 +428,7 @@ MODAL EDITAR USUARIO
               </div>
             </div>
 
-            <!-- Fila 3: Contraseña -->
-            <div class="row">
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label>Nueva Contraseña (Opcional):</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-lock"></i></span>
-                    <input type="password" class="form-control input-lg" name="editarPassword"
-                      placeholder="Escribe para cambiar la contraseña (o dejar vacío)">
-                    <input type="hidden" id="passwordActual" name="passwordActual">
-                  </div>
-                  <small class="text-muted">Si no deseas cambiar la contraseña, deja este campo vacío.</small>
-                </div>
-              </div>
-            </div>
+
 
             <!-- Fila 4: Foto -->
             <div class="row">

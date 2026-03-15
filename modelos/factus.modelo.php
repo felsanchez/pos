@@ -2071,7 +2071,7 @@ class ModeloFactus
     /*=============================================
     OBTENER KPIs PARA REPORTES
     =============================================*/
-    static public function mdlObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero = "todos")
+    static public function mdlObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos")
     {
         $db = Conexion::conectar();
 
@@ -2081,18 +2081,22 @@ class ModeloFactus
 
         $filtroCliente = ($tercero != "todos" && ($categoria == "todos" || $categoria == "facturas" || $categoria == "nc")) ? " AND id_cliente = :tc " : "";
         $filtroProveedor = ($tercero != "todos" && ($categoria == "ds" || $categoria == "na")) ? " AND id_proveedor = :tp " : "";
+        $filtroVendedor = ($idUsuario != "todos") ? " AND id_vendedor = :uidv " : "";
+        $filtroUsuario  = ($idUsuario != "todos") ? " AND id_usuario = :uidu " : "";
 
         // 1. VENTAS (Facturadas y aceptadas)
         $stmtVentas = $db->prepare("SELECT SUM(total) as t, SUM(impuesto) as i, COUNT(*) as c 
                                     FROM ventas 
                                     WHERE estado_dian IN ('aceptada', 'enviada') 
-                                    AND (fecha BETWEEN :s1 AND :e1 OR fecha_envio_dian BETWEEN :s2 AND :e2)" . $filtroCliente);
+                                    AND (fecha BETWEEN :s1 AND :e1 OR fecha_envio_dian BETWEEN :s2 AND :e2)" . $filtroCliente . $filtroVendedor);
         $stmtVentas->bindParam(":s1", $inicio, PDO::PARAM_STR);
         $stmtVentas->bindParam(":e1", $fin, PDO::PARAM_STR);
         $stmtVentas->bindParam(":s2", $inicio, PDO::PARAM_STR);
         $stmtVentas->bindParam(":e2", $fin, PDO::PARAM_STR);
         if ($filtroCliente != "")
             $stmtVentas->bindParam(":tc", $tercero, PDO::PARAM_INT);
+        if ($filtroVendedor != "")
+            $stmtVentas->bindParam(":uidv", $idUsuario, PDO::PARAM_INT);
         $stmtVentas->execute();
         $resVentas = $stmtVentas->fetch();
 
@@ -2100,11 +2104,13 @@ class ModeloFactus
         $stmtNC = $db->prepare("SELECT SUM(monto_total) as t, COUNT(*) as c 
                                 FROM notas_credito 
                                 WHERE estado_dian IN ('aceptada', 'enviada') 
-                                AND IFNULL(fecha_envio_dian, fecha_creacion) BETWEEN :s3 AND :e3" . $filtroCliente);
+                                AND IFNULL(fecha_envio_dian, fecha_creacion) BETWEEN :s3 AND :e3" . $filtroCliente . $filtroUsuario);
         $stmtNC->bindParam(":s3", $inicio, PDO::PARAM_STR);
         $stmtNC->bindParam(":e3", $fin, PDO::PARAM_STR);
         if ($filtroCliente != "")
             $stmtNC->bindParam(":tc", $tercero, PDO::PARAM_INT);
+        if ($filtroUsuario != "")
+            $stmtNC->bindParam(":uidu", $idUsuario, PDO::PARAM_INT);
         $stmtNC->execute();
         $resNC = $stmtNC->fetch();
 
@@ -2112,11 +2118,13 @@ class ModeloFactus
         $stmtDS = $db->prepare("SELECT SUM(monto_total) as t, COUNT(*) as c 
                                 FROM documentos_soporte 
                                 WHERE estado_dian IN ('aceptada', 'enviada') 
-                                AND fecha_emision BETWEEN :s4 AND :e4" . $filtroProveedor);
+                                AND fecha_emision BETWEEN :s4 AND :e4" . $filtroProveedor . $filtroUsuario);
         $stmtDS->bindParam(":s4", $inicio, PDO::PARAM_STR);
         $stmtDS->bindParam(":e4", $fin, PDO::PARAM_STR);
         if ($filtroProveedor != "")
             $stmtDS->bindParam(":tp", $tercero, PDO::PARAM_INT);
+        if ($filtroUsuario != "")
+            $stmtDS->bindParam(":uidu", $idUsuario, PDO::PARAM_INT);
         $stmtDS->execute();
         $resDS = $stmtDS->fetch();
 
@@ -2124,11 +2132,13 @@ class ModeloFactus
         $stmtNA = $db->prepare("SELECT SUM(monto_total) as t, COUNT(*) as c 
                                 FROM notas_ajuste_ds 
                                 WHERE estado_dian IN ('aceptada', 'enviada') 
-                                AND IFNULL(fecha_envio_dian, fecha_registro) BETWEEN :s5 AND :e5" . $filtroProveedor);
+                                AND IFNULL(fecha_envio_dian, fecha_registro) BETWEEN :s5 AND :e5" . $filtroProveedor . $filtroUsuario);
         $stmtNA->bindParam(":s5", $inicio, PDO::PARAM_STR);
         $stmtNA->bindParam(":e5", $fin, PDO::PARAM_STR);
         if ($filtroProveedor != "")
             $stmtNA->bindParam(":tp", $tercero, PDO::PARAM_INT);
+        if ($filtroUsuario != "")
+            $stmtNA->bindParam(":uidu", $idUsuario, PDO::PARAM_INT);
         $stmtNA->execute();
         $resNA = $stmtNA->fetch();
 
@@ -2173,7 +2183,7 @@ class ModeloFactus
     /*=============================================
     OBTENER DATOS PARA GRÁFICO DE VENTAS
     =============================================*/
-    static public function mdlObtenerVentasGrafico($fechaInicial, $fechaFinal, $categoria, $tercero = "todos")
+    static public function mdlObtenerVentasGrafico($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos")
     {
         $db = Conexion::conectar();
         $inicio = $fechaInicial . " 00:00:00";
@@ -2181,26 +2191,28 @@ class ModeloFactus
 
         $filtroCliente = ($tercero != "todos" && ($categoria == "todos" || $categoria == "facturas" || $categoria == "nc")) ? " AND id_cliente = :tc " : "";
         $filtroProveedor = ($tercero != "todos" && ($categoria == "ds" || $categoria == "na")) ? " AND id_proveedor = :tp " : "";
+        $filtroVendedor = ($idUsuario != "todos") ? " AND id_vendedor = :uidv " : "";
+        $filtroUsuario  = ($idUsuario != "todos") ? " AND id_usuario = :uidu " : "";
 
         if ($categoria == "ds") {
             $stmt = $db->prepare("SELECT DATE(fecha_emision) as dia, SUM(monto_total) as total 
                                   FROM documentos_soporte 
                                   WHERE estado_dian IN ('aceptada', 'enviada') 
-                                  AND fecha_emision BETWEEN :s1 AND :e1 " . $filtroProveedor . "
+                                  AND fecha_emision BETWEEN :s1 AND :e1 " . $filtroProveedor . $filtroUsuario . "
                                   GROUP BY DATE(fecha_emision) 
                                   ORDER BY DATE(fecha_emision) ASC");
         } else if ($categoria == "nc") {
             $stmt = $db->prepare("SELECT DATE(IFNULL(fecha_envio_dian, fecha_creacion)) as dia, SUM(monto_total) as total 
                                   FROM notas_credito 
                                   WHERE estado_dian IN ('aceptada', 'enviada') 
-                                  AND IFNULL(fecha_envio_dian, fecha_creacion) BETWEEN :s1 AND :e1 " . $filtroCliente . "
+                                  AND IFNULL(fecha_envio_dian, fecha_creacion) BETWEEN :s1 AND :e1 " . $filtroCliente . $filtroUsuario . "
                                   GROUP BY DATE(IFNULL(fecha_envio_dian, fecha_creacion)) 
                                   ORDER BY DATE(IFNULL(fecha_envio_dian, fecha_creacion)) ASC");
         } else if ($categoria == "na") {
             $stmt = $db->prepare("SELECT DATE(IFNULL(fecha_envio_dian, fecha_registro)) as dia, SUM(monto_total) as total 
                                   FROM notas_ajuste_ds 
                                   WHERE estado_dian IN ('aceptada', 'enviada') 
-                                  AND IFNULL(fecha_envio_dian, fecha_registro) BETWEEN :s1 AND :e1 " . $filtroProveedor . "
+                                  AND IFNULL(fecha_envio_dian, fecha_registro) BETWEEN :s1 AND :e1 " . $filtroProveedor . $filtroUsuario . "
                                   GROUP BY DATE(IFNULL(fecha_envio_dian, fecha_registro)) 
                                   ORDER BY DATE(IFNULL(fecha_envio_dian, fecha_registro)) ASC");
         } else {
@@ -2208,7 +2220,7 @@ class ModeloFactus
             $stmt = $db->prepare("SELECT DATE(fecha) as dia, SUM(total) as total 
                                   FROM ventas 
                                   WHERE estado_dian IN ('aceptada', 'enviada') 
-                                  AND fecha BETWEEN :s1 AND :e1 " . $filtroCliente . "
+                                  AND fecha BETWEEN :s1 AND :e1 " . $filtroCliente . $filtroVendedor . "
                                   GROUP BY DATE(fecha) 
                                   ORDER BY DATE(fecha) ASC");
         }
@@ -2219,9 +2231,18 @@ class ModeloFactus
         if ($categoria == "ds" || $categoria == "na") {
             if ($filtroProveedor != "")
                 $stmt->bindParam(":tp", $tercero, PDO::PARAM_INT);
+            if ($filtroUsuario != "")
+                $stmt->bindParam(":uidu", $idUsuario, PDO::PARAM_INT);
         } else {
             if ($filtroCliente != "")
                 $stmt->bindParam(":tc", $tercero, PDO::PARAM_INT);
+            if ($categoria == "nc") {
+                if ($filtroUsuario != "")
+                    $stmt->bindParam(":uidu", $idUsuario, PDO::PARAM_INT);
+            } else {
+                if ($filtroVendedor != "")
+                    $stmt->bindParam(":uidv", $idUsuario, PDO::PARAM_INT);
+            }
         }
 
         $stmt->execute();
@@ -2231,7 +2252,7 @@ class ModeloFactus
     /*=============================================
     MOSTRAR REPORTE DETALLADO (LISTADO CONSOLIDADO)
     =============================================*/
-    static public function mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero = "todos")
+    static public function mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos")
     {
         $db = Conexion::conectar();
         $inicio = $fechaInicial . " 00:00:00";
@@ -2239,34 +2260,38 @@ class ModeloFactus
 
         $filtroCliente = ($tercero != "todos" && ($categoria == "todos" || $categoria == "facturas" || $categoria == "nc")) ? " AND id_cliente = :tc " : "";
         $filtroProveedor = ($tercero != "todos" && ($categoria == "ds" || $categoria == "na")) ? " AND id_proveedor = :tp " : "";
+        $filtroVendedor = ($idUsuario != "todos") ? " AND v.id_vendedor = :uidv " : "";
+        $filtroNCUsuario = ($idUsuario != "todos") ? " AND nc.id_usuario = :uidu1 " : "";
+        $filtroDSUsuario = ($idUsuario != "todos") ? " AND ds.id_usuario = :uidu2 " : "";
+        $filtroNAUsuario = ($idUsuario != "todos") ? " AND na.id_usuario = :uidu3 " : "";
 
         $queryVentas = "(SELECT 'Factura' as tipo, numero_factura as numero, IFNULL(cl.nombre, 'Venta General') as tercero, IFNULL(us.nombre, 'Sistema/Varios') as vendedor, v.fecha as fecha, total as monto, estado_dian as estado, v.id as id_doc
              FROM ventas v
              LEFT JOIN clientes cl ON v.id_cliente = cl.id
              LEFT JOIN usuarios us ON v.id_vendedor = us.id
              WHERE v.estado_dian IN ('aceptada', 'enviada')
-             AND (v.fecha BETWEEN :i1 AND :f1 OR v.fecha_envio_dian BETWEEN :i2 AND :f2) " . str_replace(":tc", ":tc1", $filtroCliente) . ")";
+             AND (v.fecha BETWEEN :i1 AND :f1 OR v.fecha_envio_dian BETWEEN :i2 AND :f2) " . str_replace(":tc", ":tc1", $filtroCliente) . $filtroVendedor . ")";
 
         $queryNC = "(SELECT 'Nota Crédito' as tipo, numero_nota_credito as numero, IFNULL(cl.nombre, 'Sin Cliente') as tercero, IFNULL(us.nombre, 'Sistema') as vendedor, IFNULL(fecha_envio_dian, fecha_creacion) as fecha, monto_total as monto, estado_dian as estado, nc.id as id_doc
              FROM notas_credito nc
              LEFT JOIN clientes cl ON nc.id_cliente = cl.id
              LEFT JOIN usuarios us ON nc.id_usuario = us.id
              WHERE nc.estado_dian IN ('aceptada', 'enviada')
-             AND IFNULL(nc.fecha_envio_dian, nc.fecha_creacion) BETWEEN :i3 AND :f3 " . str_replace(":tc", ":tc2", $filtroCliente) . ")";
+             AND IFNULL(nc.fecha_envio_dian, nc.fecha_creacion) BETWEEN :i3 AND :f3 " . str_replace(":tc", ":tc2", $filtroCliente) . $filtroNCUsuario . ")";
 
         $queryDS = "(SELECT 'Doc. Soporte' as tipo, numero_ds as numero, IFNULL(pr.nombre, 'Empresa General') as tercero, IFNULL(us.nombre, 'Admin') as vendedor, fecha_emision as fecha, monto_total as monto, estado_dian as estado, ds.id as id_doc
              FROM documentos_soporte ds
              LEFT JOIN proveedores pr ON ds.id_proveedor = pr.id
              LEFT JOIN usuarios us ON ds.id_usuario = us.id
              WHERE ds.estado_dian IN ('aceptada', 'enviada')
-             AND ds.fecha_emision BETWEEN :i4 AND :f4 " . str_replace(":tp", ":tp1", $filtroProveedor) . ")";
+             AND ds.fecha_emision BETWEEN :i4 AND :f4 " . str_replace(":tp", ":tp1", $filtroProveedor) . $filtroDSUsuario . ")";
 
         $queryNA = "(SELECT 'Nota Ajuste DS' as tipo, numero_nota_ajuste as numero, IFNULL(pr.nombre, 'Sin Proveedor') as tercero, IFNULL(us.nombre, 'Admin') as vendedor, IFNULL(fecha_envio_dian, fecha_registro) as fecha, monto_total as monto, estado_dian as estado, na.id as id_doc
              FROM notas_ajuste_ds na
              LEFT JOIN proveedores pr ON na.id_proveedor = pr.id
              LEFT JOIN usuarios us ON na.id_usuario = us.id
              WHERE na.estado_dian IN ('aceptada', 'enviada')
-             AND IFNULL(na.fecha_envio_dian, na.fecha_registro) BETWEEN :i5 AND :f5 " . str_replace(":tp", ":tp2", $filtroProveedor) . ")";
+             AND IFNULL(na.fecha_envio_dian, na.fecha_registro) BETWEEN :i5 AND :f5 " . str_replace(":tp", ":tp2", $filtroProveedor) . $filtroNAUsuario . ")";
 
         $uniones = [];
         if ($categoria == "todos" || $categoria == "facturas") {
@@ -2295,6 +2320,8 @@ class ModeloFactus
             $stmt->bindParam(":f2", $fin, PDO::PARAM_STR);
             if ($filtroCliente != "")
                 $stmt->bindParam(":tc1", $tercero, PDO::PARAM_INT);
+            if ($filtroVendedor != "")
+                $stmt->bindParam(":uidv", $idUsuario, PDO::PARAM_INT);
         }
 
         if ($categoria == "todos" || $categoria == "nc") {
@@ -2302,6 +2329,8 @@ class ModeloFactus
             $stmt->bindParam(":f3", $fin, PDO::PARAM_STR);
             if ($filtroCliente != "")
                 $stmt->bindParam(":tc2", $tercero, PDO::PARAM_INT);
+            if ($filtroNCUsuario != "")
+                $stmt->bindParam(":uidu1", $idUsuario, PDO::PARAM_INT);
         }
 
         if ($categoria == "todos" || $categoria == "ds") {
@@ -2309,6 +2338,8 @@ class ModeloFactus
             $stmt->bindParam(":f4", $fin, PDO::PARAM_STR);
             if ($filtroProveedor != "")
                 $stmt->bindParam(":tp1", $tercero, PDO::PARAM_INT);
+            if ($filtroDSUsuario != "")
+                $stmt->bindParam(":uidu2", $idUsuario, PDO::PARAM_INT);
         }
 
         if ($categoria == "todos" || $categoria == "na") {
@@ -2316,6 +2347,8 @@ class ModeloFactus
             $stmt->bindParam(":f5", $fin, PDO::PARAM_STR);
             if ($filtroProveedor != "")
                 $stmt->bindParam(":tp2", $tercero, PDO::PARAM_INT);
+            if ($filtroNAUsuario != "")
+                $stmt->bindParam(":uidu3", $idUsuario, PDO::PARAM_INT);
         }
 
         $stmt->execute();

@@ -110,6 +110,7 @@ if (!$rangoAjuste) {
             </div>
 
             <form role="form" method="post" class="formularioNotaAjusteDS" id="formNotaAjusteDS">
+                <input type="hidden" name="idUsuarioSesion" id="idUsuarioSesionDS" value="<?php echo $_SESSION['id'] ?? ''; ?>">
                 <div class="box-body">
 
                     <?php if (!$idDS || !$documentoSoporte): ?>
@@ -189,9 +190,37 @@ if (!$rangoAjuste) {
 
                         <!-- CONFIGURACIÓN DE LA NOTA -->
                         <div class="row">
-                            <div class="col-xs-12">
+                            <!-- Método de Pago -->
+                            <div class="col-xs-12 col-md-6">
                                 <div class="form-group">
-                                    <label>Motivo de Ajuste *</label>
+                                    <label>Método de Pago *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-addon"><i class="fa fa-credit-card"></i></span>
+                                        <select class="form-control" name="metodoPagoDS" id="metodoPagoDS" required>
+                                            <option value="">Seleccione método de pago</option>
+                                            <option value="Efectivo">Efectivo</option>
+                                            <option value="Cheque">Cheque</option>
+                                            <option value="Consignacion">Consignación</option>
+                                            <option value="Transferencia">Transferencia</option>
+                                            <option value="Tarjeta Crédito">Tarjeta Crédito</option>
+                                            <option value="Tarjeta Débito">Tarjeta Débito</option>
+                                            <option value="Bonos">Bonos</option>
+                                            <option value="Vales">Vales</option>
+                                            <option value="Otros">Otros</option>
+                                            <option value="No Definido">No Definido</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <br>
+
+                        <!-- MOTIVO -->
+                        <div class="row">
+                            <div class="col-xs-12 col-md-12">
+                                <div class="form-group">
+                                    <label>Motivo *</label>
                                     <div class="input-group">
                                         <span class="input-group-addon"><i class="fa fa-comment"></i></span>
                                         <select class="form-control" name="motivoNotaDS" id="motivoNotaDS" required>
@@ -207,41 +236,15 @@ if (!$rangoAjuste) {
                             </div>
                         </div>
 
+                        <!-- DESCRIPCIÓN OBSERVACIONES -->
                         <div class="row">
-                            <div class="col-xs-12 col-md-6">
+                            <div class="col-xs-12">
                                 <div class="form-group">
-                                    <label>Descripción del Motivo (Opcional)</label>
+                                    <label>Observaciones (Opcional)</label>
                                     <div class="input-group">
                                         <span class="input-group-addon"><i class="fa fa-commenting"></i></span>
-                                        <textarea class="form-control" name="motivoDescDS" id="motivoDescDS" rows="2"
+                                        <textarea class="form-control" name="motivoDescDS" id="motivoDescDS" rows="3"
                                             placeholder="Escriba el motivo detallado del ajuste..."></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-12 col-md-6">
-                                <div class="form-group">
-                                    <label>Método de Pago *</label>
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="fa fa-credit-card"></i></span>
-                                        <select class="form-control" name="metodoPagoDS" id="metodoPagoDS" required>
-                                            <?php
-                                            $metodosPago = [
-                                                "Efectivo" => "Efectivo",
-                                                "Cheque" => "Cheque",
-                                                "Consignacion" => "Consignacion",
-                                                "Transferencia" => "Transferencia",
-                                                "Tarjeta Crédito" => "Tarjeta Crédito",
-                                                "Tarjeta Débito" => "Tarjeta Débito",
-                                                "Bonos" => "Bonos",
-                                                "Vales" => "Vales",
-                                                "Otros" => "Otros"
-                                            ];
-                                            foreach ($metodosPago as $valor => $etiqueta) {
-                                                $selected = ($documentoSoporte["metodo_pago"] == $valor) ? 'selected' : '';
-                                                echo "<option value=\"$valor\" $selected>$etiqueta</option>";
-                                            }
-                                            ?>
-                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -340,7 +343,7 @@ if (!$rangoAjuste) {
                     <button type="button" class="btn btn-default pull-left"
                         onclick="window.location='notas-ajuste-ds'">Cancelar</button>
                     <?php if ($idDS && $documentoSoporte): ?>
-                        <button type="submit" class="btn btn-warning pull-right">Guardar Borrador de Nota</button>
+                        <button type="submit" class="btn btn-warning pull-right">Guardar</button>
                     <?php endif; ?>
                 </div>
             </form>

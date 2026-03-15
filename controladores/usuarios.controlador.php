@@ -414,7 +414,7 @@ class ControladorUsuarios
 
 				$tabla = "usuarios";
 
-				if ($_POST["editarPassword"] != "") {
+				if (isset($_POST["editarPassword"]) && $_POST["editarPassword"] != "") {
 
 					if (preg_match('/^[a-zA-Z0-9]+$/', $_POST["editarPassword"])) {
 

@@ -1,6 +1,30 @@
 $(document).ready(function () {
     console.log("Notas Crédito JS cargado");
 
+    // Función para quitar el loader
+    function quitarLoader() {
+        if ($("#loader-table").length > 0) {
+            $("#loader-table").fadeOut(400, function () {
+                $(this).remove();
+            });
+        }
+    }
+
+    // 1. Escuchar el evento de inicialización de DataTables (delegado para mayor fiabilidad)
+    $(document).on('init.dt', '.tablas', function () {
+        console.log("DataTables inicializado (evento delegado)");
+        quitarLoader();
+    });
+
+    // 2. Respaldo: Si la tabla ya tiene la clase 'datatable-ready', quitar loader
+    if ($('.tablas').hasClass('datatable-ready')) {
+        console.log("DataTables ya estaba listo");
+        quitarLoader();
+    }
+
+    // 3. Respaldo adicional: Si por alguna razón pasan 4 segundos y sigue el spinner, quitarlo
+    setTimeout(quitarLoader, 4000);
+
     // 1. Inicializar - Calcular total al cargar
     if ($("#tablaProductosNC").length > 0) {
         recalcularTotalNC();
@@ -167,6 +191,7 @@ $(document).ready(function () {
                 datos.append("metodoPago", metodoPago);
                 datos.append("observacion", observacion);
                 datos.append("listaProductos", JSON.stringify(listaProductos));
+                datos.append("idUsuario", $("#idUsuarioSesion").val());
 
                 $.ajax({
                     url: "ajax/notas-credito.ajax.php",
@@ -180,8 +205,8 @@ $(document).ready(function () {
                         if (!respuesta.error) {
                             swal({
                                 type: "success",
-                                title: "¡Nota Crédito Generada!",
-                                text: "Nota #" + respuesta.numero_nc + " creada correctamente."
+                                title: "¡Nota Crédito Generada correctamente!"
+                                //text: "Nota #" + respuesta.numero_nc + " creada correctamente."
                             }).then((result) => {
                                 if (result.value) { window.location = "notas-credito"; }
                             });
@@ -225,13 +250,21 @@ $(document).ready(function () {
         var idNota = $(this).attr("idNota");
 
         swal({
-            title: '¿Firmar y enviar Nota Crédito a la DIAN?',
+            title: '¿Está seguro de firmar esta Nota Crédito?',
+            text: "¡Esta acción no se puede deshacer y el documento será oficial!",
             type: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Sí, firmar y enviar'
         }).then(function (result) {
             if (result.value) {
-                swal({ title: 'Procesando...', onOpen: () => { swal.showLoading() } });
+                swal({
+                    title: "Enviando",
+                    text: "Por favor espere mientras se firma el documento",
+                    allowOutsideClick: false,
+                    onBeforeOpen: () => {
+                        swal.showLoading()
+                    }
+                });
                 var datos = new FormData();
                 datos.append("idNota", idNota);
                 datos.append("accion", "firmarNotaCredito");
@@ -246,7 +279,7 @@ $(document).ready(function () {
                     dataType: "json",
                     success: function (respuesta) {
                         if (!respuesta.error) {
-                            swal({ type: "success", title: "¡Nota Crédito Firmada!" }).then((result) => {
+                            swal({ type: "success", title: "Exito", text: "Nota credito firmada correctamente" }).then((result) => {
                                 if (result.value) { window.location = "notas-credito"; }
                             })
                         } else {

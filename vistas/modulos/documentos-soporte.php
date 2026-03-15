@@ -21,22 +21,65 @@
 
                 <a href="crear-documento-soporte">
                     <button class="btn btn-primary">
-                        Emitir Documento Soporte
+                        Crear Documento Soporte
                     </button>
                 </a>
 
             </div>
 
+            <style>
+                .loader-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 60px;
+                    background: #fff;
+                    margin-bottom: 20px;
+                    transition: opacity 0.3s ease;
+                }
+
+                .loader-container i {
+                    font-size: 45px;
+                    color: #3c8dbc;
+                    margin-bottom: 15px;
+                }
+
+                .loader-container span {
+                    font-size: 16px;
+                    color: #666;
+                    font-weight: 500;
+                }
+
+                /* Hide table while loading to prevent layout jump */
+                .tablaDocumentosSoporte:not(.datatable-ready) {
+                    visibility: hidden;
+                    height: 0;
+                    overflow: hidden;
+                    opacity: 0;
+                }
+
+                .tablaDocumentosSoporte.datatable-ready {
+                    transition: opacity 0.5s ease;
+                    opacity: 1;
+                }
+            </style>
+
             <div class="box-body">
+
+                <div id="loader-table-ds" class="loader-container">
+                    <i class="fa fa-refresh fa-spin"></i>
+                    <span>Cargando Documentos Soporte...</span>
+                </div>
 
                 <table class="table table-bordered table-striped dt-responsive tablaDocumentosSoporte" width="100%">
 
                     <thead>
                         <tr>
                             <th style="width:10px">#</th>
-                            <th>Número DS</th>
+                            <th>Código</th>
                             <th>Proveedor</th>
-                            <th>Fecha Emisión</th>
+                            <th>Fecha</th>
                             <th>Estado DIAN</th>
                             <th>Total</th>
                             <th>Acciones</th>
@@ -104,20 +147,20 @@
                                             <a href="index.php?ruta=ver-documento-soporte&idDS=' . $value["id"] . '" class="btn btn-info" title="Ver Detalle"><i class="fa fa-eye"></i></a>';
 
                                 if ($value["estado_dian"] == "borrador") {
-                                    echo '<button class="btn btn-primary btnFirmarDS" idDS="' . $value["id"] . '" title="Firmar y Enviar a Factus"><i class="fa fa-pencil-square-o"></i></button>';
+                                    echo '<button class="btn btn-success btnFirmarDS" idDS="' . $value["id"] . '" title="Firmar y Enviar a Factus"><i class="fa fa-paper-plane"></i></button>';
                                     echo '<button class="btn btn-danger btnEliminarDS" idDS="' . $value["id"] . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
                                 } else {
-                                    if (ModeloFactus::mdlTieneNotaAjusteDS($value["id"])) {
-                                        echo '<button class="btn btn-warning btnVerNotasAjusteDS" idDS="' . $value["id"] . '" data-toggle="modal" data-target="#modalNotasAjusteDS" title="Ver Notas de Ajuste">
-                                                <i class="fa fa-list"></i>
-                                              </button>';
-                                    }
-
-                                    echo '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . $value["cuds"] . '" target="_blank" class="btn btn-warning" title="Ver en DIAN"><i class="fa fa-globe"></i></a>';
+                                    echo '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . $value["cuds"] . '" target="_blank" class="btn btn-success" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>';
 
                                     // Botón para enviar por correo
                                     if ($value["estado_dian"] == "aceptada" || $value["estado_dian"] == "enviada") {
                                         echo '<button class="btn btn-primary btnEnviarEmailDS" idDS="' . $value["id"] . '" nombreProveedor="' . ($proveedor["nombre"] ?? "N/A") . '" emailProveedor="' . ($proveedor["correo"] ?? "") . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
+                                    }
+
+                                    if (ModeloFactus::mdlTieneNotaAjusteDS($value["id"])) {
+                                        echo '<button class="btn btn-warning btnVerNotasAjusteDS" idDS="' . $value["id"] . '" data-toggle="modal" data-target="#modalNotasAjusteDS" title="Ver Notas de Ajuste">
+                                                <i class="fa fa-list"></i>
+                                              </button>';
                                     }
                                 }
 

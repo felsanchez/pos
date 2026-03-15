@@ -26,12 +26,56 @@ if ($_SESSION["perfil"] == "Especial") {
             <div class="box-header with-border">
                 <a href="crear-nota-ajuste-ds">
                     <button class="btn btn-primary">
-                        Generar Nueva Nota de Ajuste
+                        Crear Nota de Ajuste
                     </button>
                 </a>
             </div>
 
+            <style>
+                .loader-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 60px;
+                    background: #fff;
+                    margin-bottom: 20px;
+                    transition: opacity 0.3s ease;
+                }
+
+                .loader-container i {
+                    font-size: 45px;
+                    color: #3c8dbc;
+                    margin-bottom: 15px;
+                }
+
+                .loader-container span {
+                    font-size: 16px;
+                    color: #666;
+                    font-weight: 500;
+                }
+
+                /* Hide table while loading to prevent layout jump */
+                .tablas:not(.datatable-ready) {
+                    visibility: hidden;
+                    height: 0;
+                    overflow: hidden;
+                    opacity: 0;
+                }
+
+                .tablas.datatable-ready {
+                    transition: opacity 0.5s ease;
+                    opacity: 1;
+                }
+            </style>
+
             <div class="box-body">
+
+                <div id="loader-table-na" class="loader-container">
+                    <i class="fa fa-refresh fa-spin"></i>
+                    <span>Cargando Notas de Ajuste...</span>
+                </div>
+
                 <table class="table table-bordered table-striped dt-responsive tablas" width="100%">
                     <thead>
                         <tr>
@@ -119,11 +163,11 @@ if ($_SESSION["perfil"] == "Especial") {
                                 }
 
                                 // Botón para ver en la DIAN
-                                echo '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . $value["cuds_ajuste"] . '" target="_blank" class="btn btn-warning" title="Ver en DIAN"><i class="fa fa-globe"></i></a>';
+                                echo '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . $value["cuds_ajuste"] . '" target="_blank" class="btn btn-success" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>';
 
                                 // Botón para enviar por correo (Solo si está aceptada o enviada)
                                 if ($value["estado_dian"] == "aceptada" || $value["estado_dian"] == "enviada") {
-                                    echo '<button class="btn btn-success btnEnviarEmailNA" idNA="' . $value["id"] . '" nombreProveedor="' . ($proveedor["nombre"] ?? "N/A") . '" emailProveedor="' . ($proveedor["correo"] ?? '') . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
+                                    echo '<button class="btn btn-primary btnEnviarEmailNA" idNA="' . $value["id"] . '" nombreProveedor="' . ($proveedor["nombre"] ?? "N/A") . '" emailProveedor="' . ($proveedor["correo"] ?? '') . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
                                 }
                             }
 

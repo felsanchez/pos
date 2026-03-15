@@ -1,4 +1,26 @@
 $(document).ready(function () {
+    // Función para quitar el loader
+    function quitarLoaderNA() {
+        if ($("#loader-table-na").length > 0) {
+            $("#loader-table-na").fadeOut(400, function () {
+                $(this).remove();
+            });
+        }
+    }
+
+    // 1. Escuchar el evento de inicialización de DataTables (delegado para mayor fiabilidad)
+    $(document).on('init.dt', '.tablas', function () {
+        console.log("DataTables inicializado (evento delegado) para Nota Ajuste DS");
+        quitarLoaderNA();
+    });
+
+    // 2. Respaldo: Si la tabla ya tiene la clase 'datatable-ready', quitar loader
+    if ($('.tablas').hasClass('datatable-ready')) {
+        quitarLoaderNA();
+    }
+
+    // 3. Respaldo adicional: Si por alguna razón pasan 4 segundos y sigue el spinner, quitarlo
+    setTimeout(quitarLoaderNA, 4000);
     /*=============================================
     CALCULAR TOTALES DE LA NOTA DE AJUSTE
     =============================================*/
@@ -49,7 +71,7 @@ $(document).ready(function () {
         var tipoNota = $("#motivoNotaDS").val();
         var motivoDesc = $("#motivoDescDS").val();
         var totalDS = $("#nuevoTotalAdjDS").val();
-        var idUsuario = $("input[name='idUsuario']").val();
+        var idUsuario = $("#idUsuarioSesionDS").val();
 
         // Preparar lista de productos
         var listaProductos = [];
@@ -161,7 +183,7 @@ $(document).ready(function () {
         var idNota = $(this).attr("idNota");
 
         swal({
-            title: "¿Está seguro de firmar y enviar esta Nota de Ajuste a la DIAN?",
+            title: "¿Está seguro de firmar esta Nota de Ajuste?",
             text: "¡Esta acción no se puede deshacer y el documento será oficial!",
             type: "warning",
             showCancelButton: true,
@@ -172,8 +194,8 @@ $(document).ready(function () {
         }).then(function (result) {
             if (result.value) {
                 swal({
-                    title: "Firmando y Enviando a la DIAN...",
-                    text: "Esto puede tardar unos segundos. Por favor espere.",
+                    title: "Enviando",
+                    text: "Por favor espere mientras se firma el documento",
                     allowOutsideClick: false,
                     onBeforeOpen: () => {
                         swal.showLoading();
@@ -196,8 +218,8 @@ $(document).ready(function () {
                         if (!respuesta.error) {
                             swal({
                                 type: "success",
-                                title: "¡Nota Firmada!",
-                                text: respuesta.mensaje,
+                                title: "Exito",
+                                text: "Nota de ajuste firmada correctamente",
                                 showConfirmButton: true
                             }).then(function (result) {
                                 window.location = "notas-ajuste-ds";
@@ -257,8 +279,7 @@ $(document).ready(function () {
                         if (!respuesta.error) {
                             swal({
                                 type: "success",
-                                title: "¡Borrador Eliminado!",
-                                text: respuesta.mensaje,
+                                title: "El Documento ha sido eliminado correctamente",
                                 showConfirmButton: true
                             }).then(function (result) {
                                 window.location = "notas-ajuste-ds";

@@ -376,71 +376,78 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
                     </table>
                   </div>
 
+                  <!-- SECCIÓN DE RETENCIONES -->
+                  <div class="col-xs-12 pull-left" id="seccionRetenciones" style="display: none; margin-top: 10px;">
+                    <div class="alert alert-info">
+                      <h4><i class="icon fa fa-info-circle"></i> Retenciones Aplicadas</h4>
+                      <div id="listaRetenciones"></div>
+                      <input type="hidden" id="datosRetenciones" name="datosRetenciones" value="">
+                    </div>
+                  </div>
+
                 </div>
 
                 <hr>
 
                 <!--=====================================
-                         SECCIÓN DE DESCUENTO (solo si existe)
+                         SECCIÓN DE DESCUENTOS
                          ======================================-->
 
-                <?php if (!empty($venta["tipo_descuento"])): ?>
+                <div class="row">
+                  <div class="col-xs-12">
 
-                  <div class="row">
+                    <!-- Checkboxes para tipo de descuento -->
+                    <div class="form-group">
+                      <label style="font-weight: normal; cursor: pointer;">
+                        <input type="checkbox" id="checkDescuentoPorcentaje" name="checkDescuentoPorcentaje"
+                          style="margin-right: 5px; transform: scale(1.2);"
+                          <?php echo ($venta["tipo_descuento"] == "porcentaje") ? "checked" : ""; ?>>
+                        Agregar descuento por %
+                      </label>
+                      &nbsp;&nbsp;&nbsp;
 
-                    <div class="col-xs-12">
-
-                      <div class="form-group">
-
-                        <label>Descuento Aplicado</label>
-
-                        <div class="input-group">
-
-                          <span class="input-group-addon">
-
-                            <?php if ($venta["tipo_descuento"] == "porcentaje"): ?>
-
-                              <i class="fa fa-percent"></i>
-
-                            <?php else: ?>
-                              <i class="fa fa-money"></i>
-                            <?php endif; ?>
-
-                          </span>
-
-                          <input type="text" class="form-control input-lg" value="<?php
-                          if ($venta["tipo_descuento"] == "porcentaje") {
-                            echo number_format($venta["valor_descuento"], 0) . "% - Monto: $" . number_format($venta["monto_descuento"], 0, '', '.');
-
-                          } else {
-                            echo "$" . number_format($venta["valor_descuento"], 0, '', '.');
-
-                          }
-                          ?>" readonly>
-
-                          <span class="input-group-addon">
-
-                            <?php echo ($venta["tipo_descuento"] == "porcentaje") ? "Descuento %" : "Descuento Fijo"; ?>
-
-                          </span>
-
-                        </div>
-
-                      </div>
-
+                      <label style="font-weight: normal; cursor: pointer;">
+                        <input type="checkbox" id="checkDescuentoFijo" name="checkDescuentoFijo"
+                          style="margin-right: 5px; transform: scale(1.2);"
+                          <?php echo ($venta["tipo_descuento"] == "fijo") ? "checked" : ""; ?>>
+                        Agregar descuento por valor fijo
+                      </label>
                     </div>
 
+                    <!-- Campo de entrada para descuento -->
+                    <div class="form-group" id="campoDescuento" style="<?php echo empty($venta["tipo_descuento"]) ? "display: none;" : ""; ?>">
+                      <div class="input-group">
+                        <span class="input-group-addon" id="iconoDescuento">
+                            <?php if ($venta["tipo_descuento"] == "fijo"): ?>
+                                <i class="fa fa-money"></i>
+                            <?php else: ?>
+                                <i class="fa fa-percent"></i>
+                            <?php endif; ?>
+                        </span>
+                        <input type="number" class="form-control input-lg" min="0" id="valorDescuento"
+                          name="valorDescuento" placeholder="0" value="<?php echo empty($venta["valor_descuento"]) ? 0 : $venta["valor_descuento"]; ?>">
+                        <span class="input-group-addon" id="labelDescuento">
+                            <?php echo ($venta["tipo_descuento"] == "fijo") ? "Valor Descuento" : "Descuento"; ?>
+                        </span>
+                      </div>
+                      <small class="text-muted" id="textoAyudaDescuento">
+                          <?php echo ($venta["tipo_descuento"] == "fijo") ? "Ingrese el valor fijo del descuento" : "Ingrese el porcentaje de descuento"; ?>
+                      </small>
+                    </div>
+
+                    <!-- Campos ocultos para guardar información del descuento -->
+                    <input type="hidden" id="tipoDescuento" name="tipoDescuento" value="<?php echo $venta["tipo_descuento"]; ?>">
+                    <input type="hidden" id="montoDescuento" name="montoDescuento" value="<?php echo empty($venta["monto_descuento"]) ? 0 : $venta["monto_descuento"]; ?>">
                   </div>
 
-                <?php endif; ?>
+                </div>
 
-                <!-- Campos ocultos para mantener el descuento al guardar -->
-                <input type="hidden" name="tipoDescuento" id="tipoDescuento"
-                  value="<?php echo $venta["tipo_descuento"]; ?>">
-                <input type="hidden" name="valorDescuento" id="valorDescuento"
-                  value="<?php echo $venta["valor_descuento"]; ?>">
-                <input type="hidden" name="montoDescuento" id="montoDescuento"
-                  value="<?php echo $venta["monto_descuento"]; ?>">
+                <div class="row">
+                  <div class="col-xs-12">
+                    <button type="button" class="btn btn-default" data-toggle="modal"
+                      data-target="#modalAgregarRetencionNuevo">Retenciones</button>
+                  </div>
+                </div>
 
                 <hr>
 
@@ -456,7 +463,8 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
                         <?php
                         foreach ($mediosPago as $medio) {
                           $medio = trim($medio); // Eliminar espacios en blanco
-                          echo '<option value="' . $medio . '">' . $medio . '</option>';
+                          $sel = ($medio == $venta["metodo_pago"]) ? 'selected' : '';
+                          echo '<option value="' . $medio . '" ' . $sel . '>' . $medio . '</option>';
                         }
                         ?>
                       </select>
@@ -696,13 +704,72 @@ MODAL AGREGAR CLIENTE
 
       </form>
 
-
+      <?php
+      $crearCliente = new ControladorClientes();
+      $crearCliente->ctrCrearCliente();
       ?>
 
     </div>
 
   </div>
 
+</div>
+
+<!--=====================================
+MODAL AGREGAR RETENCION
+======================================-->
+<div id="modalAgregarRetencionNuevo" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form role="form" method="post" id="formularioRetencionNuevo">
+
+        <!-- CABEZA DEL MODAL -->
+        <div class="modal-header" style="background:#3c8dbc; color: white">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Agregar Retención</h4>
+        </div>
+
+        <!-- CUERPO DEL MODAL -->
+        <div class="modal-body">
+          <div class="box-body">
+
+            <!-- Tipo de retencion -->
+            <div class="form-group">
+              <label>Tipo Retención</label>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-th"></i></span>
+                <select class="form-control input-lg" id="nuevoTipoRetencionNuevo" name="nuevoTipoRetencion">
+                  <option value="">Seleccionar tipo</option>
+                  <option value="ReteIVA">ReteIVA</option>
+                  <option value="ReteRenta">ReteRenta</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Porcentaje -->
+            <div class="form-group">
+              <label>Porcentaje</label>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-percent"></i></span>
+                <select class="form-control input-lg" id="nuevoPorcentajeRetencionNuevo"
+                  name="nuevoPorcentajeRetencion">
+                  <option value="">Seleccionar porcentaje</option>
+                </select>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- PIE DEL MODAL -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
+          <button type="button" class="btn btn-primary" id="guardarRetencionNuevo" data-dismiss="modal">Guardar</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
 </div>
 
 
@@ -718,6 +785,85 @@ MODAL AGREGAR CLIENTE
       // Aplicar el descuento
       aplicarDescuento();
     }
+  });
+
+  $(document).ready(function () {
+    // Función centralizada para manejar la selección de porcentaje
+    function activarPorcentaje() {
+        // Desmarcar el otro checkbox
+        $('#checkDescuentoFijo').prop('checked', false);
+        try { $('#checkDescuentoFijo').iCheck('uncheck'); } catch(e){}
+
+        // Mostrar campo de descuento
+        $('#campoDescuento').slideDown();
+
+        // Cambiar icono y texto a porcentaje
+        $('#iconoDescuento').html('<i class="fa fa-percent"></i>');
+        $('#labelDescuento').text('% Descuento');
+        $('#textoAyudaDescuento').text('Ingrese el porcentaje de descuento (0-100)');
+        $('#valorDescuento').attr('max', '100');
+        $('#valorDescuento').attr('placeholder', '0');
+        // Si no había valor previo, setear a 0
+        if($('#tipoDescuento').val() !== 'porcentaje') $('#valorDescuento').val('0');
+
+        // Guardar tipo de descuento
+        $('#tipoDescuento').val('porcentaje');
+        
+        aplicarDescuento();
+    }
+
+    function desactivarDescuento() {
+        $('#campoDescuento').slideUp();
+        $('#valorDescuento').val('0');
+        $('#tipoDescuento').val('');
+        $('#montoDescuento').val('0');
+
+        // Recalcular total sin descuento
+        sumarTotalPrecios();
+        agregarImpuesto();
+    }
+
+    // Función centralizada para manejar la selección de fijo
+    function activarFijo() {
+        // Desmarcar el otro checkbox
+        $('#checkDescuentoPorcentaje').prop('checked', false);
+        try { $('#checkDescuentoPorcentaje').iCheck('uncheck'); } catch(e){}
+
+        // Mostrar campo de descuento
+        $('#campoDescuento').slideDown();
+
+        // Cambiar icono y texto a valor fijo
+        $('#iconoDescuento').html('<i class="fa fa-money"></i>');
+        $('#labelDescuento').text('Valor Descuento');
+        $('#textoAyudaDescuento').text('Ingrese el valor fijo del descuento');
+        $('#valorDescuento').removeAttr('max');
+        $('#valorDescuento').attr('placeholder', '0');
+        if($('#tipoDescuento').val() !== 'fijo') $('#valorDescuento').val('0');
+
+        // Guardar tipo de descuento
+        $('#tipoDescuento').val('fijo');
+        
+        aplicarDescuento();
+    }
+
+    // Eventos normales y eventos iCheck
+    $('#checkDescuentoPorcentaje').on('change', function () {
+      if ($(this).is(':checked')) activarPorcentaje(); else desactivarDescuento();
+    });
+    $('#checkDescuentoPorcentaje').on('ifChecked', activarPorcentaje);
+    $('#checkDescuentoPorcentaje').on('ifUnchecked', desactivarDescuento);
+
+    $('#checkDescuentoFijo').on('change', function () {
+      if ($(this).is(':checked')) activarFijo(); else desactivarDescuento();
+    });
+    $('#checkDescuentoFijo').on('ifChecked', activarFijo);
+    $('#checkDescuentoFijo').on('ifUnchecked', desactivarDescuento);
+
+    // Cuando cambia el valor del descuento, recalcular
+    $('#valorDescuento').on('change keyup', function () {
+      aplicarDescuento();
+    });
+
   });
 </script>
 
