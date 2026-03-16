@@ -572,6 +572,10 @@ if ($xml) {
               $siguienteConsecutivoBase = ModeloFactus::mdlObtenerSiguienteConsecutivoFactus();
               $borradoresEncontrados = 0;
 
+              // Obtener pre-cargado las IDs de ventas que tienen nota crédito para evitar N+1
+              $idsVentas = array_column($respuesta, 'id');
+              $ventasConNC = ModeloFactus::mdlObtenerVentasConNotaCredito($idsVentas);
+
               foreach ($respuesta as $key => $value) {
 
                 // Lógica de numeración predictiva para borradores
@@ -698,7 +702,7 @@ if ($xml) {
                 echo ' ';
 
                 // Botón de las Notas Crédito (solo si la factura tiene NC)
-                if (ModeloFactus::mdlTieneNotaCredito($value["id"])) {
+                if (in_array($value["id"], $ventasConNC)) {
                   echo '<button class="btn btn-warning btnVerNotasCredito" idVenta="' . $value["id"] . '" data-toggle="modal" data-target="#modalNotasCredito" title="Ver Notas Crédito">
                                        <i class="fa fa-list"></i>
                                      </button>';
@@ -798,7 +802,7 @@ if ($xml) {
             }
 
             // Botón de las Notas Crédito movil
-            if (ModeloFactus::mdlTieneNotaCredito($value["id"])) {
+            if (in_array($value["id"], $ventasConNC)) {
               echo '<button class="btn btn-warning btn-xs btnVerNotasCredito" idVenta="' . $value["id"] . '" data-toggle="modal" data-target="#modalNotasCredito" title="Ver Notas Crédito">
                                    <i class="fa fa-list"></i>
                                  </button>';

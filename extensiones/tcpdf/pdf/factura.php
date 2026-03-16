@@ -154,7 +154,7 @@ class imprimirFactura
 		$pdf->Ln(8);
 		$bloque2 = '<table cellpadding="6">';
 		$bloque2 .= '<tr>';
-		$bloque2 .= '<td style="width:50%; background:#f8f9fa; border-left:4px solid ' . $colorPrincipal . '; vertical-align:top;">';
+		$bloque2 .= '<td style="width:100%; background:#f8f9fa; border-left:4px solid ' . $colorPrincipal . '; vertical-align:top;">';
 		$bloque2 .= '<div style="color:' . $colorPrincipal . '; font-size:10px; font-weight:bold; margin-bottom:5px;">';
 		$bloque2 .= 'INFORMACIÓN DEL CLIENTE';
 		$bloque2 .= '</div>';
@@ -162,20 +162,18 @@ class imprimirFactura
 		$bloque2 .= '<strong>Cliente:</strong> ' . $respuestaCliente["nombre"] . '<br>';
 		$bloque2 .= '<strong>Documento:</strong> ' . $respuestaCliente["documento"] . '<br>';
 		$bloque2 .= '<strong>Dirección:</strong> ' . $respuestaCliente["direccion"] . '<br>';
-		$bloque2 .= '<strong>Municipio:</strong> ' . $respuestaCliente["ciudad"] . '<br>';
+		$municipio = !empty($respuestaCliente["ciudad"]) ? mb_convert_case($respuestaCliente["ciudad"], MB_CASE_TITLE, "UTF-8") : "";
+		$departamento = !empty($respuestaCliente["departamento"]) ? mb_convert_case($respuestaCliente["departamento"], MB_CASE_TITLE, "UTF-8") : "";
+		$ubicacion = $municipio;
+		if (!empty($municipio) && !empty($departamento)) {
+			$ubicacion .= ", " . $departamento;
+		} elseif (empty($municipio)) {
+			$ubicacion = $departamento;
+		}
+
+		$bloque2 .= '<strong>Municipio:</strong> ' . $ubicacion . '<br>';
 		$bloque2 .= '<strong>Teléfono:</strong> ' . $respuestaCliente["telefono"] . '<br>';
 		$bloque2 .= '<strong>Email:</strong> ' . $respuestaCliente["email"];
-		$bloque2 .= '</div>';
-		$bloque2 .= '</td>';
-		$bloque2 .= '<td style="width:50%; background:#f8f9fa; border-left:4px solid ' . $colorSecundario . '; vertical-align:top;">';
-		$bloque2 .= '<div style="color:' . $colorSecundario . '; font-size:10px; font-weight:bold; margin-bottom:5px;">';
-		$bloque2 .= 'DETALLES DE LA VENTA';
-		$bloque2 .= '</div>';
-		$bloque2 .= '<div style="font-size:9px; line-height:16px; color:#555;">';
-		$bloque2 .= '<strong>Vendedor:</strong> ' . $respuestaVendedor["nombre"] . '<br>';
-		$bloque2 .= '<strong>Fecha:</strong> ' . $fecha . '<br>';
-		$bloque2 .= '<strong>Departamento:</strong> ' . $respuestaCliente["departamento"] . '<br>';
-		$bloque2 .= '<strong>Ciudad:</strong> ' . $respuestaCliente["ciudad"];
 		$bloque2 .= '</div>';
 		$bloque2 .= '</td>';
 		$bloque2 .= '</tr>';
@@ -371,7 +369,7 @@ EOF;
 		$contenidoQR .= "Doc: " . $respuestaCliente["documento"] . "\n";
 		$contenidoQR .= "Tel: " . $respuestaCliente["telefono"] . "\n";
 		$contenidoQR .= "Dir: " . $respuestaCliente["direccion"] . "\n";
-		$contenidoQR .= "Ciudad: " . $respuestaCliente["ciudad"] . "\n\n";
+		$contenidoQR .= "Municipio: " . $ubicacion . "\n\n";
 		$contenidoQR .= "PRODUCTOS\n";
 		$contenidoQR .= "----------------------------\n";
 		$contenidoQR .= $listaProductosQR . "\n";

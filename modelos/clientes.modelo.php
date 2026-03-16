@@ -268,4 +268,78 @@ class ModeloClientes
 	}
 
 
+	/*=============================================
+	IMPORTAR CLIENTES MASIVOS
+	=============================================*/
+	static public function mdlImportarClientesMasivos($tabla, $datos)
+	{
+
+		$db = Conexion::conectar();
+		$success = 0;
+		$errors = [];
+
+		// Usamos ON DUPLICATE KEY UPDATE para actualizar si el documento ya existe
+		$sql = "INSERT INTO $tabla(nombre, documento, email, telefono, departamento, ciudad, direccion, estatus, notas, fecha_nacimiento, tipo_documento_id, digito_verificacion, tipo_persona, regimen_tributario, responsabilidades_fiscales, municipio_id, codigo_postal, nombre_comercial, razon_social) 
+                VALUES (:nombre, :documento, :email, :telefono, :departamento, :ciudad, :direccion, :estatus, :notas, :fecha_nacimiento, :tipo_documento_id, :digito_verificacion, :tipo_persona, :regimen_tributario, :responsabilidades_fiscales, :municipio_id, :codigo_postal, :nombre_comercial, :razon_social)
+                ON DUPLICATE KEY UPDATE
+                nombre = VALUES(nombre),
+                email = VALUES(email),
+                telefono = VALUES(telefono),
+                departamento = VALUES(departamento),
+                ciudad = VALUES(ciudad),
+                direccion = VALUES(direccion),
+                estatus = VALUES(estatus),
+                notas = VALUES(notas),
+                fecha_nacimiento = VALUES(fecha_nacimiento),
+                tipo_documento_id = VALUES(tipo_documento_id),
+                digito_verificacion = VALUES(digito_verificacion),
+                tipo_persona = VALUES(tipo_persona),
+                regimen_tributario = VALUES(regimen_tributario),
+                responsabilidades_fiscales = VALUES(responsabilidades_fiscales),
+                municipio_id = VALUES(municipio_id),
+                codigo_postal = VALUES(codigo_postal),
+                nombre_comercial = VALUES(nombre_comercial),
+                razon_social = VALUES(razon_social)";
+
+		foreach ($datos as $fila) {
+
+			$stmt = $db->prepare($sql);
+
+			$stmt->bindParam(":nombre", $fila["nombre"], PDO::PARAM_STR);
+			$stmt->bindParam(":documento", $fila["documento"], PDO::PARAM_STR);
+			$stmt->bindParam(":email", $fila["email"], PDO::PARAM_STR);
+			$stmt->bindParam(":telefono", $fila["telefono"], PDO::PARAM_STR);
+			$stmt->bindParam(":departamento", $fila["departamento"], PDO::PARAM_STR);
+			$stmt->bindParam(":ciudad", $fila["ciudad"], PDO::PARAM_STR);
+			$stmt->bindParam(":direccion", $fila["direccion"], PDO::PARAM_STR);
+			$stmt->bindParam(":estatus", $fila["estatus"], PDO::PARAM_STR);
+			$stmt->bindParam(":notas", $fila["notas"], PDO::PARAM_STR);
+			$stmt->bindParam(":fecha_nacimiento", $fila["fecha_nacimiento"], PDO::PARAM_STR);
+			$stmt->bindParam(":tipo_documento_id", $fila["tipo_documento_id"], PDO::PARAM_INT);
+			$stmt->bindParam(":digito_verificacion", $fila["digito_verificacion"], PDO::PARAM_STR);
+			$stmt->bindParam(":tipo_persona", $fila["tipo_persona"], PDO::PARAM_STR);
+			$stmt->bindParam(":regimen_tributario", $fila["regimen_tributario"], PDO::PARAM_STR);
+			$stmt->bindParam(":responsabilidades_fiscales", $fila["responsabilidades_fiscales"], PDO::PARAM_STR);
+			$stmt->bindParam(":municipio_id", $fila["municipio_id"], PDO::PARAM_STR);
+			$stmt->bindParam(":codigo_postal", $fila["codigo_postal"], PDO::PARAM_STR);
+			$stmt->bindParam(":nombre_comercial", $fila["nombre_comercial"], PDO::PARAM_STR);
+			$stmt->bindParam(":razon_social", $fila["razon_social"], PDO::PARAM_STR);
+
+			try {
+				if ($stmt->execute()) {
+					$success++;
+				} else {
+					$errors[] = "Error en fila con documento " . $fila["documento"];
+				}
+			} catch (PDOException $e) {
+				$errors[] = "Excepción en documento " . $fila["documento"] . ": " . $e->getMessage();
+			}
+		}
+
+		return [
+			"estado" => count($errors) === 0 ? "ok" : (count($errors) < count($datos) ? "parcial" : "error"),
+			"exitos" => $success,
+			"errores" => $errors
+		];
+	}
 }

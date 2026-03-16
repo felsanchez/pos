@@ -40,26 +40,26 @@ if (!$.fn.DataTable.isDataTable('.tablaEstadosClientes')) {
  
 
 /*=============================================
-EDITAR ESTADO - Usando evento show.bs.modal de Bootstrap
+EDITAR ESTADO - Capturar datos por click directo
 =============================================*/
 
-$('#modalEditarEstado').off('show.bs.modal').on('show.bs.modal', function (event) {
-	var button = $(event.relatedTarget); // Botón que abrió el modal
+$(document).off("click", ".btnEditarEstado");
+$(document).on("click", ".btnEditarEstado", function() {
+	var id = $(this).attr('data-id');
+	var nombre = $(this).attr('data-nombre');
+	var color = $(this).attr('data-color');
+	var orden = $(this).attr('data-orden');
 
-	// Obtener datos del botón usando attr() en lugar de data()
-	var id = button.attr('data-id');
-	var nombre = button.attr('data-nombre');
-	var color = button.attr('data-color');
-	var orden = button.attr('data-orden');
+	console.log("✓ Click en botón editar - ID:", id, "Nombre:", nombre, "Color:", color, "Orden:", orden);
 
-	console.log("✓ Abriendo modal editar - ID:", id, "Nombre:", nombre, "Color:", color, "Orden:", orden);
-
-	// Llenar el formulario
-	var modal = $(this);
-	modal.find('#idEstado').val(id);
-	modal.find('#editarEstadoNombre').val(nombre);
-	modal.find('#editarEstadoColor').val(color);
-	modal.find('#editarEstadoOrden').val(orden);
+	// Llenar el formulario del modal
+	$('#idEstado').val(id);
+	$('#editarEstadoNombre').val(nombre);
+	$('#editarEstadoColor').val(color);
+	$('#editarEstadoOrden').val(orden);
+	
+	// Abrir el modal manualmente por si acaso el data-toggle falla o para asegurar orden
+	// $('#modalEditarEstado').modal('show');
 });
 
 // Evento cuando el modal se muestra completamente

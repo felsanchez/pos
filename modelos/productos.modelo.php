@@ -556,7 +556,7 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 			// Iniciar transacción
 			$conexion->beginTransaction();
 
-			$stmt = $conexion->prepare("INSERT INTO $tabla(id_categoria, id_proveedor, codigo, descripcion, imagen, stock, precio_compra, precio_venta, ventas) VALUES (:id_categoria, :id_proveedor, :codigo, :descripcion, :imagen, :stock, :precio_compra, :precio_venta, :ventas)");
+			$stmt = $conexion->prepare("INSERT INTO $tabla(id_categoria, id_proveedor, codigo, descripcion, imagen, stock, precio_compra, precio_venta, ventas, unidad_medida_id, codigo_estandar_id, es_excluido, tributo_id, tasa_impuesto, notas_facturacion, scheme_id) VALUES (:id_categoria, :id_proveedor, :codigo, :descripcion, :imagen, :stock, :precio_compra, :precio_venta, :ventas, :unidad_medida_id, :codigo_estandar_id, :es_excluido, :tributo_id, :tasa_impuesto, :notas_facturacion, :scheme_id)");
 
 			foreach ($productos as $producto) {
 
@@ -569,6 +569,23 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 				$stmt->bindParam(":precio_compra", $producto["precio_compra"], PDO::PARAM_STR);
 				$stmt->bindParam(":precio_venta", $producto["precio_venta"], PDO::PARAM_STR);
 				$stmt->bindParam(":ventas", $producto["ventas"], PDO::PARAM_INT);
+				
+				// Nuevos campos de facturación
+				$unidad_medida_id = isset($producto["unidad_medida_id"]) ? $producto["unidad_medida_id"] : 70; // 70 = Unidad
+				$tributo_id = isset($producto["tributo_id"]) ? $producto["tributo_id"] : 1; // 1 = IVA
+				$codigo_estandar_id = 999;
+				$es_excluido = 0;
+				$tasa_impuesto = "0.00";
+				$notas_facturacion = "";
+				$scheme_id = "999";
+
+				$stmt->bindParam(":unidad_medida_id", $unidad_medida_id, PDO::PARAM_INT);
+				$stmt->bindParam(":codigo_estandar_id", $codigo_estandar_id, PDO::PARAM_INT);
+				$stmt->bindParam(":es_excluido", $es_excluido, PDO::PARAM_INT);
+				$stmt->bindParam(":tributo_id", $tributo_id, PDO::PARAM_INT);
+				$stmt->bindParam(":tasa_impuesto", $tasa_impuesto, PDO::PARAM_STR);
+				$stmt->bindParam(":notas_facturacion", $notas_facturacion, PDO::PARAM_STR);
+				$stmt->bindParam(":scheme_id", $scheme_id, PDO::PARAM_STR);
 
 				$stmt->execute();
 			}

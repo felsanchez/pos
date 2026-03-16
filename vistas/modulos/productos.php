@@ -204,7 +204,7 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
         </a>
 
         <button class="btn btn-success" data-toggle="modal" data-target="#modalImportarProductos">
-          <i class="fa fa-upload"></i> Importar desde CSV
+          <i class="fa fa-upload"></i> Exportar / Importar Productos
         </button>
 
       </div>
@@ -228,11 +228,11 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
             <select id="filtroCategoria" class="form-control filtro-categoria">
               <option value="">Todas</option>
               <?php
-              $categoriasFiltro = ControladorCategorias::ctrMostrarCategorias(null, null);
-              foreach ($categoriasFiltro as $categoriaFiltro) {
-                echo '<option value="' . $categoriaFiltro["categoria"] . '">' . ucfirst($categoriaFiltro["categoria"]) . '</option>';
-              }
-              ?>
+$categoriasFiltro = ControladorCategorias::ctrMostrarCategorias(null, null);
+foreach ($categoriasFiltro as $categoriaFiltro) {
+  echo '<option value="' . $categoriaFiltro["categoria"] . '">' . ucfirst($categoriaFiltro["categoria"]) . '</option>';
+}
+?>
             </select>
           </div>
 
@@ -242,11 +242,11 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
             <select id="filtroProveedor" class="form-control filtro-categoria">
               <option value="">Todos</option>
               <?php
-              $proveedoresFiltro = ControladorProveedores::ctrMostrarProveedores(null, null);
-              foreach ($proveedoresFiltro as $proveedorFiltro) {
-                echo '<option value="' . $proveedorFiltro["nombre"] . '">' . ucfirst($proveedorFiltro["nombre"]) . '</option>';
-              }
-              ?>
+$proveedoresFiltro = ControladorProveedores::ctrMostrarProveedores(null, null);
+foreach ($proveedoresFiltro as $proveedorFiltro) {
+  echo '<option value="' . $proveedorFiltro["nombre"] . '">' . ucfirst($proveedorFiltro["nombre"]) . '</option>';
+}
+?>
             </select>
           </div>
 
@@ -383,16 +383,16 @@ MODAL AGREGAR PRODUCTO
 
                   <?php
 
-                  $item = null;
-                  $valor = null;
-                  $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
+$item = null;
+$valor = null;
+$categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
 
-                  foreach ($categorias as $key => $value) {
+foreach ($categorias as $key => $value) {
 
-                    echo '<option value="' . $value["id"] . '">' . $value["categoria"] . '</option>';
-                  }
+  echo '<option value="' . $value["id"] . '">' . $value["categoria"] . '</option>';
+}
 
-                  ?>
+?>
 
                 </select>
 
@@ -468,17 +468,17 @@ MODAL AGREGAR PRODUCTO
 
                   <?php
 
-                  $item = null;
-                  $valor = null;
-                  $proveedores = ControladorProveedores::ctrMostrarProveedores($item, $valor);
+$item = null;
+$valor = null;
+$proveedores = ControladorProveedores::ctrMostrarProveedores($item, $valor);
 
-                  if ($proveedores) {
-                    foreach ($proveedores as $key => $value) {
-                      echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                    }
-                  }
+if ($proveedores) {
+  foreach ($proveedores as $key => $value) {
+    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+  }
+}
 
-                  ?>
+?>
 
                 </select>
 
@@ -649,10 +649,10 @@ MODAL AGREGAR PRODUCTO
 
       <?php
 
-      $crearProducto = new ControladorProductos();
-      $crearProducto->ctrCrearProducto();
+$crearProducto = new ControladorProductos();
+$crearProducto->ctrCrearProducto();
 
-      ?>
+?>
 
     </div>
 
@@ -735,17 +735,17 @@ MODAL EDITAR PRODUCTO
                   <option value="">Editar Categoria</option>
 
                   <?php
-                  $item = null;
-                  $valor = null;
-                  $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
+$item = null;
+$valor = null;
+$categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
 
-                  foreach ($categorias as $key => $value) {
+foreach ($categorias as $key => $value) {
 
-                    $selected = ($producto["id_categoria"] == $value["id"]) ? "selected" : "";
+  $selected = ($producto["id_categoria"] == $value["id"]) ? "selected" : "";
 
-                    echo '<option value="' . $value["id"] . '" ' . $selected . '>' . $value["categoria"] . '</option>';
-                  }
-                  ?>
+  echo '<option value="' . $value["id"] . '" ' . $selected . '>' . $value["categoria"] . '</option>';
+}
+?>
 
                 </select>
 
@@ -795,16 +795,16 @@ MODAL EDITAR PRODUCTO
                   <option value="0">Sin proveedor</option>
 
                   <?php
-                  $item = null;
-                  $valor = null;
-                  $proveedores = ControladorProveedores::ctrMostrarProveedores($item, $valor);
+$item = null;
+$valor = null;
+$proveedores = ControladorProveedores::ctrMostrarProveedores($item, $valor);
 
-                  if ($proveedores) {
-                    foreach ($proveedores as $key => $value) {
-                      echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                    }
-                  }
-                  ?>
+if ($proveedores) {
+  foreach ($proveedores as $key => $value) {
+    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+  }
+}
+?>
                 </select>
 
               </div>
@@ -996,9 +996,9 @@ MODAL EDITAR PRODUCTO
 
 
       <?php
-      $editarProducto = new ControladorProductos();
-      $editarProducto->ctrEditarProducto();
-      ?>
+$editarProducto = new ControladorProductos();
+$editarProducto->ctrEditarProducto();
+?>
 
     </div>
 
@@ -1159,7 +1159,7 @@ MODAL IMPORTAR PRODUCTOS DESDE CSV
 
               <ol>
                 <li>Descarga la plantilla CSV haciendo clic en el botón de abajo</li>
-                <li>Completa los datos de los productos (código, descripción, categoría son obligatorios)</li>
+                <li>Completa los datos de los productos (Todos los campos son obligatorios)</li>
                 <li>El campo <strong>proveedor es opcional</strong></li>
                 <li>Asegúrate de que las categorías existan en el sistema</li>
                 <li>Sube el archivo CSV completado</li>
@@ -1209,9 +1209,9 @@ MODAL IMPORTAR PRODUCTOS DESDE CSV
         </div>
 
         <?php
-        $importar = new ControladorProductos();
-        $importar->ctrImportarProductos();
-        ?>
+$importar = new ControladorProductos();
+$importar->ctrImportarProductos();
+?>
 
       </form>
 

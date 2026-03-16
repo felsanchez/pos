@@ -233,10 +233,7 @@ $mensajeRecibido = !empty($configuracion["mensaje_recibido"]) ? $configuracion["
 $mensajeProcesado = !empty($configuracion["mensaje_procesado"]) ? $configuracion["mensaje_procesado"] : "Su pedido ha sido procesado";
 $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuracion["mensaje_confirmado"] : "Su pedido ha sido confirmado";
 
-/*echo "<pre>";
-var_dump($_GET);
-echo "</pre>";
-*/
+/*echo "<pre>"; var_dump($_GET); echo "</pre>"; */
 
 $xml = ControladorVentas::ctrDescargarXML();
 
@@ -290,15 +287,15 @@ if ($xml) {
               <select name="cliente" class="form-control select-cliente" style="width: 200px;">
                 <option value="">Todos los clientes</option>
                 <?php
-                $item = null;
-                $valor = null;
-                $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+$item = null;
+$valor = null;
+$clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
 
-                foreach ($clientes as $key => $valueCliente) {
-                  $selected = (isset($_GET['cliente']) && $_GET['cliente'] == $valueCliente["id"]) ? 'selected' : '';
-                  echo '<option value="' . $valueCliente["id"] . '" ' . $selected . '>' . $valueCliente["nombre"] . '</option>';
-                }
-                ?>
+foreach ($clientes as $key => $valueCliente) {
+  $selected = (isset($_GET['cliente']) && $_GET['cliente'] == $valueCliente["id"]) ? 'selected' : '';
+  echo '<option value="' . $valueCliente["id"] . '" ' . $selected . '>' . $valueCliente["nombre"] . '</option>';
+}
+?>
               </select>
             </div>
 
@@ -307,15 +304,15 @@ if ($xml) {
               <select name="usuario" class="form-control select-usuario" style="width: 200px;">
                 <option value="">Todos los usuarios</option>
                 <?php
-                $item = null;
-                $valor = null;
-                $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
+$item = null;
+$valor = null;
+$usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
 
-                foreach ($usuarios as $key => $valueUsuario) {
-                  $selected = (isset($_GET['usuario']) && $_GET['usuario'] == $valueUsuario["id"]) ? 'selected' : '';
-                  echo '<option value="' . $valueUsuario["id"] . '" ' . $selected . '>' . $valueUsuario["nombre"] . '</option>';
-                }
-                ?>
+foreach ($usuarios as $key => $valueUsuario) {
+  $selected = (isset($_GET['usuario']) && $_GET['usuario'] == $valueUsuario["id"]) ? 'selected' : '';
+  echo '<option value="' . $valueUsuario["id"] . '" ' . $selected . '>' . $valueUsuario["nombre"] . '</option>';
+}
+?>
               </select>
             </div>
 
@@ -401,92 +398,93 @@ if ($xml) {
 
               <?php
 
-              // Determinar filtros activos
-              $fechaInicial = null;
-              $fechaFinal = null;
-              $clienteId = null;
-              $usuarioId = null;
-              $mensajeFiltro = "";
+// Determinar filtros activos
+$fechaInicial = null;
+$fechaFinal = null;
+$clienteId = null;
+$usuarioId = null;
+$mensajeFiltro = "";
 
-              // Filtro por fechas
-              if (isset($_GET["fechaInicial"]) && isset($_GET["fechaFinal"])) {
-                $fechaInicial = $_GET["fechaInicial"];
-                $fechaFinal = $_GET["fechaFinal"];
-                $mensajeFiltro .= "Filtrando desde $fechaInicial hasta $fechaFinal";
-              }
+// Filtro por fechas
+if (isset($_GET["fechaInicial"]) && isset($_GET["fechaFinal"])) {
+  $fechaInicial = $_GET["fechaInicial"];
+  $fechaFinal = $_GET["fechaFinal"];
+  $mensajeFiltro .= "Filtrando desde $fechaInicial hasta $fechaFinal";
+}
 
-              // Filtro por cliente
-              if (isset($_GET["cliente"]) && !empty($_GET["cliente"])) {
-                $clienteId = $_GET["cliente"];
+// Filtro por cliente
+if (isset($_GET["cliente"]) && !empty($_GET["cliente"])) {
+  $clienteId = $_GET["cliente"];
 
-                // Obtener nombre del cliente para mostrar
-                $clienteInfo = ControladorClientes::ctrMostrarClientes("id", $clienteId);
-                $nombreClienteFiltro = $clienteInfo["nombre"];
+  // Obtener nombre del cliente para mostrar
+  $clienteInfo = ControladorClientes::ctrMostrarClientes("id", $clienteId);
+  $nombreClienteFiltro = $clienteInfo["nombre"];
 
-                if ($mensajeFiltro != "") {
-                  $mensajeFiltro .= " | ";
-                }
-                $mensajeFiltro .= "Cliente: $nombreClienteFiltro";
-              }
+  if ($mensajeFiltro != "") {
+    $mensajeFiltro .= " | ";
+  }
+  $mensajeFiltro .= "Cliente: $nombreClienteFiltro";
+}
 
-              // Filtro por usuario
-              if (isset($_GET["usuario"]) && !empty($_GET["usuario"])) {
-                $usuarioId = $_GET["usuario"];
+// Filtro por usuario
+if (isset($_GET["usuario"]) && !empty($_GET["usuario"])) {
+  $usuarioId = $_GET["usuario"];
 
-                // Obtener nombre del usuario para mostrar
-                $usuarioInfo = ControladorUsuarios::ctrMostrarUsuarios("id", $usuarioId);
-                $nombreUsuarioFiltro = $usuarioInfo["nombre"];
+  // Obtener nombre del usuario para mostrar
+  $usuarioInfo = ControladorUsuarios::ctrMostrarUsuarios("id", $usuarioId);
+  $nombreUsuarioFiltro = $usuarioInfo["nombre"];
 
-                if ($mensajeFiltro != "") {
-                  $mensajeFiltro .= " | ";
-                }
-                $mensajeFiltro .= "Usuario: $nombreUsuarioFiltro";
-              }
+  if ($mensajeFiltro != "") {
+    $mensajeFiltro .= " | ";
+  }
+  $mensajeFiltro .= "Usuario: $nombreUsuarioFiltro";
+}
 
-              // Mostrar mensaje de filtros activos
-              if ($mensajeFiltro != "") {
-                echo "<p style='background: #d9edf7; padding: 10px; border-left: 4px solid #31708f; color: #31708f;'><i class='fa fa-filter'></i> $mensajeFiltro</p>";
-              } else {
-                echo "<p>Mostrando todas las órdenes</p>";
-              }
+// Mostrar mensaje de filtros activos
+if ($mensajeFiltro != "") {
+  echo "<p style='background: #d9edf7; padding: 10px; border-left: 4px solid #31708f; color: #31708f;'><i class='fa fa-filter'></i> $mensajeFiltro</p>";
+}
+else {
+  echo "<p>Mostrando todas las órdenes</p>";
+}
 
-              //$respuesta = ControladorVentas::ctrRangoFechasVentas($fechaInicial, $fechaFinal);
-              $respuesta = ControladorVentas::ctrRangoFechasVentasPorEstado($fechaInicial, $fechaFinal, "orden");
+//$respuesta = ControladorVentas::ctrRangoFechasVentas($fechaInicial, $fechaFinal);
+$respuesta = ControladorVentas::ctrRangoFechasVentasPorEstado($fechaInicial, $fechaFinal, "orden");
 
-              // Si hay filtro por cliente, filtrar el resultado
-              if ($clienteId !== null) {
-                $respuesta = array_filter($respuesta, function ($venta) use ($clienteId) {
-                  return $venta["id_cliente"] == $clienteId;
-                });
-              }
+// Si hay filtro por cliente, filtrar el resultado
+if ($clienteId !== null) {
+  $respuesta = array_filter($respuesta, function ($venta) use ($clienteId) {
+    return $venta["id_cliente"] == $clienteId;
+  });
+}
 
-              // Si hay filtro por usuario, filtrar el resultado
-              if ($usuarioId !== null) {
-                $respuesta = array_filter($respuesta, function ($venta) use ($usuarioId) {
-                  return $venta["id_vendedor"] == $usuarioId;
-                });
-              }
+// Si hay filtro por usuario, filtrar el resultado
+if ($usuarioId !== null) {
+  $respuesta = array_filter($respuesta, function ($venta) use ($usuarioId) {
+    return $venta["id_vendedor"] == $usuarioId;
+  });
+}
 
 
-              foreach ($respuesta as $key => $value) {
+foreach ($respuesta as $key => $value) {
 
-                echo '<tr>
+  echo '<tr>
                         <td></td>
                         <td>' . ($key + 1) . '</td>  
                         <td>' . $formatoCodigoVenta . $value["codigo"] . '</td>';
 
-                /*
-                $itemCliente = "id";
-                $valorCliente = $value["id_cliente"];
-                $respuestaCliente = ControladorClientes::ctrMostrarClientes($itemCliente, $valorCliente);
-                echo'<td>'.$respuestaCliente["nombre"].'</td>';
-                */
+  /*
+   $itemCliente = "id";
+   $valorCliente = $value["id_cliente"];
+   $respuestaCliente = ControladorClientes::ctrMostrarClientes($itemCliente, $valorCliente);
+   echo'<td>'.$respuestaCliente["nombre"].'</td>';
+   */
 
-                $itemCliente = "id";
-                $valorCliente = $value["id_cliente"];
-                $respuestaCliente = ControladorClientes::ctrMostrarClientes($itemCliente, $valorCliente);
+  $itemCliente = "id";
+  $valorCliente = $value["id_cliente"];
+  $respuestaCliente = ControladorClientes::ctrMostrarClientes($itemCliente, $valorCliente);
 
-                echo '<td>
+  echo '<td>
 
                                   <span class="btnVerClienteDesdeVenta"
                                         data-toggle="modal"
@@ -497,19 +495,20 @@ if ($xml) {
                                   </span>
                               </td>';
 
-                $itemUsuario = "id";
-                $valorUsuario = $value["id_vendedor"];
-                $respuestaUsuario = ControladorUsuarios::ctrMostrarUsuarios($itemUsuario, $valorUsuario);
-                echo '<td>' . $respuestaUsuario["nombre"] . '</td>';
+  $itemUsuario = "id";
+  $valorUsuario = $value["id_vendedor"];
+  $respuestaUsuario = ControladorUsuarios::ctrMostrarUsuarios($itemUsuario, $valorUsuario);
+  echo '<td>' . $respuestaUsuario["nombre"] . '</td>';
 
-                // Validación de la foto
-                if ($value["imagen"] != "") {
-                  echo '<td><img src="' . $value["imagen"] . '" class="img-thumbnail img-ampliar-orden" width="40px" style="cursor: pointer;" data-imagen="' . $value["imagen"] . '" data-idventa="' . $value["id"] . '"></td>';
-                } else {
-                  echo '<td><img src="vistas/img/ventas/default/sinventa.png" class="img-thumbnail img-ampliar-orden" width="40px" style="cursor: pointer;" data-imagen="vistas/img/ventas/default/sinventa.png" data-idventa="' . $value["id"] . '"></td>';
-                }
+  // Validación de la foto
+  if ($value["imagen"] != "") {
+    echo '<td><img src="' . $value["imagen"] . '" class="img-thumbnail img-ampliar-orden" width="40px" style="cursor: pointer;" data-imagen="' . $value["imagen"] . '" data-idventa="' . $value["id"] . '"></td>';
+  }
+  else {
+    echo '<td><img src="vistas/img/ventas/default/sinventa.png" class="img-thumbnail img-ampliar-orden" width="40px" style="cursor: pointer;" data-imagen="vistas/img/ventas/default/sinventa.png" data-idventa="' . $value["id"] . '"></td>';
+  }
 
-                echo '<td>' . $moneda . ' ' . $value["metodo_pago"] . '</td> 
+  echo '<td>' . $moneda . ' ' . $value["metodo_pago"] . '</td> 
 
                         <td>' . $moneda . ' ' . number_format($value["neto"], 2) . '</td> 
 
@@ -521,19 +520,21 @@ if ($xml) {
 
                          <td>' . $value["fecha"] . '</td>';
 
-                // Columna SEGUIMIENTO
-                echo '<td style="white-space:nowrap; text-align:center;">';
+  // Columna SEGUIMIENTO
+  echo '<td style="white-space:nowrap; text-align:center;">';
 
-                // Botón 1: Recibido
-                if (isset($value["seguimiento_recibido"]) && $value["seguimiento_recibido"] == 1) {
-                  echo '<span class="label label-success" style="margin-right:5px;">Enviado (R)</span>';
-                } else {
-                  // Check if keys exist to avoid warnings if columns missing
-                  $recibido = isset($value["seguimiento_recibido"]) ? $value["seguimiento_recibido"] : 0;
-                  if ($recibido == 1) {
-                    echo '<span class="label label-success" style="margin-right:5px;">Enviado (R)</span>';
-                  } else {
-                    echo '<button class="btn btn-default btn-xs btnSeguimientoRecibido" 
+  // Botón 1: Recibido
+  if (isset($value["seguimiento_recibido"]) && $value["seguimiento_recibido"] == 1) {
+    echo '<span class="label label-success" style="margin-right:5px;">Enviado (R)</span>';
+  }
+  else {
+    // Check if keys exist to avoid warnings if columns missing
+    $recibido = isset($value["seguimiento_recibido"]) ? $value["seguimiento_recibido"] : 0;
+    if ($recibido == 1) {
+      echo '<span class="label label-success" style="margin-right:5px;">Enviado (R)</span>';
+    }
+    else {
+      echo '<button class="btn btn-default btn-xs btnSeguimientoRecibido" 
                                 idOrden="' . $value["id"] . '" 
                                 codigoOrden="' . $value["codigo"] . '"
                                 cliente="' . $respuestaCliente["nombre"] . '"
@@ -541,21 +542,23 @@ if ($xml) {
                                 data-mensaje-recibido="' . htmlspecialchars($mensajeRecibido) . '"
                                 style="margin-right:5px; border: 1px solid #ccc; color: green; width: auto !important;" 
                                 title="Enviar mensaje: Pedido Recibido">
-                                Pendiente
+                                1er mensaje
                             </button>';
-                  }
-                }
+    }
+  }
 
-                // Botón 2: Procesado
-                if (isset($value["seguimiento_procesado"]) && $value["seguimiento_procesado"] == 1) {
-                  echo '<span class="label label-success" style="margin-right:5px;">Enviado (P)</span>';
-                } else {
-                  // Check if keys exist
-                  $procesado = isset($value["seguimiento_procesado"]) ? $value["seguimiento_procesado"] : 0;
-                  if ($procesado == 1) {
-                    echo '<span class="label label-success" style="margin-right:5px;">Enviado (P)</span>';
-                  } else {
-                    echo '<button class="btn btn-default btn-xs btnSeguimientoProcesado" 
+  // Botón 2: Procesado
+  if (isset($value["seguimiento_procesado"]) && $value["seguimiento_procesado"] == 1) {
+    echo '<span class="label label-success" style="margin-right:5px;">Enviado (P)</span>';
+  }
+  else {
+    // Check if keys exist
+    $procesado = isset($value["seguimiento_procesado"]) ? $value["seguimiento_procesado"] : 0;
+    if ($procesado == 1) {
+      echo '<span class="label label-success" style="margin-right:5px;">Enviado (P)</span>';
+    }
+    else {
+      echo '<button class="btn btn-default btn-xs btnSeguimientoProcesado" 
                                   idOrden="' . $value["id"] . '" 
                                   codigoOrden="' . $value["codigo"] . '"
                                   cliente="' . $respuestaCliente["nombre"] . '"
@@ -563,53 +566,54 @@ if ($xml) {
                                   data-mensaje-procesado="' . htmlspecialchars($mensajeProcesado) . '"
                                   style="margin-right:5px; border: 1px solid #ccc; color: blue; width: auto !important;" 
                                   title="Enviar mensaje: Pedido Procesado">
-                                  Pendiente
+                                  2do mensaje
                                </button>';
-                  }
-                }
+    }
+  }
 
-                $alistado = isset($value["seguimiento_alistado"]) ? $value["seguimiento_alistado"] : 0;
-                if ($alistado == 1) {
-                  echo '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-success" title="Pedido Alistado / Editado" style="width: auto !important;">
+  $alistado = isset($value["seguimiento_alistado"]) ? $value["seguimiento_alistado"] : 0;
+  if ($alistado == 1) {
+    echo '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-success" title="Pedido Alistado / Editado" style="width: auto !important;">
                               Enviado (A) <i class="fa fa-line-chart"></i>
                             </a>';
-                } else {
-                  echo '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-warning" title="Editar Orden" style="width: auto !important;">
-                              Pendiente <i class="fa fa-line-chart"></i>
+  }
+  else {
+    echo '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-warning" title="Editar Orden" style="width: auto !important;">
+                              Enviar a Ventas
                             </a>';
-                }
+  }
 
-                // Botón 4: Convertir a Factura Electrónica
-                echo ' <a href="index.php?ruta=orden-a-factura-electronica&idVenta=' . $value["id"] . '" 
+  // Botón 4: Convertir a Factura Electrónica
+  echo ' <a href="index.php?ruta=orden-a-factura-electronica&idVenta=' . $value["id"] . '" 
                             class="btn btn-xs btn-primary" 
                             title="Convertir a Factura Electrónica" 
                             style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;">
-                            <i class="fa fa-file-text-o"></i> FE
+                            <i class="fa fa-file-text-o"></i> Enviar a FE
                         </a>';
 
-                echo '</td>';
+  echo '</td>';
 
-                echo '<td> 
+  echo '<td> 
                           <div class="btn-group">
 
                             <button class="btn btn-info btnImprimirFactura" codigoVenta="' . $value["codigo"] . '" title="Imprimir Factura" style="width: auto !important;">
                               <i class="fa fa-print"></i>
                             </button>';
 
-                // Mostrar el botón solo si el usuario es Administrador
-                if ($_SESSION["perfil"] == "Administrador") {
-                  echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" style="width: auto !important;">
+  // Mostrar el botón solo si el usuario es Administrador
+  if ($_SESSION["perfil"] == "Administrador") {
+    echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" style="width: auto !important;">
                                       <i class="fa fa-times"></i>
                                     </button>';
-                }
+  }
 
-                echo '</div>
+  echo '</div>
                         </td>
 
                       </tr>';
-              }
+}
 
-              ?>
+?>
 
 
             </tbody>
@@ -622,19 +626,19 @@ if ($xml) {
         <div class="cards-ordenes">
 
           <?php
-          // Reutilizar la misma consulta de la tabla para evitar duplicar carga
-          // $respuesta ya contiene las órdenes, no hacer nueva consulta
-          
-          foreach ($respuesta as $key => $value) {
+// Reutilizar la misma consulta de la tabla para evitar duplicar carga
+// $respuesta ya contiene las órdenes, no hacer nueva consulta
 
-            // Usar nombres que ya vienen del JOIN en la consulta SQL
-            $nombreCliente = !empty($value["nombre_cliente"]) ? $value["nombre_cliente"] : "Cliente no encontrado";
-            $nombreVendedor = !empty($value["nombre_vendedor"]) ? $value["nombre_vendedor"] : "Vendedor no encontrado";
+foreach ($respuesta as $key => $value) {
 
-            // Imagen
-            $imagenOrden = !empty($value["imagen"]) ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
+  // Usar nombres que ya vienen del JOIN en la consulta SQL
+  $nombreCliente = !empty($value["nombre_cliente"]) ? $value["nombre_cliente"] : "Cliente no encontrado";
+  $nombreVendedor = !empty($value["nombre_vendedor"]) ? $value["nombre_vendedor"] : "Vendedor no encontrado";
 
-            echo '<div class="card-orden">
+  // Imagen
+  $imagenOrden = !empty($value["imagen"]) ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
+
+  echo '<div class="card-orden">
 
                       <div class="card-orden-header">
                         <div class="card-orden-codigo">
@@ -647,13 +651,13 @@ if ($xml) {
                             </button>
                             ';
 
-            if ($_SESSION["perfil"] == "Administrador") {
-              echo '<button class="btn btn-danger btn-xs btnEliminarVenta" idVenta="' . $value["id"] . '">
+  if ($_SESSION["perfil"] == "Administrador") {
+    echo '<button class="btn btn-danger btn-xs btnEliminarVenta" idVenta="' . $value["id"] . '">
                         <i class="fa fa-times"></i>
                       </button>';
-            }
+  }
 
-            echo '      </div>
+  echo '      </div>
                         </div>
                       </div>
 
@@ -697,36 +701,37 @@ if ($xml) {
                         <i class="fa fa-image"></i> Ver comprobante
                       </div>';
 
-            // Notas
-            if (!empty($value["notas"])) {
-              echo '<div class="card-orden-notas">
+  // Notas
+  if (!empty($value["notas"])) {
+    echo '<div class="card-orden-notas">
                         <i class="fa fa-magic"></i> ' . $value["notas"] . '
                       </div>';
-            }
+  }
 
-            // Observación editable
-            if (!empty($value["observacion"])) {
-              echo '<div class="card-orden-observacion celda-observacion" data-id="' . $value['id'] . '" contenteditable="true">
+  // Observación editable
+  if (!empty($value["observacion"])) {
+    echo '<div class="card-orden-observacion celda-observacion" data-id="' . $value['id'] . '" contenteditable="true">
                        ' . $value["observacion"] . '
                       </div>';
-            } else {
-              echo '<div class="card-orden-observacion celda-observacion" data-id="' . $value['id'] . '" contenteditable="true">
+  }
+  else {
+    echo '<div class="card-orden-observacion celda-observacion" data-id="' . $value['id'] . '" contenteditable="true">
                         <span style="color: #999;">Agregar observación...</span>
                       </div>';
-            }
+  }
 
-            echo '</div>';
-          }
-          ?>
+  echo '</div>';
+}
+?>
 
         </div>
 
         <?php
 
-        $eliminarVenta = new ControladorVentas();
-        $eliminarVenta->ctrEliminarVenta();
+$eliminarVenta = new ControladorVentas();
+$eliminarVenta->ctrEliminarVenta();
 
-        ?>
+?>
 
       </div>
 

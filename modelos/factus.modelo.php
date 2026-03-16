@@ -1604,6 +1604,30 @@ class ModeloFactus
     }
 
     /*=============================================
+    OBTENER VENTAS CON NOTA CRÉDITO (BULK)
+    =============================================*/
+    static public function mdlObtenerVentasConNotaCredito($idsVentas)
+    {
+        if (empty($idsVentas)) {
+            return [];
+        }
+
+        // Crear placeholders para la consulta IN (?, ?, ?)
+        $placeholders = str_repeat('?,', count($idsVentas) - 1) . '?';
+
+        $stmt = Conexion::conectar()->prepare(
+            "SELECT DISTINCT id_venta_original FROM notas_credito 
+             WHERE id_venta_original IN ($placeholders)
+             AND estado_dian IN ('enviada', 'aceptada')"
+        );
+
+        $stmt->execute($idsVentas);
+        $resultados = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        return $resultados;
+    }
+
+    /*=============================================
     OBTENER NOTA CRÉDITO POR VENTA
     =============================================*/
     static public function mdlObtenerNotaCredito($idVenta)

@@ -309,4 +309,326 @@ class ControladorClientes
 	}
 
 
+	/*=============================================
+	IMPORTAR CLIENTES DESDE CSV
+	=============================================*/
+	static public function ctrImportarClientes()
+	{
+
+		if (isset($_FILES["archivoCSV"])) {
+
+			$archivo = $_FILES["archivoCSV"]["tmp_name"];
+			$errores = array();
+			$clientesImportar = array();
+
+			// Abrir archivo CSV
+			if (($handle = fopen($archivo, "r")) !== FALSE) {
+
+				// Saltar BOM si existe
+				$bom = fread($handle, 3);
+				if ($bom != "\xEF\xBB\xBF") {
+					rewind($handle);
+				}
+
+				// DETECTAR DELIMITADOR AUTOMÁTICAMENTE
+				$primeraLinea = trim(fgets($handle));
+				rewind($handle);
+
+				// Saltar BOM nuevamente después de rewind
+				$bom = fread($handle, 3);
+				if ($bom != "\xEF\xBB\xBF") {
+					rewind($handle);
+				}
+
+				// Verificar si la primera línea es un indicador de separador de Excel (sep=;)
+				$delimitador = ";"; // Predeterminado
+				if (strpos($primeraLinea, 'sep=') === 0) {
+					$delimitador = substr($primeraLinea, 4, 1);
+					// Consumir la línea del separador para que no se lea como encabezado
+					fgets($handle);
+				} else {
+					// Contar delimitadores en la primera línea si no hay 'sep='
+					$contadorComa = substr_count($primeraLinea, ',');
+					$contadorPuntoYComa = substr_count($primeraLinea, ';');
+					$delimitador = ($contadorPuntoYComa > $contadorComa) ? ';' : ',';
+				}
+
+				// Leer encabezados
+				$encabezados = fgetcsv($handle, 1000, $delimitador);
+
+				$numeroFila = 1; // Contador de fila
+
+				// Leer cada línea del CSV
+				while (($datos = fgetcsv($handle, 1000, $delimitador)) !== FALSE) {
+					$numeroFila++;
+
+					// Saltar filas vacías
+					if (empty(array_filter($datos))) {
+						continue;
+					}
+
+					// Validar que la fila tenga al menos 11 columnas
+					if (count($datos) < 11) {
+						$errores[] = "Fila $numeroFila: Faltan columnas (se requieren 11, encontradas " . count($datos) . ")";
+						continue;
+					}
+
+					$stringTipoPersona = trim($datos[0]);
+					$stringTipoDoc = trim($datos[1]);
+					$dv = trim($datos[2]);
+					$documento = trim($datos[3]);
+					$nombre = trim($datos[4]);
+					$email = trim($datos[5]);
+					$telefono = trim($datos[6]);
+					$stringMunicipio = trim($datos[7]);
+					$direccion = trim($datos[8]);
+					$fechaNacimiento = trim($datos[9]);
+					$notas = trim($datos[10]);
+
+					// Validar campos obligatorios
+					if (empty($documento) || empty($nombre) || empty($stringTipoPersona) || empty($stringTipoDoc)) {
+						$errores[] = "Fila $numeroFila: Campos obligatorios vacíos (tipo persona, documento, nombre, tipo doc)";
+						continue;
+					}
+
+					// Mapear tipo de persona
+					$tipoPersona = self::mapearTipoPersona($stringTipoPersona);
+					if (!$tipoPersona) {
+						$errores[] = "Fila $numeroFila: Tipo de persona '$stringTipoPersona' no reconocido. Use 'Persona natural' o 'Persona juridica'.";
+						continue;
+					}
+
+					// Mapear tipo de documento
+					$tipoDocId = self::mapearTipoDocumento($stringTipoDoc);
+					if (!$tipoDocId) {
+						$errores[] = "Fila $numeroFila: Tipo de documento '$stringTipoDoc' no reconocido. Use CC, CE, DE, NIT, NUIP, PA.";
+						continue;
+					}
+
+					// Validación: Juridica debe ser NIT
+					if ($tipoPersona == "juridica" && $tipoDocId != 6) {
+						$errores[] = "Fila $numeroFila: Para Persona jurídica el tipo de documento debe ser NIT.";
+						continue;
+					}
+
+					// Cálculo de DV para NIT si está vacío
+					if ($tipoDocId == 6 && empty($dv)) {
+						require_once "modelos/factus.modelo.php";
+						$dv = ModeloFactus::mdlCalcularDV($documento);
+					}
+
+					// Mapear municipio
+					$idMunicipio = null;
+					if (!empty($stringMunicipio)) {
+						$idMunicipio = self::mapearMunicipio($stringMunicipio);
+						if (!$idMunicipio) {
+							$errores[] = "Fila $numeroFila: Municipio '$stringMunicipio' no encontrado. Use el formato 'Municipio - Departamento'.";
+							continue;
+						}
+					}
+
+					// Valores predeterminados y lógica condicional
+					$estatus = "nuevo";
+					$regimen = "simplificado";
+					$responsabilidades = ($tipoPersona == "natural") ? "R-99-PN" : "ZY";
+
+					$clientesImportar[] = array(
+						"nombre" => $nombre,
+						"documento" => $documento,
+						"email" => $email,
+						"telefono" => $telefono,
+						"departamento" => null,
+						"ciudad" => null,
+						"direccion" => $direccion,
+						"estatus" => $estatus,
+						"notas" => $notas,
+						"fecha_nacimiento" => !empty($fechaNacimiento) ? self::normalizarFecha($fechaNacimiento) : null,
+						"tipo_documento_id" => $tipoDocId,
+						"digito_verificacion" => $dv,
+						"tipo_persona" => $tipoPersona,
+						"regimen_tributario" => $regimen,
+						"responsabilidades_fiscales" => $responsabilidades,
+						"municipio_id" => $idMunicipio,
+						"codigo_postal" => null,
+						"nombre_comercial" => ($tipoPersona == "juridica") ? $nombre : null,
+						"razon_social" => ($tipoPersona == "juridica") ? $nombre : null
+					);
+				}
+
+				fclose($handle);
+			}
+
+			// Procesa la importación si no hay errores críticos de formato
+			if (count($errores) > 0) {
+
+				$mensajeErrores = '<ul><li>' . implode('</li><li>', $errores) . '</li></ul>';
+
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error en la importación",
+						html: "' . $mensajeErrores . '",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result) => {
+						if (result.value) {
+							window.location = "clientes";
+						}
+					});
+				</script>';
+
+			} elseif (count($clientesImportar) > 0) {
+
+				$respuesta = ModeloClientes::mdlImportarClientesMasivos("clientes", $clientesImportar);
+
+				if ($respuesta["estado"] == "ok") {
+
+					echo '<script>
+						swal({
+							type: "success",
+							title: "¡Importación Exitosa!",
+							text: "Se han importado ' . $respuesta["exitos"] . ' clientes correctamente.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then((result) => {
+							if (result.value) {
+								window.location = "clientes";
+							}
+						});
+					</script>';
+
+				} else {
+
+					$mensajeParcial = "Se importaron " . $respuesta["exitos"] . " clientes, pero hubo errores en algunos.";
+					if (!empty($respuesta["errores"])) {
+						$mensajeParcial .= '<ul><li>' . implode('</li><li>', $respuesta["errores"]) . '</li></ul>';
+					}
+
+					echo '<script>
+						swal({
+							type: "warning",
+							title: "Importación parcial",
+							html: "' . $mensajeParcial . '",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then((result) => {
+							if (result.value) {
+								window.location = "clientes";
+							}
+						});
+					</script>';
+				}
+
+			} else {
+				echo '<script>
+					swal({
+						type: "warning",
+						title: "Archivo vacío",
+						text: "No se encontraron datos válidos para importar.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result) => {
+						if (result.value) {
+							window.location = "clientes";
+						}
+					});
+				</script>';
+			}
+		}
+	}
+
+	/*=============================================
+	MÉTODOS AUXILIARES DE MAPEO
+	=============================================*/
+
+	static private function mapearTipoPersona($string)
+	{
+		$string = strtolower(self::normalizarTextoImport($string));
+		if (strpos($string, 'natural') !== false || $string == 'n') return "natural";
+		if (strpos($string, 'juridica') !== false || $string == 'j' || strpos($string, 'empresa') !== false) return "juridica";
+		return null;
+	}
+
+	static private function mapearTipoDocumento($string)
+	{
+		$string = strtoupper(trim($string));
+		$map = [
+			"CC" => 3,
+			"CE" => 5,
+			"DE" => 8,
+			"NIT" => 6,
+			"NUIP" => 9,
+			"PA" => 7
+		];
+		return $map[$string] ?? null;
+	}
+
+	static private function mapearMunicipio($string)
+	{
+		// Formato esperado: Medellin - Antioquia
+		$partes = explode('-', $string);
+		if (count($partes) < 2) {
+			$partes = explode(',', $string);
+		}
+
+		if (count($partes) < 2) return null;
+
+		$nombreMun = trim(self::normalizarTextoImport($partes[0]));
+		$nombreDep = trim(self::normalizarTextoImport($partes[1]));
+
+		$db = Conexion::conectar();
+		$stmt = $db->prepare("SELECT id_factus FROM factus_municipios WHERE (nombre LIKE :nombreMun) AND (departamento LIKE :nombreDep) LIMIT 1");
+		$stmt->execute([
+			':nombreMun' => '%' . $nombreMun . '%',
+			':nombreDep' => '%' . $nombreDep . '%'
+		]);
+		$res = $stmt->fetch();
+		return $res ? $res["id_factus"] : null;
+	}
+
+	static private function normalizarFecha($fecha)
+	{
+		if (empty($fecha)) return null;
+
+		$fecha = trim($fecha);
+
+		// Intentar YYYY-MM-DD
+		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+			return $fecha . " 00:00:00";
+		}
+
+		// Intentar DD/MM/YYYY
+		if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $fecha, $matches)) {
+			return $matches[3] . "-" . $matches[2] . "-" . $matches[1] . " 00:00:00";
+		}
+
+		// Intentar DD-MM-YYYY
+		if (preg_match('/^(\d{2})-(\d{2})-(\d{4})$/', $fecha, $matches)) {
+			return $matches[3] . "-" . $matches[2] . "-" . $matches[1] . " 00:00:00";
+		}
+
+		// Si ya tiene el formato completo con hora YYYY-MM-DD HH:MM:SS
+		if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $fecha)) {
+			return $fecha;
+		}
+
+		// Intentar con strtotime como último recurso
+		$timestamp = strtotime($fecha);
+		if ($timestamp) {
+			return date("Y-m-d 00:00:00", $timestamp);
+		}
+
+		return null;
+	}
+
+	static private function normalizarTextoImport($texto)
+	{
+		$texto = strtolower($texto);
+		$texto = str_replace(
+			array('á', 'é', 'í', 'ó', 'ú', 'ñ'),
+			array('a', 'e', 'i', 'o', 'u', 'n'),
+			$texto
+		);
+		return $texto;
+	}
 }

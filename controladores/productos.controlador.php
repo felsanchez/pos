@@ -1000,7 +1000,7 @@ class ControladorProductos
 				}
 
 				// DETECTAR DELIMITADOR AUTOMÁTICAMENTE
-				$primeraLinea = fgets($handle);
+				$primeraLinea = trim(fgets($handle));
 				rewind($handle);
 
 				// Saltar BOM nuevamente después de rewind
@@ -1009,12 +1009,18 @@ class ControladorProductos
 					rewind($handle);
 				}
 
-				// Contar delimitadores en la primera línea
-				$contadorComa = substr_count($primeraLinea, ',');
-				$contadorPuntoYComa = substr_count($primeraLinea, ';');
-
-				// Usar el delimitador que aparezca más veces
-				$delimitador = ($contadorPuntoYComa > $contadorComa) ? ';' : ',';
+				// Verificar si la primera línea es un indicador de separador de Excel (sep=;)
+				$delimitador = ";"; // Predeterminado
+				if (strpos($primeraLinea, 'sep=') === 0) {
+					$delimitador = substr($primeraLinea, 4, 1);
+					// Consumir la línea del separador para que no se lea como encabezado
+					fgets($handle); 
+				} else {
+					// Contar delimitadores en la primera línea si no hay 'sep='
+					$contadorComa = substr_count($primeraLinea, ',');
+					$contadorPuntoYComa = substr_count($primeraLinea, ';');
+					$delimitador = ($contadorPuntoYComa > $contadorComa) ? ';' : ',';
+				}
 
 				// Leer encabezados
 				$encabezados = fgetcsv($handle, 1000, $delimitador);
@@ -1030,10 +1036,10 @@ class ControladorProductos
 						continue;
 					}
 
-					// Validar que la fila tenga 7 columnas
-					if (count($datos) < 7) {
+					// Validar que la fila tenga 9 columnas
+					if (count($datos) < 9) {
 
-						$errores[] = "Fila $numeroFila: Faltan columnas (se requieren 7, encontradas " . count($datos) . ")";
+						$errores[] = "Fila $numeroFila: Faltan columnas (se requieren 9, encontradas " . count($datos) . ")";
 						continue;
 					}
 
@@ -1044,6 +1050,8 @@ class ControladorProductos
 					$stock = trim($datos[4]);
 					$precioCompra = trim($datos[5]);
 					$precioVenta = trim($datos[6]);
+					$unidadMedida = trim($datos[7]);
+					$tributo = trim($datos[8]);
 
 					// Validar campos obligatorios (proveedor es OPCIONAL)
 
@@ -1081,6 +1089,40 @@ class ControladorProductos
 						$idProveedor = $proveedorEncontrado["id"];
 					}
 
+					// --- PROCESAR UNIDAD DE MEDIDA ---
+					$idUnidadMedida = 70; // Default: Unidad (ID Factus 70)
+					if (!empty($unidadMedida)) {
+						if (is_numeric($unidadMedida)) {
+							$idUnidadMedida = intval($unidadMedida);
+						} else {
+							$unidadNormalizada = self::normalizarTexto($unidadMedida);
+							$unidadEncontrada = self::buscarUnidadPorNombre($unidadNormalizada);
+							if ($unidadEncontrada) {
+								$idUnidadMedida = $unidadEncontrada["codigo"];
+							} else {
+								$errores[] = "Fila $numeroFila: La unidad de medida '$unidadMedida' no fue reconocida";
+								continue;
+							}
+						}
+					}
+
+					// --- PROCESAR TRIBUTO ---
+					$idTributo = 1; // Default: IVA (ID 1)
+					if (!empty($tributo)) {
+						if (is_numeric($tributo)) {
+							$idTributo = intval($tributo);
+						} else {
+							$tributoNormalizado = self::normalizarTexto($tributo);
+							$tributoEncontrado = self::buscarTributoPorNombre($tributoNormalizado);
+							if ($tributoEncontrado) {
+								$idTributo = $tributoEncontrado["id"];
+							} else {
+								$errores[] = "Fila $numeroFila: El tributo '$tributo' no fue reconocido";
+								continue;
+							}
+						}
+					}
+
 					// Verificar si el código ya existe
 					$item = "codigo";
 					$valor = $codigo;
@@ -1101,6 +1143,8 @@ class ControladorProductos
 						"stock" => $stock,
 						"precio_compra" => $precioCompra,
 						"precio_venta" => $precioVenta,
+						"unidad_medida_id" => $idUnidadMedida,
+						"tributo_id" => $idTributo,
 						"ventas" => 0
 					);
 				}
@@ -1270,6 +1314,95 @@ class ControladorProductos
 			if ($proveedorNormalizado == $nombreNormalizado) {
 
 				return $proveedor;
+			}
+		}
+
+		return false;
+	}
+
+
+	/*=============================================
+	FUNCIÓN AUXILIAR: BUSCAR UNIDAD POR NOMBRE
+	=============================================*/
+
+	static private function buscarUnidadPorNombre($nombreNormalizado)
+	{
+
+		require_once "modelos/factus.modelo.php";
+
+		$unidades = ModeloFactus::mdlObtenerUnidadesMedida();
+
+		// Mapeo manual de abreviaturas específicas
+		$mapaAbreviaturas = [
+			"und" => "unidad"
+		];
+
+		$busqueda = isset($mapaAbreviaturas[$nombreNormalizado]) ? $mapaAbreviaturas[$nombreNormalizado] : $nombreNormalizado;
+
+		foreach ($unidades as $unidad) {
+
+			// Normalizar nombre de la unidad
+			$nombreUnidadNormalizado = self::normalizarTexto($unidad["nombre"]);
+
+			// También comparar con el código DIAN (ej: GLL, KGM, 94)
+			$codigoDianNormalizado = self::normalizarTexto($unidad["codigo_dian"]);
+
+			if (
+				$nombreUnidadNormalizado == $busqueda ||
+				$codigoDianNormalizado == $nombreNormalizado ||
+				$nombreUnidadNormalizado == $nombreNormalizado
+			) {
+
+				return $unidad;
+			}
+		}
+
+		return false;
+	}
+
+
+	/*=============================================
+	FUNCIÓN AUXILIAR: BUSCAR TRIBUTO POR NOMBRE
+	=============================================*/
+
+	static private function buscarTributoPorNombre($nombreNormalizado)
+	{
+
+		require_once "modelos/factus.modelo.php";
+
+		$tributos = ModeloFactus::mdlObtenerTributos();
+
+		// Si es "excluido", buscar directamente
+		if ($nombreNormalizado == "excluido") {
+			foreach ($tributos as $tributo) {
+				if (self::normalizarTexto($tributo["nombre"]) == "excluido") {
+					return $tributo;
+				}
+			}
+		}
+
+		// Para formatos tipo "iva 19" o "inc 8"
+		$partes = explode(" ", $nombreNormalizado);
+
+		foreach ($tributos as $tributo) {
+
+			$tributoNombreNorm = self::normalizarTexto($tributo["nombre"]);
+
+			// Caso 1: Match exacto (por si acaso)
+			if ($tributoNombreNorm == $nombreNormalizado) {
+				return $tributo;
+			}
+
+			// Caso 2: Contiene todas las partes (ej: si buscas "iva 19" y el DB tiene "IVA 19% (General)")
+			$coincidencias = 0;
+			foreach ($partes as $parte) {
+				if (strpos($tributoNombreNorm, $parte) !== false) {
+					$coincidencias++;
+				}
+			}
+
+			if ($coincidencias == count($partes)) {
+				return $tributo;
 			}
 		}
 
