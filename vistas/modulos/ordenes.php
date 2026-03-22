@@ -233,7 +233,6 @@ $mensajeRecibido = !empty($configuracion["mensaje_recibido"]) ? $configuracion["
 $mensajeProcesado = !empty($configuracion["mensaje_procesado"]) ? $configuracion["mensaje_procesado"] : "Su pedido ha sido procesado";
 $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuracion["mensaje_confirmado"] : "Su pedido ha sido confirmado";
 
-/*echo "<pre>"; var_dump($_GET); echo "</pre>"; */
 
 $xml = ControladorVentas::ctrDescargarXML();
 
@@ -282,6 +281,8 @@ if ($xml) {
             <input type="hidden" name="fechaFinal" id="fechaFinal"
               value="<?php echo isset($_GET["fechaFinal"]) ? $_GET["fechaFinal"] : null; ?>">
 
+            <?php CSRF::insertToken(); ?>
+
             <!-- Filtro por cliente -->
             <div class="filtro-cliente">
               <select name="cliente" class="form-control select-cliente" style="width: 200px;">
@@ -293,7 +294,7 @@ $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
 
 foreach ($clientes as $key => $valueCliente) {
   $selected = (isset($_GET['cliente']) && $_GET['cliente'] == $valueCliente["id"]) ? 'selected' : '';
-  echo '<option value="' . $valueCliente["id"] . '" ' . $selected . '>' . $valueCliente["nombre"] . '</option>';
+  echo '<option value="' . e($valueCliente["id"]) . '" ' . $selected . '>' . e($valueCliente["nombre"]) . '</option>';
 }
 ?>
               </select>
@@ -310,7 +311,7 @@ $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
 
 foreach ($usuarios as $key => $valueUsuario) {
   $selected = (isset($_GET['usuario']) && $_GET['usuario'] == $valueUsuario["id"]) ? 'selected' : '';
-  echo '<option value="' . $valueUsuario["id"] . '" ' . $selected . '>' . $valueUsuario["nombre"] . '</option>';
+  echo '<option value="' . e($valueUsuario["id"]) . '" ' . $selected . '>' . e($valueUsuario["nombre"]) . '</option>';
 }
 ?>
               </select>
@@ -470,8 +471,8 @@ foreach ($respuesta as $key => $value) {
 
   echo '<tr>
                         <td></td>
-                        <td>' . ($key + 1) . '</td>  
-                        <td>' . $formatoCodigoVenta . $value["codigo"] . '</td>';
+                        <td>' . e($key + 1) . '</td>  
+                        <td>' . e($formatoCodigoVenta) . e($value["codigo"]) . '</td>';
 
   /*
    $itemCliente = "id";
@@ -489,16 +490,16 @@ foreach ($respuesta as $key => $value) {
                                   <span class="btnVerClienteDesdeVenta"
                                         data-toggle="modal"
                                         data-target="#modalEditarCliente"
-                                        idCliente="' . $value["id_cliente"] . '"
+                                        idCliente="' . e($value["id_cliente"]) . '"
                                         style="cursor: pointer; color: #337ab7; text-decoration: underline;">
-                                      ' . $respuestaCliente["nombre"] . '
+                                      ' . e($respuestaCliente["nombre"]) . '
                                   </span>
                               </td>';
 
   $itemUsuario = "id";
   $valorUsuario = $value["id_vendedor"];
   $respuestaUsuario = ControladorUsuarios::ctrMostrarUsuarios($itemUsuario, $valorUsuario);
-  echo '<td>' . $respuestaUsuario["nombre"] . '</td>';
+  echo '<td>' . e($respuestaUsuario["nombre"]) . '</td>';
 
   // Validación de la foto
   if ($value["imagen"] != "") {
@@ -508,17 +509,17 @@ foreach ($respuesta as $key => $value) {
     echo '<td><img src="vistas/img/ventas/default/sinventa.png" class="img-thumbnail img-ampliar-orden" width="40px" style="cursor: pointer;" data-imagen="vistas/img/ventas/default/sinventa.png" data-idventa="' . $value["id"] . '"></td>';
   }
 
-  echo '<td>' . $moneda . ' ' . $value["metodo_pago"] . '</td> 
+  echo '<td>' . e($moneda) . ' ' . e($value["metodo_pago"]) . '</td> 
 
-                        <td>' . $moneda . ' ' . number_format($value["neto"], 2) . '</td> 
+                        <td>' . e($moneda) . ' ' . e(number_format($value["neto"], 2)) . '</td> 
 
-                        <td>' . $moneda . ' ' . number_format($value["total"], 2) . '</td>
+                        <td>' . e($moneda) . ' ' . e(number_format($value["total"], 2)) . '</td>
 
-                        <td class="celda-nota" data-id="' . $value['id'] . '">' . $value['notas'] . '</td>
+                        <td class="celda-nota" data-id="' . e($value['id']) . '">' . e($value['notas']) . '</td>
 
-                        <td contenteditable="true" class="celda-observacion" data-id="' . $value['id'] . '">' . $value['observacion'] . '</td>
+                        <td contenteditable="true" class="celda-observacion" data-id="' . e($value['id']) . '">' . e($value['observacion']) . '</td>
 
-                         <td>' . $value["fecha"] . '</td>';
+                         <td>' . e($value["fecha"]) . '</td>';
 
   // Columna SEGUIMIENTO
   echo '<td style="white-space:nowrap; text-align:center;">';
@@ -535,11 +536,11 @@ foreach ($respuesta as $key => $value) {
     }
     else {
       echo '<button class="btn btn-default btn-xs btnSeguimientoRecibido" 
-                                idOrden="' . $value["id"] . '" 
-                                codigoOrden="' . $value["codigo"] . '"
-                                cliente="' . $respuestaCliente["nombre"] . '"
-                                telefono="' . $respuestaCliente["telefono"] . '"
-                                data-mensaje-recibido="' . htmlspecialchars($mensajeRecibido) . '"
+                                idOrden="' . e($value["id"]) . '" 
+                                codigoOrden="' . e($value["codigo"]) . '"
+                                cliente="' . e($respuestaCliente["nombre"]) . '"
+                                telefono="' . e($respuestaCliente["telefono"]) . '"
+                                data-mensaje-recibido="' . e(htmlspecialchars($mensajeRecibido)) . '"
                                 style="margin-right:5px; border: 1px solid #ccc; color: green; width: auto !important;" 
                                 title="Enviar mensaje: Pedido Recibido">
                                 1er mensaje
@@ -559,11 +560,11 @@ foreach ($respuesta as $key => $value) {
     }
     else {
       echo '<button class="btn btn-default btn-xs btnSeguimientoProcesado" 
-                                  idOrden="' . $value["id"] . '" 
-                                  codigoOrden="' . $value["codigo"] . '"
-                                  cliente="' . $respuestaCliente["nombre"] . '"
-                                  telefono="' . $respuestaCliente["telefono"] . '"
-                                  data-mensaje-procesado="' . htmlspecialchars($mensajeProcesado) . '"
+                                  idOrden="' . e($value["id"]) . '" 
+                                  codigoOrden="' . e($value["codigo"]) . '"
+                                  cliente="' . e($respuestaCliente["nombre"]) . '"
+                                  telefono="' . e($respuestaCliente["telefono"]) . '"
+                                  data-mensaje-procesado="' . e(htmlspecialchars($mensajeProcesado)) . '"
                                   style="margin-right:5px; border: 1px solid #ccc; color: blue; width: auto !important;" 
                                   title="Enviar mensaje: Pedido Procesado">
                                   2do mensaje
@@ -788,6 +789,8 @@ MODAL EDITAR CLIENTE
     <div class="modal-content">
 
       <form role="form" method="post">
+
+        <?php CSRF::insertToken(); ?>
 
         <!--=====================================
       CABEZA DEL MODAL

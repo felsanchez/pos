@@ -1,6 +1,0 @@
-ID: 6 | Codigo: 7 | Nombre: Excluido
-ID: 5 | Codigo: 04 | Nombre: INC 10%
-ID: 4 | Codigo: 04 | Nombre: INC 8%
-ID: 1 | Codigo: 01 | Nombre: IVA 0% (Exento)
-ID: 3 | Codigo: 01 | Nombre: IVA 19% (General)
-ID: 2 | Codigo: 01 | Nombre: IVA 5% (Reducido)

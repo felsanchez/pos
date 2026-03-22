@@ -67,6 +67,7 @@ $(document).ready(function () {
 
         var datos = new FormData();
         datos.append("idProducto", idProducto);
+        datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
         $.ajax({
             url: "ajax/productos.ajax.php",
@@ -333,6 +334,13 @@ $(document).ready(function () {
     VALIDAR PROVEEDOR (DEBE SER NIT) ANTES DE EMITIR
     =============================================*/
     $(".formularioDocumentoSoporte").submit(function (e) {
+        var form = this;
+
+        // Si el formulario ya ha sido confirmado, permitimos el envío
+        if ($(form).data('confirmado')) {
+            return true;
+        }
+
         var optionSelected = $("#seleccionarProveedor").find('option:selected');
         var nombreTipo = (optionSelected.attr("nombreTipo") || "").trim();
 
@@ -347,37 +355,40 @@ $(document).ready(function () {
             });
             return false;
         }
-    });
 
-    /*=============================================
-    FIRMAR Y ENVIAR DOCUMENTO SOPORTE
-    =============================================*/
-    $(document).on("click", ".btnFirmarDS", function () {
-        var idDS = $(this).attr("idDS");
+        e.preventDefault();
+
+        // Aseguramos que los productos estén listados en el campo oculto
+        listarProductosDS();
 
         swal({
-            title: "¿Está seguro de firmar este Documento Soporte?",
-            text: "¡Esta acción no se puede deshacer y el documento será oficial!",
-            type: "warning",
+            title: '¿Está seguro de guardar este documento?',
+            text: "Se guardará en el sistema y podrá enviarla a la DIAN después.",
+            type: 'warning',
             showCancelButton: true,
-            confirmButtonColor: "#3c8dbc",
-            cancelButtonColor: "#d33",
-            cancelButtonText: "Cancelar",
-            confirmButtonText: "Sí, firmar y enviar"
-        }).then(function (result) {
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Sí, guardar'
+        }).then((result) => {
             if (result.value) {
+                $(form).data('confirmado', true);
+
                 swal({
-                    title: "Enviando",
-                    text: "Por favor espere mientras se firma el documento",
+                    title: 'Guardando Documento Soporte',
+                    text: 'Por favor espere mientras se procesa la información...',
+                    type: 'info',
                     allowOutsideClick: false,
+                    showConfirmButton: false,
                     onBeforeOpen: () => {
                         swal.showLoading()
                     }
                 });
 
-                var datos = new FormData();
-                datos.append("idDS", idDS);
-                datos.append("accion", "firmarDS");
+                // Enviar por AJAX
+                var datos = new FormData(form);
+                datos.append("accion", "crearDS");
+                datos.append("ajax", true);
 
                 $.ajax({
                     url: "ajax/factus.ajax.php",
@@ -391,8 +402,83 @@ $(document).ready(function () {
                         if (!respuesta.error) {
                             swal({
                                 type: "success",
-                                title: "Exito",
-                                text: "Documento soporte firmado correctamente",
+                                title: "¡Documento Soporte guardado correctamente!",
+                                text: "El documento ha sido registrado exitosamente en el sistema.",
+                                showConfirmButton: true,
+                                confirmButtonText: "Cerrar"
+                            }).then(function (result) {
+                                window.location = "documentos-soporte";
+                            });
+                        } else {
+                            swal({
+                                type: "error",
+                                title: "¡Error!",
+                                text: respuesta.mensaje,
+                                showConfirmButton: true,
+                                confirmButtonText: "Cerrar"
+                            });
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.error("Error AJAX:", jqXHR.responseText);
+                        swal({
+                            type: "error",
+                            title: "Error de Sistema",
+                            text: "No se pudo emitir el documento soporte vía AJAX. Revisa la consola."
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    /*=============================================
+    FIRMAR Y ENVIAR DOCUMENTO SOPORTE
+    =============================================*/
+    $(document).on("click", ".btnFirmarDS", function () {
+        var idDS = $(this).attr("idDS");
+
+        swal({
+            title: '¿Está seguro de firmar y emitir este Documento Soporte?',
+            text: 'Este proceso enviará el documento a la DIAN y no se podrá revertir.',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Sí, firmar documento'
+        }).then(function (result) {
+            if (result.value) {
+                swal({
+                    title: 'Guardando Documento Soporte',
+                    text: 'Por favor espere mientras se procesa la información...',
+                    type: 'info',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    onBeforeOpen: () => {
+                        swal.showLoading()
+                    }
+                });
+
+                var datos = new FormData();
+                datos.append("idDS", idDS);
+                datos.append("accion", "firmarDS");
+                datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+
+                $.ajax({
+                    url: "ajax/factus.ajax.php",
+                    method: "POST",
+                    data: datos,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    dataType: "json",
+                    success: function (respuesta) {
+                        if (!respuesta.error) {
+                            swal({
+                                type: "success",
+                                title: "¡Documento Soporte firmado y enviado correctamente!",
+                                text: "El documento ha sido procesado por la DIAN exitosamente.",
                                 showConfirmButton: true,
                                 confirmButtonText: "Cerrar"
                             }).then(function (result) {
@@ -422,19 +508,20 @@ $(document).ready(function () {
         var idDS = $(this).attr("idDS");
 
         swal({
-            title: "¿Está seguro de eliminar este borrador?",
-            text: "¡Si no lo está, puede cancelar la acción!",
-            type: "warning",
+            title: '¿Está seguro de eliminar este Documento Soporte?',
+            text: '¡Si no lo está puede cancelar la acción!',
+            type: 'warning',
             showCancelButton: true,
-            confirmButtonColor: "#3c8dbc",
-            cancelButtonColor: "#d33",
-            cancelButtonText: "Cancelar",
-            confirmButtonText: "Sí, eliminar borrador"
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Sí, eliminar documento'
         }).then(function (result) {
             if (result.value) {
                 var datos = new FormData();
                 datos.append("idDS", idDS);
                 datos.append("accion", "eliminarDS");
+                datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
                 $.ajax({
                     url: "ajax/factus.ajax.php",
@@ -448,7 +535,8 @@ $(document).ready(function () {
                         if (!respuesta.error) {
                             swal({
                                 type: "success",
-                                title: "El Documento ha sido eliminado correctamente",
+                                title: "¡Documento Soporte eliminado correctamente!",
+                                text: "El documento ha sido borrado exitosamente del sistema.",
                                 showConfirmButton: true,
                                 confirmButtonText: "Cerrar"
                             }).then(function (result) {
@@ -479,6 +567,7 @@ $(document).ready(function () {
         var datos = new FormData();
         datos.append("accion", "obtenerNotasAjusteDS");
         datos.append("idDS", idDS);
+        datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
         $.ajax({
             url: "ajax/factus.ajax.php",
@@ -573,6 +662,7 @@ $(document).ready(function () {
         var datos = new FormData();
         datos.append("idDS", idDS);
         datos.append("emailDestino", emailDestino);
+        datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
         $.ajax({
             url: "ajax/facturacion.ajax.php",

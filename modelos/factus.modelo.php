@@ -2,6 +2,8 @@
 
 require_once __DIR__ . "/conexion.php";
 
+if (!class_exists('ModeloFactus')) {
+
 class ModeloFactus
 {
 
@@ -2377,5 +2379,8 @@ class ModeloFactus
 
         $stmt->execute();
         return $stmt->fetchAll();
-    }
+	}
+
+}
+
 }

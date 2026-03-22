@@ -81,6 +81,8 @@ $productosVenta = json_decode($venta["productos"], true);
 
           <form role="form" method="post" class="formularioVenta">
 
+            <?php CSRF::insertToken(); ?>
+
             <div class="box-body">
 
               <div class="box">
@@ -103,7 +105,7 @@ $productosVenta = json_decode($venta["productos"], true);
                         <input type="text" class="form-control" id="nuevoVendedor" name="nuevoVendedor"
                           value="<?php echo $_SESSION["nombre"]; ?>" readonly>
                         <input type="hidden" name="idVendedor" value="<?php echo $_SESSION["id"]; ?>">
-                        <input type="hidden" name="rutaOrigen" value="crear-factura-electronica">
+                        <input type="hidden" name="rutaOrigen" value="facturas-electronicas">
                       </div>
                     </div>
                   </div>
@@ -379,7 +381,8 @@ $productosVenta = json_decode($venta["productos"], true);
 
 
             <div class="box-footer">
-              <input type="hidden" name="idVenta" value="<?php echo $idVenta; ?>">
+              <input type="hidden" name="editarVenta" value="<?php echo $venta["codigo"]; ?>">
+              <input type="hidden" name="activarFacturaElectronica" value="1">
               <button type="submit" name="editarVentaFactus" class="btn btn-primary pull-right">Actualizar
                 Borrador</button>
             </div>
@@ -1085,6 +1088,6 @@ MODAL AGREGAR RETENCION
 <?php
 
 $crearFactura = new ControladorVentas();
-$crearFactura->ctrCrearVenta();
+$crearFactura->ctrEditarVenta();
 
 ?>

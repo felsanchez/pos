@@ -42,6 +42,7 @@ if (!$configuracion) {
 			</div>
 
 			<form role="form" method="post">
+				<?php CSRF::insertToken(); ?>
 
 				<div class="box-body">
 
@@ -543,7 +544,8 @@ $(document).ready(function() {
 				accion: 'probarConexion',
 				apiUrl: apiUrl,
 				clientId: clientId,
-				clientSecret: clientSecret
+				clientSecret: clientSecret,
+				csrf_token: $('meta[name="csrf-token"]').attr('content')
 			},
 			dataType: 'json',
 			success: function(response) {
@@ -622,7 +624,8 @@ $(document).ready(function() {
 						username: username,
 						password: password,
 						ambiente: ambiente,
-						rangoNumeracionId: rangoNumeracionId
+						rangoNumeracionId: rangoNumeracionId,
+						csrf_token: $('meta[name="csrf-token"]').attr('content')
 					},
 					dataType: 'json',
 					success: function(response) {
@@ -684,7 +687,10 @@ $(document).ready(function() {
 				$.ajax({
 					url: 'ajax/factus.ajax.php',
 					method: 'POST',
-					data: { accion: 'sincronizarMunicipios' },
+					data: { 
+						accion: 'sincronizarMunicipios',
+						csrf_token: $('meta[name="csrf-token"]').attr('content')
+					},
 					dataType: 'json',
 					success: function(response) {
 						if (response.error) {
@@ -751,7 +757,10 @@ $(document).ready(function() {
 				$.ajax({
 					url: 'ajax/factus.ajax.php',
 					method: 'POST',
-					data: { accion: 'sincronizarTributos' },
+					data: { 
+						accion: 'sincronizarTributos',
+						csrf_token: $('meta[name="csrf-token"]').attr('content')
+					},
 					dataType: 'json',
 					success: function(response) {
 						if (response.error) {
@@ -818,7 +827,10 @@ $(document).ready(function() {
 				$.ajax({
 					url: 'ajax/factus.ajax.php',
 					method: 'POST',
-					data: { accion: 'sincronizarUnidades' },
+					data: { 
+						accion: 'sincronizarUnidades',
+						csrf_token: $('meta[name="csrf-token"]').attr('content')
+					},
 					dataType: 'json',
 					success: function(response) {
 						if (response.error) {
@@ -885,7 +897,10 @@ $(document).ready(function() {
 				$.ajax({
 					url: 'ajax/factus.ajax.php',
 					method: 'POST',
-					data: { accion: 'sincronizarRangos' },
+					data: { 
+						accion: 'sincronizarRangos',
+						csrf_token: $('meta[name="csrf-token"]').attr('content')
+					},
 					dataType: 'json',
 					success: function(response) {
 						if (response.error) {

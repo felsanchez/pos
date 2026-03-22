@@ -153,6 +153,7 @@ $(".tablaProveedores").on("click", ".btnEditarProveedor", function () {
 
 	var datos = new FormData();
 	datos.append("idProveedor", idProveedor);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 
@@ -188,14 +189,9 @@ $(".tablaProveedores").on("click", ".btnEditarProveedor", function () {
 
 
 
-/*=============================================
-ELIMINAR PROVEEDOR
-=============================================*/
 $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 
 	var idProveedor = $(this).attr("idProveedor");
-
-	//var_dump($idProveedor);
 
 	swal({
 
@@ -211,7 +207,49 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 
 		if (result.value) {
 
-			window.location = "index.php?ruta=proveedores&idProveedor=" + idProveedor;
+			var datos = new FormData();
+			datos.append("idProveedorEliminar", idProveedor);
+			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+
+			$.ajax({
+				url: "ajax/proveedores.ajax.php",
+				method: "POST",
+				data: datos,
+				cache: false,
+				contentType: false,
+				processData: false,
+				success: function (respuesta) {
+					if (respuesta == "ok") {
+						swal({
+							type: "success",
+							title: "¡Borrado correctamente!",
+							text: "El proveedor ha sido borrado correctamente.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then((result) => {
+							if (result.value) {
+								window.location.reload();
+							}
+						});
+					} else if (respuesta == "error_productos_asociados") {
+						swal({
+							type: "error",
+							title: "¡No se puede eliminar!",
+							text: "El proveedor tiene productos asociados.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					} else {
+						swal({
+							type: "error",
+							title: "Error",
+							text: "No se pudo eliminar. " + respuesta,
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					}
+				}
+			})
 		}
 	})
 })
@@ -237,7 +275,8 @@ $(document).on('blur', '.celda-notas-proveedor', function () {
 		data: {
 			id: id,
 			notas: nuevasNotas,
-			accion: 'actualizarNotas'
+			accion: 'actualizarNotas',
+			csrf_token: $('meta[name="csrf-token"]').attr('content')
 		},
 
 		success: function (respuesta) {

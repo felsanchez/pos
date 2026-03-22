@@ -227,6 +227,7 @@ $(document).on('click', '.btnVariantesVenta', function () {
 		// Solicitar variantes por AJAX
 		var datos = new FormData();
 		datos.append("obtenerVariantesProducto", idProducto);
+		datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 		$.ajax({
 			url: "ajax/productos.ajax.php",
@@ -362,6 +363,7 @@ $('.tablaVentas tbody').on("click", "button.agregarProducto", function () {
 
 	var datos = new FormData();
 	datos.append("idProducto", idProducto);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 
@@ -638,6 +640,7 @@ $(".btnAgregarProducto").click(function () {
 
 	var datos = new FormData();
 	datos.append("traerProductos", "ok");
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 
@@ -749,6 +752,7 @@ $(".formularioVenta").on("change", "select.nuevaDescripcionProducto", function (
 
 	var datos = new FormData();
 	datos.append("nombreProducto", nombreProducto);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 
@@ -1307,7 +1311,95 @@ function listarProductos() {
 }
 
 $(".formularioVenta").submit(function (e) {
+	var form = this;
+
+	// Si el formulario ya ha sido confirmado, permitimos el envío
+	if ($(form).data('confirmado')) {
+		return true;
+	}
+
+	e.preventDefault();
+
+	// Primero listamos productos para asegurar que el campo oculto esté listo
 	listarProductos();
+
+	swal({
+		title: '¿Está seguro de guardar este documento?',
+		text: "Se guardará en el sistema y podrá enviarla a la DIAN después.",
+		type: 'warning',
+		showCancelButton: true,
+		confirmButtonColor: '#3085d6',
+		cancelButtonColor: '#d33',
+		cancelButtonText: 'Cancelar',
+		confirmButtonText: 'Sí, guardar'
+	}).then((result) => {
+		if (result.value) {
+			$(form).data('confirmado', true);
+
+			swal({
+				title: 'Guardando Venta',
+				text: 'Por favor espere mientras se procesa la información...',
+				type: 'info',
+				allowOutsideClick: false,
+				showConfirmButton: false,
+				onBeforeOpen: () => {
+					swal.showLoading()
+				}
+			});
+
+			// Enviar por AJAX
+			var datos = new FormData(form);
+			datos.append("ajax", true);
+
+			$.ajax({
+				url: "ajax/ventas.ajax.php",
+				method: "POST",
+				data: datos,
+				cache: false,
+				contentType: false,
+				processData: false,
+				dataType: "json",
+				success: function (respuesta) {
+					if (respuesta.status == "success") {
+
+						localStorage.removeItem("rango");
+
+						swal({
+							type: "success",
+							title: respuesta.titulo,
+							text: respuesta.mensaje,
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then((result) => {
+							if (result.value) {
+								window.location = respuesta.ruta;
+							}
+						});
+					} else {
+						swal({
+							type: "error",
+							title: respuesta.titulo || "Error",
+							html: respuesta.mensaje || "Ocurrió un error al guardar",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					}
+				},
+				error: function (jqXHR, textStatus, errorThrown) {
+					console.error("Error AJAX Status:", jqXHR.status);
+					console.error("Error AJAX Status Text:", jqXHR.statusText);
+					console.error("Error AJAX Response:", jqXHR.responseText);
+					console.error("Error Thrown:", errorThrown);
+
+					swal({
+						type: "error",
+						title: "Error de Sistema",
+						html: "No se pudo guardar la venta vía AJAX.<br><br><b>Status:</b> " + jqXHR.status + " " + jqXHR.statusText + "<br><b>Error:</b> " + errorThrown + "<br><br>Revisa la consola para más detalles."
+					});
+				}
+			});
+		}
+	});
 });
 
 
@@ -1356,19 +1448,17 @@ $(document).on("click", ".btnEliminarVenta", function () {
 
 	swal({
 
-		title: '¿Esta seguro de borrar la venta?',
-		text: "¡Si no lo está puede cancelar la acción!",
+		title: '¿Está seguro de eliminar esta venta?',
+		text: '¡Si no lo está puede cancelar la acción!',
 		type: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
 		cancelButtonText: 'Cancelar',
-		confirmButtonText: 'Si, borrar venta!'
+		confirmButtonText: 'Sí, eliminar documento'
 	}).then((result) => {
 
 		if (result.value) {
-
-			//window.location = "index.php?ruta=ventas&idVenta="+idVenta;
 
 			// Primero intentar con el parámetro 'ruta'
 			let ruta = new URLSearchParams(window.location.search).get('ruta');
@@ -1380,15 +1470,49 @@ $(document).on("click", ".btnEliminarVenta", function () {
 				ruta = archivo.split(".php")[0]; // ejemplo: ordenes.php -> ordenes
 			}
 
-			let url = "index.php?ruta=" + ruta + "&idVenta=" + idVenta;
+			var datos = new FormData();
+			datos.append("idVentaEliminar", idVenta);
+			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 			if (ruta === "ordenes") {
-				url += "&estado=orden";
+				datos.append("estado", "orden");
 			}
 
-			window.location = url;
-
-
+			$.ajax({
+				url: "ajax/ventas.ajax.php",
+				method: "POST",
+				data: datos,
+				cache: false,
+				contentType: false,
+				processData: false,
+				success: function (respuesta) {
+					if (respuesta == "ok") {
+						swal({
+							type: "success",
+							title: "¡Venta eliminada correctamente!",
+							text: "El documento ha sido borrado exitosamente del sistema.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then((result) => {
+							if (result.value) {
+								if (ruta === "ordenes") {
+									window.location = "ordenes";
+								} else {
+									window.location.reload();
+								}
+							}
+						});
+					} else {
+						swal({
+							type: "error",
+							title: "Error",
+							text: "No se pudo eliminar. " + respuesta,
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					}
+				}
+			})
 		}
 
 	})
@@ -1570,14 +1694,14 @@ $(document).on("click", ".btnFirmarFactura", function () {
 	var boton = $(this);
 
 	swal({
-		title: '¿Está seguro de firmar esta Factura?',
-		text: "¡Esta acción no se puede deshacer y el documento será oficial!",
+		title: '¿Está seguro de firmar y emitir esta Factura Electrónica?',
+		text: 'Este proceso enviará el documento a la DIAN y no se podrá revertir.',
 		type: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
 		cancelButtonText: 'Cancelar',
-		confirmButtonText: 'Sí, firmar y enviar!'
+		confirmButtonText: 'Sí, firmar documento'
 	}).then((result) => {
 
 		if (result.value) {
@@ -1588,9 +1712,11 @@ $(document).on("click", ".btnFirmarFactura", function () {
 			boton.html('<i class="fa fa-spinner fa-spin"></i>');
 
 			swal({
-				title: "Enviando",
-				text: "Por favor espere mientras se firma el documento",
+				title: 'Guardando Factura Electrónica',
+				text: 'Por favor espere mientras se procesa la información...',
+				type: 'info',
 				allowOutsideClick: false,
+				showConfirmButton: false,
 				onBeforeOpen: () => {
 					swal.showLoading()
 				}
@@ -1599,6 +1725,7 @@ $(document).on("click", ".btnFirmarFactura", function () {
 			var datos = new FormData();
 			datos.append("accion", "generarFactura");
 			datos.append("idVenta", idVenta);
+			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 			$.ajax({
 				url: "ajax/factus.ajax.php",
@@ -1614,8 +1741,8 @@ $(document).on("click", ".btnFirmarFactura", function () {
 
 						swal({
 							type: "success",
-							title: "Exito",
-							text: "Factura firmada correctamente",
+							title: "¡Factura Electrónica firmada y enviada correctamente!",
+							text: "El documento ha sido procesado por la DIAN exitosamente.",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
 						}).then(function (result) {
@@ -1841,6 +1968,7 @@ $(document).on("click", ".btnEditarCliente, .btnVerClienteDesdeVenta", function 
 
 	var datos = new FormData();
 	datos.append("idCliente", idCliente);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 
@@ -1918,6 +2046,7 @@ $("#formEnviarEmail").submit(function (e) {
 	var datos = new FormData();
 	datos.append("idVenta", idVenta);
 	datos.append("emailDestino", emailDestino);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 		url: "ajax/facturacion.ajax.php",

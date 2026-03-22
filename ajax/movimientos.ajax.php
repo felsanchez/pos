@@ -1,16 +1,21 @@
 <?php
-
-// Asegurar que no haya output antes del JSON
-error_reporting(E_ALL);
-ini_set('display_errors', 0); // No mostrar errores en output
-ini_set('log_errors', 1);
-
-// Iniciar sesión segura
 require_once "../modelos/session-manager.php";
 SessionManager::startSecure();
 
+// Asegurar que no haya output antes del JSON
+error_reporting(E_ALL);
+
 require_once "../controladores/movimientos.controlador.php";
 require_once "../modelos/movimientos.modelo.php";
+require_once "../modelos/csrf.php";
+
+// VALIDAR CSRF para todas las peticiones POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!CSRF::validateToken()) {
+        http_response_code(403);
+        die(json_encode(['error' => 'Token CSRF inválido', 'success' => false]));
+    }
+}
 
 class AjaxMovimientos
 {

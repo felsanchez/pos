@@ -109,6 +109,8 @@ MODAL AGREGAR USUARIO
 
       <form role="form" method="post" enctype="multipart/form-data">
 
+        <?php CSRF::insertToken(); ?>
+
       <!--=====================================
       CABEZA DEL MODAL
       ======================================-->

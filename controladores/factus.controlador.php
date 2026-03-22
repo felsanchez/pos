@@ -19,6 +19,26 @@ class ControladorFactus
 	{
 		if (isset($_POST["apiUrl"])) {
 
+			/*=============================================
+			VALIDAR CSRF
+			=============================================*/
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "configuracion-factus";
+						}
+					})
+				</script>';
+				return;
+			}
+
 			// Procesar checkbox de activo
 			$activo = isset($_POST["factusActivo"]) ? 1 : 0;
 
@@ -1280,14 +1300,22 @@ class ControladorFactus
 	=============================================*/
 	static public function ctrEliminarNotaCredito()
 	{
-		if (isset($_GET["idEliminarNota"])) {
+		// Unificar parámetro ID desde POST (AJAX) o GET (Carga directa)
+		$idNota = isset($_POST["idNotaEliminar"]) ? $_POST["idNotaEliminar"] : (isset($_GET["idEliminarNota"]) ? $_GET["idEliminarNota"] : null);
+
+		if ($idNota != null) {
 
 			// Verificar que la nota exista y sea tipo borrador
-			$nota = ModeloFactus::mdlMostrarNotasCredito("notas_credito", "id", $_GET["idEliminarNota"]);
+			$nota = ModeloFactus::mdlMostrarNotasCredito("notas_credito", "id", $idNota);
 
 			if ($nota && $nota["estado_dian"] == "borrador") {
 
-				$respuesta = ModeloFactus::mdlEliminarNotaCredito($_GET["idEliminarNota"]);
+				$respuesta = ModeloFactus::mdlEliminarNotaCredito($idNota);
+
+				// Si es una petición AJAX (identificada por el parámetro accion en POST), retornamos el resultado
+				if (isset($_POST["accion"]) && $_POST["accion"] == "eliminarNotaCredito") {
+					return $respuesta;
+				}
 
 				if ($respuesta == "ok") {
 					echo '<script>
@@ -1304,6 +1332,11 @@ class ControladorFactus
 					</script>';
 				}
 			} else {
+				// Si es AJAX y el estado no es borrador
+				if (isset($_POST["accion"]) && $_POST["accion"] == "eliminarNotaCredito") {
+					return "error_estado";
+				}
+
 				echo '<script>
 					swal({
 						type: "error",
@@ -2058,7 +2091,7 @@ class ControladorFactus
 			if ($idNuevaNota == "ok" || is_numeric($idNuevaNota)) {
 				return array(
 					"error" => false,
-					"mensaje" => "Nota de Ajuste guardada como borrador correctamente",
+					"mensaje" => "",
 					"numero" => $numeroRango ? $numeroRango : "Borrador"
 				);
 			} else {
@@ -2383,31 +2416,6 @@ class ControladorFactus
 			header("Pragma: public");
 			header('Content-Disposition:; filename="' . $Name . '"');
 			header("Content-Transfer-Encoding: binary");
-
-			echo utf8_decode("<table border='0'> 
-				<tr> 
-				<td style='font-weight:bold; border:1px solid #eee;'>TIPO DOCUMENTO</td> 
-				<td style='font-weight:bold; border:1px solid #eee;'>NÚMERO</td>
-				<td style='font-weight:bold; border:1px solid #eee;'>CLIENTE / PROVEEDOR</td>
-				<td style='font-weight:bold; border:1px solid #eee;'>VENDEDOR / USUARIO</td>
-				<td style='font-weight:bold; border:1px solid #eee;'>FECHA Y HORA</td>
-				<td style='font-weight:bold; border:1px solid #eee;'>MONTO TOTAL</td>
-				<td style='font-weight:bold; border:1px solid #eee;'>ESTADO DIAN</td>		
-				</tr>");
-
-			foreach ($reporte as $row => $item) {
-				echo utf8_decode("<tr>
-							<td style='border:1px solid #eee;'>" . $item["tipo"] . "</td> 
-							<td style='border:1px solid #eee;'>" . $item["numero"] . "</td>
-							<td style='border:1px solid #eee;'>" . $item["tercero"] . "</td>
-							<td style='border:1px solid #eee;'>" . $item["vendedor"] . "</td>
-							<td style='border:1px solid #eee;'>" . $item["fecha"] . "</td>
-							<td style='border:1px solid #eee;'>" . number_format((float) $item["monto"], 2, '.', '') . "</td>
-							<td style='border:1px solid #eee;'>" . ucfirst((string) $item["estado"]) . "</td>
-						</tr>");
-			}
-
-			echo "</table>";
 		}
 	}
 }

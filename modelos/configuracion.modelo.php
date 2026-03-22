@@ -1,6 +1,8 @@
 <?php
 
-require_once "conexion.php";
+require_once __DIR__ . "/conexion.php";
+
+if (!class_exists('ModeloConfiguracion')) {
 
 class ModeloConfiguracion
 {
@@ -69,5 +71,7 @@ class ModeloConfiguracion
 		$stmt->close();
 		$stmt = null;
 	}
+
+}
 
 }

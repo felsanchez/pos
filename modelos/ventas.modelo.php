@@ -2,6 +2,8 @@
 
 require_once __DIR__ . "/conexion.php";
 
+if (!class_exists('ModeloVentas')) {
+
 class ModeloVentas
 {
 
@@ -31,9 +33,6 @@ class ModeloVentas
 			return $stmt->fetchAll();
 
 		}
-
-		$stmt = null;
-
 	}
 
 	/*=============================================
@@ -88,9 +87,6 @@ class ModeloVentas
 			return "error";
 
 		}
-
-		$stmt = null;
-
 	}
 
 	/*=============================================
@@ -144,9 +140,6 @@ class ModeloVentas
 			return "error";
 
 		}
-
-		$stmt = null;
-
 	}
 
 	/*=============================================
@@ -161,17 +154,15 @@ class ModeloVentas
 		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
 
 		if ($stmt->execute()) {
-
-			return "ok";
-
+			if ($stmt->rowCount() > 0) {
+				return "ok";
+			} else {
+				return "no_affected_rows";
+			}
 		} else {
-
-			return "error";
-
+			$error = $stmt->errorInfo();
+			return "error_db: " . ($error[2] ?? "Unknown");
 		}
-
-		$stmt = null;
-
 	}
 
 	/*=============================================
@@ -244,8 +235,6 @@ class ModeloVentas
 		$stmt->execute();
 
 		return $stmt->fetch();
-
-		$stmt = null;
 	}
 
 	/*=============================================
@@ -260,8 +249,6 @@ class ModeloVentas
 		$stmt->execute();
 
 		return $stmt->fetch();
-
-		$stmt = null;
 	}
 
 	/*=============================================
@@ -276,8 +263,6 @@ class ModeloVentas
 		$stmt->execute();
 
 		return $stmt->fetch();
-
-		$stmt = null;
 	}
 
 
@@ -436,8 +421,6 @@ class ModeloVentas
 		} else {
 			return "error";
 		}
-
-		$stmt = null;
 	}
 
 
@@ -454,8 +437,6 @@ class ModeloVentas
 		} else {
 			return "error";
 		}
-
-		$stmt = null;
 	}
 
 
@@ -478,11 +459,7 @@ class ModeloVentas
 		} else {
 
 			return "error";
-
 		}
-
-		$stmt = null;
-
 	}
 
 	/*=============================================
@@ -504,8 +481,6 @@ class ModeloVentas
 		} else {
 			return "error";
 		}
-
-		$stmt = null;
 	}
 
 
@@ -522,8 +497,6 @@ class ModeloVentas
 
 		return $stmt->fetch();
 
-		$stmt = null;
-
 	}
 
 	/*=============================================
@@ -538,7 +511,6 @@ class ModeloVentas
 		$stmt->bindParam(":estado", $estado, PDO::PARAM_STR);
 		$stmt->execute();
 		return $stmt->fetch();
-		$stmt = null;
 	}
 
 	/*=============================================
@@ -550,7 +522,8 @@ class ModeloVentas
 		$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE estado = 'venta' AND resolucion_id IS NOT NULL AND resolucion_id != 0 ORDER BY id DESC LIMIT 1");
 		$stmt->execute();
 		return $stmt->fetch();
-		$stmt = null;
 	}
+
+}
 
 }

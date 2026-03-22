@@ -257,22 +257,48 @@ class ControladorEstadosClientes
 	static public function ctrEliminarEstado()
 	{
 
-		if (isset($_GET["idEstado"])) {
+		if (isset($_GET["idEstado"]) || isset($_POST["idEstadoEliminar"])) {
+
+			/*=============================================
+			VALIDAR CSRF (Solo si es POST)
+			=============================================*/
+			if ($_SERVER['REQUEST_METHOD'] == 'POST' && !CSRF::validateToken()) {
+				if (isset($_POST["idEstadoEliminar"])) {
+					return "error_csrf";
+				}
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "estados-clientes";
+						}
+					})
+				</script>';
+				return;
+			}
 
 			// Detectar desde dónde se llamó
-			$origen = isset($_GET["origen"]) ? $_GET["origen"] : "estados-clientes";
+			$origen = isset($_GET["origen"]) ? $_GET["origen"] : (isset($_POST["origen"]) ? $_POST["origen"] : "estados-clientes");
 			$redireccion = ($origen == "clientes" || $origen == "contactos") ? $origen : "estados-clientes";
 
 			$tabla = "estados_clientes";
 
-			$id = $_GET["idEstado"];
+			$id = isset($_GET["idEstado"]) ? $_GET["idEstado"] : $_POST["idEstadoEliminar"];
 
-			$nombreEstado = $_GET["nombreEstado"];
+			$nombreEstado = isset($_GET["nombreEstado"]) ? $_GET["nombreEstado"] : $_POST["nombreEstado"];
 
 			// Verificar si el estado está en uso
 			$enUso = ModeloEstadosClientes::mdlVerificarEstadoEnUso($nombreEstado);
 
 			if ($enUso > 0) {
+				if (isset($_POST["idEstadoEliminar"])) {
+					return "error_en_uso";
+				}
 				echo '<script>
 					swal({
 						type: "error",
@@ -299,6 +325,9 @@ class ControladorEstadosClientes
 				$respuesta = ModeloEstadosClientes::mdlEliminarEstado($tabla, $id);
 
 				if ($respuesta == "ok") {
+					if (isset($_POST["idEstadoEliminar"])) {
+						return "ok";
+					}
 					echo '<script>
 						swal({
 							type: "success",

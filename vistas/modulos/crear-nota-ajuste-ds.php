@@ -75,7 +75,8 @@ if (!$rangoAjuste) {
             Crear Nota de Ajuste DS
             <?php if ($idDS && $documentoSoporte): ?>
                 <small>Documento Soporte #<?php echo $documentoSoporte["numero_ds"]; ?></small>
-            <?php endif; ?>
+            <?php
+endif; ?>
         </h1>
         <ol class="breadcrumb">
             <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
@@ -94,22 +95,26 @@ if (!$rangoAjuste) {
                             <span class="label label-primary"
                                 style="font-size: 1.1em; padding: 4px 10px; margin-left: 8px;">
                                 <?php
-                                $prefijo = $rangoAjuste["prefijo"] ?? "NA";
-                                $proximoNumero = ModeloFactus::mdlObtenerSiguienteConsecutivoNotaAjusteDS();
-                                echo htmlspecialchars($prefijo . $proximoNumero);
-                                ?>
+$prefijo = $rangoAjuste["prefijo"] ?? "NA";
+$proximoNumero = ModeloFactus::mdlObtenerSiguienteConsecutivoNotaAjusteDS();
+echo htmlspecialchars($prefijo . $proximoNumero);
+?>
                             </span>
                             <?php if ($idDS && $documentoSoporte): ?>
                                 <small style="color: white; margin-left: 10px;">
                                     (Referencia: <?php echo $documentoSoporte["numero_ds"]; ?>)
                                 </small>
-                            <?php endif; ?>
+                            <?php
+endif; ?>
                         </div>
                     </div>
                 </div>
             </div>
 
             <form role="form" method="post" class="formularioNotaAjusteDS" id="formNotaAjusteDS">
+
+                <?php CSRF::insertToken(); ?>
+
                 <input type="hidden" name="idUsuarioSesion" id="idUsuarioSesionDS" value="<?php echo $_SESSION['id'] ?? ''; ?>">
                 <div class="box-body">
 
@@ -127,23 +132,24 @@ if (!$rangoAjuste) {
                                     <select class="form-control select2" id="seleccionarDSReferencia" style="width: 100%;">
                                         <option value="">Seleccione un Documento Soporte...</option>
                                         <?php
-                                        // Cargar todos los DS que están en estado "enviada" (exitosos)
-                                        $documentos = ControladorFactus::ctrMostrarDocumentosSoporte(null, null);
-                                        foreach ($documentos as $key => $value) {
-                                            if ($value["estado_dian"] == "enviada") {
-                                                $provDS = ControladorProveedores::ctrMostrarProveedores("id", $value["id_proveedor"]);
-                                                $nombreProv = $provDS ? $provDS["nombre"] : "Proveedor Desconocido";
+    // Cargar todos los DS que están en estado "enviada" (exitosos)
+    $documentos = ControladorFactus::ctrMostrarDocumentosSoporte(null, null);
+    foreach ($documentos as $key => $value) {
+        if ($value["estado_dian"] == "enviada") {
+            $provDS = ControladorProveedores::ctrMostrarProveedores("id", $value["id_proveedor"]);
+            $nombreProv = $provDS ? $provDS["nombre"] : "Proveedor Desconocido";
 
-                                                echo '<option value="' . $value["id"] . '">' . $value["numero_ds"] . ' - ' . $nombreProv . ' - $' . number_format($value["monto_total"], 2) . '</option>';
-                                            }
-                                        }
-                                        ?>
+            echo '<option value="' . $value["id"] . '">' . $value["numero_ds"] . ' - ' . $nombreProv . ' - $' . number_format($value["monto_total"], 2) . '</option>';
+        }
+    }
+?>
                                     </select>
                                 </div>
                             </div>
                         </div>
 
-                    <?php else: ?>
+                    <?php
+else: ?>
 
                         <!-- ENCABEZADO DE LA NOTA DE AJUSTE -->
                         <div class="row">
@@ -270,9 +276,9 @@ if (!$rangoAjuste) {
                                 </thead>
                                 <tbody>
                                     <?php
-                                    foreach ($productos as $key => $prod) {
-                                        $totalFila = $prod["precio"] * $prod["cantidad"];
-                                        ?>
+    foreach ($productos as $key => $prod) {
+        $totalFila = $prod["precio"] * $prod["cantidad"];
+?>
                                         <tr>
                                             <td class="text-center">
                                                 <input type="checkbox" class="checkProductoDS" name="productosSeleccionadosDS[]"
@@ -310,7 +316,8 @@ if (!$rangoAjuste) {
                                             <input type="hidden" name="precio_<?php echo $key; ?>"
                                                 value="<?php echo $prod["precio"]; ?>">
                                         </tr>
-                                    <?php } ?>
+                                    <?php
+    }?>
                                 </tbody>
                             </table>
                         </div>
@@ -335,7 +342,8 @@ if (!$rangoAjuste) {
                         <input type="hidden" name="listaProductosAdjDS" id="listaProductosAdjDS">
                         <input type="hidden" name="idUsuario" value="<?php echo $_SESSION["id"]; ?>">
 
-                    <?php endif; ?> <!-- Fin validación IDDS -->
+                    <?php
+endif; ?> <!-- Fin validación IDDS -->
 
                 </div>
 
@@ -343,8 +351,9 @@ if (!$rangoAjuste) {
                     <button type="button" class="btn btn-default pull-left"
                         onclick="window.location='notas-ajuste-ds'">Cancelar</button>
                     <?php if ($idDS && $documentoSoporte): ?>
-                        <button type="submit" class="btn btn-warning pull-right">Guardar</button>
-                    <?php endif; ?>
+                        <button type="submit" class="btn btn-primary pull-right">Guardar</button>
+                    <?php
+endif; ?>
                 </div>
             </form>
         </div>

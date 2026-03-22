@@ -449,6 +449,8 @@ MODAL AGREGAR GASTO
 
       <form role="form" method="post" enctype="multipart/form-data">
 
+        <?php CSRF::insertToken(); ?>
+
         <!--=====================================
         CABEZA DEL MODAL
         ======================================-->
@@ -652,6 +654,8 @@ MODAL EDITAR GASTO
     <div class="modal-content">
 
       <form role="form" method="post" enctype="multipart/form-data">
+
+        <?php CSRF::insertToken(); ?>
 
         <!--=====================================
         CABEZA DEL MODAL
@@ -875,6 +879,8 @@ MODAL GESTIONAR CATEGORÍAS
           </div>
           <div class="panel-body">
             <form role="form" method="post" id="formAgregarCategoria">
+
+        <?php CSRF::insertToken(); ?>
               <div class="row">
                 <div class="col-md-5">
                   <div class="form-group">
@@ -977,6 +983,8 @@ MODAL EDITAR CATEGORÍA
     <div class="modal-content">
 
       <form role="form" method="post">
+
+        <?php CSRF::insertToken(); ?>
 
         <!--=====================================
         CABEZA DEL MODAL

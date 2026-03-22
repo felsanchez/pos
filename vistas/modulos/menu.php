@@ -41,9 +41,9 @@
       <?php
 
 
-      if ($_SESSION["perfil"] == "Administrador") {
+if ($_SESSION["perfil"] == "Administrador") {
 
-        echo '<li class="active">
+  echo '<li class="active">
 
             <a href="inicio">   
 
@@ -65,13 +65,13 @@
             </a>   
 
           </li>';
-      }
+}
 
 
-      if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor") {
+if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor") {
 
 
-        echo '<li class="treeview">
+  echo '<li class="treeview">
                 <a href="">         
                     <i class="fa fa-product-hunt"></i>
                     <span>Productos</span>
@@ -109,17 +109,17 @@
                     </a>
                   </li>';
 
-        echo '</ul> 
+  echo '</ul> 
 
         </li>';
 
-      }
+}
 
 
 
-      if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor" || $_SESSION["perfil"] == "Especial") {
+if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor" || $_SESSION["perfil"] == "Especial") {
 
-        echo '<li>
+  echo '<li>
 
             <a href="clientes">   
 
@@ -130,13 +130,13 @@
 
           </li>';
 
-      }
+}
 
 
 
-      if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor" || $_SESSION["perfil"] == "Especial") {
+if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor" || $_SESSION["perfil"] == "Especial") {
 
-        echo '<li class="treeview">
+  echo '<li class="treeview">
                 <a href="">         
                     <i class="fa fa-calendar"></i>
                     <span>Actividades</span>
@@ -160,16 +160,16 @@
                     </a>
                   </li>';
 
-        echo '</ul> 
+  echo '</ul> 
 
         </li>';
-      }
+}
 
 
 
-      if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") {
+if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") {
 
-        echo '<li>
+  echo '<li>
 
             <a href="ordenes">   
 
@@ -179,61 +179,44 @@
             </a>   
 
           </li>';
-      }
+}
 
 
 
-      if ($_SESSION["perfil"] == "Visitante") {
+if ($_SESSION["perfil"] == "Visitante") {
 
-        echo '<li>
+  echo '<li>
                       <a href="ordenes-visita">
                         <i class="fa fa-circle-o"></i>
                         <span>Ordenes de Venta</span>
                       </a>
                     </li>';
-      }
+}
 
 
 
-      if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") {
+if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") {
 
-        echo '<li class="treeview">
-                  <a href="">         
-                      <i class="fa fa-line-chart"></i>
-                      <span>Ventas</span>
-                      <span class="pull-right-container">
-                      <i class="fa fa-angle-left pull-right"></i>
-                      </span>
-                  </a>
 
-                  <ul class="treeview-menu">
-                    <li>
+
+
+
+  echo '<li>
                       <a href="ventas">
-                        <i class="fa fa-circle-o"></i>
-                        <span>Administrar ventas</span>
-                      </a>
-                    </li>
-
-';
-
-        if ($_SESSION["perfil"] == "Administrador") {
-
-          echo '<li>
-                      <a href="reportes">
-                        <i class="fa fa-circle-o"></i>
-                        <span>Reporte de ventas</span>
+                        <i class="fa fa-line-chart"></i>
+                        <span>Ventas</span>
                       </a>
                     </li>';
-        }
 
-        echo '</ul> 
 
-          </li>';
-      }
 
-      if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") {
 
-        echo '<li class="treeview">
+
+}
+
+if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") {
+
+  echo '<li class="treeview">
             <a href="">
                 <i class="fa fa-file-text-o"></i>
                 <span>Factura Electrónica</span>
@@ -254,19 +237,13 @@
                         <span>Notas Crédito</span>
                     </a>
                 </li>
-                <li>
-                    <a href="reportes-facturacion">
-                        <i class="fa fa-circle-o"></i>
-                        <span>Reportes</span>
-                    </a>
-                </li>
             </ul>
         </li>';
-      }
+}
 
-      if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") {
+if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") {
 
-        echo '<li class="treeview">
+  echo '<li class="treeview">
             <a href="">
                 <i class="fa fa-file-powerpoint-o"></i>
                 <span>Documento Soporte</span>
@@ -291,23 +268,33 @@
             </ul>
         </li>';
 
-      }
+}
 
-      if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") {
+if ($_SESSION["perfil"] == "Administrador") {
 
-        echo '<li>
+  echo '<li>
+                <a href="reportes">
+                  <i class="fa fa-bar-chart"></i>
+                  <span>Reporte de ventas</span>
+                </a>
+              </li>';
+}
+
+if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") {
+
+  echo '<li>
             <a href="seguimiento-leads">
                 <i class="fa fa-eye"></i>
                 <span>Seguimiento a leads</span>
             </a>
         </li>';
 
-      }
+}
 
 
-      if ($_SESSION["perfil"] == "Administrador") {
+if ($_SESSION["perfil"] == "Administrador") {
 
-        echo '<li>
+  echo '<li>
 
           <a href="historial-stock">   
 
@@ -317,13 +304,13 @@
           </a>   
 
         </li>';
-      }
+}
 
 
 
-      if ($_SESSION["perfil"] == "Administrador") {
+if ($_SESSION["perfil"] == "Administrador") {
 
-        echo '<li> 
+  echo '<li> 
 
           <a href="gastos"> 
 
@@ -335,13 +322,13 @@
 
         </li>';
 
-      }
+}
 
 
 
-      if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") {
+if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") {
 
-        echo '<li> 
+  echo '<li> 
 
             <a href="notificaciones"> 
 
@@ -353,13 +340,13 @@
 
         </li>';
 
-      }
+}
 
 
 
-      if ($_SESSION["perfil"] == "Administrador") {
+if ($_SESSION["perfil"] == "Administrador") {
 
-        echo '<li> 
+  echo '<li> 
 
           <a href="configuracion">
 
@@ -371,44 +358,40 @@
 
         </li>';
 
-      }
+}
 
 
-      /*
-      if ($_SESSION["perfil"] == "Administrador") {
-
-        echo '<li class="treeview">
-                <a href="">
-                    <i class="fa fa-file-text-o"></i>
-                    <span>Logs y Fact. Electronica</span>
-                    <span class="pull-right-container">
-                    <i class="fa fa-angle-left pull-right"></i>
-                    </span>
-                </a>
-
-                <ul class="treeview-menu">
-                  <li>
-                    <a href="index.php?ruta=logs">
-                      <i class="fa fa-circle-o"></i>
-                      <span>Logs del sistema</span>
-                    </a>
-                  </li>
-
-                  <li>
-                    <a href="configuracion-facturacion">
-                      <i class="fa fa-circle-o"></i>
-                      <span>Factus (Fact. Electrónica)</span>
-                    </a>
-                  </li>
-                </ul>
-              </li>';
-      }
-
-      */
+/*
+ if ($_SESSION["perfil"] == "Administrador") {
+ echo '<li class="treeview">
+ <a href="">
+ <i class="fa fa-file-text-o"></i>
+ <span>Logs y Fact. Electronica</span>
+ <span class="pull-right-container">
+ <i class="fa fa-angle-left pull-right"></i>
+ </span>
+ </a>
+ <ul class="treeview-menu">
+ <li>
+ <a href="index.php?ruta=logs">
+ <i class="fa fa-circle-o"></i>
+ <span>Logs del sistema</span>
+ </a>
+ </li>
+ <li>
+ <a href="configuracion-facturacion">
+ <i class="fa fa-circle-o"></i>
+ <span>Factus (Fact. Electrónica)</span>
+ </a>
+ </li>
+ </ul>
+ </li>';
+ }
+ */
 
 
 
-      ?>
+?>
 
     </ul>
 

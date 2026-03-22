@@ -139,6 +139,7 @@ $(document).ready(function () {
 
         var datos = new FormData();
         datos.append("validarDocumento", documento);
+        datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
         datos.append("validarTelefono", telefono);
         if (idCliente) {
             datos.append("idClienteValidacion", idCliente);

@@ -12,6 +12,26 @@ class ControladorProveedores
 
 		if (isset($_POST["nuevoProveedor"])) {
 
+			/*=============================================
+			VALIDAR CSRF
+			=============================================*/
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "proveedores";
+						}
+					})
+				</script>';
+				return;
+			}
+
 			if (
 				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoProveedor"]) &&
 				($_POST["nuevaMarca"] == "" || preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevaMarca"])) &&
@@ -103,6 +123,26 @@ class ControladorProveedores
 
 		if (isset($_POST["editarProveedor"])) {
 
+			/*=============================================
+			VALIDAR CSRF
+			=============================================*/
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "proveedores";
+						}
+					})
+				</script>';
+				return;
+			}
+
 			if (
 				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarProveedor"]) &&
 				($_POST["editarMarca"] == "" || preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarMarca"])) &&
@@ -177,15 +217,41 @@ class ControladorProveedores
 	static public function ctrBorrarProveedor()
 	{
 
-		if (isset($_GET["idProveedor"])) {
+		if (isset($_GET["idProveedor"]) || isset($_POST["idProveedorEliminar"])) {
+
+			/*=============================================
+			VALIDAR CSRF (Solo si es POST)
+			=============================================*/
+			if ($_SERVER['REQUEST_METHOD'] == 'POST' && !CSRF::validateToken()) {
+				if (isset($_POST["idProveedorEliminar"])) {
+					return "error_csrf";
+				}
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "proveedores";
+						}
+					})
+				</script>';
+				return;
+			}
 
 			$tabla = "proveedores";
-			$idProveedor = $_GET["idProveedor"];
+			$idProveedor = isset($_GET["idProveedor"]) ? $_GET["idProveedor"] : $_POST["idProveedorEliminar"];
 
 			// Verificar si hay productos asociados a esta proveedores
 			$productosAsociados = ModeloProductos::mdlMostrarProductos("productos", "id_proveedor", $idProveedor, "id");
 
 			if (!empty($productosAsociados)) {
+				if (isset($_POST["idProveedorEliminar"])) {
+					return "error_productos_asociados";
+				}
 				echo '<script>
 					swal({
 						type: "error",
@@ -205,6 +271,9 @@ class ControladorProveedores
 			$respuesta = ModeloProveedores::mdlBorrarProveedor($tabla, $idProveedor);
 
 			if ($respuesta == "ok") {
+				if (isset($_POST["idProveedorEliminar"])) {
+					return "ok";
+				}
 				echo '<script>
 					swal({
 						type: "success",

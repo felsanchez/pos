@@ -36,6 +36,26 @@ class ControladorGastos{
 
 		if(isset($_POST["nuevoConceptoGasto"])){
 
+			/*=============================================
+			VALIDAR CSRF
+			=============================================*/
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "gastos";
+						}
+					})
+				</script>';
+				return;
+			}
+
 			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoConceptoGasto"])){
 
 				/*=============================================
@@ -190,6 +210,26 @@ class ControladorGastos{
 
 		if(isset($_POST["editarConceptoGasto"])){
 
+			/*=============================================
+			VALIDAR CSRF
+			=============================================*/
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "gastos";
+						}
+					})
+				</script>';
+				return;
+			}
+
 			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarConceptoGasto"])){
 
 				/*=============================================
@@ -341,21 +381,48 @@ class ControladorGastos{
 
 	static public function ctrEliminarGasto(){
 
-		if(isset($_GET["idGasto"])){
+		if (isset($_GET["idGasto"]) || isset($_POST["idGastoEliminar"])) {
+
+			/*=============================================
+			VALIDAR CSRF (Solo si es POST)
+			=============================================*/
+			if ($_SERVER['REQUEST_METHOD'] == 'POST' && !CSRF::validateToken()) {
+				if (isset($_POST["idGastoEliminar"])) {
+					return "error_csrf";
+				}
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "gastos";
+						}
+					})
+				</script>';
+				return;
+			}
 
 			$tabla ="gastos";
-			$datos = $_GET["idGasto"];
+			$idGasto = isset($_GET["idGasto"]) ? $_GET["idGasto"] : $_POST["idGastoEliminar"];
 
 			// Obtener información del gasto para eliminar imagen si existe
-			$gasto = ModeloGastos::mdlMostrarGastos($tabla, "id", $datos);
+			$gasto = ModeloGastos::mdlMostrarGastos($tabla, "id", $idGasto);
 
 			if(!empty($gasto["imagen_comprobante"]) && file_exists($gasto["imagen_comprobante"])){
 				unlink($gasto["imagen_comprobante"]);
 			}
 
-			$respuesta = ModeloGastos::mdlEliminarGasto($tabla, $datos);
+			$respuesta = ModeloGastos::mdlEliminarGasto($tabla, $idGasto);
 
 			if($respuesta == "ok"){
+
+				if (isset($_POST["idGastoEliminar"])) {
+					return "ok";
+				}
 
 				echo'<script>
 

@@ -289,7 +289,6 @@ $configFactus = ControladorFactus::ctrObtenerConfiguracion();
           <div class="table-responsive">
             <table class="table">
               <?php
-              $totalRetenciones = 0;
               foreach ($retenciones as $retencion):
                 $totalRetenciones += $retencion['monto'];
                 ?>

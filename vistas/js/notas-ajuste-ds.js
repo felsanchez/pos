@@ -105,22 +105,24 @@ $(document).ready(function () {
         }
 
         swal({
-            title: "¿Está seguro de guardar este borrador?",
-            text: "La Nota de Ajuste se guardará localmente and podrá enviarla a la DIAN después.",
+            title: '¿Está seguro de guardar este documento?',
+            text: "Se guardará en el sistema y podrá enviarla a la DIAN después.",
             type: "info",
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
             cancelButtonText: "Cancelar",
-            confirmButtonText: "Sí, guardar borrador"
+            confirmButtonText: "Sí, guardar"
         }).then(function (result) {
             if (result.value) {
 
                 // Mostrar cargando
                 swal({
-                    title: "Guardando...",
-                    text: "Por favor espere mientras procesamos el documento",
+                    title: 'Guardando Nota de Ajuste',
+                    text: 'Por favor espere mientras se procesa la información...',
+                    type: 'info',
                     allowOutsideClick: false,
+                    showConfirmButton: false,
                     onBeforeOpen: () => {
                         swal.showLoading();
                     }
@@ -135,6 +137,7 @@ $(document).ready(function () {
                 datos.append("idUsuario", idUsuario);
                 datos.append("metodoPagoDS", $("#metodoPagoDS").val());
                 datos.append("listaProductosDS", JSON.stringify(listaProductos));
+                datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
                 $.ajax({
                     url: "ajax/factus.ajax.php",
@@ -148,9 +151,10 @@ $(document).ready(function () {
                         if (!respuesta.error) {
                             swal({
                                 type: "success",
-                                title: "¡Éxito!",
-                                text: respuesta.mensaje,
-                                showConfirmButton: true
+                                title: "¡Nota de Ajuste guardada correctamente!",
+                                text: "El documento ha sido registrado exitosamente en el sistema.",
+                                showConfirmButton: true,
+                                confirmButtonText: "Cerrar"
                             }).then(function (result) {
                                 window.location = "notas-ajuste-ds";
                             });
@@ -183,20 +187,22 @@ $(document).ready(function () {
         var idNota = $(this).attr("idNota");
 
         swal({
-            title: "¿Está seguro de firmar esta Nota de Ajuste?",
-            text: "¡Esta acción no se puede deshacer y el documento será oficial!",
-            type: "warning",
+            title: '¿Está seguro de firmar y emitir esta Nota de Ajuste?',
+            text: 'Este proceso enviará el documento a la DIAN y no se podrá revertir.',
+            type: 'warning',
             showCancelButton: true,
-            confirmButtonColor: "#f39c12",
-            cancelButtonColor: "#d33",
-            cancelButtonText: "Cancelar",
-            confirmButtonText: "Sí, firmar y enviar"
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Sí, firmar documento'
         }).then(function (result) {
             if (result.value) {
                 swal({
-                    title: "Enviando",
-                    text: "Por favor espere mientras se firma el documento",
+                    title: 'Guardando Nota de Ajuste',
+                    text: 'Por favor espere mientras se procesa la información...',
+                    type: 'info',
                     allowOutsideClick: false,
+                    showConfirmButton: false,
                     onBeforeOpen: () => {
                         swal.showLoading();
                     }
@@ -205,6 +211,7 @@ $(document).ready(function () {
                 var datos = new FormData();
                 datos.append("accion", "firmarNotaAjusteDS");
                 datos.append("idNota", idNota);
+                datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
                 $.ajax({
                     url: "ajax/factus.ajax.php",
@@ -218,9 +225,10 @@ $(document).ready(function () {
                         if (!respuesta.error) {
                             swal({
                                 type: "success",
-                                title: "Exito",
-                                text: "Nota de ajuste firmada correctamente",
-                                showConfirmButton: true
+                                title: "¡Nota de Ajuste firmada y enviada correctamente!",
+                                text: "El documento ha sido procesado por la DIAN exitosamente.",
+                                showConfirmButton: true,
+                                confirmButtonText: "Cerrar"
                             }).then(function (result) {
                                 window.location = "notas-ajuste-ds";
                             });
@@ -253,19 +261,20 @@ $(document).ready(function () {
         var idNota = $(this).attr("idNota");
 
         swal({
-            title: "¿Está seguro de eliminar el borrador de esta Nota de Ajuste?",
-            text: "¡Si no lo está, puede cancelar la acción!",
-            type: "warning",
+            title: '¿Está seguro de eliminar esta Nota de Ajuste?',
+            text: '¡Si no lo está puede cancelar la acción!',
+            type: 'warning',
             showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            cancelButtonText: "Cancelar",
-            confirmButtonText: "Sí, borrar nota"
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Sí, eliminar documento'
         }).then(function (result) {
             if (result.value) {
                 var datos = new FormData();
                 datos.append("accion", "eliminarNotaAjusteDS");
                 datos.append("idNota", idNota);
+                datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
                 $.ajax({
                     url: "ajax/factus.ajax.php",
@@ -279,8 +288,10 @@ $(document).ready(function () {
                         if (!respuesta.error) {
                             swal({
                                 type: "success",
-                                title: "El Documento ha sido eliminado correctamente",
-                                showConfirmButton: true
+                                title: "¡Nota de Ajuste eliminada correctamente!",
+                                text: "El documento ha sido borrado exitosamente del sistema.",
+                                showConfirmButton: true,
+                                confirmButtonText: "Cerrar"
                             }).then(function (result) {
                                 window.location = "notas-ajuste-ds";
                             });
@@ -324,6 +335,7 @@ $(document).ready(function () {
         var datos = new FormData();
         datos.append("accion", "obtenerNotasAjusteDS");
         datos.append("idDS", idDS);
+        datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
         $.ajax({
             url: "ajax/factus.ajax.php",
@@ -432,6 +444,7 @@ $(document).ready(function () {
         var datos = new FormData();
         datos.append("idNA", idNA);
         datos.append("emailDestino", emailDestino);
+        datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
         $.ajax({
             url: "ajax/facturacion.ajax.php",

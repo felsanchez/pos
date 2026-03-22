@@ -97,6 +97,8 @@ $totalProductos = 0;
                     </div>
 
                     <form role="form" method="post" class="formularioVenta">
+
+        <?php CSRF::insertToken(); ?>
                         <div class="box-body">
                             <div class="box">
 
@@ -534,6 +536,8 @@ MODAL AGREGAR CLIENTE
 
       <form role="form" method="post">
 
+        <?php CSRF::insertToken(); ?>
+
         <!--=====================================
       CABEZA DEL MODAL
       ======================================-->
@@ -692,6 +696,8 @@ MODAL AGREGAR RETENCION
   <div class="modal-dialog">
     <div class="modal-content">
       <form role="form" method="post" id="formularioRetencionNuevo">
+
+        <?php CSRF::insertToken(); ?>
 
         <!-- CABEZA DEL MODAL -->
         <div class="modal-header" style="background:#3c8dbc; color: white">

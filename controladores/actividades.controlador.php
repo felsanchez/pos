@@ -10,6 +10,26 @@ class ControladorActividades{
 
 		if(isset($_POST["nuevaActividad"])){
 
+			/*=============================================
+			VALIDAR CSRF
+			=============================================*/
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "actividades";
+						}
+					})
+				</script>';
+				return;
+			}
+
 			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevaActividad"]) &&
                 preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoTipo"]) &&
                 preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoEstado"])){
@@ -99,6 +119,26 @@ class ControladorActividades{
 
 		if(isset($_POST["editarActividad"])){
 
+			/*=============================================
+			VALIDAR CSRF
+			=============================================*/
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "actividades";
+						}
+					})
+				</script>';
+				return;
+			}
+
 			// En el controlador
 			//var_dump($actividad);
 
@@ -176,15 +216,41 @@ class ControladorActividades{
 
 	static public function ctrEliminarActividad(){
 
-		if(isset($_GET["idActividad"])){
+		if (isset($_GET["idActividad"]) || isset($_POST["idActividadEliminar"])) {
+
+			/*=============================================
+			VALIDAR CSRF (Solo si es POST)
+			=============================================*/
+			if ($_SERVER['REQUEST_METHOD'] == 'POST' && !CSRF::validateToken()) {
+				if (isset($_POST["idActividadEliminar"])) {
+					return "error_csrf";
+				}
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "actividades";
+						}
+					})
+				</script>';
+				return;
+			}
 
 			$tabla = "actividades";
-			$datos = $_GET["idActividad"];
+			$idActividad = isset($_GET["idActividad"]) ? $_GET["idActividad"] : $_POST["idActividadEliminar"];
 
-			$respuesta = ModeloActividades::mdlEliminarActividad($tabla, $datos);
-			//var_dump($idActividad);
+			$respuesta = ModeloActividades::mdlEliminarActividad($tabla, $idActividad);
 
 			if($respuesta == "ok"){
+
+				if (isset($_POST["idActividadEliminar"])) {
+					return "ok";
+				}
 
 				echo '<script>
 					swal({

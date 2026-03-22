@@ -168,18 +168,24 @@ $(document).ready(function () {
         }
 
         swal({
-            title: '¿Generar Nota Crédito?',
-            text: "Se generará una nota por valor de $" + $("#nuevoTotalNC").val(),
+            title: '¿Está seguro de guardar este documento?',
+            text: "Se guardará en el sistema y podrá enviarla a la DIAN después.",
             type: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, generar'
+            confirmButtonText: 'Sí, guardar'
         }).then((result) => {
             if (result.value) {
                 swal({
-                    title: 'Procesando...',
-                    onOpen: () => { swal.showLoading() }
+                    title: 'Guardando Nota Crédito',
+                    text: 'Por favor espere mientras se procesa la información...',
+                    type: 'info',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    onBeforeOpen: () => {
+                        swal.showLoading()
+                    }
                 });
 
                 var datos = new FormData();
@@ -192,6 +198,7 @@ $(document).ready(function () {
                 datos.append("observacion", observacion);
                 datos.append("listaProductos", JSON.stringify(listaProductos));
                 datos.append("idUsuario", $("#idUsuarioSesion").val());
+                datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
                 $.ajax({
                     url: "ajax/notas-credito.ajax.php",
@@ -205,8 +212,10 @@ $(document).ready(function () {
                         if (!respuesta.error) {
                             swal({
                                 type: "success",
-                                title: "¡Nota Crédito Generada correctamente!"
-                                //text: "Nota #" + respuesta.numero_nc + " creada correctamente."
+                                title: "¡Nota Crédito guardada correctamente!",
+                                text: "El documento ha sido registrado exitosamente en el sistema.",
+                                showConfirmButton: true,
+                                confirmButtonText: "Cerrar"
                             }).then((result) => {
                                 if (result.value) { window.location = "notas-credito"; }
                             });
@@ -250,17 +259,22 @@ $(document).ready(function () {
         var idNota = $(this).attr("idNota");
 
         swal({
-            title: '¿Está seguro de firmar esta Nota Crédito?',
-            text: "¡Esta acción no se puede deshacer y el documento será oficial!",
+            title: '¿Está seguro de firmar y emitir esta Nota Crédito?',
+            text: 'Este proceso enviará el documento a la DIAN y no se podrá revertir.',
             type: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Sí, firmar y enviar'
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Sí, firmar documento'
         }).then(function (result) {
             if (result.value) {
                 swal({
-                    title: "Enviando",
-                    text: "Por favor espere mientras se firma el documento",
+                    title: 'Guardando Nota Crédito',
+                    text: 'Por favor espere mientras se procesa la información...',
+                    type: 'info',
                     allowOutsideClick: false,
+                    showConfirmButton: false,
                     onBeforeOpen: () => {
                         swal.showLoading()
                     }
@@ -268,6 +282,7 @@ $(document).ready(function () {
                 var datos = new FormData();
                 datos.append("idNota", idNota);
                 datos.append("accion", "firmarNotaCredito");
+                datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
                 $.ajax({
                     url: "ajax/notas-credito.ajax.php",
@@ -279,7 +294,13 @@ $(document).ready(function () {
                     dataType: "json",
                     success: function (respuesta) {
                         if (!respuesta.error) {
-                            swal({ type: "success", title: "Exito", text: "Nota credito firmada correctamente" }).then((result) => {
+                            swal({ 
+                                type: "success", 
+                                title: "¡Nota Crédito firmada y enviada correctamente!", 
+                                text: "El documento ha sido procesado por la DIAN exitosamente.",
+                                showConfirmButton: true,
+                                confirmButtonText: "Cerrar"
+                            }).then((result) => {
                                 if (result.value) { window.location = "notas-credito"; }
                             })
                         } else {
@@ -300,15 +321,64 @@ $(document).ready(function () {
     $(document).on("click", ".btnEliminarNotaCredito", function () {
         var idNota = $(this).attr("idNota");
         swal({
-            title: '¿Está seguro de borrar la Nota Crédito?',
-            type: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, borrar nota'
-        }).then(function (result) {
-            if (result.value) {
-                window.location = "index.php?ruta=notas-credito&idEliminarNota=" + idNota;
-            }
-        })
+        title: '¿Está seguro de eliminar esta Nota Crédito?',
+        text: '¡Si no lo está puede cancelar la acción!',
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Sí, eliminar documento'
+    }).then(function (result) {
+
+        if (result.value) {
+
+            var datos = new FormData();
+            datos.append("accion", "eliminarNotaCredito");
+            datos.append("idNotaEliminar", idNota);
+            datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+
+            $.ajax({
+                url: "ajax/factus.ajax.php",
+                method: "POST",
+                data: datos,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (respuesta) {
+                    if (respuesta == "ok") {
+                        swal({
+                            type: "success",
+                            title: "¡Nota Crédito eliminada correctamente!",
+                            text: "El documento ha sido borrado exitosamente del sistema.",
+                            showConfirmButton: true,
+                            confirmButtonText: "Cerrar"
+                        }).then((result) => {
+                            if (result.value) {
+                                window.location.reload();
+                            }
+                        });
+                    } else if (respuesta == "error_estado") {
+                        swal({
+                            type: "error",
+                            title: "¡No se puede eliminar!",
+                            text: "La nota ya fue enviada a la DIAN.",
+                            showConfirmButton: true,
+                            confirmButtonText: "Cerrar"
+                        });
+                    } else {
+                        swal({
+                            type: "error",
+                            title: "Error",
+                            text: "No se pudo eliminar la nota. " + respuesta,
+                            showConfirmButton: true,
+                            confirmButtonText: "Cerrar"
+                        });
+                    }
+                }
+            })
+        }
+    })
     });
 
     /*=============================================
@@ -319,6 +389,7 @@ $(document).ready(function () {
         var datos = new FormData();
         datos.append("accion", "obtenerNotasCreditoVenta");
         datos.append("idVenta", idVenta);
+        datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
         $.ajax({
             url: "ajax/factus.ajax.php",
@@ -396,6 +467,7 @@ $(document).ready(function () {
         var datos = new FormData();
         datos.append("idNota", idNota);
         datos.append("emailDestino", emailDestino);
+        datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
         $.ajax({
             url: "ajax/facturacion.ajax.php",

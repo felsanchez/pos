@@ -1,6 +1,6 @@
 {
     "numbering_range_id": 1190,
-    "reference_code": "860",
+    "reference_code": "892",
     "observation": "",
     "payment_form": "1",
     "payment_due_date": "0000-00-00",
@@ -49,30 +49,15 @@
             "scheme_id": "1",
             "note": "",
             "code_reference": "ITEM-1",
-            "name": "prueba05 IVA19 MTR",
+            "name": "Producto de Ejemplo 2",
             "quantity": 1,
             "discount_rate": "0.00",
-            "price": "84.033613",
-            "tax_rate": "19.00",
-            "unit_measure_id": 512,
-            "standard_code_id": 1,
-            "is_excluded": 0,
-            "tribute_id": 1,
-            "withholding_taxes": []
-        },
-        {
-            "scheme_id": "1",
-            "note": "",
-            "code_reference": "ITEM-2",
-            "name": "prueba04 IVA0 LBR",
-            "quantity": 1,
-            "discount_rate": "0.00",
-            "price": "100.000000",
+            "price": "8000.000000",
             "tax_rate": "0.00",
-            "unit_measure_id": 449,
+            "unit_measure_id": 414,
             "standard_code_id": 1,
             "is_excluded": 0,
-            "tribute_id": 1,
+            "tribute_id": 7,
             "withholding_taxes": []
         }
     ]

@@ -1,13 +1,10 @@
 <?php
 
- 
-
 /**
  * Carga las variables de entorno desde el archivo .env
  * Este archivo debe ser incluido antes de usar las variables de entorno
  */
 
- 
 
 function cargarEnv($rutaArchivo = __DIR__ . '/.env') {
 

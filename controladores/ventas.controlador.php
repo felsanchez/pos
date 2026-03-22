@@ -480,7 +480,7 @@ class ControladorVentas
 					$ultimaVenta = ModeloVentas::mdlMostrarVentas("ventas", "codigo", $codigoVenta);
 
 					if ($ultimaVenta) {
-						require_once "factus.controlador.php";
+						require_once __DIR__ . "/factus.controlador.php";
 
 						// Generar factura electrónica
 						// Generar factura electrónica (BORRADOR - SIN FIRMAR)
@@ -532,6 +532,16 @@ class ControladorVentas
 							// ERROR Y REDIRECCIÓN
 							$mensajeError = "La factura electrónica falló y la venta NO se guardó. <br>Error: " . $resultadoFactura['mensaje'];
 
+							if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+								if (ob_get_length()) ob_clean();
+								echo json_encode([
+									"status" => "error",
+									"titulo" => "Error en Facturación",
+									"mensaje" => $mensajeError
+								]);
+								return; // ABORTAR TODO
+							}
+
 							echo '<script>
 								swal({
 									type: "error",
@@ -552,6 +562,17 @@ class ControladorVentas
 
 
 				if ($_POST["estado"] == "orden") {
+					if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+						if (ob_get_length()) ob_clean();
+						echo json_encode([
+							"status" => "success",
+							"titulo" => "¡Orden Guardada!",
+							"mensaje" => "La orden ha sido guardada correctamente",
+							"ruta" => "ordenes"
+						]);
+						return;
+					}
+
 					echo '<script>
 						localStorage.removeItem("rango");
 						swal({
@@ -569,42 +590,63 @@ class ControladorVentas
 				else {
 
 					// MENSAJE PERSONALIZADO SI ES FACTURA ELECTRÓNICA
-					$tituloMensaje = "!La venta ha sigo guardada correctamente!";
-					$textoMensaje = "";
+					$tituloMensaje = "¡Venta guardada correctamente!";
+					$textoMensaje = "El documento ha sido registrado exitosamente en el sistema.";
 					
 					if ((isset($_POST["activarFacturaElectronica"]) && $_POST["activarFacturaElectronica"] == "1") || isset($_POST["guardarVentaFactus"])) {
 
-						$tituloMensaje = "Factura Electrónica GUARDADA";
-						$textoMensaje = "La factura ha sido guardada correctamente como borrador";
+						$tituloMensaje = "¡Factura Electrónica guardada correctamente!";
+						$textoMensaje = "El documento ha sido registrado exitosamente en el sistema.";
 
-						if (isset($resultadoFactura) && $resultadoFactura['error']) {
-							// Construir mensaje de error con lista de errores
-							$mensajeError = $resultadoFactura['mensaje'];
-							if (isset($resultadoFactura['errores']) && !empty($resultadoFactura['errores'])) {
-								$mensajeError .= "<ul style='text-align:left; margin-top:10px;'>";
-								foreach ($resultadoFactura['errores'] as $error) {
-									$mensajeError .= "<li>" . htmlspecialchars($error) . "</li>";
+							if (isset($resultadoFactura) && $resultadoFactura['error']) {
+								// Construir mensaje de error con lista de errores
+								$mensajeError = $resultadoFactura['mensaje'];
+								if (isset($resultadoFactura['errores']) && !empty($resultadoFactura['errores'])) {
+									$mensajeError .= "<ul style='text-align:left; margin-top:10px;'>";
+									foreach ($resultadoFactura['errores'] as $error) {
+										$mensajeError .= "<li>" . htmlspecialchars($error) . "</li>";
+									}
+									$mensajeError .= "</ul>";
 								}
-								$mensajeError .= "</ul>";
-							}
 
-							echo '<script>
-								swal({
-									type: "error",
-									title: "Error de Validación",
-									html: "' . addslashes($mensajeError) . '",
-									showConfirmButton: true,
-									confirmButtonText: "Cerrar"
-								});
-							</script>';
-							return; // Detener ejecución para no mostrar mensaje de éxito
-						}
+								if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+									if (ob_get_length()) ob_clean();
+									echo json_encode([
+										"status" => "error",
+										"titulo" => "Error de Validación",
+										"mensaje" => $mensajeError
+									]);
+									return;
+								}
+
+								echo '<script>
+									swal({
+										type: "error",
+										title: "Error de Validación",
+										html: "' . addslashes($mensajeError) . '",
+										showConfirmButton: true,
+										confirmButtonText: "Cerrar"
+									});
+								</script>';
+								return; // Detener ejecución para no mostrar mensaje de éxito
+							}
 					}
 
 					// Determinar ruta de redirección
 					$rutaRedireccion = "ventas";
 					if ((isset($_POST["activarFacturaElectronica"]) && $_POST["activarFacturaElectronica"] == "1") || isset($_POST["guardarVentaFactus"])) {
 						$rutaRedireccion = "facturas-electronicas";
+					}
+
+					if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+						if (ob_get_length()) ob_clean();
+						echo json_encode([
+							"status" => "success",
+							"titulo" => $tituloMensaje,
+							"mensaje" => $textoMensaje,
+							"ruta" => $rutaRedireccion
+						]);
+						return;
 					}
 
 					echo '<script>
@@ -715,6 +757,16 @@ class ControladorVentas
 
 			//No permitir ejecutar la venta si no hay productos añadidos
 			if ($_POST["listaProductos"] == "") {
+
+				if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+					if (ob_get_length()) ob_clean();
+					echo json_encode([
+						"status" => "error",
+						"titulo" => "Error de Validación",
+						"mensaje" => "Debe modificar los productos para guardar la venta"
+					]);
+					return;
+				}
 
 				echo '<script>
 				swal({
@@ -1248,19 +1300,31 @@ class ControladorVentas
 
 
 
-				echo '<script>
-				localStorage.removeItem("rango");
-				swal({
-					type: "success",
-					title: "!La venta ha sigo editada correctamente!",
-					showConfirmButton: true,
-					confirmButtonText: "Cerrar",
-					}).then((result)=>{
-						if(result.value){
-							window.location = "ordenes";
-						}
-					})
-			</script>';
+					if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+						if (ob_get_length()) ob_clean();
+						echo json_encode([
+							"status" => "success",
+							"titulo" => "¡Venta guardada correctamente!",
+							"mensaje" => "El documento ha sido registrado exitosamente en el sistema.",
+							"ruta" => "ordenes"
+						]);
+						return;
+					}
+
+					echo '<script>
+					localStorage.removeItem("rango");
+					swal({
+						type: "success",
+						title: "¡Venta guardada correctamente!",
+						text: "El documento ha sido registrado exitosamente en el sistema.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar",
+						}).then((result)=>{
+							if(result.value){
+								window.location = "ordenes";
+							}
+						})
+				</script>';
 			}
 
 
@@ -1274,15 +1338,24 @@ class ControladorVentas
 
 	static public function ctrEliminarVenta()
 	{
+		$idVenta = isset($_GET["idVenta"]) ? $_GET["idVenta"] : (isset($_POST["idVentaEliminar"]) ? $_POST["idVentaEliminar"] : null);
 
-		if (isset($_GET["idVenta"])) {
+		if ($idVenta) {
 
 			$tabla = "ventas";
 
 			$item = "id";
-			$valor = $_GET["idVenta"];
+			$valor = $idVenta;
 
 			$traerVenta = ModeloVentas::mdlMostrarVentas($tabla, $item, $valor);
+
+			if (!$traerVenta) {
+				$traerVenta = ModeloVentas::mdlMostrarVentas($tabla, "codigo", $valor);
+			}
+
+			if ($traerVenta) {
+				$valor = $traerVenta["id"]; // Asegurar que usamos el ID físico para el DELETE
+			}
 
 
 
@@ -1477,12 +1550,19 @@ class ControladorVentas
 			 ELIMINAR VENTA
 			 =============================================*/
 
-			$respuesta = ModeloVentas::mdlEliminarVenta($tabla, $_GET["idVenta"]);
+			$idVentaEliminarReal = $traerVenta["id"];
+			$respuesta = ModeloVentas::mdlEliminarVenta($tabla, $idVentaEliminarReal);
 
 			if ($respuesta == "ok") {
 
 
 				if (isset($_GET["estado"]) && $_GET["estado"] == "orden") {
+					if (isset($_POST["idVentaEliminar"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+						if (ob_get_length()) ob_clean();
+						echo "ok";
+						return;
+					}
+
 					echo '<script>
 						localStorage.removeItem("rango");
 						swal({
@@ -1500,6 +1580,12 @@ class ControladorVentas
 				else {
 
 					$rutaRedireccion = (isset($_GET["ruta"]) && !empty($_GET["ruta"])) ? $_GET["ruta"] : "ventas";
+
+					if (isset($_POST["idVentaEliminar"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+						if (ob_get_length()) ob_clean();
+						echo "ok";
+						return;
+					}
 
 					echo '<script>
 						localStorage.removeItem("rango");
@@ -1524,6 +1610,12 @@ class ControladorVentas
 			     	</script>';
 				}
 
+			} else {
+				if (isset($_POST["idVentaEliminar"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+					if (ob_get_length()) ob_clean();
+					echo $respuesta; // Reportar error real: no_affected_rows o error_db
+					return;
+				}
 			}
 
 		}
@@ -1838,6 +1930,16 @@ class ControladorVentas
 
 			// 1. Validar productos
 			if ($_POST["listaProductos"] == "") {
+				if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+					if (ob_get_length()) ob_clean();
+					echo json_encode([
+						"status" => "error",
+						"titulo" => "Error de Validación",
+						"mensaje" => "La venta no se puede ejecutar si no hay productos"
+					]);
+					return;
+				}
+
 				echo '<script>
 				swal({
 					  type: "error",
@@ -1846,7 +1948,7 @@ class ControladorVentas
 					  confirmButtonText: "Cerrar"
 					  }).then(function(result){
 								if (result.value) {
-								window.location = "crear-factura-electronica";
+								window.location = "ventas";
 								}
 							})
 				</script>';
@@ -1983,7 +2085,7 @@ class ControladorVentas
 				/*=============================================
 				 4. ENVIAR A FACTUS (Refactorizado para usar lógica unificada)
 				 =============================================*/
-				require_once "factus.controlador.php";
+				require_once __DIR__ . "/factus.controlador.php";
 
 				// Recuperar ID venta
 				$ventaGuardada = ModeloVentas::mdlMostrarVentas($tabla, "codigo", $codigoVenta);
@@ -1995,6 +2097,17 @@ class ControladorVentas
 
 				if (!$resultadoFactura["error"]) {
 					// EXITO
+					if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+						if (ob_get_length()) ob_clean();
+						echo json_encode([
+							"status" => "success",
+							"titulo" => "Factura Electrónica GUARDADA",
+							"mensaje" => "La factura ha sido guardada correctamente como borrador",
+							"ruta" => "facturas-electronicas"
+						]);
+						return;
+					}
+
 					echo '<script>
 						swal({
 						  type: "success",
@@ -2016,6 +2129,17 @@ class ControladorVentas
 						$errorMsg .= " " . implode(", ", $resultadoFactura["errores"]);
 					}
 
+					if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+						if (ob_get_length()) ob_clean();
+						echo json_encode([
+							"status" => "success", // Se considera éxito porque la venta se guardó localmente
+							"titulo" => "Venta guardada pero Factura RECHAZADA",
+							"mensaje" => $errorMsg,
+							"ruta" => "facturas-electronicas"
+						]);
+						return;
+					}
+
 					echo '<script>
 						swal({
 						  type: "warning",
@@ -2033,6 +2157,16 @@ class ControladorVentas
 
 			}
 			else {
+				if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+					if (ob_get_length()) ob_clean();
+					echo json_encode([
+						"status" => "error",
+						"titulo" => "Error al guardar la venta localmente",
+						"mensaje" => "No se pudo realizar el guardado en la base de datos local"
+					]);
+					return;
+				}
+
 				echo '<script>
 					swal({
 						  type: "error",

@@ -360,6 +360,20 @@ function setupErrorHandler() {
             'exception' => $exception
         ]);
 
+        // Detectar si es una petición AJAX
+        $isAjax = (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest'));
+
+        if ($isAjax) {
+            if (ob_get_length()) ob_clean();
+            echo json_encode([
+                "status" => "error",
+                "titulo" => "Error de Sistema (Logger)",
+                "mensaje" => $exception->getMessage(),
+                "detalles" => $exception->getFile() . " L" . $exception->getLine()
+            ]);
+            exit;
+        }
+
         // En producción, mostrar mensaje genérico
         if (env('APP_ENV') === 'production') {
             echo "Ha ocurrido un error. Por favor, contacte al administrador.";

@@ -116,6 +116,8 @@ MODAL AGREGAR CLIENTE
 
       <form role="form" method="post">
 
+        <?php CSRF::insertToken(); ?>
+
       <!--=====================================
       CABEZA DEL MODAL
       ======================================-->

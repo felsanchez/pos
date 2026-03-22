@@ -63,6 +63,7 @@ RANGO DE FECHAS
 
   const form = e.target;
   const formData = new FormData(form);
+  formData.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
   fetch("vistas/modulos/reportes/filtro_tipos_pago.php", {
     method: "POST",

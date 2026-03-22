@@ -14,6 +14,15 @@ require_once "../modelos/categorias.modelo.php";
 
 require_once "../controladores/variantes.controlador.php";
 require_once "../modelos/variantes.modelo.php";
+require_once "../modelos/csrf.php";
+
+// VALIDAR CSRF para todas las peticiones POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!CSRF::validateToken()) {
+        http_response_code(403);
+        die(json_encode(['error' => 'Token CSRF inválido', 'success' => false]));
+    }
+}
 
 class AjaxProductos
 {
@@ -219,6 +228,15 @@ class AjaxProductos
 
 }
 
+/*=============================================
+ELIMINAR PRODUCTO
+=============================================*/
+if (isset($_POST["idProductoEliminar"])) {
+    $eliminar = new ControladorProductos();
+    $respuesta = $eliminar->ctrEliminarProducto();
+    echo $respuesta;
+    exit;
+}
 
 /*=============================================
 GENERAR CODIGO A PARTIR DE ID CATEGORIA

@@ -3,6 +3,19 @@
 require_once "../modelos/session-manager.php";
 SessionManager::startSecure();
 
+require_once "../modelos/csrf.php";
+
+// VALIDAR CSRF para todas las peticiones POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!CSRF::validateToken()) {
+        http_response_code(403);
+        die(json_encode(['error' => 'Token CSRF inválido', 'success' => false]));
+    }
+}
+
+require_once "../modelos/session-manager.php";
+SessionManager::startSecure();
+
 require_once "../config.php";
 require_once "../controladores/logs.controlador.php";
 

@@ -4,7 +4,6 @@
 
 require_once __DIR__ . '/../config.php';
 
- 
 class Conexion{ 
 
 	static public function conectar(){ 

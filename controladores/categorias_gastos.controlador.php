@@ -24,6 +24,26 @@ class ControladorCategoriasGastos{
 
 		if(isset($_POST["nombreCategoriaGasto"])){
 
+			/*=============================================
+			VALIDAR CSRF
+			=============================================*/
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "gastos";
+						}
+					})
+				</script>';
+				return;
+			}
+
 			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nombreCategoriaGasto"])){
 
 				$tabla = "categorias_gastos";
@@ -89,6 +109,26 @@ class ControladorCategoriasGastos{
 
 		if(isset($_POST["editarNombreCategoriaGasto"])){
 
+			/*=============================================
+			VALIDAR CSRF
+			=============================================*/
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "gastos";
+						}
+					})
+				</script>';
+				return;
+			}
+
 			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarNombreCategoriaGasto"])){
 
 				$tabla = "categorias_gastos";
@@ -153,15 +193,42 @@ class ControladorCategoriasGastos{
 
 	static public function ctrEliminarCategoriaGasto(){
 
-		if(isset($_GET["idCategoriaGasto"])){
+		if (isset($_GET["idCategoriaGasto"]) || isset($_POST["idCategoriaGastoEliminar"])) {
+
+			/*=============================================
+			VALIDAR CSRF (Solo si es POST)
+			=============================================*/
+			if ($_SERVER['REQUEST_METHOD'] == 'POST' && !CSRF::validateToken()) {
+				if (isset($_POST["idCategoriaGastoEliminar"])) {
+					return "error_csrf";
+				}
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "gastos";
+						}
+					})
+				</script>';
+				return;
+			}
 
 			$tabla ="categorias_gastos";
-			$datos = $_GET["idCategoriaGasto"];
+			$idCategoriaGasto = isset($_GET["idCategoriaGasto"]) ? $_GET["idCategoriaGasto"] : $_POST["idCategoriaGastoEliminar"];
 
 			// Verificar si hay gastos con esta categoría
-			$totalGastos = ModeloCategoriasGastos::mdlContarGastosPorCategoria($datos);
+			$totalGastos = ModeloCategoriasGastos::mdlContarGastosPorCategoria($idCategoriaGasto);
 
 			if($totalGastos > 0){
+
+				if (isset($_POST["idCategoriaGastoEliminar"])) {
+					return "error_gastos_asociados";
+				}
 
 				echo'<script>
 
@@ -182,9 +249,13 @@ class ControladorCategoriasGastos{
 
 			}else{
 
-				$respuesta = ModeloCategoriasGastos::mdlEliminarCategoriaGasto($tabla, $datos);
+				$respuesta = ModeloCategoriasGastos::mdlEliminarCategoriaGasto($tabla, $idCategoriaGasto);
 
 				if($respuesta == "ok"){
+
+					if (isset($_POST["idCategoriaGastoEliminar"])) {
+						return "ok";
+					}
 
 					echo'<script>
 

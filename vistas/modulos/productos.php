@@ -213,6 +213,8 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
       <!--CODIGO PARA LLAMAR AL WEBHOOK DE n8n -->
       <form id="formN8N"
         action="https://demo-ppal-n8n.lhs6l6.easypanel.host/webhook/ed25e621-dcc5-45c0-918c-5ec3c9ecbdc3" method="POST">
+
+        <?php CSRF::insertToken(); ?>
         <input type="hidden" name="origen" value="productos">
         <button type="submit" class="btn btn-success">Actualizar</button>
       </form>
@@ -230,7 +232,7 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
               <?php
 $categoriasFiltro = ControladorCategorias::ctrMostrarCategorias(null, null);
 foreach ($categoriasFiltro as $categoriaFiltro) {
-  echo '<option value="' . $categoriaFiltro["categoria"] . '">' . ucfirst($categoriaFiltro["categoria"]) . '</option>';
+  echo '<option value="' . e($categoriaFiltro["categoria"]) . '">' . e(ucfirst($categoriaFiltro["categoria"])) . '</option>';
 }
 ?>
             </select>
@@ -244,7 +246,7 @@ foreach ($categoriasFiltro as $categoriaFiltro) {
               <?php
 $proveedoresFiltro = ControladorProveedores::ctrMostrarProveedores(null, null);
 foreach ($proveedoresFiltro as $proveedorFiltro) {
-  echo '<option value="' . $proveedorFiltro["nombre"] . '">' . ucfirst($proveedorFiltro["nombre"]) . '</option>';
+  echo '<option value="' . e($proveedorFiltro["nombre"]) . '">' . e(ucfirst($proveedorFiltro["nombre"])) . '</option>';
 }
 ?>
             </select>
@@ -350,7 +352,8 @@ MODAL AGREGAR PRODUCTO
 
       <form role="form" method="post" enctype="multipart/form-data">
 
-        <!--=====================================
+        <?php CSRF::insertToken(); ?>
+<!--=====================================
       CABEZA DEL MODAL
       ======================================-->
 
@@ -389,7 +392,7 @@ $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
 
 foreach ($categorias as $key => $value) {
 
-  echo '<option value="' . $value["id"] . '">' . $value["categoria"] . '</option>';
+  echo '<option value="' . e($value["id"]) . '">' . e($value["categoria"]) . '</option>';
 }
 
 ?>
@@ -675,6 +678,8 @@ MODAL EDITAR PRODUCTO
     <div class="modal-content">
 
       <form role="form" method="post" enctype="multipart/form-data">
+
+        <?php CSRF::insertToken(); ?>
 
         <!--=====================================
       CABEZA DEL MODAL
@@ -1041,6 +1046,8 @@ MODAL EDITAR VARIANTE
 
       <form role="form" method="post" id="formEditarVariante">
 
+        <?php CSRF::insertToken(); ?>
+
         <!--=====================================
         CABEZA DEL MODAL
         ======================================-->
@@ -1132,6 +1139,8 @@ MODAL IMPORTAR PRODUCTOS DESDE CSV
     <div class="modal-content">
 
       <form role="form" method="post" enctype="multipart/form-data">
+
+        <?php CSRF::insertToken(); ?>
 
         <!--=====================================
         CABEZA DEL MODAL

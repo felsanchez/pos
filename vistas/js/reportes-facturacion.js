@@ -128,7 +128,8 @@ $(document).ready(function () {
                 fechaFinal: fechaFinal,
                 categoria: categoria,
                 tercero: tercero,
-                idUsuario: idUsuario || "todos"
+                idUsuario: idUsuario || "todos",
+                csrf_token: $('meta[name="csrf-token"]').attr('content')
             },
             dataType: "json",
             success: function (respuesta) {
@@ -152,7 +153,8 @@ $(document).ready(function () {
                 fechaFinal: fechaFinal,
                 categoria: categoria,
                 tercero: tercero,
-                idUsuario: idUsuario || "todos"
+                idUsuario: idUsuario || "todos",
+                csrf_token: $('meta[name="csrf-token"]').attr('content')
             },
             dataType: "json",
             success: function (respuesta) {
@@ -255,7 +257,8 @@ $(document).ready(function () {
                     "fechaFinal": ff,
                     "categoria": cat,
                     "tercero": tercero,
-                    "idUsuario": idUsuario || "todos"
+                    "idUsuario": idUsuario || "todos",
+                    "csrf_token": $('meta[name="csrf-token"]').attr('content')
                 }
             },
             "deferRender": true,

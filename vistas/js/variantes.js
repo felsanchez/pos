@@ -6,7 +6,10 @@ $(document).on("click", ".btnAbrirModalTipo", function(){
     $.ajax({
         url: "ajax/variantes.ajax.php",
         method: "POST",
-        data: {obtenerSiguienteOrdenTipo: true},
+        data: {
+            obtenerSiguienteOrdenTipo: true,
+            csrf_token: $('meta[name="csrf-token"]').attr('content')
+        },
         dataType: "json",
         success: function(respuesta){
             console.log("Siguiente orden tipo:", respuesta);
@@ -34,6 +37,7 @@ $(document).on("click", "[data-target='#modalAgregarOpcion']", function(){
 
     var datos = new FormData();
     datos.append("obtenerSiguienteOrdenOpcion", idTipo);
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     $.ajax({
         url: "ajax/variantes.ajax.php",
@@ -73,6 +77,7 @@ $(document).on("click", ".btnVerOpciones", function(){
     // Cargar opciones con AJAX
     var datos = new FormData();
     datos.append("idTipoVariante", idTipo);
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     $.ajax({
         url: "ajax/variantes.ajax.php",
@@ -150,6 +155,7 @@ $(document).on("click", ".btnActivarTipo", function(){
     var datos = new FormData();
     datos.append("activarTipo", idTipo);
     datos.append("estadoTipo", estadoTipo);
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     $.ajax({
         url: "ajax/variantes.ajax.php",
@@ -239,6 +245,7 @@ $(document).on("click", ".btnActivarOpcion", function(){
     var datos = new FormData();
     datos.append("activarOpcion", idOpcion);
     datos.append("estadoOpcion", estadoOpcion);
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     $.ajax({
         url: "ajax/variantes.ajax.php",
@@ -318,6 +325,7 @@ $(document).on("click", ".btnEditarTipoVariante", function(){
 
     var datos = new FormData();
     datos.append("idTipo", idTipo);
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     $.ajax({
         url: "ajax/variantes.ajax.php",
@@ -348,6 +356,7 @@ $(document).on("click", ".btnEditarOpcion", function(){
 
     var datos = new FormData();
     datos.append("idOpcionEditar", idOpcion);
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     $.ajax({
         url: "ajax/variantes.ajax.php",
@@ -401,6 +410,7 @@ $(document).on("click", ".btnEliminarTipo", function(){
             var datos = new FormData();
 
             datos.append("idEliminarTipo", idTipo); 
+            datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
             $.ajax({ 
 
@@ -475,6 +485,7 @@ $(document).on("click", ".btnEliminarOpcion", function(){
             var datos = new FormData();
 
             datos.append("idEliminarOpcion", idOpcion); 
+            datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
             $.ajax({
 

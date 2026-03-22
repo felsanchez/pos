@@ -24,6 +24,8 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
 
       <form role="form" method="post" enctype="multipart/form-data">
 
+        <?php CSRF::insertToken(); ?>
+
         <div class="box-body">
 
           <!--=====================================

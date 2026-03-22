@@ -29,6 +29,8 @@
 
                 <form role="form" method="post">
 
+        <?php CSRF::insertToken(); ?>
+
                 <div class="box-body">
 
                     <div class="box">
@@ -324,6 +326,8 @@ MODAL AGREGAR CLIENTE
     <div class="modal-content">
 
       <form role="form" method="post">
+
+        <?php CSRF::insertToken(); ?>
 
       <!--=====================================
       CABEZA DEL MODAL

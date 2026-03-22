@@ -272,6 +272,8 @@ BARRA DE NAVEGACION
 
 			<!-- Cuerpo del Modal -->
 			<form id="formPerfilUsuario" method="post">
+
+        <?php CSRF::insertToken(); ?>
 				<div class="modal-body">
 
 					<div class="row">

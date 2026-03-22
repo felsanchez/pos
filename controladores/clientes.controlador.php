@@ -12,6 +12,26 @@ class ControladorClientes
 
 		if (isset($_POST["nuevoCliente"])) {
 
+			/*=============================================
+			VALIDAR CSRF
+			=============================================*/
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "clientes";
+						}
+					})
+				</script>';
+				return;
+			}
+
 			if (
 				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoCliente"]) &&
 				preg_match('/^[0-9]+$/', $_POST["nuevoDocumentoId"]) &&
@@ -123,10 +143,26 @@ class ControladorClientes
 
 		if (isset($_POST["editarCliente"])) {
 
-			/*echo "<pre>";
-			var_dump($_POST);
-			echo "</pre>";
-			die();*/
+			/*=============================================
+			VALIDAR CSRF
+			=============================================*/
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "clientes";
+						}
+					})
+				</script>';
+				return;
+			}
+
 
 			if (
 				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarCliente"]) &&
@@ -167,21 +203,7 @@ class ControladorClientes
 					"razon_social" => isset($_POST["editarRazonSocial"]) ? $_POST["editarRazonSocial"] : null
 				);
 
-				// DEBUG: Log para ver qué municipio se está guardando
-				file_put_contents(
-					"debug_cliente_save.txt",
-					"=== EDITAR CLIENTE ===\n" .
-					"Cliente ID: " . $_POST["idCliente"] . "\n" .
-					"POST editarMunicipio: " . (isset($_POST["editarMunicipio"]) ? $_POST["editarMunicipio"] : 'NO EXISTE') . "\n" .
-					"Municipio a guardar: " . ($datos["municipio_id"] ?? 'NULL') . "\n" .
-					"Timestamp: " . date('Y-m-d H:i:s') . "\n\n",
-					FILE_APPEND
-				);
 
-				/*echo "<pre>DATOS A GUARDAR:";
-				var_dump($datos);
-				echo "</pre>";
-				die();*/
 
 				$respuesta = ModeloClientes::mdlEditarCliente($tabla, $datos);
 
@@ -233,18 +255,44 @@ class ControladorClientes
 	static public function ctrEliminarCliente()
 	{
 
-		if (isset($_GET["idCliente"])) {
+		if (isset($_GET["idCliente"]) || isset($_POST["idClienteEliminar"])) {
+
+			/*=============================================
+			VALIDAR CSRF (Solo si es POST, GET se mantendrá por compatibilidad temporal pero se marcará como DEPRECATED)
+			=============================================*/
+			if ($_SERVER['REQUEST_METHOD'] == 'POST' && !CSRF::validateToken()) {
+				if (isset($_POST["idClienteEliminar"])) {
+					return "error_csrf";
+				}
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "clientes";
+						}
+					})
+				</script>';
+				return;
+			}
 
 			$tabla = "clientes";
-			$datos = $_GET["idCliente"];
+			$datos = isset($_GET["idCliente"]) ? $_GET["idCliente"] : $_POST["idClienteEliminar"];
 
 			// Detectar de dónde viene la eliminación
-			$ruta = isset($_GET["ruta"]) ? $_GET["ruta"] : "clientes";
+			$ruta = isset($_GET["ruta"]) ? $_GET["ruta"] : (isset($_POST["ruta"]) ? $_POST["ruta"] : "clientes");
 
 			// Verificar si hay actividades asociados
 			$actividadesAsociados = ModeloActividades::mdlMostrarActividades("actividades", "id_cliente", $datos, "id");
 
 			if (!empty($actividadesAsociados)) {
+				if (isset($_POST["idClienteEliminar"])) {
+					return "error_actividades";
+				}
 				echo '<script>
 					swal({
 						type: "error",
@@ -266,6 +314,9 @@ class ControladorClientes
 			$ventasAsociados = ModeloVentas::mdlMostrarVentas("ventas", "id_cliente", $datos, "id");
 
 			if (!empty($ventasAsociados)) {
+				if (isset($_POST["idClienteEliminar"])) {
+					return "error_ventas";
+				}
 				echo '<script>
 					swal({
 						type: "error",
@@ -283,10 +334,12 @@ class ControladorClientes
 			}
 
 
-			$respuesta = ModeloClientes::mdlEliminarCliente($tabla, $datos);
+			$respuesta = ModeloClientes::mdlBorrarCliente($tabla, $datos);
 
 			if ($respuesta == "ok") {
-
+				if (isset($_POST["idClienteEliminar"])) {
+					return "ok";
+				}
 				echo '<script>
 					swal({
 						type: "success",
@@ -316,6 +369,26 @@ class ControladorClientes
 	{
 
 		if (isset($_FILES["archivoCSV"])) {
+
+			/*=============================================
+			VALIDAR CSRF
+			=============================================*/
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "clientes";
+						}
+					})
+				</script>';
+				return;
+			}
 
 			$archivo = $_FILES["archivoCSV"]["tmp_name"];
 			$errores = array();

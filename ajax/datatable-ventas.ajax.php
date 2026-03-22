@@ -1,11 +1,18 @@
 <?php
-
-// Desactivar display de errores para no corromper JSON
-error_reporting(E_ALL);
-ini_set('display_errors', 0);
-ini_set('log_errors', 1);
+require_once "../modelos/session-manager.php";
+SessionManager::startSecure();
 
 require_once "../controladores/productos.controlador.php";
+require_once "../modelos/productos.modelo.php";
+require_once "../modelos/csrf.php";
+
+// VALIDAR CSRF para todas las peticiones POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!CSRF::validateToken()) {
+        http_response_code(403);
+        die(json_encode(['error' => 'Token CSRF inválido', 'success' => false]));
+    }
+}
 require_once "../modelos/productos.modelo.php";
 
 class tablaProductos{

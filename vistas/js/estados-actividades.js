@@ -142,6 +142,7 @@ $(document).on("click", ".btnEliminarEstadoActividad", function () {
 			var datos = new FormData();
 			datos.append("idEstado", idEstado);
 			datos.append("nombreEstado", nombreEstado);
+			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 			$.ajax({
 				url: "ajax/estados-actividades-eliminar.ajax.php",

@@ -141,47 +141,6 @@ class ControladorMovimientos{
 
 			$movimientos = ModeloMovimientos::mdlMostrarMovimientos($filtros);
 
-			// Crear archivo Excel
-			header('Content-Type: application/vnd.ms-excel');
-			header('Content-Disposition: attachment;filename="historial_stock_'.date('Y-m-d_H-i-s').'.xls"');
-			header('Cache-Control: max-age=0');
-
-			echo '<html>';
-			echo '<meta charset="UTF-8">';
-			echo '<body>';
-			echo '<table border="1">';
-			echo '<tr>';
-			echo '<th>ID</th>';
-			echo '<th>Fecha</th>';
-			echo '<th>Producto</th>';
-			echo '<th>Tipo Movimiento</th>';
-			echo '<th>Cantidad</th>';
-			echo '<th>Stock Anterior</th>';
-			echo '<th>Stock Nuevo</th>';
-			echo '<th>Usuario</th>';
-			echo '<th>Referencia</th>';
-			echo '<th>Notas</th>';
-			echo '</tr>';
-
-			foreach ($movimientos as $row) {
-				echo '<tr>';
-				echo '<td>'.$row["id"].'</td>';
-				echo '<td>'.$row["fecha"].'</td>';
-				echo '<td>'.$row["nombre_producto"].'</td>';
-				echo '<td>'.$row["tipo_movimiento"].'</td>';
-				echo '<td>'.$row["cantidad"].'</td>';
-				echo '<td>'.$row["stock_anterior"].'</td>';
-				echo '<td>'.$row["stock_nuevo"].'</td>';
-				echo '<td>'.$row["nombre_usuario"].'</td>';
-				echo '<td>'.$row["referencia"].'</td>';
-				echo '<td>'.$row["notas"].'</td>';
-				echo '</tr>';
-			}
-
-			echo '</table>';
-			echo '</body>';
-			echo '</html>';
-
 			exit;
 		}
 	}
@@ -217,43 +176,6 @@ class ControladorMovimientos{
 		header('Content-Disposition:; filename="' . $Name . '"');
 		header("Content-Transfer-Encoding: binary");
 
-		echo utf8_decode("<table border='1'>
-			<tr>
-			<td style='font-weight:bold; background-color:#3c8dbc; color:white;'>FECHA</td>
-			<td style='font-weight:bold; background-color:#3c8dbc; color:white;'>PRODUCTO</td>
-			<td style='font-weight:bold; background-color:#3c8dbc; color:white;'>TIPO</td>
-			<td style='font-weight:bold; background-color:#3c8dbc; color:white;'>TIPO MOVIMIENTO</td>
-			<td style='font-weight:bold; background-color:#3c8dbc; color:white;'>CANTIDAD</td>
-			<td style='font-weight:bold; background-color:#3c8dbc; color:white;'>STOCK ANTERIOR</td>
-			<td style='font-weight:bold; background-color:#3c8dbc; color:white;'>STOCK NUEVO</td>
-			<td style='font-weight:bold; background-color:#3c8dbc; color:white;'>USUARIO</td>
-			<td style='font-weight:bold; background-color:#3c8dbc; color:white;'>REFERENCIA</td>
-			<td style='font-weight:bold; background-color:#3c8dbc; color:white;'>NOTAS</td>
-			</tr>");
-
-		foreach ($movimientos as $row => $item) {
-
-			// Formatear tipo de producto
-			$tipoProducto = ($item["tipo_producto"] == "producto") ? "Producto" : "Variante";
-
-			// Formatear tipo de movimiento
-			$tipoMovimiento = str_replace("_", " ", ucwords($item["tipo_movimiento"], "_"));
-
-			echo "<tr>";
-			echo "<td>" . $item["fecha"] . "</td>";
-			echo "<td>" . $item["nombre_producto"] . "</td>";
-			echo "<td>" . $tipoProducto . "</td>";
-			echo "<td>" . $tipoMovimiento . "</td>";
-			echo "<td>" . $item["cantidad"] . "</td>";
-			echo "<td>" . $item["stock_anterior"] . "</td>";
-			echo "<td>" . $item["stock_nuevo"] . "</td>";
-			echo "<td>" . $item["nombre_usuario"] . "</td>";
-			echo "<td>" . $item["referencia"] . "</td>";
-			echo "<td>" . $item["notas"] . "</td>";
-			echo "</tr>";
-		}
-
-		echo "</table>";
 		exit;
 	}
 

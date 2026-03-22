@@ -146,6 +146,7 @@ $(document).on("click", ".btnEliminarEstado", function(){
 			var datos = new FormData();
 			datos.append("idEstado", idEstado);
 			datos.append("nombreEstado", nombreEstado);
+			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 			$.ajax({
 				url: "ajax/estados-clientes-eliminar.ajax.php",

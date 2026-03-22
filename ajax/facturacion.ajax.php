@@ -10,8 +10,20 @@ require_once __DIR__ . "/../controladores/productos.controlador.php";
 require_once __DIR__ . "/../modelos/productos.modelo.php";
 require_once __DIR__ . "/../controladores/configuracion.controlador.php";
 require_once __DIR__ . "/../modelos/configuracion.modelo.php";
-require_once __DIR__ . "/../controladores/factus.controlador.php";
-require_once __DIR__ . "/../modelos/factus.modelo.php";
+require_once "../modelos/session-manager.php";
+SessionManager::startSecure();
+
+require_once "../controladores/factus.controlador.php";
+require_once "../modelos/factus.modelo.php";
+require_once "../modelos/csrf.php";
+
+// VALIDAR CSRF para todas las peticiones POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!CSRF::validateToken()) {
+        http_response_code(403);
+        die(json_encode(['error' => 'Token CSRF inválido', 'success' => false]));
+    }
+}
 require_once __DIR__ . "/../controladores/correo.controlador.php";
 require_once __DIR__ . "/../controladores/proveedores.controlador.php";
 require_once __DIR__ . "/../modelos/proveedores.modelo.php";
@@ -1054,12 +1066,23 @@ class AjaxFacturacion
             $botones = "<div class='btn-group'>";
 
             if ($valor["tipo"] == "Factura") {
-                $botones .= "<button class='btn btn-info btn-xs btnVerFactura' idVenta='" . $valor["id_doc"] . "' title='Ver PDF'><i class='fa fa-eye'></i></button>";
+                $rutaDocs = "index.php?ruta=editar-venta&idVenta=" . $valor["id_doc"];
+                $btnClass = "btn-info";
             } else if ($valor["tipo"] == "Nota Crédito") {
-                $botones .= "<button class='btn btn-warning btn-xs btnVerNotaCredito' idNota='" . $valor["id_doc"] . "' title='Ver PDF'><i class='fa fa-eye'></i></button>";
+                $rutaDocs = "index.php?ruta=ver-nota-credito&idNota=" . $valor["id_doc"];
+                $btnClass = "btn-warning";
+            } else if ($valor["tipo"] == "Doc. Soporte") {
+                $rutaDocs = "index.php?ruta=ver-documento-soporte&idDS=" . $valor["id_doc"];
+                $btnClass = "btn-success";
+            } else if ($valor["tipo"] == "Nota Ajuste DS") {
+                $rutaDocs = "index.php?ruta=ver-nota-ajuste-ds&idNota=" . $valor["id_doc"];
+                $btnClass = "btn-danger";
             } else {
-                $botones .= "<button class='btn btn-default btn-xs' title='Ver PDF'><i class='fa fa-eye'></i></button>";
+                $rutaDocs = "#";
+                $btnClass = "btn-default";
             }
+
+            $botones .= "<a href='" . $rutaDocs . "' class='btn " . $btnClass . " btn-xs' title='Ver detalle del documento'><i class='fa fa-eye'></i></a>";
 
             $botones .= "</div>";
 

@@ -514,11 +514,38 @@ class ControladorUsuarios
 	static public function ctrBorrarUsuario()
 	{
 
-		if (isset($_GET["idUsuario"])) {
+		if (isset($_GET["idUsuario"]) || isset($_POST["idUsuarioEliminar"])) {
 
+			/*=============================================
+			VALIDAR CSRF (Solo si es POST)
+			=============================================*/
+			if ($_SERVER['REQUEST_METHOD'] == 'POST' && !CSRF::validateToken()) {
+				if (isset($_POST["idUsuarioEliminar"])) {
+					return "error_csrf";
+				}
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "usuarios";
+						}
+					})
+				</script>';
+				return;
+			}
+
+			$idUsuario = isset($_GET["idUsuario"]) ? $_GET["idUsuario"] : $_POST["idUsuarioEliminar"];
 
 			// ❗ Validar que no elimine su propio usuario
-			if ($_GET["idUsuario"] == $_SESSION["id"]) {
+			if ($idUsuario == $_SESSION["id"]) {
+				if (isset($_POST["idUsuarioEliminar"])) {
+					return "error_auto_eliminacion";
+				}
 				echo '<script>
 					swal({
 						type: "error",
@@ -536,19 +563,39 @@ class ControladorUsuarios
 			}
 
 			$tabla = "usuarios";
-			$datos = $_GET["idUsuario"];
 
-			if ($_GET["fotoUsuario"] != "") {
+			// Obtener información del usuario desde la DB para validar rutas y dependencias
+			$usuario = ModeloUsuarios::mdlMostrarUsuarios($tabla, "id", $idUsuario);
 
-				unlink($_GET["fotoUsuario"]);
-				rmdir('vistas/img/usuarios/' . $_GET["usuario"]);
+			if (!$usuario) {
+				if (isset($_POST["idUsuarioEliminar"])) {
+					return "error_no_existe";
+				}
+				return;
+			}
+
+			$foto = $usuario["foto"];
+			$usrName = $usuario["usuario"];
+
+			// Borrar foto y directorio si no es la por defecto
+			if ($foto != "" && $foto != "vistas/img/usuarios/default/anonymous.png") {
+				if (file_exists($foto)) {
+					unlink($foto);
+				}
+				$dir = 'vistas/img/usuarios/' . $usrName;
+				if (is_dir($dir)) {
+					rmdir($dir);
+				}
 			}
 
 
 			// Verificar si hay actividades asociados
-			$actividadesAsociados = ModeloActividades::mdlMostrarActividades("actividades", "id_user", $datos, "id");
+			$actividadesAsociados = ModeloActividades::mdlMostrarActividades("actividades", "id_user", $idUsuario, "id");
 
 			if (!empty($actividadesAsociados)) {
+				if (isset($_POST["idUsuarioEliminar"])) {
+					return "error_actividades";
+				}
 				echo '<script>
 					swal({
 						type: "error",
@@ -567,9 +614,12 @@ class ControladorUsuarios
 
 
 			// Verificar si hay ventas asociados
-			$ventasAsociados = ModeloVentas::mdlMostrarVentas("ventas", "id_vendedor", $datos, "id");
+			$ventasAsociados = ModeloVentas::mdlMostrarVentas("ventas", "id_vendedor", $idUsuario, "id");
 
 			if (!empty($ventasAsociados)) {
+				if (isset($_POST["idUsuarioEliminar"])) {
+					return "error_ventas";
+				}
 				echo '<script>
 					swal({
 						type: "error",
@@ -587,10 +637,12 @@ class ControladorUsuarios
 			}
 
 
-			$respuesta = ModeloUsuarios::mdlBorrarUsuario($tabla, $datos);
+			$respuesta = ModeloUsuarios::mdlBorrarUsuario($tabla, $idUsuario);
 
 			if ($respuesta == "ok") {
-
+				if (isset($_POST["idUsuarioEliminar"])) {
+					return "ok";
+				}
 				echo '<script>
 					swal({
 						type: "success",

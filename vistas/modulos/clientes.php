@@ -268,6 +268,8 @@ $editarCliente->ctrEditarCliente();
       <!--CODIGO PARA LLAMAR AL WEBHOOK DE n8n -->
       <!--
         <form id="formN8N" action="https://c610c962d42e.ngrok-free.app/webhook/mipos" method="POST" target="_blank">
+
+        <?php CSRF::insertToken(); ?>
           <input type="hidden" name="origen" value="clientes">
           <button type="submit" class="btn btn-success">Enviar a n8n</button>
         </form>
@@ -470,7 +472,8 @@ MODAL AGREGAR CLIENTE
 
       <form role="form" method="post">
 
-        <!--=====================================
+        <?php CSRF::insertToken(); ?>
+<!--=====================================
       CABEZA DEL MODAL
       ======================================-->
 
@@ -747,6 +750,8 @@ MODAL EDITAR CLIENTE
 
       <form role="form" method="post">
 
+        <?php CSRF::insertToken(); ?>
+
         <!--=====================================
       CABEZA DEL MODAL
       ======================================-->
@@ -955,9 +960,11 @@ MODAL EDITAR CLIENTE
                   <option value="">Seleccionar estado</option>
 
                   <?php
-$estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
-foreach ($estadosDisponibles as $estado) {
-  echo '<option value="' . $estado["nombre"] . '">' . ucfirst($estado["nombre"]) . '</option>';
+$item = null;
+$valor = null;
+$estadosS = ControladorEstadosClientes::ctrMostrarEstados($item, $valor);
+foreach ($estadosS as $key => $v) {
+  echo '<option value="' . e($v["id"]) . '">' . e($v["nombre"]) . '</option>';
 }
 ?>
 
@@ -1078,6 +1085,8 @@ MODAL IMPORTAR CLIENTES DESDE CSV
     <div class="modal-content">
 
       <form role="form" method="post" enctype="multipart/form-data">
+
+        <?php CSRF::insertToken(); ?>
 
         <!--=====================================
         CABEZA DEL MODAL
@@ -1203,6 +1212,8 @@ MODAL GESTIONAR ESTADOS
           <div class="panel-body">
             <form role="form" method="post" id="formAgregarEstado">
 
+        <?php CSRF::insertToken(); ?>
+
               <!-- Campo oculto para indicar origen -->
               <input type="hidden" name="origenModal" value="clientes">
 
@@ -1251,20 +1262,19 @@ MODAL GESTIONAR ESTADOS
 $estados = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
 foreach ($estados as $key => $value) {
   echo '<tr>
-                      <td>' . ($key + 1) . '</td>
-                      <td><span class="badge" style="background-color: ' . $value["color"] . '">' . $value["nombre"] . '</span></td>
-                      <td><input type="color" value="' . $value["color"] . '" disabled style="width: 50px;"></td>
+                      <td>' . e($key + 1) . '</td>
+                      <td><span class="badge" style="background-color: ' . e($value["color"]) . '">' . e($value["nombre"]) . '</span></td>
+                      <td><input type="color" value="' . e($value["color"]) . '" disabled style="width: 50px;"></td>
                       <td>
                         <button class="btn btn-warning btn-xs btnEditarEstado"
-                          data-id="' . $value["id"] . '"
-                          data-nombre="' . $value["nombre"] . '"
-                          data-color="' . $value["color"] . '"
-                          data-orden="' . $value["orden"] . '"
+                          data-nombre="' . e($value["nombre"]) . '"
+                          data-color="' . e($value["color"]) . '"
+                          data-orden="' . e($value["orden"]) . '"
                           data-toggle="modal"
                           data-target="#modalEditarEstado">
                           <i class="fa fa-pencil"></i>
                         </button>
-                        <button class="btn btn-danger btn-xs btnEliminarEstado" idEstado="' . $value["id"] . '" nombreEstado="' . $value["nombre"] . '"><i class="fa fa-times"></i></button>
+                        <button class="btn btn-danger btn-xs btnEliminarEstado" idEstado="' . e($value["id"]) . '" nombreEstado="' . e($value["nombre"]) . '"><i class="fa fa-times"></i></button>
                       </td>
                     </tr>';
 }
@@ -1302,6 +1312,8 @@ MODAL EDITAR ESTADO
     <div class="modal-content">
 
       <form role="form" method="post">
+
+        <?php CSRF::insertToken(); ?>
 
         <!--=====================================
         CABEZA DEL MODAL

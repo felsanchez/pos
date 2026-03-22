@@ -3,9 +3,20 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+require_once "../modelos/session-manager.php";
+SessionManager::startSecure();
 
 require_once "../controladores/actividades.controlador.php";
 require_once "../modelos/actividades.modelo.php";
+require_once "../modelos/csrf.php";
+
+// VALIDAR CSRF para todas las peticiones POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!CSRF::validateToken()) {
+        http_response_code(403);
+        die(json_encode(['error' => 'Token CSRF inválido', 'success' => false]));
+    }
+}
 
 
 class AjaxActividades{
@@ -207,13 +218,23 @@ if (isset($_GET["action"]) && $_GET["action"] == "usuarios") {
 		=============================================*/
 		
 		if (isset($_POST["accion"]) && $_POST["accion"] == "actualizarObservacion") {
-			$tabla = "actividades";
-			$datos = array(
-			"id" => $_POST["id"],
-			"observacion" => $_POST["observacion"]
-			);
-			$respuesta = ModeloActividades::mdlActualizarObservacion("actividades", $_POST["id"], $_POST["observacion"]);
-			echo json_encode($respuesta);
-		}
+	$tabla = "actividades";
+	$datos = array(
+	"id" => $_POST["id"],
+	"observacion" => $_POST["observacion"]
+	);
+	$respuesta = ModeloActividades::mdlActualizarObservacion("actividades", $_POST["id"], $_POST["observacion"]);
+	echo json_encode($respuesta);
+}
+
+/*=============================================
+ELIMINAR ACTIVIDAD
+=============================================*/
+if (isset($_POST["idActividadEliminar"])) {
+    $eliminar = new ControladorActividades();
+    $respuesta = $eliminar->ctrEliminarActividad();
+    echo $respuesta;
+    exit;
+}
 			
   

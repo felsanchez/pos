@@ -82,6 +82,8 @@ if ($ultimaVenta) {
 
           <form role="form" method="post" class="formularioVenta">
 
+            <?php CSRF::insertToken(); ?>
+
             <div class="box-body">
 
               <div class="box">
@@ -391,6 +393,7 @@ if ($ultimaVenta) {
                         ENTRADA ESTADO
                         ======================================-->
                 <input type="hidden" name="estado" value="venta">
+                <input type="hidden" name="activarFacturaElectronica" value="1">
 
                 <br>
 

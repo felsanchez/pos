@@ -202,11 +202,34 @@ class ControladorTiposActividades{
 
 	static public function ctrEliminarTipo(){
 
-		if(isset($_GET["idTipo"])){
+		if (isset($_GET["idTipo"]) || isset($_POST["idTipoEliminar"])) {
+
+			/*=============================================
+			VALIDAR CSRF (Solo si es POST)
+			=============================================*/
+			if ($_SERVER['REQUEST_METHOD'] == 'POST' && !CSRF::validateToken()) {
+				if (isset($_POST["idTipoEliminar"])) {
+					return "error_csrf";
+				}
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "actividades";
+						}
+					})
+				</script>';
+				return;
+			}
 
 			$tabla ="tipos_actividades";
-			$id = $_GET["idTipo"];
-			$nombreTipo = $_GET["nombreTipo"];
+			$id = isset($_GET["idTipo"]) ? $_GET["idTipo"] : $_POST["idTipoEliminar"];
+			$nombreTipo = isset($_GET["nombreTipo"]) ? $_GET["nombreTipo"] : $_POST["nombreTipo"];
 
 			// Detectar desde dónde se llamó la eliminación
 			$redireccion = isset($_GET["origen"]) && $_GET["origen"] == "actividades" ? "actividades" : "tipos-actividades";
@@ -215,6 +238,9 @@ class ControladorTiposActividades{
 			$enUso = ModeloTiposActividades::mdlVerificarTipoEnUso($nombreTipo);
 
 			if($enUso > 0){
+				if (isset($_POST["idTipoEliminar"])) {
+					return "error_en_uso";
+				}
 				echo '<script>
 					swal({
 						type: "error",
@@ -233,7 +259,9 @@ class ControladorTiposActividades{
 				$respuesta = ModeloTiposActividades::mdlEliminarTipo($tabla, $id);
 
 				if($respuesta == "ok"){
-
+					if (isset($_POST["idTipoEliminar"])) {
+						return "ok";
+					}
 					echo '<script>
 						swal({
 							type: "success",

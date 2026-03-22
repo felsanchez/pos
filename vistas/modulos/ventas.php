@@ -340,7 +340,7 @@ if ($xml) {
 
                 foreach ($clientes as $key => $valueCliente) {
                   $selected = (isset($_GET['cliente']) && $_GET['cliente'] == $valueCliente["id"]) ? 'selected' : '';
-                  echo '<option value="' . $valueCliente["id"] . '" ' . $selected . '>' . $valueCliente["nombre"] . '</option>';
+                  echo '<option value="' . e($valueCliente["id"]) . '" ' . $selected . '>' . e($valueCliente["nombre"]) . '</option>';
                 }
                 ?>
               </select>
@@ -357,7 +357,7 @@ if ($xml) {
 
                 foreach ($usuarios as $key => $valueUsuario) {
                   $selected = (isset($_GET['usuario']) && $_GET['usuario'] == $valueUsuario["id"]) ? 'selected' : '';
-                  echo '<option value="' . $valueUsuario["id"] . '" ' . $selected . '>' . $valueUsuario["nombre"] . '</option>';
+                  echo '<option value="' . e($valueUsuario["id"]) . '" ' . $selected . '>' . e($valueUsuario["nombre"]) . '</option>';
                 }
                 ?>
               </select>
@@ -816,6 +816,8 @@ MODAL EDITAR CLIENTE
     <div class="modal-content">
 
       <form role="form" method="post">
+
+        <?php CSRF::insertToken(); ?>
 
         <!--=====================================
       CABEZA DEL MODAL

@@ -103,6 +103,7 @@ function cargarLogs() {
     datos.append("fecha", fecha);
     datos.append("nivel", nivel);
     datos.append("limite", limite);
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     $.ajax({
         url: "ajax/logs.ajax.php",
@@ -168,6 +169,7 @@ function eliminarLogsSeleccionados(logs) {
     var datos = new FormData();
     datos.append("accion", "eliminar_logs");
     datos.append("logs", JSON.stringify(logs));
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     $.ajax({
         url: "ajax/logs.ajax.php",
@@ -216,6 +218,7 @@ function cargarEstadisticas() {
     var datos = new FormData();
     datos.append("accion", "obtener_estadisticas");
     datos.append("fecha", fecha);
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     $.ajax({
         url: "ajax/logs.ajax.php",
@@ -244,6 +247,7 @@ function limpiarLogsAntiguos() {
     var datos = new FormData();
     datos.append("accion", "limpiar_logs");
     datos.append("dias", 30);
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     $.ajax({
         url: "ajax/logs.ajax.php",

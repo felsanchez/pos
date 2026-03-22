@@ -8,6 +8,7 @@ $(".tablas").on("click", ".btnEditarCategoria", function(){
 
 	var datos = new FormData();
 	datos.append("idCategoria", idCategoria);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 
@@ -31,10 +32,7 @@ $(".tablas").on("click", ".btnEditarCategoria", function(){
 })
 
 
-/*=============================================
-ELIMINAR CATEGORIA
-=============================================*/
-$(".tablas").on("click", ".btnEliminarCategoria", function(){
+$(".tablas").on("click", ".btnEliminarCategoria", function () {
 
 	var idCategoria = $(this).attr("idCategoria");
 
@@ -48,11 +46,53 @@ $(".tablas").on("click", ".btnEliminarCategoria", function(){
 		cancelButtonColor: '#d33',
 		cancelButtonText: 'Cancelar',
 		confirmButtonText: 'Si, borrar categoría!'
-	}).then((result)=>{
+	}).then((result) => {
 
-		if(result.value){
+		if (result.value) {
 
-			window.location = "index.php?ruta=categorias&idCategoria="+idCategoria;
+			var datos = new FormData();
+			datos.append("idCategoriaEliminar", idCategoria);
+			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+
+			$.ajax({
+				url: "ajax/categorias.ajax.php",
+				method: "POST",
+				data: datos,
+				cache: false,
+				contentType: false,
+				processData: false,
+				success: function (respuesta) {
+					if (respuesta == "ok") {
+						swal({
+							type: "success",
+							title: "¡Borrado correctamente!",
+							text: "La categoría ha sido borrada correctamente.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then((result) => {
+							if (result.value) {
+								window.location.reload();
+							}
+						});
+					} else if (respuesta == "error_productos_asociados") {
+						swal({
+							type: "error",
+							title: "¡No se puede eliminar!",
+							text: "La categoría tiene productos asociados.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					} else {
+						swal({
+							type: "error",
+							title: "Error",
+							text: "No se pudo eliminar. " + respuesta,
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					}
+				}
+			})
 		}
 
 	})
@@ -72,6 +112,7 @@ $("#nuevaCategoria").change(function(){
 
 	var datos = new FormData();
 	datos.append("validarCategoria", categoria);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 		url:"ajax/categorias.ajax.php",

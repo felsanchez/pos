@@ -182,6 +182,7 @@ $(".tablaUsuarios").on("click", ".btnEditarUsuario", function () {
 
 	var datos = new FormData();
 	datos.append("idUsuario", idUsuario);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 
@@ -255,6 +256,7 @@ $(".tablaUsuarios").on("click", ".btnActivar", function () {
 	var datos = new FormData();
 	datos.append("activarId", idUsuario);
 	datos.append("activarUsuario", estadoUsuario);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 		url: "ajax/usuarios.ajax.php",
@@ -321,6 +323,7 @@ $("#nuevoUsuario").change(function () {
 
 	var datos = new FormData();
 	datos.append("validarUsuario", usuario);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 		url: "ajax/usuarios.ajax.php",
@@ -366,7 +369,64 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 
 		if (result.value) {
 
-			window.location = "index.php?ruta=usuarios&idUsuario=" + idUsuario + "&usuario=" + usuario + "&fotoUsuario=" + fotoUsuario;
+			var datos = new FormData();
+			datos.append("idUsuarioEliminar", idUsuario);
+			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+
+			$.ajax({
+				url: "ajax/usuarios.ajax.php",
+				method: "POST",
+				data: datos,
+				cache: false,
+				contentType: false,
+				processData: false,
+				success: function (respuesta) {
+					if (respuesta == "ok") {
+						swal({
+							type: "success",
+							title: "¡El usuario ha sido borrado correctamente!",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then((result) => {
+							if (result.value) {
+								window.location = "usuarios";
+							}
+						});
+					} else if (respuesta == "error_auto_eliminacion") {
+						swal({
+							type: "error",
+							title: "¡No puedes eliminar tu propio usuario!",
+							text: "Cierra la sesión e inicia con otro usuario para poder eliminar este.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					} else if (respuesta == "error_actividades") {
+						swal({
+							type: "error",
+							title: "¡No se puede eliminar!",
+							text: "El usuario tiene actividades asociadas.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					} else if (respuesta == "error_ventas") {
+						swal({
+							type: "error",
+							title: "¡No se puede eliminar!",
+							text: "El usuario tiene ventas asociadas.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					} else {
+						swal({
+							type: "error",
+							title: "Error",
+							text: "No se pudo eliminar el usuario. " + respuesta,
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					}
+				}
+			})
 		}
 
 

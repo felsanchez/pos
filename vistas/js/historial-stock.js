@@ -15,7 +15,8 @@ function cargarTablaMovimientos() {
 		tipo_movimiento: $("#filtroTipo").val() || "",
 		fecha_desde: $("#filtroFechaDesde").val() || "",
 		fecha_hasta: $("#filtroFechaHasta").val() || "",
-		usuario: $("#filtroUsuario").val() || ""
+		usuario: $("#filtroUsuario").val() || "",
+		csrf_token: $('meta[name="csrf-token"]').attr('content')
 	};
 
 	$.ajax({
@@ -198,7 +199,8 @@ function cargarResumen() {
 	var filtros = {
 		accion: "obtenerResumen",
 		fecha_desde: $("#filtroFechaDesde").val(),
-		fecha_hasta: $("#filtroFechaHasta").val()
+		fecha_hasta: $("#filtroFechaHasta").val(),
+		csrf_token: $('meta[name="csrf-token"]').attr('content')
 	};
 
 	$.ajax({
@@ -313,7 +315,8 @@ function inicializarEdicionNotas() {
 			data: {
 				id: id,
 				notas: nuevaNota,
-				accion: 'actualizarNota'
+				accion: 'actualizarNota',
+				csrf_token: $('meta[name="csrf-token"]').attr('content')
 			},
 			success: function (respuesta) {
 				console.log('Nota actualizada:', respuesta);
@@ -386,6 +389,7 @@ $("#btnBorrarMovimientos").click(function () {
 			var datos = new FormData();
 			datos.append("idsEliminarMovimientos", JSON.stringify(idsSeleccionados));
 			datos.append("accion", "eliminarMovimientos");
+			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 			$.ajax({
 				url: "ajax/movimientos.ajax.php",

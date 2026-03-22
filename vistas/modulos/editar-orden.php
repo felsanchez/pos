@@ -48,6 +48,8 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
           <!--<form role="form" method="post" class="formularioVenta">-->
           <form role="form" method="post" class="formularioVenta" id="formularioVenta">
 
+            <?php CSRF::insertToken(); ?>
+
             <div class="box-body">
 
               <div class="box">
@@ -570,6 +572,8 @@ MODAL AGREGAR CLIENTE
     <div class="modal-content">
 
       <form role="form" method="post">
+
+        <?php CSRF::insertToken(); ?>
 
         <!--=====================================
       CABEZA DEL MODAL

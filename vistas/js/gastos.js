@@ -97,6 +97,7 @@ $(document).on("click", ".btnEditarGasto", function () {
 
     var datos = new FormData();
     datos.append("idGasto", idGasto);
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     $.ajax({
 
@@ -144,27 +145,60 @@ ELIMINAR GASTO
 
 $(document).on("click", ".btnEliminarGasto", function () {
 
-    var idGasto = $(this).attr("idGasto");
-    var codigoGasto = $(this).attr("codigoGasto");
-    var conceptoGasto = $(this).attr("conceptoGasto");
+	var idGasto = $(this).attr("idGasto");
+	var conceptoGasto = $(this).attr("conceptoGasto");
 
-    swal({
+	swal({
 
-        title: '¿Está seguro de eliminar el gasto: "' + conceptoGasto + '"?',
-        text: "¡Si no lo está puede cancelar la acción!",
-        type: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        cancelButtonText: 'Cancelar',
-        confirmButtonText: 'Sí, eliminar gasto!'
-    }).then((result) => {
+		title: '¿Está seguro de eliminar el gasto: "' + conceptoGasto + '"?',
+		text: "¡Si no lo está puede cancelar la acción!",
+		type: 'warning',
+		showCancelButton: true,
+		confirmButtonColor: '#3085d6',
+		cancelButtonColor: '#d33',
+		cancelButtonText: 'Cancelar',
+		confirmButtonText: 'Sí, eliminar gasto!'
+	}).then((result) => {
 
-        if (result.value) {
+		if (result.value) {
 
-            window.location = "index.php?ruta=gastos&idGasto=" + idGasto;
-        }
-    })
+			var datos = new FormData();
+			datos.append("idGastoEliminar", idGasto);
+			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+
+			$.ajax({
+				url: "ajax/gastos.ajax.php",
+				method: "POST",
+				data: datos,
+				cache: false,
+				contentType: false,
+				processData: false,
+				success: function (respuesta) {
+					if (respuesta == "ok") {
+						swal({
+							type: "success",
+							title: "¡Eliminado!",
+							text: "El gasto ha sido eliminado correctamente.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then((result) => {
+							if (result.value) {
+								window.location.reload();
+							}
+						});
+					} else {
+						swal({
+							type: "error",
+							title: "Error",
+							text: "No se pudo eliminar el gasto. " + respuesta,
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					}
+				}
+			})
+		}
+	})
 })
 
 /*=============================================
@@ -181,6 +215,7 @@ $("#modalGestionarCategorias").on("click", ".btnEditarCategoriaGasto", function 
 
     var datos = new FormData();
     datos.append("idCategoria", idCategoria);
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     $.ajax({
 
@@ -214,26 +249,68 @@ ELIMINAR CATEGORÍA DE GASTO
 
 $("#modalGestionarCategorias").on("click", ".btnEliminarCategoriaGasto", function () {
 
-    var idCategoria = $(this).attr("idCategoria");
-    var nombreCategoria = $(this).attr("nombreCategoria");
+	var idCategoria = $(this).attr("idCategoria");
+	var nombreCategoria = $(this).attr("nombreCategoria");
 
-    swal({
+	swal({
 
-        title: '¿Está seguro de eliminar la categoría "' + nombreCategoria + '"?',
-        text: "¡Si no lo está puede cancelar la acción!",
-        type: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        cancelButtonText: 'Cancelar',
-        confirmButtonText: 'Sí, eliminar categoría!'
-    }).then((result) => {
+		title: '¿Está seguro de eliminar la categoría "' + nombreCategoria + '"?',
+		text: "¡Si no lo está puede cancelar la acción!",
+		type: 'warning',
+		showCancelButton: true,
+		confirmButtonColor: '#3085d6',
+		cancelButtonColor: '#d33',
+		cancelButtonText: 'Cancelar',
+		confirmButtonText: 'Sí, eliminar categoría!'
+	}).then((result) => {
 
-        if (result.value) {
+		if (result.value) {
 
-            window.location = "index.php?ruta=gastos&idCategoriaGasto=" + idCategoria;
-        }
-    })
+			var datos = new FormData();
+			datos.append("idCategoriaGastoEliminar", idCategoria);
+			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+
+			$.ajax({
+				url: "ajax/categorias_gastos.ajax.php",
+				method: "POST",
+				data: datos,
+				cache: false,
+				contentType: false,
+				processData: false,
+				success: function (respuesta) {
+					if (respuesta == "ok") {
+						swal({
+							type: "success",
+							title: "¡Eliminada!",
+							text: "La categoría ha sido eliminada correctamente.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then((result) => {
+							if (result.value) {
+								window.location.reload();
+							}
+						});
+					} else if (respuesta == "error_gastos_asociados") {
+						swal({
+							type: "error",
+							title: "¡No se puede eliminar!",
+							text: "Esta categoría tiene gastos asociados.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					} else {
+						swal({
+							type: "error",
+							title: "Error",
+							text: "No se pudo eliminar la categoría. " + respuesta,
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					}
+				}
+			})
+		}
+	})
 })
 
 /*=============================================
@@ -337,6 +414,7 @@ $(document).on("click", ".btnGuardarImagenComprobante", function () {
     datos.append("idGastoImagen", idGasto);
     datos.append("conceptoGasto", concepto);
     datos.append("nuevaImagenComprobante", imagen);
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     // Mostrar loading
     swal({
@@ -410,6 +488,7 @@ $("#btnFiltrarGastos").on("click", function () {
     datos.append("fechaFin", fechaFin);
     datos.append("categoria", categoria);
     datos.append("proveedor", proveedor);
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     $.ajax({
 
@@ -597,7 +676,8 @@ $(document).on('blur', '.celda-notas-gasto', function () {
         method: 'POST',
         data: {
             idGasto: id,
-            nota: nuevasNotas
+            nota: nuevasNotas,
+            csrf_token: $('meta[name="csrf-token"]').attr('content')
         },
         dataType: 'json',
 

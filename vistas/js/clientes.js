@@ -17,6 +17,7 @@ $(document).on("click", ".btnEditarCliente", function () {
 
 	var datos = new FormData();
 	datos.append("idClienteEditar", idCliente);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 	//datos.append("idCliente", idCliente);
 
 	$.ajax({
@@ -81,7 +82,57 @@ $(document).on("click", ".btnEliminarCliente", function () {
 
 		if (result.value) {
 
-			window.location = "index.php?ruta=" + ruta + "&idCliente=" + idCliente;
+			var datos = new FormData();
+			datos.append("idClienteEliminar", idCliente);
+			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+			datos.append("ruta", ruta);
+
+			$.ajax({
+				url: "ajax/clientes.ajax.php",
+				method: "POST",
+				data: datos,
+				cache: false,
+				contentType: false,
+				processData: false,
+				success: function (respuesta) {
+					if (respuesta == "ok") {
+						swal({
+							type: "success",
+							title: "¡El cliente ha sido borrado correctamente!",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then((result) => {
+							if (result.value) {
+								window.location = ruta;
+							}
+						});
+					} else if (respuesta == "error_actividades") {
+						swal({
+							type: "error",
+							title: "¡No se puede eliminar!",
+							text: "El cliente tiene actividades asociadas.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					} else if (respuesta == "error_ventas") {
+						swal({
+							type: "error",
+							title: "¡No se puede eliminar!",
+							text: "El cliente tiene ventas asociadas.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					} else {
+						swal({
+							type: "error",
+							title: "Error",
+							text: "No se pudo eliminar el cliente. " + respuesta,
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					}
+				}
+			})
 		}
 	})
 })
@@ -100,6 +151,7 @@ $("#nuevoCliente").change(function () {
 
 	var datos = new FormData();
 	datos.append("validarCliente", nombre);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 		url: "ajax/clientes.ajax.php",

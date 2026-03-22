@@ -1,10 +1,25 @@
-
 <?php
 
 // Habilitar reporte de errores para debugging
 error_reporting(E_ALL);
 ini_set('display_errors', 0); // No mostrar errores en pantalla
 ini_set('log_errors', 1);
+
+require_once "../modelos/session-manager.php";
+SessionManager::startSecure();
+
+require_once "../controladores/estados-actividades.controlador.php";
+
+require_once "../modelos/conexion.php";
+require_once "../modelos/csrf.php";
+
+// VALIDAR CSRF para todas las peticiones POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!CSRF::validateToken()) {
+        http_response_code(403);
+        die(json_encode(['error' => 'Token CSRF inválido', 'success' => false]));
+    }
+}
 
 require_once "../controladores/estados-actividades.controlador.php";
 require_once "../modelos/estados-actividades.modelo.php";

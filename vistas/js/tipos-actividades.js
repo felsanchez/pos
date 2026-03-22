@@ -45,6 +45,7 @@ $(".tablaTiposActividades").on("click", ".btnEditarTipoActividad", function () {
 	var idTipo = $(this).attr("idTipo");
 	var datos = new FormData();
 	datos.append("idTipo", idTipo);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 		url: "ajax/tipos-actividades.ajax.php",
@@ -86,7 +87,50 @@ $(".tablaTiposActividades").on("click", ".btnEliminarTipoActividad", function ()
 
 		if (result.value) {
 
-			window.location = "index.php?ruta=tipos-actividades&idTipo=" + idTipo;
+			var datos = new FormData();
+			datos.append("idTipoEliminar", idTipo);
+			datos.append("nombreTipo", nombreTipo);
+			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+
+			$.ajax({
+				url: "ajax/tipos-actividades.ajax.php",
+				method: "POST",
+				data: datos,
+				cache: false,
+				contentType: false,
+				processData: false,
+				success: function (respuesta) {
+					if (respuesta == "ok") {
+						swal({
+							type: "success",
+							title: "¡Eliminado!",
+							text: "El tipo ha sido eliminado correctamente.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then((result) => {
+							if (result.value) {
+								window.location.reload();
+							}
+						});
+					} else if (respuesta == "error_en_uso") {
+						swal({
+							type: "error",
+							title: "¡No se puede eliminar!",
+							text: "Este tipo está en uso por algunas actividades.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					} else {
+						swal({
+							type: "error",
+							title: "Error",
+							text: "No se pudo eliminar el tipo. " + respuesta,
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					}
+				}
+			})
 		}
 	});
 

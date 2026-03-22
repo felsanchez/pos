@@ -45,6 +45,8 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
           <form role="form" method="post" class="formularioVenta">
 
+            <?php CSRF::insertToken(); ?>
+
             <div class="box-body">
 
               <div class="box">

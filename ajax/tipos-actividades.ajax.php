@@ -1,7 +1,19 @@
-<?php 
+<?php
+require_once "../modelos/session-manager.php";
+SessionManager::startSecure();
 
 require_once "../controladores/tipos-actividades.controlador.php";
-require_once "../modelos/tipos-actividades.modelo.php"; 
+require_once "../modelos/tipos-actividades.modelo.php";
+require_once "../modelos/csrf.php";
+
+// VALIDAR CSRF para todas las peticiones POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!CSRF::validateToken()) {
+        http_response_code(403);
+        die(json_encode(['error' => 'Token CSRF inválido', 'success' => false]));
+    }
+}
+ 
 
 class AjaxTiposActividades{ 
 
@@ -30,4 +42,14 @@ if(isset($_POST["idTipo"])){
 	$editar -> idTipo = $_POST["idTipo"];
 	$editar -> ajaxEditarTipo();
 
+}
+
+/*=============================================
+ELIMINAR TIPO
+=============================================*/
+if (isset($_POST["idTipoEliminar"])) {
+    $eliminar = new ControladorTiposActividades();
+    $respuesta = $eliminar->ctrEliminarTipo();
+    echo $respuesta;
+    exit;
 }

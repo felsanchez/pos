@@ -144,6 +144,8 @@ MODAL AGREGAR TIPO DE VARIANTE
 
       <form role="form" method="post">
 
+        <?php CSRF::insertToken(); ?>
+
         <!-- CABEZA DEL MODAL -->
         <div class="modal-header" style="background:#3c8dbc; color:white">
           <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -208,6 +210,8 @@ MODAL AGREGAR OPCIÓN
     <div class="modal-content">
 
       <form role="form" method="post">
+
+        <?php CSRF::insertToken(); ?>
 
         <!-- CABEZA DEL MODAL -->
         <div class="modal-header" style="background:#3c8dbc; color:white">
@@ -281,6 +285,8 @@ MODAL EDITAR TIPO DE VARIANTE
 
       <form role="form" method="post">
 
+        <?php CSRF::insertToken(); ?>
+
         <!-- CABEZA DEL MODAL -->
         <div class="modal-header" style="background:#3c8dbc; color:white">
           <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -346,6 +352,8 @@ MODAL EDITAR OPCIÓN
     <div class="modal-content">
 
       <form role="form" method="post">
+
+        <?php CSRF::insertToken(); ?>
 
         <!-- CABEZA DEL MODAL -->
         <div class="modal-header" style="background:#3c8dbc; color:white">

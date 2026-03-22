@@ -50,6 +50,8 @@ $configuracion = ControladorFacturacion::ctrMostrarConfiguracion();
 
                     <form role="form" method="post">
 
+        <?php CSRF::insertToken(); ?>
+
                         <div class="box-body">
 
                             <div class="row">

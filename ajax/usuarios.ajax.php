@@ -12,20 +12,18 @@ require_once "../modelos/csrf.php";
 // TODO: Implementar solución para agregar token CSRF a FormData en JavaScript
 // Las peticiones de formularios HTML siguen protegidas por CSRF en los controladores
 
-/*
 // VALIDAR CSRF para todas las peticiones POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	// Validar token CSRF
 	if (!CSRF::validateToken()) {
 		// Log para debugging
-		error_log("CSRF validation failed. Token in session: " . ($_SESSION['csrf_token'] ?? 'none'));
+		error_log("CSRF validation failed in usuarios.ajax.php. Token in session: " . ($_SESSION['csrf_token'] ?? 'none'));
 		error_log("Token received: " . ($_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? 'none'));
 
 		http_response_code(403);
 		die(json_encode(['error' => 'Token CSRF inválido', 'success' => false]));
 	}
 }
-*/
 
 class AjaxUsuarios
 {
@@ -86,6 +84,16 @@ class AjaxUsuarios
 	}
 
 
+}
+
+/*=============================================
+ELIMINAR USUARIO
+=============================================*/
+if (isset($_POST["idUsuarioEliminar"])) {
+	$eliminar = new ControladorUsuarios();
+	$respuesta = $eliminar->ctrBorrarUsuario();
+	echo $respuesta;
+	exit;
 }
 
 /*=============================================

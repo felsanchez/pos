@@ -27,6 +27,26 @@ class ControladorProductos
 
 		if (isset($_POST["nuevaDescripcion"])) {
 
+			/*=============================================
+			VALIDAR CSRF
+			=============================================*/
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "productos";
+						}
+					})
+				</script>';
+				return;
+			}
+
 			// Verificar si el producto tiene variantes
 
 			$tieneVariantes = isset($_POST["tieneVariantes"]) ? 1 : 0;
@@ -498,6 +518,26 @@ class ControladorProductos
 
 		if (isset($_POST["editarDescripcion"])) {
 
+			/*=============================================
+			VALIDAR CSRF
+			=============================================*/
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "productos";
+						}
+					})
+				</script>';
+				return;
+			}
+
 			if (
 				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarDescripcion"]) &&
 				preg_match('/^[0-9]+$/', $_POST["editarStock"]) &&
@@ -887,48 +927,69 @@ class ControladorProductos
 	static public function ctrEliminarProducto()
 	{
 
-		if (isset($_GET["idProducto"])) {
+		if (isset($_GET["idProducto"]) || isset($_POST["idProductoEliminar"])) {
+
+			/*=============================================
+			VALIDAR CSRF (Solo si es POST)
+			=============================================*/
+			if ($_SERVER['REQUEST_METHOD'] == 'POST' && !CSRF::validateToken()) {
+				if (isset($_POST["idProductoEliminar"])) {
+					return "error_csrf";
+				}
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "productos";
+						}
+					})
+				</script>';
+				return;
+			}
 
 			$tabla = "productos";
-			$datos = $_GET["idProducto"];
+			$idProducto = isset($_GET["idProducto"]) ? $_GET["idProducto"] : $_POST["idProductoEliminar"];
 
-			if ($_GET["imagen"] != "" && $_GET["imagen"] != "vistas/img/productos/default/anonymous.png") {
+			// Obtener información del producto desde la DB para validar rutas
+			$producto = ModeloProductos::mdlMostrarProductos($tabla, "id", $idProducto, null);
 
-				unlink($_GET["imagen"]);
-				rmdir('vistas/img/productos/' . $_GET["codigo"]);
+			if (!$producto) {
+				if (isset($_POST["idProductoEliminar"])) {
+					return "error_no_existe";
+				}
+				return;
 			}
 
-			// Verificamos si el producto está asociado a alguna venta
-			/*
-			$ventas = ModeloVentas::mdlMostrarVentas("ventas", null, null); 
-			foreach ($ventas as $venta) {	
-				$productosVenta = json_decode($venta["productos"], true);	
-				foreach ($productosVenta as $producto) {
-					if ($producto["id"] == $datos) {	
-						echo '<script>
-							swal({
-								type: "error",
-								title: "¡No se puede eliminar!",
-								text: "Este producto está asociado a una o más ventas.",
-								showConfirmButton: true,
-								confirmButtonText: "Cerrar"
-							}).then((result) => {
-								if (result.value) {
-									window.location = "productos";
-								}
-							});
-						</script>';
-						return; // Cancelamos eliminación
-					}
+			$imagen = $producto["imagen"];
+			$codigo = $producto["codigo"];
+
+			// Borrar imagen y directorio si no es la por defecto
+			if ($imagen != "" && $imagen != "vistas/img/productos/default/anonymous.png") {
+
+				// Usar rutas relativas al root para unlink
+				$rutaImagen = $imagen;
+				if (file_exists($rutaImagen)) {
+					unlink($rutaImagen);
+				}
+
+				$directorio = 'vistas/img/productos/' . $codigo;
+				if (is_dir($directorio)) {
+					// rmdir solo funciona si el directorio está vacío
+					rmdir($directorio);
 				}
 			}
-			*/
 
-
-			$respuesta = ModeloProductos::mdlEliminarProducto($tabla, $datos);
+			$respuesta = ModeloProductos::mdlEliminarProducto($tabla, $idProducto);
 
 			if ($respuesta == "ok") {
-
+				if (isset($_POST["idProductoEliminar"])) {
+					return "ok";
+				}
 				echo '<script>
 					swal({
 						type: "success",
@@ -943,10 +1004,7 @@ class ControladorProductos
 						})
 			     	</script>';
 			}
-
 		}
-
-
 	}
 
 

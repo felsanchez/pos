@@ -114,6 +114,7 @@ $(document).ready(function () {
                 // Generar código basado en categoría
                 var data = new FormData();
                 data.append("idCategoria", idCategoria);
+                data.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
                 $.ajax({
                     url: "ajax/productos.ajax.php",
@@ -265,6 +266,7 @@ FUNCIONES PARA VARIANTES
 function cargarTiposVariantes() {
     var datos = new FormData();
     datos.append("obtenerTiposVariantes", "ok");
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     $.ajax({
         url: "ajax/productos.ajax.php",
@@ -356,6 +358,7 @@ function removerTipoVariante(idTipo) {
 function cargarOpcionesVariante(idTipo, nombreTipo) {
     var datos = new FormData();
     datos.append("obtenerOpcionesVariante", idTipo);
+    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
     $.ajax({
         url: "ajax/productos.ajax.php",

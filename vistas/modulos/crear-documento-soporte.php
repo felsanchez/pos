@@ -37,32 +37,7 @@ if ($ultimoDS) {
 ?>
 
 <?php
-$crearDS = new ControladorFactus();
-$respuesta = $crearDS->ctrCrearDocumentoSoporte();
-
-if (isset($respuesta) && $respuesta["error"] == false) {
-    echo '<script>
-      swal({
-        type: "success",
-        title: "¡Documento Soporte generado correctamente!",
-        //text: "Número: ' . $respuesta["numero"] . '",
-        showConfirmButton: true,
-        confirmButtonText: "Cerrar"
-      }).then(function(result){
-        window.location = "documentos-soporte";
-      });
-    </script>';
-} else if (isset($respuesta) && $respuesta["error"] == true) {
-    echo '<script>
-      swal({
-        type: "error",
-        title: "¡Error al generar Documento Soporte!",
-        text: "' . addslashes($respuesta["mensaje"]) . '",
-        showConfirmButton: true,
-        confirmButtonText: "Cerrar"
-      });
-    </script>';
-}
+// El guardado ahora se maneja vía AJAX en documentos-soporte.js
 ?>
 
 <div class="content-wrapper">
@@ -93,6 +68,8 @@ if (isset($respuesta) && $respuesta["error"] == false) {
                     <div class="box-header with-border"></div>
 
                     <form role="form" method="post" class="formularioDocumentoSoporte">
+
+                        <?php CSRF::insertToken(); ?>
 
                         <div class="box-body">
 

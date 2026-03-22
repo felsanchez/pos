@@ -81,7 +81,8 @@ require_once "modelos/productos.modelo.php";
             Crear Nota Crédito
             <?php if ($idVenta && $venta): ?>
                 <small>Factura #<?php echo $venta["numero_factura"]; ?></small>
-            <?php endif; ?>
+            <?php
+endif; ?>
         </h1>
         <ol class="breadcrumb">
             <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
@@ -108,10 +109,10 @@ require_once "modelos/productos.modelo.php";
                                     <span class="label label-warning"
                                         style="font-size: 1.1em; padding: 4px 10px; margin-left: 8px;">
                                         <?php
-                                        $prefijo = $rangoNC["prefijo"] ?? "NC";
-                                        $proximoNumero = ModeloFactus::mdlObtenerSiguienteConsecutivoNC();
-                                        echo htmlspecialchars($prefijo . $proximoNumero);
-                                        ?>
+$prefijo = $rangoNC["prefijo"] ?? "NC";
+$proximoNumero = ModeloFactus::mdlObtenerSiguienteConsecutivoNC();
+echo htmlspecialchars($prefijo . $proximoNumero);
+?>
                                     </span>
                                     <small style="color: white; margin-left: 10px;">
                                         (Rango: <?php echo htmlspecialchars($rangoNC["numero_desde"]); ?> -
@@ -121,13 +122,17 @@ require_once "modelos/productos.modelo.php";
                                         <small style="color: white; margin-left: 10px;">
                                             (Factura Referencia: <?php echo $venta["numero_factura"]; ?>)
                                         </small>
-                                    <?php endif; ?>
+                                    <?php
+endif; ?>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <form role="form" method="post" class="formularioNotaCredito" id="formNotaCredito">
+                        
+                        <?php CSRF::insertToken(); ?>
+
                         <input type="hidden" name="idUsuarioSesion" id="idUsuarioSesion" value="<?php echo $_SESSION['id'] ?? ''; ?>">
 
                         <div class="box-body">
@@ -147,23 +152,24 @@ require_once "modelos/productos.modelo.php";
                                                 style="width: 100%;">
                                                 <option value="">Seleccione una Factura...</option>
                                                 <?php
-                                                // Cargar todas las facturas en estado "enviada" o "aceptada"
-                                                $ventas = ControladorVentas::ctrMostrarVentas(null, null);
-                                                foreach ($ventas as $key => $value) {
-                                                    if ($value["estado_dian"] == "enviada" || $value["estado_dian"] == "aceptada") {
-                                                        $clienteVenta = ControladorClientes::ctrMostrarClientes("id", $value["id_cliente"]);
-                                                        $nombreCliente = $clienteVenta ? $clienteVenta["nombre"] : "Cliente Desconocido";
+    // Cargar todas las facturas en estado "enviada" o "aceptada"
+    $ventas = ControladorVentas::ctrMostrarVentas(null, null);
+    foreach ($ventas as $key => $value) {
+        if ($value["estado_dian"] == "enviada" || $value["estado_dian"] == "aceptada") {
+            $clienteVenta = ControladorClientes::ctrMostrarClientes("id", $value["id_cliente"]);
+            $nombreCliente = $clienteVenta ? $clienteVenta["nombre"] : "Cliente Desconocido";
 
-                                                        echo '<option value="' . $value["id"] . '">' . $value["numero_factura"] . ' - ' . $nombreCliente . ' - $' . number_format($value["total"], 2) . '</option>';
-                                                    }
-                                                }
-                                                ?>
+            echo '<option value="' . $value["id"] . '">' . $value["numero_factura"] . ' - ' . $nombreCliente . ' - $' . number_format($value["total"], 2) . '</option>';
+        }
+    }
+?>
                                             </select>
                                         </div>
                                     </div>
                                 </div>
 
-                            <?php else: ?>
+                            <?php
+else: ?>
 
                                 <div class="box">
 
@@ -319,18 +325,18 @@ require_once "modelos/productos.modelo.php";
                                     </thead>
                                     <tbody>
                                         <?php
-                                        foreach ($productos as $key => $prod) {
-                                            // Buscamos info extra del producto si es necesario (ej. impuestos)
-                                            // Por ahora usamos los datos guardados en la venta para integridad
-                                            $totalFila = $prod["precio"] * $prod["cantidad"]; // Precio incluye impuesto según lógica pos
-                                    
-                                            // Recuperar código si falta
-                                            $codigoProducto = $prod["codigo"] ?? "";
-                                            if (empty($codigoProducto)) {
-                                                $infoP = ModeloProductos::mdlMostrarProductos("productos", "id", $prod["id"], "id");
-                                                $codigoProducto = $infoP["codigo"] ?? "";
-                                            }
-                                            ?>
+    foreach ($productos as $key => $prod) {
+        // Buscamos info extra del producto si es necesario (ej. impuestos)
+        // Por ahora usamos los datos guardados en la venta para integridad
+        $totalFila = $prod["precio"] * $prod["cantidad"]; // Precio incluye impuesto según lógica pos
+
+        // Recuperar código si falta
+        $codigoProducto = $prod["codigo"] ?? "";
+        if (empty($codigoProducto)) {
+            $infoP = ModeloProductos::mdlMostrarProductos("productos", "id", $prod["id"], "id");
+            $codigoProducto = $infoP["codigo"] ?? "";
+        }
+?>
                                             <tr>
                                                 <td class="text-center">
                                                     <input type="checkbox" class="checkProducto" name="productosSeleccionados[]"
@@ -368,8 +374,8 @@ require_once "modelos/productos.modelo.php";
                                                     value="<?php echo $prod["total"]; ?>">
                                             </tr>
                                             <?php
-                                        }
-                                        ?>
+    }
+?>
                                     </tbody>
                                 </table>
                             </div>
@@ -431,7 +437,8 @@ require_once "modelos/productos.modelo.php";
 
                             <input type="hidden" name="listaProductosNC" id="listaProductosNC">
 
-                        <?php endif; ?> <!-- Fin validación idVenta -->
+                        <?php
+endif; ?> <!-- Fin validación idVenta -->
 
                 </div> <!-- box-body -->
 
@@ -440,7 +447,8 @@ require_once "modelos/productos.modelo.php";
                         onclick="window.location='notas-credito'">Cancelar</button>
                     <?php if ($idVenta && $venta): ?>
                         <button type="submit" class="btn btn-primary pull-right">Guardar</button>
-                    <?php endif; ?>
+                    <?php
+endif; ?>
                 </div>
 
                 </form>

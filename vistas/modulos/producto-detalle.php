@@ -67,6 +67,8 @@ if ($modoEdicion) {
             <div class="col-md-12">
                 <form role="form" method="post" enctype="multipart/form-data" id="formProducto">
 
+        <?php CSRF::insertToken(); ?>
+
                     <!-- ============================================= -->
                     <!-- SECCIÓN 1: INFORMACIÓN BÁSICA -->
                     <!-- ============================================= -->

@@ -293,6 +293,7 @@ $("#nuevaCategoria").change(function () {
 
 	var datos = new FormData();
 	datos.append("idCategoria", idCategoria);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 
@@ -336,6 +337,7 @@ $("#nuevoCodigo").on("blur change", function () {
 
 	var datos = new FormData();
 	datos.append("validarCodigo", codigo);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 		url: "ajax/productos.ajax.php",
@@ -532,8 +534,40 @@ $(".tablaProductos tbody").on("click", "button.btnEliminarProducto", function ()
 
 		if (result.value) {
 
-			window.location = "index.php?ruta=productos&idProducto=" + idProducto + "&imagen=" + imagen + "&codigo=" + codigo;
+			var datos = new FormData();
+			datos.append("idProductoEliminar", idProducto);
+			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
+			$.ajax({
+				url: "ajax/productos.ajax.php",
+				method: "POST",
+				data: datos,
+				cache: false,
+				contentType: false,
+				processData: false,
+				success: function (respuesta) {
+					if (respuesta == "ok") {
+						swal({
+							type: "success",
+							title: "¡El producto ha sido borrado correctamente!",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then((result) => {
+							if (result.value) {
+								window.location = "productos";
+							}
+						});
+					} else {
+						swal({
+							type: "error",
+							title: "Error",
+							text: "No se pudo eliminar el producto. " + respuesta,
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					}
+				}
+			})
 		}
 
 	})
@@ -555,6 +589,7 @@ $("#nuevaDescripcion").change(function () {
 
 	var datos = new FormData();
 	datos.append("validarDescripcion", descripcion);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 		url: "ajax/productos.ajax.php",
@@ -1379,6 +1414,7 @@ $(document).on('click', '.btnExpandirVariantes', function () {
 	// Cargar variantes vía AJAX
 	var datos = new FormData();
 	datos.append("obtenerVariantesProducto", idProducto);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 		url: "ajax/productos.ajax.php",
@@ -1454,6 +1490,7 @@ $(document).on('click', '.btnActivarVariante', function () {
 	var datos = new FormData();
 	datos.append("activarVariante", idVariante);
 	datos.append("nuevoEstado", nuevoEstado);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 
@@ -1572,6 +1609,7 @@ $("#formEditarVariante").on("submit", function (e) {
 	datos.append("editarVariante", idVariante);
 	datos.append("editarPrecioAdicionalVariante", precioAdicional);
 	datos.append("editarStockVariante", stock);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 
@@ -1674,6 +1712,7 @@ function cargarVariantesExistentes(callback) {
 
 	var datos = new FormData();
 	datos.append("obtenerVariantesParaEditar", idProductoEditando);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 		url: "ajax/productos.ajax.php",
@@ -1728,6 +1767,7 @@ function cargarTiposVariantesEditar() {
 
 	var datos = new FormData();
 	datos.append("obtenerTiposVariantes", true);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 		url: "ajax/productos.ajax.php",
@@ -1837,6 +1877,7 @@ function cargarOpcionesVarianteEditar(idTipo, nombreTipo) {
 
 	var datos = new FormData();
 	datos.append("obtenerOpcionesVariante", idTipo);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
 	$.ajax({
 		url: "ajax/productos.ajax.php",

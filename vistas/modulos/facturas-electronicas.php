@@ -329,6 +329,8 @@ if ($xml) {
             <input type="hidden" name="fechaFinal" id="fechaFinal"
               value="<?php echo isset($_GET["fechaFinal"]) ? $_GET["fechaFinal"] : null; ?>">
 
+            <?php CSRF::insertToken(); ?>
+
             <!-- Filtro por cliente -->
             <div class="filtro-cliente">
               <select name="cliente" class="form-control select-cliente" style="width: 200px;">
@@ -340,7 +342,7 @@ if ($xml) {
 
                 foreach ($clientes as $key => $valueCliente) {
                   $selected = (isset($_GET['cliente']) && $_GET['cliente'] == $valueCliente["id"]) ? 'selected' : '';
-                  echo '<option value="' . $valueCliente["id"] . '" ' . $selected . '>' . $valueCliente["nombre"] . '</option>';
+                  echo '<option value="' . e($valueCliente["id"]) . '" ' . $selected . '>' . e($valueCliente["nombre"]) . '</option>';
                 }
                 ?>
               </select>
@@ -357,7 +359,7 @@ if ($xml) {
 
                 foreach ($usuarios as $key => $valueUsuario) {
                   $selected = (isset($_GET['usuario']) && $_GET['usuario'] == $valueUsuario["id"]) ? 'selected' : '';
-                  echo '<option value="' . $valueUsuario["id"] . '" ' . $selected . '>' . $valueUsuario["nombre"] . '</option>';
+                  echo '<option value="' . e($valueUsuario["id"]) . '" ' . $selected . '>' . e($valueUsuario["nombre"]) . '</option>';
                 }
                 ?>
               </select>
@@ -595,8 +597,8 @@ if ($xml) {
                   }
                 }
 
-                echo '<td>' . ($key + 1) . '</td>
-                      <td' . ($esBorrador ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . $numeroMostrar . '</td>';
+                echo '<td>' . e($key + 1) . '</td>
+                      <td' . ($esBorrador ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . e($numeroMostrar) . '</td>';
 
                 // Usar nombres que ya vienen del JOIN en la consulta SQL
                 $nombreCliente = !empty($value["nombre_cliente"]) ? $value["nombre_cliente"] : "Cliente no encontrado";
@@ -607,15 +609,15 @@ if ($xml) {
                                   <span class="btnVerClienteDesdeVenta"
                                         data-toggle="modal"
                                         data-target="#modalEditarCliente"
-                                        idCliente="' . $value["id_cliente"] . '"
+                                        idCliente="' . e($value["id_cliente"]) . '"
                                         style="cursor: pointer; color: #337ab7; text-decoration: underline;">
-                                      ' . $nombreCliente . '
+                                      ' . e($nombreCliente) . '
                                   </span>
                               </td>';
 
-                echo '<td>' . $nombreVendedor . '</td> 
+                echo '<td>' . e($nombreVendedor) . '</td> 
 
-                        <td>' . $moneda . ' ' . $value["metodo_pago"] . '</td>';
+                        <td>' . e($moneda) . ' ' . e($value["metodo_pago"]) . '</td>';
 
                 // Validación de la foto
                 if ($value["imagen"] != "") {
@@ -624,7 +626,7 @@ if ($xml) {
                   echo '<td><img src="vistas/img/ventas/default/sinventa.png" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="vistas/img/ventas/default/sinventa.png" data-idventa="' . $value["id"] . '"></td>';
                 }
 
-                echo '<td>' . $moneda . ' ' . number_format($value["total"], 2) . '</td>';
+                echo '<td>' . e($moneda) . ' ' . e(number_format($value["total"], 2)) . '</td>';
 
                 // Estado DIAN
                 $estadoDian = isset($value["estado_dian"]) ? $value["estado_dian"] : 'pendiente';
@@ -640,7 +642,7 @@ if ($xml) {
                 }
                 echo '<td>' . $badgeDian . '</td>';
 
-                echo '<td>' . $value['notas'] . '</td>';
+                echo '<td>' . e($value['notas']) . '</td>';
 
                 $estadoDian = isset($value["estado_dian"]) ? $value["estado_dian"] : "";
                 $esEditable = ($estadoDian != "enviada" && $estadoDian != "aceptada");
@@ -648,27 +650,27 @@ if ($xml) {
                 $contentEditableAttr = $esEditable ? 'contenteditable="true"' : '';
                 $claseEditable = $esEditable ? 'celda-observacion' : '';
 
-                echo '<td ' . $contentEditableAttr . ' class="' . $claseEditable . '" data-id="' . $value["id"] . '">' . $value["observacion"] . '</td>
+                echo '<td ' . $contentEditableAttr . ' class="' . $claseEditable . '" data-id="' . e($value["id"]) . '">' . e($value["observacion"]) . '</td>
 
                         
-                       <td>' . $value["fecha"];
+                       <td>' . e($value["fecha"]);
 
                 // 1. Botón Eliminar - Solo Administrador
                 // 1. Botón Eliminar - Solo Administrador
                 if ($_SESSION["perfil"] == "Administrador") {
-                  echo '<button class="btn btn-danger btn-xs solo-movil btnEliminarVenta" style="float: right;" idVenta="' . $value["id"] . '">
+                  echo '<button class="btn btn-danger btn-xs solo-movil btnEliminarVenta" style="float: right;" idVenta="' . e($value["id"]) . '">
                                       <i class="fa fa-times"></i>
                                     </button>';
                 }
 
                 // 2. Botón Imprimir
-                echo '<button class="btn btn-info btn-xs solo-movil btnImprimirFactura" style="float: right;" codigoVenta="' . $value["codigo"] . '">
+                echo '<button class="btn btn-info btn-xs solo-movil btnImprimirFactura" style="float: right;" codigoVenta="' . e($value["codigo"]) . '">
                               <i class="fa fa-print"></i>
                             </button>
                             ';
 
                 // 3. Botón Editar (Ver)
-                echo '<button class="btn btn-warning btn-xs solo-movil btnEditarVenta" style="float: right;" idVenta="' . $value["id"] . '">
+                echo '<button class="btn btn-warning btn-xs solo-movil btnEditarVenta" style="float: right;" idVenta="' . e($value["id"]) . '">
                               <i class="fa fa-eye"></i>
                             </button>';
 

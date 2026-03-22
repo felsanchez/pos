@@ -26,6 +26,26 @@ class ControladorConfiguracion
 		if (isset($_POST["nombreEmpresa"])) {
 
 			/*=============================================
+			VALIDAR CSRF
+			=============================================*/
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "configuracion";
+						}
+					})
+				</script>';
+				return;
+			}
+
+			/*=============================================
 			VALIDAR LOGO
 			=============================================*/
 

@@ -1,10 +1,28 @@
 <?php
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+require_once __DIR__ . "/../modelos/session-manager.php";
+SessionManager::startSecure();
 
-session_start();
+require_once __DIR__ . "/../controladores/factus.controlador.php";
+require_once __DIR__ . "/../modelos/factus.modelo.php";
+require_once __DIR__ . "/../controladores/clientes.controlador.php";
+require_once __DIR__ . "/../modelos/clientes.modelo.php";
+require_once __DIR__ . "/../controladores/productos.controlador.php";
+require_once __DIR__ . "/../modelos/productos.modelo.php";
+require_once __DIR__ . "/../controladores/configuracion.controlador.php";
+require_once __DIR__ . "/../modelos/configuracion.modelo.php";
+require_once __DIR__ . "/../modelos/conexion.php";
+require_once __DIR__ . "/../modelos/csrf.php";
 
-require_once "../controladores/factus.controlador.php";
-require_once "../modelos/factus.modelo.php";
-require_once "../modelos/conexion.php";
+/*
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!CSRF::validateToken()) {
+        http_response_code(403);
+        die(json_encode(['error' => 'Token CSRF inválido', 'success' => false]));
+    }
+}
+*/
 
 class AjaxFactus
 {
@@ -435,6 +453,11 @@ class AjaxFactus
 		}
 	}
 
+	public function ajaxCrearDocumentoSoporte()
+	{
+		$resultado = ControladorFactus::ctrCrearDocumentoSoporte();
+		echo json_encode($resultado);
+	}
 }
 
 /*=============================================
@@ -471,6 +494,9 @@ if (isset($_POST["accion"])) {
 		case "eliminarDS":
 			$factus->ajaxEliminarDocumentoSoporte();
 			break;
+		case "crearDS":
+			$factus->ajaxCrearDocumentoSoporte();
+			break;
 		case "crearNotaAjusteDS":
 			$factus->ajaxCrearNotaAjusteDS();
 			break;
@@ -485,6 +511,12 @@ if (isset($_POST["accion"])) {
 			break;
 		case "obtenerNotasAjusteDS":
 			$factus->ajaxObtenerNotasAjusteDS();
+			break;
+		case "eliminarNotaCredito":
+			$factusEliminar = new ControladorFactus();
+			$respuesta = $factusEliminar->ctrEliminarNotaCredito();
+			echo $respuesta;
+			exit;
 			break;
 		default:
 			echo json_encode(array("error" => true, "mensaje" => "Acción no válida"));

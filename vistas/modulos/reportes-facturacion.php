@@ -53,20 +53,20 @@
                   <select class="form-control" id="seleccionarClienteReporte" style="display:block; width: 100%;">
                     <option value="todos">Todos los clientes</option>
                     <?php
-                    $clientes = ControladorClientes::ctrMostrarClientes(null, null);
-                    foreach ($clientes as $key => $value) {
-                      echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                    }
-                    ?>
+$clientes = ControladorClientes::ctrMostrarClientes(null, null);
+foreach ($clientes as $key => $value) {
+  echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+}
+?>
                   </select>
                   <select class="form-control" id="seleccionarProveedorReporte" style="display:none; width: 100%;">
                     <option value="todos">Todos los proveedores</option>
                     <?php
-                    $proveedores = ControladorProveedores::ctrMostrarProveedores(null, null);
-                    foreach ($proveedores as $key => $value) {
-                      echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                    }
-                    ?>
+$proveedores = ControladorProveedores::ctrMostrarProveedores(null, null);
+foreach ($proveedores as $key => $value) {
+  echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+}
+?>
                   </select>
                 </div>
               </div>
@@ -77,11 +77,11 @@
                   <select class="form-control" id="seleccionarUsuarioReporte" style="width: 100%;">
                     <option value="todos">Todos los usuarios</option>
                     <?php
-                    $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
-                    foreach ($usuarios as $key => $value) {
-                      echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                    }
-                    ?>
+$usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
+foreach ($usuarios as $key => $value) {
+  echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+}
+?>
                   </select>
                 </div>
               </div>
@@ -172,7 +172,7 @@
                   <th>Fecha</th>
                   <th>Monto Total</th>
                   <th>Estado</th>
-                  <th>Acciones</th>
+                  <th>Ver</th>
                 </tr>
               </thead>
             </table>

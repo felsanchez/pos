@@ -167,6 +167,7 @@ $("#btnEliminarSeleccionados").on("click", function () {
         if (result.value) {
             var datos = new FormData();
             datos.append("idsEliminar", JSON.stringify(ids));
+            datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
 
             $.ajax({
                 url: "ajax/seguimiento.ajax.php",

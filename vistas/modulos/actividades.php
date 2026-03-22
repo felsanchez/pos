@@ -320,6 +320,8 @@ MODAL AGREGAR actividad
 
       <form role="form" method="post" enctype="multipart/form-data">
 
+        <?php CSRF::insertToken(); ?>
+
         <!--=====================================
       CABEZA DEL MODAL
       ======================================-->
@@ -514,6 +516,8 @@ MODAL EDITAR Actividad
     <div class="modal-content">
 
       <form role="form" method="post">
+
+        <?php CSRF::insertToken(); ?>
 
         <!--=====================================
             CABEZA DEL MODAL
@@ -712,6 +716,8 @@ MODAL GESTIONAR ESTADOS
           </div>
           <div class="panel-body">
             <form role="form" method="post" id="formAgregarEstado">
+
+        <?php CSRF::insertToken(); ?>
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
@@ -821,6 +827,8 @@ MODAL EDITAR ESTADO
 
       <form role="form" method="post">
 
+        <?php CSRF::insertToken(); ?>
+
         <!--=====================================
         CABEZA DEL MODAL
         ======================================-->
@@ -905,6 +913,8 @@ MODAL GESTIONAR TIPOS
           </div>
           <div class="panel-body">
             <form role="form" method="post" id="formAgregarTipo">
+
+        <?php CSRF::insertToken(); ?>
               <div class="row">
                 <div class="col-md-9">
                   <div class="form-group">
@@ -986,6 +996,8 @@ MODAL EDITAR TIPO
     <div class="modal-content">
 
       <form role="form" method="post">
+
+        <?php CSRF::insertToken(); ?>
 
         <!--=====================================
         CABEZA DEL MODAL

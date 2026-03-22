@@ -172,6 +172,8 @@ MODAL AGREGAR Proveedor
 
       <form role="form" method="post" enctype="multipart/form-data">
 
+        <?php CSRF::insertToken(); ?>
+
         <!--=====================================
       CABEZA DEL MODAL
       ======================================-->
@@ -370,6 +372,8 @@ MODAL EDITAR Proveedor
     <div class="modal-content">
 
       <form role="form" method="post" enctype="multipart/form-data">
+
+        <?php CSRF::insertToken(); ?>
 
         <!--=====================================
       CABEZA DEL MODAL

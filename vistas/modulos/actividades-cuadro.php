@@ -282,6 +282,8 @@ MODAL AGREGAR actividad
 
       <form role="form" method="post" enctype="multipart/form-data">
 
+        <?php CSRF::insertToken(); ?>
+
  
 
       <!--=====================================

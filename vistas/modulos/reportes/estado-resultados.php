@@ -46,10 +46,10 @@
       <div class="filtro-grupo-fin">
         <label for="tipo-fecha-fin">Filtrar por fecha</label>
         <select id="tipo-fecha-fin" name="tipo" class="form-control">
-          <option value="todo">Todas las fechas</option>
+          <option value="todo" selected>Todas las fechas</option>
           <option value="hoy">Hoy</option>
           <option value="ayer">Ayer</option>
-          <option value="mes" selected>Mes actual</option>
+          <option value="mes">Mes actual</option>
           <option value="personalizado">Personalizado</option>
         </select>
 

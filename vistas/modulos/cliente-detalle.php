@@ -60,6 +60,8 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
     <section class="content">
         <form role="form" method="post" id="formCliente">
 
+        <?php CSRF::insertToken(); ?>
+
             <?php if ($modoEdicion): ?>
                 <input type="hidden" name="idCliente" value="<?php echo $cliente['id']; ?>">
             <?php endif; ?>
