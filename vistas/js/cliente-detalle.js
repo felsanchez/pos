@@ -89,7 +89,7 @@ $(document).ready(function () {
             swal({
                 title: "Error",
                 text: "El dígito de verificación es obligatorio para NIT",
-                type: "error",
+                icon: "error",
                 confirmButtonText: "Cerrar"
             });
             return false;
@@ -104,7 +104,7 @@ $(document).ready(function () {
             swal({
                 title: "Error",
                 text: "La razón social es obligatoria para personas jurídicas",
-                type: "error",
+                icon: "error",
                 confirmButtonText: "Cerrar"
             });
             return false;
@@ -117,7 +117,7 @@ $(document).ready(function () {
             swal({
                 title: "Error",
                 text: "El formato del email no es válido",
-                type: "error",
+                icon: "error",
                 confirmButtonText: "Cerrar"
             });
             return false;
@@ -139,7 +139,7 @@ $(document).ready(function () {
 
         var datos = new FormData();
         datos.append("validarDocumento", documento);
-        datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+        // csrf_token removido - manejado por csrf-helper.js
         datos.append("validarTelefono", telefono);
         if (idCliente) {
             datos.append("idClienteValidacion", idCliente);
@@ -158,7 +158,7 @@ $(document).ready(function () {
                     swal({
                         title: "¡Advertencia!",
                         text: respuesta.mensaje,
-                        type: "warning",
+                        icon: "warning",
                         confirmButtonText: "Cerrar"
                     });
                 } else {
@@ -176,7 +176,7 @@ $(document).ready(function () {
                 swal({
                     title: "Error técnico",
                     text: "No se pudo validar la información. Detalle: " + jqXHR.status + " " + errorThrown + (jqXHR.responseText ? "\n" + jqXHR.responseText.substring(0, 100) : ""),
-                    type: "error",
+                    icon: "error",
                     confirmButtonText: "Cerrar"
                 });
             }

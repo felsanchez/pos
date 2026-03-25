@@ -17,7 +17,7 @@ $(document).on("click", ".btnEditarActividad", function () {
 
 	var datos = new FormData();
 	datos.append("idActividad", idActividad);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 
@@ -82,7 +82,7 @@ $(document).on("click", ".btnEliminarActividad", function () {
 
 		title: '¿Esta seguro de borrar la actividad?',
 		text: "¡Si no lo está puede cancelar la acción!",
-		type: 'warning',
+		icon: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -94,7 +94,7 @@ $(document).on("click", ".btnEliminarActividad", function () {
 
 			var datos = new FormData();
 			datos.append("idActividadEliminar", idActividad);
-			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+			// csrf_token removido - manejado por csrf-helper.js
 
 			$.ajax({
 				url: "ajax/actividades.ajax.php",
@@ -106,7 +106,7 @@ $(document).on("click", ".btnEliminarActividad", function () {
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							type: "success",
+							icon: "success",
 							title: "¡Eliminada!",
 							text: "La actividad ha sido eliminada correctamente.",
 							showConfirmButton: true,
@@ -118,7 +118,7 @@ $(document).on("click", ".btnEliminarActividad", function () {
 						});
 					} else {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "Error",
 							text: "No se pudo eliminar la actividad. " + respuesta,
 							showConfirmButton: true,
@@ -289,7 +289,7 @@ $("#modalGestionarTipos").on("click", ".btnEditarTipoActividad", function () {
 
 	var datos = new FormData();
 	datos.append("idTipo", idTipo);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 
@@ -314,7 +314,7 @@ $("#modalGestionarTipos").on("click", ".btnEditarTipoActividad", function () {
 			console.error("Respuesta completa:", xhr.responseText);
 
 			swal({
-				type: "error",
+				icon: "error",
 				title: "Error al cargar el tipo",
 				text: "No se pudieron cargar los datos del tipo"
 			});
@@ -345,7 +345,7 @@ $(document).on("click", ".btnEliminarTipoActividad", function () {
 	swal({
 		title: '¿Está seguro de borrar el tipo "' + nombreTipo + '"?',
 		text: "¡Si no lo está puede cancelar la acción!",
-		type: 'warning',
+		icon: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -358,7 +358,7 @@ $(document).on("click", ".btnEliminarTipoActividad", function () {
 			var datos = new FormData();
 			datos.append("idTipoEliminar", idTipo);
 			datos.append("nombreTipo", nombreTipo);
-			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+			// csrf_token removido - manejado por csrf-helper.js
 
 			$.ajax({
 				url: "ajax/tipos-actividades.ajax.php",
@@ -370,7 +370,7 @@ $(document).on("click", ".btnEliminarTipoActividad", function () {
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							type: "success",
+							icon: "success",
 							title: "¡Eliminado!",
 							text: "El tipo ha sido eliminado correctamente.",
 							showConfirmButton: true,
@@ -382,7 +382,7 @@ $(document).on("click", ".btnEliminarTipoActividad", function () {
 						});
 					} else if (respuesta == "error_en_uso") {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "¡No se puede eliminar!",
 							text: "Este tipo está en uso por algunas actividades.",
 							showConfirmButton: true,
@@ -390,7 +390,7 @@ $(document).on("click", ".btnEliminarTipoActividad", function () {
 						});
 					} else {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "Error",
 							text: "No se pudo eliminar el tipo. " + respuesta,
 							showConfirmButton: true,

@@ -6,7 +6,7 @@ $(document).on("click", ".btnSinVentas", function (e) {
 	swal({
 		title: "Sin ventas",
 		text: "Este cliente no tiene ventas registradas",
-		type: "info",
+		icon: "info",
 		confirmButtonText: "Cerrar"
 	});
 });
@@ -17,7 +17,7 @@ $(document).on("click", ".btnEditarCliente", function () {
 
 	var datos = new FormData();
 	datos.append("idClienteEditar", idCliente);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 	//datos.append("idCliente", idCliente);
 
 	$.ajax({
@@ -72,7 +72,7 @@ $(document).on("click", ".btnEliminarCliente", function () {
 
 		title: mensaje,
 		text: "¡Si no lo está puede cancelar la acción!",
-		type: 'warning',
+		icon: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -84,7 +84,7 @@ $(document).on("click", ".btnEliminarCliente", function () {
 
 			var datos = new FormData();
 			datos.append("idClienteEliminar", idCliente);
-			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+			// csrf_token removido - manejado por csrf-helper.js
 			datos.append("ruta", ruta);
 
 			$.ajax({
@@ -97,7 +97,7 @@ $(document).on("click", ".btnEliminarCliente", function () {
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							type: "success",
+							icon: "success",
 							title: "¡El cliente ha sido borrado correctamente!",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
@@ -108,7 +108,7 @@ $(document).on("click", ".btnEliminarCliente", function () {
 						});
 					} else if (respuesta == "error_actividades") {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "¡No se puede eliminar!",
 							text: "El cliente tiene actividades asociadas.",
 							showConfirmButton: true,
@@ -116,7 +116,7 @@ $(document).on("click", ".btnEliminarCliente", function () {
 						});
 					} else if (respuesta == "error_ventas") {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "¡No se puede eliminar!",
 							text: "El cliente tiene ventas asociadas.",
 							showConfirmButton: true,
@@ -124,7 +124,7 @@ $(document).on("click", ".btnEliminarCliente", function () {
 						});
 					} else {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "Error",
 							text: "No se pudo eliminar el cliente. " + respuesta,
 							showConfirmButton: true,
@@ -151,7 +151,7 @@ $("#nuevoCliente").change(function () {
 
 	var datos = new FormData();
 	datos.append("validarCliente", nombre);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 		url: "ajax/clientes.ajax.php",

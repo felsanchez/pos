@@ -25,15 +25,13 @@ class ControladorFactus
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "configuracion-factus";
-						}
+					}).then(() => {
+						window.location = "configuracion-factus";
 					})
 				</script>';
 				return;
@@ -81,20 +79,18 @@ class ControladorFactus
 			if ($respuesta == "ok") {
 				echo '<script>
 					swal({
-						type: "success",
+						icon: "success",
 						title: "La configuración de Factus ha sido actualizada correctamente",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then(function(result) {
-						if (result.value) {
-							window.location = "configuracion-factus";
-						}
+					}).then(() => {
+						window.location = "configuracion-factus";
 					})
 				</script>';
 			} else {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error al actualizar la configuración",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -1320,14 +1316,12 @@ class ControladorFactus
 				if ($respuesta == "ok") {
 					echo '<script>
 					swal({
-						type: "success",
+						icon: "success",
 						title: "El Documento ha sido eliminado correctamente",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-						}).then(function(result){
-									if (result.value) {
+						}).then(() => {
 									window.location = "notas-credito";
-									}
 								})
 					</script>';
 				}
@@ -1339,14 +1333,12 @@ class ControladorFactus
 
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "No se puede eliminar esta nota porque ya fue enviada a la DIAN",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-						}).then(function(result){
-									if (result.value) {
+						}).then(() => {
 									window.location = "notas-credito";
-									}
 								})
 					</script>';
 			}

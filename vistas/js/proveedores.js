@@ -153,7 +153,7 @@ $(".tablaProveedores").on("click", ".btnEditarProveedor", function () {
 
 	var datos = new FormData();
 	datos.append("idProveedor", idProveedor);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 
@@ -197,7 +197,7 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 
 		title: '¿Esta seguro de borrar el proveedor?',
 		text: "¡Si no lo está puede cancelar la acción!",
-		type: 'warning',
+		icon: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -209,7 +209,7 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 
 			var datos = new FormData();
 			datos.append("idProveedorEliminar", idProveedor);
-			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+			// csrf_token removido - manejado por csrf-helper.js
 
 			$.ajax({
 				url: "ajax/proveedores.ajax.php",
@@ -221,7 +221,7 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							type: "success",
+							icon: "success",
 							title: "¡Borrado correctamente!",
 							text: "El proveedor ha sido borrado correctamente.",
 							showConfirmButton: true,
@@ -233,7 +233,7 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 						});
 					} else if (respuesta == "error_productos_asociados") {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "¡No se puede eliminar!",
 							text: "El proveedor tiene productos asociados.",
 							showConfirmButton: true,
@@ -241,7 +241,7 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 						});
 					} else {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "Error",
 							text: "No se pudo eliminar. " + respuesta,
 							showConfirmButton: true,
@@ -275,8 +275,8 @@ $(document).on('blur', '.celda-notas-proveedor', function () {
 		data: {
 			id: id,
 			notas: nuevasNotas,
-			accion: 'actualizarNotas',
-			csrf_token: $('meta[name="csrf-token"]').attr('content')
+			accion: 'actualizarNotas'
+			// csrf_token removido - manejado por csrf-helper.js
 		},
 
 		success: function (respuesta) {

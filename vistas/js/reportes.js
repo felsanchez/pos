@@ -63,19 +63,23 @@ RANGO DE FECHAS
 
   const form = e.target;
   const formData = new FormData(form);
-  formData.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+  // csrf_token removido - manejado por $.ajax + csrf-helper.js
 
-  fetch("vistas/modulos/reportes/filtro_tipos_pago.php", {
+  $.ajax({
+    url: "vistas/modulos/reportes/filtro_tipos_pago.php",
     method: "POST",
-    body: formData
-  })
-    .then(res => res.json())
-    .then(data => {
+    data: formData,
+    cache: false,
+    contentType: false,
+    processData: false,
+    dataType: "json",
+    success: function (data) {
       actualizarGraficoTiposPago(data);
-    })
-    .catch(err => {
-      console.error("Error al cargar los datos de tipos de pago:", err);
-    });
+    },
+    error: function (xhr, status, error) {
+      console.error("Error al cargar los datos de tipos de pago:", error);
+    }
+  });
 });
 
 function actualizarGraficoTiposPago(datosMetodoPago) {

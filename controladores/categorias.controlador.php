@@ -16,15 +16,13 @@ class ControladorCategorias{
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "categorias";
-						}
+					}).then(() => {
+						window.location = "categorias";
 					})
 				</script>';
 				return;
@@ -42,18 +40,13 @@ class ControladorCategorias{
 
 					echo '<script>
 					swal({
-						type: "success",
-						title: "!La categoría ha sido guardada correctamente!",
+						icon: "success",
+						title: "¡La categoría ha sido guardada correctamente!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
+						confirmButtonText: "Cerrar"
 
-						}).then((result)=>{
-
-							if(result.value){
-
-								window.location = "categorias";
-							}
+						}).then(() => {
+							window.location = "categorias";
 						});
 				</script>';
 				}
@@ -136,18 +129,13 @@ class ControladorCategorias{
 
 					echo '<script>
 					swal({
-						type: "success",
-						title: "!La categoría ha sido editada correctamente!",
+						icon: "success",
+						title: "¡La categoría ha sido editada correctamente!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
+						confirmButtonText: "Cerrar"
 
-						}).then((result)=>{
-
-							if(result.value){
-
-								window.location = "categorias";
-							}
+						}).then(() => {
+							window.location = "categorias";
 						});
 				</script>';
 				}
@@ -220,15 +208,13 @@ class ControladorCategorias{
 				}
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "¡No se puede eliminar!",
 						text: "La categoría tiene productos asociados.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result) => {
-						if (result.value) {
-							window.location = "categorias";
-						}
+					}).then(() => {
+						window.location = "categorias";
 					});
 				</script>';
 				return;
@@ -242,14 +228,12 @@ class ControladorCategorias{
 				}
 				echo '<script>
 					swal({
-						type: "success",
+						icon: "success",
 						title: "¡La categoría ha sido borrada correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result) => {
-						if (result.value) {
-							window.location = "categorias";
-						}
+					}).then(() => {
+						window.location = "categorias";
 					});
 				</script>';
 			}

@@ -293,7 +293,7 @@ $("#nuevaCategoria").change(function () {
 
 	var datos = new FormData();
 	datos.append("idCategoria", idCategoria);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 
@@ -337,7 +337,7 @@ $("#nuevoCodigo").on("blur change", function () {
 
 	var datos = new FormData();
 	datos.append("validarCodigo", codigo);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 		url: "ajax/productos.ajax.php",
@@ -356,7 +356,7 @@ $("#nuevoCodigo").on("blur change", function () {
 				swal({
 					title: "Error",
 					text: "El código del producto ya existe. Por favor ingrese uno diferente.",
-					type: "error",
+					icon: "error",
 					confirmButtonText: "Cerrar"
 				});
 
@@ -457,7 +457,7 @@ $(".nuevaImagen").change(function () {
 		swal({
 			title: "Error al subir la imagenn",
 			text: "¡La imagen debe estar en formato jpg o png!",
-			type: "error",
+			icon: "error",
 			confirmButtonText: "¡Cerrar!"
 		});
 	}
@@ -469,7 +469,7 @@ $(".nuevaImagen").change(function () {
 		swal({
 			title: "Error al subir la imagen",
 			text: "¡La imagen no debe pesar mas de 2MB!",
-			type: "error",
+			icon: "error",
 			confirmButtonText: "¡Cerrar!"
 		});
 
@@ -524,7 +524,7 @@ $(".tablaProductos tbody").on("click", "button.btnEliminarProducto", function ()
 
 		title: '¿Esta seguro de borrar el producto?',
 		text: "¡Si no lo está puede cancelar la acción!",
-		type: 'warning',
+		icon: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -536,7 +536,7 @@ $(".tablaProductos tbody").on("click", "button.btnEliminarProducto", function ()
 
 			var datos = new FormData();
 			datos.append("idProductoEliminar", idProducto);
-			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+			// csrf_token removido - manejado por csrf-helper.js
 
 			$.ajax({
 				url: "ajax/productos.ajax.php",
@@ -548,7 +548,7 @@ $(".tablaProductos tbody").on("click", "button.btnEliminarProducto", function ()
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							type: "success",
+							icon: "success",
 							title: "¡El producto ha sido borrado correctamente!",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
@@ -559,7 +559,7 @@ $(".tablaProductos tbody").on("click", "button.btnEliminarProducto", function ()
 						});
 					} else {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "Error",
 							text: "No se pudo eliminar el producto. " + respuesta,
 							showConfirmButton: true,
@@ -589,7 +589,7 @@ $("#nuevaDescripcion").change(function () {
 
 	var datos = new FormData();
 	datos.append("validarDescripcion", descripcion);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 		url: "ajax/productos.ajax.php",
@@ -1414,7 +1414,7 @@ $(document).on('click', '.btnExpandirVariantes', function () {
 	// Cargar variantes vía AJAX
 	var datos = new FormData();
 	datos.append("obtenerVariantesProducto", idProducto);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 		url: "ajax/productos.ajax.php",
@@ -1490,7 +1490,7 @@ $(document).on('click', '.btnActivarVariante', function () {
 	var datos = new FormData();
 	datos.append("activarVariante", idVariante);
 	datos.append("nuevoEstado", nuevoEstado);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 
@@ -1518,7 +1518,7 @@ $(document).on('click', '.btnActivarVariante', function () {
 				}
 
 				swal({
-					type: "success",
+					icon: "success",
 					title: "Estado actualizado correctamente",
 					showConfirmButton: false,
 					timer: 1500
@@ -1527,7 +1527,7 @@ $(document).on('click', '.btnActivarVariante', function () {
 			} else {
 
 				swal({
-					type: "error",
+					icon: "error",
 					title: "Error al actualizar el estado",
 					text: "Por favor, intenta nuevamente"
 				});
@@ -1540,7 +1540,7 @@ $(document).on('click', '.btnActivarVariante', function () {
 			console.error("Error al activar/desactivar variante:", textStatus, errorThrown);
 
 			swal({
-				type: "error",
+				icon: "error",
 				title: "Error de conexión",
 				text: "No se pudo conectar con el servidor"
 			});
@@ -1609,7 +1609,7 @@ $("#formEditarVariante").on("submit", function (e) {
 	datos.append("editarVariante", idVariante);
 	datos.append("editarPrecioAdicionalVariante", precioAdicional);
 	datos.append("editarStockVariante", stock);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 
@@ -1626,7 +1626,7 @@ $("#formEditarVariante").on("submit", function (e) {
 				$("#modalEditarVariante").modal("hide");
 
 				swal({
-					type: "success",
+					icon: "success",
 					title: "¡La variante ha sido actualizada correctamente!",
 					showConfirmButton: false,
 					timer: 1500
@@ -1648,7 +1648,7 @@ $("#formEditarVariante").on("submit", function (e) {
 
 			} else {
 				swal({
-					type: "error",
+					icon: "error",
 					title: "Error al actualizar la variante",
 					text: "Por favor, intenta nuevamente"
 				});
@@ -1659,7 +1659,7 @@ $("#formEditarVariante").on("submit", function (e) {
 			console.error("Error al guardar variante:", textStatus, errorThrown);
 
 			swal({
-				type: "error",
+				icon: "error",
 				title: "Error de conexión",
 				text: "No se pudo conectar con el servidor"
 			});
@@ -1712,7 +1712,7 @@ function cargarVariantesExistentes(callback) {
 
 	var datos = new FormData();
 	datos.append("obtenerVariantesParaEditar", idProductoEditando);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 		url: "ajax/productos.ajax.php",
@@ -1767,7 +1767,7 @@ function cargarTiposVariantesEditar() {
 
 	var datos = new FormData();
 	datos.append("obtenerTiposVariantes", true);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 		url: "ajax/productos.ajax.php",
@@ -1877,7 +1877,7 @@ function cargarOpcionesVarianteEditar(idTipo, nombreTipo) {
 
 	var datos = new FormData();
 	datos.append("obtenerOpcionesVariante", idTipo);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 		url: "ajax/productos.ajax.php",

@@ -6,6 +6,9 @@ SessionManager::startSecure();
 
 require_once "../controladores/usuarios.controlador.php";
 require_once "../modelos/usuarios.modelo.php";
+require_once "../modelos/actividades.modelo.php";
+require_once "../modelos/ventas.modelo.php";
+require_once "../modelos/factus.modelo.php";
 require_once "../modelos/csrf.php";
 
 // NOTA TEMPORAL: Validación CSRF deshabilitada para peticiones AJAX con FormData

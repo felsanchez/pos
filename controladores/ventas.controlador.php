@@ -60,12 +60,12 @@ class ControladorVentas
 			if (!$venta || !in_array($venta["estado_dian"], ['creada', 'pendiente', null])) {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error",
 						text: "Esta factura no puede ser editada",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then(function(result){
+					}).then(() => {
 						window.location = "facturas-electronicas";
 					});
 				</script>';
@@ -76,11 +76,11 @@ class ControladorVentas
 			if (empty($_POST["listaProductos"]) || $_POST["listaProductos"] == "") {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "La factura no se puede actualizar sin productos",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then(function(result){
+					}).then(() => {
 						window.location = "editar-factura-electronica&idVenta=' . $idVenta . '";
 					});
 				</script>';
@@ -159,11 +159,11 @@ class ControladorVentas
 			if ($respuesta == "ok") {
 				echo '<script>
 					swal({
-						type: "success",
+						icon: "success",
 						title: "Factura actualizada correctamente",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then(function(result){
+					}).then(() => {
 						window.location = "facturas-electronicas";
 					});
 				</script>';
@@ -171,7 +171,7 @@ class ControladorVentas
 			else {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error al actualizar la factura",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -196,17 +196,13 @@ class ControladorVentas
 				echo '<script>
 
 				swal({
-					  type: "error",
+					  icon: "error",
 					  title: "La venta no se puede ejecutar si no hay productos",
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"
-					  }).then(function(result){
-								if (result.value) {
-
+					  }).then(() => {
 								window.location = "ventas";
-
-								}
-							})
+					  })
 
 				</script>';
 
@@ -269,7 +265,7 @@ class ControladorVentas
 					if (!$validacion['valido']) {
 						echo '<script>
 							swal({
-								type: "error",
+								icon: "error",
 								title: "Error de Validación",
 								text: "No se puede generar la factura electrónica. Corrija los siguientes errores: ' . implode(", ", $validacion['errores']) . '",
 								showConfirmButton: true,
@@ -544,15 +540,13 @@ class ControladorVentas
 
 							echo '<script>
 								swal({
-									type: "error",
+									icon: "error",
 									title: "Error en Facturación",
 									html: "' . $mensajeError . '",
 									showConfirmButton: true,
 									confirmButtonText: "Cerrar"
-								}).then(function(result){
-									if (result.value) {
+								}).then(() => {
 										window.location = "' . (isset($_POST['rutaOrigen']) ? $_POST['rutaOrigen'] : 'crear-venta') . '";
-									}
 								})
 							</script>';
 							return; // ABORTAR TODO
@@ -576,14 +570,12 @@ class ControladorVentas
 					echo '<script>
 						localStorage.removeItem("rango");
 						swal({
-							type: "success",
+							icon: "success",
 							title: "¡La orden ha sido guardada correctamente!",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
-						}).then(function(result){
-							if (result.value) {
+						}).then(() => {
 								window.location = "ordenes";
-							}
 						});
 					</script>';
 				}
@@ -621,7 +613,7 @@ class ControladorVentas
 
 								echo '<script>
 									swal({
-										type: "error",
+										icon: "error",
 										title: "Error de Validación",
 										html: "' . addslashes($mensajeError) . '",
 										showConfirmButton: true,
@@ -652,16 +644,14 @@ class ControladorVentas
 					echo '<script>
 						localStorage.removeItem("rango");
 						swal({
-							type: "success",
+							icon: "success",
 							title: "' . $tituloMensaje . '",
 							text: "' . $textoMensaje . '",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar",
-							}).then((result)=>{
-								if(result.value){
+							}).then(() => {
 
 								window.location = "' . $rutaRedireccion . '";
-								}
 							})
 						</script>';
 				}
@@ -770,15 +760,13 @@ class ControladorVentas
 
 				echo '<script>
 				swal({
-					  type: "error",
+					  icon: "error",
 					  title: "Debe modificar los productos para guardar la  venta",
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"
-					  }).then(function(result){
-								if (result.value) {
+					  }).then(() => {
 									window.location = "ordenes";
-								}
-							})
+					  })
 				</script>';
 				return;
 			}
@@ -1314,15 +1302,13 @@ class ControladorVentas
 					echo '<script>
 					localStorage.removeItem("rango");
 					swal({
-						type: "success",
+						icon: "success",
 						title: "¡Venta guardada correctamente!",
 						text: "El documento ha sido registrado exitosamente en el sistema.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar",
-						}).then((result)=>{
-							if(result.value){
+						}).then(() => {
 								window.location = "ordenes";
-							}
 						})
 				</script>';
 			}
@@ -1566,14 +1552,12 @@ class ControladorVentas
 					echo '<script>
 						localStorage.removeItem("rango");
 						swal({
-							type: "success",
+							icon: "success",
 							title: "¡La orden ha sido eliminada correctamente!",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
-						}).then(function(result){
-							if (result.value) {
+						}).then(() => {
 								window.location = "ordenes";
-							}
 						});
 					</script>';
 				}
@@ -1590,13 +1574,11 @@ class ControladorVentas
 					echo '<script>
 						localStorage.removeItem("rango");
 						swal({
-							type: "success",
-							title: "!La venta ha sigo borrada correctamente!",
+							icon: "success",
+							title: "¡La venta ha sido borrada correctamente!",
 							showConfirmButton: true,
-							confirmButtonText: "Cerrar",
-							closeOnConfirm: false
-							}).then((result)=>{
-								if(result.value){
+							confirmButtonText: "Cerrar"
+							}).then(() => {
 									// Limpiar idVenta para evitar ciclo infinito
 									if (window.history.replaceState) {
 										var url = new URL(window.location.href);
@@ -1605,7 +1587,6 @@ class ControladorVentas
 									}
 									// Recargar página para actualizar tabla manteniendo filtros
 									window.location.reload();
-								}
 							})
 			     	</script>';
 				}
@@ -1942,14 +1923,12 @@ class ControladorVentas
 
 				echo '<script>
 				swal({
-					  type: "error",
+					  icon: "error",
 					  title: "La venta no se puede ejecutar si no hay productos",
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"
-					  }).then(function(result){
-								if (result.value) {
+					  }).then(() => {
 								window.location = "ventas";
-								}
 							})
 				</script>';
 				return;
@@ -2110,15 +2089,13 @@ class ControladorVentas
 
 					echo '<script>
 						swal({
-						  type: "success",
+						  icon: "success",
 						  title: "Factura Electrónica GUARDADA",
 						  text: "La factura ha sido guardada correctamente como borrador",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
-						  }).then(function(result){
-									if (result.value) {
+						  }).then(() => {
 									window.location = "facturas-electronicas";
-									}
 								})
 						</script>';
 				}
@@ -2142,15 +2119,13 @@ class ControladorVentas
 
 					echo '<script>
 						swal({
-						  type: "warning",
+						  icon: "warning",
 						  title: "Venta guardada pero Factura RECHAZADA",
 						  text: "' . str_replace('"', "'", $errorMsg) . '",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
-						  }).then(function(result){
-									if (result.value) {
+						  }).then(() => {
 									window.location = "facturas-electronicas";
-									}
 								})
 						</script>';
 				}
@@ -2169,7 +2144,7 @@ class ControladorVentas
 
 				echo '<script>
 					swal({
-						  type: "error",
+						  icon: "error",
 						  title: "Error al guardar la venta localmente",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"

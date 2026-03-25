@@ -269,10 +269,11 @@ MODAL AGREGAR USUARIO
                     <span class="input-group-addon"><i class="fa fa-users"></i></span>
                     <select class="form-control input-lg" name="nuevoPerfil" required>
                       <option value="">Seleccionar perfil</option>
-                      <option value="Administrador">Administrador</option>
-                      <option value="Especial">Especial</option>
-                      <option value="Vendedor">Vendedor</option>
-                      <option value="Visitante">Visitante</option>
+                      <?php foreach (ModeloPerfiles::mdlObtenerPerfiles() as $p): ?>
+                        <option value="<?php echo htmlspecialchars($p['nombre']); ?>">
+                          <?php echo htmlspecialchars($p['nombre']); ?>
+                        </option>
+                      <?php endforeach; ?>
                     </select>
                   </div>
                 </div>
@@ -419,9 +420,11 @@ MODAL EDITAR USUARIO
                     <span class="input-group-addon"><i class="fa fa-users"></i></span>
                     <select class="form-control input-lg" name="editarPerfil">
                       <option value="" id="editarPerfil"></option>
-                      <option value="Administrador">Administrador</option>
-                      <option value="Especial">Especial</option>
-                      <option value="Vendedor">Vendedor</option>
+                      <?php foreach (ModeloPerfiles::mdlObtenerPerfiles() as $p): ?>
+                        <option value="<?php echo htmlspecialchars($p['nombre']); ?>">
+                          <?php echo htmlspecialchars($p['nombre']); ?>
+                        </option>
+                      <?php endforeach; ?>
                     </select>
                   </div>
                 </div>
@@ -523,7 +526,7 @@ $borrarUsuario->ctrBorrarUsuario();
         swal({
           title: "Error al subir la imagen",
           text: "¡La imagen debe estar en formato JPG o PNG!",
-          type: "error",
+          icon: "error",
           confirmButtonText: "¡Cerrar!"
         });
       } else if (imagen["size"] > 2000000) {
@@ -531,7 +534,7 @@ $borrarUsuario->ctrBorrarUsuario();
         swal({
           title: "Error al subir la imagen",
           text: "¡La imagen no debe pesar más de 2MB!",
-          type: "error",
+          icon: "error",
           confirmButtonText: "¡Cerrar!"
         });
       } else {
@@ -580,7 +583,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
         swal({
           title: "Error al subir la imagen",
           text: "¡La imagen debe estar en formato JPG o PNG!",
-          type: "error",
+          icon: "error",
           confirmButtonText: "¡Cerrar!"
         });
       } else if (imagen["size"] > 2000000) {
@@ -588,7 +591,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
         swal({
           title: "Error al subir la imagen",
           text: "¡La imagen no debe pesar más de 2MB!",
-          type: "error",
+          icon: "error",
           confirmButtonText: "¡Cerrar!"
         });
       } else {
@@ -618,7 +621,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
       swal({
         title: "Advertencia",
         text: "No has seleccionado ninguna imagen",
-        type: "warning",
+        icon: "warning",
         confirmButtonText: "¡Cerrar!"
       });
       return;
@@ -628,7 +631,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
       swal({
         title: "Error",
         text: "No se pudo obtener el ID o nombre del usuario",
-        type: "error",
+        icon: "error",
         confirmButtonText: "¡Cerrar!"
       });
       return;
@@ -643,7 +646,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
     swal({
       title: 'Cargando...',
       allowOutsideClick: false,
-      onBeforeOpen: () => {
+      didOpen: () => {
         swal.showLoading()
       }
     });
@@ -661,7 +664,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
 
         if (respuesta == "ok") {
           swal({
-            type: "success",
+            icon: "success",
             title: "¡La imagen ha sido actualizada correctamente!",
             showConfirmButton: true,
             confirmButtonText: "Cerrar"
@@ -673,7 +676,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
           });
         } else {
           swal({
-            type: "error",
+            icon: "error",
             title: "Error al actualizar la imagen",
             text: JSON.stringify(respuesta),
             confirmButtonText: "Cerrar"
@@ -685,7 +688,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
         console.log("Respuesta:", jqXHR.responseText);
 
         swal({
-          type: "error",
+          icon: "error",
           title: "Error en la petición",
           text: "Por favor revisa la consola para más detalles",
           confirmButtonText: "Cerrar"

@@ -18,15 +18,13 @@ class ControladorClientes
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "clientes";
-						}
+					}).then(() => {
+						window.location = "clientes";
 					})
 				</script>';
 				return;
@@ -79,16 +77,13 @@ class ControladorClientes
 
 					echo '<script>
 					swal({
-						type: "success",
-						title: "!El cliente ha sido guardado correctamente!",
+						icon: "success",
+						title: "¡El cliente ha sido guardado correctamente!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
-						}).then((result)=>{
-							if(result.value){
+						confirmButtonText: "Cerrar"
+						}).then(() => {
 
 							   window.location = "' . $redireccion . '";
-							}
 						})
 			     	</script>';
 				}
@@ -99,17 +94,13 @@ class ControladorClientes
 
 				echo '<script>
 					swal({
-						type: "error",
-						title: "!El cliente no puede ir vacío o llevar caracteres especiales!",
+						icon: "error",
+						title: "¡El cliente no puede ir vacío o llevar caracteres especiales!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
-						}).then((result)=>{
-
-							if(result.value){
+						confirmButtonText: "Cerrar"
+						}).then(() => {
 
 								window.location = "' . $redireccion . '";
-							}
 						})
 				</script>';
 			}
@@ -211,33 +202,26 @@ class ControladorClientes
 
 					echo '<script>
 					swal({
-						type: "success",
-						title: "!El cliente ha sido cambiado correctamente!",
+						icon: "success",
+						title: "¡El cliente ha sido cambiado correctamente!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
-						}).then((result)=>{
-							if(result.value){
+						confirmButtonText: "Cerrar"
+						}).then(() => {
 
 							   window.location = "clientes";
-							}
 						})
 			     	</script>';
 				}
 			} else {
 				echo '<script>
 					swal({
-						type: "error",
-						title: "!El cliente no puede ir vacío o llevar caracteres especiales!",
+						icon: "error",
+						title: "¡El cliente no puede ir vacío o llevar caracteres especiales!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
-						}).then((result)=>{
-
-							if(result.value){
+						confirmButtonText: "Cerrar"
+						}).then(() => {
 
 								window.location = "clientes";
-							}
 						})
 				</script>';
 			}
@@ -295,15 +279,13 @@ class ControladorClientes
 				}
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "¡No se puede eliminar!",
 						text: "El cliente tiene actividades asociadas.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result) => {
-						if (result.value) {
-							window.location = "' . $ruta . '";
-						}
+					}).then(() => {
+						window.location = "' . $ruta . '";
 					});
 				</script>';
 				return;
@@ -319,15 +301,13 @@ class ControladorClientes
 				}
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "¡No se puede eliminar!",
 						text: "El cliente tiene ventas asociadas.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result) => {
-						if (result.value) {
-							window.location = "' . $ruta . '";
-						}
+					}).then(() => {
+						window.location = "' . $ruta . '";
 					});
 				</script>';
 				return;
@@ -342,18 +322,14 @@ class ControladorClientes
 				}
 				echo '<script>
 					swal({
-						type: "success",
-						title: "!El cliente ha sido borrado correctamente!",
+						icon: "success",
+						title: "¡El cliente ha sido borrado correctamente!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
+						confirmButtonText: "Cerrar"
 
-						}).then((result)=>{
-
-							if(result.value){
+						}).then(() => {
 
 								window.location = "' . $ruta . '";
-							}
 						});
 				</script>';
 			}
@@ -538,15 +514,13 @@ class ControladorClientes
 
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error en la importación",
 						html: "' . $mensajeErrores . '",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result) => {
-						if (result.value) {
-							window.location = "clientes";
-						}
+					}).then(() => {
+						window.location = "clientes";
 					});
 				</script>';
 
@@ -558,15 +532,13 @@ class ControladorClientes
 
 					echo '<script>
 						swal({
-							type: "success",
+							icon: "success",
 							title: "¡Importación Exitosa!",
 							text: "Se han importado ' . $respuesta["exitos"] . ' clientes correctamente.",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
-						}).then((result) => {
-							if (result.value) {
-								window.location = "clientes";
-							}
+						}).then(() => {
+							window.location = "clientes";
 						});
 					</script>';
 
@@ -579,15 +551,13 @@ class ControladorClientes
 
 					echo '<script>
 						swal({
-							type: "warning",
+							icon: "warning",
 							title: "Importación parcial",
 							html: "' . $mensajeParcial . '",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
-						}).then((result) => {
-							if (result.value) {
-								window.location = "clientes";
-							}
+						}).then(() => {
+							window.location = "clientes";
 						});
 					</script>';
 				}
@@ -595,15 +565,13 @@ class ControladorClientes
 			} else {
 				echo '<script>
 					swal({
-						type: "warning",
+						icon: "warning",
 						title: "Archivo vacío",
 						text: "No se encontraron datos válidos para importar.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result) => {
-						if (result.value) {
-							window.location = "clientes";
-						}
+					}).then(() => {
+						window.location = "clientes";
 					});
 				</script>';
 			}

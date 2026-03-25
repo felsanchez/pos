@@ -133,9 +133,9 @@ $(".nuevaFoto").change(function () {
 		$(".nuevaFoto").val("");
 
 		swal({
-			title: "Error al subir la imagenn",
+			title: "Error al subir la imagen",
 			text: "¡La imagen debe estar en formato jpg o png!",
-			type: "error",
+			icon: "error",
 			confirmButtonText: "¡Cerrar!"
 		});
 	}
@@ -147,7 +147,7 @@ $(".nuevaFoto").change(function () {
 		swal({
 			title: "Error al subir la imagen",
 			text: "¡La imagen no debe pesar mas de 2MB!",
-			type: "error",
+			icon: "error",
 			confirmButtonText: "¡Cerrar!"
 		});
 
@@ -182,7 +182,7 @@ $(".tablaUsuarios").on("click", ".btnEditarUsuario", function () {
 
 	var datos = new FormData();
 	datos.append("idUsuario", idUsuario);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 
@@ -222,7 +222,7 @@ $(".tablaUsuarios").on("click", ".btnEditarUsuario", function () {
 			console.error("Respuesta:", xhr.responseText);
 
 			swal({
-				type: "error",
+				icon: "error",
 				title: "Error al cargar los datos del usuario",
 				text: "Por favor, intente nuevamente",
 				confirmButtonText: "Cerrar"
@@ -256,7 +256,7 @@ $(".tablaUsuarios").on("click", ".btnActivar", function () {
 	var datos = new FormData();
 	datos.append("activarId", idUsuario);
 	datos.append("activarUsuario", estadoUsuario);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 		url: "ajax/usuarios.ajax.php",
@@ -300,7 +300,7 @@ $(".tablaUsuarios").on("click", ".btnActivar", function () {
 			fila.css('opacity', '1');
 
 			swal({
-				type: "error",
+				icon: "error",
 				title: "Error en la conexión",
 				showConfirmButton: true,
 				confirmButtonText: "Cerrar"
@@ -323,7 +323,7 @@ $("#nuevoUsuario").change(function () {
 
 	var datos = new FormData();
 	datos.append("validarUsuario", usuario);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 		url: "ajax/usuarios.ajax.php",
@@ -359,7 +359,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 	swal({
 		title: '¿Esta seguro de borrar el usuario?',
 		text: "¡Si no lo está puede cancelar la acción!",
-		type: 'warning',
+		icon: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -371,7 +371,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 
 			var datos = new FormData();
 			datos.append("idUsuarioEliminar", idUsuario);
-			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+			// csrf_token removido - manejado por csrf-helper.js
 
 			$.ajax({
 				url: "ajax/usuarios.ajax.php",
@@ -383,7 +383,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							type: "success",
+							icon: "success",
 							title: "¡El usuario ha sido borrado correctamente!",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
@@ -394,7 +394,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 						});
 					} else if (respuesta == "error_auto_eliminacion") {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "¡No puedes eliminar tu propio usuario!",
 							text: "Cierra la sesión e inicia con otro usuario para poder eliminar este.",
 							showConfirmButton: true,
@@ -402,7 +402,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 						});
 					} else if (respuesta == "error_actividades") {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "¡No se puede eliminar!",
 							text: "El usuario tiene actividades asociadas.",
 							showConfirmButton: true,
@@ -410,7 +410,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 						});
 					} else if (respuesta == "error_ventas") {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "¡No se puede eliminar!",
 							text: "El usuario tiene ventas asociadas.",
 							showConfirmButton: true,
@@ -418,7 +418,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 						});
 					} else {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "Error",
 							text: "No se pudo eliminar el usuario. " + respuesta,
 							showConfirmButton: true,

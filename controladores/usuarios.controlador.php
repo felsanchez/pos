@@ -82,6 +82,9 @@ class ControladorUsuarios
 							$_SESSION["perfil"] = $respuesta["perfil"];
 							$_SESSION["email"] = $respuesta["email"];
 
+							// Cargar permisos del perfil en sesión (una sola consulta al login)
+							$_SESSION["permisos"] = ModeloPerfiles::mdlCargarPermisosEnSesion($respuesta["perfil"]);
+
 							// Regenerar ID de sesión después del login (previene fijación de sesión)
 							SessionManager::regenerate();
 
@@ -152,15 +155,13 @@ class ControladorUsuarios
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token inválido. Recarga la página e intenta nuevamente.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "usuarios";
-						}
+					}).then(() => {
+						window.location = "usuarios";
 					});
 				</script>';
 				return;
@@ -261,36 +262,26 @@ class ControladorUsuarios
 
 				echo '<script>
 					swal({
-						type: "success",
-						title: "!El usuario ha sido guardado correctamente!",
+						icon: "success",
+						title: "¡El usuario ha sido guardado correctamente!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
+						confirmButtonText: "Cerrar"
 
-						}).then((result)=>{
-
-							if(result.value){
-
-								window.location = "usuarios";
-							}
+						}).then(() => {
+							window.location = "usuarios";
 						});
 				</script>';
 			} else {
 
 				echo '<script>
 					swal({
-						type: "error",
-						title: "!El usuario no puede ir vacío o llevar caracteres especiales!",
+						icon: "error",
+						title: "¡El usuario no puede ir vacío o llevar caracteres especiales!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
+						confirmButtonText: "Cerrar"
 
-						}).then((result)=>{
-
-							if(result.value){
-
-								window.location = "usuarios";
-							}
+						}).then(() => {
+							window.location = "usuarios";
 						});
 				</script>';
 			}
@@ -327,15 +318,13 @@ class ControladorUsuarios
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token inválido. Recarga la página e intenta nuevamente.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "usuarios";
-						}
+					}).then(() => {
+						window.location = "usuarios";
 					});
 				</script>';
 				return;
@@ -424,18 +413,13 @@ class ControladorUsuarios
 
 						echo '<script>
 					swal({
-						type: "error",
-						title: "!El usuario no puede ir vacío o llevar caracteres especiales!",
+						icon: "error",
+						title: "¡El usuario no puede ir vacío o llevar caracteres especiales!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
+						confirmButtonText: "Cerrar"
 
-						}).then((result)=>{
-
-							if(result.value){
-
-								window.location = "usuarios";
-							}
+						}).then(() => {
+							window.location = "usuarios";
 						});
 				</script>';
 
@@ -464,18 +448,13 @@ class ControladorUsuarios
 
 					echo '<script>
 					swal({
-						type: "success",
-						title: "!El usuario ha sido editado correctamente!",
+						icon: "success",
+						title: "¡El usuario ha sido editado correctamente!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
+						confirmButtonText: "Cerrar"
 
-						}).then((result)=>{
-
-							if(result.value){
-
-								window.location = "usuarios";
-							}
+						}).then(() => {
+							window.location = "usuarios";
 						});
 				</script>';
 
@@ -485,18 +464,13 @@ class ControladorUsuarios
 			} else {
 				echo '<script>
 					swal({
-						type: "error",
-						title: "!El nombre no puede ir vacío o llevar caracteres especiales!",
+						icon: "error",
+						title: "¡El nombre no puede ir vacío o llevar caracteres especiales!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
+						confirmButtonText: "Cerrar"
 
-						}).then((result)=>{
-
-							if(result.value){
-
-								window.location = "usuarios";
-							}
+						}).then(() => {
+							window.location = "usuarios";
 						});
 				</script>';
 
@@ -525,15 +499,13 @@ class ControladorUsuarios
 				}
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "usuarios";
-						}
+					}).then(() => {
+						window.location = "usuarios";
 					})
 				</script>';
 				return;
@@ -548,15 +520,13 @@ class ControladorUsuarios
 				}
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "¡No puedes eliminar tu propio usuario!",
 						text: "Cierra la sesión e inicia con otro usuario para poder eliminar este.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result) => {
-						if (result.value) {
-							window.location = "usuarios";
-						}
+					}).then(() => {
+						window.location = "usuarios";
 					});
 				</script>';
 				return;
@@ -598,15 +568,13 @@ class ControladorUsuarios
 				}
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "¡No se puede eliminar!",
 						text: "El usuario tiene actividades asociadas.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result) => {
-						if (result.value) {
-							window.location = "usuarios";
-						}
+					}).then(() => {
+						window.location = "usuarios";
 					});
 				</script>';
 				return;
@@ -622,15 +590,76 @@ class ControladorUsuarios
 				}
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "¡No se puede eliminar!",
 						text: "El usuario tiene ventas asociadas.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result) => {
-						if (result.value) {
-							window.location = "usuarios";
-						}
+					}).then(() => {
+						window.location = "usuarios";
+					});
+				</script>';
+				return;
+			}
+
+			// Verificar si hay Notas Crédito asociadas
+			$notasCreditoAsociadas = ModeloFactus::mdlMostrarNotasCredito("notas_credito", "id_usuario", $idUsuario);
+
+			if (!empty($notasCreditoAsociadas)) {
+				if (isset($_POST["idUsuarioEliminar"])) {
+					return "error_notas_credito";
+				}
+				echo '<script>
+					swal({
+						icon: "error",
+						title: "¡No se puede eliminar!",
+						text: "El usuario tiene notas crédito asociadas.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "usuarios";
+					});
+				</script>';
+				return;
+			}
+
+			// Verificar si hay Documentos Soporte asociados
+			$docsSoporteAsociados = ModeloFactus::mdlMostrarDocumentosSoporte("id_usuario", $idUsuario);
+
+			if (!empty($docsSoporteAsociados)) {
+				if (isset($_POST["idUsuarioEliminar"])) {
+					return "error_documentos_soporte";
+				}
+				echo '<script>
+					swal({
+						icon: "error",
+						title: "¡No se puede eliminar!",
+						text: "El usuario tiene documentos soporte asociados.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "usuarios";
+					});
+				</script>';
+				return;
+			}
+
+			// Verificar si hay Notas de Ajuste DS asociadas
+			$notasAjusteAsociadas = ModeloFactus::mdlMostrarNotasAjusteDS("id_usuario", $idUsuario);
+
+			if (!empty($notasAjusteAsociadas)) {
+				if (isset($_POST["idUsuarioEliminar"])) {
+					return "error_notas_ajuste";
+				}
+				echo '<script>
+					swal({
+						icon: "error",
+						title: "¡No se puede eliminar!",
+						text: "El usuario tiene notas de ajuste asociadas.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "usuarios";
 					});
 				</script>';
 				return;
@@ -645,19 +674,14 @@ class ControladorUsuarios
 				}
 				echo '<script>
 					swal({
-						type: "success",
-						title: "!El usuario ha sido borrado correctamente!",
+						icon: "success",
+						title: "¡El usuario ha sido borrado correctamente!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
+						confirmButtonText: "Cerrar"
 
-						}).then((result)=>{
-
-							if(result.value){
-
-								window.location = "usuarios";
-							}
-						})
+						}).then(() => {
+							window.location = "usuarios";
+						});
 				</script>';
 
 			}
@@ -679,15 +703,13 @@ class ControladorUsuarios
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token inválido. Recarga la página e intenta nuevamente.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "login";
-						}
+					}).then(() => {
+						window.location = "login";
 					});
 				</script>';
 				return;
@@ -709,15 +731,13 @@ class ControladorUsuarios
 				if ($usuarioExiste) {
 					echo '<script>
 						swal({
-							type: "error",
+							icon: "error",
 							title: "¡El usuario ya existe!",
 							text: "Por favor elige otro nombre de usuario.",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
-						}).then((result)=>{
-							if(result.value){
-								window.location = "login";
-							}
+						}).then(() => {
+							window.location = "login";
 						});
 					</script>';
 					return;
@@ -742,30 +762,26 @@ class ControladorUsuarios
 
 					echo '<script>
 						swal({
-							type: "success",
+							icon: "success",
 							title: "¡Registro exitoso!",
 							text: "Ya puedes ingresar al sistema con tu usuario y contraseña.",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
-						}).then((result)=>{
-							if(result.value){
-								window.location = "login";
-							}
+						}).then(() => {
+							window.location = "login";
 						});
 					</script>';
 
 				} else {
 					echo '<script>
 						swal({
-							type: "error",
+							icon: "error",
 							title: "¡Error al registrar!",
 							text: "Por favor intenta nuevamente.",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
-						}).then((result)=>{
-							if(result.value){
-								window.location = "login";
-							}
+						}).then(() => {
+							window.location = "login";
 						});
 					</script>';
 				}

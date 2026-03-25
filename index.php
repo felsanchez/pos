@@ -29,6 +29,7 @@ require_once "controladores/configuracion.controlador.php";
 require_once "controladores/factus.controlador.php";
 require_once "controladores/logs.controlador.php";
 require_once "controladores/seguimiento.controlador.php";
+require_once "controladores/perfiles.controlador.php";
 
 require_once "modelos/usuarios.modelo.php";
 require_once "modelos/categorias.modelo.php";
@@ -48,6 +49,8 @@ require_once "modelos/notificaciones.modelo.php";
 require_once "modelos/configuracion.modelo.php";
 require_once "modelos/factus.modelo.php";
 require_once "modelos/seguimiento.modelo.php";
+require_once "modelos/perfiles.modelo.php";
+require_once "modelos/helpers.php";
 
 // Exportar Excel de Historial de Stock
 ControladorMovimientos::ctrExportarExcel();

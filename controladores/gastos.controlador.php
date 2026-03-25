@@ -42,15 +42,13 @@ class ControladorGastos{
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "gastos";
-						}
+					}).then(() => {
+						window.location = "gastos";
 					})
 				</script>';
 				return;
@@ -160,16 +158,12 @@ class ControladorGastos{
 					echo'<script>
 
 					swal({
-						  type: "success",
+						  icon: "success",
 						  title: "El gasto ha sido guardado correctamente",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
-						  }).then(function(result){
-								if (result.value) {
-
+						  }).then(() => {
 								window.location = "gastos";
-
-								}
 							})
 
 					</script>';
@@ -333,16 +327,12 @@ class ControladorGastos{
 					echo'<script>
 
 					swal({
-						  type: "success",
+						  icon: "success",
 						  title: "El gasto ha sido editado correctamente",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
-						  }).then(function(result){
-								if (result.value) {
-
+						  }).then(() => {
 								window.location = "gastos";
-
-								}
 							})
 
 					</script>';
@@ -427,16 +417,12 @@ class ControladorGastos{
 				echo'<script>
 
 				swal({
-					  type: "success",
+					  icon: "success",
 					  title: "El gasto ha sido eliminado correctamente",
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"
-					  }).then(function(result){
-							if (result.value) {
-
-							window.location = "gastos";
-
-							}
+					  }).then(() => {
+								window.location = "gastos";
 						})
 
 				</script>';

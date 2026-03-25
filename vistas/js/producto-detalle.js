@@ -114,7 +114,7 @@ $(document).ready(function () {
                 // Generar código basado en categoría
                 var data = new FormData();
                 data.append("idCategoria", idCategoria);
-                data.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+                // csrf_token removido - manejado por csrf-helper.js
 
                 $.ajax({
                     url: "ajax/productos.ajax.php",
@@ -161,7 +161,7 @@ $(document).ready(function () {
                 swal({
                     title: "Error",
                     text: "La imagen no debe pesar más de 2MB",
-                    type: "error",
+                    icon: "error",
                     confirmButtonText: "¡Cerrar!"
                 });
                 $(this).val('');
@@ -173,7 +173,7 @@ $(document).ready(function () {
                 swal({
                     title: "Error",
                     text: "La imagen debe estar en formato JPG o PNG",
-                    type: "error",
+                    icon: "error",
                     confirmButtonText: "¡Cerrar!"
                 });
                 $(this).val('');
@@ -200,7 +200,7 @@ $(document).ready(function () {
             swal({
                 title: "Error",
                 text: "El código del producto es obligatorio",
-                type: "error",
+                icon: "error",
                 confirmButtonText: "¡Cerrar!"
             });
             return false;
@@ -211,7 +211,7 @@ $(document).ready(function () {
             swal({
                 title: "Error",
                 text: "La descripción del producto es obligatoria",
-                type: "error",
+                icon: "error",
                 confirmButtonText: "¡Cerrar!"
             });
             return false;
@@ -222,7 +222,7 @@ $(document).ready(function () {
             swal({
                 title: "Error",
                 text: "Debe seleccionar una categoría",
-                type: "error",
+                icon: "error",
                 confirmButtonText: "¡Cerrar!"
             });
             return false;
@@ -236,7 +236,7 @@ $(document).ready(function () {
                 swal({
                     title: "Error",
                     text: "Debe generar al menos una combinación de variantes",
-                    type: "error",
+                    icon: "error",
                     confirmButtonText: "¡Cerrar!"
                 });
                 return false;
@@ -266,7 +266,7 @@ FUNCIONES PARA VARIANTES
 function cargarTiposVariantes() {
     var datos = new FormData();
     datos.append("obtenerTiposVariantes", "ok");
-    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+    // csrf_token removido - manejado por csrf-helper.js
 
     $.ajax({
         url: "ajax/productos.ajax.php",
@@ -358,7 +358,7 @@ function removerTipoVariante(idTipo) {
 function cargarOpcionesVariante(idTipo, nombreTipo) {
     var datos = new FormData();
     datos.append("obtenerOpcionesVariante", idTipo);
-    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+    // csrf_token removido - manejado por csrf-helper.js
 
     $.ajax({
         url: "ajax/productos.ajax.php",

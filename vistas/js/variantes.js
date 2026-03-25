@@ -7,8 +7,8 @@ $(document).on("click", ".btnAbrirModalTipo", function(){
         url: "ajax/variantes.ajax.php",
         method: "POST",
         data: {
-            obtenerSiguienteOrdenTipo: true,
-            csrf_token: $('meta[name="csrf-token"]').attr('content')
+            obtenerSiguienteOrdenTipo: true
+            // csrf_token removido - manejado por csrf-helper.js
         },
         dataType: "json",
         success: function(respuesta){
@@ -37,7 +37,7 @@ $(document).on("click", "[data-target='#modalAgregarOpcion']", function(){
 
     var datos = new FormData();
     datos.append("obtenerSiguienteOrdenOpcion", idTipo);
-    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+    // csrf_token removido - manejado por csrf-helper.js
 
     $.ajax({
         url: "ajax/variantes.ajax.php",
@@ -77,7 +77,7 @@ $(document).on("click", ".btnVerOpciones", function(){
     // Cargar opciones con AJAX
     var datos = new FormData();
     datos.append("idTipoVariante", idTipo);
-    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+    // csrf_token removido - manejado por csrf-helper.js
 
     $.ajax({
         url: "ajax/variantes.ajax.php",
@@ -155,7 +155,7 @@ $(document).on("click", ".btnActivarTipo", function(){
     var datos = new FormData();
     datos.append("activarTipo", idTipo);
     datos.append("estadoTipo", estadoTipo);
-    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+    // csrf_token removido - manejado por csrf-helper.js
 
     $.ajax({
         url: "ajax/variantes.ajax.php",
@@ -198,7 +198,7 @@ $(document).on("click", ".btnActivarTipo", function(){
                     fila.css('opacity', '1');
                     
                     swal({
-                        type: "error",
+                        icon: "error",
                         title: "Error al actualizar el estado",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
@@ -214,7 +214,7 @@ $(document).on("click", ".btnActivarTipo", function(){
             fila.css('opacity', '1');
             
             swal({
-                type: "error",
+                icon: "error",
                 title: "Error en la conexión",
                 showConfirmButton: true,
                 confirmButtonText: "Cerrar"
@@ -245,7 +245,7 @@ $(document).on("click", ".btnActivarOpcion", function(){
     var datos = new FormData();
     datos.append("activarOpcion", idOpcion);
     datos.append("estadoOpcion", estadoOpcion);
-    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+    // csrf_token removido - manejado por csrf-helper.js
 
     $.ajax({
         url: "ajax/variantes.ajax.php",
@@ -288,7 +288,7 @@ $(document).on("click", ".btnActivarOpcion", function(){
                     fila.css('opacity', '1');
                     
                     swal({
-                        type: "error",
+                        icon: "error",
                         title: "Error al actualizar el estado",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
@@ -304,7 +304,7 @@ $(document).on("click", ".btnActivarOpcion", function(){
             fila.css('opacity', '1');
             
             swal({
-                type: "error",
+                icon: "error",
                 title: "Error en la conexión",
                 showConfirmButton: true,
                 confirmButtonText: "Cerrar"
@@ -325,7 +325,7 @@ $(document).on("click", ".btnEditarTipoVariante", function(){
 
     var datos = new FormData();
     datos.append("idTipo", idTipo);
-    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+    // csrf_token removido - manejado por csrf-helper.js
 
     $.ajax({
         url: "ajax/variantes.ajax.php",
@@ -356,7 +356,7 @@ $(document).on("click", ".btnEditarOpcion", function(){
 
     var datos = new FormData();
     datos.append("idOpcionEditar", idOpcion);
-    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+    // csrf_token removido - manejado por csrf-helper.js
 
     $.ajax({
         url: "ajax/variantes.ajax.php",
@@ -397,7 +397,7 @@ $(document).on("click", ".btnEliminarTipo", function(){
 
         title: '¿Está seguro de eliminar el tipo "' + nombreTipo + '"?',
         text: "¡Si no lo está puede cancelar la acción!",
-        type: 'warning',
+        icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
@@ -410,7 +410,7 @@ $(document).on("click", ".btnEliminarTipo", function(){
             var datos = new FormData();
 
             datos.append("idEliminarTipo", idTipo); 
-            datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+            // csrf_token removido - manejado por csrf-helper.js
 
             $.ajax({ 
 
@@ -426,7 +426,7 @@ $(document).on("click", ".btnEliminarTipo", function(){
                     if(respuesta == "ok"){
 
                         swal({
-                            type: "success",
+                            icon: "success",
                             title: "¡El tipo de variante ha sido eliminado correctamente!",
                             showConfirmButton: true,
                             confirmButtonText: "Cerrar"
@@ -438,7 +438,7 @@ $(document).on("click", ".btnEliminarTipo", function(){
 
                      } else {
                         swal({
-                            type: "error",
+                            icon: "error",
                             title: "¡No se puede eliminar!",
                             text: "Este tipo de variante tiene opciones o está siendo usado en productos",
                             showConfirmButton: true,
@@ -472,7 +472,7 @@ $(document).on("click", ".btnEliminarOpcion", function(){
 
         title: '¿Está seguro de eliminar la opción "' + nombreOpcion + '"?',
         text: "¡Si no lo está puede cancelar la acción!",
-        type: 'warning',
+        icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
@@ -485,7 +485,7 @@ $(document).on("click", ".btnEliminarOpcion", function(){
             var datos = new FormData();
 
             datos.append("idEliminarOpcion", idOpcion); 
-            datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+            // csrf_token removido - manejado por csrf-helper.js
 
             $.ajax({
 
@@ -500,7 +500,7 @@ $(document).on("click", ".btnEliminarOpcion", function(){
 
                      if(respuesta == "ok"){
                         swal({
-                            type: "success",
+                            icon: "success",
                             title: "¡La opción ha sido eliminada correctamente!",
                             showConfirmButton: true,
                             confirmButtonText: "Cerrar"
@@ -521,7 +521,7 @@ $(document).on("click", ".btnEliminarOpcion", function(){
                     } else { 
 
                         swal({
-                            type: "error",
+                            icon: "error",
                             title: "¡No se puede eliminar!",
                             text: "Esta opción está siendo usada en productos existentes",
                             showConfirmButton: true,

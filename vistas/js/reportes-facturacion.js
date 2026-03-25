@@ -257,8 +257,8 @@ $(document).ready(function () {
                     "fechaFinal": ff,
                     "categoria": cat,
                     "tercero": tercero,
-                    "idUsuario": idUsuario || "todos",
-                    "csrf_token": $('meta[name="csrf-token"]').attr('content')
+                    "idUsuario": idUsuario || "todos"
+                    // csrf_token removido - manejado por csrf-helper.js
                 }
             },
             "deferRender": true,

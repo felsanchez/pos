@@ -30,15 +30,13 @@ class ControladorCategoriasGastos{
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "gastos";
-						}
+					}).then(() => {
+						window.location = "gastos";
 					})
 				</script>';
 				return;
@@ -59,16 +57,12 @@ class ControladorCategoriasGastos{
 					echo'<script>
 
 					swal({
-						  type: "success",
+						  icon: "success",
 						  title: "La categoría ha sido guardada correctamente",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
-						  }).then(function(result){
-									if (result.value) {
-
-									window.location = "gastos";
-
-									}
+						  }).then(() => {
+								window.location = "gastos";
 								})
 
 					</script>';
@@ -81,16 +75,12 @@ class ControladorCategoriasGastos{
 				echo'<script>
 
 					swal({
-						  type: "error",
+						  icon: "error",
 						  title: "¡La categoría no puede ir vacía o llevar caracteres especiales!",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
-						  }).then(function(result){
-							if (result.value) {
-
-							window.location = "gastos";
-
-							}
+						  }).then(() => {
+								window.location = "gastos";
 						})
 
 			  	</script>';
@@ -115,15 +105,13 @@ class ControladorCategoriasGastos{
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "gastos";
-						}
+					}).then(() => {
+						window.location = "gastos";
 					})
 				</script>';
 				return;
@@ -145,16 +133,12 @@ class ControladorCategoriasGastos{
 					echo'<script>
 
 					swal({
-						  type: "success",
+						  icon: "success",
 						  title: "La categoría ha sido editada correctamente",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
-						  }).then(function(result){
-									if (result.value) {
-
-									window.location = "gastos";
-
-									}
+						  }).then(() => {
+								window.location = "gastos";
 								})
 
 					</script>';
@@ -167,16 +151,12 @@ class ControladorCategoriasGastos{
 				echo'<script>
 
 					swal({
-						  type: "error",
+						  icon: "error",
 						  title: "¡La categoría no puede ir vacía o llevar caracteres especiales!",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
-						  }).then(function(result){
-							if (result.value) {
-
-							window.location = "gastos";
-
-							}
+						  }).then(() => {
+								window.location = "gastos";
 						})
 
 			  	</script>';
@@ -204,15 +184,13 @@ class ControladorCategoriasGastos{
 				}
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "gastos";
-						}
+					}).then(() => {
+						window.location = "gastos";
 					})
 				</script>';
 				return;
@@ -233,16 +211,12 @@ class ControladorCategoriasGastos{
 				echo'<script>
 
 				swal({
-					  type: "error",
+					  icon: "error",
 					  title: "¡No se puede eliminar la categoría porque tiene '.$totalGastos.' gasto(s) asociado(s)!",
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"
-					  }).then(function(result){
-								if (result.value) {
-
+					  }).then(() => {
 								window.location = "gastos";
-
-								}
 							})
 
 				</script>';
@@ -260,16 +234,12 @@ class ControladorCategoriasGastos{
 					echo'<script>
 
 					swal({
-						  type: "success",
+						  icon: "success",
 						  title: "La categoría ha sido eliminada correctamente",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
-						  }).then(function(result){
-									if (result.value) {
-
-									window.location = "gastos";
-
-									}
+						  }).then(() => {
+								window.location = "gastos";
 								})
 
 					</script>';

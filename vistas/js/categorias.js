@@ -8,7 +8,7 @@ $(".tablas").on("click", ".btnEditarCategoria", function(){
 
 	var datos = new FormData();
 	datos.append("idCategoria", idCategoria);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 
@@ -40,7 +40,7 @@ $(".tablas").on("click", ".btnEliminarCategoria", function () {
 
 		title: '¿Esta seguro de borrar la categoría?',
 		text: "¡Si no lo está puede cancelar la acción!",
-		type: 'warning',
+		icon: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -52,7 +52,7 @@ $(".tablas").on("click", ".btnEliminarCategoria", function () {
 
 			var datos = new FormData();
 			datos.append("idCategoriaEliminar", idCategoria);
-			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+			// csrf_token removido - manejado por csrf-helper.js
 
 			$.ajax({
 				url: "ajax/categorias.ajax.php",
@@ -64,7 +64,7 @@ $(".tablas").on("click", ".btnEliminarCategoria", function () {
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							type: "success",
+							icon: "success",
 							title: "¡Borrado correctamente!",
 							text: "La categoría ha sido borrada correctamente.",
 							showConfirmButton: true,
@@ -76,7 +76,7 @@ $(".tablas").on("click", ".btnEliminarCategoria", function () {
 						});
 					} else if (respuesta == "error_productos_asociados") {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "¡No se puede eliminar!",
 							text: "La categoría tiene productos asociados.",
 							showConfirmButton: true,
@@ -84,7 +84,7 @@ $(".tablas").on("click", ".btnEliminarCategoria", function () {
 						});
 					} else {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "Error",
 							text: "No se pudo eliminar. " + respuesta,
 							showConfirmButton: true,
@@ -112,7 +112,7 @@ $("#nuevaCategoria").change(function(){
 
 	var datos = new FormData();
 	datos.append("validarCategoria", categoria);
-	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+	// csrf_token removido - manejado por csrf-helper.js
 
 	$.ajax({
 		url:"ajax/categorias.ajax.php",

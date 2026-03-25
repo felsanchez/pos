@@ -86,7 +86,7 @@ $(document).ready(function () {
             cantidad = max;
             $(this).val(max);
             swal({
-                type: "warning",
+                icon: "warning",
                 title: "Cantidad excedida",
                 text: "No puedes devolver más de la cantidad original (" + max + ")",
                 timer: 2000
@@ -131,7 +131,7 @@ $(document).ready(function () {
 
         if ($(".checkProducto:checked").length == 0) {
             swal({
-                type: "error",
+                icon: "error",
                 title: "Error",
                 text: "Debes seleccionar al menos un producto para devolver."
             });
@@ -163,14 +163,14 @@ $(document).ready(function () {
         var observacion = $("#observacion").val();
 
         if (metodoPago == "") {
-            swal({ type: "error", title: "Error", text: "Seleccione un método de pago." });
+            swal({ icon: "error", title: "Error", text: "Seleccione un método de pago." });
             return;
         }
 
         swal({
             title: '¿Está seguro de guardar este documento?',
             text: "Se guardará en el sistema y podrá enviarla a la DIAN después.",
-            type: 'warning',
+            icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
@@ -180,7 +180,7 @@ $(document).ready(function () {
                 swal({
                     title: 'Guardando Nota Crédito',
                     text: 'Por favor espere mientras se procesa la información...',
-                    type: 'info',
+                    icon: 'info',
                     allowOutsideClick: false,
                     showConfirmButton: false,
                     onBeforeOpen: () => {
@@ -198,7 +198,7 @@ $(document).ready(function () {
                 datos.append("observacion", observacion);
                 datos.append("listaProductos", JSON.stringify(listaProductos));
                 datos.append("idUsuario", $("#idUsuarioSesion").val());
-                datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+                // csrf_token removido - manejado por csrf-helper.js
 
                 $.ajax({
                     url: "ajax/notas-credito.ajax.php",
@@ -211,7 +211,7 @@ $(document).ready(function () {
                     success: function (respuesta) {
                         if (!respuesta.error) {
                             swal({
-                                type: "success",
+                                icon: "success",
                                 title: "¡Nota Crédito guardada correctamente!",
                                 text: "El documento ha sido registrado exitosamente en el sistema.",
                                 showConfirmButton: true,
@@ -220,11 +220,11 @@ $(document).ready(function () {
                                 if (result.value) { window.location = "notas-credito"; }
                             });
                         } else {
-                            swal({ type: "error", title: "Error API Factus", text: respuesta.mensaje });
+                            swal({ icon: 'error', title: "Error API Factus", text: respuesta.mensaje });
                         }
                     },
                     error: function (jqXHR, status, error) {
-                        swal({ type: "error", title: "Error del Sistema", text: "Error AJAX: " + error });
+                        swal({ icon: "error", title: "Error del Sistema", text: "Error AJAX: " + error });
                     }
                 });
             }
@@ -261,7 +261,7 @@ $(document).ready(function () {
         swal({
             title: '¿Está seguro de firmar y emitir esta Nota Crédito?',
             text: 'Este proceso enviará el documento a la DIAN y no se podrá revertir.',
-            type: 'warning',
+            icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
@@ -272,7 +272,7 @@ $(document).ready(function () {
                 swal({
                     title: 'Guardando Nota Crédito',
                     text: 'Por favor espere mientras se procesa la información...',
-                    type: 'info',
+                    icon: 'info',
                     allowOutsideClick: false,
                     showConfirmButton: false,
                     onBeforeOpen: () => {
@@ -282,7 +282,7 @@ $(document).ready(function () {
                 var datos = new FormData();
                 datos.append("idNota", idNota);
                 datos.append("accion", "firmarNotaCredito");
-                datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+                // csrf_token removido - manejado por csrf-helper.js
 
                 $.ajax({
                     url: "ajax/notas-credito.ajax.php",
@@ -295,7 +295,7 @@ $(document).ready(function () {
                     success: function (respuesta) {
                         if (!respuesta.error) {
                             swal({ 
-                                type: "success", 
+                                icon: "success", 
                                 title: "¡Nota Crédito firmada y enviada correctamente!", 
                                 text: "El documento ha sido procesado por la DIAN exitosamente.",
                                 showConfirmButton: true,
@@ -304,11 +304,11 @@ $(document).ready(function () {
                                 if (result.value) { window.location = "notas-credito"; }
                             })
                         } else {
-                            swal({ type: "error", title: "Error API Factus", text: respuesta.mensaje });
+                            swal({ icon: 'error', title: "Error API Factus", text: respuesta.mensaje });
                         }
                     },
                     error: function () {
-                        swal({ type: "error", title: "Error de Servidor" });
+                        swal({ icon: "error", title: "Error de Servidor" });
                     }
                 })
             }
@@ -323,7 +323,7 @@ $(document).ready(function () {
         swal({
         title: '¿Está seguro de eliminar esta Nota Crédito?',
         text: '¡Si no lo está puede cancelar la acción!',
-        type: 'warning',
+        icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
@@ -336,7 +336,7 @@ $(document).ready(function () {
             var datos = new FormData();
             datos.append("accion", "eliminarNotaCredito");
             datos.append("idNotaEliminar", idNota);
-            datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+            // csrf_token removido - manejado por csrf-helper.js
 
             $.ajax({
                 url: "ajax/factus.ajax.php",
@@ -348,7 +348,7 @@ $(document).ready(function () {
                 success: function (respuesta) {
                     if (respuesta == "ok") {
                         swal({
-                            type: "success",
+                            icon: "success",
                             title: "¡Nota Crédito eliminada correctamente!",
                             text: "El documento ha sido borrado exitosamente del sistema.",
                             showConfirmButton: true,
@@ -360,7 +360,7 @@ $(document).ready(function () {
                         });
                     } else if (respuesta == "error_estado") {
                         swal({
-                            type: "error",
+                            icon: "error",
                             title: "¡No se puede eliminar!",
                             text: "La nota ya fue enviada a la DIAN.",
                             showConfirmButton: true,
@@ -368,7 +368,7 @@ $(document).ready(function () {
                         });
                     } else {
                         swal({
-                            type: "error",
+                            icon: "error",
                             title: "Error",
                             text: "No se pudo eliminar la nota. " + respuesta,
                             showConfirmButton: true,
@@ -389,7 +389,7 @@ $(document).ready(function () {
         var datos = new FormData();
         datos.append("accion", "obtenerNotasCreditoVenta");
         datos.append("idVenta", idVenta);
-        datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+        // csrf_token removido - manejado por csrf-helper.js
 
         $.ajax({
             url: "ajax/factus.ajax.php",
@@ -448,7 +448,7 @@ $(document).ready(function () {
 
         if (emailDestino == "") {
             swal({
-                type: "error",
+                icon: "error",
                 title: "Error",
                 text: "El correo electrónico es obligatorio"
             });
@@ -467,7 +467,7 @@ $(document).ready(function () {
         var datos = new FormData();
         datos.append("idNota", idNota);
         datos.append("emailDestino", emailDestino);
-        datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+        // csrf_token removido - manejado por csrf-helper.js
 
         $.ajax({
             url: "ajax/facturacion.ajax.php",
@@ -480,7 +480,7 @@ $(document).ready(function () {
             success: function (respuesta) {
                 if (respuesta.status == "success") {
                     swal({
-                        type: "success",
+                        icon: "success",
                         title: "¡Enviado!",
                         text: respuesta.mensaje,
                         confirmButtonText: "Cerrar"
@@ -491,7 +491,7 @@ $(document).ready(function () {
                     });
                 } else {
                     swal({
-                        type: "error",
+                        icon: "error",
                         title: "Error",
                         text: respuesta.mensaje
                     });
@@ -499,7 +499,7 @@ $(document).ready(function () {
             },
             error: function () {
                 swal({
-                    type: "error",
+                    icon: "error",
                     title: "Error de comunicación",
                     text: "No se pudo conectar con el servidor para enviar el correo."
                 });

@@ -97,7 +97,7 @@ $(document).on("click", ".btnEditarGasto", function () {
 
     var datos = new FormData();
     datos.append("idGasto", idGasto);
-    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+    // csrf_token removido - manejado por csrf-helper.js
 
     $.ajax({
 
@@ -152,7 +152,7 @@ $(document).on("click", ".btnEliminarGasto", function () {
 
 		title: '¿Está seguro de eliminar el gasto: "' + conceptoGasto + '"?',
 		text: "¡Si no lo está puede cancelar la acción!",
-		type: 'warning',
+		icon: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -164,7 +164,7 @@ $(document).on("click", ".btnEliminarGasto", function () {
 
 			var datos = new FormData();
 			datos.append("idGastoEliminar", idGasto);
-			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+			// csrf_token removido - manejado por csrf-helper.js
 
 			$.ajax({
 				url: "ajax/gastos.ajax.php",
@@ -176,7 +176,7 @@ $(document).on("click", ".btnEliminarGasto", function () {
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							type: "success",
+							icon: "success",
 							title: "¡Eliminado!",
 							text: "El gasto ha sido eliminado correctamente.",
 							showConfirmButton: true,
@@ -188,7 +188,7 @@ $(document).on("click", ".btnEliminarGasto", function () {
 						});
 					} else {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "Error",
 							text: "No se pudo eliminar el gasto. " + respuesta,
 							showConfirmButton: true,
@@ -215,7 +215,7 @@ $("#modalGestionarCategorias").on("click", ".btnEditarCategoriaGasto", function 
 
     var datos = new FormData();
     datos.append("idCategoria", idCategoria);
-    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+    // csrf_token removido - manejado por csrf-helper.js
 
     $.ajax({
 
@@ -256,7 +256,7 @@ $("#modalGestionarCategorias").on("click", ".btnEliminarCategoriaGasto", functio
 
 		title: '¿Está seguro de eliminar la categoría "' + nombreCategoria + '"?',
 		text: "¡Si no lo está puede cancelar la acción!",
-		type: 'warning',
+		icon: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -268,7 +268,7 @@ $("#modalGestionarCategorias").on("click", ".btnEliminarCategoriaGasto", functio
 
 			var datos = new FormData();
 			datos.append("idCategoriaGastoEliminar", idCategoria);
-			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+			// csrf_token removido - manejado por csrf-helper.js
 
 			$.ajax({
 				url: "ajax/categorias_gastos.ajax.php",
@@ -280,7 +280,7 @@ $("#modalGestionarCategorias").on("click", ".btnEliminarCategoriaGasto", functio
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							type: "success",
+							icon: "success",
 							title: "¡Eliminada!",
 							text: "La categoría ha sido eliminada correctamente.",
 							showConfirmButton: true,
@@ -292,7 +292,7 @@ $("#modalGestionarCategorias").on("click", ".btnEliminarCategoriaGasto", functio
 						});
 					} else if (respuesta == "error_gastos_asociados") {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "¡No se puede eliminar!",
 							text: "Esta categoría tiene gastos asociados.",
 							showConfirmButton: true,
@@ -300,7 +300,7 @@ $("#modalGestionarCategorias").on("click", ".btnEliminarCategoriaGasto", functio
 						});
 					} else {
 						swal({
-							type: "error",
+							icon: "error",
 							title: "Error",
 							text: "No se pudo eliminar la categoría. " + respuesta,
 							showConfirmButton: true,
@@ -356,7 +356,7 @@ $(document).on("change", ".nuevaImagenComprobante", function () {
             swal({
                 title: "Error al subir la imagen",
                 text: "¡La imagen debe estar en formato JPG o PNG!",
-                type: "error",
+                icon: "error",
                 confirmButtonText: "¡Cerrar!"
             });
         } else if (imagen["size"] > 2000000) {
@@ -364,7 +364,7 @@ $(document).on("change", ".nuevaImagenComprobante", function () {
             swal({
                 title: "Error al subir la imagen",
                 text: "¡La imagen no debe pesar más de 2MB!",
-                type: "error",
+                icon: "error",
                 confirmButtonText: "¡Cerrar!"
             });
         } else {
@@ -394,7 +394,7 @@ $(document).on("click", ".btnGuardarImagenComprobante", function () {
         swal({
             title: "Advertencia",
             text: "No has seleccionado ninguna imagen",
-            type: "warning",
+            icon: "warning",
             confirmButtonText: "¡Cerrar!"
         });
         return;
@@ -404,7 +404,7 @@ $(document).on("click", ".btnGuardarImagenComprobante", function () {
         swal({
             title: "Error",
             text: "No se pudo obtener el ID del gasto",
-            type: "error",
+            icon: "error",
             confirmButtonText: "¡Cerrar!"
         });
         return;
@@ -414,13 +414,13 @@ $(document).on("click", ".btnGuardarImagenComprobante", function () {
     datos.append("idGastoImagen", idGasto);
     datos.append("conceptoGasto", concepto);
     datos.append("nuevaImagenComprobante", imagen);
-    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+    // csrf_token removido - manejado por csrf-helper.js
 
     // Mostrar loading
     swal({
         title: 'Cargando...',
         allowOutsideClick: false,
-        onBeforeOpen: () => {
+        didOpen: () => {
             swal.showLoading()
         }
     });
@@ -438,7 +438,7 @@ $(document).on("click", ".btnGuardarImagenComprobante", function () {
 
             if (respuesta == "ok") {
                 swal({
-                    type: "success",
+                    icon: "success",
                     title: "¡La imagen ha sido actualizada correctamente!",
                     showConfirmButton: true,
                     confirmButtonText: "Cerrar"
@@ -449,7 +449,7 @@ $(document).on("click", ".btnGuardarImagenComprobante", function () {
                 });
             } else {
                 swal({
-                    type: "error",
+                    icon: "error",
                     title: "Error al actualizar la imagen",
                     text: respuesta,
                     confirmButtonText: "¡Cerrar!"
@@ -460,7 +460,7 @@ $(document).on("click", ".btnGuardarImagenComprobante", function () {
             console.error("Error en AJAX:", textStatus, errorThrown);
             console.error("Respuesta:", jqXHR.responseText);
             swal({
-                type: "error",
+                icon: "error",
                 title: "Error de conexión",
                 text: "No se pudo conectar con el servidor",
                 confirmButtonText: "¡Cerrar!"
@@ -488,7 +488,7 @@ $("#btnFiltrarGastos").on("click", function () {
     datos.append("fechaFin", fechaFin);
     datos.append("categoria", categoria);
     datos.append("proveedor", proveedor);
-    datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+    // csrf_token removido - manejado por csrf-helper.js
 
     $.ajax({
 
@@ -696,7 +696,7 @@ $(document).on('blur', '.celda-notas-gasto', function () {
             $celdaActual.removeClass('guardando');
 
             swal({
-                type: "error",
+                icon: "error",
                 title: "Error al guardar la nota",
                 text: "No se pudo guardar la nota. Por favor, intente nuevamente.",
                 confirmButtonText: "Cerrar"

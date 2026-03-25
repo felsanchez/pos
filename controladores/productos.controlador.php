@@ -33,15 +33,13 @@ class ControladorProductos
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "productos";
-						}
+					}).then(() => {
+						window.location = "productos";
 					})
 				</script>';
 				return;
@@ -82,16 +80,14 @@ class ControladorProductos
 					echo '<script> 
 
 						swal({ 
-							type: "error",
+							icon: "error",
 							title: "El código del producto ya existe",
 							text: "Por favor ingrese un código diferente. El código ' . $_POST["nuevoCodigo"] . ' ya está siendo utilizado.",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar" 
 
-						}).then(function(result){
-							if(result.value){
-								window.location = "productos";
-							}
+						}).then(() => {
+							window.location = "productos";
 						});
 					</script>';
 					return;
@@ -253,23 +249,12 @@ class ControladorProductos
 						echo '<script>
 
 						swal({
-
-							type: "success",
-
-							title: "!El producto ha sido guardado correctamente!",
-
+							icon: "success",
+							title: "¡El producto ha sido guardado correctamente!",
 							showConfirmButton: true,
-
 							confirmButtonText: "Cerrar"
-
-						}).then((result)=>{
-
-							if(result.value){
-
-								window.location = "productos";
-
-							}
-
+						}).then(() => {
+							window.location = "productos";
 						})
 
 						</script>';
@@ -415,25 +400,13 @@ class ControladorProductos
 						echo '<script>
 
 						swal({
-
-							type: "success",
-
+							icon: "success",
 							title: "¡Producto guardado!",
-
 							text: "Se crearon ' . $variantesCreadas . ' variantes correctamente",
-
 							showConfirmButton: true,
-
 							confirmButtonText: "Cerrar"
-
-						}).then((result)=>{
-
-							if(result.value){
-
-								window.location = "productos";
-
-							}
-
+						}).then(() => {
+							window.location = "productos";
 						})
 
 						</script>';
@@ -445,23 +418,12 @@ class ControladorProductos
 						echo '<script>
 
 						swal({
-
-							type: "error",
-
+							icon: "error",
 							title: "Error al guardar el producto",
-
 							showConfirmButton: true,
-
 							confirmButtonText: "Cerrar"
-
-						}).then((result)=>{
-
-							if(result.value){
-
-								window.location = "productos";
-
-							}
-
+						}).then(() => {
+							window.location = "productos";
 						})
 
 						</script>';
@@ -477,25 +439,12 @@ class ControladorProductos
 				echo '<script>
 
 					swal({
-
-						type: "error",
-
-						title: "!El producto no puede ir con los campos vacíos o llevar caracteres especiales!",
-
+						icon: "error",
+						title: "¡El producto no puede ir con los campos vacíos o llevar caracteres especiales!",
 						showConfirmButton: true,
-
-						confirmButtonText: "Cerrar",
-
-						closeOnConfirm: false
-
-					}).then((result)=>{
-
-						if(result.value){
-
-							window.location = "productos";
-
-						}
-
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "productos";
 					})
 
 
@@ -524,15 +473,13 @@ class ControladorProductos
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "productos";
-						}
+					}).then(() => {
+						window.location = "productos";
 					})
 				</script>';
 				return;
@@ -638,12 +585,12 @@ class ControladorProductos
 				if (!$productoAnterior) {
 					echo '<script>
 						swal({
-							type: "error",
+							icon: "error",
 							title: "Error al editar producto",
 							text: "No se pudo encontrar el producto en la base de datos",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
-						}).then((result) => {
+						}).then(() => {
 							window.location = "productos";
 						});
 					</script>';
@@ -885,15 +832,12 @@ class ControladorProductos
 
 					echo '<script>
 					swal({
-						type: "success",
-						title: "!El producto ha sido editado correctamente!",
+						icon: "success",
+						title: "¡El producto ha sido editado correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar",
-						}).then((result)=>{
-							if(result.value){
-
-							   window.location = "productos";
-							}
+						}).then(() => {
+							window.location = "productos";
 						})
 			     	</script>';
 				}
@@ -901,17 +845,12 @@ class ControladorProductos
 			} else {
 				echo '<script>
 					swal({
-						type: "error",
-						title: "!El producto no puede ir con los campos vacíos o llevar caracteres especiales!",
+						icon: "error",
+						title: "¡El producto no puede ir con los campos vacíos o llevar caracteres especiales!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
-						}).then((result)=>{
-
-							if(result.value){
-
-								window.location = "productos";
-							}
+						confirmButtonText: "Cerrar"
+						}).then(() => {
+							window.location = "productos";
 						})
 				</script>';
 			}
@@ -938,15 +877,13 @@ class ControladorProductos
 				}
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "productos";
-						}
+					}).then(() => {
+						window.location = "productos";
 					})
 				</script>';
 				return;
@@ -992,15 +929,12 @@ class ControladorProductos
 				}
 				echo '<script>
 					swal({
-						type: "success",
-						title: "!El producto ha sido borrado correctamente!",
+						icon: "success",
+						title: "¡El producto ha sido borrado correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar",
-						}).then((result)=>{
-							if(result.value){
-
-							   window.location = "productos";
-							}
+						}).then(() => {
+							window.location = "productos";
 						})
 			     	</script>';
 			}
@@ -1221,15 +1155,13 @@ class ControladorProductos
 
 					echo '<script>
 						swal({
-							type: "error",
+							icon: "error",
 							title: "Error en la importación",
 							text: "' . $mensajeError . '",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
-						}).then((result)=>{
-							if(result.value){
-								window.location = "productos";
-							}
+						}).then(() => {
+							window.location = "productos";
 						});
 					</script>';
 					return;
@@ -1248,30 +1180,26 @@ class ControladorProductos
 
 						echo '<script>
 							swal({
-								type: "success",
+								icon: "success",
 								title: "¡Importación exitosa!",
 								text: "Se importaron ' . $totalImportados . ' productos correctamente.",
 								showConfirmButton: true,
 								confirmButtonText: "Cerrar"
-							}).then((result)=>{
-								if(result.value){
-									window.location = "productos";
-								}
+							}).then(() => {
+								window.location = "productos";
 							});
 						</script>';
 
 					} else {
 						echo '<script>
 							swal({
-								type: "error",
+								icon: "error",
 								title: "Error al importar",
 								text: "Hubo un error al guardar los productos en la base de datos.",
 								showConfirmButton: true,
 								confirmButtonText: "Cerrar"
-							}).then((result)=>{
-								if(result.value){
-									window.location = "productos";
-								}
+							}).then(() => {
+								window.location = "productos";
 							});
 						</script>';
 					}
@@ -1279,15 +1207,13 @@ class ControladorProductos
 				} else {
 					echo '<script>
 						swal({
-							type: "warning",
+							icon: "warning",
 							title: "Sin productos válidos",
 							text: "No hay productos válidos para importar en el archivo CSV.",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
-						}).then((result)=>{
-							if(result.value){
-								window.location = "productos";
-							}
+						}).then(() => {
+							window.location = "productos";
 						});
 					</script>';
 				}
@@ -1295,15 +1221,13 @@ class ControladorProductos
 			} else {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error al leer archivo",
 						text: "No se pudo abrir el archivo CSV.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "productos";
-						}
+					}).then(() => {
+						window.location = "productos";
 					});
 				</script>';
 			}

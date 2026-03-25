@@ -31,15 +31,13 @@ class ControladorConfiguracion
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "configuracion";
-						}
+					}).then(() => {
+						window.location = "configuracion";
 					})
 				</script>';
 				return;
@@ -265,16 +263,12 @@ class ControladorConfiguracion
 				echo '<script>
 
 				swal({
-					  type: "success",
+					  icon: "success",
 					  title: "La configuración ha sido actualizada correctamente",
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"
-					  }).then(function(result){
-							if (result.value) {
-
+					  }).then(() => {
 							window.location = "configuracion";
-
-							}
 						})
 
 				</script>';

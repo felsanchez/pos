@@ -18,15 +18,13 @@ class ControladorProveedores
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "proveedores";
-						}
+					}).then(() => {
+						window.location = "proveedores";
 					})
 				</script>';
 				return;
@@ -60,18 +58,13 @@ class ControladorProveedores
 
 					echo '<script>
 					swal({
-						type: "success",
-						title: "!El proveedor ha sido guardado correctamente!",
+						icon: "success",
+						title: "¡El proveedor ha sido guardado correctamente!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
+						confirmButtonText: "Cerrar"
 
-						}).then((result)=>{
-
-							if(result.value){
-
+						}).then(() => {
 								window.location = "proveedores";
-							}
 						});
 				</script>';
 				}
@@ -80,18 +73,13 @@ class ControladorProveedores
 
 				echo '<script>
 					swal({
-						type: "error",
-						title: "!El proveedor no puede ir vacío o llevar caracteres especiales!",
+						icon: "error",
+						title: "¡El proveedor no puede ir vacío o llevar caracteres especiales!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
+						confirmButtonText: "Cerrar"
 
-						}).then((result)=>{
-
-							if(result.value){
-
+						}).then(() => {
 								window.location = "proveedores";
-							}
 						});
 				</script>';
 			}
@@ -129,15 +117,13 @@ class ControladorProveedores
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "proveedores";
-						}
+					}).then(() => {
+						window.location = "proveedores";
 					})
 				</script>';
 				return;
@@ -170,18 +156,13 @@ class ControladorProveedores
 
 					echo '<script>
 					swal({
-						type: "success",
-						title: "!El Proveedor ha sido editado correctamente!",
+						icon: "success",
+						title: "¡El Proveedor ha sido editado correctamente!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
+						confirmButtonText: "Cerrar"
 
-						}).then((result)=>{
-
-							if(result.value){
-
+						}).then(() => {
 								window.location = "proveedores";
-							}
 						});
 				</script>';
 				}
@@ -190,18 +171,13 @@ class ControladorProveedores
 
 				echo '<script>
 					swal({
-						type: "error",
-						title: "!El Proveedor no puede ir vacío o llevar caracteres especiales!",
+						icon: "error",
+						title: "¡El Proveedor no puede ir vacío o llevar caracteres especiales!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
+						confirmButtonText: "Cerrar"
 
-						}).then((result)=>{
-
-							if(result.value){
-
+						}).then(() => {
 								window.location = "proveedores";
-							}
 						});
 				</script>';
 			}
@@ -228,15 +204,13 @@ class ControladorProveedores
 				}
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "proveedores";
-						}
+					}).then(() => {
+						window.location = "proveedores";
 					})
 				</script>';
 				return;
@@ -254,15 +228,13 @@ class ControladorProveedores
 				}
 				echo '<script>
 					swal({
-						type: "error",
+						icon: "error",
 						title: "¡No se puede eliminar!",
 						text: "El proveedor tiene productos asociados.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result) => {
-						if (result.value) {
+					}).then(() => {
 							window.location = "proveedores";
-						}
 					});
 				</script>';
 				return;
@@ -276,14 +248,12 @@ class ControladorProveedores
 				}
 				echo '<script>
 					swal({
-						type: "success",
+						icon: "success",
 						title: "¡El Proveedor ha sido borrado correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result) => {
-						if (result.value) {
+					}).then(() => {
 							window.location = "proveedores";
-						}
 					});
 				</script>';
 			}

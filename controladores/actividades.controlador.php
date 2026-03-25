@@ -57,17 +57,12 @@ class ControladorActividades{
 
 			    	echo '<script>
 					swal({
-						type: "success",
-						title: "!La actividad ha sido guardado correctamente!",
+						icon: "success",
+						title: "¡La actividad ha sido guardada correctamente!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
-						}).then((result)=>{
-							if(result.value){
-
-							   //window.location = "actividades";
+						confirmButtonText: "Cerrar"
+						}).then(() => {
 							   window.location = "'.$paginaDestino.'";
-							}
 						})
 			     	</script>';
 		         }
@@ -76,18 +71,12 @@ class ControladorActividades{
 			else{
 				echo '<script>
 					swal({
-						type: "error",
-						title: "!La actividad no puede ir vacío o llevar caracteres especiales!",
+						icon: "error",
+						title: "¡La actividad no puede ir vacía o llevar caracteres especiales!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
-						}).then((result)=>{
-
-							if(result.value){
-
-								 //window.location = "actividades";
+						confirmButtonText: "Cerrar"
+						}).then(() => {
 							   window.location = "'.$paginaDestino.'";
-							}
 						})
 				</script>';
 			}
@@ -254,18 +243,12 @@ class ControladorActividades{
 
 				echo '<script>
 					swal({
-						type: "success",
-						title: "!La actividad ha sido borrada correctamente!",
+						icon: "success",
+						title: "¡La actividad ha sido borrada correctamente!",
 						showConfirmButton: true,
-						confirmButtonText: "Cerrar",
-						closeOnConfirm: false
-
-						}).then((result)=>{
-
-							if(result.value){
-
+						confirmButtonText: "Cerrar"
+						}).then(() => {
 								window.location = "actividades";
-							}
 						});
 				</script>';
 			}

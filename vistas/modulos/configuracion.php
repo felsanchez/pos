@@ -765,7 +765,90 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
 
         </div>
 
-        <!-- Pie del Formulario -->
+          <!--=====================================
+          SECCIÓN 6: GESTIÓN DE PERFILES
+          ======================================-->
+
+          <?php
+          $listaPerfiles = ControladorPerfiles::ctrObtenerPerfiles();
+          $modulosSistema = ControladorPerfiles::ctrObtenerModulos();
+          ?>
+
+          <div class="box box-info collapsed-box" id="seccion-perfiles">
+            <div class="box-header with-border">
+              <h3 class="box-title"><i class="fa fa-shield"></i> Gestión de Perfiles de Usuario</h3>
+              <div class="box-tools pull-right">
+                <button type="button" class="btn btn-box-tool" data-widget="custom-collapse"><i class="fa fa-plus"></i></button>
+              </div>
+            </div>
+            <div class="box-body" style="display: none;">
+
+              <p class="text-muted">Crea y administra los perfiles de acceso. Cada perfil define qué módulos y acciones puede usar un usuario.</p>
+
+              <button type="button" class="btn btn-success btn-sm mb-3" id="btnNuevoPerfil" style="margin-bottom:15px;">
+                <i class="fa fa-plus"></i> Nuevo Perfil
+              </button>
+
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="tablaPerfiles">
+                  <thead>
+                    <tr>
+                      <th>Perfil</th>
+                      <th>Descripción</th>
+                      <th>Usuarios</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($listaPerfiles as $perfil): ?>
+                    <tr>
+                      <td>
+                        <strong><?php echo htmlspecialchars($perfil['nombre']); ?></strong>
+                        <?php if ($perfil['es_sistema']): ?>
+                          <span class="label label-warning" style="margin-left:5px;"><i class="fa fa-lock"></i> Sistema</span>
+                        <?php endif; ?>
+                      </td>
+                      <td><?php echo htmlspecialchars($perfil['descripcion'] ?? ''); ?></td>
+                      <td><span class="badge bg-blue"><?php echo $perfil['total_usuarios']; ?></span></td>
+                      <td>
+                        <?php if (!$perfil['es_sistema']): ?>
+                          <button type="button" class="btn btn-xs btn-primary btn-editar-perfil"
+                            data-id="<?php echo $perfil['id']; ?>"
+                            data-nombre="<?php echo htmlspecialchars($perfil['nombre']); ?>"
+                            data-descripcion="<?php echo htmlspecialchars($perfil['descripcion'] ?? ''); ?>">
+                            <i class="fa fa-edit"></i> Editar
+                          </button>
+                          <?php if ($perfil['total_usuarios'] == 0): ?>
+                          <button type="button" class="btn btn-xs btn-danger btn-eliminar-perfil"
+                            data-id="<?php echo $perfil['id']; ?>"
+                            data-nombre="<?php echo htmlspecialchars($perfil['nombre']); ?>">
+                            <i class="fa fa-trash"></i> Eliminar
+                          </button>
+                          <?php endif; ?>
+                        <?php else: ?>
+                          <button type="button" class="btn btn-xs btn-default btn-ver-permisos-admin"
+                            data-id="<?php echo $perfil['id']; ?>">
+                            <i class="fa fa-eye"></i> Ver Permisos
+                          </button>
+                        <?php endif; ?>
+                      </td>
+                    </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ===============================================
+        MODAL: CREAR / EDITAR PERFIL
+        ================================================ -->
+
+
+
         <div class="box-footer">
           <button type="submit" class="btn btn-primary btn-lg">
             <i class="fa fa-save"></i> Guardar Configuración
@@ -990,4 +1073,291 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
         });
       });
   });
+</script>
+
+<!-- ===============================================
+MODAL: CREAR / EDITAR PERFIL (FUERA DEL FORM)
+================================================ -->
+<div class="modal fade" id="modalPerfil" role="dialog">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background:#17a2b8;color:white;">
+        <button type="button" class="close" data-dismiss="modal" style="color:white;">&times;</button>
+        <h4 class="modal-title"><i class="fa fa-shield"></i> <span id="modalPerfilTitulo">Nuevo Perfil</span></h4>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="perfilId" value="">
+        <input type="hidden" id="perfilEsSistema" value="0">
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Nombre del Perfil *</label>
+              <input type="text" class="form-control" id="perfilNombre" placeholder="Ej: Cajero, Supervisor...">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Descripción</label>
+              <input type="text" class="form-control" id="perfilDescripcion" placeholder="Breve descripción del rol">
+            </div>
+          </div>
+        </div>
+
+        <hr>
+        <h5><i class="fa fa-table"></i> Matriz de Permisos</h5>
+        <p class="text-muted small">Marca las acciones permitidas para cada módulo. El permiso <strong>Ver</strong> es requerido para los demás.</p>
+
+        <div id="adminFullAccessAlert" class="alert alert-warning" style="display:none;">
+          <i class="fa fa-lock"></i> <strong>Administrador</strong> siempre tiene acceso total. Los permisos no son editables.
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-bordered table-condensed" id="tablaMatrizPermisos">
+            <thead>
+              <tr style="background:#f4f4f4;">
+                <th style="min-width:160px;">Módulo</th>
+                <th class="text-center">Ver</th>
+                <th class="text-center">Crear</th>
+                <th class="text-center">Editar</th>
+                <th class="text-center">Eliminar</th>
+                <th class="text-center">Imprimir</th>
+                <th class="text-center">Exportar</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php
+              $modulosMatriz = ControladorPerfiles::ctrObtenerModulos();
+              $accionesNoAplica = [
+                'inicio'               => ['crear','editar','eliminar','imprimir','exportar'],
+                'usuarios'             => ['imprimir','exportar'],
+                'productos'            => ['imprimir','exportar'],
+                'categorias'           => ['imprimir','exportar'],
+                'clientes'             => ['imprimir','exportar'],
+                'actividades'          => ['imprimir','exportar'],
+                'seguimiento_leads'    => ['imprimir','exportar'],
+                'gastos'               => ['imprimir','exportar'],
+                'notificaciones'       => ['crear','editar','eliminar','imprimir','exportar'],
+                'configuracion'        => ['crear','editar','eliminar','imprimir','exportar'],
+                'reporte_ventas'       => ['crear','editar','eliminar','imprimir'],
+                'historial_stock'      => ['crear','editar','eliminar','imprimir'],
+                'ordenes-visita'       => ['crear','exportar'],
+                // Estos SI tienen imprimir (no están en la lista de exclusión para imprimir)
+                // ventas, factura_electronica, documento_soporte, notas_credito, notas_ajuste, ordenes
+              ];
+              foreach ($modulosMatriz as $slug => $nombreModulo):
+                $noAplica = $accionesNoAplica[$slug] ?? [];
+              ?>
+              <tr data-modulo="<?php echo $slug; ?>">
+                <td><strong><?php echo $nombreModulo; ?></strong></td>
+                <?php foreach (['ver','crear','editar','eliminar','imprimir','exportar'] as $accion): ?>
+                <td class="text-center">
+                  <?php if (in_array($accion, $noAplica)): ?>
+                    <span class="text-muted">—</span>
+                  <?php else: ?>
+                    <input type="checkbox"
+                      class="perm-check perm-<?php echo $accion; ?>"
+                      data-accion="<?php echo $accion; ?>"
+                      data-modulo="<?php echo $slug; ?>"
+                      style="width:18px;height:18px;cursor:pointer;">
+                  <?php endif; ?>
+                </td>
+                <?php endforeach; ?>
+              </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnGuardarPerfil">
+          <i class="fa fa-save"></i> Guardar Perfil
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  console.log("Script Gestión de Perfiles cargado.");
+  
+  var ajaxUrl = 'ajax/perfiles.ajax.php';
+  
+  function getCsrfToken() {
+    return $('meta[name="csrf-token"]').attr('content') || '';
+  }
+
+  function desmarcarTodo() {
+    $('#tablaMatrizPermisos input[type=checkbox]').prop('checked', false).prop('disabled', false);
+  }
+
+  function abrirModalNuevo() {
+    console.log("Abriendo modal para nuevo perfil.");
+    $('#perfilId').val('');
+    $('#perfilEsSistema').val('0');
+    $('#modalPerfilTitulo').text('Nuevo Perfil');
+    $('#perfilNombre').val('').prop('readonly', false);
+    $('#perfilDescripcion').val('');
+    $('#adminFullAccessAlert').hide();
+    $('#btnGuardarPerfil').show();
+    desmarcarTodo();
+    $('#modalPerfil').modal('show');
+  }
+
+  function abrirModalEditar(id, nombre, descripcion) {
+    console.log("Abriendo modal para editar perfil:", id);
+    $('#perfilId').val(id);
+    $('#perfilEsSistema').val('0');
+    $('#modalPerfilTitulo').text('Editar Perfil: ' + nombre);
+    $('#perfilNombre').val(nombre).prop('readonly', false);
+    $('#perfilDescripcion').val(descripcion);
+    $('#adminFullAccessAlert').hide();
+    $('#btnGuardarPerfil').show();
+    desmarcarTodo();
+
+    $.post(ajaxUrl, {accion: 'obtenerPermisos', id_perfil: id}, function(res) {
+      if (res.permisos) {
+        $.each(res.permisos, function(modulo, acciones) {
+          $.each(acciones, function(accion, val) {
+            if (val) {
+              $('[data-modulo="' + modulo + '"][data-accion="' + accion + '"]').prop('checked', true);
+            }
+          });
+        });
+      }
+      $('#modalPerfil').modal('show');
+    }, 'json');
+  }
+
+  function abrirModalAdmin(id) {
+    $('#perfilId').val(id);
+    $('#perfilEsSistema').val('1');
+    $('#modalPerfilTitulo').text('Perfil: Administrador (Solo lectura)');
+    $('#perfilNombre').val('Administrador').prop('readonly', true);
+    $('#perfilDescripcion').val('Acceso total al sistema. Permisos no editables.');
+    $('#adminFullAccessAlert').show();
+    $('#btnGuardarPerfil').hide();
+    $('#tablaMatrizPermisos input[type=checkbox]').prop('checked', true).prop('disabled', true);
+    $('#modalPerfil').modal('show');
+  }
+
+  // --- EVENTOS (DELEGADOS) ---
+  
+  $(document).on('click', '#btnNuevoPerfil', abrirModalNuevo);
+
+  $(document).on('click', '.btn-editar-perfil', function() {
+    abrirModalEditar($(this).data('id'), $(this).data('nombre'), $(this).data('descripcion'));
+  });
+
+  $(document).on('click', '.btn-ver-permisos-admin', function() {
+    abrirModalAdmin($(this).data('id'));
+  });
+
+  $(document).on('change', '.perm-ver', function() {
+    var modulo = $(this).data('modulo');
+    var checked = $(this).is(':checked');
+    if (!checked) {
+      $('[data-modulo="' + modulo + '"]').not(this).prop('checked', false);
+    }
+  });
+
+  $(document).on('change', '.perm-check:not(.perm-ver)', function() {
+    if ($(this).is(':checked')) {
+      var modulo = $(this).data('modulo');
+      $('[data-modulo="' + modulo + '"][data-accion="ver"]').prop('checked', true);
+    }
+  });
+
+  $(document).on('click', '.btn-eliminar-perfil', function() {
+    var id = $(this).data('id');
+    var nombre = $(this).data('nombre');
+    swal({
+      title: '¿Eliminar perfil "' + nombre + '"?',
+      text: 'Esta acción no se puede deshacer.',
+      type: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d9534f'
+    }).then(function(result) {
+      if (result.value) {
+        $.post(ajaxUrl, {accion: 'eliminarPerfil', id_perfil: id, csrf_token: getCsrfToken()}, function(res) {
+          if (res.resultado === 'ok') {
+            swal({ title: 'Eliminado', text: 'El perfil fue eliminado.', type: 'success' }).then(function() { location.reload(); });
+          } else if (res.resultado === 'error_usuarios') {
+            swal({ title: 'Error', text: 'No se puede eliminar: hay usuarios con este perfil.', type: 'error' });
+          } else {
+            swal({ title: 'Error', text: 'No se pudo eliminar el perfil.', type: 'error' });
+          }
+        }, 'json');
+      }
+    });
+  });
+
+  $(document).on('click', '#btnGuardarPerfil', function() {
+    console.log("Iniciando guardado de perfil...");
+    var id = $('#perfilId').val();
+    var nombre = $('#perfilNombre').val().trim();
+    var descripcion = $('#perfilDescripcion').val().trim();
+
+    if (!nombre) {
+      swal({ title: 'Atención', text: 'El nombre del perfil es requerido.', type: 'warning' });
+      return;
+    }
+
+    var permisos = {};
+    $('#tablaMatrizPermisos tr[data-modulo]').each(function() {
+      var modulo = $(this).data('modulo');
+      permisos[modulo] = {};
+      $(this).find('input[type=checkbox]').each(function() {
+        var accion = $(this).data('accion');
+        permisos[modulo][accion] = $(this).is(':checked') ? 1 : 0;
+      });
+    });
+
+    var accion = id ? 'actualizarPerfil' : 'crearPerfil';
+    var data = {
+      accion: accion,
+      nombre: nombre,
+      descripcion: descripcion,
+      csrf_token: getCsrfToken()
+    };
+    if (id) data.id_perfil = id;
+
+    $.each(permisos, function(modulo, acciones) {
+      $.each(acciones, function(accionKey, val) {
+        data['permisos[' + modulo + '][' + accionKey + ']'] = val;
+      });
+    });
+
+    console.log("Datos a enviar:", data);
+
+    $.post(ajaxUrl, data, function(res) {
+      console.log("Respuesta recibida:", res);
+      if (res.resultado === 'ok') {
+        $('#modalPerfil').modal('hide');
+        swal({ title: 'Guardado', text: 'El perfil fue guardado correctamente.', type: 'success' }).then(function() { location.reload(); });
+      } else if (res.resultado === 'error_nombre') {
+        swal({ title: 'Error', text: 'El nombre del perfil es requerido.', type: 'error' });
+      } else if (res.resultado && res.resultado.startsWith('error')) {
+        swal({ title: 'Error', text: 'No se pudo guardar: ' + res.resultado, type: 'error' });
+      } else {
+        swal({ title: 'Error', text: 'Respuesta inesperada del servidor.', type: 'error' });
+      }
+    }, 'json').fail(function(xhr) {
+      console.error("Fallo AJAX:", xhr.responseText);
+      swal({ title: 'Error', text: 'No se pudo conectar con el servidor.', type: 'error' });
+    });
+  });
+
+  $('#modalPerfil').on('hidden.bs.modal', function() {
+    desmarcarTodo();
+    $('#perfilId').val('');
+    $('#perfilNombre').prop('readonly', false);
+    $('#btnGuardarPerfil').show();
+    $('#adminFullAccessAlert').hide();
+  });
+});
 </script>

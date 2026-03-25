@@ -38,16 +38,12 @@ class ControladorVariantes{
 					echo'<script>
 
 					swal({
-						  type: "success",
+						  icon: "success",
 						  title: "El tipo de variante ha sido guardado correctamente",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
-						  }).then(function(result){
-									if (result.value) {
-
-									window.location = "variantes";
-
-									}
+						  }).then(() => {
+								window.location = "variantes";
 								})
 
 					</script>';
@@ -60,16 +56,12 @@ class ControladorVariantes{
 				echo'<script>
 
 					swal({
-						  type: "error",
+						  icon: "error",
 						  title: "¡El tipo de variante no puede ir vacío o llevar caracteres especiales!",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
-						  }).then(function(result){
-							if (result.value) {
-
-							window.location = "variantes";
-
-							}
+						  }).then(() => {
+								window.location = "variantes";
 						})
 
 			  	</script>';
@@ -118,16 +110,12 @@ class ControladorVariantes{
                     echo'<script>
 
                     swal({
-                        type: "success",
+                        icon: "success",
                         title: "La opción ha sido guardada correctamente",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
-                        }).then(function(result){
-                                    if (result.value) {
-
+                        }).then(() => {
                                     window.location = "variantes";
-
-                                    }
                                 })
 
                     </script>';
@@ -185,16 +173,12 @@ class ControladorVariantes{
                     echo'<script>
 
                     swal({
-                        type: "success",
+                        icon: "success",
                         title: "El tipo de variante ha sido actualizado correctamente",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
-                        }).then(function(result){
-                                    if (result.value) {
-
+                        }).then(() => {
                                     window.location = "variantes";
-
-                                    }
                                 })
 
                     </script>';
@@ -206,16 +190,12 @@ class ControladorVariantes{
                 echo'<script>
 
                     swal({
-                        type: "error",
+                        icon: "error",
                         title: "¡El tipo de variante no puede ir vacío o llevar caracteres especiales!",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
-                        }).then(function(result){
-                            if (result.value) {
-
-                            window.location = "variantes";
-
-                            }
+                        }).then(() => {
+                                window.location = "variantes";
                         })
 
                 </script>';
@@ -251,16 +231,12 @@ class ControladorVariantes{
                     echo'<script>
 
                     swal({
-                        type: "success",
+                        icon: "success",
                         title: "La opción ha sido actualizada correctamente",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
-                        }).then(function(result){
-                                    if (result.value) {
-
+                        }).then(() => {
                                     window.location = "variantes";
-
-                                    }
                                 })
 
                     </script>';
