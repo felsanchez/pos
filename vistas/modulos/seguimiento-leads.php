@@ -40,9 +40,11 @@ if ($_SESSION["perfil"] == "Especial") {
 
             <div class="box-header with-border">
 
+                <?php if(puedeAccion('seguimiento_leads', 'eliminar')): ?>
                 <button class="btn btn-danger" id="btnEliminarSeleccionados" disabled>
                     <i class="fa fa-trash"></i> Eliminar seleccionados
                 </button>
+                <?php endif; ?>
 
             </div>
 

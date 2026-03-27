@@ -313,6 +313,28 @@ class ControladorClientes
 				return;
 			}
 
+			// Verificar si hay notas crédito asociadas
+			// Usamos ModeloFactus que es el que gestiona notas_credito en este proyecto
+			$notasAsociadas = ModeloFactus::mdlMostrarNotasCredito("notas_credito", "id_cliente", $datos);
+
+			if (!empty($notasAsociadas)) {
+				if (isset($_POST["idClienteEliminar"])) {
+					return "error_notas_credito";
+				}
+				echo '<script>
+					swal({
+						icon: "error",
+						title: "¡No se puede eliminar!",
+						text: "El cliente tiene notas crédito asociadas.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "' . $ruta . '";
+					});
+				</script>';
+				return;
+			}
+
 
 			$respuesta = ModeloClientes::mdlBorrarCliente($tabla, $datos);
 

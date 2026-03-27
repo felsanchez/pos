@@ -1,3 +1,9 @@
+<?php
+if (!puedeVer('variantes')) {
+  echo '<script>window.location = "inicio";</script>';
+  return;
+}
+?>
 <div class="content-wrapper">
 
   <section class="content-header">
@@ -22,9 +28,11 @@
     <div class="box">
       
       <div class="box-header with-border">
+        <?php if(puedeAccion('variantes', 'crear')): ?>
         <button class="btn btn-primary btnAbrirModalTipo" data-toggle="modal" data-target="#modalAgregarTipoVariante">
         Agregar Tipo de Variante
         </button>
+        <?php endif; ?>
       </div>
 
       <div class="box-body">
@@ -60,26 +68,33 @@
 
                     <td>'.$value["orden"].'</td>';
 
-                    if($value["estado"] != 0){
-                      echo '<td><button class="btn btn-success btn-xs btnActivarTipo" idTipo="'.$value["id"].'" estadoTipo="0">Activado</button></td>';
-
-                    }else{
-                      echo '<td><button class="btn btn-danger btn-xs btnActivarTipo" idTipo="'.$value["id"].'" estadoTipo="1">Desactivado</button></td>';
+                    if(puedeAccion('variantes', 'editar')){
+                      if($value["estado"] != 0){
+                        echo '<td><button class="btn btn-success btn-xs btnActivarTipo" idTipo="'.$value["id"].'" estadoTipo="0">Activado</button></td>';
+                      }else{
+                        echo '<td><button class="btn btn-danger btn-xs btnActivarTipo" idTipo="'.$value["id"].'" estadoTipo="1">Desactivado</button></td>';
+                      }
+                    } else {
+                      if($value["estado"] != 0){
+                        echo '<td><button class="btn btn-success btn-xs">Activado</button></td>';
+                      }else{
+                        echo '<td><button class="btn btn-danger btn-xs">Desactivado</button></td>';
+                      }
                     }
 
-                    echo '<td>
+                    echo '<td><div class="btn-group">';
 
-                      <div class="btn-group">
-                          
-                       <button class="btn btn-warning btnEditarTipoVariante" idTipo="'.$value["id"].'" data-toggle="modal" data-target="#modalEditarTipoVariante"><i class="fa fa-pencil"></i></button> 
+                    if(puedeAccion('variantes', 'editar')){
+                      echo '<button class="btn btn-warning btnEditarTipoVariante" idTipo="'.$value["id"].'" data-toggle="modal" data-target="#modalEditarTipoVariante"><i class="fa fa-pencil"></i></button>';
+                    }
 
-                        <button class="btn btn-info btnVerOpciones" idTipo="'.$value["id"].'" nombreTipo="'.$value["nombre"].'"><i class="fa fa-list"></i> Opciones</button> 
+                    echo '<button class="btn btn-info btnVerOpciones" idTipo="'.$value["id"].'" nombreTipo="'.$value["nombre"].'"><i class="fa fa-list"></i> Opciones</button>';
 
-                        <button class="btn btn-danger btnEliminarTipo" idTipo="'.$value["id"].'" nombreTipo="'.$value["nombre"].'"><i class="fa fa-times"></i></button> 
+                    if(puedeAccion('variantes', 'eliminar')){
+                      echo '<button class="btn btn-danger btnEliminarTipo" idTipo="'.$value["id"].'" nombreTipo="'.$value["nombre"].'"><i class="fa fa-times"></i></button>';
+                    }
 
-                      </div>
-
-                    </td>
+                    echo '</div></td>
 
                   </tr>';
           }
@@ -102,9 +117,13 @@
       <div class="box-header with-border">
         <h3 class="box-title">Opciones de: <span id="nombreTipoVariante"></span></h3>
         <input type="hidden" id="idTipoVarianteActual">
+        <input type="hidden" id="puedeEditarVariante" value="<?php echo puedeAccion('variantes', 'editar') ? 1 : 0; ?>">
+        <input type="hidden" id="puedeEliminarVariante" value="<?php echo puedeAccion('variantes', 'eliminar') ? 1 : 0; ?>">
+        <?php if(puedeAccion('variantes', 'crear')): ?>
         <button class="btn btn-primary pull-right" data-toggle="modal" data-target="#modalAgregarOpcion">
           Agregar Opción
         </button>
+        <?php endif; ?>
       </div>
 
       <div class="box-body">

@@ -8,6 +8,7 @@ require_once "../modelos/ventas.modelo.php";
 require_once "../controladores/productos.controlador.php";
 require_once "../modelos/productos.modelo.php";
 require_once "../modelos/csrf.php";
+require_once "../modelos/helpers.php";
 
 // VALIDAR CSRF para todas las peticiones POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -116,9 +117,11 @@ class tablaVentas
 				$botones .= '</button>';
 			}
 
-			$botones .= '<a href="index.php?ruta=editarordenes-visita&idVenta=' . (isset($venta["id"]) ? $venta["id"] : "") . '" class="btn btn-warning">';
-			$botones .= '<i class="fa fa-line-chart"></i>';
-			$botones .= '</a>';
+            if(puedeAccion('ordenes-visita', 'editar')){
+			    $botones .= '<a href="index.php?ruta=editarordenes-visita&idVenta=' . (isset($venta["id"]) ? $venta["id"] : "") . '" class="btn btn-warning">';
+			    $botones .= '<i class="fa fa-line-chart"></i>';
+			    $botones .= '</a>';
+            }
 			$botones .= '</div>';
 
 			$data[] = array(

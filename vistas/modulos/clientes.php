@@ -249,7 +249,7 @@ $editarCliente->ctrEditarCliente();
     <div class="box">
 
       <div class="box-header with-border">
-
+        <?php if(puedeAccion('clientes', 'crear')): ?>
         <a href="cliente-detalle" class="btn btn-primary">
           <i class="fa fa-plus"></i> Agregar Nuevo
         </a>
@@ -261,7 +261,7 @@ $editarCliente->ctrEditarCliente();
         <button class="btn btn-success" data-toggle="modal" data-target="#modalImportarClientes">
           <i class="fa fa-upload"></i> Exportar / Importar Clientes
         </button>
-
+        <?php endif; ?>
       </div>
 
 
@@ -367,10 +367,12 @@ if (is_array($clientes) && count($clientes) > 0):
                       <i class="fa fa-line-chart"></i>
                     </a>
 
+                    <?php if(puedeAccion('clientes', 'editar')): ?>
                     <a href="cliente-detalle?id=<?php echo $value['id']; ?>" class="btn btn-warning btn-xs solo-movil"
                       style="float: right;" title="Editar cliente">
                       <i class="fa fa-pencil"></i>
                     </a>
+                    <?php endif; ?>
                   </td>
                   <!-- FIN BTN MOVIL-->
 
@@ -410,10 +412,12 @@ if (is_array($clientes) && count($clientes) > 0):
 
                   <td>
                     <div class="btn-group">
+                      <?php if(puedeAccion('clientes', 'editar')): ?>
                       <a href="cliente-detalle?id=<?php echo $value["id"]; ?>" class="btn btn-warning"
                         title="Editar cliente">
                         <i class="fa fa-pencil"></i>
                       </a>
+                      <?php endif; ?>
 
                       <?php
     $tieneVentas = (isset($value["compras"]) && $value["compras"] > 0);
@@ -427,10 +431,12 @@ if (is_array($clientes) && count($clientes) > 0):
                         <i class="fa fa-line-chart"></i>
                       </a>
 
+                      <?php if(puedeAccion('clientes', 'eliminar')): ?>
                       <button class="btn btn-danger btnEliminarCliente" idCliente="<?php echo $value["id"]; ?>"
                         title="Eliminar cliente">
                         <i class="fa fa-times"></i>
                       </button>
+                      <?php endif; ?>
                     </div>
                   </td>
 

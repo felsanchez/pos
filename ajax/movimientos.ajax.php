@@ -49,6 +49,9 @@ class AjaxMovimientos
 				$filtros["usuario"] = $_POST["usuario"];
 			}
 
+			// Limpieza automática de registros más antiguos de 3 meses
+			ModeloMovimientos::mdlLimpiarHistorialAntiguo("movimientos_stock");
+
 			$movimientos = ModeloMovimientos::mdlMostrarMovimientos($filtros);
 
 			// Asegurar que siempre devolvemos un array
@@ -81,6 +84,9 @@ class AjaxMovimientos
 			if (isset($_POST["fecha_hasta"]) && $_POST["fecha_hasta"] != "") {
 				$filtros["fecha_hasta"] = $_POST["fecha_hasta"];
 			}
+
+			// Limpieza automática de registros más antiguos de 3 meses
+			ModeloMovimientos::mdlLimpiarHistorialAntiguo("movimientos_stock");
 
 			$resumen = ModeloMovimientos::mdlObtenerResumen($filtros);
 

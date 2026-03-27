@@ -311,11 +311,13 @@ if ($xml) {
       <div class="box-header with-border">
 
 
+        <?php if(puedeAccion('ventas', 'crear')): ?>
         <a href="crear-venta">
           <button class="btn btn-primary">
             Agregar venta
           </button>
         </a>
+        <?php endif; ?>
 
 
         <div class="pull-right contenedor-filtros">
@@ -589,8 +591,8 @@ if ($xml) {
                         
                        <td>' . $value["fecha"];
 
-                // 1. Botón Eliminar - Solo Administrador
-                if ($_SESSION["perfil"] == "Administrador") {
+                // 1. Botón Eliminar
+                if (puedeAccion('ventas', 'eliminar')) {
                   echo '<button class="btn btn-danger btn-xs solo-movil btnEliminarVenta" style="float: right;" idVenta="' . $value["id"] . '">
                                       <i class="fa fa-times"></i>
                                     </button>';
@@ -603,9 +605,11 @@ if ($xml) {
                             ';
 
                 // 3. Botón Editar (Ver)
-                echo '<button class="btn btn-warning btn-xs solo-movil btnEditarVenta" style="float: right;" idVenta="' . $value["id"] . '">
-                              <i class="fa fa-eye"></i>
-                            </button>';
+                if(puedeAccion('ventas', 'editar')){
+                  echo '<button class="btn btn-warning btn-xs solo-movil btnEditarVenta" style="float: right;" idVenta="' . $value["id"] . '">
+                                <i class="fa fa-eye"></i>
+                              </button>';
+                }
 
                 echo '</td>
 
@@ -617,13 +621,15 @@ if ($xml) {
 
                             <button class="btn btn-info btnImprimirFactura" codigoVenta="' . $value["codigo"] . '">
                               <i class="fa fa-print"></i>
-                            </button>
-
-                            <button class="btn btn-warning btnEditarVenta" idVenta="' . $value["id"] . '">
+                            </button>';
+                            
+                if(puedeAccion('ventas', 'editar')){
+                  echo '<button class="btn btn-warning btnEditarVenta" idVenta="' . $value["id"] . '">
                               <i class="fa fa-eye"></i>
                             </button>';
+                }
 
-                if ($_SESSION["perfil"] == "Administrador") {
+                if (puedeAccion('ventas', 'eliminar')) {
                   echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '">
                                       <i class="fa fa-times"></i>
                                     </button>';
@@ -689,12 +695,15 @@ if ($xml) {
                           <div class="btn-group">
                             <button class="btn btn-info btn-xs btnImprimirFactura" codigoVenta="' . $value["codigo"] . '">
                               <i class="fa fa-print"></i>
-                            </button>
-                            <button class="btn btn-warning btn-xs btnEditarVenta" idVenta="' . $value["id"] . '">
+                            </button>';
+                            
+            if(puedeAccion('ventas', 'editar')){
+              echo '        <button class="btn btn-warning btn-xs btnEditarVenta" idVenta="' . $value["id"] . '">
                               <i class="fa fa-eye"></i>
                             </button>';
+            }
 
-            if ($_SESSION["perfil"] == "Administrador") {
+            if (puedeAccion('ventas', 'eliminar')) {
               echo '<button class="btn btn-danger btn-xs btnEliminarVenta" idVenta="' . $value["id"] . '">
                         <i class="fa fa-times"></i>
                       </button>';

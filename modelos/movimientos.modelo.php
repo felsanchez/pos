@@ -225,7 +225,24 @@ class ModeloMovimientos
 			return "error";
 		}
 
-		$stmt->close();
+		$stmt->closeCursor();
+		$stmt = null;
+	}
+
+	/*=============================================
+	LIMPIAR MOVIMIENTOS ANTIGUOS (MÁS DE 3 MESES)
+	=============================================*/
+	static public function mdlLimpiarHistorialAntiguo($tabla)
+	{
+		$stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE fecha < DATE_SUB(NOW(), INTERVAL 3 MONTH)");
+
+		if ($stmt->execute()) {
+			return "ok";
+		} else {
+			return "error";
+		}
+
+		$stmt->closeCursor();
 		$stmt = null;
 	}
 

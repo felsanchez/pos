@@ -57,13 +57,13 @@
     <div class="box">
 
       <div class="box-header with-border">
-
+        <?php if(puedeAccion('categorias', 'crear')): ?>
         <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarCategoria">
 
           Agregar categoría
 
         </button>
-
+        <?php endif; ?>
       </div>
 
 
@@ -109,15 +109,15 @@
 
                             <td>
 
-                              <div class="btn-group"> 
+                              <div class="btn-group">';
 
-                                <button class="btn btn-warning btnEditarCategoria" idCategoria="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarCategoria"><i class="fa fa-pencil"></i></button>';
+              if (puedeAccion('categorias', 'editar')) {
+                echo '<button class="btn btn-warning btnEditarCategoria" idCategoria="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarCategoria"><i class="fa fa-pencil"></i></button>';
+              }
 
-              //if($_SESSION["perfil"] =="Administrador"){
-            
-              echo '<button class="btn btn-danger btnEliminarCategoria" idCategoria="' . $value["id"] . '"><i class="fa fa-times"></i></button>';
-
-              //} 
+              if (puedeAccion('categorias', 'eliminar')) {
+                echo '<button class="btn btn-danger btnEliminarCategoria" idCategoria="' . $value["id"] . '"><i class="fa fa-times"></i></button>';
+              }
             
               echo '</div>
 

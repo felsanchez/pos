@@ -161,6 +161,33 @@
   }
 </style>
 
+<!-- Fix para modal de ajuste de stock -->
+<style>
+  /* Forzar z-index del modal por encima del backdrop */
+  #modalAjusteStock {
+    z-index: 10050 !important;
+    opacity: 1 !important;
+  }
+
+  #modalAjusteStock .modal-dialog {
+    z-index: 10051 !important;
+  }
+
+  #modalAjusteStock .modal-content {
+    opacity: 1 !important;
+  }
+
+  /* Ajustar z-index del backdrop debajo del modal */
+  #modalAjusteStock~.modal-backdrop,
+  .modal-backdrop.in {
+    z-index: 10040 !important;
+  }
+
+  /* Asegurar que el modal sea completamente visible */
+  #modalAjusteStock.in {
+    opacity: 1 !important;
+  }
+</style>
 
 <?php
 ini_set('display_errors', 1);
@@ -196,7 +223,7 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
     <div class="box">
 
       <div class="box-header with-border">
-
+        <?php if(puedeAccion('productos', 'crear')): ?>
         <a href="producto-detalle" class="btn btn-primary">
 
           <i class="fa fa-plus"></i> Agregar producto
@@ -206,7 +233,7 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
         <button class="btn btn-success" data-toggle="modal" data-target="#modalImportarProductos">
           <i class="fa fa-upload"></i> Exportar / Importar Productos
         </button>
-
+        <?php endif; ?>
       </div>
 
 
@@ -1478,6 +1505,63 @@ AMPLIAR Y EDITAR IMAGEN DE PRODUCTO DESDE LA TABLA
 
 
 
+<!--=====================================
+MODAL AJUSTE DE STOCK
+======================================-->
+<div id="modalAjusteStock" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form role="form" method="post">
+        <?php CSRF::insertToken(); ?>
+        
+        <div class="modal-header" style="background:#3c8dbc; color: white">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Ajuste Rápido de Stock</h4>
+        </div>
+        
+        <div class="modal-body">
+          <div class="box-body">
+            
+            <!-- entrada oculta ID -->
+            <input type="hidden" id="idProductoAjuste" name="idProductoAjuste" required>
+
+            <!-- entrada tipo de ajuste -->
+            <div class="form-group">
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-random"></i></span>
+                <select class="form-control input-lg" name="tipoAjuste" required>
+                  <option value="aumentar">Aumentar</option>
+                  <option value="disminuir">Disminuir</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- entrada cantidad -->
+            <div class="form-group">
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-hashtag"></i></span>
+                <input type="number" class="form-control input-lg" name="cantidadAjuste" id="cantidadAjuste" min="1" placeholder="Ingresar la cantidad a ajustar" required>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
+          <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </div>
+        
+        <?php
+          $ajusteStock = new ControladorProductos();
+          $ajusteStock->ctrAjusteStockLocal();
+        ?>
+        
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- Mensaje al actualizar productos a n8n -->
 <!--<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -1625,6 +1709,11 @@ document.getElementById('formN8N').addEventListener('submit', function(e) {
     if ($('#modalAgregarProducto').length) {
       $('#modalAgregarProducto').appendTo('body');
       console.log('✓ Modal de agregar producto movido al body correctamente');
+    }
+
+    // Modal de ajuste de stock
+    if ($('#modalAjusteStock').length) {
+      $('#modalAjusteStock').appendTo('body');
     }
 
     // Modal de ampliar imagen - YA NO ES NECESARIO, Bootstrap lo maneja automáticamente

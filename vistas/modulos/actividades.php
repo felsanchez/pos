@@ -86,9 +86,11 @@
 
       <div class="box-header with-border">
 
+        <?php if(puedeAccion('actividades', 'crear')): ?>
         <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarActividad">
           Agregar Actividad
         </button>
+        <?php endif; ?>
 
         <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
           <i class="fa fa-flag"></i> Gestionar estados
@@ -261,18 +263,16 @@
 
                   <td>
                     <div class="btn-group">
-
-                      <!--<button class="btn btn-warning btnEditarActividad" 
-                                    idActividad="<?php echo $value["id"]; ?>">
-                                    <i class="fa fa-pencil"></i>
-                                </button>-->
-
-                      <button class="btn btn-warning btnEditarActividad" data-id="<?php echo $actividad['id']; ?>"
+                      <?php if(puedeAccion('actividades', 'editar')): ?>
+                      <button class="btn btn-warning btnEditarActividad" data-id="<?php echo $value['id'] ?? ''; ?>"
                         data-toggle="modal" data-target="#modalEditarActividad"
                         idActividad="<?php echo $value["id"]; ?>"><i class="fa fa-pencil"></i></button>
+                      <?php endif; ?>
 
+                      <?php if(puedeAccion('actividades', 'eliminar')): ?>
                       <button class="btn btn-danger btnEliminarActividad" idActividad="<?php echo $value["id"]; ?>"><i
                           class="fa fa-times"></i></button>
+                      <?php endif; ?>
                     </div>
                   </td>
                 </tr>

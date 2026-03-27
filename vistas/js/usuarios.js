@@ -12,13 +12,14 @@ $(document).ready(function () {
 						var rowData = api.row(rowIdx).data();
 
 						// Indices (0-based):
-						// 0: Control, 1: Nombre, 2: Usuario, 3: Foto, 4: Perfil, 
-						// 5: Estado, 6: Ultimo login, 7: Acciones
+						// 0: Control, 1: Nombre, 2: Usuario, 3: Email, 4: Foto, 5: Perfil, 
+						// 6: Estado, 7: Ultimo login, 8: Acciones
 
 						var nombre = rowData[1];
-						var foto = rowData[3]; // HTML content (img tag)
-						var estado = rowData[5]; // HTML content (button)
-						var ultimoLogin = rowData[6];
+						var email = rowData[3];
+						var foto = rowData[4]; // HTML content (img tag)
+						var estado = rowData[6]; // HTML content (button)
+						var ultimoLogin = rowData[7];
 
 						var finalHtml = '';
 
@@ -30,10 +31,16 @@ $(document).ready(function () {
 						finalHtml += '<span class="text-bold" style="color:#555;">Nombre: </span><span class="pull-right" style="color:#333;">' + nombre + '</span></div>';
 
 						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Foto: </span><span class="pull-right" style="color:#333;"><button class="btn btn-info btn-xs btnVerFotoUsuario">Ver foto</button></span></div>';
+						finalHtml += '<span class="text-bold" style="color:#555;">Email: </span><span class="pull-right" style="color:#333;">' + email + '</span></div>';
 
 						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Estado: </span><span class="pull-right" style="color:#333;">' + estado + '</span></div>';
+						finalHtml += '<span class="text-bold" style="color:#555;">Foto: </span><span class="pull-right" style="color:#333;"><button class="btn btn-info btn-xs btnVerFotoUsuario">Ver foto</button></span></div>';
+
+						// Solo agregar fila de estado si la columna está visible en DataTables
+						if (api.column(6).visible()) {
+							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+							finalHtml += '<span class="text-bold" style="color:#555;">Estado: </span><span class="pull-right" style="color:#333;">' + estado + '</span></div>';
+						}
 
 						// Section 2: Actividad
 						finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
@@ -58,16 +65,21 @@ $(document).ready(function () {
 					"responsivePriority": 1
 				},
 				{
-					"targets": 4, // Perfil
+					"targets": 5, // Perfil
 					"responsivePriority": 1
 				},
 				{
-					"targets": 7, // Acciones
-					"responsivePriority": 2,
+					"targets": 6, // Estado
+					"visible": $("#puedeEditarUsuarios").val() == "1",
+					"responsivePriority": 1000
+				},
+				{
+					"targets": 8, // Acciones
+					"responsivePriority": 1,
 					"orderable": false
 				},
 				{
-					"targets": [1, 3, 5, 6], // Nombre, Foto, Estado, Ultimo login (hidden on mobile)
+					"targets": [1, 3, 4, 7], // Nombre, Email, Foto, Ultimo login (hidden on mobile)
 					"responsivePriority": 1000
 				}
 			],
@@ -413,6 +425,30 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 							icon: "error",
 							title: "¡No se puede eliminar!",
 							text: "El usuario tiene ventas asociadas.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					} else if (respuesta == "error_notas_credito") {
+						swal({
+							icon: "error",
+							title: "¡No se puede eliminar!",
+							text: "El usuario tiene notas crédito asociadas.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					} else if (respuesta == "error_documentos_soporte") {
+						swal({
+							icon: "error",
+							title: "¡No se puede eliminar!",
+							text: "El usuario tiene documentos soporte asociados.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
+					} else if (respuesta == "error_notas_ajuste") {
+						swal({
+							icon: "error",
+							title: "¡No se puede eliminar!",
+							text: "El usuario tiene notas de ajuste asociadas.",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
 						});

@@ -95,14 +95,25 @@ $(document).on("click", ".btnVerOpciones", function(){
 
             if(respuesta.length > 0){
 
+                var puedeEditar = $("#puedeEditarVariante").val() == "1";
+                var puedeEliminar = $("#puedeEliminarVariante").val() == "1";
+
                 for(var i = 0; i < respuesta.length; i++){
 
                     // Estado
                     var estadoHTML = "";
-                    if(respuesta[i].estado == 1){
-                        estadoHTML = '<button class="btn btn-success btn-xs btnActivarOpcion" idOpcion="'+respuesta[i].id+'" estadoOpcion="0">Activado</button>';
+                    if(puedeEditar){
+                        if(respuesta[i].estado == 1){
+                            estadoHTML = '<button class="btn btn-success btn-xs btnActivarOpcion" idOpcion="'+respuesta[i].id+'" estadoOpcion="0">Activado</button>';
+                        } else {
+                            estadoHTML = '<button class="btn btn-danger btn-xs btnActivarOpcion" idOpcion="'+respuesta[i].id+'" estadoOpcion="1">Desactivado</button>';
+                        }
                     } else {
-                        estadoHTML = '<button class="btn btn-danger btn-xs btnActivarOpcion" idOpcion="'+respuesta[i].id+'" estadoOpcion="1">Desactivado</button>';
+                        if(respuesta[i].estado == 1){
+                            estadoHTML = '<button class="btn btn-success btn-xs">Activado</button>';
+                        } else {
+                            estadoHTML = '<button class="btn btn-danger btn-xs">Desactivado</button>';
+                        }
                     }
 
                     html += '<tr>';
@@ -112,8 +123,12 @@ $(document).on("click", ".btnVerOpciones", function(){
                     html += '<td>'+estadoHTML+'</td>';
                     html += '<td>';
                     html += '<div class="btn-group">';
-                    html += '<button class="btn btn-warning btn-xs btnEditarOpcion" idOpcion="'+respuesta[i].id+'" data-toggle="modal" data-target="#modalEditarOpcion"><i class="fa fa-pencil"></i></button>';
-                    html += '<button class="btn btn-danger btn-xs btnEliminarOpcion" idOpcion="'+respuesta[i].id+'" nombreOpcion="'+respuesta[i].nombre+'"><i class="fa fa-times"></i></button>';
+                    if(puedeEditar){
+                        html += '<button class="btn btn-warning btn-xs btnEditarOpcion" idOpcion="'+respuesta[i].id+'" data-toggle="modal" data-target="#modalEditarOpcion"><i class="fa fa-pencil"></i></button>';
+                    }
+                    if(puedeEliminar){
+                        html += '<button class="btn btn-danger btn-xs btnEliminarOpcion" idOpcion="'+respuesta[i].id+'" nombreOpcion="'+respuesta[i].nombre+'"><i class="fa fa-times"></i></button>';
+                    }
                     html += '</div>';
                     html += '</td>';
                     html += '</tr>';

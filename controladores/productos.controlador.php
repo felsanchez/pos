@@ -1494,6 +1494,90 @@ class ControladorProductos
 
 
 
+	/*=============================================
+	AJUSTE RÁPIDO DE STOCK
+	=============================================*/
+	static public function ctrAjusteStockLocal()
+	{
+		if (isset($_POST["idProductoAjuste"]) && isset($_POST["tipoAjuste"]) && isset($_POST["cantidadAjuste"])) {
+
+			if (!CSRF::validateToken()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error de seguridad",
+						text: "Token CSRF inválido. Recarga la página.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(function(){
+						window.location = "productos";
+					});
+				</script>';
+				return;
+			}
+
+			$idProducto = $_POST["idProductoAjuste"];
+			$tipo = $_POST["tipoAjuste"];
+			$cantidad = (int) $_POST["cantidadAjuste"];
+
+			if ($cantidad > 0) {
+				
+				$producto = ModeloProductos::mdlMostrarProductos("productos", "id", $idProducto, "id");
+				
+				if ($producto) {
+					$stockActual = (int) $producto["stock"];
+					
+					if ($tipo == "aumentar") {
+						$nuevoStock = $stockActual + $cantidad;
+					} else {
+						$nuevoStock = $stockActual - $cantidad;
+						if ($nuevoStock < 0) $nuevoStock = 0;
+					}
+
+					$diferencia = $nuevoStock - $stockActual;
+
+					$respuesta = ModeloProductos::mdlActualizarProducto("productos", "stock", $nuevoStock, $idProducto);
+
+					if ($respuesta == "ok") {
+
+						ControladorMovimientos::ctrRegistrarMovimiento(
+							"producto",
+							$idProducto,
+							null,
+							$producto["descripcion"],
+							"ajuste_manual",
+							$diferencia,
+							$stockActual,
+							$nuevoStock,
+							"Ajuste rápido",
+							"Tipo: " . ucfirst($tipo)
+						);
+
+						echo '<script>
+							swal({
+								type: "success",
+								title: "¡Stock modificado correctamente!",
+								showConfirmButton: true,
+								confirmButtonText: "Cerrar"
+							}).then(function(){
+								window.location = "productos";
+							});
+						</script>';
+					} else {
+						echo '<script>
+							swal({
+								type: "error",
+								title: "Error al actualizar la base de datos",
+								showConfirmButton: true,
+								confirmButtonText: "Cerrar"
+							});
+						</script>';
+					}
+				}
+			}
+		}
+	}
+
 }
 
 

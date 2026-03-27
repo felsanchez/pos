@@ -1,3 +1,9 @@
+<?php
+if (!puedeVer('proveedores')) {
+  echo '<script>window.location = "inicio";</script>';
+  return;
+}
+?>
 <!-- Solo muestra 2 campos en movil en la Tabla 1-->
 <style>
   /* Estilos para el botón de expansión en móvil */
@@ -65,13 +71,13 @@
     <div class="box">
 
       <div class="box-header with-border">
-
+        <?php if(puedeAccion('proveedores', 'crear')): ?>
         <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarProveedor">
 
           Agregar proveedor
 
         </button>
-
+        <?php endif; ?>
       </div>
 
 
@@ -127,15 +133,18 @@
               echo '<td contenteditable="true" class="celda-notas-proveedor" data-id="' . $value['id'] . '">' . $notas . '</td>';
 
               echo '<td>
-                      <div class="btn-group">
+                      <div class="btn-group">';
 
-                        <button class="btn btn-warning btnEditarProveedor" idProveedor="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarProveedor"><i class="fa fa-pencil"></i></button>';
+              if (puedeAccion('proveedores', 'editar')) {
+                echo '<button class="btn btn-warning btnEditarProveedor" idProveedor="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarProveedor"><i class="fa fa-pencil"></i></button>';
+              }
 
-              if ($totalProductos == 0) {
-                echo '<button class="btn btn-danger btnEliminarProveedor" idProveedor="' . $value["id"] . '"><i class="fa fa-times"></i></button>';
-
-              } else {
-                echo '<button class="btn btn-danger" disabled title="No se puede eliminar porque tiene productos asociados"><i class="fa fa-times"></i></button>';
+              if (puedeAccion('proveedores', 'eliminar')) {
+                if ($totalProductos == 0) {
+                  echo '<button class="btn btn-danger btnEliminarProveedor" idProveedor="' . $value["id"] . '"><i class="fa fa-times"></i></button>';
+                } else {
+                  echo '<button class="btn btn-danger" disabled title="No se puede eliminar porque tiene productos asociados"><i class="fa fa-times"></i></button>';
+                }
               }
 
               echo '</div>

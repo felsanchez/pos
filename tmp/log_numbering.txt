@@ -712,3 +712,14 @@
 2026-03-25 03:54:19 | RangoId: 1190 | Prefijo: SETP | Local: 990000219 | NextLocal: 990000220 | ApiLive: 990000220 | Desde: 990000000 | Siguiente: 990000220
 2026-03-25 04:17:23 | RangoId: 1190 | Prefijo: SETP | Local: 990000219 | NextLocal: 990000220 | ApiLive: 990000220 | Desde: 990000000 | Siguiente: 990000220
 2026-03-25 04:17:27 | RangoId: 1190 | Prefijo: SETP | Local: 990000219 | NextLocal: 990000220 | ApiLive: 990000220 | Desde: 990000000 | Siguiente: 990000220
+2026-03-26 06:41:54 | RangoId: 1190 | Prefijo: SETP | Local: 990000219 | NextLocal: 990000220 | ApiLive: 990000219 | Desde: 990000000 | Siguiente: 990000220
+2026-03-26 06:42:31 | RangoId: 1190 | Prefijo: SETP | Local: 990000219 | NextLocal: 990000220 | ApiLive: 990000219 | Desde: 990000000 | Siguiente: 990000220
+2026-03-26 21:47:27 | RangoId: 1190 | Prefijo: SETP | Local: 990000219 | NextLocal: 990000220 | ApiLive: 990000219 | Desde: 990000000 | Siguiente: 990000220
+2026-03-26 21:47:30 | RangoId: 1190 | Prefijo: SETP | Local: 990000219 | NextLocal: 990000220 | ApiLive: 990000219 | Desde: 990000000 | Siguiente: 990000220
+2026-03-26 21:52:45 | RangoId: 1190 | Prefijo: SETP | Local: 990000219 | NextLocal: 990000220 | ApiLive: 990000219 | Desde: 990000000 | Siguiente: 990000220
+2026-03-26 21:53:06 | RangoId: 1190 | Prefijo: SETP | Local: 990000219 | NextLocal: 990000220 | ApiLive: 990000219 | Desde: 990000000 | Siguiente: 990000220
+2026-03-26 21:53:18 | RangoId: 1190 | Prefijo: SETP | Local: 990000220 | NextLocal: 990000221 | ApiLive: 990000220 | Desde: 990000000 | Siguiente: 990000221
+2026-03-26 21:54:36 | RangoId: 1190 | Prefijo: SETP | Local: 990000220 | NextLocal: 990000221 | ApiLive: 990000220 | Desde: 990000000 | Siguiente: 990000221
+2026-03-26 21:54:52 | RangoId: 1190 | Prefijo: SETP | Local: 990000220 | NextLocal: 990000221 | ApiLive: 990000220 | Desde: 990000000 | Siguiente: 990000221
+2026-03-26 21:54:56 | RangoId: 1190 | Prefijo: SETP | Local: 990000219 | NextLocal: 990000220 | ApiLive: 990000220 | Desde: 990000000 | Siguiente: 990000220
+2026-03-26 22:05:14 | RangoId: 1190 | Prefijo: SETP | Local: 990000219 | NextLocal: 990000220 | ApiLive: 990000220 | Desde: 990000000 | Siguiente: 990000220

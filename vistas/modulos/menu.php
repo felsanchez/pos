@@ -56,41 +56,54 @@
           </li>';
       }
 
-      if (puedeVer('productos')) {
+      if (puedeVer('productos') || puedeVer('categorias') || puedeVer('variantes') || puedeVer('proveedores')) {
         echo '<li class="treeview">
                 <a href="">
                     <i class="fa fa-product-hunt"></i>
-                    <span>Productos</span>
+                    <span>Catálogo</span>
                     <span class="pull-right-container">
                     <i class="fa fa-angle-left pull-right"></i>
                     </span>
                 </a>
-                <ul class="treeview-menu">
-                  <li>
-                    <a href="productos">
-                      <i class="fa fa-circle-o"></i>
-                      <span>Productos</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="categorias">
-                      <i class="fa fa-circle-o"></i>
-                      <span>Categorias</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="variantes">
-                      <i class="fa fa-circle-o"></i>
-                      <span>Variantes</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="proveedores">
-                      <i class="fa fa-circle-o"></i>
-                      <span>Proveedores</span>
-                    </a>
-                  </li>
-                </ul>
+                <ul class="treeview-menu">';
+                  
+                  if (puedeVer('productos')) {
+                    echo '<li>
+                      <a href="productos">
+                        <i class="fa fa-circle-o"></i>
+                        <span>Productos</span>
+                      </a>
+                    </li>';
+                  }
+
+                  if (puedeVer('categorias')) {
+                    echo '<li>
+                      <a href="categorias">
+                        <i class="fa fa-circle-o"></i>
+                        <span>Categorías</span>
+                      </a>
+                    </li>';
+                  }
+
+                  if (puedeVer('variantes')) {
+                    echo '<li>
+                      <a href="variantes">
+                        <i class="fa fa-circle-o"></i>
+                        <span>Variantes</span>
+                      </a>
+                    </li>';
+                  }
+
+                  if (puedeVer('proveedores')) {
+                    echo '<li>
+                      <a href="proveedores">
+                        <i class="fa fa-circle-o"></i>
+                        <span>Proveedores</span>
+                      </a>
+                    </li>';
+                  }
+
+        echo '</ul>
               </li>';
       }
 

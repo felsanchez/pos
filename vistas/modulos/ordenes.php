@@ -264,11 +264,13 @@ if ($xml) {
       <div class="box-header with-border">
 
 
+        <?php if(puedeAccion('ordenes', 'crear')): ?>
         <a href="crear-orden">
           <button class="btn btn-primary">
             Agregar orden
           </button>
         </a>
+        <?php endif; ?>
 
         <div class="pull-right contenedor-filtros">
 
@@ -573,15 +575,18 @@ foreach ($respuesta as $key => $value) {
   }
 
   $alistado = isset($value["seguimiento_alistado"]) ? $value["seguimiento_alistado"] : 0;
-  if ($alistado == 1) {
-    echo '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-success" title="Pedido Alistado / Editado" style="width: auto !important;">
-                              Enviado (A) <i class="fa fa-line-chart"></i>
-                            </a>';
-  }
-  else {
-    echo '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-warning" title="Editar Orden" style="width: auto !important;">
-                              Enviar a Ventas
-                            </a>';
+  
+  if(puedeAccion('ordenes', 'editar')){
+    if ($alistado == 1) {
+      echo '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-success" title="Pedido Alistado / Editado" style="width: auto !important;">
+                                Enviado (A) <i class="fa fa-line-chart"></i>
+                              </a>';
+    }
+    else {
+      echo '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-warning" title="Editar Orden" style="width: auto !important;">
+                                Enviar a Ventas
+                              </a>';
+    }
   }
 
   // Botón 4: Convertir a Factura Electrónica
@@ -601,8 +606,8 @@ foreach ($respuesta as $key => $value) {
                               <i class="fa fa-print"></i>
                             </button>';
 
-  // Mostrar el botón solo si el usuario es Administrador
-  if ($_SESSION["perfil"] == "Administrador") {
+  // Mostrar el botón solo si el usuario tiene permiso
+  if (puedeAccion('ordenes', 'eliminar')) {
     echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" style="width: auto !important;">
                                       <i class="fa fa-times"></i>
                                     </button>';
@@ -652,7 +657,7 @@ foreach ($respuesta as $key => $value) {
                             </button>
                             ';
 
-  if ($_SESSION["perfil"] == "Administrador") {
+  if (puedeAccion('ordenes', 'eliminar')) {
     echo '<button class="btn btn-danger btn-xs btnEliminarVenta" idVenta="' . $value["id"] . '">
                         <i class="fa fa-times"></i>
                       </button>';

@@ -24,11 +24,13 @@ if ($_SESSION["perfil"] == "Especial") {
     <section class="content">
         <div class="box">
             <div class="box-header with-border">
+                <?php if(puedeAccion('factura_electronica', 'crear')): ?>
                 <a href="crear-nota-credito">
                     <button class="btn btn-primary">
                         Crear Nota Crédito
                     </button>
                 </a>
+                <?php endif; ?>
             </div>
 
             <style>
@@ -123,9 +125,13 @@ if ($_SESSION["perfil"] == "Especial") {
 
                             if ($value["estado_dian"] == "borrador") {
                                 // Botón Firmar
-                                echo '<button class="btn btn-success btnFirmarNotaCredito" idNota="' . e($value["id"]) . '" title="Firmar y Enviar a DIAN"><i class="fa fa-paper-plane"></i></button>';
+                                if(puedeAccion('factura_electronica', 'editar')) {
+                                    echo '<button class="btn btn-success btnFirmarNotaCredito" idNota="' . e($value["id"]) . '" title="Firmar y Enviar a DIAN"><i class="fa fa-paper-plane"></i></button>';
+                                }
                                 // Botón Eliminar
-                                echo '<button class="btn btn-danger btnEliminarNotaCredito" idNota="' . e($value["id"]) . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
+                                if(puedeAccion('factura_electronica', 'eliminar')) {
+                                    echo '<button class="btn btn-danger btnEliminarNotaCredito" idNota="' . e($value["id"]) . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
+                                }
                             } else {
                                 // Botón XML si tiene URL
                                 if (!empty($value["xml_dian_nc"])) {

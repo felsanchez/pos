@@ -60,7 +60,7 @@ require_once "modelos/sanitizer.php";
   <link rel="stylesheet" href="vistas/bower_components/datatables.net-bs/css/responsive.bootstrap.min.css">
 
   <!-- DataTables Buttons -->
-  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.5.2/css/buttons.bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-buttons-bs@1.5.2/css/buttons.bootstrap.min.css">
 
   <!-- iCheck for checkboxes and radio inputs -->
   <link rel="stylesheet" href="vistas/plugins/iCheck/all.css">
@@ -104,10 +104,10 @@ require_once "modelos/sanitizer.php";
   <script src="vistas/bower_components/datatables.net-bs/js/responsive.bootstrap.min.js"></script>
 
   <!-- DataTables Buttons -->
-  <script src="https://cdn.datatables.net/buttons/1.5.2/js/dataTables.buttons.min.js"></script>
-  <script src="https://cdn.datatables.net/buttons/1.5.2/js/buttons.bootstrap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-  <script src="https://cdn.datatables.net/buttons/1.5.2/js/buttons.html5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/datatables.net-buttons@1.5.2/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/datatables.net-buttons-bs@1.5.2/js/buttons.bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.1.3/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/datatables.net-buttons@1.5.2/js/buttons.html5.min.js"></script>
 
   <!-- SweetAlert2 -->
   <script src="vistas/plugins/sweetalert2/sweetalert2.all.min.js"></script>
@@ -247,9 +247,10 @@ CUERPO DOCUMENTO
   <script src="vistas/js/csrf-helper.js"></script>
   <script src="vistas/js/plantilla.js"></script>
   <script src="vistas/js/usuarios.js?v=<?php echo time(); ?>"></script>
+  <script src="vistas/js/clientes.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/categorias.js"></script>
   <script src="vistas/js/productos.js"></script>
-  <script src="vistas/js/clientes.js?v=<?php echo time(); ?>"></script>
+
   <script src="vistas/js/ventas.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/actividades.js"></script>
   <script src="vistas/js/proveedores.js"></script>

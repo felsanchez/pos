@@ -19,11 +19,13 @@
 
             <div class="box-header with-border">
 
+                <?php if(puedeAccion('documento_soporte', 'crear')): ?>
                 <a href="crear-documento-soporte">
                     <button class="btn btn-primary">
                         Crear Documento Soporte
                     </button>
                 </a>
+                <?php endif; ?>
 
             </div>
 
@@ -147,8 +149,12 @@
                                             <a href="index.php?ruta=ver-documento-soporte&idDS=' . e($value["id"]) . '" class="btn btn-info" title="Ver Detalle"><i class="fa fa-eye"></i></a>';
 
                                 if ($value["estado_dian"] == "borrador") {
-                                    echo '<button class="btn btn-success btnFirmarDS" idDS="' . e($value["id"]) . '" title="Firmar y Enviar a Factus"><i class="fa fa-paper-plane"></i></button>';
-                                    echo '<button class="btn btn-danger btnEliminarDS" idDS="' . e($value["id"]) . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
+                                    if(puedeAccion('documento_soporte', 'editar')) {
+                                        echo '<button class="btn btn-success btnFirmarDS" idDS="' . e($value["id"]) . '" title="Firmar y Enviar a Factus"><i class="fa fa-paper-plane"></i></button>';
+                                    }
+                                    if(puedeAccion('documento_soporte', 'eliminar')) {
+                                        echo '<button class="btn btn-danger btnEliminarDS" idDS="' . e($value["id"]) . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
+                                    }
                                 } else {
                                     echo '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . e($value["cuds"]) . '" target="_blank" class="btn btn-success" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>';
 

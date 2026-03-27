@@ -601,9 +601,11 @@ MODAL AGREGAR actividad
         <button type="button" class="btn btn-warning" data-dismiss="modal">
           <i class="fa fa-check"></i> Entendido
         </button>
+        <?php if(puedeAccion('actividades', 'crear')): ?>
         <button type="button" class="btn btn-primary" id="crearNuevaActividad">
           <i class="fa fa-plus"></i> Crear Nueva Actividad
         </button>
+        <?php endif; ?>
       </div>
     </div>
   </div>

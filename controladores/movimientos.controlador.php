@@ -62,6 +62,9 @@ class ControladorMovimientos{
 	=============================================*/
 	static public function ctrMostrarMovimientos(){
 
+		// Limpieza automática de registros más antiguos de 3 meses
+		ModeloMovimientos::mdlLimpiarHistorialAntiguo("movimientos_stock");
+
 		$filtros = array();
 
 		if(isset($_POST["id_producto"]) && !empty($_POST["id_producto"])){

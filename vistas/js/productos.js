@@ -510,6 +510,15 @@ $(".tablaProductos tbody").on("click", "button.btnEditarProducto", function () {
 
 
 /*=============================================
+AJUSTE RÁPIDO DE STOCK
+=============================================*/
+$(".tablaProductos tbody").on("click", "button.btnAjusteStock", function () {
+	var idProducto = $(this).attr("idProducto");
+	$("#idProductoAjuste").val(idProducto);
+	$("#cantidadAjuste").val("");
+});
+
+/*=============================================
 ELIMINAR PRODUCTO
 =============================================*/
 

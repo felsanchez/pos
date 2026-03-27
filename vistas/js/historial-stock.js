@@ -42,15 +42,7 @@ function cargarTablaMovimientos() {
 				autoWidth: false,
 
 				columns: [
-					{
-						data: "id",
-						responsivePriority: 1, // Mostrar Checkbox (Visible)
-						orderable: false,
-						className: "text-center all",
-						render: function (data) {
-							return '<input type="checkbox" class="checkMovimiento" value="' + data + '" onclick="event.stopPropagation()">';
-						}
-					},
+
 					{
 						data: "fecha",
 						className: "all",
@@ -331,101 +323,4 @@ function inicializarEdicionNotas() {
 // Ejecutar al cargar por primera vez
 $(document).ready(function () {
 	inicializarEdicionNotas();
-});
-
-/*=============================================
-SELECCIONAR TODOS LOS MOVIMIENTOS
-=============================================*/
-$(document).on("change", "#checkTodosMovimientos", function () {
-	$(".checkMovimiento").prop("checked", $(this).prop("checked"));
-	mostrarBotonBorrarMovimientos();
-});
-
-/*=============================================
-SELECCIONAR UNA MOVIMIENTO
-=============================================*/
-$(document).on("change", ".checkMovimiento", function () {
-	mostrarBotonBorrarMovimientos();
-});
-
-/*=============================================
-MOSTRAR BOTÓN BORRAR
-=============================================*/
-function mostrarBotonBorrarMovimientos() {
-	var checkedCount = $(".checkMovimiento:checked").length;
-	if (checkedCount > 0) {
-		$("#btnBorrarMovimientos").show();
-	} else {
-		$("#btnBorrarMovimientos").hide();
-	}
-}
-
-/*=============================================
-ELIMINAR MOVIMIENTOS SELECCIONADOS
-=============================================*/
-$("#btnBorrarMovimientos").click(function () {
-
-	var idsSeleccionados = [];
-	$(".checkMovimiento:checked").each(function () {
-		idsSeleccionados.push($(this).val());
-	});
-
-	if (idsSeleccionados.length == 0) {
-		return;
-	}
-
-	swal({
-		title: '¿Está seguro de eliminar los movimientos seleccionados?',
-		text: "Se eliminarán " + idsSeleccionados.length + " registro(s)",
-		type: 'warning',
-		showCancelButton: true,
-		confirmButtonColor: '#3085d6',
-		cancelButtonColor: '#d33',
-		cancelButtonText: 'Cancelar',
-		confirmButtonText: 'Sí, eliminar'
-	}).then(function (result) {
-		if (result.value) {
-
-			var datos = new FormData();
-			datos.append("idsEliminarMovimientos", JSON.stringify(idsSeleccionados));
-			datos.append("accion", "eliminarMovimientos");
-			datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
-
-			$.ajax({
-				url: "ajax/movimientos.ajax.php",
-				method: "POST",
-				data: datos,
-				cache: false,
-				contentType: false,
-				processData: false,
-				success: function (respuesta) {
-					console.log("Respuesta eliminar:", respuesta);
-					if (respuesta == "ok") {
-						swal({
-							type: "success",
-							title: "Movimientos eliminados correctamente",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						}).then(function (result) {
-							if (result.value) {
-								cargarTablaMovimientos();
-								cargarResumen();
-								$("#btnBorrarMovimientos").hide();
-								$("#checkTodosMovimientos").prop("checked", false);
-							}
-						});
-					} else {
-						swal({
-							type: "error",
-							title: "Error al eliminar movimientos",
-							text: "Ocurrió un error al intentar eliminar los registros.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					}
-				}
-			});
-		}
-	});
-
 });

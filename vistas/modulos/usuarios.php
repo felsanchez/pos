@@ -47,16 +47,21 @@
 
       <div class="box-header with-border">
 
+        <?php if(puedeAccion('usuarios', 'crear')): ?>
         <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarUsuario">
 
           Agregar usuario
 
         </button>
+        <?php endif; ?>
 
       </div>
 
 
       <div class="box-body table-responsive">
+
+        <!-- Variable oculta para que JS sepa si el usuario actual puede editar la columna estado -->
+        <input type="hidden" id="puedeEditarUsuarios" value="<?php echo puedeAccion('usuarios', 'editar') ? '1' : '0'; ?>">
 
         <table class="table table-bordered table-striped dt-responsive tablaUsuarios" style="width: 100%">
 
@@ -119,25 +124,37 @@
 
               echo '<td>' . e($value["perfil"]) . '</td>';
 
-              if ($value["estado"] != 0) {
+              if (puedeAccion('usuarios', 'editar')) {
+                if ($value["estado"] != 0) {
 
-                echo '<td><button class="btn btn-success btn-xs btnActivar" idUsuario="' . $value["id"] . '" estadoUsuario="0">Activado</button></td>';
+                  echo '<td><button class="btn btn-success btn-xs btnActivar" idUsuario="' . $value["id"] . '" estadoUsuario="0">Activado</button></td>';
+                } else {
+
+                  echo '<td><button class="btn btn-danger btn-xs btnActivar" idUsuario="' . $value["id"] . '" estadoUsuario="1">Desactivado</button></td>';
+                }
               } else {
-
-                echo '<td><button class="btn btn-danger btn-xs btnActivar" idUsuario="' . $value["id"] . '" estadoUsuario="1">Desactivado</button></td>';
+                if ($value["estado"] != 0) {
+                  echo '<td><button class="btn btn-success btn-xs">Activado</button></td>';
+                } else {
+                  echo '<td><button class="btn btn-danger btn-xs">Desactivado</button></td>';
+                }
               }
 
 
               echo '<td>' . $value["ultimo_login"] . '</td>
 
                     <td>
-                      <div class="btn-group">
-
-                        <button class="btn btn-warning btnEditarUsuario" idUsuario="' . $value["id"] . '"><i class="fa fa-pencil"></i></button>
+                      <div class="btn-group">';
                         
-                        <button class="btn btn-danger btnEliminarUsuario" idUsuario="' . $value["id"] . '" fotoUsuario="' . $value["foto"] . '" usuario="' . $value["usuario"] . '"><i class="fa fa-times"></i></button>
+                        if(puedeAccion('usuarios', 'editar')) {
+                          echo '<button class="btn btn-warning btnEditarUsuario" idUsuario="' . $value["id"] . '"><i class="fa fa-pencil"></i></button>';
+                        }
+                        
+                        if(puedeAccion('usuarios', 'eliminar')) {
+                          echo '<button class="btn btn-danger btnEliminarUsuario" idUsuario="' . $value["id"] . '" fotoUsuario="' . $value["foto"] . '" usuario="' . $value["usuario"] . '"><i class="fa fa-times"></i></button>';
+                        }
 
-                      </div>
+                      echo '</div>
                     </td>
 
                   </tr>';

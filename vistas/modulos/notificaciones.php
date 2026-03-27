@@ -133,9 +133,11 @@
               <i class="fa fa-check"></i> Marcar todas como leídas
             </button>
 
+            <?php if(puedeAccion('notificaciones', 'eliminar')): ?>
             <button class="btn btn-danger" id="btnBorrarSeleccionadas" style="display:none;">
               <i class="fa fa-trash"></i> Borrar seleccionadas
             </button>
+            <?php endif; ?>
           </div>
 
           <div class="col-md-6">

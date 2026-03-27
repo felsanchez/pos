@@ -311,11 +311,13 @@ if ($xml) {
       <div class="box-header with-border">
 
 
+        <?php if(puedeAccion('factura_electronica', 'crear')): ?>
         <a href="crear-factura-electronica">
           <button class="btn btn-primary">
             Crear Factura Electrónica
           </button>
         </a>
+        <?php endif; ?>
 
 
         <div class="pull-right contenedor-filtros">
@@ -656,8 +658,8 @@ if ($xml) {
                        <td>' . e($value["fecha"]);
 
                 // 1. Botón Eliminar - Solo Administrador
-                // 1. Botón Eliminar - Solo Administrador
-                if ($_SESSION["perfil"] == "Administrador") {
+                // 1. Botón Eliminar
+                if (puedeAccion('factura_electronica', 'eliminar')) {
                   echo '<button class="btn btn-danger btn-xs solo-movil btnEliminarVenta" style="float: right;" idVenta="' . e($value["id"]) . '">
                                       <i class="fa fa-times"></i>
                                     </button>';
@@ -685,15 +687,18 @@ if ($xml) {
 
                              ' . (!empty($value["qr_data"]) ? '<a class="btn btn-success" href="' . $value["qr_data"] . '" target="_blank" data-toggle="tooltip" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>' : '') . '
 
-                             ' . ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
-                  '<button class="btn btn-success btnFirmarFactura" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
-                                <i class="fa fa-paper-plane"></i>
-                             </button>' : '') . '
-                             ' . ((isset($value["estado_dian"]) && in_array($value["estado_dian"], ['creada', 'pendiente'])) ?
-                  '<a class="btn btn-warning" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador">
-                                <i class="fa fa-pencil"></i>
-                             </a>' : '') . '
                              ';
+                             if(puedeAccion('factura_electronica', 'editar')) {
+                                echo ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
+                                    '<button class="btn btn-success btnFirmarFactura" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
+                                        <i class="fa fa-paper-plane"></i>
+                                    </button>' : '') . '
+                                    ' . ((isset($value["estado_dian"]) && in_array($value["estado_dian"], ['creada', 'pendiente'])) ?
+                                    '<a class="btn btn-warning" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador">
+                                        <i class="fa fa-pencil"></i>
+                                    </a>' : '');
+                             }
+                             echo ' ';
 
                 if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
                   echo ' <button class="btn btn-primary btnEnviarEmail" idVenta="' . $value["id"] . '" nombreCliente="' . $nombreCliente . '" emailCliente="' . $value["email_cliente"] . '" title="Enviar por Correo">
@@ -710,7 +715,7 @@ if ($xml) {
                                      </button>';
                 }
 
-                if ($_SESSION["perfil"] == "Administrador") {
+                if (puedeAccion('factura_electronica', 'eliminar')) {
                   // Solo mostrar botón eliminar si la factura NO ha sido firmada/aceptada
                   $estadosNoEliminables = ['enviada', 'aceptada'];
                   if (!in_array($value["estado_dian"], $estadosNoEliminables)) {
@@ -810,17 +815,20 @@ if ($xml) {
                                  </button>';
             }
 
-            echo ' ' . ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
-              '<button class="btn btn-success btn-xs btnFirmarFactura" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
-                                <i class="fa fa-paper-plane"></i>
-                             </button>' : '') . '
-                             ' . ((isset($value["estado_dian"]) && in_array($value["estado_dian"], ['creada', 'pendiente'])) ?
-              '<a class="btn btn-warning btn-xs" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador">
-                                <i class="fa fa-pencil"></i>
-                             </a>' : '') . '
-';
+            echo ' ';
+            if(puedeAccion('factura_electronica', 'editar')) {
+                echo ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
+                '<button class="btn btn-success btn-xs btnFirmarFactura" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
+                                    <i class="fa fa-paper-plane"></i>
+                                </button>' : '') . '
+                                ' . ((isset($value["estado_dian"]) && in_array($value["estado_dian"], ['creada', 'pendiente'])) ?
+                '<a class="btn btn-warning btn-xs" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador">
+                                    <i class="fa fa-pencil"></i>
+                                </a>' : '');
+            }
+            echo ' ';
 
-            if ($_SESSION["perfil"] == "Administrador") {
+            if (puedeAccion('factura_electronica', 'eliminar')) {
               // Solo mostrar botón eliminar si la factura NO ha sido firmada/aceptada
               $estadosNoEliminables = ['enviada', 'aceptada'];
               if (!in_array($value["estado_dian"], $estadosNoEliminables)) {
@@ -976,9 +984,11 @@ MODAL GENERAR NOTA CRÉDITO
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+        <?php if(puedeAccion('factura_electronica', 'crear')): ?>
         <button type="button" class="btn btn-danger" id="btnConfirmarNC">
           <i class="fa fa-check"></i> Generar Nota Crédito
         </button>
+        <?php endif; ?>
       </div>
     </div>
   </div>

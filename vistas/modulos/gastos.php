@@ -150,9 +150,11 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
       <div class="box-header with-border">
 
+        <?php if(puedeAccion('gastos', 'crear')): ?>
         <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarGasto">
           <i class="fa fa-plus"></i> Agregar gasto
         </button>
+        <?php endif; ?>
 
         <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarCategorias">
           <i class="fa fa-tags"></i> Gestionar categorías
@@ -318,10 +320,14 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
                 // Columna 10: Acciones
                 echo '<td>
-                  <div class="btn-group">
-                    <button class="btn btn-warning btnEditarGasto" idGasto="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarGasto"><i class="fa fa-pencil"></i></button>
-                    <button class="btn btn-danger btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . $value["concepto"] . '"><i class="fa fa-times"></i></button>
-                  </div>
+                  <div class="btn-group">';
+                    if(puedeAccion('gastos', 'editar')) {
+                      echo '<button class="btn btn-warning btnEditarGasto" idGasto="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarGasto"><i class="fa fa-pencil"></i></button>';
+                    }
+                    if(puedeAccion('gastos', 'eliminar')) {
+                      echo '<button class="btn btn-danger btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . $value["concepto"] . '"><i class="fa fa-times"></i></button>';
+                    }
+                  echo '</div>
                 </td>
 
               </tr>';
@@ -372,14 +378,18 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                       <div class="card-gasto-concepto">
                         ' . $value["concepto"] . '
                       </div>
-                      <div class="btn-group">
-                        <button class="btn btn-warning btn-xs btnEditarGasto" idGasto="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarGasto">
-                          <i class="fa fa-pencil"></i>
-                        </button>
-                        <button class="btn btn-danger btn-xs btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . $value["concepto"] . '">
-                          <i class="fa fa-times"></i>
-                        </button>
-                      </div>
+                      <div class="btn-group">';
+                        if(puedeAccion('gastos', 'editar')) {
+                            echo '<button class="btn btn-warning btn-xs btnEditarGasto" idGasto="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarGasto">
+                                    <i class="fa fa-pencil"></i>
+                                  </button>';
+                        }
+                        if(puedeAccion('gastos', 'eliminar')) {
+                            echo '<button class="btn btn-danger btn-xs btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . $value["concepto"] . '">
+                                    <i class="fa fa-times"></i>
+                                  </button>';
+                        }
+                      echo '</div>
                     </div>
 
                     <div class="card-gasto-detalles">
