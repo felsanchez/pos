@@ -162,7 +162,7 @@
         <!-- TABLA PARA ESCRITORIO -->
         <div class="tabla-actividades">
 
-          <table class="table table-bordered table-striped tablas" style="width: 100%">
+          <table class="table table-bordered table-striped tablaActividades" style="width: 100%">
 
             <thead>
               <tr>
@@ -1082,136 +1082,7 @@ $editarTipo = new ControladorTiposActividades();
 $editarTipo->ctrEditarTipo();
 ?>
 
-<!-- DataTables Initialization for Actividades -->
-<script>
-  $(document).ready(function () {
-    // Verificar si existe la tabla antes de inicializar
-    if ($(".tablas").length > 0) {
-      // Destruir instancia previa si existe
-      if ($.fn.DataTable.isDataTable('.tablas')) {
-        $('.tablas').DataTable().destroy();
-      }
-
-      $(".tablas").DataTable({
-        "order": [[1, "desc"]], // Ordenar por ID (columna 1)
-        "responsive": {
-          "details": {
-            "type": "column",
-            "target": 0,
-            "renderer": function (api, rowIdx, columns) {
-
-              // Mapear datos por título de columna
-              var dataMap = {};
-              columns.forEach(function (col) {
-                var headerText = col.title ? col.title.replace(/<[^>]*>?/gm, '').trim() : '';
-                dataMap[headerText] = col.data;
-              });
-
-              // Obtener datos
-              var descripcion = dataMap['Descripción'] || '';
-              var tipo = dataMap['Tipo'] || '';
-              var responsable = dataMap['Responsable'] || '';
-              var fecha = dataMap['Fecha'] || '';
-              var estado = dataMap['Estado'] || '';
-              var cliente = dataMap['Cliente'] || '';
-              var observacion = dataMap['Observación'] || '';
-              var acciones = dataMap['Acciones'] || '';
-
-              var finalHtml = '';
-
-              // SECCIÓN 1: Información General
-              finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
-              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información General</h5></div>';
-
-              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-              finalHtml += '<span class="text-bold" style="color:#555;">Descripción: </span><span class="pull-right" style="color:#333;">' + descripcion + '</span></div>';
-
-              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-              finalHtml += '<span class="text-bold" style="color:#555;">Fecha: </span><span class="pull-right" style="color:#333;">' + fecha + '</span></div>';
-
-              // SECCIÓN 2: Categoría
-              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #f39c12;">';
-              finalHtml += '<h5 style="font-weight:bold; color:#f39c12; margin:0;">Categoría</h5></div>';
-
-              finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-              finalHtml += '<span class="text-bold" style="color:#555;">Estado: </span><span class="pull-right" style="color:#333;">' + estado + '</span></div>';
-
-              finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-              finalHtml += '<span class="text-bold" style="color:#555;">Tipo: </span><span class="pull-right" style="color:#333;">' + tipo + '</span></div>';
-
-              // SECCIÓN 3: Clientes
-              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #00a65a;">';
-              finalHtml += '<h5 style="font-weight:bold; color:#00a65a; margin:0;">Clientes</h5></div>';
-
-              finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-              finalHtml += '<span class="text-bold" style="color:#555;">Responsable: </span><span class="pull-right" style="color:#333;">' + responsable + '</span></div>';
-
-              finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-              finalHtml += '<span class="text-bold" style="color:#555;">Cliente: </span><span class="pull-right" style="color:#333;">' + cliente + '</span></div>';
-
-              // SECCIÓN 4: Información Adicional (solo si hay observación)
-              if (observacion && observacion.trim() !== '') {
-                finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #605ca8;">';
-                finalHtml += '<h5 style="font-weight:bold; color:#605ca8; margin:0;">Información Adicional</h5></div>';
-
-                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-                finalHtml += '<span class="text-bold" style="color:#555;">Observación: </span><span class="pull-right" style="color:#333;">' + observacion + '</span></div>';
-              }
-
-              // SECCIÓN 4: Información Adicional (solo si hay observación)
-              if (observacion && observacion.trim() !== '') {
-                finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #605ca8;">';
-                finalHtml += '<h5 style="font-weight:bold; color:#605ca8; margin:0;">Información Adicional</h5></div>';
-
-                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-                finalHtml += '<span class="text-bold" style="color:#555;">Observación: </span><span class="pull-right" style="color:#333;">' + observacion + '</span></div>';
-              }
-
-              // SECCIÓN 5: Acciones (ELIMINADO en detalle móvil porque ya se muestra en la tabla principal)
-              /*
-              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #dd4b39;">';
-              finalHtml += '<h5 style="font-weight:bold; color:#dd4b39; margin:0;">Acciones</h5></div>';
-
-              finalHtml += '<div class="col-xs-12" style="padding: 10px 0;">';
-              finalHtml += acciones;
-              finalHtml += '</div>';
-              */
-
-              return finalHtml;
-            }
-          }
-        },
-        "language": {
-          "sProcessing": "Procesando...",
-          "sLengthMenu": "Mostrar _MENU_ registros",
-          "sZeroRecords": "No se encontraron resultados",
-          "sEmptyTable": "Ningún dato disponible en esta tabla",
-          "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-          "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
-          "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-          "sInfoPostFix": "",
-          "sSearch": "Buscar:",
-          "sUrl": "",
-          "sInfoThousands": ",",
-          "sLoadingRecords": "Cargando...",
-          "oPaginate": {
-            "sFirst": "Primero",
-            "sLast": "Último",
-            "sNext": "Siguiente",
-            "sPrevious": "Anterior"
-          },
-          "oAria": {
-            "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
-            "sSortDescending": ": Activar para ordenar la columna de manera descendente"
-          }
-        }
-      });
-
-      // Marcar tabla como lista para mostrarla
-      $(".tablas").addClass("datatable-ready");
-    }
-  });
-</script>
+<!-- DataTables y Scripts se manejan desde actividades.js -->
 
 <!--=============CALENDARIO========================
 <script>

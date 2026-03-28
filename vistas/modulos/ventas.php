@@ -973,9 +973,6 @@ MODAL EDITAR CLIENTE
 </div>
 
 
-<!--Ruta Clientes.js-->
-<script src="vistas/js/ventas.js"></script>
-
 <!-- DateRangePicker -->
 <script src="vistas/bower_components/moment/min/moment.min.js"></script>
 <script src="vistas/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>

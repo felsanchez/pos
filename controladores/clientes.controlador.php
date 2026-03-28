@@ -336,7 +336,7 @@ class ControladorClientes
 			}
 
 
-			$respuesta = ModeloClientes::mdlBorrarCliente($tabla, $datos);
+			$respuesta = ModeloClientes::mdlEliminarCliente($tabla, $datos);
 
 			if ($respuesta == "ok") {
 				if (isset($_POST["idClienteEliminar"])) {

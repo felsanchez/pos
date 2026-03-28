@@ -21,10 +21,10 @@ $(document).ready(function () {
                     "orderable": true
                 },
                 {
-                    "targets": 9, // Acciones
                     "orderable": false
                 }
             ],
+            "dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
             "language": {
                 "sProcessing": "Procesando...",
                 "sLengthMenu": "Mostrar _MENU_ registros",
@@ -55,6 +55,7 @@ $(document).ready(function () {
     // Inicializar DataTable para tabla de categorías de gastos
     if (!$.fn.DataTable.isDataTable('.tablaCategoriasGastos')) {
         $('.tablaCategoriasGastos').DataTable({
+            "dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
             "language": {
                 "sProcessing": "Procesando...",
                 "sLengthMenu": "Mostrar _MENU_ registros",

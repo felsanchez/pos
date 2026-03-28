@@ -1,8 +1,7 @@
-console.log("DEBUG: vistas/js/clientes.js cargado correctamente");
+console.log("DEBUG: Iniciando carga de clientes.js");
 
-//Campo estatus
 $(document).on("click", ".btnEditarCliente", function () {
-  console.log("DEBUG: Clic en .btnEditarCliente detectado");
+
   var idCliente = $(this).attr("idCliente");
 
 
@@ -194,6 +193,7 @@ function filterTable1() {
 }
 
 $(document).ready(function () {
+  console.log("DEBUG: document.ready - Inicializando tabla1");
 
 
   tabla1 = $('.tablas1').DataTable({
@@ -296,6 +296,7 @@ $(document).ready(function () {
     ],
     "order": [[0, 'desc']],
     "autoWidth": false,
+    "dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
     "language": {
       url: "vistas/bower_components/datatables.net/Spanish.json",
       search: "Buscar:",
@@ -419,6 +420,7 @@ $(document).ready(function () {
       }
     },
 
+    "dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
     language: {
       url: "vistas/bower_components/datatables.net/Spanish.json",
       search: "Buscar:",
@@ -519,7 +521,9 @@ function inicializarEdicionNotas() {
 }
 
 // Ejecutar al cargar por primera vez
+console.log("DEBUG: Llamando a inicializarEdicionNotas()");
 inicializarEdicionNotas();
+console.log("DEBUG: inicializarEdicionNotas() ejecutado");
 
 /*=============================================
 ACCIONES ADICIONALES (Restauradas)
@@ -539,10 +543,10 @@ $(document).on("click", ".btnSinVentas", function (e) {
 ELIMINAR CLIENTE
 =============================================*/
 $(document).on("click", ".btnEliminarCliente", function () {
-  console.log("DEBUG: Clic en .btnEliminarCliente detectado");
-
+  console.log("DEBUG: Click en eliminar cliente detectado");
   var idCliente = $(this).attr("idCliente");
-  console.log("DEBUG: idCliente capturado:", idCliente);
+  console.log("DEBUG: ID Cliente extraído:", idCliente);
+
 
 
   // Detectar si estamos en contactos o clientes
@@ -568,6 +572,7 @@ $(document).on("click", ".btnEliminarCliente", function () {
     console.log("DEBUG: Resultado de swal:", result);
 
     if (result.value) {
+      console.log("DEBUG: Confirmación recibida, iniciando AJAX...");
       console.log("DEBUG: Confirmación recibida, iniciando AJAX...");
 
       var datos = new FormData();

@@ -1,4 +1,9 @@
 <?php
+// Habilitar errores para depuración
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Incluir gestión segura de sesiones
 require_once "modelos/session-manager.php";
 SessionManager::startSecure();
@@ -134,9 +139,6 @@ require_once "modelos/sanitizer.php";
   <!--Chart Js www.chartjs.org-->
   <script src="vistas/bower_components/chart.js/Chart.js"></script>
 
-
-
-
 </head>
 
 
@@ -243,11 +245,12 @@ CUERPO DOCUMENTO
 
   ?>
 
-  <!-- CSRF Helper para AJAX -->
-  <script src="vistas/js/csrf-helper.js"></script>
+
+  <!-- CSRF Helper para AJAX (ya cargado arriba en línea 88) -->
   <script src="vistas/js/plantilla.js"></script>
   <script src="vistas/js/usuarios.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/clientes.js?v=<?php echo time(); ?>"></script>
+  <script src="vistas/js/estados-clientes.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/categorias.js"></script>
   <script src="vistas/js/productos.js"></script>
 
@@ -280,6 +283,12 @@ CUERPO DOCUMENTO
       });
     });
   </script>
+
+  <script>console.warn("!!!! DEBUG: PLANTILLA.PHP ALCANZO EL FINAL !!!!");</script>
+
+  <div style="position: fixed; bottom: 0; left: 0; width: 100%; background: yellow; color: red; border-top: 5px solid red; padding: 10px; text-align: center; font-weight: bold; font-size: 20px; z-index: 999999;">
+    ⚠️ DEPURACIÓN: SI VES ESTO, LA PÁGINA CARGÓ HASTA EL FINAL ⚠️
+  </div>
 
 </body>
 

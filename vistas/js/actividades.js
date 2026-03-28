@@ -407,57 +407,235 @@ $(document).on("click", ".btnEliminarTipoActividad", function () {
 })
 
 /*=============================================
-FILTROS DE DATATABLES - TIPO Y ESTADO
+TABLA ACTIVIDADES CON CONFIGURACIÓN ESPECIAL
 =============================================*/
 $(document).ready(function () {
-	var filtroTipoActual = '';
-	var filtroEstadoActual = '';
+  // Verificar si existe la tabla antes de inicializar
+  if ($(".tablaActividades").length > 0) {
+    // Destruir instancia previa si existe por alguna razón
+    if ($.fn.DataTable.isDataTable('.tablaActividades')) {
+      $('.tablaActividades').DataTable().destroy();
+    }
 
-	// Crear filtro personalizado que busca en los atributos data-* del <tr>
-	$.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-		// Solo aplicar este filtro a la tabla de actividades
-		if (!$(settings.nTable).hasClass('tablas')) {
-			return true;
-		}
+    $(".tablaActividades").DataTable({
+      "order": [[1, "desc"]], // Ordenar por ID (columna 1) desc
+      "responsive": {
+        "details": {
+          "type": "column",
+          "target": 0,
+          "renderer": function (api, rowIdx, columns) {
+            // Mapear datos por título de columna
+            var dataMap = {};
+            columns.forEach(function (col) {
+              var headerText = col.title ? col.title.replace(/<[^>]*>?/gm, '').trim() : '';
+              dataMap[headerText] = col.data;
+            });
 
-		// Obtener la fila actual
-		var row = $(settings.aoData[dataIndex].nTr);
+            // Obtener datos
+            var descripcion = dataMap['Descripción'] || '';
+            var tipo = dataMap['Tipo'] || '';
+            var responsable = dataMap['Responsable'] || '';
+            var fecha = dataMap['Fecha'] || '';
+            var estado = dataMap['Estado'] || '';
+            var cliente = dataMap['Cliente'] || '';
+            var observacion = dataMap['Observación'] || '';
 
-		// Obtener los valores de los atributos data-*
-		var rowTipo = row.attr('data-tipo') || '';
-		var rowEstado = row.attr('data-estado') || '';
+            var finalHtml = '';
 
-		// Aplicar filtros
-		var pasaTipoFiltro = true;
-		var pasaEstadoFiltro = true;
+            // SECCIÓN 1: Información General
+            finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
+            finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información General</h5></div>';
 
-		if (filtroTipoActual !== '') {
-			pasaTipoFiltro = (rowTipo.toLowerCase() === filtroTipoActual.toLowerCase());
-		}
+            finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+            finalHtml += '<span class="text-bold" style="color:#555;">Descripción: </span><span class="pull-right" style="color:#333;">' + descripcion + '</span></div>';
 
-		if (filtroEstadoActual !== '') {
-			pasaEstadoFiltro = (rowEstado.toLowerCase() === filtroEstadoActual.toLowerCase());
-		}
+            finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+            finalHtml += '<span class="text-bold" style="color:#555;">Fecha: </span><span class="pull-right" style="color:#333;">' + fecha + '</span></div>';
 
-		return pasaTipoFiltro && pasaEstadoFiltro;
-	});
+            // SECCIÓN 2: Categoría
+            finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #f39c12;">';
+            finalHtml += '<h5 style="font-weight:bold; color:#f39c12; margin:0;">Categoría</h5></div>';
 
-	// Esperar a que DataTable esté inicializado
-	setTimeout(function () {
-		var table = $('.tablas').DataTable();
+            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+            finalHtml += '<span class="text-bold" style="color:#555;">Estado: </span><span class="pull-right" style="color:#333;">' + estado + '</span></div>';
 
-		// Filtro por Tipo
-		$('#filtroTipo').on('change', function () {
-			filtroTipoActual = this.value;
-			console.log('Filtrando por Tipo:', filtroTipoActual);
-			table.draw();
-		});
+            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+            finalHtml += '<span class="text-bold" style="color:#555;">Tipo: </span><span class="pull-right" style="color:#333;">' + tipo + '</span></div>';
 
-		// Filtro por Estado
-		$('#filtroEstado').on('change', function () {
-			filtroEstadoActual = this.value;
-			console.log('Filtrando por Estado:', filtroEstadoActual);
-			table.draw();
-		});
-	}, 500);
+            // SECCIÓN 3: Clientes
+            finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #00a65a;">';
+            finalHtml += '<h5 style="font-weight:bold; color:#00a65a; margin:0;">Clientes</h5></div>';
+
+            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+            finalHtml += '<span class="text-bold" style="color:#555;">Responsable: </span><span class="pull-right" style="color:#333;">' + responsable + '</span></div>';
+
+            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+            finalHtml += '<span class="text-bold" style="color:#555;">Cliente: </span><span class="pull-right" style="color:#333;">' + cliente + '</span></div>';
+
+            // SECCIÓN 4: Observación
+            if (observacion && observacion.trim() !== '') {
+              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #605ca8;">';
+              finalHtml += '<h5 style="font-weight:bold; color:#605ca8; margin:0;">Información Adicional</h5></div>';
+
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+              finalHtml += '<span class="text-bold" style="color:#555;">Observación: </span><span class="pull-right" style="color:#333;">' + observacion + '</span></div>';
+            }
+
+            return finalHtml;
+          }
+        }
+      },
+      "language": {
+        "sProcessing": "Procesando...",
+        "sLengthMenu": "Mostrar _MENU_ registros",
+        "sZeroRecords": "No se encontraron resultados",
+        "sEmptyTable": "Ningún dato disponible en esta tabla",
+        "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+        "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
+        "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+        "sInfoPostFix": "",
+        "sSearch": "Buscar:",
+        "sUrl": "",
+        "sInfoThousands": ",",
+        "sLoadingRecords": "Cargando...",
+        "oPaginate": {
+          "sFirst": "Primero",
+          "sLast": "Último",
+          "sNext": "Siguiente",
+          "sPrevious": "Anterior"
+        },
+        "oAria": {
+          "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+          "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+        }
+      },
+      "dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
+      "initComplete": function () {
+        // Asegurar visibilidad tras inicializar
+        $(".tablaActividades").addClass("datatable-ready").css("visibility", "visible");
+      }
+    });
+
+    var table = $('.tablaActividades').DataTable();
+
+    // Filtro por Tipo
+    $('#filtroTipo').on('change', function () {
+      console.log('Filtrando por Tipo:', this.value);
+      filtroTipoActual = this.value;
+      table.draw();
+    });
+
+    // Filtro por Estado
+    $('#filtroEstado').on('change', function () {
+      console.log('Filtrando por Estado:', this.value);
+      filtroEstadoActual = this.value;
+      table.draw();
+    });
+  }
+});
+
+/*=============================================
+AUTOGUARDADO DE OBSERVACIONES (DELEGADO)
+=============================================*/
+$(document).on('focus', '.celda-observacion', function() {
+    $(this).removeAttr('data-placeholder');
+});
+
+$(document).on('blur', '.celda-observacion', function() {
+    var elemento = $(this);
+    var id = elemento.data('id');
+    var nuevaObservacion = elemento.text().trim();
+
+    // Manejar placeholder visual
+    if (nuevaObservacion === '') {
+        elemento.attr('data-placeholder', 'true');
+    } else {
+        elemento.removeAttr('data-placeholder');
+    }
+
+    // Obtener token CSRF del meta tag (doble chequeo)
+    var csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+    // Guardar en la base de datos vía AJAX
+    $.ajax({
+        url: 'ajax/actividades.ajax.php',
+        method: 'POST',
+        data: {
+          id: id,
+          observacion: nuevaObservacion,
+          accion: 'actualizarObservacion',
+          csrf_token: csrfToken // Enviar explícitamente por si acaso ajaxSetup no lo capturó
+        },
+        dataType: 'json',
+        success: function(respuesta) {
+          if (respuesta == "ok") {
+            console.log('✅ Observación guardada correctamente (ID: ' + id + ')');
+            // Opcional: mostrar un pequeño feedback visual momentáneo
+            elemento.css('background-color', '#dff0d8');
+            setTimeout(function() {
+                elemento.css('background-color', '');
+            }, 500);
+          } else {
+            console.error('❌ Error al guardar:', respuesta);
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error('❌ Error AJAX:', status, error);
+          alert('No se pudo guardar la observación. Por favor, intenta de nuevo.');
+        }
+    });
+});
+
+/*=============================================
+FILTROS PERSONALIZADOS DATATABLES
+=============================================*/
+var filtroTipoActual = '';
+var filtroEstadoActual = '';
+
+$.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+  // Solo aplicar este filtro a la tabla de actividades
+  if (!$(settings.nTable).hasClass('tablaActividades')) {
+    return true;
+  }
+
+  // Obtener la fila actual
+  var row = $(settings.aoData[dataIndex].nTr);
+
+  // Obtener los valores de los atributos data-*
+  var rowTipo = row.attr('data-tipo') || '';
+  var rowEstado = row.attr('data-estado') || '';
+
+  // Aplicar filtros
+  var pasaTipoFiltro = true;
+  var pasaEstadoFiltro = true;
+
+  if (filtroTipoActual !== '') {
+    pasaTipoFiltro = (rowTipo.toLowerCase() === filtroTipoActual.toLowerCase());
+  }
+
+  if (filtroEstadoActual !== '') {
+    pasaEstadoFiltro = (rowEstado.toLowerCase() === filtroEstadoActual.toLowerCase());
+  }
+
+  return pasaTipoFiltro && pasaEstadoFiltro;
+});
+
+/*=============================================
+CALENDARIO DE ACTIVIDADES
+=============================================*/
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    if (calendarEl && typeof FullCalendar !== 'undefined') {
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            locale: 'es',
+            initialView: 'dayGridMonth',
+            eventTimeFormat: {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            },
+            events: 'ajax/eventos.php'
+        });
+        calendar.render();
+    }
 });

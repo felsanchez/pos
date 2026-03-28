@@ -88,9 +88,9 @@ var table2 = $(".tablaVentas").DataTable({
 		"sEmptyTable": "Ningún dato disponible en esta tabla",
 		"sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
 		"sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
-		"sInfoFiltered": "(filtrado de un total de _MAX_ registros",
+		"sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
 		"sInfoPostFix": "",
-		"sSearch": "Buscar",
+		"sSearch": "Buscar:",
 		"sUrl": "",
 		"sInfoThousands": ",",
 		"sLoadingRecords": "Cargando...",
@@ -104,7 +104,9 @@ var table2 = $(".tablaVentas").DataTable({
 			"sSortAscending": ": Activar para ordenar la columna de manera ascendente",
 			"sSortDescending": ": Activar para ordenar la columna de manera descendente"
 		}
-	}
+	},
+	"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>'
+
 
 
 })

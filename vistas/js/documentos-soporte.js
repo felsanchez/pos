@@ -31,6 +31,7 @@ $(document).ready(function () {
                 }
             }
         ],
+        "dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
         "language": {
             "sProcessing": "Procesando...",
             "sLengthMenu": "Mostrar _MENU_ registros",
@@ -299,6 +300,7 @@ $(document).ready(function () {
     =============================================*/
     if ($(".tablaDocumentosSoporte").length > 0) {
         $(".tablaDocumentosSoporte").DataTable({
+            "dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
             "language": {
                 "sProcessing": "Procesando...",
                 "sLengthMenu": "Mostrar _MENU_ registros",

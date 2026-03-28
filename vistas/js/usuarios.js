@@ -83,6 +83,7 @@ $(document).ready(function () {
 					"responsivePriority": 1000
 				}
 			],
+			"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
 			"language": {
 				"sProcessing": "Procesando...",
 				"sLengthMenu": "Mostrar _MENU_ registros",
@@ -322,6 +323,7 @@ $(".tablaUsuarios").on("click", ".btnActivar", function () {
 
 })
 
+console.warn("!!!! USUARIOS JAVASCRIPT CARGADO !!!!");
 
 /*=============================================
 REVISAR SI EL USUARIO YA ESTA REGISTRADO

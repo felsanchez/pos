@@ -4,6 +4,9 @@ SessionManager::startSecure();
 
 require_once "../controladores/clientes.controlador.php";
 require_once "../modelos/clientes.modelo.php";
+require_once "../modelos/actividades.modelo.php";
+require_once "../modelos/ventas.modelo.php";
+require_once "../modelos/factus.modelo.php";
 require_once "../modelos/csrf.php";
 
 // VALIDAR CSRF para todas las peticiones POST

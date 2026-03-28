@@ -258,6 +258,10 @@ $editarCliente->ctrEditarCliente();
           <i class="fa fa-flag"></i> Gestionar estados
         </button>
 
+            <button class="btn btn-warning" data-toggle="modal" data-target="#modalImportarClientes">
+              Importar Clientes
+            </button>
+            <script>console.warn("!!!! DEBUG: CLIENTES.PHP LLEGO A LINEA 600 !!!!");</script>
         <button class="btn btn-success" data-toggle="modal" data-target="#modalImportarClientes">
           <i class="fa fa-upload"></i> Exportar / Importar Clientes
         </button>
@@ -269,7 +273,11 @@ $editarCliente->ctrEditarCliente();
       <!--
         <form id="formN8N" action="https://c610c962d42e.ngrok-free.app/webhook/mipos" method="POST" target="_blank">
 
-        <?php CSRF::insertToken(); ?>
+        <?php 
+          echo '<script>console.log("DEBUG: Entrando a CSRF::insertToken");</script>';
+          CSRF::insertToken(); 
+          echo '<script>console.log("DEBUG: Saliendo de CSRF::insertToken");</script>';
+        ?>
           <input type="hidden" name="origen" value="clientes">
           <button type="submit" class="btn btn-success">Enviar a n8n</button>
         </form>
@@ -508,6 +516,7 @@ MODAL AGREGAR CLIENTE
 
                 <input type="text" class="form-control input-lg" name="nuevoCliente" id="nuevoCliente"
                   placeholder="Ingresar nombre *" required>
+                <script>console.warn("!!!! DEBUG: CLIENTES.PHP LLEGO A LINEA 516 (MODAL NUEVO) !!!!");</script>
 
               </div>
 
@@ -1023,27 +1032,17 @@ foreach ($estadosS as $key => $v) {
 
 
 <?php
-
+/*
 $eliminarCliente = new ControladorClientes();
 $eliminarCliente->ctrEliminarCliente();
-
+*/
 ?>
 
-
-<!-- jQuery 
-<script src="vistas/bower_components/jquery/dist/jquery.min.js"></script>
- Datatable
-<script src="vistas/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
--->
 
 
 <!-- Choices.js para Campo estatus-->
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
-<!--Ruta Clientes.js-->
-<script src="assets/js/clientes.js?v=<?php echo time(); ?>"></script>
-
-<script src="vistas/js/estados-clientes.js?v=<?php echo time(); ?>"></script>
 
 <!-- Filtro estatus tabla 1 -->
 <script>
@@ -1064,6 +1063,7 @@ $eliminarCliente->ctrEliminarCliente();
     });
   }
   $(document).ready(function () {
+    console.warn("!!!! DEBUG: CLIENTES.PHP LLEGO A LINEA 1060 (SCRIPTS INLINE) !!!!");
     // Ejecutar filtro al cargar si hay valor
     filterTable1();
     // Si usas AJAX para cambiar estatus, llama a filterTable1() después de actualizar
@@ -1416,6 +1416,7 @@ endif; ?>
 
 <?php
 // Procesar acciones de estados AL FINAL de la página para evitar romper el HTML
+/*
 $crearEstado = new ControladorEstadosClientes();
 $crearEstado->ctrCrearEstado();
 
@@ -1427,4 +1428,5 @@ $eliminarEstado->ctrEliminarEstado();
 
 $eliminarCliente = new ControladorClientes();
 $eliminarCliente->ctrEliminarCliente();
+*/
 ?>

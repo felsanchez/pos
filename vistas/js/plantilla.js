@@ -1,3 +1,5 @@
+console.warn("!!!! PLANTILLA JAVASCRIPT CARGADA !!!!");
+
 /*=============================================
 SideBar Menu
 =============================================*/
@@ -31,11 +33,11 @@ $(".tablas").not('.tablas1, .tablas2, #example').DataTable({
 
 		"sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
 
-		"sInfoFiltered": "(filtrado de un total de _MAX_ registros",
+		"sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
 
 		"sInfoPostFix": "",
 
-		"sSearch": "Buscar",
+		"sSearch": "Buscar:",
 
 		"sUrl": "",
 
@@ -64,6 +66,9 @@ $(".tablas").not('.tablas1, .tablas2, #example').DataTable({
 		}
 
 	},
+
+	"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
+
 
 
 
@@ -103,9 +108,9 @@ if ($('#example').length > 0) {
 			"sEmptyTable": "Ningún dato disponible en esta tabla",
 			"sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
 			"sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
-			"sInfoFiltered": "(filtrado de un total de _MAX_ registros",
+			"sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
 			"sInfoPostFix": "",
-			"sSearch": "Buscar",
+			"sSearch": "Buscar:",
 			"sUrl": "",
 			"sInfoThousands": ",",
 			"sLoadingRecords": "Cargando...",
@@ -120,6 +125,11 @@ if ($('#example').length > 0) {
 				"sSortDescending": ": Activar para ordenar la columna de manera descendente"
 			}
 		},
+
+		"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
+		"autoWidth": false,
+		"responsive": true,
+
 
 		"preDrawCallback": function () {
 			// Ocultar tabla antes de dibujarla por primera vez
