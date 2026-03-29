@@ -755,9 +755,92 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                     </div>
                   </div>
 
+                  <!-- Botón Autenticar rápido -->
+                  <div class="callout callout-success" style="margin-top: 15px;">
+                    <h4><i class="fa fa-key"></i> Autenticación Rápida con Factus</h4>
+                    <p>Obtén nuevos tokens de acceso usando las credenciales guardadas actualmente.</p>
+                    <button type="button" class="btn btn-success" id="btnAutenticarConfig">
+                      <i class="fa fa-key"></i> Autenticar y Obtener Tokens
+                    </button>
+                    <div id="resultadoAutenticarConfig" style="margin-top: 12px;"></div>
+                  </div>
+
                   <a href="configuracion-factus" class="btn btn-primary btn-block">
                     <i class="fa fa-cogs"></i> Ir a Configuración Completa de Factus
                   </a>
+
+                  <script>
+                  $(document).ready(function () {
+                    // Credenciales guardadas inyectadas desde PHP
+                    var factusConfig = {
+                      apiUrl:          '<?php echo addslashes($configFactus['api_url'] ?? ''); ?>',
+                      clientId:        '<?php echo addslashes($configFactus['client_id'] ?? ''); ?>',
+                      clientSecret:    '<?php echo addslashes($configFactus['client_secret'] ?? ''); ?>',
+                      username:        '<?php echo addslashes($configFactus['username'] ?? ''); ?>',
+                      password:        '<?php echo addslashes($configFactus['password'] ?? ''); ?>',
+                      ambiente:        '<?php echo addslashes($configFactus['ambiente'] ?? 'sandbox'); ?>',
+                      rangoNumeracionId: '<?php echo addslashes($configFactus['rango_numeracion_id'] ?? ''); ?>'
+                    };
+
+                    $('#btnAutenticarConfig').on('click', function () {
+                      var btn = $(this);
+                      var resultado = $('#resultadoAutenticarConfig');
+
+                      if (!factusConfig.apiUrl || !factusConfig.clientId || !factusConfig.clientSecret) {
+                        resultado.html('<div class="alert alert-warning"><i class="fa fa-warning"></i> Faltan credenciales. Configúralas en <a href="configuracion-factus">Configuración de Factus</a>.</div>');
+                        return;
+                      }
+
+                      swal({
+                        title: '¿Autenticar con Factus?',
+                        text: 'Esto obtendrá nuevos tokens de acceso y los guardará en el sistema.',
+                        type: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3c8dbc',
+                        confirmButtonText: 'Sí, autenticar',
+                        cancelButtonText: 'Cancelar'
+                      }).then(function (result) {
+                        if (result.value) {
+                          btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Autenticando...');
+                          resultado.html('<div class="alert alert-info"><i class="fa fa-spinner fa-spin"></i> Obteniendo tokens de Factus...</div>');
+
+                          $.ajax({
+                            url: 'ajax/factus.ajax.php',
+                            method: 'POST',
+                            data: {
+                              accion: 'autenticar',
+                              apiUrl: factusConfig.apiUrl,
+                              clientId: factusConfig.clientId,
+                              clientSecret: factusConfig.clientSecret,
+                              username: factusConfig.username,
+                              password: factusConfig.password,
+                              ambiente: factusConfig.ambiente,
+                              rangoNumeracionId: factusConfig.rangoNumeracionId,
+                              csrf_token: $('meta[name="csrf-token"]').attr('content')
+                            },
+                            dataType: 'json',
+                            success: function (response) {
+                              if (response.error) {
+                                resultado.html('<div class="alert alert-danger"><i class="fa fa-times"></i> <strong>Error:</strong> ' + response.mensaje +
+                                  (response.detalles ? '<br><small>' + response.detalles + '</small>' : '') + '</div>');
+                              } else {
+                                resultado.html('<div class="alert alert-success"><i class="fa fa-check"></i> <strong>¡Éxito!</strong> ' + response.mensaje +
+                                  '<br><small>Token válido hasta: ' + response.expiracion + '</small></div>');
+                                setTimeout(function () { location.reload(); }, 2000);
+                              }
+                            },
+                            error: function () {
+                              resultado.html('<div class="alert alert-danger"><i class="fa fa-times"></i> Error al conectar con el servidor.</div>');
+                            },
+                            complete: function () {
+                              btn.prop('disabled', false).html('<i class="fa fa-key"></i> Autenticar y Obtener Tokens');
+                            }
+                          });
+                        }
+                      });
+                    });
+                  });
+                  </script>
                 </div>
               </div>
             </div>

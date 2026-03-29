@@ -167,47 +167,47 @@
 <!-- Estilos dinámicos para colores de estados -->
 <style>
   <?php
-$estadosParaEstilos = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
-foreach ($estadosParaEstilos as $estadoEstilo) {
-  $nombreLimpio = str_replace(" ", "-", strtolower($estadoEstilo["nombre"]));
+  $estadosParaEstilos = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
+  foreach ($estadosParaEstilos as $estadoEstilo) {
+    $nombreLimpio = str_replace(" ", "-", strtolower($estadoEstilo["nombre"]));
 
-  $color = $estadoEstilo["color"];
+    $color = $estadoEstilo["color"];
 
-  // Estilos para el contenedor cerrado de Choices.js (select cuando NO está abierto)
-  echo '.estatus-' . $nombreLimpio . ' .choices__inner,';
-  echo '.estatus-' . $nombreLimpio . '.choices .choices__inner {';
-  echo '  background-color: ' . $color . ' !important;';
-  echo '  border-color: ' . $color . ' !important;';
-  echo '  color: #fff !important;';
-  echo '}';
+    // Estilos para el contenedor cerrado de Choices.js (select cuando NO está abierto)
+    echo '.estatus-' . $nombreLimpio . ' .choices__inner,';
+    echo '.estatus-' . $nombreLimpio . '.choices .choices__inner {';
+    echo '  background-color: ' . $color . ' !important;';
+    echo '  border-color: ' . $color . ' !important;';
+    echo '  color: #fff !important;';
+    echo '}';
 
 
-  // Estilos para cada opción individual en el dropdown (basado SOLO en data-value)
-  echo '.choices__list--dropdown .choices__item--selectable[data-value="' . $estadoEstilo["nombre"] . '"] {';
-  echo '  background-color: ' . $color . ' !important;';
-  echo '  color: #fff !important;';
-  echo '}';
+    // Estilos para cada opción individual en el dropdown (basado SOLO en data-value)
+    echo '.choices__list--dropdown .choices__item--selectable[data-value="' . $estadoEstilo["nombre"] . '"] {';
+    echo '  background-color: ' . $color . ' !important;';
+    echo '  color: #fff !important;';
+    echo '}';
 
-  echo '.choices__list--dropdown .choices__item--selectable[data-value="' . $estadoEstilo["nombre"] . '"]:hover {';
-  echo '  background-color: ' . adjustBrightness($color, -20) . ' !important;';
-  echo '  color: #fff !important;';
-  echo '}';
-}
+    echo '.choices__list--dropdown .choices__item--selectable[data-value="' . $estadoEstilo["nombre"] . '"]:hover {';
+    echo '  background-color: ' . adjustBrightness($color, -20) . ' !important;';
+    echo '  color: #fff !important;';
+    echo '}';
+  }
 
-// Función helper para ajustar brillo (hover más oscuro)
-function adjustBrightness($hex, $steps)
-{
-  $steps = max(-255, min(255, $steps));
-  $hex = str_replace('#', '', $hex);
-  $r = hexdec(substr($hex, 0, 2));
-  $g = hexdec(substr($hex, 2, 2));
-  $b = hexdec(substr($hex, 4, 2));
-  $r = max(0, min(255, $r + $steps));
-  $g = max(0, min(255, $g + $steps));
-  $b = max(0, min(255, $b + $steps));
-  return '#' . str_pad(dechex($r), 2, '0', STR_PAD_LEFT) . str_pad(dechex($g), 2, '0', STR_PAD_LEFT) . str_pad(dechex($b), 2, '0', STR_PAD_LEFT);
-}
-?>
+  // Función helper para ajustar brillo (hover más oscuro)
+  function adjustBrightness($hex, $steps)
+  {
+    $steps = max(-255, min(255, $steps));
+    $hex = str_replace('#', '', $hex);
+    $r = hexdec(substr($hex, 0, 2));
+    $g = hexdec(substr($hex, 2, 2));
+    $b = hexdec(substr($hex, 4, 2));
+    $r = max(0, min(255, $r + $steps));
+    $g = max(0, min(255, $g + $steps));
+    $b = max(0, min(255, $b + $steps));
+    return '#' . str_pad(dechex($r), 2, '0', STR_PAD_LEFT) . str_pad(dechex($g), 2, '0', STR_PAD_LEFT) . str_pad(dechex($b), 2, '0', STR_PAD_LEFT);
+  }
+  ?>
 </style>
 
 
@@ -215,11 +215,11 @@ function adjustBrightness($hex, $steps)
 <script>
   window.estadosColores = {
     <?php
-foreach ($estadosParaEstilos as $key => $estadoEstilo) {
-  $coma = ($key < count($estadosParaEstilos) - 1) ? ',' : '';
-  echo '"' . strtolower($estadoEstilo["nombre"]) . '": "' . $estadoEstilo["color"] . '"' . $coma . "\n";
-}
-?>
+    foreach ($estadosParaEstilos as $key => $estadoEstilo) {
+      $coma = ($key < count($estadosParaEstilos) - 1) ? ',' : '';
+      echo '"' . strtolower($estadoEstilo["nombre"]) . '": "' . $estadoEstilo["color"] . '"' . $coma . "\n";
+    }
+    ?>
   };
 
   console.log("Colores de estados cargados:", window.estadosColores);
@@ -249,22 +249,18 @@ $editarCliente->ctrEditarCliente();
     <div class="box">
 
       <div class="box-header with-border">
-        <?php if(puedeAccion('clientes', 'crear')): ?>
-        <a href="cliente-detalle" class="btn btn-primary">
-          <i class="fa fa-plus"></i> Agregar Nuevo
-        </a>
+        <?php if (puedeAccion('clientes', 'crear')): ?>
+          <a href="cliente-detalle" class="btn btn-primary">
+            <i class="fa fa-plus"></i> Agregar Nuevo
+          </a>
 
-        <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
-          <i class="fa fa-flag"></i> Gestionar estados
-        </button>
+          <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
+            <i class="fa fa-flag"></i> Gestionar estados
+          </button>
 
-            <button class="btn btn-warning" data-toggle="modal" data-target="#modalImportarClientes">
-              Importar Clientes
-            </button>
-            <script>console.warn("!!!! DEBUG: CLIENTES.PHP LLEGO A LINEA 600 !!!!");</script>
-        <button class="btn btn-success" data-toggle="modal" data-target="#modalImportarClientes">
-          <i class="fa fa-upload"></i> Exportar / Importar Clientes
-        </button>
+          <button class="btn btn-success" data-toggle="modal" data-target="#modalImportarClientes">
+            <i class="fa fa-upload"></i> Exportar / Importar Clientes
+          </button>
         <?php endif; ?>
       </div>
 
@@ -273,10 +269,10 @@ $editarCliente->ctrEditarCliente();
       <!--
         <form id="formN8N" action="https://c610c962d42e.ngrok-free.app/webhook/mipos" method="POST" target="_blank">
 
-        <?php 
-          echo '<script>console.log("DEBUG: Entrando a CSRF::insertToken");</script>';
-          CSRF::insertToken(); 
-          echo '<script>console.log("DEBUG: Saliendo de CSRF::insertToken");</script>';
+        <?php
+        echo '<script>console.log("DEBUG: Entrando a CSRF::insertToken");</script>';
+        CSRF::insertToken();
+        echo '<script>console.log("DEBUG: Saliendo de CSRF::insertToken");</script>';
         ?>
           <input type="hidden" name="origen" value="clientes">
           <button type="submit" class="btn btn-success">Enviar a n8n</button>
@@ -285,13 +281,13 @@ $editarCliente->ctrEditarCliente();
 
 
       <?php
-$filtroEstatus1 = isset($_GET['filtroEstatus1']) ? $_GET['filtroEstatus1'] : ''; // Captura el valor del filtro de estatus si existe.
-
-// Aquí aplica el filtro de estatus desde el GET para obtener los clientes correctos
-$item = "estatus";
-$valor = $filtroEstatus1;
-$clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
-?>
+      $filtroEstatus1 = isset($_GET['filtroEstatus1']) ? $_GET['filtroEstatus1'] : ''; // Captura el valor del filtro de estatus si existe.
+      
+      // Aquí aplica el filtro de estatus desde el GET para obtener los clientes correctos
+      $item = "estatus";
+      $valor = $filtroEstatus1;
+      $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+      ?>
 
       <h3
         style="text-align: center; font-weight: bold; margin: 20px 0; color: #4A4A4A; padding-bottom: 10px; border-bottom: 2px solid #4A4A4A;">
@@ -309,12 +305,12 @@ $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
 
               <option value="">Todos</option>
               <?php
-$estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
-foreach ($estadosDisponibles as $estado) {
-  $selected = ($filtroEstatus1 == $estado["nombre"]) ? "selected" : "";
-  echo '<option value="' . $estado["nombre"] . '" ' . $selected . '>' . ucfirst($estado["nombre"]) . '</option>';
-}
-?>
+              $estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
+              foreach ($estadosDisponibles as $estado) {
+                $selected = ($filtroEstatus1 == $estado["nombre"]) ? "selected" : "";
+                echo '<option value="' . $estado["nombre"] . '" ' . $selected . '>' . ucfirst($estado["nombre"]) . '</option>';
+              }
+              ?>
 
             </select>
           </div>
@@ -345,23 +341,23 @@ foreach ($estadosDisponibles as $estado) {
           </thead>
           <tbody>
             <?php
-$item = null;
-$valor = null;
-$clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+            $item = null;
+            $valor = null;
+            $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
 
-if (is_array($clientes) && count($clientes) > 0):
-  $key = 1;
-  // Pre-fetch states for efficiency
-  $estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
+            if (is_array($clientes) && count($clientes) > 0):
+              $key = 1;
+              // Pre-fetch states for efficiency
+              $estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
 
-  foreach ($clientes as $value):
-    // if (isset($value["compras"]) && $value["compras"] > 0):
-    $estatus = $value["estatus"] ?? "";
-    $estatusClass = "estatus-" . str_replace(" ", "-", strtolower($estatus));
-?>
+              foreach ($clientes as $value):
+                // if (isset($value["compras"]) && $value["compras"] > 0):
+                $estatus = $value["estatus"] ?? "";
+                $estatusClass = "estatus-" . str_replace(" ", "-", strtolower($estatus));
+                ?>
 
                 <tr>
-                  <td data-order="<?php echo $value["id"]; ?>"><?php echo($key + 1); ?></td>
+                  <td data-order="<?php echo $value["id"]; ?>"><?php echo ($key + 1); ?></td>
 
                   <td><?php echo $value["nombre"]; ?></td>
                   <!-- BTN VERSION MOVIL-->
@@ -375,11 +371,11 @@ if (is_array($clientes) && count($clientes) > 0):
                       <i class="fa fa-line-chart"></i>
                     </a>
 
-                    <?php if(puedeAccion('clientes', 'editar')): ?>
-                    <a href="cliente-detalle?id=<?php echo $value['id']; ?>" class="btn btn-warning btn-xs solo-movil"
-                      style="float: right;" title="Editar cliente">
-                      <i class="fa fa-pencil"></i>
-                    </a>
+                    <?php if (puedeAccion('clientes', 'editar')): ?>
+                      <a href="cliente-detalle?id=<?php echo $value['id']; ?>" class="btn btn-warning btn-xs solo-movil"
+                        style="float: right;" title="Editar cliente">
+                        <i class="fa fa-pencil"></i>
+                      </a>
                     <?php endif; ?>
                   </td>
                   <!-- FIN BTN MOVIL-->
@@ -392,23 +388,22 @@ if (is_array($clientes) && count($clientes) > 0):
 
                   <td>
                     <?php
-    $estatus = $value["estatus"] ?? "";
-    $colorEstado = "#999"; // Default color
+                    $estatus = $value["estatus"] ?? "";
+                    $colorEstado = "#999"; // Default color
+                
+                    foreach ($estadosDisponibles as $estado) {
+                      if (strcasecmp($estado["nombre"], $estatus) == 0) {
+                        $colorEstado = $estado["color"];
+                        break;
+                      }
+                    }
 
-    foreach ($estadosDisponibles as $estado) {
-      if (strcasecmp($estado["nombre"], $estatus) == 0) {
-        $colorEstado = $estado["color"];
-        break;
-      }
-    }
-
-    if (!empty($estatus)) {
-      echo '<span class="badge" style="background-color: ' . $colorEstado . '">' . ucfirst($estatus) . '</span>';
-    }
-    else {
-      echo '<span class="text-muted">Sin estado</span>';
-    }
-?>
+                    if (!empty($estatus)) {
+                      echo '<span class="badge" style="background-color: ' . $colorEstado . '">' . ucfirst($estatus) . '</span>';
+                    } else {
+                      echo '<span class="text-muted">Sin estado</span>';
+                    }
+                    ?>
                   </td>
 
                   <td contenteditable="true" class="celda-notas" data-id="<?= $value['id']; ?>">
@@ -420,30 +415,30 @@ if (is_array($clientes) && count($clientes) > 0):
 
                   <td>
                     <div class="btn-group">
-                      <?php if(puedeAccion('clientes', 'editar')): ?>
-                      <a href="cliente-detalle?id=<?php echo $value["id"]; ?>" class="btn btn-warning"
-                        title="Editar cliente">
-                        <i class="fa fa-pencil"></i>
-                      </a>
+                      <?php if (puedeAccion('clientes', 'editar')): ?>
+                        <a href="cliente-detalle?id=<?php echo $value["id"]; ?>" class="btn btn-warning"
+                          title="Editar cliente">
+                          <i class="fa fa-pencil"></i>
+                        </a>
                       <?php endif; ?>
 
                       <?php
-    $tieneVentas = (isset($value["compras"]) && $value["compras"] > 0);
-    $styleVentas = $tieneVentas ? "" : "opacity: 0.6;";
-    $claseVentas = $tieneVentas ? "btnVerVentasCliente" : "btnSinVentas";
-    $linkVentas = $tieneVentas ? "index.php?ruta=cliente-ventas&idCliente=" . $value['id'] : "#";
-?>
+                      $tieneVentas = (isset($value["compras"]) && $value["compras"] > 0);
+                      $styleVentas = $tieneVentas ? "" : "opacity: 0.6;";
+                      $claseVentas = $tieneVentas ? "btnVerVentasCliente" : "btnSinVentas";
+                      $linkVentas = $tieneVentas ? "index.php?ruta=cliente-ventas&idCliente=" . $value['id'] : "#";
+                      ?>
 
                       <a href="<?php echo $linkVentas; ?>" class="btn btn-success <?php echo $claseVentas; ?>"
                         title="Ver ventas de este cliente" style="<?php echo $styleVentas; ?>">
                         <i class="fa fa-line-chart"></i>
                       </a>
 
-                      <?php if(puedeAccion('clientes', 'eliminar')): ?>
-                      <button class="btn btn-danger btnEliminarCliente" idCliente="<?php echo $value["id"]; ?>"
-                        title="Eliminar cliente">
-                        <i class="fa fa-times"></i>
-                      </button>
+                      <?php if (puedeAccion('clientes', 'eliminar')): ?>
+                        <button class="btn btn-danger btnEliminarCliente" idCliente="<?php echo $value["id"]; ?>"
+                          title="Eliminar cliente">
+                          <i class="fa fa-times"></i>
+                        </button>
                       <?php endif; ?>
                     </div>
                   </td>
@@ -451,16 +446,16 @@ if (is_array($clientes) && count($clientes) > 0):
                   <td><?php echo $value["fecha"]; ?></td>
                 </tr>
                 <?php
-    $key++;
-  // endif;
-  endforeach;
-else:
-?>
+                $key++;
+                // endif;
+              endforeach;
+            else:
+              ?>
               <tr>
                 <td colspan="14" class="text-center">No hay clientes registrados</td>
               </tr>
-            <?php
-endif; ?>
+              <?php
+            endif; ?>
           </tbody>
         </table>
 
@@ -487,7 +482,7 @@ MODAL AGREGAR CLIENTE
       <form role="form" method="post">
 
         <?php CSRF::insertToken(); ?>
-<!--=====================================
+        <!--=====================================
       CABEZA DEL MODAL
       ======================================-->
 
@@ -516,7 +511,6 @@ MODAL AGREGAR CLIENTE
 
                 <input type="text" class="form-control input-lg" name="nuevoCliente" id="nuevoCliente"
                   placeholder="Ingresar nombre *" required>
-                <script>console.warn("!!!! DEBUG: CLIENTES.PHP LLEGO A LINEA 516 (MODAL NUEVO) !!!!");</script>
 
               </div>
 
@@ -740,10 +734,10 @@ MODAL AGREGAR CLIENTE
 
       <?php
 
-$crearCliente = new ControladorClientes();
-$crearCliente->ctrCrearCliente();
+      $crearCliente = new ControladorClientes();
+      $crearCliente->ctrCrearCliente();
 
-?>
+      ?>
 
     </div>
 
@@ -975,13 +969,13 @@ MODAL EDITAR CLIENTE
                   <option value="">Seleccionar estado</option>
 
                   <?php
-$item = null;
-$valor = null;
-$estadosS = ControladorEstadosClientes::ctrMostrarEstados($item, $valor);
-foreach ($estadosS as $key => $v) {
-  echo '<option value="' . e($v["id"]) . '">' . e($v["nombre"]) . '</option>';
-}
-?>
+                  $item = null;
+                  $valor = null;
+                  $estadosS = ControladorEstadosClientes::ctrMostrarEstadosClientes($item, $valor);
+                  foreach ($estadosS as $key => $v) {
+                    echo '<option value="' . e($v["id"]) . '">' . e($v["nombre"]) . '</option>';
+                  }
+                  ?>
 
                 </select>
               </div>
@@ -1063,12 +1057,11 @@ $eliminarCliente->ctrEliminarCliente();
     });
   }
   $(document).ready(function () {
-    console.warn("!!!! DEBUG: CLIENTES.PHP LLEGO A LINEA 1060 (SCRIPTS INLINE) !!!!");
     // Ejecutar filtro al cargar si hay valor
     filterTable1();
     // Si usas AJAX para cambiar estatus, llama a filterTable1() después de actualizar
   });
-  $(document).ready(function() {
+  $(document).ready(function () {
     // Mover modales al body para evitar conflictos de posicionamiento
     if ($('#modalImportarClientes').length) $('#modalImportarClientes').appendTo('body');
     if ($('#modalGestionarEstados').length) $('#modalGestionarEstados').appendTo('body');
@@ -1120,11 +1113,13 @@ MODAL IMPORTAR CLIENTES DESDE CSV
 
               <ol>
                 <li>Descarga la plantilla CSV haciendo clic en el botón de abajo</li>
-                <li>Completa los datos de los clientes (Tipo de Persona, Tipo Doc, Documento, Nombre, Teléfono, Dirección y Municipio son obligatorios)</li>
+                <li>Completa los datos de los clientes (Tipo de Persona, Tipo Doc, Documento, Nombre, Teléfono,
+                  Dirección y Municipio son obligatorios)</li>
                 <li><strong>Tipo Persona:</strong> Use "Persona natural" o "Persona juridica"</li>
                 <li><strong>Tipo Documento:</strong> Use CC, CE, DE, NIT, NUIP o PA</li>
                 <li><strong>Persona Jurídica:</strong> Requiere que el tipo de documento sea NIT obligatoriamente</li>
-                <li><strong>Municipio:</strong> Use el formato "Municipio - Departamento" (Ej: Medellin - Antioquia)</li>
+                <li><strong>Municipio:</strong> Use el formato "Municipio - Departamento" (Ej: Medellin - Antioquia)
+                </li>
                 <li>Sube el archivo CSV completado</li>
               </ol>
 
@@ -1172,9 +1167,9 @@ MODAL IMPORTAR CLIENTES DESDE CSV
         </div>
 
         <?php
-$importar = new ControladorClientes();
-$importar->ctrImportarClientes();
-?>
+        $importar = new ControladorClientes();
+        $importar->ctrImportarClientes();
+        ?>
 
       </form>
 
@@ -1218,7 +1213,7 @@ MODAL GESTIONAR ESTADOS
           <div class="panel-body">
             <form role="form" method="post" id="formAgregarEstado">
 
-        <?php CSRF::insertToken(); ?>
+              <?php CSRF::insertToken(); ?>
 
               <!-- Campo oculto para indicar origen -->
               <input type="hidden" name="origenModal" value="clientes">
@@ -1265,9 +1260,9 @@ MODAL GESTIONAR ESTADOS
                 </thead>
                 <tbody>
                   <?php
-$estados = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
-foreach ($estados as $key => $value) {
-  echo '<tr>
+                  $estados = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
+                  foreach ($estados as $key => $value) {
+                    echo '<tr>
                       <td>' . e($key + 1) . '</td>
                       <td><span class="badge" style="background-color: ' . e($value["color"]) . '">' . e($value["nombre"]) . '</span></td>
                       <td><input type="color" value="' . e($value["color"]) . '" disabled style="width: 50px;"></td>
@@ -1283,8 +1278,8 @@ foreach ($estados as $key => $value) {
                         <button class="btn btn-danger btn-xs btnEliminarEstado" idEstado="' . e($value["id"]) . '" nombreEstado="' . e($value["nombre"]) . '"><i class="fa fa-times"></i></button>
                       </td>
                     </tr>';
-}
-?>
+                  }
+                  ?>
                 </tbody>
               </table>
             </div>
@@ -1399,8 +1394,8 @@ MODAL EDITAR ESTADO
           window.location = "clientes";
         }
       });
-    <?php
-endif; ?>
+      <?php
+    endif; ?>
 
     <?php if (isset($_GET["estadoCreado"]) && $_GET["estadoCreado"] == "error"): ?>
       swal({
@@ -1409,14 +1404,13 @@ endif; ?>
         showConfirmButton: true,
         confirmButtonText: "Cerrar"
       });
-    <?php
-endif; ?>
+      <?php
+    endif; ?>
   });
 </script>
 
 <?php
 // Procesar acciones de estados AL FINAL de la página para evitar romper el HTML
-/*
 $crearEstado = new ControladorEstadosClientes();
 $crearEstado->ctrCrearEstado();
 
@@ -1428,5 +1422,4 @@ $eliminarEstado->ctrEliminarEstado();
 
 $eliminarCliente = new ControladorClientes();
 $eliminarCliente->ctrEliminarCliente();
-*/
 ?>
