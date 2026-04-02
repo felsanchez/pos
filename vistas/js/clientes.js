@@ -153,6 +153,20 @@ $(document).on("click", ".btnSinVentas", function (e) {
 
 
 /*=============================================
+BOTÓN SIN FACTURAS ELECTRÓNICAS
+=============================================*/
+$(document).on("click", ".btnSinFacturas", function (e) {
+  e.preventDefault();
+  swal({
+    title: "Sin Facturas electrónicas",
+    text: "Este cliente no tiene facturas electrónicas registradas",
+    icon: "info",
+    confirmButtonText: "Cerrar"
+  });
+});
+
+
+/*=============================================
 ELIMINAR CLIENTE
 =============================================*/
 $(document).on("click", ".btnEliminarCliente", function () {

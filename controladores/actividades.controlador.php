@@ -52,10 +52,13 @@ class ControladorActividades{
 
 				if ($respuesta == "ok") {
 
-				// Verificar si la actividad creada requiere notificación
-				ControladorNotificaciones::ctrVerificarActividadesProximas();
+					// Verificar si la actividad creada requiere notificación
+					ControladorNotificaciones::ctrVerificarActividadesProximas();
 
-			    	echo '<script>
+					// Determinar a de dónde redirigir según la URL actual o el origen
+					$paginaDestino = isset($_POST["urlActual"]) ? $_POST["urlActual"] : "actividades";
+
+					echo '<script>
 					swal({
 						icon: "success",
 						title: "¡La actividad ha sido guardada correctamente!",
@@ -65,10 +68,12 @@ class ControladorActividades{
 							   window.location = "'.$paginaDestino.'";
 						})
 			     	</script>';
-		         }
-			}
+				}
+			} else {
 
-			else{
+				// Determinar a de dónde redirigir según la URL actual o el origen
+				$paginaDestino = isset($_POST["urlActual"]) ? $_POST["urlActual"] : "actividades";
+
 				echo '<script>
 					swal({
 						icon: "error",
@@ -158,7 +163,10 @@ class ControladorActividades{
 
 						// Verificar si la actividad editada requiere notificación
 						ControladorNotificaciones::ctrVerificarActividadesProximas();
-    
+
+                        // Determinar a de dónde redirigir según la URL actual o el origen
+                        $paginaDestino = isset($_POST["urlActual"]) ? $_POST["urlActual"] : "actividades";
+
                         echo '<script>
                         swal({
                             type: "success",
@@ -169,7 +177,7 @@ class ControladorActividades{
                             }).then((result)=>{
                                 if(result.value){
     
-                                   window.location = "actividades";
+                                   window.location = "'.$paginaDestino.'";
                                 }
                             })
                          </script>';
@@ -177,6 +185,9 @@ class ControladorActividades{
                 }
     
                 else{
+                    // Determinar a de dónde redirigir según la URL actual o el origen
+                    $paginaDestino = isset($_POST["urlActual"]) ? $_POST["urlActual"] : "actividades";
+
                     echo '<script>
                         swal({
                             type: "error",
@@ -188,7 +199,7 @@ class ControladorActividades{
     
                                 if(result.value){
     
-                                    window.location = "actividades";
+                                    window.location = "'.$paginaDestino.'";
                                 }
                             })
                     </script>';

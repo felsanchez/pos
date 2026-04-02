@@ -28,12 +28,11 @@ if ($modoEdicion) {
     }
 }
 
-// Helper function para obtener valores del cliente de forma segura
-function obtenerValor($cliente, $campo, $default = '') {
-    if ($cliente && isset($cliente[$campo])) {
-        return $cliente[$campo];
-    }
-    return $default;
+// Recuperar datos de sesión en caso de error previo
+$datosSession = null;
+if (isset($_SESSION["datos_cliente_error"])) {
+    $datosSession = $_SESSION["datos_cliente_error"];
+    unset($_SESSION["datos_cliente_error"]);
 }
 
 // Obtener estados disponibles
@@ -43,6 +42,30 @@ $estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null
 $esContacto = isset($_GET['origen']) && $_GET['origen'] === 'contactos';
 $tipoEntidad = $esContacto ? 'Contacto' : 'Cliente';
 $rutaVolver = $esContacto ? 'contactos' : 'clientes';
+
+// Prefijo para los campos según el modo
+$prefix = $modoEdicion ? 'editar' : 'nuevo';
+
+// Helper function para obtener valores del cliente de forma segura (Prioridad: Sesión > DB > Default)
+function obtenerValorForm($campoForm, $campoDB, $datosSession, $cliente, $default = '') {
+    if ($datosSession && isset($datosSession[$campoForm])) {
+        return $datosSession[$campoForm];
+    }
+    if ($cliente && isset($cliente[$campoDB])) {
+        return $cliente[$campoDB];
+    }
+    return $default;
+}
+
+/**
+ * @deprecated Use obtenerValorForm instead for form fields
+ */
+function obtenerValor($cliente, $campo, $default = '') {
+    if ($cliente && isset($cliente[$campo])) {
+        return $cliente[$campo];
+    }
+    return $default;
+}
 ?>
 
 <div class="content-wrapper">
@@ -69,6 +92,22 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
             <!-- Campo oculto para saber a qué vista regresar -->
             <input type="hidden" name="vistaOrigen" value="<?php echo isset($_GET['origen']) ? $_GET['origen'] : 'clientes'; ?>">
 
+            <!-- Campo oculto para permanecer en la vista actual en caso de error -->
+            <?php
+            $urlActual = "cliente-detalle";
+            $params = [];
+            if (isset($_GET['id'])) {
+                $params[] = "id=" . $_GET['id'];
+            }
+            if (isset($_GET['origen'])) {
+                $params[] = "origen=" . $_GET['origen'];
+            }
+            if (!empty($params)) {
+                $urlActual .= "?" . implode("&", $params);
+            }
+            ?>
+            <input type="hidden" name="urlActual" value="<?php echo $urlActual; ?>">
+
             <!-- ============================================= -->
             <!-- SECCIÓN 1: INFORMACIÓN BÁSICA -->
             <!-- ============================================= -->
@@ -82,17 +121,20 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Tipo de Persona *</label>
+                                <?php
+                                $tipoPersonaActual = obtenerValorForm($prefix . 'TipoPersona', 'tipo_persona', $datosSession, $cliente, 'natural');
+                                ?>
                                 <div>
                                     <label class="radio-inline">
                                         <input type="radio" name="<?php echo $modoEdicion ? 'editarTipoPersona' : 'nuevoTipoPersona'; ?>" 
                                                value="natural" id="tipoPersonaNatural"
-                                               <?php echo (!$modoEdicion || (isset($cliente['tipo_persona']) && $cliente['tipo_persona'] == 'natural')) ? 'checked' : ''; ?>>
+                                               <?php echo ($tipoPersonaActual == 'natural') ? 'checked' : ''; ?>>
                                         Persona Natural
                                     </label>
                                     <label class="radio-inline">
                                         <input type="radio" name="<?php echo $modoEdicion ? 'editarTipoPersona' : 'nuevoTipoPersona'; ?>" 
                                                value="juridica" id="tipoPersonaJuridica"
-                                               <?php echo ($modoEdicion && isset($cliente['tipo_persona']) && $cliente['tipo_persona'] == 'juridica') ? 'checked' : ''; ?>>
+                                               <?php echo ($tipoPersonaActual == 'juridica') ? 'checked' : ''; ?>>
                                         Persona Jurídica
                                     </label>
                                 </div>
@@ -115,14 +157,10 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                                         <?php
                                         // Obtener tipos de documento dinámicamente
                                         $tiposDocumento = ControladorFactus::ctrMostrarTiposDocumento();
+                                        $tipoDocActual = obtenerValorForm($prefix . 'TipoDocumento', 'tipo_documento_id', $datosSession, $cliente, 3);
+                                        
                                         foreach ($tiposDocumento as $tipo) {
-                                            $selected = '';
-                                            if ($modoEdicion && isset($cliente['tipo_documento_id']) && $cliente['tipo_documento_id'] == $tipo['id']) {
-                                                $selected = 'selected';
-                                            } elseif (!$modoEdicion && $tipo['id'] == 3) { 
-                                                // Preseleccionar Cédula (ID 3) por defecto en nuevo cliente
-                                                $selected = 'selected';
-                                            }
+                                            $selected = ($tipoDocActual == $tipo['id']) ? 'selected' : '';
                                             
                                             // Mostrar solo nombre para mayor limpieza visual
                                             $label = $tipo['nombre'];
@@ -147,7 +185,7 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                                     <input type="number" class="form-control" id="documento"
                                            name="<?php echo $modoEdicion ? 'editarDocumentoId' : 'nuevoDocumentoId'; ?>"
                                            placeholder="Ingrese el número de documento"
-                                           value="<?php echo $modoEdicion ? $cliente['documento'] : ''; ?>"
+                                           value="<?php echo obtenerValorForm($prefix . 'DocumentoId', 'documento', $datosSession, $cliente); ?>"
                                            min="0" required>
                                 </div>
                             </div>
@@ -162,7 +200,7 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                                     <input type="text" class="form-control" id="digitoVerificacion" maxlength="1"
                                            name="<?php echo $modoEdicion ? 'editarDigitoVerificacion' : 'nuevoDigitoVerificacion'; ?>"
                                            placeholder="DV"
-                                           value="<?php echo $modoEdicion && isset($cliente['digito_verificacion']) ? $cliente['digito_verificacion'] : ''; ?>">
+                                           value="<?php echo obtenerValorForm($prefix . 'DigitoVerificacion', 'digito_verificacion', $datosSession, $cliente); ?>">
                                 </div>
                                 <p class="help-block">Obligatorio para NIT</p>
                             </div>
@@ -179,7 +217,7 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                                     <input type="text" class="form-control" id="nombre"
                                            name="<?php echo $modoEdicion ? 'editarCliente' : 'nuevoCliente'; ?>"
                                            placeholder="Ingrese el nombre"
-                                           value="<?php echo $modoEdicion ? obtenerValor($cliente, 'nombre') : ''; ?>"
+                                           value="<?php echo obtenerValorForm($prefix . ($modoEdicion ? 'Cliente' : 'Cliente'), 'nombre', $datosSession, $cliente); ?>"
                                            required>
                                 </div>
                             </div>
@@ -194,7 +232,7 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                                     <input type="text" class="form-control" id="razonSocial"
                                            name="<?php echo $modoEdicion ? 'editarRazonSocial' : 'nuevaRazonSocial'; ?>"
                                            placeholder="Nombre legal de la empresa"
-                                           value="<?php echo $modoEdicion && isset($cliente['razon_social']) ? $cliente['razon_social'] : ''; ?>">
+                                           value="<?php echo obtenerValorForm(($modoEdicion ? 'editar' : 'nueva') . 'RazonSocial', 'razon_social', $datosSession, $cliente); ?>">
                                 </div>
                             </div>
                         </div>
@@ -208,7 +246,7 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                                     <input type="text" class="form-control" id="nombreComercial"
                                            name="<?php echo $modoEdicion ? 'editarNombreComercial' : 'nuevoNombreComercial'; ?>"
                                            placeholder="Nombre comercial"
-                                           value="<?php echo $modoEdicion && isset($cliente['nombre_comercial']) ? $cliente['nombre_comercial'] : ''; ?>">
+                                           value="<?php echo obtenerValorForm($prefix . 'NombreComercial', 'nombre_comercial', $datosSession, $cliente); ?>">
                                 </div>
                             </div>
                         </div>
@@ -224,7 +262,9 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                                     <select class="form-control"
                                             name="<?php echo $modoEdicion ? 'editarEstado' : 'nuevoEstatus'; ?>">
                                         <?php
-                                        $estadoActual = $modoEdicion && isset($cliente['estatus']) ? $cliente['estatus'] : 'nuevo';
+                                        $campoFormEstatus = $modoEdicion ? 'editarEstado' : 'nuevoEstatus';
+                                        $estadoActual = obtenerValorForm($campoFormEstatus, 'estatus', $datosSession, $cliente, 'nuevo');
+                                        
                                         if (is_array($estadosDisponibles) && count($estadosDisponibles) > 0):
                                             foreach ($estadosDisponibles as $estado):
                                                 $selected = (strcasecmp($estadoActual, $estado['nombre']) == 0) ? 'selected' : '';
@@ -262,9 +302,9 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                                 <div class="input-group">
                                     <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
                                     <input type="email" class="form-control"
-                                           name="<?php echo $modoEdicion ? 'editarEmail' : 'nuevoEmail'; ?>"
-                                           placeholder="correo@ejemplo.com"
-                                           value="<?php echo $modoEdicion ? $cliente['email'] : ''; ?>">
+                                            name="<?php echo $modoEdicion ? 'editarEmail' : 'nuevoEmail'; ?>"
+                                            placeholder="correo@ejemplo.com"
+                                            value="<?php echo obtenerValorForm($prefix . 'Email', 'email', $datosSession, $cliente); ?>">
                                 </div>
                                 <p class="help-block">Se usará para envío de facturas electrónicas</p>
                             </div>
@@ -277,10 +317,10 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                                 <div class="input-group">
                                     <span class="input-group-addon"><i class="fa fa-phone"></i></span>
                                     <input type="text" class="form-control" id="telefono"
-                                           name="<?php echo $modoEdicion ? 'editarTelefono' : 'nuevoTelefono'; ?>"
-                                           placeholder="(300) 123-4567"
-                                           value="<?php echo $modoEdicion ? $cliente['telefono'] : ''; ?>"
-                                           data-inputmask="'mask':'(999) 999-9999'" data-mask required>
+                                            name="<?php echo $modoEdicion ? 'editarTelefono' : 'nuevoTelefono'; ?>"
+                                            placeholder="(300) 123-4567"
+                                            value="<?php echo obtenerValorForm($prefix . 'Telefono', 'telefono', $datosSession, $cliente); ?>"
+                                            data-inputmask="'mask':'(999) 999-9999'" data-mask required>
                                 </div>
                             </div>
                         </div>
@@ -330,7 +370,7 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                                     <?php
                                     require_once "modelos/factus.modelo.php";
                                     $municipios = ModeloFactus::mdlObtenerMunicipios();
-                                    $municipioActual = $modoEdicion && isset($cliente['municipio_id']) ? $cliente['municipio_id'] : '';
+                                    $municipioActual = obtenerValorForm($prefix . 'Municipio', 'municipio_id', $datosSession, $cliente);
                                     foreach ($municipios as $municipio) {
                                         $selected = ($municipioActual == $municipio['id_factus']) ? 'selected' : '';
                                         $textoMunicipio = $municipio['nombre'] . ' - ' . $municipio['departamento'];
@@ -353,7 +393,7 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                                     <input type="text" class="form-control"
                                            name="<?php echo $modoEdicion ? 'editarDireccion' : 'nuevaDireccion'; ?>"
                                            placeholder="Calle, carrera, número, etc."
-                                           value="<?php echo $modoEdicion ? $cliente['direccion'] : ''; ?>"
+                                           value="<?php echo obtenerValorForm(($modoEdicion ? 'editar' : 'nueva') . 'Direccion', 'direccion', $datosSession, $cliente); ?>"
                                            required>
                                 </div>
                             </div>
@@ -367,9 +407,13 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                                 <label>Fecha de Nacimiento</label>
                                 <div class="input-group">
                                     <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                    <?php
+                                    $valFecha = obtenerValorForm(($modoEdicion ? 'editar' : 'nueva') . 'FechaNacimiento', 'fecha_nacimiento', $datosSession, $cliente);
+                                    $valFechaFormatted = ($valFecha && $valFecha != '0000-00-00 00:00:00') ? date('Y-m-d', strtotime($valFecha)) : '';
+                                    ?>
                                     <input type="date" class="form-control"
                                            name="<?php echo $modoEdicion ? 'editarFechaNacimiento' : 'nuevaFechaNacimiento'; ?>"
-                                           value="<?php echo $modoEdicion && isset($cliente['fecha_nacimiento']) && $cliente['fecha_nacimiento'] != '0000-00-00 00:00:00' ? date('Y-m-d', strtotime($cliente['fecha_nacimiento'])) : ''; ?>">
+                                           value="<?php echo $valFechaFormatted; ?>">
                                 </div>
                             </div>
                         </div>
@@ -382,7 +426,7 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                                     <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
                                     <textarea class="form-control" rows="3"
                                               name="<?php echo $modoEdicion ? 'editarNota' : 'nuevaNota'; ?>"
-                                              placeholder="Información adicional sobre el cliente"><?php echo $modoEdicion && isset($cliente['notas']) ? $cliente['notas'] : ''; ?></textarea>
+                                              placeholder="Información adicional sobre el cliente"><?php echo obtenerValorForm(($modoEdicion ? 'editar' : 'nueva') . 'Nota', 'notas', $datosSession, $cliente); ?></textarea>
                                 </div>
                             </div>
                         </div>
@@ -411,7 +455,8 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                                             required>
                                         <option value="">-- Seleccionar --</option>
                                         <?php
-                                        $respActual = $modoEdicion && isset($cliente['responsabilidades_fiscales']) ? $cliente['responsabilidades_fiscales'] : 'R-99-PN';
+                                        $campoFormResp = $modoEdicion ? 'editarResponsabilidades' : 'nuevasResponsabilidades';
+                                        $respActual = obtenerValorForm($campoFormResp, 'responsabilidades_fiscales', $datosSession, $cliente, 'R-99-PN');
                                         $listaResponsabilidades = [
                                             "R-99-PN" => "R-99-PN: No responsable (Persona Natural)",
                                             "O-13" => "O-13: Gran Contribuyente",
@@ -441,7 +486,7 @@ $rutaVolver = $esContacto ? 'contactos' : 'clientes';
                                     <input type="text" class="form-control"
                                            name="<?php echo $modoEdicion ? 'editarCodigoPostal' : 'nuevoCodigoPostal'; ?>"
                                            placeholder="Código postal"
-                                           value="<?php echo $modoEdicion && isset($cliente['codigo_postal']) ? $cliente['codigo_postal'] : ''; ?>">
+                                           value="<?php echo obtenerValorForm($prefix . 'CodigoPostal', 'codigo_postal', $datosSession, $cliente); ?>">
                                 </div>
                             </div>
                         </div>

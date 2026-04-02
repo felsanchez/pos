@@ -140,11 +140,7 @@ if (!puedeVer('proveedores')) {
               }
 
               if (puedeAccion('proveedores', 'eliminar')) {
-                if ($totalProductos == 0) {
-                  echo '<button class="btn btn-danger btnEliminarProveedor" idProveedor="' . $value["id"] . '"><i class="fa fa-times"></i></button>';
-                } else {
-                  echo '<button class="btn btn-danger" disabled title="No se puede eliminar porque tiene productos asociados"><i class="fa fa-times"></i></button>';
-                }
+                echo '<button class="btn btn-danger btnEliminarProveedor" idProveedor="' . $value["id"] . '"><i class="fa fa-times"></i></button>';
               }
 
               echo '</div>

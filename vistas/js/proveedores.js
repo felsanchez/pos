@@ -232,6 +232,14 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 								window.location.reload();
 							}
 						});
+					} else if (respuesta == "error_documentos_soporte") {
+						swal({
+							icon: "error",
+							title: "¡No se puede eliminar!",
+							text: "El proveedor tiene documentos soporte asociados. Elimine o reasigne los documentos soporte antes de continuar.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
 					} else if (respuesta == "error_productos_asociados") {
 						swal({
 							icon: "error",

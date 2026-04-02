@@ -61,6 +61,21 @@
 
 
 
+<?php
+// Calcular la URL actual con filtros para redirecciones dinámicas
+$urlActual = "actividades";
+$params = [];
+if (isset($_GET['filtroTipo']) && !empty($_GET['filtroTipo'])) {
+    $params[] = "filtroTipo=" . $_GET['filtroTipo'];
+}
+if (isset($_GET['filtroEstado']) && !empty($_GET['filtroEstado'])) {
+    $params[] = "filtroEstado=" . $_GET['filtroEstado'];
+}
+if (!empty($params)) {
+    $urlActual .= "?" . implode("&", $params);
+}
+?>
+
 <div class="content-wrapper">
   <section class="content-header">
 
@@ -321,6 +336,7 @@ MODAL AGREGAR actividad
       <form role="form" method="post" enctype="multipart/form-data">
 
         <?php CSRF::insertToken(); ?>
+        <input type="hidden" name="urlActual" value="<?php echo $urlActual; ?>">
 
         <!--=====================================
       CABEZA DEL MODAL
@@ -518,6 +534,7 @@ MODAL EDITAR Actividad
       <form role="form" method="post">
 
         <?php CSRF::insertToken(); ?>
+        <input type="hidden" name="urlActual" value="<?php echo $urlActual; ?>">
 
         <!--=====================================
             CABEZA DEL MODAL
@@ -718,6 +735,7 @@ MODAL GESTIONAR ESTADOS
             <form role="form" method="post" id="formAgregarEstado">
 
         <?php CSRF::insertToken(); ?>
+        <input type="hidden" name="urlActual" value="<?php echo $urlActual; ?>">
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
@@ -828,6 +846,7 @@ MODAL EDITAR ESTADO
       <form role="form" method="post">
 
         <?php CSRF::insertToken(); ?>
+        <input type="hidden" name="urlActual" value="<?php echo $urlActual; ?>">
 
         <!--=====================================
         CABEZA DEL MODAL
@@ -915,6 +934,7 @@ MODAL GESTIONAR TIPOS
             <form role="form" method="post" id="formAgregarTipo">
 
         <?php CSRF::insertToken(); ?>
+        <input type="hidden" name="urlActual" value="<?php echo $urlActual; ?>">
               <div class="row">
                 <div class="col-md-9">
                   <div class="form-group">
@@ -998,6 +1018,7 @@ MODAL EDITAR TIPO
       <form role="form" method="post">
 
         <?php CSRF::insertToken(); ?>
+        <input type="hidden" name="urlActual" value="<?php echo $urlActual; ?>">
 
         <!--=====================================
         CABEZA DEL MODAL

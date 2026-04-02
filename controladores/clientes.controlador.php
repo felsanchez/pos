@@ -89,8 +89,11 @@ class ControladorClientes
 				}
 			} else {
 
-				// Determinar a dónde redirigir según el origen
-				$redireccion = isset($_POST["vistaOrigen"]) ? $_POST["vistaOrigen"] : "clientes";
+				// GUARDAR DATOS EN SESION PARA PERSISTENCIA
+				$_SESSION["datos_cliente_error"] = $_POST;
+
+				// Determinar a dónde redirigir según la URL actual o el origen
+				$redireccion = isset($_POST["urlActual"]) ? $_POST["urlActual"] : (isset($_POST["vistaOrigen"]) ? $_POST["vistaOrigen"] : "clientes");
 
 				echo '<script>
 					swal({
@@ -200,6 +203,9 @@ class ControladorClientes
 
 				if ($respuesta == "ok") {
 
+					// Determinar a dónde redirigir según el origen
+					$redireccion = isset($_POST["vistaOrigen"]) ? $_POST["vistaOrigen"] : "clientes";
+
 					echo '<script>
 					swal({
 						icon: "success",
@@ -208,11 +214,18 @@ class ControladorClientes
 						confirmButtonText: "Cerrar"
 						}).then(() => {
 
-							   window.location = "clientes";
+							   window.location = "' . $redireccion . '";
 						})
 			     	</script>';
 				}
 			} else {
+
+				// GUARDAR DATOS EN SESION PARA PERSISTENCIA
+				$_SESSION["datos_cliente_error"] = $_POST;
+
+				// Determinar a dónde redirigir según la URL actual o el origen
+				$redireccion = isset($_POST["urlActual"]) ? $_POST["urlActual"] : (isset($_POST["vistaOrigen"]) ? $_POST["vistaOrigen"] : "clientes");
+
 				echo '<script>
 					swal({
 						icon: "error",
@@ -221,7 +234,7 @@ class ControladorClientes
 						confirmButtonText: "Cerrar"
 						}).then(() => {
 
-								window.location = "clientes";
+								window.location = "' . $redireccion . '";
 						})
 				</script>';
 			}
@@ -271,7 +284,7 @@ class ControladorClientes
 			$ruta = isset($_GET["ruta"]) ? $_GET["ruta"] : (isset($_POST["ruta"]) ? $_POST["ruta"] : "clientes");
 
 			// Verificar si hay actividades asociados
-			$actividadesAsociados = ModeloActividades::mdlMostrarActividades("actividades", "id_cliente", $datos, "id");
+			$actividadesAsociados = ModeloActividades::mdlMostrarActividades("actividades", "id_cliente", $datos);
 
 			if (!empty($actividadesAsociados)) {
 				if (isset($_POST["idClienteEliminar"])) {
@@ -293,7 +306,7 @@ class ControladorClientes
 
 
 			// Verificar si hay ventas asociados
-			$ventasAsociados = ModeloVentas::mdlMostrarVentas("ventas", "id_cliente", $datos, "id");
+			$ventasAsociados = ModeloVentas::mdlMostrarVentas("ventas", "id_cliente", $datos);
 
 			if (!empty($ventasAsociados)) {
 				if (isset($_POST["idClienteEliminar"])) {

@@ -514,6 +514,30 @@ class ModeloVentas
 	}
 
 	/*=============================================
+	CONTAR FACTURAS ELECTRÓNICAS POR CLIENTE
+	=============================================*/
+	static public function mdlContarFacturasElectronicasPorCliente($tabla)
+	{
+		// Retorna un array [ id_cliente => cantidad ] para todos los clientes con FE
+		$stmt = Conexion::conectar()->prepare(
+			"SELECT id_cliente, COUNT(*) as total
+			 FROM $tabla
+			 WHERE estado = 'venta'
+			   AND (numero_factura IS NOT NULL AND numero_factura != ''
+			        OR (resolucion_id IS NOT NULL AND resolucion_id != 0))
+			 GROUP BY id_cliente"
+		);
+		$stmt->execute();
+		$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+		$resultado = [];
+		foreach ($rows as $row) {
+			$resultado[$row['id_cliente']] = (int) $row['total'];
+		}
+		return $resultado;
+	}
+
+	/*=============================================
 	MOSTRAR ULTIMA FACTURA ELECTRÓNICA
 	=============================================*/
 	static public function mdlMostrarUltimaFacturaElectronica($tabla)

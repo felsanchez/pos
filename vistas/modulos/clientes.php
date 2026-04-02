@@ -349,11 +349,24 @@ $editarCliente->ctrEditarCliente();
               $key = 1;
               // Pre-fetch states for efficiency
               $estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
+              // Pre-cargar conteo de facturas electrónicas por cliente (evita N+1 queries)
+              $feMapClientes = ModeloVentas::mdlContarFacturasElectronicasPorCliente("ventas");
 
               foreach ($clientes as $value):
                 // if (isset($value["compras"]) && $value["compras"] > 0):
                 $estatus = $value["estatus"] ?? "";
                 $estatusClass = "estatus-" . str_replace(" ", "-", strtolower($estatus));
+
+                // Calcular variables de botones (deben estar antes del primer uso en móvil y desktop)
+                $tieneVentas = (isset($value["compras"]) && $value["compras"] > 0);
+                $styleVentas = $tieneVentas ? "" : "opacity: 0.6;";
+                $claseVentas = $tieneVentas ? "btnVerVentasCliente" : "btnSinVentas";
+                $linkVentas  = $tieneVentas ? "index.php?ruta=cliente-ventas&idCliente=" . $value['id'] : "#";
+
+                $tieneFE = isset($feMapClientes[$value['id']]) && $feMapClientes[$value['id']] > 0;
+                $styleFE = $tieneFE ? "" : "opacity: 0.6;";
+                $claseFE = $tieneFE ? "" : "btnSinFacturas";
+                $linkFE  = $tieneFE ? "index.php?ruta=facturas-electronicas&cliente=" . $value['id'] : "#";
                 ?>
 
                 <tr>
@@ -365,10 +378,16 @@ $editarCliente->ctrEditarCliente();
 
                     <?php echo $value["documento"]; ?>
 
-                    <a href="index.php?ruta=cliente-ventas&idCliente=<?php echo $value['id']; ?>"
-                      class="btn btn-success btn-xs btnVerVentasCliente solo-movil" style="float: right;"
+                    <a href="<?php echo $linkVentas; ?>"
+                      class="btn btn-success btn-xs <?php echo $claseVentas; ?> solo-movil" style="float: right; <?php echo $styleVentas; ?>"
                       title="Ver ventas de este cliente">
                       <i class="fa fa-line-chart"></i>
+                    </a>
+
+                    <a href="<?php echo $linkFE; ?>"
+                      class="btn btn-info btn-xs <?php echo $claseFE; ?> solo-movil" style="float: right; margin-right: 3px; <?php echo $styleFE; ?>"
+                      title="Ver facturas electrónicas de este cliente">
+                      <i class="fa fa-file-text"></i>
                     </a>
 
                     <?php if (puedeAccion('clientes', 'editar')): ?>
@@ -422,16 +441,16 @@ $editarCliente->ctrEditarCliente();
                         </a>
                       <?php endif; ?>
 
-                      <?php
-                      $tieneVentas = (isset($value["compras"]) && $value["compras"] > 0);
-                      $styleVentas = $tieneVentas ? "" : "opacity: 0.6;";
-                      $claseVentas = $tieneVentas ? "btnVerVentasCliente" : "btnSinVentas";
-                      $linkVentas = $tieneVentas ? "index.php?ruta=cliente-ventas&idCliente=" . $value['id'] : "#";
-                      ?>
+                      <?php // Variables calculadas al inicio del loop, disponibles aquí. ?>
 
                       <a href="<?php echo $linkVentas; ?>" class="btn btn-success <?php echo $claseVentas; ?>"
                         title="Ver ventas de este cliente" style="<?php echo $styleVentas; ?>">
                         <i class="fa fa-line-chart"></i>
+                      </a>
+
+                      <a href="<?php echo $linkFE; ?>" class="btn btn-info <?php echo $claseFE; ?>"
+                        title="Ver facturas electrónicas de este cliente" style="<?php echo $styleFE; ?>">
+                        <i class="fa fa-file-text"></i>
                       </a>
 
                       <?php if (puedeAccion('clientes', 'eliminar')): ?>

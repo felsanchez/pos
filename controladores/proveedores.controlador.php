@@ -219,7 +219,28 @@ class ControladorProveedores
 			$tabla = "proveedores";
 			$idProveedor = isset($_GET["idProveedor"]) ? $_GET["idProveedor"] : $_POST["idProveedorEliminar"];
 
-			// Verificar si hay productos asociados a esta proveedores
+			// Verificar si hay documentos soporte asociados a este proveedor
+			$docsSoporteAsociados = ModeloFactus::mdlMostrarDocumentosSoporte("id_proveedor", $idProveedor);
+
+			if (!empty($docsSoporteAsociados)) {
+				if (isset($_POST["idProveedorEliminar"])) {
+					return "error_documentos_soporte";
+				}
+				echo '<script>
+					swal({
+						icon: "error",
+						title: "¡No se puede eliminar!",
+						text: "El proveedor tiene documentos soporte asociados.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+							window.location = "proveedores";
+					});
+				</script>';
+				return;
+			}
+
+			// Verificar si hay productos asociados a este proveedor
 			$productosAsociados = ModeloProductos::mdlMostrarProductos("productos", "id_proveedor", $idProveedor, "id");
 
 			if (!empty($productosAsociados)) {
