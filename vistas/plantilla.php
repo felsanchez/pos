@@ -59,6 +59,9 @@ require_once "modelos/sanitizer.php";
   <!-- DataTables responsive-->
   <link rel="stylesheet" href="vistas/bower_components/datatables.net-bs/css/responsive.bootstrap.min.css">
 
+  <!-- Select2 -->
+  <link rel="stylesheet" href="vistas/bower_components/select2/dist/css/select2.min.css">
+
   <!-- DataTables Buttons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-buttons-bs@1.5.2/css/buttons.bootstrap.min.css">
 
@@ -92,6 +95,9 @@ require_once "modelos/sanitizer.php";
 
   <!-- FastClick -->
   <script src="vistas/bower_components/fastclick/lib/fastclick.js"></script>
+
+  <!-- Select2 -->
+  <script src="vistas/bower_components/select2/dist/js/select2.full.min.js"></script>
 
   <!-- AdminLTE App -->
   <script src="vistas/dist/js/adminlte.min.js"></script>
@@ -216,6 +222,7 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "ver-nota-ajuste-ds" ||
         $_GET["ruta"] == "notas-ajuste-ds" ||
         $_GET["ruta"] == "reportes-facturacion" ||
+        $_GET["ruta"] == "ver-detalle-orden" ||
         $_GET["ruta"] == "salir"
       ) {
 

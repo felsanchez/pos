@@ -27,9 +27,6 @@ function cargarTablaMovimientos() {
 		success: function (movimientos) {
 
 			console.log("Movimientos cargados:", movimientos);
-			console.log("Total de movimientos recibidos:", movimientos.length);
-			console.log("Primeros 5 registros:", movimientos.slice(0, 5));
-			console.log("Configurando tabla con responsive mode...");
 
 			tablaMovimientos = $(".tablaHistorialStock").DataTable({
 
@@ -42,11 +39,10 @@ function cargarTablaMovimientos() {
 				autoWidth: false,
 
 				columns: [
-
 					{
 						data: "fecha",
 						className: "all",
-						responsivePriority: 1, // Mostrar Fecha
+						responsivePriority: 1, 
 						render: function (data) {
 							var fecha = new Date(data);
 							return fecha.toLocaleString('es-ES', {
@@ -61,11 +57,11 @@ function cargarTablaMovimientos() {
 					{
 						data: "nombre_producto",
 						className: "all",
-						responsivePriority: 1 // Mostrar Producto
+						responsivePriority: 1
 					},
 					{
 						data: "tipo_producto",
-						responsivePriority: 100, // Ocultar Tipo Producto
+						responsivePriority: 100,
 						render: function (data) {
 							if (data == "producto") {
 								return '<span class="label label-primary">Producto</span>';
@@ -77,7 +73,7 @@ function cargarTablaMovimientos() {
 					{
 						data: "tipo_movimiento",
 						className: "all",
-						responsivePriority: 1, // Mostrar Tipo Movimiento
+						responsivePriority: 1,
 						render: function (data) {
 							var badges = {
 								"venta": '<span class="label label-success">Venta</span>',
@@ -93,7 +89,7 @@ function cargarTablaMovimientos() {
 					},
 					{
 						data: "cantidad",
-						responsivePriority: 100, // Ocultar Cantidad
+						responsivePriority: 100,
 						render: function (data) {
 							if (data > 0) {
 								return '<span class="text-green"><i class="fa fa-arrow-up"></i> +' + data + '</span>';
@@ -104,11 +100,11 @@ function cargarTablaMovimientos() {
 					},
 					{
 						data: "stock_anterior",
-						responsivePriority: 100 // Ocultar Stock Anterior
+						responsivePriority: 100
 					},
 					{
 						data: "stock_nuevo",
-						responsivePriority: 100, // Ocultar Stock Nuevo
+						responsivePriority: 100,
 						render: function (data, type, row) {
 							var cambio = row.stock_nuevo - row.stock_anterior;
 							if (cambio > 0) {
@@ -122,15 +118,15 @@ function cargarTablaMovimientos() {
 					},
 					{
 						data: "nombre_usuario",
-						responsivePriority: 100 // Ocultar Usuario
+						responsivePriority: 100
 					},
 					{
 						data: "referencia",
-						responsivePriority: 100 // Ocultar Referencia
+						responsivePriority: 100
 					},
 					{
 						data: "notas",
-						responsivePriority: 100, // Ocultar Notas
+						responsivePriority: 100,
 						render: function (data, type, row) {
 							return '<div contenteditable="true" class="celda-notas-movimiento" data-id="' + row.id + '">' + data + '</div>';
 						}
@@ -145,36 +141,30 @@ function cargarTablaMovimientos() {
 					"sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
 					"sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
 					"sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-					"sInfoPostFix": "",
 					"sSearch": "Buscar:",
-					"sUrl": "",
-					"sInfoThousands": ",",
-					"sLoadingRecords": "Cargando...",
 					"oPaginate": {
 						"sFirst": "Primero",
 						"sLast": "Último",
 						"sNext": "Siguiente",
 						"sPrevious": "Anterior"
-					},
-					"oAria": {
-						"sSortAscending": ": Activar para ordenar la columna de manera ascendente",
-						"sSortDescending": ": Activar para ordenar la columna de manera descendente"
 					}
 				},
 
+				"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
 				"order": [],
 				"ordering": false,
 				"pageLength": 25,
-
+				"preDrawCallback": function () {
+					if (!$(this).hasClass('datatable-ready')) {
+						$(this).css('visibility', 'hidden');
+					}
+				},
 				"initComplete": function () {
-					console.log("Tabla inicializada, recalculando responsive...");
+					$(this).addClass('datatable-ready').css('visibility', 'visible');
 					this.api().responsive.recalc();
 				}
 
 			});
-
-			console.log("DataTable creado:", tablaMovimientos);
-			console.log("Responsive enabled:", tablaMovimientos.responsive);
 
 		},
 		error: function (jqXHR, textStatus, errorThrown) {
@@ -201,8 +191,6 @@ function cargarResumen() {
 		data: filtros,
 		dataType: "json",
 		success: function (resumen) {
-
-			console.log("Resumen:", resumen);
 
 			// Resetear contadores
 			$("#totalVentas").text("0");
@@ -245,12 +233,64 @@ $(document).ready(function () {
 	// Solo ejecutar si estamos en la página de historial de stock
 	if ($(".tablaHistorialStock").length > 0) {
 
-		// 🔹 LIMPIAR CAMPO FECHA HASTA para evitar filtros residuales del caché
-		$("#filtroFechaHasta").val("");
+		// Inicializar Select2 para los filtros
+		if (typeof $.fn.select2 !== 'undefined') {
+			$('#filtroProducto').select2({
+				placeholder: "Seleccionar producto...",
+				allowClear: true,
+				minimumResultsForSearch: 0,
+				width: '100%'
+			});
+			$('#filtroUsuario').select2({
+				placeholder: "Seleccionar usuario...",
+				allowClear: true,
+				minimumResultsForSearch: 0,
+				width: '100%'
+			});
+			$('#filtroTipo').select2({
+				placeholder: "Seleccionar tipo...",
+				allowClear: true,
+				minimumResultsForSearch: 0,
+				width: '100%'
+			});
+		}
 
 		// Cargar datos al inicio
 		cargarTablaMovimientos();
 		cargarResumen();
+
+		/*=============================================
+		RANGO DE FECHAS
+		=============================================*/
+		if ($('#daterange-btn').length > 0) {
+			
+			$('#daterange-btn').daterangepicker(
+				{
+					ranges: {
+						'Hoy': [moment(), moment()],
+						'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+						'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+						'Este mes': [moment().startOf('month'), moment().endOf('month')],
+						'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+					},
+					startDate: moment().subtract(29, 'days'),
+					endDate: moment()
+				},
+				function (start, end) {
+					$('#daterange-btn span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+
+					var fechaInicial = start.format('YYYY-MM-DD');
+					var fechaFinal = end.format('YYYY-MM-DD');
+
+					// Actualizar inputs ocultos
+					$("#filtroFechaDesde").val(fechaInicial);
+					$("#filtroFechaHasta").val(fechaFinal);
+				}
+			);
+		}
+
+		// Inicializar edición de notas
+		inicializarEdicionNotas();
 	}
 
 });
@@ -267,11 +307,14 @@ $("#btnFiltrar").click(function () {
 BOTÓN LIMPIAR FILTROS
 =============================================*/
 $("#btnLimpiar").click(function () {
-	$("#filtroProducto").val("");
-	$("#filtroTipo").val("");
+	$("#filtroProducto").val("").trigger("change");
+	$("#filtroTipo").val("").trigger("change");
 	$("#filtroFechaDesde").val("");
 	$("#filtroFechaHasta").val("");
-	$("#filtroUsuario").val("");
+	$("#filtroUsuario").val("").trigger("change");
+
+	// Resetear texto del botón de rango
+	$("#daterange-btn span").html('<i class="fa fa-calendar"></i> Rango de fecha');
 
 	cargarTablaMovimientos();
 	cargarResumen();
@@ -319,8 +362,3 @@ function inicializarEdicionNotas() {
 		});
 	});
 }
-
-// Ejecutar al cargar por primera vez
-$(document).ready(function () {
-	inicializarEdicionNotas();
-});

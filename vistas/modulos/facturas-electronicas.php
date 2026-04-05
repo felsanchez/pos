@@ -311,19 +311,18 @@ if ($xml) {
       <div class="box-header with-border">
 
 
-        <?php if(puedeAccion('factura_electronica', 'crear')): ?>
-        <a href="crear-factura-electronica">
-          <button class="btn btn-primary">
-            Crear Factura Electrónica
-          </button>
-        </a>
+        <?php if (puedeAccion('factura_electronica', 'crear')): ?>
+          <a href="crear-factura-electronica">
+            <button class="btn btn-primary">
+              <i class="fa fa-plus"></i> Crear Factura Electrónica
+            </button>
+          </a>
         <?php endif; ?>
 
 
         <div class="pull-right contenedor-filtros">
 
-          <form method="GET" action="index.php"
-            style="display: inline-flex; gap: 5px; align-items: center; flex-wrap: wrap;">
+          <form method="GET" action="index.php" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
 
             <input type="hidden" name="ruta" value="facturas-electronicas">
             <input type="hidden" name="fechaInicial" id="fechaInicial"
@@ -334,38 +333,51 @@ if ($xml) {
             <?php CSRF::insertToken(); ?>
 
             <!-- Filtro por cliente -->
-            <div class="filtro-cliente">
-              <select name="cliente" class="form-control select-cliente" style="width: 200px;">
-                <option value="">Todos los clientes</option>
-                <?php
-                $item = null;
-                $valor = null;
-                $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="hidden-xs"><b>Filtrar por Cliente:</b></span>
+              <div class="input-group" style="width: 200px;">
+                <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+                  <i class="fa fa-search text-primary"></i>
+                </span>
+                <select name="cliente" class="form-control select2 select-cliente" style="width: 100%;">
+                  <option value="">Seleccionar cliente...</option>
+                  <?php
+                  $item = null;
+                  $valor = null;
+                  $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
 
-                foreach ($clientes as $key => $valueCliente) {
-                  $selected = (isset($_GET['cliente']) && $_GET['cliente'] == $valueCliente["id"]) ? 'selected' : '';
-                  echo '<option value="' . e($valueCliente["id"]) . '" ' . $selected . '>' . e($valueCliente["nombre"]) . '</option>';
-                }
-                ?>
-              </select>
+                  foreach ($clientes as $key => $valueCliente) {
+                    $selected = (isset($_GET['cliente']) && $_GET['cliente'] == $valueCliente["id"]) ? 'selected' : '';
+                    echo '<option value="' . e($valueCliente["id"]) . '" ' . $selected . '>' . e($valueCliente["nombre"]) . '</option>';
+                  }
+                  ?>
+                </select>
+              </div>
             </div>
 
             <!-- Filtro por usuario -->
-            <div class="filtro-usuario">
-              <select name="usuario" class="form-control select-usuario" style="width: 200px;">
-                <option value="">Todos los usuarios</option>
-                <?php
-                $item = null;
-                $valor = null;
-                $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="hidden-xs"><b>Filtrar por Vendedor:</b></span>
+              <div class="input-group" style="width: 200px;">
+                <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+                  <i class="fa fa-search text-primary"></i>
+                </span>
+                <select name="usuario" class="form-control select2 select-usuario" style="width: 100%;">
+                  <option value="">Seleccionar usuario...</option>
+                  <?php
+                  $item = null;
+                  $valor = null;
+                  $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
 
-                foreach ($usuarios as $key => $valueUsuario) {
-                  $selected = (isset($_GET['usuario']) && $_GET['usuario'] == $valueUsuario["id"]) ? 'selected' : '';
-                  echo '<option value="' . e($valueUsuario["id"]) . '" ' . $selected . '>' . e($valueUsuario["nombre"]) . '</option>';
-                }
-                ?>
-              </select>
+                  foreach ($usuarios as $key => $valueUsuario) {
+                    $selected = (isset($_GET['usuario']) && $_GET['usuario'] == $valueUsuario["id"]) ? 'selected' : '';
+                    echo '<option value="' . e($valueUsuario["id"]) . '" ' . $selected . '>' . e($valueUsuario["nombre"]) . '</option>';
+                  }
+                  ?>
+                </select>
+              </div>
             </div>
+
 
             <!-- Botón Rango de Fecha -->
             <button type="button" class="btn btn-default" id="daterange-btn-factus">
@@ -376,12 +388,12 @@ if ($xml) {
             </button>
 
             <!-- Botón Buscar -->
-            <button type="submit" class="btn btn-info">
-              <i class="fa fa-search"></i> Buscar
+            <button type="submit" class="btn btn-primary" title="Filtrar">
+              <i class="fa fa-search"></i>
             </button>
 
             <!-- Botón Limpiar -->
-            <a href="index.php?ruta=facturas-electronicas" class="btn btn-default" title="Limpiar filtros">
+            <a href="index.php?ruta=facturas-electronicas" class="btn btn-default" title="Limpiar">
               <i class="fa fa-refresh"></i>
             </a>
 
@@ -391,29 +403,33 @@ if ($xml) {
 
         <style>
           @media (max-width: 767px) {
-            .box-header .btn-primary {
+            .box-header .btn-primary:not([type="submit"]) {
               width: 100%;
               margin-bottom: 10px;
+            }
+
+            .pull-right.contenedor-filtros {
+              float: none !important;
+              width: 100%;
             }
 
             .pull-right.contenedor-filtros form {
               flex-direction: column;
               align-items: stretch !important;
               width: 100%;
+              gap: 10px !important;
             }
 
-            .filtro-cliente,
-            .filtro-usuario,
-            #daterange-btn,
-            .btn-info,
+            .pull-right.contenedor-filtros form .input-group,
+            .pull-right.contenedor-filtros form div {
+              width: 100% !important;
+            }
+
+            #daterange-btn-factus,
+            [type="submit"],
             .btn-default {
               width: 100% !important;
               margin-bottom: 5px;
-            }
-
-            .select-cliente,
-            .select-usuario {
-              width: 100% !important;
             }
           }
         </style>
@@ -688,17 +704,17 @@ if ($xml) {
                              ' . (!empty($value["qr_data"]) ? '<a class="btn btn-success" href="' . $value["qr_data"] . '" target="_blank" data-toggle="tooltip" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>' : '') . '
 
                              ';
-                             if(puedeAccion('factura_electronica', 'editar')) {
-                                echo ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
-                                    '<button class="btn btn-success btnFirmarFactura" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
+                if (puedeAccion('factura_electronica', 'editar')) {
+                  echo ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
+                    '<button class="btn btnFirmarFactura" style="background-color: black; color: white;" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
                                         <i class="fa fa-paper-plane"></i>
                                     </button>' : '') . '
                                     ' . ((isset($value["estado_dian"]) && in_array($value["estado_dian"], ['creada', 'pendiente'])) ?
-                                    '<a class="btn btn-warning" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador">
+                    '<a class="btn btn-warning" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador">
                                         <i class="fa fa-pencil"></i>
                                     </a>' : '');
-                             }
-                             echo ' ';
+                }
+                echo ' ';
 
                 if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
                   echo ' <button class="btn btn-primary btnEnviarEmail" idVenta="' . $value["id"] . '" nombreCliente="' . $nombreCliente . '" emailCliente="' . $value["email_cliente"] . '" title="Enviar por Correo">
@@ -816,9 +832,9 @@ if ($xml) {
             }
 
             echo ' ';
-            if(puedeAccion('factura_electronica', 'editar')) {
-                echo ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
-                '<button class="btn btn-success btn-xs btnFirmarFactura" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
+            if (puedeAccion('factura_electronica', 'editar')) {
+              echo ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
+                '<button class="btn btn-xs btnFirmarFactura" style="background-color: black; color: white;" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
                                     <i class="fa fa-paper-plane"></i>
                                 </button>' : '') . '
                                 ' . ((isset($value["estado_dian"]) && in_array($value["estado_dian"], ['creada', 'pendiente'])) ?
@@ -984,10 +1000,10 @@ MODAL GENERAR NOTA CRÉDITO
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-        <?php if(puedeAccion('factura_electronica', 'crear')): ?>
-        <button type="button" class="btn btn-danger" id="btnConfirmarNC">
-          <i class="fa fa-check"></i> Generar Nota Crédito
-        </button>
+        <?php if (puedeAccion('factura_electronica', 'crear')): ?>
+          <button type="button" class="btn btn-danger" id="btnConfirmarNC">
+            <i class="fa fa-check"></i> Generar Nota Crédito
+          </button>
         <?php endif; ?>
       </div>
     </div>
@@ -1208,7 +1224,7 @@ MODAL EDITAR CLIENTE
         // Actualizar inputs ocultos que se enviarán con el form
         var fechaInicialFormato = start.startOf('day').format('YYYY-MM-DD HH:mm:ss');
         var fechaFinalFormato = end.endOf('day').format('YYYY-MM-DD HH:mm:ss');
-        
+
         $('#fechaInicial').val(fechaInicialFormato);
         $('#fechaFinal').val(fechaFinalFormato);
       }

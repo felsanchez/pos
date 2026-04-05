@@ -349,7 +349,7 @@ $(document).ready(function () {
         if (nombreTipo != "NIT") {
             e.preventDefault();
             swal({
-                icon: "warning",
+                type: "warning",
                 title: "Validación de Proveedor",
                 text: "El tipo de documento de identificación del proveedor debe ser NIT",
                 showConfirmButton: true,
@@ -366,7 +366,7 @@ $(document).ready(function () {
         swal({
             title: '¿Está seguro de guardar este documento?',
             text: "Se guardará en el sistema y podrá enviarla a la DIAN después.",
-            icon: 'warning',
+            type: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
@@ -379,7 +379,7 @@ $(document).ready(function () {
                 swal({
                     title: 'Guardando Documento Soporte',
                     text: 'Por favor espere mientras se procesa la información...',
-                    icon: 'info',
+                    type: 'info',
                     allowOutsideClick: false,
                     showConfirmButton: false,
                     onBeforeOpen: () => {
@@ -403,7 +403,7 @@ $(document).ready(function () {
                     success: function (respuesta) {
                         if (!respuesta.error) {
                             swal({
-                                icon: "success",
+                                type: "success",
                                 title: "¡Documento Soporte guardado correctamente!",
                                 text: "El documento ha sido registrado exitosamente en el sistema.",
                                 showConfirmButton: true,
@@ -413,7 +413,7 @@ $(document).ready(function () {
                             });
                         } else {
                             swal({
-                                icon: "error",
+                                type: "error",
                                 title: "¡Error!",
                                 text: respuesta.mensaje,
                                 showConfirmButton: true,
@@ -424,7 +424,7 @@ $(document).ready(function () {
                     error: function (jqXHR, textStatus, errorThrown) {
                         console.error("Error AJAX:", jqXHR.responseText);
                         swal({
-                            icon: "error",
+                            type: "error",
                             title: "Error de Sistema",
                             text: "No se pudo emitir el documento soporte vía AJAX. Revisa la consola."
                         });
@@ -443,7 +443,7 @@ $(document).ready(function () {
         swal({
             title: '¿Está seguro de firmar y emitir este Documento Soporte?',
             text: 'Este proceso enviará el documento a la DIAN y no se podrá revertir.',
-            icon: 'warning',
+            type: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
@@ -454,7 +454,7 @@ $(document).ready(function () {
                 swal({
                     title: 'Guardando Documento Soporte',
                     text: 'Por favor espere mientras se procesa la información...',
-                    icon: 'info',
+                    type: 'info',
                     allowOutsideClick: false,
                     showConfirmButton: false,
                     onBeforeOpen: () => {
@@ -478,7 +478,7 @@ $(document).ready(function () {
                     success: function (respuesta) {
                         if (!respuesta.error) {
                             swal({
-                                icon: "success",
+                                type: "success",
                                 title: "¡Documento Soporte firmado y enviado correctamente!",
                                 text: "El documento ha sido procesado por la DIAN exitosamente.",
                                 showConfirmButton: true,
@@ -490,7 +490,7 @@ $(document).ready(function () {
                             });
                         } else {
                             swal({
-                                icon: 'error',
+                                type: 'error',
                                 title: "Error",
                                 text: respuesta.mensaje,
                                 showConfirmButton: true,
@@ -512,7 +512,7 @@ $(document).ready(function () {
         swal({
             title: '¿Está seguro de eliminar este Documento Soporte?',
             text: '¡Si no lo está puede cancelar la acción!',
-            icon: 'warning',
+            type: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
@@ -536,7 +536,7 @@ $(document).ready(function () {
                     success: function (respuesta) {
                         if (!respuesta.error) {
                             swal({
-                                icon: "success",
+                                type: "success",
                                 title: "¡Documento Soporte eliminado correctamente!",
                                 text: "El documento ha sido borrado exitosamente del sistema.",
                                 showConfirmButton: true,
@@ -548,7 +548,7 @@ $(document).ready(function () {
                             });
                         } else {
                             swal({
-                                icon: 'error',
+                                type: 'error',
                                 title: "Error",
                                 text: respuesta.mensaje,
                                 showConfirmButton: true,
@@ -645,7 +645,7 @@ $(document).ready(function () {
 
         if (emailDestino == "") {
             swal({
-                icon: "error",
+                type: "error",
                 title: "Error",
                 text: "El correo electrónico es obligatorio"
             });
@@ -677,7 +677,7 @@ $(document).ready(function () {
             success: function (respuesta) {
                 if (respuesta.status == "success") {
                     swal({
-                        icon: "success",
+                        type: "success",
                         title: "¡Enviado!",
                         text: respuesta.mensaje,
                         confirmButtonText: "Cerrar"
@@ -688,7 +688,7 @@ $(document).ready(function () {
                     });
                 } else {
                     swal({
-                        icon: "error",
+                        type: "error",
                         title: "Error",
                         text: respuesta.mensaje
                     });
@@ -696,7 +696,7 @@ $(document).ready(function () {
             },
             error: function () {
                 swal({
-                    icon: "error",
+                    type: "error",
                     title: "Error de comunicación",
                     text: "No se pudo conectar con el servidor para enviar el correo."
                 });

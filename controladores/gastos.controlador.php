@@ -42,7 +42,7 @@ class ControladorGastos{
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
@@ -158,7 +158,7 @@ class ControladorGastos{
 					echo'<script>
 
 					swal({
-						  icon: "success",
+						  type: "success",
 						  title: "El gasto ha sido guardado correctamente",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
@@ -327,7 +327,7 @@ class ControladorGastos{
 					echo'<script>
 
 					swal({
-						  icon: "success",
+						  type: "success",
 						  title: "El gasto ha sido editado correctamente",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
@@ -417,7 +417,7 @@ class ControladorGastos{
 				echo'<script>
 
 				swal({
-					  icon: "success",
+					  type: "success",
 					  title: "El gasto ha sido eliminado correctamente",
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"

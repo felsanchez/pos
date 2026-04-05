@@ -46,22 +46,37 @@
     <div class="box">
 
       <div class="box-header with-border">
-
-        <?php if(puedeAccion('usuarios', 'crear')): ?>
-        <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarUsuario">
-
-          Agregar usuario
-
-        </button>
+        <?php if (puedeAccion('usuarios', 'crear')): ?>
+          <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarUsuario">
+            <i class="fa fa-plus"></i> Agregar usuario
+          </button>
         <?php endif; ?>
 
+        <!-- Filtro por Perfil Estandarizado -->
+        <div class="pull-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span class="hidden-xs"><b>Filtrar por Perfil:</b></span>
+          <div class="input-group" style="width: 200px;">
+            <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+              <i class="fa fa-search text-primary"></i>
+            </span>
+            <select class="form-control select2" id="seleccionarPerfilFiltro" style="width: 100%;">
+              <option value="">Seleccionar perfil...</option>
+              <?php foreach (ModeloPerfiles::mdlObtenerPerfiles() as $p): ?>
+                <option value="<?php echo htmlspecialchars($p['nombre']); ?>">
+                  <?php echo htmlspecialchars($p['nombre']); ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+        </div>
       </div>
 
 
       <div class="box-body table-responsive">
 
         <!-- Variable oculta para que JS sepa si el usuario actual puede editar la columna estado -->
-        <input type="hidden" id="puedeEditarUsuarios" value="<?php echo puedeAccion('usuarios', 'editar') ? '1' : '0'; ?>">
+        <input type="hidden" id="puedeEditarUsuarios"
+          value="<?php echo puedeAccion('usuarios', 'editar') ? '1' : '0'; ?>">
 
         <table class="table table-bordered table-striped dt-responsive tablaUsuarios" style="width: 100%">
 
@@ -145,16 +160,16 @@
 
                     <td>
                       <div class="btn-group">';
-                        
-                        if(puedeAccion('usuarios', 'editar')) {
-                          echo '<button class="btn btn-warning btnEditarUsuario" idUsuario="' . $value["id"] . '"><i class="fa fa-pencil"></i></button>';
-                        }
-                        
-                        if(puedeAccion('usuarios', 'eliminar')) {
-                          echo '<button class="btn btn-danger btnEliminarUsuario" idUsuario="' . $value["id"] . '" fotoUsuario="' . $value["foto"] . '" usuario="' . $value["usuario"] . '"><i class="fa fa-times"></i></button>';
-                        }
 
-                      echo '</div>
+              if (puedeAccion('usuarios', 'editar')) {
+                echo '<button class="btn btn-warning btnEditarUsuario" idUsuario="' . $value["id"] . '"><i class="fa fa-pencil"></i></button>';
+              }
+
+              if (puedeAccion('usuarios', 'eliminar')) {
+                echo '<button class="btn btn-danger btnEliminarUsuario" idUsuario="' . $value["id"] . '" fotoUsuario="' . $value["foto"] . '" usuario="' . $value["usuario"] . '"><i class="fa fa-times"></i></button>';
+              }
+
+              echo '</div>
                     </td>
 
                   </tr>';
@@ -273,8 +288,8 @@ MODAL AGREGAR USUARIO
                   <label>Correo Electrónico:</label>
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
-                    <input type="email" class="form-control input-lg" name="nuevoEmail"
-                      placeholder="correo@ejemplo.com" required>
+                    <input type="email" class="form-control input-lg" name="nuevoEmail" placeholder="correo@ejemplo.com"
+                      required>
                   </div>
                 </div>
               </div>
@@ -543,7 +558,7 @@ $borrarUsuario->ctrBorrarUsuario();
         swal({
           title: "Error al subir la imagen",
           text: "¡La imagen debe estar en formato JPG o PNG!",
-          icon: "error",
+          type: "error",
           confirmButtonText: "¡Cerrar!"
         });
       } else if (imagen["size"] > 2000000) {
@@ -551,7 +566,7 @@ $borrarUsuario->ctrBorrarUsuario();
         swal({
           title: "Error al subir la imagen",
           text: "¡La imagen no debe pesar más de 2MB!",
-          icon: "error",
+          type: "error",
           confirmButtonText: "¡Cerrar!"
         });
       } else {
@@ -600,7 +615,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
         swal({
           title: "Error al subir la imagen",
           text: "¡La imagen debe estar en formato JPG o PNG!",
-          icon: "error",
+          type: "error",
           confirmButtonText: "¡Cerrar!"
         });
       } else if (imagen["size"] > 2000000) {
@@ -608,7 +623,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
         swal({
           title: "Error al subir la imagen",
           text: "¡La imagen no debe pesar más de 2MB!",
-          icon: "error",
+          type: "error",
           confirmButtonText: "¡Cerrar!"
         });
       } else {
@@ -638,7 +653,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
       swal({
         title: "Advertencia",
         text: "No has seleccionado ninguna imagen",
-        icon: "warning",
+        type: "warning",
         confirmButtonText: "¡Cerrar!"
       });
       return;
@@ -648,7 +663,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
       swal({
         title: "Error",
         text: "No se pudo obtener el ID o nombre del usuario",
-        icon: "error",
+        type: "error",
         confirmButtonText: "¡Cerrar!"
       });
       return;
@@ -681,7 +696,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
 
         if (respuesta == "ok") {
           swal({
-            icon: "success",
+            type: "success",
             title: "¡La imagen ha sido actualizada correctamente!",
             showConfirmButton: true,
             confirmButtonText: "Cerrar"
@@ -693,7 +708,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
           });
         } else {
           swal({
-            icon: "error",
+            type: "error",
             title: "Error al actualizar la imagen",
             text: JSON.stringify(respuesta),
             confirmButtonText: "Cerrar"
@@ -705,7 +720,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
         console.log("Respuesta:", jqXHR.responseText);
 
         swal({
-          icon: "error",
+          type: "error",
           title: "Error en la petición",
           text: "Por favor revisa la consola para más detalles",
           confirmButtonText: "Cerrar"

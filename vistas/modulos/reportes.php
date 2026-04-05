@@ -108,7 +108,7 @@
         <div class="box-tools pull-right">
           <button class="btn btn-success btn-sm" style="margin-right: 5px;" data-toggle="modal"
             data-target="#modalDescargarExcel">
-            <i class="fa fa-file-excel-o"></i> Excel
+            <i class="fa fa-file-excel-o"></i> Descargar Reporte
           </button>
           <button type="button" class="btn btn-box-tool" data-widget="collapse">
             <i class="fa fa-minus"></i>
@@ -241,7 +241,8 @@
           </div>
           <div class="col-md-2" style="margin-bottom: 10px;">
             <div class="input-group">
-              <span class="input-group-addon" style="background-color: #f4f4f4;"><i class="fa fa-filter"></i> Categoría</span>
+              <span class="input-group-addon" style="background-color: #f4f4f4;"><i class="fa fa-filter"></i>
+                Categoría</span>
               <select class="form-control" id="seleccionarCategoriaReporte">
                 <option value="todos">Todos los documentos</option>
                 <option value="facturas">Facturas Electrónicas</option>
@@ -253,7 +254,8 @@
           </div>
           <div class="col-md-3" style="margin-bottom: 10px;">
             <div class="input-group" style="width: 100%;">
-              <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i class="fa fa-users"></i></span>
+              <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
+                  class="fa fa-users"></i></span>
               <select class="form-control" id="seleccionarClienteReporte" style="display:block; width: 100%;">
                 <option value="todos">Todos los clientes</option>
                 <?php
@@ -276,7 +278,8 @@
           </div>
           <div class="col-md-3" style="margin-bottom: 10px;">
             <div class="input-group" style="width: 100%;">
-              <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i class="fa fa-user"></i></span>
+              <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
+                  class="fa fa-user"></i></span>
               <select class="form-control" id="seleccionarUsuarioReporte" style="width: 100%;">
                 <option value="todos">Todos los usuarios</option>
                 <?php
@@ -292,7 +295,8 @@
             <button type="button" class="btn btn-primary" id="btnFiltrarReportes" style="flex: 1;">
               <i class="fa fa-search"></i> Buscar
             </button>
-            <button type="button" class="btn btn-default" id="btnLimpiarFiltrosReportes" style="flex: 1;" title="Limpiar filtros">
+            <button type="button" class="btn btn-default" id="btnLimpiarFiltrosReportes" style="flex: 1;"
+              title="Limpiar filtros">
               <i class="fa fa-refresh"></i>
             </button>
           </div>

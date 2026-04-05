@@ -7,7 +7,7 @@ if (!puedeVer('variantes')) {
 <div class="content-wrapper">
 
   <section class="content-header">
-    
+
     <h1>
       Administrar Variantes
       <small>Tipos y Opciones</small>
@@ -26,19 +26,19 @@ if (!puedeVer('variantes')) {
     TIPOS DE VARIANTES
     ====================================== -->
     <div class="box">
-      
+
       <div class="box-header with-border">
-        <?php if(puedeAccion('variantes', 'crear')): ?>
-        <button class="btn btn-primary btnAbrirModalTipo" data-toggle="modal" data-target="#modalAgregarTipoVariante">
-        Agregar Tipo de Variante
-        </button>
+        <?php if (puedeAccion('variantes', 'crear')): ?>
+          <button class="btn btn-primary btnAbrirModalTipo" data-toggle="modal" data-target="#modalAgregarTipoVariante">
+            <i class="fa fa-plus"></i> Agregar Tipo de Variante
+          </button>
         <?php endif; ?>
       </div>
 
       <div class="box-body">
-        
+
         <table class="table table-bordered table-striped dt-responsive tablas" width="100%">
-          
+
           <thead>
             <tr>
               <th style="width:10px">#</th>
@@ -46,60 +46,60 @@ if (!puedeVer('variantes')) {
               <th>Orden</th>
               <th>Estado</th>
               <th>Acciones</th>
-            </tr> 
+            </tr>
           </thead>
 
           <tbody>
 
-          <?php
+            <?php
 
-          $item = null;
-          $valor = null;
+            $item = null;
+            $valor = null;
 
-          $tiposVariantes = ControladorVariantes::ctrMostrarTiposVariantes($item, $valor);
+            $tiposVariantes = ControladorVariantes::ctrMostrarTiposVariantes($item, $valor);
 
-          foreach ($tiposVariantes as $key => $value) {
-            
-            echo '<tr>
+            foreach ($tiposVariantes as $key => $value) {
 
-                    <td>'.($key+1).'</td>
+              echo '<tr>
 
-                    <td>'.$value["nombre"].'</td>
+                    <td>' . ($key + 1) . '</td>
 
-                    <td>'.$value["orden"].'</td>';
+                    <td>' . $value["nombre"] . '</td>
 
-                    if(puedeAccion('variantes', 'editar')){
-                      if($value["estado"] != 0){
-                        echo '<td><button class="btn btn-success btn-xs btnActivarTipo" idTipo="'.$value["id"].'" estadoTipo="0">Activado</button></td>';
-                      }else{
-                        echo '<td><button class="btn btn-danger btn-xs btnActivarTipo" idTipo="'.$value["id"].'" estadoTipo="1">Desactivado</button></td>';
-                      }
-                    } else {
-                      if($value["estado"] != 0){
-                        echo '<td><button class="btn btn-success btn-xs">Activado</button></td>';
-                      }else{
-                        echo '<td><button class="btn btn-danger btn-xs">Desactivado</button></td>';
-                      }
-                    }
+                    <td>' . $value["orden"] . '</td>';
 
-                    echo '<td><div class="btn-group">';
+              if (puedeAccion('variantes', 'editar')) {
+                if ($value["estado"] != 0) {
+                  echo '<td><button class="btn btn-success btn-xs btnActivarTipo" idTipo="' . $value["id"] . '" estadoTipo="0">Activado</button></td>';
+                } else {
+                  echo '<td><button class="btn btn-danger btn-xs btnActivarTipo" idTipo="' . $value["id"] . '" estadoTipo="1">Desactivado</button></td>';
+                }
+              } else {
+                if ($value["estado"] != 0) {
+                  echo '<td><button class="btn btn-success btn-xs">Activado</button></td>';
+                } else {
+                  echo '<td><button class="btn btn-danger btn-xs">Desactivado</button></td>';
+                }
+              }
 
-                    if(puedeAccion('variantes', 'editar')){
-                      echo '<button class="btn btn-warning btnEditarTipoVariante" idTipo="'.$value["id"].'" data-toggle="modal" data-target="#modalEditarTipoVariante"><i class="fa fa-pencil"></i></button>';
-                    }
+              echo '<td><div class="btn-group">';
 
-                    echo '<button class="btn btn-info btnVerOpciones" idTipo="'.$value["id"].'" nombreTipo="'.$value["nombre"].'"><i class="fa fa-list"></i> Opciones</button>';
+              if (puedeAccion('variantes', 'editar')) {
+                echo '<button class="btn btn-warning btnEditarTipoVariante" idTipo="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarTipoVariante"><i class="fa fa-pencil"></i></button>';
+              }
 
-                    if(puedeAccion('variantes', 'eliminar')){
-                      echo '<button class="btn btn-danger btnEliminarTipo" idTipo="'.$value["id"].'" nombreTipo="'.$value["nombre"].'"><i class="fa fa-times"></i></button>';
-                    }
+              echo '<button class="btn btn-info btnVerOpciones" idTipo="' . $value["id"] . '" nombreTipo="' . $value["nombre"] . '"><i class="fa fa-list"></i> Opciones</button>';
 
-                    echo '</div></td>
+              if (puedeAccion('variantes', 'eliminar')) {
+                echo '<button class="btn btn-danger btnEliminarTipo" idTipo="' . $value["id"] . '" nombreTipo="' . $value["nombre"] . '"><i class="fa fa-times"></i></button>';
+              }
+
+              echo '</div></td>
 
                   </tr>';
-          }
+            }
 
-          ?>
+            ?>
 
           </tbody>
 
@@ -113,21 +113,22 @@ if (!puedeVer('variantes')) {
     OPCIONES DE VARIANTES (se muestra al hacer clic en "Opciones")
     ====================================== -->
     <div class="box box-info" id="boxOpciones" style="display:none;">
-      
+
       <div class="box-header with-border">
         <h3 class="box-title">Opciones de: <span id="nombreTipoVariante"></span></h3>
         <input type="hidden" id="idTipoVarianteActual">
         <input type="hidden" id="puedeEditarVariante" value="<?php echo puedeAccion('variantes', 'editar') ? 1 : 0; ?>">
-        <input type="hidden" id="puedeEliminarVariante" value="<?php echo puedeAccion('variantes', 'eliminar') ? 1 : 0; ?>">
-        <?php if(puedeAccion('variantes', 'crear')): ?>
-        <button class="btn btn-primary pull-right" data-toggle="modal" data-target="#modalAgregarOpcion">
-          Agregar Opción
-        </button>
+        <input type="hidden" id="puedeEliminarVariante"
+          value="<?php echo puedeAccion('variantes', 'eliminar') ? 1 : 0; ?>">
+        <?php if (puedeAccion('variantes', 'crear')): ?>
+          <button class="btn btn-primary pull-right" data-toggle="modal" data-target="#modalAgregarOpcion">
+            Agregar Opción
+          </button>
         <?php endif; ?>
       </div>
 
       <div class="box-body">
-        
+
         <table class="table table-bordered table-striped" id="tablaOpciones">
           <thead>
             <tr>
@@ -136,7 +137,7 @@ if (!puedeVer('variantes')) {
               <th>Orden</th>
               <th>Estado</th>
               <th>Acciones</th>
-            </tr> 
+            </tr>
           </thead>
           <tbody id="bodyOpciones">
             <!-- Se carga dinámicamente con AJAX -->
@@ -156,7 +157,7 @@ MODAL AGREGAR TIPO DE VARIANTE
 ====================================== -->
 
 <div id="modalAgregarTipoVariante" class="modal fade" role="dialog">
-  
+
   <div class="modal-dialog">
 
     <div class="modal-content">
@@ -179,20 +180,22 @@ MODAL AGREGAR TIPO DE VARIANTE
             <!-- ENTRADA PARA EL NOMBRE -->
             <div class="form-group">
               <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-th"></i></span> 
-                <input type="text" class="form-control input-lg" name="nuevoTipoVariante" placeholder="Ingresar nombre (ej: Color, Talla, Material)" required>
+                <span class="input-group-addon"><i class="fa fa-th"></i></span>
+                <input type="text" class="form-control input-lg" name="nuevoTipoVariante"
+                  placeholder="Ingresar nombre (ej: Color, Talla, Material)" required>
               </div>
             </div>
 
             <!-- ENTRADA PARA EL ORDEN -->
             <div class="form-group">
-            <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-sort-numeric-asc"></i></span> 
-                <input type="number" class="form-control input-lg" id="nuevoOrdenTipo" name="nuevoOrdenTipo" placeholder="Orden de visualización" value="1" min="1" required>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-sort-numeric-asc"></i></span>
+                <input type="number" class="form-control input-lg" id="nuevoOrdenTipo" name="nuevoOrdenTipo"
+                  placeholder="Orden de visualización" value="1" min="1" required>
+              </div>
+              <p class="help-block">El orden se autocompletará con el siguiente disponible</p>
             </div>
-            <p class="help-block">El orden se autocompletará con el siguiente disponible</p>
-            </div>
-  
+
           </div>
 
         </div>
@@ -205,8 +208,8 @@ MODAL AGREGAR TIPO DE VARIANTE
 
         <?php
 
-          $crearTipo = new ControladorVariantes();
-          $crearTipo -> ctrCrearTipoVariante();
+        $crearTipo = new ControladorVariantes();
+        $crearTipo->ctrCrearTipoVariante();
 
         ?>
 
@@ -223,7 +226,7 @@ MODAL AGREGAR OPCIÓN
 ====================================== -->
 
 <div id="modalAgregarOpcion" class="modal fade" role="dialog">
-  
+
   <div class="modal-dialog">
 
     <div class="modal-content">
@@ -249,21 +252,23 @@ MODAL AGREGAR OPCIÓN
             <!-- ENTRADA PARA EL NOMBRE -->
             <div class="form-group">
               <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-tag"></i></span> 
-                <input type="text" class="form-control input-lg" name="nuevaOpcion" placeholder="Nombre de la opción (ej: Rojo, M, Algodón)" required>
+                <span class="input-group-addon"><i class="fa fa-tag"></i></span>
+                <input type="text" class="form-control input-lg" name="nuevaOpcion"
+                  placeholder="Nombre de la opción (ej: Rojo, M, Algodón)" required>
               </div>
             </div>
 
 
             <!-- ENTRADA PARA EL ORDEN -->
             <div class="form-group">
-            <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-sort-numeric-asc"></i></span> 
-                <input type="number" class="form-control input-lg" id="nuevoOrdenOpcion" name="nuevoOrdenOpcion" placeholder="Orden" value="1" min="1" required>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-sort-numeric-asc"></i></span>
+                <input type="number" class="form-control input-lg" id="nuevoOrdenOpcion" name="nuevoOrdenOpcion"
+                  placeholder="Orden" value="1" min="1" required>
+              </div>
+              <p class="help-block">El orden se autocompletará con el siguiente disponible</p>
             </div>
-            <p class="help-block">El orden se autocompletará con el siguiente disponible</p>
-            </div>
-  
+
           </div>
 
         </div>
@@ -276,8 +281,8 @@ MODAL AGREGAR OPCIÓN
 
         <?php
 
-          $crearOpcion = new ControladorVariantes();
-          $crearOpcion -> ctrCrearOpcionVariante();
+        $crearOpcion = new ControladorVariantes();
+        $crearOpcion->ctrCrearOpcionVariante();
 
         ?>
 
@@ -297,7 +302,7 @@ MODAL EDITAR TIPO DE VARIANTE
 ====================================== -->
 
 <div id="modalEditarTipoVariante" class="modal fade" role="dialog">
-  
+
   <div class="modal-dialog">
 
     <div class="modal-content">
@@ -320,8 +325,9 @@ MODAL EDITAR TIPO DE VARIANTE
             <!-- ENTRADA PARA EL NOMBRE -->
             <div class="form-group">
               <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-th"></i></span> 
-                <input type="text" class="form-control input-lg" id="editarTipoVariante" name="editarTipoVariante" required>
+                <span class="input-group-addon"><i class="fa fa-th"></i></span>
+                <input type="text" class="form-control input-lg" id="editarTipoVariante" name="editarTipoVariante"
+                  required>
                 <input type="hidden" id="idTipo" name="idTipo">
               </div>
             </div>
@@ -329,11 +335,12 @@ MODAL EDITAR TIPO DE VARIANTE
             <!-- ENTRADA PARA EL ORDEN -->
             <div class="form-group">
               <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-sort-numeric-asc"></i></span> 
-                <input type="number" class="form-control input-lg" id="editarOrdenTipo" name="editarOrdenTipo" min="1" required>
+                <span class="input-group-addon"><i class="fa fa-sort-numeric-asc"></i></span>
+                <input type="number" class="form-control input-lg" id="editarOrdenTipo" name="editarOrdenTipo" min="1"
+                  required>
               </div>
             </div>
-  
+
           </div>
 
         </div>
@@ -346,8 +353,8 @@ MODAL EDITAR TIPO DE VARIANTE
 
         <?php
 
-          $editarTipo = new ControladorVariantes();
-          $editarTipo -> ctrEditarTipoVariante();
+        $editarTipo = new ControladorVariantes();
+        $editarTipo->ctrEditarTipoVariante();
 
         ?>
 
@@ -365,7 +372,7 @@ MODAL EDITAR OPCIÓN
 ====================================== -->
 
 <div id="modalEditarOpcion" class="modal fade" role="dialog">
-  
+
   <div class="modal-dialog">
 
     <div class="modal-content">
@@ -391,7 +398,7 @@ MODAL EDITAR OPCIÓN
             <!-- ENTRADA PARA EL NOMBRE -->
             <div class="form-group">
               <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-tag"></i></span> 
+                <span class="input-group-addon"><i class="fa fa-tag"></i></span>
                 <input type="text" class="form-control input-lg" id="editarOpcion" name="editarOpcion" required>
               </div>
             </div>
@@ -399,11 +406,12 @@ MODAL EDITAR OPCIÓN
             <!-- ENTRADA PARA EL ORDEN -->
             <div class="form-group">
               <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-sort-numeric-asc"></i></span> 
-                <input type="number" class="form-control input-lg" id="editarOrdenOpcion" name="editarOrdenOpcion" min="1" required>
+                <span class="input-group-addon"><i class="fa fa-sort-numeric-asc"></i></span>
+                <input type="number" class="form-control input-lg" id="editarOrdenOpcion" name="editarOrdenOpcion"
+                  min="1" required>
               </div>
             </div>
-  
+
           </div>
 
         </div>
@@ -416,8 +424,8 @@ MODAL EDITAR OPCIÓN
 
         <?php
 
-          $editarOpcion = new ControladorVariantes();
-          $editarOpcion -> ctrEditarOpcionVariante();
+        $editarOpcion = new ControladorVariantes();
+        $editarOpcion->ctrEditarOpcionVariante();
 
         ?>
 

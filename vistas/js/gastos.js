@@ -3,54 +3,63 @@ console.log("✅ Archivo gastos.js cargado correctamente");
 $(document).ready(function () {
     console.log("✅ jQuery está funcionando en gastos.js");
 
-    // Inicializar DataTable para tabla de gastos (solo si existe en la página)
-    if ($('#tablaGastos').length > 0) {
-        console.log("Inicializando tabla de gastos con orden forzado por ID descendente");
-        var tablaGastos = $('#tablaGastos').DataTable({
-            "destroy": true,
-            "stateSave": false,
-            "order": [[0, "desc"]],
-            "responsive": false,
-            "columnDefs": [
-                {
-                    "targets": 0, // # column
-                    "orderable": true,
-                },
-                {
-                    "targets": 8, // Notas
-                    "orderable": true
-                },
-                {
-                    "orderable": false
-                }
-            ],
-            "dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
-            "language": {
-                "sProcessing": "Procesando...",
-                "sLengthMenu": "Mostrar _MENU_ registros",
-                "sZeroRecords": "No se encontraron resultados",
-                "sEmptyTable": "Ningún dato disponible en esta tabla",
-                "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-                "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
-                "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-                "sInfoPostFix": "",
-                "sSearch": "Buscar:",
-                "sUrl": "",
-                "sInfoThousands": ",",
-                "sLoadingRecords": "Cargando...",
-                "oPaginate": {
-                    "sFirst": "Primero",
-                    "sLast": "Último",
-                    "sNext": "Siguiente",
-                    "sPrevious": "Anterior"
-                },
-                "oAria": {
-                    "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
-                    "sSortDescending": ": Activar para ordenar la columna de manera descendente"
-                }
-            }
+    // Inicializar Select2 para los filtros si están presentes
+    if (typeof $.fn.select2 !== 'undefined') {
+        $('.select2').select2({
+            width: '100%'
         });
     }
+
+    // Función para inicializar DataTable en Gastos de forma global
+    window.inicializarTablaGastos = function() {
+        if ($('#tablaGastos').length > 0) {
+            console.log("Inicializando tabla de gastos...");
+            
+            // Si ya existe, destruirla para evitar errores al re-filtrar
+            if ($.fn.DataTable.isDataTable('#tablaGastos')) {
+                $('#tablaGastos').DataTable().destroy();
+            }
+
+            return $('#tablaGastos').DataTable({
+                "autoWidth": false,
+                "responsive": true,
+                "order": [[2, "desc"]], // Ordenar por fecha (columna 2) por defecto
+                "language": {
+                    "sProcessing": "Procesando...",
+                    "sLengthMenu": "Mostrar _MENU_ registros",
+                    "sZeroRecords": "No se encontraron resultados",
+                    "sEmptyTable": "Ningún dato disponible en esta tabla",
+                    "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+                    "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
+                    "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+                    "sSearch": "Buscar:",
+                    "sInfoThousands": ",",
+                    "sLoadingRecords": "Cargando...",
+                    "oPaginate": {
+                        "sFirst": "Primero",
+                        "sLast": "Último",
+                        "sNext": "Siguiente",
+                        "sPrevious": "Anterior"
+                    },
+                    "oAria": {
+                        "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+                        "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+                    }
+                },
+                "dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
+                "preDrawCallback": function () {
+                    if (!$(this).hasClass('datatable-ready')) {
+                        $(this).css('visibility', 'hidden');
+                    }
+                },
+                "initComplete": function () {
+                    $(this).addClass('datatable-ready').css('visibility', 'visible');
+                }
+            });
+        }
+    };
+
+    window.inicializarTablaGastos();
 
     // Inicializar DataTable para tabla de categorías de gastos
     if (!$.fn.DataTable.isDataTable('.tablaCategoriasGastos')) {
@@ -64,20 +73,12 @@ $(document).ready(function () {
                 "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
                 "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
                 "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-                "sInfoPostFix": "",
                 "sSearch": "Buscar:",
-                "sUrl": "",
-                "sInfoThousands": ",",
-                "sLoadingRecords": "Cargando...",
                 "oPaginate": {
                     "sFirst": "Primero",
                     "sLast": "Último",
                     "sNext": "Siguiente",
                     "sPrevious": "Anterior"
-                },
-                "oAria": {
-                    "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
-                    "sSortDescending": ": Activar para ordenar la columna de manera descendente"
                 }
             }
         });
@@ -483,6 +484,11 @@ $("#btnFiltrarGastos").on("click", function () {
 
     console.log("Filtros:", fechaInicio, fechaFin, categoria, proveedor);
 
+    // Destruir instancia previa de DataTable para poder reconstruir
+    if ($.fn.DataTable.isDataTable('#tablaGastos')) {
+        $('#tablaGastos').DataTable().destroy();
+    }
+
     var datos = new FormData();
     datos.append("accion", "filtrarGastos");
     datos.append("fechaInicio", fechaInicio);
@@ -502,15 +508,15 @@ $("#btnFiltrarGastos").on("click", function () {
         dataType: "json",
         success: function (respuesta) {
 
-            console.log("Gastos filtrados:", respuesta);
+            console.log("Gastos filtrados respuesta:", respuesta);
 
             // Limpiar tabla y cards
-            $(".tablas1 tbody").empty();
+            $("#tablaGastos tbody").empty();
             $(".cards-gastos").empty();
 
-            if (respuesta.length == 0) {
-                $(".tablas1 tbody").html('<tr><td colspan="8" class="text-center">No se encontraron gastos con los filtros seleccionados</td></tr>');
-                $(".cards-gastos").html('<div class="alert alert-info"><i class="fa fa-info-circle"></i> No se encontraron gastos con los filtros seleccionados</div>');
+            if (!respuesta || !Array.isArray(respuesta) || respuesta.length == 0) {
+                $("#tablaGastos tbody").html('<tr><td colspan="10" class="text-center">No se encontraron gastos con los filtros seleccionados</td></tr>');
+                $(".cards-gastos").html('<div class="alert alert-info"><i class="fa fa-info-circle"></i> No se encontraron productos con los filtros seleccionados</div>');
             } else {
 
                 // Llenar tabla con resultados
@@ -535,6 +541,16 @@ $("#btnFiltrarGastos").on("click", function () {
                         categoriaBadge = '-';
                     }
 
+                    // Estado badge
+                    var estadoBadge = '';
+                    if (gasto.estado == "aprobado") {
+                        estadoBadge = '<button class="btn btn-success btn-xs">Aprobado</button>';
+                    } else if (gasto.estado == "pendiente") {
+                        estadoBadge = '<button class="btn btn-warning btn-xs">Pendiente</button>';
+                    } else {
+                        estadoBadge = '<button class="btn btn-danger btn-xs">Rechazado</button>';
+                    }
+
                     // Formatear monto
                     var monto = gasto.monto ? '$' + parseFloat(gasto.monto).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
 
@@ -549,41 +565,29 @@ $("#btnFiltrarGastos").on("click", function () {
                         imagen = '<img src="vistas/img/gastos/default/sin-imagen.png" class="img-thumbnail img-comprobante-clickeable" width="40px" style="cursor: pointer;" data-imagen="" data-idgasto="' + gasto.id + '" data-concepto="' + gasto.concepto + '">';
                     }
 
-                    // Crear fila
+                    // Notas (editable)
+                    var notas = gasto.notas ? gasto.notas : '';
+
+                    // Crear fila (10 columnas)
                     var fila = '<tr ' + rowStyle + '>';
-
-                    // Columna 1: Número
                     fila += '<td>' + (index + 1) + '</td>';
-
-                    // Columna 2: Concepto
-                    fila += '<td>' + gasto.concepto + '</td>';
-
-                    // Columna 3: Fecha
+                    fila += '<td>' + (gasto.concepto || '-') + '</td>';
                     fila += '<td>' + fechaFormateada + '</td>';
-
-                    // Columna 4: Monto
                     fila += '<td><strong>' + monto + '</strong></td>';
-
-                    // Columna 5: Categoría
                     fila += '<td>' + categoriaBadge + '</td>';
-
-                    // Columna 6: Proveedor
+                    fila += '<td>' + estadoBadge + '</td>';
                     fila += '<td>' + proveedor + '</td>';
-
-                    // Columna 7: Imagen
                     fila += '<td>' + imagen + '</td>';
-
-                    // Columna 8: Acciones
+                    fila += '<td contenteditable="true" class="celda-notas-gasto" data-id="' + gasto.id + '">' + notas + '</td>';
                     fila += '<td>';
                     fila += '<div class="btn-group">';
                     fila += '<button class="btn btn-warning btnEditarGasto" idGasto="' + gasto.id + '" data-toggle="modal" data-target="#modalEditarGasto"><i class="fa fa-pencil"></i></button>';
-                    fila += '<button class="btn btn-danger btnEliminarGasto" idGasto="' + gasto.id + '" codigoGasto="' + gasto.codigo + '" conceptoGasto="' + gasto.concepto + '"><i class="fa fa-times"></i></button>';
+                    fila += '<button class="btn btn-danger btnEliminarGasto" idGasto="' + gasto.id + '" conceptoGasto="' + (gasto.concepto || '') + '"><i class="fa fa-times"></i></button>';
                     fila += '</div>';
                     fila += '</td>';
-
                     fila += '</tr>';
 
-                    $(".tablas1 tbody").append(fila);
+                    $("#tablaGastos tbody").append(fila);
 
                     // CREAR CARD PARA MÓVIL
                     var claseHoy = esHoy ? ' gasto-hoy' : '';
@@ -593,61 +597,33 @@ $("#btnFiltrarGastos").on("click", function () {
                     var proveedorCard = gasto.proveedor_nombre ? gasto.proveedor_nombre : 'Sin proveedor';
 
                     var card = '<div class="card-gasto' + claseHoy + '">';
-
-                    // Header con Concepto y Botones
                     card += '<div class="card-gasto-header">';
-
-                    // Concepto
-                    card += '<div class="card-gasto-concepto">';
-                    card += gasto.concepto;
-                    card += '</div>';
-
-                    // Botones
+                    card += '<div class="card-gasto-concepto">' + (gasto.concepto || '-') + '</div>';
                     card += '<div class="btn-group">';
-                    card += '<button class="btn btn-warning btn-xs btnEditarGasto" idGasto="' + gasto.id + '" data-toggle="modal" data-target="#modalEditarGasto">';
-                    card += '<i class="fa fa-pencil"></i>';
-                    card += '</button>';
-                    card += '<button class="btn btn-danger btn-xs btnEliminarGasto" idGasto="' + gasto.id + '" codigoGasto="' + gasto.codigo + '" conceptoGasto="' + gasto.concepto + '">';
-                    card += '<i class="fa fa-times"></i>';
-                    card += '</button>';
-                    card += '</div>';
-
-                    card += '</div>';
-
-                    // Detalles
+                    card += '<button class="btn btn-warning btn-xs btnEditarGasto" idGasto="' + gasto.id + '" data-toggle="modal" data-target="#modalEditarGasto"><i class="fa fa-pencil"></i></button>';
+                    card += '<button class="btn btn-danger btn-xs btnEliminarGasto" idGasto="' + gasto.id + '" conceptoGasto="' + (gasto.concepto || '') + '"><i class="fa fa-times"></i></button>';
+                    card += '</div></div>';
                     card += '<div class="card-gasto-detalles">';
-
-                    // Fila 1: Monto y Categoría
-                    card += '<div class="card-gasto-fila">';
-                    card += '<div class="card-gasto-monto"><i class="fa fa-money"></i> ' + monto + '</div>';
-                    card += '<div class="card-gasto-categoria">' + categoriaBadgeCard + '</div>';
+                    card += '<div class="card-gasto-fila"><div class="card-gasto-monto"><i class="fa fa-money"></i> ' + monto + '</div><div class="card-gasto-categoria">' + categoriaBadgeCard + '</div></div>';
+                    card += '<div class="card-gasto-fila"><div class="card-gasto-fecha"><i class="fa fa-calendar"></i> ' + fechaFormateada + '</div><div class="card-gasto-proveedor"><i class="fa fa-user"></i> ' + proveedorCard + '</div></div>';
                     card += '</div>';
-
-                    // Fila 2: Fecha y Proveedor
-                    card += '<div class="card-gasto-fila">';
-                    card += '<div class="card-gasto-fecha"><i class="fa fa-calendar"></i> ' + fechaFormateada + '</div>';
-                    card += '<div class="card-gasto-proveedor"><i class="fa fa-user"></i> ' + proveedorCard + '</div>';
-                    card += '</div>';
-
-                    card += '</div>';
-
-                    // Imagen (Botón)
                     var imagenGasto = (gasto.imagen_comprobante && gasto.imagen_comprobante != '') ? gasto.imagen_comprobante : "";
-
-                    card += '<div class="card-gasto-imagen-icono img-comprobante-clickeable" data-imagen="' + imagenGasto + '" data-idgasto="' + gasto.id + '" data-concepto="' + gasto.concepto + '">';
-                    card += '<i class="fa fa-image"></i> Ver imagen';
-                    card += '</div>';
-
+                    card += '<div class="card-gasto-imagen-icono img-comprobante-clickeable" data-imagen="' + imagenGasto + '" data-idgasto="' + gasto.id + '" data-concepto="' + gasto.concepto + '"><i class="fa fa-image"></i> Ver imagen</div>';
                     card += '</div>';
 
                     $(".cards-gastos").append(card);
                 });
+            }
 
+            // Reinicializar DataTable tras cargar los nuevos datos
+            if (typeof window.inicializarTablaGastos === 'function') {
+                window.inicializarTablaGastos();
             }
 
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            console.error("Error en AJAX:", textStatus, errorThrown);
+            console.error("❌ Error en AJAX de filtrado:", textStatus, errorThrown);
+            console.error("Respuesta cruda del servidor:", jqXHR.responseText);
         }
 
     })
@@ -705,3 +681,49 @@ $(document).on('blur', '.celda-notas-gasto', function () {
         }
     });
 });
+
+/*=============================================
+LIMPIAR FILTROS GASTOS
+=============================================*/
+
+$("#btnLimpiarGastos").on("click", function () {
+    $("#filtroFechaInicio").val("");
+    $("#filtroFechaFin").val("");
+    $("#filtroCategoria").val("").trigger('change');
+    $("#filtroProveedor").val("").trigger('change');
+
+    // Resetear texto del botón de rango
+    $("#daterange-btn span").html('<i class="fa fa-calendar"></i> Rango de fecha');
+
+    // Disparar el filtrado con campos vacíos (esto recargará todo)
+    $("#btnFiltrarGastos").click();
+});
+
+/*=============================================
+RANGO DE FECHAS GASTOS
+=============================================*/
+if ($('#daterange-btn').length > 0) {
+    $('#daterange-btn').daterangepicker(
+        {
+            ranges: {
+                'Hoy': [moment(), moment()],
+                'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+                'Este mes': [moment().startOf('month'), moment().endOf('month')],
+                'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+            },
+            startDate: moment().subtract(29, 'days'),
+            endDate: moment()
+        },
+        function (start, end) {
+            $('#daterange-btn span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+
+            var fechaInicial = start.format('YYYY-MM-DD');
+            var fechaFinal = end.format('YYYY-MM-DD');
+
+            // Actualizar inputs ocultos
+            $("#filtroFechaInicio").val(fechaInicial);
+            $("#filtroFechaFin").val(fechaFinal);
+        }
+    );
+}

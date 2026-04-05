@@ -18,7 +18,7 @@ class ControladorProveedores
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
@@ -58,7 +58,7 @@ class ControladorProveedores
 
 					echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡El proveedor ha sido guardado correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -73,7 +73,7 @@ class ControladorProveedores
 
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡El proveedor no puede ir vacío o llevar caracteres especiales!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -117,7 +117,7 @@ class ControladorProveedores
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
@@ -156,7 +156,7 @@ class ControladorProveedores
 
 					echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡El Proveedor ha sido editado correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -171,7 +171,7 @@ class ControladorProveedores
 
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡El Proveedor no puede ir vacío o llevar caracteres especiales!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -204,7 +204,7 @@ class ControladorProveedores
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
@@ -228,7 +228,7 @@ class ControladorProveedores
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡No se puede eliminar!",
 						text: "El proveedor tiene documentos soporte asociados.",
 						showConfirmButton: true,
@@ -249,7 +249,7 @@ class ControladorProveedores
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡No se puede eliminar!",
 						text: "El proveedor tiene productos asociados.",
 						showConfirmButton: true,
@@ -269,7 +269,7 @@ class ControladorProveedores
 				}
 				echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡El Proveedor ha sido borrado correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"

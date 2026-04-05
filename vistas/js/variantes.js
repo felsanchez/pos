@@ -213,7 +213,7 @@ $(document).on("click", ".btnActivarTipo", function(){
                     fila.css('opacity', '1');
                     
                     swal({
-                        icon: "error",
+                        type: "error",
                         title: "Error al actualizar el estado",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
@@ -229,7 +229,7 @@ $(document).on("click", ".btnActivarTipo", function(){
             fila.css('opacity', '1');
             
             swal({
-                icon: "error",
+                type: "error",
                 title: "Error en la conexión",
                 showConfirmButton: true,
                 confirmButtonText: "Cerrar"
@@ -303,7 +303,7 @@ $(document).on("click", ".btnActivarOpcion", function(){
                     fila.css('opacity', '1');
                     
                     swal({
-                        icon: "error",
+                        type: "error",
                         title: "Error al actualizar el estado",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
@@ -319,7 +319,7 @@ $(document).on("click", ".btnActivarOpcion", function(){
             fila.css('opacity', '1');
             
             swal({
-                icon: "error",
+                type: "error",
                 title: "Error en la conexión",
                 showConfirmButton: true,
                 confirmButtonText: "Cerrar"
@@ -412,7 +412,7 @@ $(document).on("click", ".btnEliminarTipo", function(){
 
         title: '¿Está seguro de eliminar el tipo "' + nombreTipo + '"?',
         text: "¡Si no lo está puede cancelar la acción!",
-        icon: 'warning',
+        type: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
@@ -441,7 +441,7 @@ $(document).on("click", ".btnEliminarTipo", function(){
                     if(respuesta == "ok"){
 
                         swal({
-                            icon: "success",
+                            type: "success",
                             title: "¡El tipo de variante ha sido eliminado correctamente!",
                             showConfirmButton: true,
                             confirmButtonText: "Cerrar"
@@ -453,7 +453,7 @@ $(document).on("click", ".btnEliminarTipo", function(){
 
                      } else {
                         swal({
-                            icon: "error",
+                            type: "error",
                             title: "¡No se puede eliminar!",
                             text: "Este tipo de variante tiene opciones o está siendo usado en productos",
                             showConfirmButton: true,
@@ -487,7 +487,7 @@ $(document).on("click", ".btnEliminarOpcion", function(){
 
         title: '¿Está seguro de eliminar la opción "' + nombreOpcion + '"?',
         text: "¡Si no lo está puede cancelar la acción!",
-        icon: 'warning',
+        type: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
@@ -515,7 +515,7 @@ $(document).on("click", ".btnEliminarOpcion", function(){
 
                      if(respuesta == "ok"){
                         swal({
-                            icon: "success",
+                            type: "success",
                             title: "¡La opción ha sido eliminada correctamente!",
                             showConfirmButton: true,
                             confirmButtonText: "Cerrar"
@@ -536,7 +536,7 @@ $(document).on("click", ".btnEliminarOpcion", function(){
                     } else { 
 
                         swal({
-                            icon: "error",
+                            type: "error",
                             title: "¡No se puede eliminar!",
                             text: "Esta opción está siendo usada en productos existentes",
                             showConfirmButton: true,

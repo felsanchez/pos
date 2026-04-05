@@ -14,36 +14,14 @@
       vertical-align: middle;
     }
   }
-</style>
-<style>
-  .filtro-categoria-wrapper {
-    min-width: 250px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
 
-  .filtro-categoria-wrapper label {
-    font-weight: 400 !important;
-    margin-bottom: 0;
-  }
-
-  .filtro-categoria {
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 14px;
-  }
-
+  /* Estilos para filtros estandarizados */
   @media (max-width: 767px) {
-    .filtro-categoria-wrapper {
+    .pull-right {
       float: none !important;
       justify-content: center !important;
-      text-align: center;
-      width: 100%;
-    }
-
-    .filtro-categoria-wrapper label {
-      margin-bottom: 5px;
+      width: 100% !important;
+      margin-top: 10px;
     }
   }
 </style>
@@ -223,65 +201,75 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
     <div class="box">
 
       <div class="box-header with-border">
-        <?php if(puedeAccion('productos', 'crear')): ?>
-        <a href="producto-detalle" class="btn btn-primary">
+        <?php if (puedeAccion('productos', 'crear')): ?>
+          <a href="producto-detalle" class="btn btn-primary">
+            <i class="fa fa-plus"></i> Agregar producto
+          </a>
 
-          <i class="fa fa-plus"></i> Agregar producto
-
-        </a>
-
-        <button class="btn btn-success" data-toggle="modal" data-target="#modalImportarProductos">
-          <i class="fa fa-upload"></i> Exportar / Importar Productos
-        </button>
+          <button class="btn btn-success" data-toggle="modal" data-target="#modalImportarProductos">
+            <i class="fa fa-upload"></i> Exportar / Importar Productos
+          </button>
         <?php endif; ?>
+
+        <!-- Filtros Estandarizados en el Header (Alineados a la derecha) -->
+        <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+
+          <!-- Filtro Proveedor -->
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="hidden-xs"><b>Filtrar por Proveedor:</b></span>
+            <div class="input-group" style="width: 200px;">
+              <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+                <i class="fa fa-search text-primary"></i>
+              </span>
+              <select class="form-control select2" id="filtroProveedor">
+                <option value="">Seleccionar proveedor...</option>
+                <?php
+                $proveedoresFiltro = ControladorProveedores::ctrMostrarProveedores(null, null);
+                foreach ($proveedoresFiltro as $proveedorFiltro) {
+                  echo '<option value="' . e($proveedorFiltro["nombre"]) . '">' . e(ucfirst($proveedorFiltro["nombre"])) . '</option>';
+                }
+                ?>
+              </select>
+            </div>
+          </div>
+
+          <!-- Filtro Categoría -->
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="hidden-xs"><b>Filtrar por Categoría:</b></span>
+            <div class="input-group" style="width: 200px;">
+              <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+                <i class="fa fa-search text-primary"></i>
+              </span>
+              <select class="form-control select2" id="filtroCategoria">
+                <option value="">Seleccionar categoria...</option>
+                <?php
+                $categoriasFiltro = ControladorCategorias::ctrMostrarCategorias(null, null);
+                foreach ($categoriasFiltro as $categoriaFiltro) {
+                  echo '<option value="' . e($categoriaFiltro["categoria"]) . '">' . e(ucfirst($categoriaFiltro["categoria"])) . '</option>';
+                }
+                ?>
+              </select>
+            </div>
+          </div>
+
+        </div>
       </div>
 
 
       <!--CODIGO PARA LLAMAR AL WEBHOOK DE n8n -->
-      <form id="formN8N"
-        action="https://demo-ppal-n8n.lhs6l6.easypanel.host/webhook/ed25e621-dcc5-45c0-918c-5ec3c9ecbdc3" method="POST">
+      <div class="content-header">
+        <form id="formN8N"
+          action="https://demo-ppal-n8n.lhs6l6.easypanel.host/webhook/ed25e621-dcc5-45c0-918c-5ec3c9ecbdc3"
+          method="POST">
 
-        <?php CSRF::insertToken(); ?>
-        <input type="hidden" name="origen" value="productos">
-        <button type="submit" class="btn btn-success">Actualizar</button>
-      </form>
-
-
-      <!-- Filtros -->
-      <div class="box-body">
-        <div class="clearfix mb-2">
-
-          <!-- Filtro Categoría -->
-          <div class="pull-right filtro-categoria-wrapper" style="margin-left: 10px;">
-            <label for="filtroCategoria" class="control-label">Categoría:</label>
-            <select id="filtroCategoria" class="form-control filtro-categoria">
-              <option value="">Todas</option>
-              <?php
-$categoriasFiltro = ControladorCategorias::ctrMostrarCategorias(null, null);
-foreach ($categoriasFiltro as $categoriaFiltro) {
-  echo '<option value="' . e($categoriaFiltro["categoria"]) . '">' . e(ucfirst($categoriaFiltro["categoria"])) . '</option>';
-}
-?>
-            </select>
-          </div>
-
-          <!-- Filtro Proveedor -->
-          <div class="pull-right filtro-categoria-wrapper">
-            <label for="filtroProveedor" class="control-label">Proveedor:</label>
-            <select id="filtroProveedor" class="form-control filtro-categoria">
-              <option value="">Todos</option>
-              <?php
-$proveedoresFiltro = ControladorProveedores::ctrMostrarProveedores(null, null);
-foreach ($proveedoresFiltro as $proveedorFiltro) {
-  echo '<option value="' . e($proveedorFiltro["nombre"]) . '">' . e(ucfirst($proveedorFiltro["nombre"])) . '</option>';
-}
-?>
-            </select>
-          </div>
-
-        </div>
-        <br>
+          <?php CSRF::insertToken(); ?>
+          <input type="hidden" name="origen" value="productos">
+          <button type="submit" class="btn btn-success">Actualizar</button>
+        </form>
       </div>
+
+
+
 
 
       <div class="box-body table-responsive">
@@ -380,7 +368,7 @@ MODAL AGREGAR PRODUCTO
       <form role="form" method="post" enctype="multipart/form-data">
 
         <?php CSRF::insertToken(); ?>
-<!--=====================================
+        <!--=====================================
       CABEZA DEL MODAL
       ======================================-->
 
@@ -413,16 +401,16 @@ MODAL AGREGAR PRODUCTO
 
                   <?php
 
-$item = null;
-$valor = null;
-$categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
+                  $item = null;
+                  $valor = null;
+                  $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
 
-foreach ($categorias as $key => $value) {
+                  foreach ($categorias as $key => $value) {
 
-  echo '<option value="' . e($value["id"]) . '">' . e($value["categoria"]) . '</option>';
-}
+                    echo '<option value="' . e($value["id"]) . '">' . e($value["categoria"]) . '</option>';
+                  }
 
-?>
+                  ?>
 
                 </select>
 
@@ -498,17 +486,17 @@ foreach ($categorias as $key => $value) {
 
                   <?php
 
-$item = null;
-$valor = null;
-$proveedores = ControladorProveedores::ctrMostrarProveedores($item, $valor);
+                  $item = null;
+                  $valor = null;
+                  $proveedores = ControladorProveedores::ctrMostrarProveedores($item, $valor);
 
-if ($proveedores) {
-  foreach ($proveedores as $key => $value) {
-    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-  }
-}
+                  if ($proveedores) {
+                    foreach ($proveedores as $key => $value) {
+                      echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                    }
+                  }
 
-?>
+                  ?>
 
                 </select>
 
@@ -679,10 +667,10 @@ if ($proveedores) {
 
       <?php
 
-$crearProducto = new ControladorProductos();
-$crearProducto->ctrCrearProducto();
+      $crearProducto = new ControladorProductos();
+      $crearProducto->ctrCrearProducto();
 
-?>
+      ?>
 
     </div>
 
@@ -767,17 +755,17 @@ MODAL EDITAR PRODUCTO
                   <option value="">Editar Categoria</option>
 
                   <?php
-$item = null;
-$valor = null;
-$categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
+                  $item = null;
+                  $valor = null;
+                  $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
 
-foreach ($categorias as $key => $value) {
+                  foreach ($categorias as $key => $value) {
 
-  $selected = ($producto["id_categoria"] == $value["id"]) ? "selected" : "";
+                    $selected = ($producto["id_categoria"] == $value["id"]) ? "selected" : "";
 
-  echo '<option value="' . $value["id"] . '" ' . $selected . '>' . $value["categoria"] . '</option>';
-}
-?>
+                    echo '<option value="' . $value["id"] . '" ' . $selected . '>' . $value["categoria"] . '</option>';
+                  }
+                  ?>
 
                 </select>
 
@@ -827,16 +815,16 @@ foreach ($categorias as $key => $value) {
                   <option value="0">Sin proveedor</option>
 
                   <?php
-$item = null;
-$valor = null;
-$proveedores = ControladorProveedores::ctrMostrarProveedores($item, $valor);
+                  $item = null;
+                  $valor = null;
+                  $proveedores = ControladorProveedores::ctrMostrarProveedores($item, $valor);
 
-if ($proveedores) {
-  foreach ($proveedores as $key => $value) {
-    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-  }
-}
-?>
+                  if ($proveedores) {
+                    foreach ($proveedores as $key => $value) {
+                      echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                    }
+                  }
+                  ?>
                 </select>
 
               </div>
@@ -1028,9 +1016,9 @@ if ($proveedores) {
 
 
       <?php
-$editarProducto = new ControladorProductos();
-$editarProducto->ctrEditarProducto();
-?>
+      $editarProducto = new ControladorProductos();
+      $editarProducto->ctrEditarProducto();
+      ?>
 
     </div>
 
@@ -1245,9 +1233,9 @@ MODAL IMPORTAR PRODUCTOS DESDE CSV
         </div>
 
         <?php
-$importar = new ControladorProductos();
-$importar->ctrImportarProductos();
-?>
+        $importar = new ControladorProductos();
+        $importar->ctrImportarProductos();
+        ?>
 
       </form>
 
@@ -1513,15 +1501,15 @@ MODAL AJUSTE DE STOCK
     <div class="modal-content">
       <form role="form" method="post">
         <?php CSRF::insertToken(); ?>
-        
+
         <div class="modal-header" style="background:#3c8dbc; color: white">
           <button type="button" class="close" data-dismiss="modal">&times;</button>
           <h4 class="modal-title">Ajuste Rápido de Stock</h4>
         </div>
-        
+
         <div class="modal-body">
           <div class="box-body">
-            
+
             <!-- entrada oculta ID -->
             <input type="hidden" id="idProductoAjuste" name="idProductoAjuste" required>
 
@@ -1540,23 +1528,24 @@ MODAL AJUSTE DE STOCK
             <div class="form-group">
               <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-hashtag"></i></span>
-                <input type="number" class="form-control input-lg" name="cantidadAjuste" id="cantidadAjuste" min="1" placeholder="Ingresar la cantidad a ajustar" required>
+                <input type="number" class="form-control input-lg" name="cantidadAjuste" id="cantidadAjuste" min="1"
+                  placeholder="Ingresar la cantidad a ajustar" required>
               </div>
             </div>
 
           </div>
         </div>
-        
+
         <div class="modal-footer">
           <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
           <button type="submit" class="btn btn-primary">Guardar Cambios</button>
         </div>
-        
+
         <?php
-          $ajusteStock = new ControladorProductos();
-          $ajusteStock->ctrAjusteStockLocal();
+        $ajusteStock = new ControladorProductos();
+        $ajusteStock->ctrAjusteStockLocal();
         ?>
-        
+
       </form>
     </div>
   </div>
@@ -1646,46 +1635,7 @@ document.getElementById('formN8N').addEventListener('submit', function(e) {
 </script>
 
 
-<script>   /*=============================================   FILTRO DE CATEGORÍA EN PRODUCTOS   =============================================*/
 
-  $(document).ready(function () {
-    var tablaProductos = $('.tablaProductos').DataTable();
-
-    // Agregar filtro personalizado a DataTables
-    $.fn.dataTable.ext.search.push(
-      function (settings, data, dataIndex) {
-        // Verificar si es la tabla de productos
-        if (settings.nTable.className.indexOf('tablaProductos') === -1) {
-          return true;
-        }
-
-        var filtroCategoria = $('#filtroCategoria').val().toLowerCase();
-        var filtroProveedor = $('#filtroProveedor').val().toLowerCase();
-
-        // Si no hay filtro seleccionado, mostrar todo
-        if (filtroCategoria === "" && filtroProveedor === "") {
-          return true;
-        }
-
-        // La columna 4 (índice 4) es la categoría
-        var categoriaTexto = data[4].toLowerCase();
-        // La columna 8 (índice 8) es el proveedor
-        var proveedorTexto = data[8].toLowerCase();
-
-        // Verificar coincidencia
-        var matchCategoria = (filtroCategoria === "" || categoriaTexto.indexOf(filtroCategoria) !== -1);
-        var matchProveedor = (filtroProveedor === "" || proveedorTexto.indexOf(filtroProveedor) !== -1);
-
-        return matchCategoria && matchProveedor;
-      }
-    );
-
-    // Evento al cambiar el filtro
-    $('#filtroCategoria, #filtroProveedor').on('change', function () {
-      tablaProductos.draw();
-    });
-  });
-</script>
 
 
 <script>   /*=============================================   FIX MODALES DE PRODUCTOS - Mover al body para evitar bloqueos   =============================================*/

@@ -7,21 +7,13 @@
 
 <!-- Centrar filtro -->
 <style>
+  /* Estilos para filtros estandarizados */
   @media (max-width: 767px) {
-    .filtro-estatus-wrapper {
+    .pull-right {
       float: none !important;
-      /* anula el pull-right */
       justify-content: center !important;
-      /* centra con flex */
-      text-align: center;
-      /* por si acaso */
-      width: 100%;
-      /* ocupa todo el ancho */
-    }
-
-    .filtro-estatus-wrapper label {
-      margin-bottom: 5px;
-      /* pequeño espacio si se apila */
+      width: 100% !important;
+      margin-top: 10px;
     }
   }
 </style>
@@ -251,7 +243,7 @@ $editarCliente->ctrEditarCliente();
       <div class="box-header with-border">
         <?php if (puedeAccion('clientes', 'crear')): ?>
           <a href="cliente-detalle" class="btn btn-primary">
-            <i class="fa fa-plus"></i> Agregar Nuevo
+            <i class="fa fa-plus"></i> Agregar Cliente
           </a>
 
           <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
@@ -262,6 +254,27 @@ $editarCliente->ctrEditarCliente();
             <i class="fa fa-upload"></i> Exportar / Importar Clientes
           </button>
         <?php endif; ?>
+
+        <!-- Filtro por Estado Estandarizado en el Header -->
+        <div class="pull-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span class="hidden-xs"><b>Filtrar por Estado:</b></span>
+          <div class="input-group" style="width: 220px;">
+            <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+              <i class="fa fa-search text-primary"></i>
+            </span>
+            <select class="form-control select2" id="filtroEstatus1" style="width: 100%;">
+              <option value="">Seleccionar estado...</option>
+              <?php
+              $estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
+              foreach ($estadosDisponibles as $estado) {
+                // Notar: filtroEstatus1 debe estar capturado previamente o usar el valor del GET
+                $selected = ($filtroEstatus1 == $estado["nombre"]) ? "selected" : "";
+                echo '<option value="' . $estado["nombre"] . '" ' . $selected . '>' . ucfirst($estado["nombre"]) . '</option>';
+              }
+              ?>
+            </select>
+          </div>
+        </div>
       </div>
 
 
@@ -289,34 +302,11 @@ $editarCliente->ctrEditarCliente();
       $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
       ?>
 
-      <h3
-        style="text-align: center; font-weight: bold; margin: 20px 0; color: #4A4A4A; padding-bottom: 10px; border-bottom: 2px solid #4A4A4A;">
-        Lista de Clientes
-      </h3>
+
 
 
       <div class="box-body table-responsive">
 
-        <!-- filtro estatus-->
-        <div class="clearfix mb-2">
-          <div class="pull-right filtro-estatus-wrapper d-flex align-items-center" style="gap: 8px;">
-            <label for="filtroEstatus1" class="control-label mb-0">Filtra por ESTADOS:</label>
-            <select id="filtroEstatus1" onchange="filterTable1()" class="form-control filtro-estatus">
-
-              <option value="">Todos</option>
-              <?php
-              $estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
-              foreach ($estadosDisponibles as $estado) {
-                $selected = ($filtroEstatus1 == $estado["nombre"]) ? "selected" : "";
-                echo '<option value="' . $estado["nombre"] . '" ' . $selected . '>' . ucfirst($estado["nombre"]) . '</option>';
-              }
-              ?>
-
-            </select>
-          </div>
-        </div>
-
-        <br><br>
 
 
         <table class="table table-bordered table-striped tablas1">
@@ -361,12 +351,12 @@ $editarCliente->ctrEditarCliente();
                 $tieneVentas = (isset($value["compras"]) && $value["compras"] > 0);
                 $styleVentas = $tieneVentas ? "" : "opacity: 0.6;";
                 $claseVentas = $tieneVentas ? "btnVerVentasCliente" : "btnSinVentas";
-                $linkVentas  = $tieneVentas ? "index.php?ruta=cliente-ventas&idCliente=" . $value['id'] : "#";
+                $linkVentas = $tieneVentas ? "index.php?ruta=cliente-ventas&idCliente=" . $value['id'] : "#";
 
                 $tieneFE = isset($feMapClientes[$value['id']]) && $feMapClientes[$value['id']] > 0;
                 $styleFE = $tieneFE ? "" : "opacity: 0.6;";
                 $claseFE = $tieneFE ? "" : "btnSinFacturas";
-                $linkFE  = $tieneFE ? "index.php?ruta=facturas-electronicas&cliente=" . $value['id'] : "#";
+                $linkFE = $tieneFE ? "index.php?ruta=facturas-electronicas&cliente=" . $value['id'] : "#";
                 ?>
 
                 <tr>
@@ -379,13 +369,13 @@ $editarCliente->ctrEditarCliente();
                     <?php echo $value["documento"]; ?>
 
                     <a href="<?php echo $linkVentas; ?>"
-                      class="btn btn-success btn-xs <?php echo $claseVentas; ?> solo-movil" style="float: right; <?php echo $styleVentas; ?>"
-                      title="Ver ventas de este cliente">
+                      class="btn btn-success btn-xs <?php echo $claseVentas; ?> solo-movil"
+                      style="float: right; <?php echo $styleVentas; ?>" title="Ver ventas de este cliente">
                       <i class="fa fa-line-chart"></i>
                     </a>
 
-                    <a href="<?php echo $linkFE; ?>"
-                      class="btn btn-info btn-xs <?php echo $claseFE; ?> solo-movil" style="float: right; margin-right: 3px; <?php echo $styleFE; ?>"
+                    <a href="<?php echo $linkFE; ?>" class="btn btn-info btn-xs <?php echo $claseFE; ?> solo-movil"
+                      style="float: right; margin-right: 3px; <?php echo $styleFE; ?>"
                       title="Ver facturas electrónicas de este cliente">
                       <i class="fa fa-file-text"></i>
                     </a>

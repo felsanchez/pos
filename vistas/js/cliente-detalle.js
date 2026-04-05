@@ -89,7 +89,7 @@ $(document).ready(function () {
             swal({
                 title: "Error",
                 text: "El dígito de verificación es obligatorio para NIT",
-                icon: "error",
+                type: "error",
                 confirmButtonText: "Cerrar"
             });
             return false;
@@ -104,7 +104,7 @@ $(document).ready(function () {
             swal({
                 title: "Error",
                 text: "La razón social es obligatoria para personas jurídicas",
-                icon: "error",
+                type: "error",
                 confirmButtonText: "Cerrar"
             });
             return false;
@@ -117,7 +117,7 @@ $(document).ready(function () {
             swal({
                 title: "Error",
                 text: "El formato del email no es válido",
-                icon: "error",
+                type: "error",
                 confirmButtonText: "Cerrar"
             });
             return false;
@@ -158,7 +158,7 @@ $(document).ready(function () {
                     swal({
                         title: "¡Advertencia!",
                         text: respuesta.mensaje,
-                        icon: "warning",
+                        type: "warning",
                         confirmButtonText: "Cerrar"
                     });
                 } else {
@@ -176,7 +176,7 @@ $(document).ready(function () {
                 swal({
                     title: "Error técnico",
                     text: "No se pudo validar la información. Detalle: " + jqXHR.status + " " + errorThrown + (jqXHR.responseText ? "\n" + jqXHR.responseText.substring(0, 100) : ""),
-                    icon: "error",
+                    type: "error",
                     confirmButtonText: "Cerrar"
                 });
             }

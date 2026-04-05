@@ -71,12 +71,12 @@ if (!puedeVer('proveedores')) {
     <div class="box">
 
       <div class="box-header with-border">
-        <?php if(puedeAccion('proveedores', 'crear')): ?>
-        <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarProveedor">
+        <?php if (puedeAccion('proveedores', 'crear')): ?>
+          <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarProveedor">
 
-          Agregar proveedor
+            <i class="fa fa-plus"></i> Agregar proveedor
 
-        </button>
+          </button>
         <?php endif; ?>
       </div>
 

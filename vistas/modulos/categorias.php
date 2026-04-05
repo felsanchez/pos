@@ -57,12 +57,12 @@
     <div class="box">
 
       <div class="box-header with-border">
-        <?php if(puedeAccion('categorias', 'crear')): ?>
-        <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarCategoria">
+        <?php if (puedeAccion('categorias', 'crear')): ?>
+          <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarCategoria">
 
-          Agregar categoría
+            <i class="fa fa-plus"></i> Agregar categoría
 
-        </button>
+          </button>
         <?php endif; ?>
       </div>
 
@@ -118,7 +118,7 @@
               if (puedeAccion('categorias', 'eliminar')) {
                 echo '<button class="btn btn-danger btnEliminarCategoria" idCategoria="' . $value["id"] . '"><i class="fa fa-times"></i></button>';
               }
-            
+
               echo '</div>
 
                              </td> 

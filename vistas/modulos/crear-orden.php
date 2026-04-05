@@ -420,7 +420,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
     if (!listaProductos || listaProductos === '[]') {
       e.preventDefault(); // Detiene el envío del formulario
       Swal.fire({
-        icon: 'warning',
+        type: 'warning',
         title: 'Sin productos',
         text: 'Debe agregar al menos un producto para guardar la venta',
         confirmButtonText: 'OK'

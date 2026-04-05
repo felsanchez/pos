@@ -7,32 +7,13 @@
 
 <!-- Centrar filtro -->
 <style>
+  /* Estilos para filtros estandarizados */
   @media (max-width: 767px) {
-
-    .filtro-estado-wrapper,
-    .filtro-tipo-wrapper {
+    .pull-right {
       float: none !important;
-      /* anula el pull-right */
       justify-content: center !important;
-      /* centra con flex */
-      text-align: center;
-      /* por si acaso */
-      width: 100%;
-      /* ocupa todo el ancho */
-    }
-
-    .filtro-estado-wrapper label,
-    .filtro-tipo-wrapper label {
-      margin-bottom: 5px;
-      /* pequeño espacio si se apila */
-    }
-
-    /* Botones pequeños en móvil (Columna Acciones es la última) */
-    .tabla-actividades .table tr td:last-child .btn,
-    .tabla-actividades .table tr th:last-child .btn {
-      padding: 1px 5px !important;
-      font-size: 12px !important;
-      line-height: 1.5 !important;
+      width: 100% !important;
+      margin-top: 10px;
     }
   }
 </style>
@@ -66,13 +47,13 @@
 $urlActual = "actividades";
 $params = [];
 if (isset($_GET['filtroTipo']) && !empty($_GET['filtroTipo'])) {
-    $params[] = "filtroTipo=" . $_GET['filtroTipo'];
+  $params[] = "filtroTipo=" . $_GET['filtroTipo'];
 }
 if (isset($_GET['filtroEstado']) && !empty($_GET['filtroEstado'])) {
-    $params[] = "filtroEstado=" . $_GET['filtroEstado'];
+  $params[] = "filtroEstado=" . $_GET['filtroEstado'];
 }
 if (!empty($params)) {
-    $urlActual .= "?" . implode("&", $params);
+  $urlActual .= "?" . implode("&", $params);
 }
 ?>
 
@@ -101,10 +82,10 @@ if (!empty($params)) {
 
       <div class="box-header with-border">
 
-        <?php if(puedeAccion('actividades', 'crear')): ?>
-        <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarActividad">
-          Agregar Actividad
-        </button>
+        <?php if (puedeAccion('actividades', 'crear')): ?>
+          <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarActividad">
+            <i class="fa fa-plus"></i> Agregar Actividad
+          </button>
         <?php endif; ?>
 
         <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
@@ -115,6 +96,51 @@ if (!empty($params)) {
           <i class="fa fa-tags"></i> Gestionar tipos
         </button>
 
+        <!-- Filtros Estandarizados en el Header (Compatibilidad con pattern de Usuarios/Productos/Clientes) -->
+        <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+
+          <!-- Filtro por Tipo -->
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="hidden-xs"><b>Filtrar por Tipo:</b></span>
+            <div class="input-group" style="width: 200px;">
+              <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+                <i class="fa fa-search text-primary"></i>
+              </span>
+              <select class="form-control select2" id="filtroTipo" style="width: 100%;">
+                <option value="">Seleccionar tipo...</option>
+                <?php
+                $tiposFiltro = ControladorTiposActividades::ctrMostrarTiposActividades(null, null);
+                $filtroTipoHeader = isset($_GET['filtroTipo']) ? $_GET['filtroTipo'] : '';
+                foreach ($tiposFiltro as $tipoFiltroItem) {
+                  $selected = ($filtroTipoHeader == $tipoFiltroItem["nombre"]) ? "selected" : "";
+                  echo '<option value="' . $tipoFiltroItem["nombre"] . '" ' . $selected . '>' . ucfirst($tipoFiltroItem["nombre"]) . '</option>';
+                }
+                ?>
+              </select>
+            </div>
+          </div>
+
+          <!-- Filtro por Estado -->
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="hidden-xs"><b>Filtrar por Estado:</b></span>
+            <div class="input-group" style="width: 200px;">
+              <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+                <i class="fa fa-search text-primary"></i>
+              </span>
+              <select class="form-control select2" id="filtroEstado" style="width: 100%;">
+                <option value="">Seleccionar estado...</option>
+                <?php
+                $filtroEstadoHeader = isset($_GET['filtroEstado']) ? $_GET['filtroEstado'] : '';
+                $estadosFiltro = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
+                foreach ($estadosFiltro as $estadoFiltroItem) {
+                  $selected = ($filtroEstadoHeader == $estadoFiltroItem["nombre"]) ? "selected" : "";
+                  echo '<option value="' . $estadoFiltroItem["nombre"] . '" ' . $selected . '>' . ucfirst($estadoFiltroItem["nombre"]) . '</option>';
+                }
+                ?>
+              </select>
+            </div>
+          </div>
+        </div>
       </div>
 
 
@@ -131,48 +157,7 @@ if (!empty($params)) {
       <div class="box-body table-responsive">
 
 
-        <!-- Filtro tipo -->
-        <div class="clearfix mb-2">
-          <div class="pull-right filtro-tipo-wrapper d-flex align-items-center" style="gap: 8px;">
-            <label for="filtroTipo" class="control-label mb-0">Filtra por TIPO:</label>
-            <select id="filtroTipo" class="form-control filtro-tipo">
-              <option value="">Todos</option>
 
-              <?php
-              $tiposFiltro = ControladorTiposActividades::ctrMostrarTiposActividades(null, null);
-              foreach ($tiposFiltro as $tipoFiltro) {
-                $selected = ($filtroTipo == $tipoFiltro["nombre"]) ? "selected" : "";
-                echo '<option value="' . $tipoFiltro["nombre"] . '" ' . $selected . '>' . ucfirst($tipoFiltro["nombre"]) . '</option>';
-              }
-              ?>
-
-            </select>
-          </div>
-        </div>
-        <br>
-
-
-        <!-- Filtro estado -->
-        <div class="clearfix mb-2">
-          <div class="pull-right filtro-estado-wrapper d-flex align-items-center" style="gap: 8px;">
-            <label for="filtroEstado" class="control-label mb-0">Filtra por ESTADO:</label>
-            <select id="filtroEstado" class="form-control filtro-estado">
-              <option value="">Todos</option>
-
-              <?php
-              $filtroEstado = isset($_GET['filtroEstado']) ? $_GET['filtroEstado'] : '';
-              $estadosFiltro = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
-              foreach ($estadosFiltro as $estadoFiltroItem) {
-                $selected = ($filtroEstado == $estadoFiltroItem["nombre"]) ? "selected" : "";
-                echo '<option value="' . $estadoFiltroItem["nombre"] . '" ' . $selected . '>' . ucfirst($estadoFiltroItem["nombre"]) . '</option>';
-              }
-              ?>
-
-            </select>
-          </div>
-        </div>
-
-        <br><br>
 
         <!-- TABLA PARA ESCRITORIO -->
         <div class="tabla-actividades">
@@ -278,15 +263,15 @@ if (!empty($params)) {
 
                   <td>
                     <div class="btn-group">
-                      <?php if(puedeAccion('actividades', 'editar')): ?>
-                      <button class="btn btn-warning btnEditarActividad" data-id="<?php echo $value['id'] ?? ''; ?>"
-                        data-toggle="modal" data-target="#modalEditarActividad"
-                        idActividad="<?php echo $value["id"]; ?>"><i class="fa fa-pencil"></i></button>
+                      <?php if (puedeAccion('actividades', 'editar')): ?>
+                        <button class="btn btn-warning btnEditarActividad" data-id="<?php echo $value['id'] ?? ''; ?>"
+                          data-toggle="modal" data-target="#modalEditarActividad"
+                          idActividad="<?php echo $value["id"]; ?>"><i class="fa fa-pencil"></i></button>
                       <?php endif; ?>
 
-                      <?php if(puedeAccion('actividades', 'eliminar')): ?>
-                      <button class="btn btn-danger btnEliminarActividad" idActividad="<?php echo $value["id"]; ?>"><i
-                          class="fa fa-times"></i></button>
+                      <?php if (puedeAccion('actividades', 'eliminar')): ?>
+                        <button class="btn btn-danger btnEliminarActividad" idActividad="<?php echo $value["id"]; ?>"><i
+                            class="fa fa-times"></i></button>
                       <?php endif; ?>
                     </div>
                   </td>
@@ -734,8 +719,8 @@ MODAL GESTIONAR ESTADOS
           <div class="panel-body">
             <form role="form" method="post" id="formAgregarEstado">
 
-        <?php CSRF::insertToken(); ?>
-        <input type="hidden" name="urlActual" value="<?php echo $urlActual; ?>">
+              <?php CSRF::insertToken(); ?>
+              <input type="hidden" name="urlActual" value="<?php echo $urlActual; ?>">
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
@@ -933,8 +918,8 @@ MODAL GESTIONAR TIPOS
           <div class="panel-body">
             <form role="form" method="post" id="formAgregarTipo">
 
-        <?php CSRF::insertToken(); ?>
-        <input type="hidden" name="urlActual" value="<?php echo $urlActual; ?>">
+              <?php CSRF::insertToken(); ?>
+              <input type="hidden" name="urlActual" value="<?php echo $urlActual; ?>">
               <div class="row">
                 <div class="col-md-9">
                   <div class="form-group">

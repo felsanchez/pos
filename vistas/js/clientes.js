@@ -42,6 +42,16 @@ function filterTable1() {
 
 $(document).ready(function () {
 
+	// Inicializar Select2 para el filtro de estado
+	if ($("#filtroEstatus1").length > 0 && typeof $.fn.select2 !== 'undefined') {
+		$("#filtroEstatus1").select2({
+			placeholder: "Seleccionar estado...",
+			allowClear: true,
+			minimumResultsForSearch: 0,
+			width: '100%'
+		});
+	}
+
   if ($('.tablas1').length === 0) return;
 
   tabla1 = $('.tablas1').DataTable({
@@ -146,7 +156,7 @@ $(document).on("click", ".btnSinVentas", function (e) {
   swal({
     title: "Sin ventas",
     text: "Este cliente no tiene ventas registradas",
-    icon: "info",
+    type: "info",
     confirmButtonText: "Cerrar"
   });
 });
@@ -160,7 +170,7 @@ $(document).on("click", ".btnSinFacturas", function (e) {
   swal({
     title: "Sin Facturas electrónicas",
     text: "Este cliente no tiene facturas electrónicas registradas",
-    icon: "info",
+    type: "info",
     confirmButtonText: "Cerrar"
   });
 });
@@ -175,7 +185,7 @@ $(document).on("click", ".btnEliminarCliente", function () {
   swal({
     title: "¿Estás seguro de borrar el cliente?",
     text: "¡Si no lo estás puedes cancelar la acción!",
-    icon: 'warning',
+    type: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#3085d6',
     cancelButtonColor: '#d33',
@@ -198,7 +208,7 @@ $(document).on("click", ".btnEliminarCliente", function () {
           respuesta = $.trim(respuesta);
           if (respuesta === "ok") {
             swal({
-              icon: "success",
+              type: "success",
               title: "¡El cliente ha sido borrado correctamente!",
               showConfirmButton: true,
               confirmButtonText: "Cerrar"
@@ -209,28 +219,28 @@ $(document).on("click", ".btnEliminarCliente", function () {
             });
           } else if (respuesta === "error_actividades") {
             swal({
-              icon: "error",
+              type: "error",
               title: "¡No se puede eliminar!",
               text: "El cliente tiene actividades asociadas.",
               confirmButtonText: "Cerrar"
             });
           } else if (respuesta === "error_ventas") {
             swal({
-              icon: "error",
+              type: "error",
               title: "¡No se puede eliminar!",
               text: "El cliente tiene ventas asociadas.",
               confirmButtonText: "Cerrar"
             });
           } else if (respuesta === "error_notas_credito") {
             swal({
-              icon: "error",
+              type: "error",
               title: "¡No se puede eliminar!",
               text: "El cliente tiene notas crédito asociadas.",
               confirmButtonText: "Cerrar"
             });
           } else {
             swal({
-              icon: "error",
+              type: "error",
               title: "Error",
               text: "No se pudo eliminar el cliente. " + respuesta,
               confirmButtonText: "Cerrar"
@@ -239,7 +249,7 @@ $(document).on("click", ".btnEliminarCliente", function () {
         },
         error: function (xhr, status, err) {
           swal({
-            icon: "error",
+            type: "error",
             title: "Error de conexión",
             text: "No se pudo conectar con el servidor.",
             confirmButtonText: "Cerrar"

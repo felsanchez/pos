@@ -19,12 +19,12 @@
 
             <div class="box-header with-border">
 
-                <?php if(puedeAccion('documento_soporte', 'crear')): ?>
-                <a href="crear-documento-soporte">
-                    <button class="btn btn-primary">
-                        Crear Documento Soporte
-                    </button>
-                </a>
+                <?php if (puedeAccion('documento_soporte', 'crear')): ?>
+                    <a href="crear-documento-soporte">
+                        <button class="btn btn-primary">
+                            <i class="fa fa-plus"></i> Crear Documento Soporte
+                        </button>
+                    </a>
                 <?php endif; ?>
 
             </div>
@@ -149,10 +149,10 @@
                                             <a href="index.php?ruta=ver-documento-soporte&idDS=' . e($value["id"]) . '" class="btn btn-info" title="Ver Detalle"><i class="fa fa-eye"></i></a>';
 
                                 if ($value["estado_dian"] == "borrador") {
-                                    if(puedeAccion('documento_soporte', 'editar')) {
-                                        echo '<button class="btn btn-success btnFirmarDS" idDS="' . e($value["id"]) . '" title="Firmar y Enviar a Factus"><i class="fa fa-paper-plane"></i></button>';
+                                    if (puedeAccion('documento_soporte', 'editar')) {
+                                        echo '<button class="btn btnFirmarDS" style="background-color: black; color: white;" idDS="' . e($value["id"]) . '" title="Firmar y Enviar a Factus"><i class="fa fa-paper-plane"></i></button>';
                                     }
-                                    if(puedeAccion('documento_soporte', 'eliminar')) {
+                                    if (puedeAccion('documento_soporte', 'eliminar')) {
                                         echo '<button class="btn btn-danger btnEliminarDS" idDS="' . e($value["id"]) . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
                                     }
                                 } else {

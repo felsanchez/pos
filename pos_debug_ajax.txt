@@ -1,0 +1,4 @@
+AJAX MarcarComoLeida: UserID: 43 - NotifID: 86
+Response: ok
+AJAX MarcarComoLeida: UserID: 43 - NotifID: 87
+Response: ok

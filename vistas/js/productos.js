@@ -151,9 +151,76 @@ var table = $(".tablaProductos").DataTable({
 		}
 	},
 	"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
+});
 
+/*=============================================
+INICIALIZAR SELECT2 Y FILTROS PERSONALIZADOS
+=============================================*/
+$(document).ready(function () {
 
-})
+	// Inicializar Select2 para los filtros
+	if (typeof $.fn.select2 !== 'undefined') {
+		$('#filtroProveedor').select2({
+			placeholder: "Seleccionar proveedor...",
+			allowClear: true,
+			minimumResultsForSearch: 0,
+			width: '100%'
+		});
+		$('#filtroCategoria').select2({
+			placeholder: "Seleccionar categoria...",
+			allowClear: true,
+			minimumResultsForSearch: 0,
+			width: '100%'
+		});
+	}
+
+	// Agregar filtro personalizado a DataTables
+	if (typeof $.fn.dataTable !== 'undefined' && $.fn.dataTable.ext && $.fn.dataTable.ext.search) {
+		
+		// Limpiar búsquedas previas para evitar duplicidad si se recarga el script
+		$.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(function(item) {
+			return true; 
+		});
+
+		$.fn.dataTable.ext.search.push(
+			function (settings, data, dataIndex) {
+				// Verificar si es la tabla de productos
+				if (settings.nTable.className.indexOf('tablaProductos') === -1) {
+					return true;
+				}
+
+				var filtroCategoria = $('#filtroCategoria').val() ? $('#filtroCategoria').val().toLowerCase() : "";
+				var filtroProveedor = $('#filtroProveedor').val() ? $('#filtroProveedor').val().toLowerCase() : "";
+
+				// Si no hay filtro seleccionado, mostrar todo
+				if (filtroCategoria === "" && filtroProveedor === "") {
+					return true;
+				}
+
+				// La columna 4 (índice 4) es la categoría
+				var categoriaTexto = data[4] ? data[4].toLowerCase() : "";
+				// La columna 8 (índice 8) es el proveedor
+				var proveedorTexto = data[8] ? data[8].toLowerCase() : "";
+
+				// Verificar coincidencia
+				var matchCategoria = (filtroCategoria === "" || categoriaTexto.indexOf(filtroCategoria) !== -1);
+				var matchProveedor = (filtroProveedor === "" || proveedorTexto.indexOf(filtroProveedor) !== -1);
+
+				return matchCategoria && matchProveedor;
+			}
+		);
+	}
+
+	// Evento al cambiar los filtros
+	$('#filtroCategoria, #filtroProveedor').on('change', function () {
+		if (typeof table !== 'undefined') {
+			table.draw();
+		} else if ($.fn.DataTable.isDataTable('.tablaProductos')) {
+			$('.tablaProductos').DataTable().draw();
+		}
+	});
+
+});
 
 /*=============================================
 ACTIVAR LOS BOTONES CON LOS ID CORRESPONDIENTES
@@ -357,7 +424,7 @@ $("#nuevoCodigo").on("blur change", function () {
 				swal({
 					title: "Error",
 					text: "El código del producto ya existe. Por favor ingrese uno diferente.",
-					icon: "error",
+					type: "error",
 					confirmButtonText: "Cerrar"
 				});
 
@@ -458,7 +525,7 @@ $(".nuevaImagen").change(function () {
 		swal({
 			title: "Error al subir la imagenn",
 			text: "¡La imagen debe estar en formato jpg o png!",
-			icon: "error",
+			type: "error",
 			confirmButtonText: "¡Cerrar!"
 		});
 	}
@@ -470,7 +537,7 @@ $(".nuevaImagen").change(function () {
 		swal({
 			title: "Error al subir la imagen",
 			text: "¡La imagen no debe pesar mas de 2MB!",
-			icon: "error",
+			type: "error",
 			confirmButtonText: "¡Cerrar!"
 		});
 
@@ -534,7 +601,7 @@ $(".tablaProductos tbody").on("click", "button.btnEliminarProducto", function ()
 
 		title: '¿Esta seguro de borrar el producto?',
 		text: "¡Si no lo está puede cancelar la acción!",
-		icon: 'warning',
+		type: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -558,7 +625,7 @@ $(".tablaProductos tbody").on("click", "button.btnEliminarProducto", function ()
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							icon: "success",
+							type: "success",
 							title: "¡El producto ha sido borrado correctamente!",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
@@ -569,7 +636,7 @@ $(".tablaProductos tbody").on("click", "button.btnEliminarProducto", function ()
 						});
 					} else {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "Error",
 							text: "No se pudo eliminar el producto. " + respuesta,
 							showConfirmButton: true,
@@ -1528,7 +1595,7 @@ $(document).on('click', '.btnActivarVariante', function () {
 				}
 
 				swal({
-					icon: "success",
+					type: "success",
 					title: "Estado actualizado correctamente",
 					showConfirmButton: false,
 					timer: 1500
@@ -1537,7 +1604,7 @@ $(document).on('click', '.btnActivarVariante', function () {
 			} else {
 
 				swal({
-					icon: "error",
+					type: "error",
 					title: "Error al actualizar el estado",
 					text: "Por favor, intenta nuevamente"
 				});
@@ -1550,7 +1617,7 @@ $(document).on('click', '.btnActivarVariante', function () {
 			console.error("Error al activar/desactivar variante:", textStatus, errorThrown);
 
 			swal({
-				icon: "error",
+				type: "error",
 				title: "Error de conexión",
 				text: "No se pudo conectar con el servidor"
 			});
@@ -1636,7 +1703,7 @@ $("#formEditarVariante").on("submit", function (e) {
 				$("#modalEditarVariante").modal("hide");
 
 				swal({
-					icon: "success",
+					type: "success",
 					title: "¡La variante ha sido actualizada correctamente!",
 					showConfirmButton: false,
 					timer: 1500
@@ -1658,7 +1725,7 @@ $("#formEditarVariante").on("submit", function (e) {
 
 			} else {
 				swal({
-					icon: "error",
+					type: "error",
 					title: "Error al actualizar la variante",
 					text: "Por favor, intenta nuevamente"
 				});
@@ -1669,7 +1736,7 @@ $("#formEditarVariante").on("submit", function (e) {
 			console.error("Error al guardar variante:", textStatus, errorThrown);
 
 			swal({
-				icon: "error",
+				type: "error",
 				title: "Error de conexión",
 				text: "No se pudo conectar con el servidor"
 			});

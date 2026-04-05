@@ -58,7 +58,7 @@ RANGO DE FECHAS
    /*=============================================
 	Filtro tipos de pagos
 	=============================================*/
- document.getElementById("form-filtro-tipos-pago").addEventListener("submit", function (e) {
+ $(document).on("submit", "#form-filtro-tipos-pago", function (e) {
   e.preventDefault();
 
   const form = e.target;

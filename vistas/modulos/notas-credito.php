@@ -24,12 +24,12 @@ if ($_SESSION["perfil"] == "Especial") {
     <section class="content">
         <div class="box">
             <div class="box-header with-border">
-                <?php if(puedeAccion('factura_electronica', 'crear')): ?>
-                <a href="crear-nota-credito">
-                    <button class="btn btn-primary">
-                        Crear Nota Crédito
-                    </button>
-                </a>
+                <?php if (puedeAccion('factura_electronica', 'crear')): ?>
+                    <a href="crear-nota-credito">
+                        <button class="btn btn-primary">
+                            <i class="fa fa-plus"></i> Crear Nota Crédito
+                        </button>
+                    </a>
                 <?php endif; ?>
             </div>
 
@@ -125,11 +125,11 @@ if ($_SESSION["perfil"] == "Especial") {
 
                             if ($value["estado_dian"] == "borrador") {
                                 // Botón Firmar
-                                if(puedeAccion('factura_electronica', 'editar')) {
-                                    echo '<button class="btn btn-success btnFirmarNotaCredito" idNota="' . e($value["id"]) . '" title="Firmar y Enviar a DIAN"><i class="fa fa-paper-plane"></i></button>';
+                                if (puedeAccion('factura_electronica', 'editar')) {
+                                    echo '<button class="btn btnFirmarNotaCredito" style="background-color: black; color: white;" idNota="' . e($value["id"]) . '" title="Firmar y Enviar a DIAN"><i class="fa fa-paper-plane"></i></button>';
                                 }
                                 // Botón Eliminar
-                                if(puedeAccion('factura_electronica', 'eliminar')) {
+                                if (puedeAccion('factura_electronica', 'eliminar')) {
                                     echo '<button class="btn btn-danger btnEliminarNotaCredito" idNota="' . e($value["id"]) . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
                                 }
                             } else {

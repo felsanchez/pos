@@ -311,19 +311,18 @@ if ($xml) {
       <div class="box-header with-border">
 
 
-        <?php if(puedeAccion('ventas', 'crear')): ?>
-        <a href="crear-venta">
-          <button class="btn btn-primary">
-            Agregar venta
-          </button>
-        </a>
+        <?php if (puedeAccion('ventas', 'crear')): ?>
+          <a href="crear-venta">
+            <button class="btn btn-primary">
+              <i class="fa fa-plus"></i> Agregar venta
+            </button>
+          </a>
         <?php endif; ?>
 
 
         <div class="pull-right contenedor-filtros">
 
-          <form method="GET" action="index.php"
-            style="display: inline-flex; gap: 5px; align-items: center; flex-wrap: wrap;">
+          <form method="GET" action="index.php" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
 
             <input type="hidden" name="ruta" value="ventas">
             <input type="hidden" name="fechaInicial" id="fechaInicial"
@@ -332,37 +331,49 @@ if ($xml) {
               value="<?php echo isset($_GET["fechaFinal"]) ? $_GET["fechaFinal"] : null; ?>">
 
             <!-- Filtro por cliente -->
-            <div class="filtro-cliente">
-              <select name="cliente" class="form-control select-cliente" style="width: 200px;">
-                <option value="">Todos los clientes</option>
-                <?php
-                $item = null;
-                $valor = null;
-                $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="hidden-xs"><b>Filtrar por Cliente:</b></span>
+              <div class="input-group" style="width: 200px;">
+                <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+                  <i class="fa fa-search text-primary"></i>
+                </span>
+                <select name="cliente" class="form-control select2 select-cliente" style="width: 100%;">
+                  <option value="">Seleccionar cliente...</option>
+                  <?php
+                  $item = null;
+                  $valor = null;
+                  $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
 
-                foreach ($clientes as $key => $valueCliente) {
-                  $selected = (isset($_GET['cliente']) && $_GET['cliente'] == $valueCliente["id"]) ? 'selected' : '';
-                  echo '<option value="' . e($valueCliente["id"]) . '" ' . $selected . '>' . e($valueCliente["nombre"]) . '</option>';
-                }
-                ?>
-              </select>
+                  foreach ($clientes as $key => $valueCliente) {
+                    $selected = (isset($_GET['cliente']) && $_GET['cliente'] == $valueCliente["id"]) ? 'selected' : '';
+                    echo '<option value="' . e($valueCliente["id"]) . '" ' . $selected . '>' . e($valueCliente["nombre"]) . '</option>';
+                  }
+                  ?>
+                </select>
+              </div>
             </div>
 
             <!-- Filtro por usuario -->
-            <div class="filtro-usuario">
-              <select name="usuario" class="form-control select-usuario" style="width: 200px;">
-                <option value="">Todos los usuarios</option>
-                <?php
-                $item = null;
-                $valor = null;
-                $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="hidden-xs"><b>Filtrar por Vendedor:</b></span>
+              <div class="input-group" style="width: 200px;">
+                <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+                  <i class="fa fa-search text-primary"></i>
+                </span>
+                <select name="usuario" class="form-control select2 select-usuario" style="width: 100%;">
+                  <option value="">Seleccionar usuario...</option>
+                  <?php
+                  $item = null;
+                  $valor = null;
+                  $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
 
-                foreach ($usuarios as $key => $valueUsuario) {
-                  $selected = (isset($_GET['usuario']) && $_GET['usuario'] == $valueUsuario["id"]) ? 'selected' : '';
-                  echo '<option value="' . e($valueUsuario["id"]) . '" ' . $selected . '>' . e($valueUsuario["nombre"]) . '</option>';
-                }
-                ?>
-              </select>
+                  foreach ($usuarios as $key => $valueUsuario) {
+                    $selected = (isset($_GET['usuario']) && $_GET['usuario'] == $valueUsuario["id"]) ? 'selected' : '';
+                    echo '<option value="' . e($valueUsuario["id"]) . '" ' . $selected . '>' . e($valueUsuario["nombre"]) . '</option>';
+                  }
+                  ?>
+                </select>
+              </div>
             </div>
 
 
@@ -375,12 +386,12 @@ if ($xml) {
             </button>
 
             <!-- Botón Buscar -->
-            <button type="submit" class="btn btn-info">
-              <i class="fa fa-search"></i> Buscar
+            <button type="submit" class="btn btn-primary" title="Filtrar">
+              <i class="fa fa-search"></i>
             </button>
 
             <!-- Botón Limpiar -->
-            <a href="index.php?ruta=ventas" class="btn btn-default" title="Limpiar filtros">
+            <a href="index.php?ruta=ventas" class="btn btn-default" title="Limpiar">
               <i class="fa fa-refresh"></i>
             </a>
 
@@ -390,29 +401,33 @@ if ($xml) {
 
         <style>
           @media (max-width: 767px) {
-            .box-header .btn-primary {
+            .box-header .btn-primary:not([type="submit"]) {
               width: 100%;
               margin-bottom: 10px;
+            }
+
+            .pull-right.contenedor-filtros {
+              float: none !important;
+              width: 100%;
             }
 
             .pull-right.contenedor-filtros form {
               flex-direction: column;
               align-items: stretch !important;
               width: 100%;
+              gap: 10px !important;
             }
 
-            .filtro-cliente,
-            .filtro-usuario,
+            .pull-right.contenedor-filtros form .input-group,
+            .pull-right.contenedor-filtros form div {
+              width: 100% !important;
+            }
+
             #daterange-btn,
-            .btn-info,
+            [type="submit"],
             .btn-default {
               width: 100% !important;
               margin-bottom: 5px;
-            }
-
-            .select-cliente,
-            .select-usuario {
-              width: 100% !important;
             }
           }
         </style>
@@ -589,42 +604,29 @@ if ($xml) {
 
                         <td contenteditable="true" class="celda-observacion" data-id="' . $value['id'] . '">' . $value['observacion'] . '</td>
                         
-                       <td>' . $value["fecha"];
+                        <td>' . $value["fecha"];
 
                 // 1. Botón Eliminar
                 if (puedeAccion('ventas', 'eliminar')) {
                   echo '<button class="btn btn-danger btn-xs solo-movil btnEliminarVenta" style="float: right;" idVenta="' . $value["id"] . '">
-                                      <i class="fa fa-times"></i>
-                                    </button>';
+                          <i class="fa fa-times"></i>
+                        </button>';
                 }
 
-                // 2. Botón Imprimir
-                echo '<button class="btn btn-info btn-xs solo-movil btnImprimirFactura" style="float: right;" codigoVenta="' . $value["codigo"] . '">
-                              <i class="fa fa-print"></i>
-                            </button>
-                            ';
-
                 // 3. Botón Editar (Ver)
-                if(puedeAccion('ventas', 'editar')){
-                  echo '<button class="btn btn-warning btn-xs solo-movil btnEditarVenta" style="float: right;" idVenta="' . $value["id"] . '">
-                                <i class="fa fa-eye"></i>
-                              </button>';
+                if (puedeAccion('ventas', 'editar')) {
+                  echo '<button class="btn btn-warning solo-movil btnEditarVenta" style="float: right; margin-left: 3px;" idVenta="' . $value["id"] . '" title="Ver Detalle">
+                          <i class="fa fa-eye"></i>
+                        </button>';
                 }
 
                 echo '</td>
 
-
                         <td>
-                          <div class="btn-group">
+                          <div class="btn-group">';
 
-                            <!--<a class="btn btn-success" href="index.php?ruta=ventas&xml=' . $value["codigo"] . '">xml</a>-->
-
-                            <button class="btn btn-info btnImprimirFactura" codigoVenta="' . $value["codigo"] . '">
-                              <i class="fa fa-print"></i>
-                            </button>';
-                            
-                if(puedeAccion('ventas', 'editar')){
-                  echo '<button class="btn btn-warning btnEditarVenta" idVenta="' . $value["id"] . '">
+                if (puedeAccion('ventas', 'editar')) {
+                  echo '<button class="btn btn-warning btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver Detalle de Venta" style="width: auto !important;">
                               <i class="fa fa-eye"></i>
                             </button>';
                 }
@@ -693,12 +695,10 @@ if ($xml) {
             echo '</div>
                         <div class="card-venta-acciones">
                           <div class="btn-group">
-                            <button class="btn btn-info btn-xs btnImprimirFactura" codigoVenta="' . $value["codigo"] . '">
-                              <i class="fa fa-print"></i>
-                            </button>';
-                            
-            if(puedeAccion('ventas', 'editar')){
-              echo '        <button class="btn btn-warning btn-xs btnEditarVenta" idVenta="' . $value["id"] . '">
+                            ';
+
+            if (puedeAccion('ventas', 'editar')) {
+              echo '        <button class="btn btn-warning btn-sm btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver Detalle">
                               <i class="fa fa-eye"></i>
                             </button>';
             }

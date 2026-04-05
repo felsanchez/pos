@@ -60,7 +60,7 @@ class ControladorActividades{
 
 					echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡La actividad ha sido guardada correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -76,7 +76,7 @@ class ControladorActividades{
 
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡La actividad no puede ir vacía o llevar caracteres especiales!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -254,7 +254,7 @@ class ControladorActividades{
 
 				echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡La actividad ha sido borrada correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"

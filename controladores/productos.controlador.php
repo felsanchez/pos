@@ -33,7 +33,7 @@ class ControladorProductos
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
@@ -80,7 +80,7 @@ class ControladorProductos
 					echo '<script> 
 
 						swal({ 
-							icon: "error",
+							type: "error",
 							title: "El código del producto ya existe",
 							text: "Por favor ingrese un código diferente. El código ' . $_POST["nuevoCodigo"] . ' ya está siendo utilizado.",
 							showConfirmButton: true,
@@ -249,7 +249,7 @@ class ControladorProductos
 						echo '<script>
 
 						swal({
-							icon: "success",
+							type: "success",
 							title: "¡El producto ha sido guardado correctamente!",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
@@ -400,7 +400,7 @@ class ControladorProductos
 						echo '<script>
 
 						swal({
-							icon: "success",
+							type: "success",
 							title: "¡Producto guardado!",
 							text: "Se crearon ' . $variantesCreadas . ' variantes correctamente",
 							showConfirmButton: true,
@@ -418,7 +418,7 @@ class ControladorProductos
 						echo '<script>
 
 						swal({
-							icon: "error",
+							type: "error",
 							title: "Error al guardar el producto",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
@@ -439,7 +439,7 @@ class ControladorProductos
 				echo '<script>
 
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡El producto no puede ir con los campos vacíos o llevar caracteres especiales!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -473,7 +473,7 @@ class ControladorProductos
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
@@ -585,7 +585,7 @@ class ControladorProductos
 				if (!$productoAnterior) {
 					echo '<script>
 						swal({
-							icon: "error",
+							type: "error",
 							title: "Error al editar producto",
 							text: "No se pudo encontrar el producto en la base de datos",
 							showConfirmButton: true,
@@ -832,7 +832,7 @@ class ControladorProductos
 
 					echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡El producto ha sido editado correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar",
@@ -845,7 +845,7 @@ class ControladorProductos
 			} else {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡El producto no puede ir con los campos vacíos o llevar caracteres especiales!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -877,7 +877,7 @@ class ControladorProductos
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
@@ -929,7 +929,7 @@ class ControladorProductos
 				}
 				echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡El producto ha sido borrado correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar",
@@ -1155,7 +1155,7 @@ class ControladorProductos
 
 					echo '<script>
 						swal({
-							icon: "error",
+							type: "error",
 							title: "Error en la importación",
 							text: "' . $mensajeError . '",
 							showConfirmButton: true,
@@ -1180,7 +1180,7 @@ class ControladorProductos
 
 						echo '<script>
 							swal({
-								icon: "success",
+								type: "success",
 								title: "¡Importación exitosa!",
 								text: "Se importaron ' . $totalImportados . ' productos correctamente.",
 								showConfirmButton: true,
@@ -1193,7 +1193,7 @@ class ControladorProductos
 					} else {
 						echo '<script>
 							swal({
-								icon: "error",
+								type: "error",
 								title: "Error al importar",
 								text: "Hubo un error al guardar los productos en la base de datos.",
 								showConfirmButton: true,
@@ -1207,7 +1207,7 @@ class ControladorProductos
 				} else {
 					echo '<script>
 						swal({
-							icon: "warning",
+							type: "warning",
 							title: "Sin productos válidos",
 							text: "No hay productos válidos para importar en el archivo CSV.",
 							showConfirmButton: true,
@@ -1221,7 +1221,7 @@ class ControladorProductos
 			} else {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error al leer archivo",
 						text: "No se pudo abrir el archivo CSV.",
 						showConfirmButton: true,

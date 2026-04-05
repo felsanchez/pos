@@ -81,8 +81,8 @@
   <section class="content-header">
 
     <h1>
-      Historial de Movimientos de Stock
-      <small>Auditoría completa de inventario</small>
+      Historial de Stock
+      <small>Auditoría de inventario</small>
     </h1>
 
     <ol class="breadcrumb">
@@ -97,7 +97,8 @@
     <div class="alert alert-warning alert-dismissible">
       <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
       <h4><i class="icon fa fa-warning"></i> Atención!</h4>
-      Los registros del historial de stock se eliminan automáticamente del sistema después de transcurrir <b>3 meses</b> desde su creación.
+      Los registros del historial de stock se eliminan automáticamente del sistema después de transcurrir <b>3 meses</b>
+      desde su creación.
     </div>
 
     <!-- TARJETAS DE RESUMEN -->
@@ -153,138 +154,106 @@
 
     </div>
 
-    <div class="box">
-
-      <div class="box-header with-border">
-        <h3 class="box-title">Filtros de Búsqueda</h3>
-      </div>
-
-      <div class="box-body">
-
-        <!-- FORMULARIO DE FILTROS -->
-        <form id="formFiltros">
-
-          <div class="row">
-
-            <!-- Filtro por Producto -->
-            <div class="col-md-3">
-              <div class="form-group">
-                <label>Producto:</label>
-                <select class="form-control" id="filtroProducto" name="filtroProducto" style="width: 100%;">
-                  <option value="">Todos los productos</option>
-                  <?php
-                  $item = null;
-                  $valor = null;
-                  $orden = "descripcion";
-                  $productos = ControladorProductos::ctrMostrarProductos($item, $valor, $orden);
-
-                  foreach ($productos as $key => $value) {
-                    echo '<option value="' . $value["id"] . '">' . $value["descripcion"] . '</option>';
-                  }
-                  ?>
-                </select>
-              </div>
-            </div>
-
-            <!-- Filtro por Tipo de Movimiento -->
-            <div class="col-md-3">
-              <div class="form-group">
-                <label>Tipo de Movimiento:</label>
-                <select class="form-control" id="filtroTipo" name="filtroTipo" style="width: 100%;">
-                  <option value="">Todos los tipos</option>
-                  <option value="venta">Venta</option>
-                  <option value="eliminacion_venta">Eliminación de Venta</option>
-                  <option value="creacion_producto">Creación Producto</option>
-                  <option value="creacion_variante">Creación Variante</option>
-                  <option value="edicion_stock">Edición Stock</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Filtro por Fecha Desde -->
-            <div class="col-md-2">
-              <div class="form-group">
-                <label>Fecha Desde:</label>
-                <input type="date" class="form-control" id="filtroFechaDesde" name="filtroFechaDesde">
-              </div>
-            </div>
-
-            <!-- Filtro por Fecha Hasta -->
-            <div class="col-md-2">
-              <div class="form-group">
-                <label>Fecha Hasta:</label>
-                <input type="date" class="form-control" id="filtroFechaHasta" name="filtroFechaHasta">
-              </div>
-            </div>
-
-            <!-- Botones -->
-            <div class="col-md-2">
-              <div class="form-group">
-                <label>&nbsp;</label>
-                <button type="button" class="btn btn-primary btn-block" id="btnFiltrar">
-                  <i class="fa fa-search"></i> Filtrar
-                </button>
-              </div>
-            </div>
-
-          </div>
-
-          <div class="row">
-
-            <!-- Filtro por Usuario -->
-            <div class="col-md-3">
-              <div class="form-group">
-                <label>Usuario:</label>
-
-                <select class="form-control" id="filtroUsuario" name="filtroUsuario" style="width: 100%;">
-                  <option value="">Todos los usuarios</option>
-                  <?php
-                  $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
-                  foreach ($usuarios as $key => $value) {
-                    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                  }
-                  ?>
-                </select>
-
-              </div>
-            </div>
-
-            <div class="col-md-3">
-              <div class="form-group">
-                <label>&nbsp;</label>
-                <button type="button" class="btn btn-default btn-block" id="btnLimpiar">
-                  <i class="fa fa-eraser"></i> Limpiar Filtros
-                </button>
-              </div>
-            </div>
-
-            <div class="col-md-3">
-              <div class="form-group">
-                <label>&nbsp;</label>
-                <button type="button" class="btn btn-success btn-block" data-toggle="modal"
-                  data-target="#modalDescargarExcelStock">
-                  <i class="fa fa-file-excel-o"></i> Exportar a Excel
-                </button>
-              </div>
-            </div>
-
-          </div>
-
-        </form>
-
-      </div>
-
-    </div>
 
     <!-- TABLA DE MOVIMIENTOS -->
     <div class="box">
 
       <div class="box-header with-border">
+
         <h3 class="box-title">Registro de Movimientos</h3>
 
+        <div class="pull-right contenedor-filtros">
 
+          <form id="formFiltros" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+
+            <!-- Filtro por Producto -->
+            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
+              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Producto:</label>
+              <div class="input-group">
+                <span class="input-group-addon" style="background-color: #f9f9f9;"><i
+                    class="fa fa-search text-primary"></i></span>
+                <select class="form-control select2" id="filtroProducto" name="filtroProducto"
+                  style="width: 140px; border-left: 0;">
+                  <option value="">Seleccionar Producto</option>
+                  <?php
+                  $item = null;
+                  $valor = null;
+                  $orden = "descripcion";
+                  $productos = ControladorProductos::ctrMostrarProductos($item, $valor, $orden);
+                  foreach ($productos as $key => $value) {
+                    echo '<option value="' . e($value["id"]) . '">' . e($value["descripcion"]) . '</option>';
+                  }
+                  ?>
+                </select>
+              </div>
+            </div>
+
+            <!-- Filtro por Movimiento -->
+            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
+              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Tipo:</label>
+              <div class="input-group">
+                <span class="input-group-addon" style="background-color: #f9f9f9;"><i
+                    class="fa fa-search text-primary"></i></span>
+                <select class="form-control select2" id="filtroTipo" name="filtroTipo"
+                  style="width: 130px; border-left: 0;">
+                  <option value="">Seleccionar Tipo</option>
+                  <option value="venta">Venta</option>
+                  <option value="eliminacion_venta">Eliminación Venta</option>
+                  <option value="creacion_producto">Creación</option>
+                  <option value="creacion_variante">Creación Variación</option>
+                  <option value="edicion_stock">Edición Stock</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Filtro por Usuario -->
+            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
+              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Usuario:</label>
+              <div class="input-group">
+                <span class="input-group-addon" style="background-color: #f9f9f9;"><i
+                    class="fa fa-search text-primary"></i></span>
+                <select class="form-control select2" id="filtroUsuario" name="filtroUsuario"
+                  style="width: 120px; border-left: 0;">
+                  <option value="">Seleccionar Usuario</option>
+                  <?php
+                  $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
+                  foreach ($usuarios as $key => $value) {
+                    echo '<option value="' . e($value["id"]) . '">' . e($value["nombre"]) . '</option>';
+                  }
+                  ?>
+                </select>
+              </div>
+            </div>
+
+            <!-- Filtro por Rango de Fecha -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <button type="button" class="btn btn-default" id="daterange-btn">
+                <span>
+                  <i class="fa fa-calendar"></i> Rango
+                </span>
+                <i class="fa fa-caret-down"></i>
+              </button>
+              <input type="hidden" id="filtroFechaDesde" name="filtroFechaDesde">
+              <input type="hidden" id="filtroFechaHasta" name="filtroFechaHasta">
+            </div>
+
+            <!-- Botones de Acción (Separados para mantener gap consistente) -->
+            <button type="button" class="btn btn-primary" id="btnFiltrar" title="Filtrar">
+              <i class="fa fa-search"></i>
+            </button>
+            <button type="button" class="btn btn-default" id="btnLimpiar" title="Limpiar">
+              <i class="fa fa-refresh"></i>
+            </button>
+            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalDescargarExcelStock">
+              <i class="fa fa-file-excel-o"></i> Exportar a Excel
+            </button>
+
+          </form>
+
+        </div>
 
       </div>
+
 
       <div class="box-body">
 

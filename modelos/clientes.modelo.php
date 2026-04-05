@@ -105,7 +105,7 @@ class ModeloClientes
 					m.departamento as nombre_departamento
 					FROM $tabla c 
 					LEFT JOIN factus_municipios m ON (c.municipio_id = m.codigo OR c.municipio_id = m.id_factus)
-					ORDER BY id DESC";
+					ORDER BY c.id DESC";
 
 			$stmt = Conexion::conectar()->prepare($sql);
 

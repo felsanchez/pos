@@ -161,7 +161,7 @@ $(document).ready(function () {
                 swal({
                     title: "Error",
                     text: "La imagen no debe pesar más de 2MB",
-                    icon: "error",
+                    type: "error",
                     confirmButtonText: "¡Cerrar!"
                 });
                 $(this).val('');
@@ -173,7 +173,7 @@ $(document).ready(function () {
                 swal({
                     title: "Error",
                     text: "La imagen debe estar en formato JPG o PNG",
-                    icon: "error",
+                    type: "error",
                     confirmButtonText: "¡Cerrar!"
                 });
                 $(this).val('');
@@ -200,7 +200,7 @@ $(document).ready(function () {
             swal({
                 title: "Error",
                 text: "El código del producto es obligatorio",
-                icon: "error",
+                type: "error",
                 confirmButtonText: "¡Cerrar!"
             });
             return false;
@@ -211,7 +211,7 @@ $(document).ready(function () {
             swal({
                 title: "Error",
                 text: "La descripción del producto es obligatoria",
-                icon: "error",
+                type: "error",
                 confirmButtonText: "¡Cerrar!"
             });
             return false;
@@ -222,7 +222,7 @@ $(document).ready(function () {
             swal({
                 title: "Error",
                 text: "Debe seleccionar una categoría",
-                icon: "error",
+                type: "error",
                 confirmButtonText: "¡Cerrar!"
             });
             return false;
@@ -236,7 +236,7 @@ $(document).ready(function () {
                 swal({
                     title: "Error",
                     text: "Debe generar al menos una combinación de variantes",
-                    icon: "error",
+                    type: "error",
                     confirmButtonText: "¡Cerrar!"
                 });
                 return false;

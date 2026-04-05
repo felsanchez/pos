@@ -18,7 +18,7 @@ class ControladorClientes
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
@@ -77,7 +77,7 @@ class ControladorClientes
 
 					echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡El cliente ha sido guardado correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -97,7 +97,7 @@ class ControladorClientes
 
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡El cliente no puede ir vacío o llevar caracteres especiales!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -208,7 +208,7 @@ class ControladorClientes
 
 					echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡El cliente ha sido cambiado correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -228,7 +228,7 @@ class ControladorClientes
 
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡El cliente no puede ir vacío o llevar caracteres especiales!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -292,7 +292,7 @@ class ControladorClientes
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡No se puede eliminar!",
 						text: "El cliente tiene actividades asociadas.",
 						showConfirmButton: true,
@@ -314,7 +314,7 @@ class ControladorClientes
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡No se puede eliminar!",
 						text: "El cliente tiene ventas asociadas.",
 						showConfirmButton: true,
@@ -336,7 +336,7 @@ class ControladorClientes
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡No se puede eliminar!",
 						text: "El cliente tiene notas crédito asociadas.",
 						showConfirmButton: true,
@@ -357,7 +357,7 @@ class ControladorClientes
 				}
 				echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡El cliente ha sido borrado correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -549,7 +549,7 @@ class ControladorClientes
 
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error en la importación",
 						html: "' . $mensajeErrores . '",
 						showConfirmButton: true,
@@ -567,7 +567,7 @@ class ControladorClientes
 
 					echo '<script>
 						swal({
-							icon: "success",
+							type: "success",
 							title: "¡Importación Exitosa!",
 							text: "Se han importado ' . $respuesta["exitos"] . ' clientes correctamente.",
 							showConfirmButton: true,
@@ -586,7 +586,7 @@ class ControladorClientes
 
 					echo '<script>
 						swal({
-							icon: "warning",
+							type: "warning",
 							title: "Importación parcial",
 							html: "' . $mensajeParcial . '",
 							showConfirmButton: true,
@@ -600,7 +600,7 @@ class ControladorClientes
 			} else {
 				echo '<script>
 					swal({
-						icon: "warning",
+						type: "warning",
 						title: "Archivo vacío",
 						text: "No se encontraron datos válidos para importar.",
 						showConfirmButton: true,

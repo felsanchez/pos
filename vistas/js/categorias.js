@@ -40,7 +40,7 @@ $(".tablas").on("click", ".btnEliminarCategoria", function () {
 
 		title: '¿Esta seguro de borrar la categoría?',
 		text: "¡Si no lo está puede cancelar la acción!",
-		icon: 'warning',
+		type: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -64,7 +64,7 @@ $(".tablas").on("click", ".btnEliminarCategoria", function () {
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							icon: "success",
+							type: "success",
 							title: "¡Borrado correctamente!",
 							text: "La categoría ha sido borrada correctamente.",
 							showConfirmButton: true,
@@ -76,7 +76,7 @@ $(".tablas").on("click", ".btnEliminarCategoria", function () {
 						});
 					} else if (respuesta == "error_productos_asociados") {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "¡No se puede eliminar!",
 							text: "La categoría tiene productos asociados.",
 							showConfirmButton: true,
@@ -84,7 +84,7 @@ $(".tablas").on("click", ".btnEliminarCategoria", function () {
 						});
 					} else {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "Error",
 							text: "No se pudo eliminar. " + respuesta,
 							showConfirmButton: true,

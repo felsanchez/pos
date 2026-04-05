@@ -25,7 +25,7 @@ class ControladorFactus
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
@@ -79,7 +79,7 @@ class ControladorFactus
 			if ($respuesta == "ok") {
 				echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "La configuración de Factus ha sido actualizada correctamente",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -90,7 +90,7 @@ class ControladorFactus
 			} else {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error al actualizar la configuración",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -1316,7 +1316,7 @@ class ControladorFactus
 				if ($respuesta == "ok") {
 					echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "El Documento ha sido eliminado correctamente",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -1333,7 +1333,7 @@ class ControladorFactus
 
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "No se puede eliminar esta nota porque ya fue enviada a la DIAN",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"

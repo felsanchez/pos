@@ -198,7 +198,7 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 
 		title: '¿Esta seguro de borrar el proveedor?',
 		text: "¡Si no lo está puede cancelar la acción!",
-		icon: 'warning',
+		type: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -222,7 +222,7 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							icon: "success",
+							type: "success",
 							title: "¡Borrado correctamente!",
 							text: "El proveedor ha sido borrado correctamente.",
 							showConfirmButton: true,
@@ -234,7 +234,7 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 						});
 					} else if (respuesta == "error_documentos_soporte") {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "¡No se puede eliminar!",
 							text: "El proveedor tiene documentos soporte asociados. Elimine o reasigne los documentos soporte antes de continuar.",
 							showConfirmButton: true,
@@ -242,7 +242,7 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 						});
 					} else if (respuesta == "error_productos_asociados") {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "¡No se puede eliminar!",
 							text: "El proveedor tiene productos asociados.",
 							showConfirmButton: true,
@@ -250,7 +250,7 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 						});
 					} else {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "Error",
 							text: "No se pudo eliminar. " + respuesta,
 							showConfirmButton: true,

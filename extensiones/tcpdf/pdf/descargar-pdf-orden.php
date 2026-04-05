@@ -18,7 +18,7 @@ require_once "../../../modelos/configuracion.modelo.php";
 require_once "../../../controladores/factus.controlador.php";
 require_once "../../../modelos/factus.modelo.php";
 
-class imprimirDetalleVenta
+class imprimirDetalleOrden
 {
     public $idVenta;
 
@@ -29,13 +29,28 @@ class imprimirDetalleVenta
         $venta = ControladorVentas::ctrMostrarVentas($item, $valor);
 
         if (!$venta) {
-            die("Venta no encontrada.");
+            die("Orden no encontrada.");
         }
 
         $vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $venta["id_vendedor"]);
         $cliente = ControladorClientes::ctrMostrarClientes("id", $venta["id_cliente"]);
         $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
         $configFactus = ControladorFactus::ctrObtenerConfiguracion();
+
+        // Identificar tipo de documento
+        $tipoDocumento = "ORDEN DE VENTA";
+        $etiquetaDocumento = "Orden de Venta";
+        $numeroDocumento = $venta["codigo"] ?? '';
+
+        if (!empty($venta["numero_factura"])) {
+            $tipoDocumento = "FACTURA ELECTRÓNICA";
+            $etiquetaDocumento = "Factura Electrónica";
+            $numeroDocumento = $venta["numero_factura"];
+        } else if ($venta["estado"] == "venta") {
+            $tipoDocumento = "FACTURA DE VENTA";
+            $etiquetaDocumento = "Factura de Venta";
+            $numeroDocumento = $venta["codigo"] ?? '';
+        }
 
         // REQUERIMOS LA CLASE TCPDF
         require_once('tcpdf_include.php');
@@ -44,7 +59,7 @@ class imprimirDetalleVenta
 
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetAuthor('Sistema POS');
-        $pdf->SetTitle('Factura de Venta #' . $venta["codigo"]);
+        $pdf->SetTitle($etiquetaDocumento . ' #' . $numeroDocumento);
 
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
@@ -66,7 +81,6 @@ class imprimirDetalleVenta
             .total-table { width: 100%; }
             .total-table th { text-align: left; font-weight: bold; padding: 5px; }
             .total-table td { text-align: right; padding: 5px; }
-            .qr-section { margin-top: 20px; }
         </style>';
 
         // --- DEFINICIÓN DE VARIABLES (Ámbito principal) ---
@@ -97,7 +111,7 @@ class imprimirDetalleVenta
                     <span style="font-size:18px; font-weight:bold; color:#444;">' . $htmlLogo . $nombreEmpresa . '</span>
                 </td>
                 <td style="width:50%; text-align:right; vertical-align:middle;">
-                    <span style="font-size:16px; font-weight:bold; color:#3c8dbc;">FACTURA DE VENTA</span><br>
+                    <span style="font-size:16px; font-weight:bold; color:#3c8dbc;">' . $tipoDocumento . '</span><br>
                     <span style="font-size:10px; color:#666;">Fecha: ' . $venta["fecha"] . '</span>
                 </td>
             </tr>
@@ -124,7 +138,7 @@ class imprimirDetalleVenta
                 </td>
                 <td style="width:34%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Detalles</span><br><br>
-                    <strong>Factura de Venta #' . ($venta["codigo"] ?? '') . '</strong><br><br>
+                    <strong>' . $etiquetaDocumento . ' #' . $numeroDocumento . '</strong><br><br>
                     <strong>Vendedor:</strong> ' . ($vendedor["nombre"] ?? '') . '<br>
                     <strong>Método de Pago:</strong> ' . ($venta["metodo_pago"] ?? '') . '
                 </td>
@@ -189,7 +203,7 @@ class imprimirDetalleVenta
         }
         $htmlLeft .= '</div>';
 
-        // Renderizamos columna izquierda (solo texto inicial) con ln=1 para bajar el cursor
+        // Renderizamos columna izquierda
         $pdf->writeHTMLCell(110, 0, 10, $startY, $htmlLeft, 0, 1, false, true, 'L', true);
 
         // --- SECCIÓN QR Y CUFE (SOLO PARA FACTURA ELECTRÓNICA) ---
@@ -263,12 +277,13 @@ class imprimirDetalleVenta
         $pdf->writeHTMLCell(75, 0, 125, $startY, $htmlRight, 0, 1, false, true, 'R', true);
 
         ob_end_clean();
-        $pdf->Output('factura-de-venta-' . $venta["codigo"] . '.pdf', 'I');
+        $filename = strtolower(str_replace(' ', '-', $etiquetaDocumento)) . '-' . $numeroDocumento . '.pdf';
+        $pdf->Output($filename, 'I');
     }
 }
 
 if (isset($_GET["idVenta"])) {
-    $imprimir = new imprimirDetalleVenta();
+    $imprimir = new imprimirDetalleOrden();
     $imprimir->idVenta = $_GET["idVenta"];
     $imprimir->traerImpresionDetalle();
 }

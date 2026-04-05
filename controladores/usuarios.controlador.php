@@ -155,7 +155,7 @@ class ControladorUsuarios
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token inválido. Recarga la página e intenta nuevamente.",
 						showConfirmButton: true,
@@ -262,7 +262,7 @@ class ControladorUsuarios
 
 				echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡El usuario ha sido guardado correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -275,7 +275,7 @@ class ControladorUsuarios
 
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡El usuario no puede ir vacío o llevar caracteres especiales!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -318,7 +318,7 @@ class ControladorUsuarios
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token inválido. Recarga la página e intenta nuevamente.",
 						showConfirmButton: true,
@@ -413,7 +413,7 @@ class ControladorUsuarios
 
 						echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡El usuario no puede ir vacío o llevar caracteres especiales!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -448,7 +448,7 @@ class ControladorUsuarios
 
 					echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡El usuario ha sido editado correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -464,7 +464,7 @@ class ControladorUsuarios
 			} else {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡El nombre no puede ir vacío o llevar caracteres especiales!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -499,7 +499,7 @@ class ControladorUsuarios
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
@@ -520,7 +520,7 @@ class ControladorUsuarios
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡No puedes eliminar tu propio usuario!",
 						text: "Cierra la sesión e inicia con otro usuario para poder eliminar este.",
 						showConfirmButton: true,
@@ -568,7 +568,7 @@ class ControladorUsuarios
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡No se puede eliminar!",
 						text: "El usuario tiene actividades asociadas.",
 						showConfirmButton: true,
@@ -590,7 +590,7 @@ class ControladorUsuarios
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡No se puede eliminar!",
 						text: "El usuario tiene ventas asociadas.",
 						showConfirmButton: true,
@@ -611,7 +611,7 @@ class ControladorUsuarios
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡No se puede eliminar!",
 						text: "El usuario tiene notas crédito asociadas.",
 						showConfirmButton: true,
@@ -632,7 +632,7 @@ class ControladorUsuarios
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡No se puede eliminar!",
 						text: "El usuario tiene documentos soporte asociados.",
 						showConfirmButton: true,
@@ -653,7 +653,7 @@ class ControladorUsuarios
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡No se puede eliminar!",
 						text: "El usuario tiene notas de ajuste asociadas.",
 						showConfirmButton: true,
@@ -674,7 +674,7 @@ class ControladorUsuarios
 				}
 				echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡El usuario ha sido borrado correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -703,7 +703,7 @@ class ControladorUsuarios
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token inválido. Recarga la página e intenta nuevamente.",
 						showConfirmButton: true,
@@ -731,7 +731,7 @@ class ControladorUsuarios
 				if ($usuarioExiste) {
 					echo '<script>
 						swal({
-							icon: "error",
+							type: "error",
 							title: "¡El usuario ya existe!",
 							text: "Por favor elige otro nombre de usuario.",
 							showConfirmButton: true,
@@ -762,7 +762,7 @@ class ControladorUsuarios
 
 					echo '<script>
 						swal({
-							icon: "success",
+							type: "success",
 							title: "¡Registro exitoso!",
 							text: "Ya puedes ingresar al sistema con tu usuario y contraseña.",
 							showConfirmButton: true,
@@ -775,7 +775,7 @@ class ControladorUsuarios
 				} else {
 					echo '<script>
 						swal({
-							icon: "error",
+							type: "error",
 							title: "¡Error al registrar!",
 							text: "Por favor intenta nuevamente.",
 							showConfirmButton: true,

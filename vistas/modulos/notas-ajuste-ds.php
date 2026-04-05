@@ -24,12 +24,12 @@ if ($_SESSION["perfil"] == "Especial") {
     <section class="content">
         <div class="box">
             <div class="box-header with-border">
-                <?php if(puedeAccion('documento_soporte', 'crear')): ?>
-                <a href="crear-nota-ajuste-ds">
-                    <button class="btn btn-primary">
-                        Crear Nota de Ajuste
-                    </button>
-                </a>
+                <?php if (puedeAccion('documento_soporte', 'crear')): ?>
+                    <a href="crear-nota-ajuste-ds">
+                        <button class="btn btn-primary">
+                            <i class="fa fa-plus"></i> Crear Nota de Ajuste
+                        </button>
+                    </a>
                 <?php endif; ?>
             </div>
 
@@ -150,11 +150,11 @@ if ($_SESSION["perfil"] == "Especial") {
 
                             if ($value["estado_dian"] == "borrador") {
                                 // Botón Firmar
-                                if(puedeAccion('documento_soporte', 'editar')) {
-                                    echo '<button class="btn btn-success btnFirmarNotaAjusteDS" idNota="' . $value["id"] . '" title="Firmar y Enviar a DIAN"><i class="fa fa-paper-plane"></i></button>';
+                                if (puedeAccion('documento_soporte', 'editar')) {
+                                    echo '<button class="btn btnFirmarNotaAjusteDS" style="background-color: black; color: white;" idNota="' . $value["id"] . '" title="Firmar y Enviar a DIAN"><i class="fa fa-paper-plane"></i></button>';
                                 }
                                 // Botón Eliminar
-                                if(puedeAccion('documento_soporte', 'eliminar')) {
+                                if (puedeAccion('documento_soporte', 'eliminar')) {
                                     echo '<button class="btn btn-danger btnEliminarNotaAjusteDS" idNota="' . $value["id"] . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
                                 }
                             } else {

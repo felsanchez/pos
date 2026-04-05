@@ -60,7 +60,7 @@ class ControladorVentas
 			if (!$venta || !in_array($venta["estado_dian"], ['creada', 'pendiente', null])) {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error",
 						text: "Esta factura no puede ser editada",
 						showConfirmButton: true,
@@ -76,7 +76,7 @@ class ControladorVentas
 			if (empty($_POST["listaProductos"]) || $_POST["listaProductos"] == "") {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "La factura no se puede actualizar sin productos",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -159,7 +159,7 @@ class ControladorVentas
 			if ($respuesta == "ok") {
 				echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "Factura actualizada correctamente",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -171,7 +171,7 @@ class ControladorVentas
 			else {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error al actualizar la factura",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -196,7 +196,7 @@ class ControladorVentas
 				echo '<script>
 
 				swal({
-					  icon: "error",
+					  type: "error",
 					  title: "La venta no se puede ejecutar si no hay productos",
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"
@@ -265,7 +265,7 @@ class ControladorVentas
 					if (!$validacion['valido']) {
 						echo '<script>
 							swal({
-								icon: "error",
+								type: "error",
 								title: "Error de Validación",
 								text: "No se puede generar la factura electrónica. Corrija los siguientes errores: ' . implode(", ", $validacion['errores']) . '",
 								showConfirmButton: true,
@@ -540,7 +540,7 @@ class ControladorVentas
 
 							echo '<script>
 								swal({
-									icon: "error",
+									type: "error",
 									title: "Error en Facturación",
 									html: "' . $mensajeError . '",
 									showConfirmButton: true,
@@ -570,7 +570,7 @@ class ControladorVentas
 					echo '<script>
 						localStorage.removeItem("rango");
 						swal({
-							icon: "success",
+							type: "success",
 							title: "¡La orden ha sido guardada correctamente!",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
@@ -613,7 +613,7 @@ class ControladorVentas
 
 								echo '<script>
 									swal({
-										icon: "error",
+										type: "error",
 										title: "Error de Validación",
 										html: "' . addslashes($mensajeError) . '",
 										showConfirmButton: true,
@@ -644,7 +644,7 @@ class ControladorVentas
 					echo '<script>
 						localStorage.removeItem("rango");
 						swal({
-							icon: "success",
+							type: "success",
 							title: "' . $tituloMensaje . '",
 							text: "' . $textoMensaje . '",
 							showConfirmButton: true,
@@ -760,7 +760,7 @@ class ControladorVentas
 
 				echo '<script>
 				swal({
-					  icon: "error",
+					  type: "error",
 					  title: "Debe modificar los productos para guardar la  venta",
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"
@@ -1302,7 +1302,7 @@ class ControladorVentas
 					echo '<script>
 					localStorage.removeItem("rango");
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡Venta guardada correctamente!",
 						text: "El documento ha sido registrado exitosamente en el sistema.",
 						showConfirmButton: true,
@@ -1552,7 +1552,7 @@ class ControladorVentas
 					echo '<script>
 						localStorage.removeItem("rango");
 						swal({
-							icon: "success",
+							type: "success",
 							title: "¡La orden ha sido eliminada correctamente!",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
@@ -1574,7 +1574,7 @@ class ControladorVentas
 					echo '<script>
 						localStorage.removeItem("rango");
 						swal({
-							icon: "success",
+							type: "success",
 							title: "¡La venta ha sido borrada correctamente!",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
@@ -1923,7 +1923,7 @@ class ControladorVentas
 
 				echo '<script>
 				swal({
-					  icon: "error",
+					  type: "error",
 					  title: "La venta no se puede ejecutar si no hay productos",
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"
@@ -2089,7 +2089,7 @@ class ControladorVentas
 
 					echo '<script>
 						swal({
-						  icon: "success",
+						  type: "success",
 						  title: "Factura Electrónica GUARDADA",
 						  text: "La factura ha sido guardada correctamente como borrador",
 						  showConfirmButton: true,
@@ -2119,7 +2119,7 @@ class ControladorVentas
 
 					echo '<script>
 						swal({
-						  icon: "warning",
+						  type: "warning",
 						  title: "Venta guardada pero Factura RECHAZADA",
 						  text: "' . str_replace('"', "'", $errorMsg) . '",
 						  showConfirmButton: true,
@@ -2144,7 +2144,7 @@ class ControladorVentas
 
 				echo '<script>
 					swal({
-						  icon: "error",
+						  type: "error",
 						  title: "Error al guardar la venta localmente",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"

@@ -3,8 +3,19 @@ CARGAR TABLA DINAMICA USUARIOS
 =============================================*/
 
 $(document).ready(function () {
+
+	// Inicializar Select2 para el filtro de perfiles
+	if ($("#seleccionarPerfilFiltro").length > 0 && typeof $.fn.select2 !== 'undefined') {
+		$("#seleccionarPerfilFiltro").select2({
+			placeholder: "Seleccionar perfil...",
+			allowClear: true,
+			minimumResultsForSearch: 0,
+			width: '100%'
+		});
+	}
+
 	if (!$.fn.DataTable.isDataTable('.tablaUsuarios')) {
-		$(".tablaUsuarios").DataTable({
+		var tablaUsuarios = $(".tablaUsuarios").DataTable({
 			"responsive": {
 				"details": {
 					"renderer": function (api, rowIdx, columns) {
@@ -109,6 +120,23 @@ $(document).ready(function () {
 				}
 			}
 		});
+
+		/*=============================================
+		FILTRAR POR PERFIL (NUEVO BUSCADOR)
+		=============================================*/
+		$("#seleccionarPerfilFiltro").on("change", function () {
+			var perfil = $(this).val();
+
+			console.log("Filtrando usuarios por perfil:", perfil);
+
+			// Usamos una expresión regular para una búsqueda exacta en la columna 5 (Perfil)
+			// El índice 5 corresponde a la columna de Perfil
+			if (perfil != "") {
+				tablaUsuarios.column(5).search('^' + perfil + '$', true, false).draw();
+			} else {
+				tablaUsuarios.column(5).search("").draw();
+			}
+		});
 	}
 });
 
@@ -148,7 +176,7 @@ $(".nuevaFoto").change(function () {
 		swal({
 			title: "Error al subir la imagen",
 			text: "¡La imagen debe estar en formato jpg o png!",
-			icon: "error",
+			type: "error",
 			confirmButtonText: "¡Cerrar!"
 		});
 	}
@@ -160,7 +188,7 @@ $(".nuevaFoto").change(function () {
 		swal({
 			title: "Error al subir la imagen",
 			text: "¡La imagen no debe pesar mas de 2MB!",
-			icon: "error",
+			type: "error",
 			confirmButtonText: "¡Cerrar!"
 		});
 
@@ -235,7 +263,7 @@ $(".tablaUsuarios").on("click", ".btnEditarUsuario", function () {
 			console.error("Respuesta:", xhr.responseText);
 
 			swal({
-				icon: "error",
+				type: "error",
 				title: "Error al cargar los datos del usuario",
 				text: "Por favor, intente nuevamente",
 				confirmButtonText: "Cerrar"
@@ -313,7 +341,7 @@ $(".tablaUsuarios").on("click", ".btnActivar", function () {
 			fila.css('opacity', '1');
 
 			swal({
-				icon: "error",
+				type: "error",
 				title: "Error en la conexión",
 				showConfirmButton: true,
 				confirmButtonText: "Cerrar"
@@ -373,7 +401,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 	swal({
 		title: '¿Esta seguro de borrar el usuario?',
 		text: "¡Si no lo está puede cancelar la acción!",
-		icon: 'warning',
+		type: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -397,7 +425,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							icon: "success",
+							type: "success",
 							title: "¡El usuario ha sido borrado correctamente!",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
@@ -408,7 +436,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 						});
 					} else if (respuesta == "error_auto_eliminacion") {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "¡No puedes eliminar tu propio usuario!",
 							text: "Cierra la sesión e inicia con otro usuario para poder eliminar este.",
 							showConfirmButton: true,
@@ -416,7 +444,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 						});
 					} else if (respuesta == "error_actividades") {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "¡No se puede eliminar!",
 							text: "El usuario tiene actividades asociadas.",
 							showConfirmButton: true,
@@ -424,7 +452,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 						});
 					} else if (respuesta == "error_ventas") {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "¡No se puede eliminar!",
 							text: "El usuario tiene ventas asociadas.",
 							showConfirmButton: true,
@@ -432,7 +460,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 						});
 					} else if (respuesta == "error_notas_credito") {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "¡No se puede eliminar!",
 							text: "El usuario tiene notas crédito asociadas.",
 							showConfirmButton: true,
@@ -440,7 +468,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 						});
 					} else if (respuesta == "error_documentos_soporte") {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "¡No se puede eliminar!",
 							text: "El usuario tiene documentos soporte asociados.",
 							showConfirmButton: true,
@@ -448,7 +476,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 						});
 					} else if (respuesta == "error_notas_ajuste") {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "¡No se puede eliminar!",
 							text: "El usuario tiene notas de ajuste asociadas.",
 							showConfirmButton: true,
@@ -456,7 +484,7 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 						});
 					} else {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "Error",
 							text: "No se pudo eliminar el usuario. " + respuesta,
 							showConfirmButton: true,

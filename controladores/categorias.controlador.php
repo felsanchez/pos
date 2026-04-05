@@ -16,7 +16,7 @@ class ControladorCategorias{
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
@@ -40,7 +40,7 @@ class ControladorCategorias{
 
 					echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡La categoría ha sido guardada correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -129,7 +129,7 @@ class ControladorCategorias{
 
 					echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡La categoría ha sido editada correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
@@ -208,7 +208,7 @@ class ControladorCategorias{
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "¡No se puede eliminar!",
 						text: "La categoría tiene productos asociados.",
 						showConfirmButton: true,
@@ -228,7 +228,7 @@ class ControladorCategorias{
 				}
 				echo '<script>
 					swal({
-						icon: "success",
+						type: "success",
 						title: "¡La categoría ha sido borrada correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"

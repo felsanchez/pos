@@ -110,18 +110,16 @@ class tablaVentas
 			// Generar botones de acciones
 			$botones = '<div class="btn-group">';
 
-			// Solo mostrar botón "Imprimir Factura" si el estado es "venta"
-			if (isset($venta["estado"]) && $venta["estado"] == "venta") {
-				$botones .= '<button class="btn btn-info btnImprimirFactura" codigoVenta="' . (isset($venta["codigo"]) ? $venta["codigo"] : "") . '">';
-				$botones .= '<i class="fa fa-print"></i>';
-				$botones .= '</button>';
-			}
+			// 1. Botón Ver Detalle (Ojo - Naranja)
+			$botones .= '<a href="index.php?ruta=ver-detalle-orden&idVenta=' . (isset($venta["id"]) ? $venta["id"] : "") . '" class="btn btn-warning" title="Ver Detalle" style="margin-right: 3px;">';
+			$botones .= '<i class="fa fa-eye"></i>';
+			$botones .= '</a>';
 
-            if(puedeAccion('ordenes-visita', 'editar')){
-			    $botones .= '<a href="index.php?ruta=editarordenes-visita&idVenta=' . (isset($venta["id"]) ? $venta["id"] : "") . '" class="btn btn-warning">';
-			    $botones .= '<i class="fa fa-line-chart"></i>';
-			    $botones .= '</a>';
-            }
+			// 2. Botón Descargar PDF (Verde)
+			$botones .= '<a href="extensiones/tcpdf/pdf/descargar-pdf-orden.php?idVenta=' . (isset($venta["id"]) ? $venta["id"] : "") . '" target="_blank" class="btn btn-success" title="Descargar PDF" style="margin-right: 3px;">';
+			$botones .= '<i class="fa fa-file-pdf-o"></i>';
+			$botones .= '</a>';
+
 			$botones .= '</div>';
 
 			$data[] = array(

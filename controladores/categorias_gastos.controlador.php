@@ -30,7 +30,7 @@ class ControladorCategoriasGastos{
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
@@ -57,7 +57,7 @@ class ControladorCategoriasGastos{
 					echo'<script>
 
 					swal({
-						  icon: "success",
+						  type: "success",
 						  title: "La categoría ha sido guardada correctamente",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
@@ -75,7 +75,7 @@ class ControladorCategoriasGastos{
 				echo'<script>
 
 					swal({
-						  icon: "error",
+						  type: "error",
 						  title: "¡La categoría no puede ir vacía o llevar caracteres especiales!",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
@@ -105,7 +105,7 @@ class ControladorCategoriasGastos{
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
@@ -133,7 +133,7 @@ class ControladorCategoriasGastos{
 					echo'<script>
 
 					swal({
-						  icon: "success",
+						  type: "success",
 						  title: "La categoría ha sido editada correctamente",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
@@ -151,7 +151,7 @@ class ControladorCategoriasGastos{
 				echo'<script>
 
 					swal({
-						  icon: "error",
+						  type: "error",
 						  title: "¡La categoría no puede ir vacía o llevar caracteres especiales!",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
@@ -184,7 +184,7 @@ class ControladorCategoriasGastos{
 				}
 				echo '<script>
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de seguridad",
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
@@ -211,7 +211,7 @@ class ControladorCategoriasGastos{
 				echo'<script>
 
 				swal({
-					  icon: "error",
+					  type: "error",
 					  title: "¡No se puede eliminar la categoría porque tiene '.$totalGastos.' gasto(s) asociado(s)!",
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"
@@ -234,7 +234,7 @@ class ControladorCategoriasGastos{
 					echo'<script>
 
 					swal({
-						  icon: "success",
+						  type: "success",
 						  title: "La categoría ha sido eliminada correctamente",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"

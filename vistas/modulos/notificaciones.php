@@ -127,34 +127,46 @@
 
       <div class="box-header with-border">
 
-        <div class="row">
-          <div class="col-md-6">
-            <button class="btn btn-success" id="btnMarcarTodasLeidas">
-              <i class="fa fa-check"></i> Marcar todas como leídas
-            </button>
+        <h3 class="box-title">Listado de Notificaciones</h3>
 
-            <?php if(puedeAccion('notificaciones', 'eliminar')): ?>
-            <button class="btn btn-danger" id="btnBorrarSeleccionadas" style="display:none;">
-              <i class="fa fa-trash"></i> Borrar seleccionadas
-            </button>
-            <?php endif; ?>
-          </div>
+        <div class="pull-right contenedor-filtros">
 
-          <div class="col-md-6">
-            <div class="form-group" style="margin-bottom: 0;">
-              <select class="form-control" id="filtroTipoNotificacion">
-                <option value="">Mostrar Todas</option>
-                <option value="Stock Agotado">Stock Agotado</option>
-                <option value="Stock Bajo">Stock Bajo</option>
-                <option value="Actividad Próxima">Actividad Próxima</option>
-                <option value="Gasto Próximo">Gasto Próximo</option>
-                <option value="Orden Agente IA">Orden Agente IA</option>
-                <option value="Transacción Bold">Transacción de Bold</option>
-                <option value="Edicion de pedido">Solicitud Edición de pedido</option>
-                <option value="Eliminacion de pedido">Solicitud Eliminación de pedido</option>
-              </select>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+
+            <!-- Filtro por Tipo -->
+            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
+              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Tipo:</label>
+              <div class="input-group">
+                <span class="input-group-addon" style="background-color: #f9f9f9;"><i class="fa fa-search text-primary"></i></span>
+                <select class="form-control" id="filtroTipoNotificacion" style="width: 160px; border-left: 0;">
+                  <option value="">Mostrar Todas</option>
+                  <option value="Stock Agotado">Stock Agotado</option>
+                  <option value="Stock Bajo">Stock Bajo</option>
+                  <option value="Actividad Próxima">Actividad Próxima</option>
+                  <option value="Gasto Próximo">Gasto Próximo</option>
+                  <option value="Orden Agente IA">Orden Agente IA</option>
+                  <option value="Transacción Bold">Transacción de Bold</option>
+                  <option value="Edicion de pedido">Solicitud Edición de pedido</option>
+                  <option value="Eliminacion de pedido">Solicitud Eliminación de pedido</option>
+                </select>
+              </div>
             </div>
+
+            <!-- Botones de Acción -->
+            <div class="btn-group">
+              <button class="btn btn-success" id="btnMarcarTodasLeidas" title="Marcar todas como leídas">
+                <i class="fa fa-check"></i> <span class="hidden-xs">Marcar todas leídas</span>
+              </button>
+
+              <?php if(puedeAccion('notificaciones', 'eliminar')): ?>
+              <button class="btn btn-danger" id="btnBorrarSeleccionadas" style="display:none;" title="Borrar seleccionadas">
+                <i class="fa fa-trash"></i> <span class="hidden-xs">Borrar</span>
+              </button>
+              <?php endif; ?>
+            </div>
+
           </div>
+
         </div>
 
       </div>
@@ -169,7 +181,7 @@
 
           echo '<div class="tabla-notificaciones">
                   <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover tablas tablaNotificaciones">
                       <thead>
                         <tr>
 
@@ -497,9 +509,11 @@
 
       var tipo = $(this).val();
 
-      if (tipo != "") {
-
-        // Filtrar tabla (Desktop)
+      // Filtrar Tabla (Desktop) usando DataTables API si existe
+      if ($.fn.DataTable.isDataTable('.tablaNotificaciones')) {
+        $('.tablaNotificaciones').DataTable().column(2).search(tipo).draw();
+      } else {
+        // Fallback manual si no hay DataTable
         $(".tabla-notificaciones table tbody tr").hide();
         $(".tabla-notificaciones table tbody tr").each(function () {
           var textoTipo = $(this).find("td:eq(2)").text(); // Columna indice 2 es Tipo
@@ -507,20 +521,16 @@
             $(this).show();
           }
         });
-
-        // Filtrar cards (Mobile)
-        $(".cards-notificaciones .card-notificacion").hide();
-        $(".cards-notificaciones .card-notificacion").each(function () {
-          var textoTipo = $(this).find(".card-notificacion-tipo").text();
-          if (textoTipo.indexOf(tipo) != -1) {
-            $(this).show();
-          }
-        });
-
-      } else {
-        $(".tabla-notificaciones table tbody tr").show();
-        $(".cards-notificaciones .card-notificacion").show();
       }
+
+      // Filtrar cards (Mobile)
+      $(".cards-notificaciones .card-notificacion").hide();
+      $(".cards-notificaciones .card-notificacion").each(function () {
+        var textoTipo = $(this).find(".card-notificacion-tipo").text();
+        if (textoTipo.indexOf(tipo) != -1) {
+          $(this).show();
+        }
+      });
 
     });
 

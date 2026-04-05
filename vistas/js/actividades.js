@@ -82,7 +82,7 @@ $(document).on("click", ".btnEliminarActividad", function () {
 
 		title: '¿Esta seguro de borrar la actividad?',
 		text: "¡Si no lo está puede cancelar la acción!",
-		icon: 'warning',
+		type: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -106,7 +106,7 @@ $(document).on("click", ".btnEliminarActividad", function () {
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							icon: "success",
+							type: "success",
 							title: "¡Eliminada!",
 							text: "La actividad ha sido eliminada correctamente.",
 							showConfirmButton: true,
@@ -118,7 +118,7 @@ $(document).on("click", ".btnEliminarActividad", function () {
 						});
 					} else {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "Error",
 							text: "No se pudo eliminar la actividad. " + respuesta,
 							showConfirmButton: true,
@@ -314,7 +314,7 @@ $("#modalGestionarTipos").on("click", ".btnEditarTipoActividad", function () {
 			console.error("Respuesta completa:", xhr.responseText);
 
 			swal({
-				icon: "error",
+				type: "error",
 				title: "Error al cargar el tipo",
 				text: "No se pudieron cargar los datos del tipo"
 			});
@@ -345,7 +345,7 @@ $(document).on("click", ".btnEliminarTipoActividad", function () {
 	swal({
 		title: '¿Está seguro de borrar el tipo "' + nombreTipo + '"?',
 		text: "¡Si no lo está puede cancelar la acción!",
-		icon: 'warning',
+		type: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -370,7 +370,7 @@ $(document).on("click", ".btnEliminarTipoActividad", function () {
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							icon: "success",
+							type: "success",
 							title: "¡Eliminado!",
 							text: "El tipo ha sido eliminado correctamente.",
 							showConfirmButton: true,
@@ -382,7 +382,7 @@ $(document).on("click", ".btnEliminarTipoActividad", function () {
 						});
 					} else if (respuesta == "error_en_uso") {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "¡No se puede eliminar!",
 							text: "Este tipo está en uso por algunas actividades.",
 							showConfirmButton: true,
@@ -390,7 +390,7 @@ $(document).on("click", ".btnEliminarTipoActividad", function () {
 						});
 					} else {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "Error",
 							text: "No se pudo eliminar el tipo. " + respuesta,
 							showConfirmButton: true,
@@ -410,6 +410,23 @@ $(document).on("click", ".btnEliminarTipoActividad", function () {
 TABLA ACTIVIDADES CON CONFIGURACIÓN ESPECIAL
 =============================================*/
 $(document).ready(function () {
+
+	// Inicializar Select2 para los filtros
+	if (typeof $.fn.select2 !== 'undefined') {
+		$("#filtroTipo").select2({
+			placeholder: "Seleccionar tipo...",
+			allowClear: true,
+			minimumResultsForSearch: 0,
+			width: '100%'
+		});
+		$("#filtroEstado").select2({
+			placeholder: "Seleccionar estado...",
+			allowClear: true,
+			minimumResultsForSearch: 0,
+			width: '100%'
+		});
+	}
+
   // Verificar si existe la tabla antes de inicializar
   if ($(".tablaActividades").length > 0) {
     // Destruir instancia previa si existe por alguna razón

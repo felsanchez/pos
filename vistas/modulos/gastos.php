@@ -150,84 +150,87 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
       <div class="box-header with-border">
 
-        <?php if(puedeAccion('gastos', 'crear')): ?>
-        <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarGasto">
-          <i class="fa fa-plus"></i> Agregar gasto
-        </button>
+        <?php if (puedeAccion('gastos', 'crear')): ?>
+          <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarGasto">
+            <i class="fa fa-plus"></i> Agregar gasto
+          </button>
         <?php endif; ?>
 
         <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarCategorias">
           <i class="fa fa-tags"></i> Gestionar categorías
         </button>
 
-      </div>
+        <div class="pull-right contenedor-filtros">
 
-      <!-- FILTROS -->
-      <div class="box-body">
+          <form method="GET" action="index.php" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
 
-        <div class="row">
+            <input type="hidden" name="ruta" value="gastos">
 
-          <div class="col-md-2">
-            <div class="form-group">
-              <label>Fecha inicio:</label>
-              <input type="date" class="form-control" id="filtroFechaInicio">
+            <!-- Filtro por Categoría -->
+            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
+              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Categoría:</label>
+              <div class="input-group">
+                <span class="input-group-addon" style="background-color: #f9f9f9;"><i class="fa fa-search text-primary"></i></span>
+                <select class="form-control select2" id="filtroCategoria" style="width: 150px; border-left: 0;">
+                  <option value="">Seleccionar Categoría</option>
+                  <?php
+                  $categorias = ControladorCategoriasGastos::ctrMostrarCategoriasGastos(null, null);
+                  foreach ($categorias as $key => $value) {
+                    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                  }
+                  ?>
+                </select>
+              </div>
             </div>
-          </div>
 
-          <div class="col-md-2">
-            <div class="form-group">
-              <label>Fecha fin:</label>
-              <input type="date" class="form-control" id="filtroFechaFin">
+            <!-- Filtro por Proveedor -->
+            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
+              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Proveedor:</label>
+              <div class="input-group">
+                <span class="input-group-addon" style="background-color: #f9f9f9;"><i class="fa fa-search text-primary"></i></span>
+                <select class="form-control select2" id="filtroProveedor" style="width: 150px; border-left: 0;">
+                  <option value="">Seleccionar Proveedor</option>
+                  <?php
+                  $proveedores = ControladorProveedores::ctrMostrarProveedores(null, null);
+                  foreach ($proveedores as $key => $value) {
+                    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                  }
+                  ?>
+                </select>
+              </div>
             </div>
-          </div>
 
-          <div class="col-md-3">
-            <div class="form-group">
-              <label>Categoría:</label>
-              <select class="form-control" id="filtroCategoria">
-                <option value="">Todas las categorías</option>
-                <?php
-                $categorias = ControladorCategoriasGastos::ctrMostrarCategoriasGastos(null, null);
-                foreach ($categorias as $key => $value) {
-                  echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                }
-                ?>
-              </select>
-            </div>
-          </div>
-
-          <div class="col-md-3">
-            <div class="form-group">
-              <label>Proveedor:</label>
-              <select class="form-control" id="filtroProveedor">
-                <option value="">Todos los proveedores</option>
-                <?php
-                $proveedores = ControladorProveedores::ctrMostrarProveedores(null, null);
-                foreach ($proveedores as $key => $value) {
-                  echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                }
-                ?>
-              </select>
-            </div>
-          </div>
-
-          <div class="col-md-2">
-            <div class="form-group">
-              <label>&nbsp;</label>
-              <button type="button" class="btn btn-info btn-block" id="btnFiltrarGastos">
-                <i class="fa fa-search"></i> Filtrar
+            <!-- Filtro por Fecha -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <button type="button" class="btn btn-default" id="daterange-btn">
+                <span>
+                  <i class="fa fa-calendar"></i> Rango
+                </span>
+                <i class="fa fa-caret-down"></i>
               </button>
+              <input type="hidden" id="filtroFechaInicio" name="filtroFechaInicio">
+              <input type="hidden" id="filtroFechaFin" name="filtroFechaFin">
             </div>
-          </div>
+
+            <!-- Botones (Separados para mantener gap consistente) -->
+            <button type="button" class="btn btn-primary" id="btnFiltrarGastos" title="Filtrar">
+              <i class="fa fa-search"></i>
+            </button>
+            <button type="button" class="btn btn-default" id="btnLimpiarGastos" title="Limpiar">
+              <i class="fa fa-refresh"></i>
+            </button>
+
+          </form>
 
         </div>
 
       </div>
 
+
       <div class="box-body">
 
         <div class="tabla-gastos table-responsive">
-          <table id="tablaGastos" class="table table-bordered table-striped tablas1">
+          <table id="tablaGastos" class="table table-bordered table-striped tablas" width="100%">
 
             <thead>
               <tr>
@@ -321,13 +324,13 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                 // Columna 10: Acciones
                 echo '<td>
                   <div class="btn-group">';
-                    if(puedeAccion('gastos', 'editar')) {
-                      echo '<button class="btn btn-warning btnEditarGasto" idGasto="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarGasto"><i class="fa fa-pencil"></i></button>';
-                    }
-                    if(puedeAccion('gastos', 'eliminar')) {
-                      echo '<button class="btn btn-danger btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . $value["concepto"] . '"><i class="fa fa-times"></i></button>';
-                    }
-                  echo '</div>
+                if (puedeAccion('gastos', 'editar')) {
+                  echo '<button class="btn btn-warning btnEditarGasto" idGasto="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarGasto"><i class="fa fa-pencil"></i></button>';
+                }
+                if (puedeAccion('gastos', 'eliminar')) {
+                  echo '<button class="btn btn-danger btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . $value["concepto"] . '"><i class="fa fa-times"></i></button>';
+                }
+                echo '</div>
                 </td>
 
               </tr>';
@@ -379,17 +382,17 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                         ' . $value["concepto"] . '
                       </div>
                       <div class="btn-group">';
-                        if(puedeAccion('gastos', 'editar')) {
-                            echo '<button class="btn btn-warning btn-xs btnEditarGasto" idGasto="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarGasto">
+            if (puedeAccion('gastos', 'editar')) {
+              echo '<button class="btn btn-warning btn-xs btnEditarGasto" idGasto="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarGasto">
                                     <i class="fa fa-pencil"></i>
                                   </button>';
-                        }
-                        if(puedeAccion('gastos', 'eliminar')) {
-                            echo '<button class="btn btn-danger btn-xs btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . $value["concepto"] . '">
+            }
+            if (puedeAccion('gastos', 'eliminar')) {
+              echo '<button class="btn btn-danger btn-xs btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . $value["concepto"] . '">
                                     <i class="fa fa-times"></i>
                                   </button>';
-                        }
-                      echo '</div>
+            }
+            echo '</div>
                     </div>
 
                     <div class="card-gasto-detalles">
@@ -890,7 +893,7 @@ MODAL GESTIONAR CATEGORÍAS
           <div class="panel-body">
             <form role="form" method="post" id="formAgregarCategoria">
 
-        <?php CSRF::insertToken(); ?>
+              <?php CSRF::insertToken(); ?>
               <div class="row">
                 <div class="col-md-5">
                   <div class="form-group">

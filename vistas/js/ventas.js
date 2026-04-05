@@ -21,6 +21,22 @@ $(document).ready(function () {
 
 	// 3. Respaldo adicional: Si por alguna razón pasan 4 segundos y sigue el spinner, quitarlo
 	setTimeout(quitarLoaderFE, 4000);
+
+	// Inicializar Select2 para los filtros de Cliente y Usuario
+	if (typeof $.fn.select2 !== 'undefined') {
+		$('.select-cliente').select2({
+			placeholder: "Seleccionar cliente...",
+			allowClear: true,
+			minimumResultsForSearch: 0,
+			width: '100%'
+		});
+		$('.select-usuario').select2({
+			placeholder: "Seleccionar usuario...",
+			allowClear: true,
+			minimumResultsForSearch: 0,
+			width: '100%'
+		});
+	}
 });
 
 /*=============================================
@@ -258,7 +274,7 @@ $(document).on('click', '.btnVariantesVenta', function () {
 				console.error("Error al cargar variantes:", textStatus, errorThrown);
 
 				swal({
-					icon: "error",
+					type: "error",
 					title: "Error al cargar las variantes",
 					text: "Por favor, intenta nuevamente"
 				});
@@ -811,7 +827,7 @@ $(".formularioVenta").on("change", "input.nuevaCantidadProducto", function () {
 		swal({
 			title: "La cantidad supera el Stock",
 			text: "¡Solo hay " + $(this).attr("stock") + " unidades!",
-			icon: "error",
+			type: "error",
 			confirmButtonText: "¡Cerrar!"
 		});
 
@@ -1328,7 +1344,7 @@ $(".formularioVenta").submit(function (e) {
 	swal({
 		title: '¿Está seguro de guardar este documento?',
 		text: "Se guardará en el sistema y podrá enviarla a la DIAN después.",
-		icon: 'warning',
+		type: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -1341,7 +1357,7 @@ $(".formularioVenta").submit(function (e) {
 			swal({
 				title: 'Guardando Venta',
 				text: 'Por favor espere mientras se procesa la información...',
-				icon: 'info',
+				type: 'info',
 				allowOutsideClick: false,
 				showConfirmButton: false,
 				didOpen: () => {
@@ -1367,7 +1383,7 @@ $(".formularioVenta").submit(function (e) {
 						localStorage.removeItem("rango");
 
 						swal({
-							icon: "success",
+							type: "success",
 							title: respuesta.titulo,
 							text: respuesta.mensaje,
 							showConfirmButton: true,
@@ -1379,7 +1395,7 @@ $(".formularioVenta").submit(function (e) {
 						});
 					} else {
 						swal({
-							icon: "error",
+							type: "error",
 							title: respuesta.titulo || "Error",
 							html: respuesta.mensaje || "Ocurrió un error al guardar",
 							showConfirmButton: true,
@@ -1394,7 +1410,7 @@ $(".formularioVenta").submit(function (e) {
 					console.error("Error Thrown:", errorThrown);
 
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de Sistema",
 						html: "No se pudo guardar la venta vía AJAX.<br><br><b>Status:</b> " + jqXHR.status + " " + jqXHR.statusText + "<br><b>Error:</b> " + errorThrown + "<br><br>Revisa la consola para más detalles."
 					});
@@ -1452,7 +1468,7 @@ $(document).on("click", ".btnEliminarVenta", function () {
 
 		title: '¿Está seguro de eliminar esta venta?',
 		text: '¡Si no lo está puede cancelar la acción!',
-		icon: 'warning',
+		type: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -1490,7 +1506,7 @@ $(document).on("click", ".btnEliminarVenta", function () {
 				success: function (respuesta) {
 					if (respuesta == "ok") {
 						swal({
-							icon: "success",
+							type: "success",
 							title: "¡Venta eliminada correctamente!",
 							text: "El documento ha sido borrado exitosamente del sistema.",
 							showConfirmButton: true,
@@ -1506,7 +1522,7 @@ $(document).on("click", ".btnEliminarVenta", function () {
 						});
 					} else {
 						swal({
-							icon: "error",
+							type: "error",
 							title: "Error",
 							text: "No se pudo eliminar. " + respuesta,
 							showConfirmButton: true,
@@ -1698,7 +1714,7 @@ $(document).on("click", ".btnFirmarFactura", function () {
 	swal({
 		title: '¿Está seguro de firmar y emitir esta Factura Electrónica?',
 		text: 'Este proceso enviará el documento a la DIAN y no se podrá revertir.',
-		icon: 'warning',
+		type: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
@@ -1716,7 +1732,7 @@ $(document).on("click", ".btnFirmarFactura", function () {
 			swal({
 				title: 'Guardando Factura Electrónica',
 				text: 'Por favor espere mientras se procesa la información...',
-				icon: 'info',
+				type: 'info',
 				allowOutsideClick: false,
 				showConfirmButton: false,
 				didOpen: () => {
@@ -1742,7 +1758,7 @@ $(document).on("click", ".btnFirmarFactura", function () {
 					if (!respuesta.error) {
 
 						swal({
-							icon: "success",
+							type: "success",
 							title: "¡Factura Electrónica firmada y enviada correctamente!",
 							text: "El documento ha sido procesado por la DIAN exitosamente.",
 							showConfirmButton: true,
@@ -1761,7 +1777,7 @@ $(document).on("click", ".btnFirmarFactura", function () {
 						}
 
 						swal({
-							icon: "error",
+							type: "error",
 							title: "Error al firmar",
 							text: mensajeError,
 							showConfirmButton: true,
@@ -1786,7 +1802,7 @@ $(document).on("click", ".btnFirmarFactura", function () {
 					}
 
 					swal({
-						icon: "error",
+						type: "error",
 						title: "Error de comunicación",
 						text: mensajeDetallado,
 						showConfirmButton: true,
@@ -1847,7 +1863,7 @@ $('#guardarRetencionNuevo').click(function () {
 
 	if (!tipoRetencion || !porcentajeRetencion) {
 		swal({
-			icon: "error",
+			type: "error",
 			title: "Debe seleccionar el tipo y porcentaje de retención",
 			showConfirmButton: true,
 			confirmButtonText: "Cerrar"
@@ -2061,7 +2077,7 @@ $("#formEnviarEmail").submit(function (e) {
 		success: function (respuesta) {
 			if (respuesta.status == "success") {
 				swal({
-					icon: "success",
+					type: "success",
 					title: "¡Enviado!",
 					text: respuesta.mensaje,
 					showConfirmButton: true,
@@ -2073,7 +2089,7 @@ $("#formEnviarEmail").submit(function (e) {
 				});
 			} else {
 				swal({
-					icon: "error",
+					type: "error",
 					title: "Error",
 					text: respuesta.mensaje,
 					showConfirmButton: true,
@@ -2084,7 +2100,7 @@ $("#formEnviarEmail").submit(function (e) {
 		error: function (xhr, status, error) {
 			console.error("AJAX Error:", error);
 			swal({
-				icon: "error",
+				type: "error",
 				title: "Error de comunicación",
 				text: "No se pudo conectar con el servidor para enviar el correo.",
 				showConfirmButton: true,

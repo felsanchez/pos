@@ -38,7 +38,7 @@ class ControladorVariantes{
 					echo'<script>
 
 					swal({
-						  icon: "success",
+						  type: "success",
 						  title: "El tipo de variante ha sido guardado correctamente",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
@@ -56,7 +56,7 @@ class ControladorVariantes{
 				echo'<script>
 
 					swal({
-						  icon: "error",
+						  type: "error",
 						  title: "¡El tipo de variante no puede ir vacío o llevar caracteres especiales!",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
@@ -110,7 +110,7 @@ class ControladorVariantes{
                     echo'<script>
 
                     swal({
-                        icon: "success",
+                        type: "success",
                         title: "La opción ha sido guardada correctamente",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
@@ -173,7 +173,7 @@ class ControladorVariantes{
                     echo'<script>
 
                     swal({
-                        icon: "success",
+                        type: "success",
                         title: "El tipo de variante ha sido actualizado correctamente",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
@@ -190,7 +190,7 @@ class ControladorVariantes{
                 echo'<script>
 
                     swal({
-                        icon: "error",
+                        type: "error",
                         title: "¡El tipo de variante no puede ir vacío o llevar caracteres especiales!",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
@@ -231,7 +231,7 @@ class ControladorVariantes{
                     echo'<script>
 
                     swal({
-                        icon: "success",
+                        type: "success",
                         title: "La opción ha sido actualizada correctamente",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
