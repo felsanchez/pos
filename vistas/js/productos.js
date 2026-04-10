@@ -14,8 +14,11 @@ var table = $(".tablaProductos").DataTable({
 			console.log("Respuesta del servidor:", xhr.responseText);
 		}
 	},
+	"order": [[3, 'asc']],
 	"responsive": {
 		"details": {
+			"type": "column",
+			"target": 0, // Columna # como disparador en móvil
 			"renderer": function (api, rowIdx, columns) {
 				var data = $.map(columns, function (col, i) {
 					return col.hidden ?
@@ -55,34 +58,34 @@ var table = $(".tablaProductos").DataTable({
 				var finalHtml = '';
 
 				// Section 1: Code, Category, Stock
-				finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
+				 finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
 				finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Descripción</h5></div>';
 
-				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-				finalHtml += '<span class="text-bold" style="color:#555;">Código: </span><span class="pull-right" style="color:#333;">' + codigo + '</span></div>';
+				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+				finalHtml += '<span class="text-bold" style="color:#555;">Código: </span><span style="color:#333; text-align: right;">' + codigo + '</span></div>';
 
-				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-				finalHtml += '<span class="text-bold" style="color:#555;">Categoría: </span><span class="pull-right" style="color:#333;">' + categoria + '</span></div>';
+				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+				finalHtml += '<span class="text-bold" style="color:#555;">Categoría: </span><span style="color:#333; text-align: right;">' + categoria + '</span></div>';
 
-				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-				finalHtml += '<span class="text-bold" style="color:#555;">Stock: </span><span class="pull-right" style="color:#333;"><span class="label ' + stockBadgeClass + '">' + stockValue + '</span></span></div>';
+				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+				finalHtml += '<span class="text-bold" style="color:#555;">Stock: </span><span style="color:#333; text-align: right;"><span class="label ' + stockBadgeClass + '">' + stockValue + '</span></span></div>';
 
 				// Section 2: Prices
-				finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
+				finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
 				finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Precios</h5></div>';
 
-				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-				finalHtml += '<span class="text-bold" style="color:#555;">Impuesto: </span><span class="pull-right" style="color:#333;">' + impuesto + '</span></div>';
+				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+				finalHtml += '<span class="text-bold" style="color:#555;">Impuesto: </span><span style="color:#333; text-align: right;">' + impuesto + '</span></div>';
 
-				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-				finalHtml += '<span class="text-bold" style="color:#555;">Precio Venta: </span><span class="pull-right" style="color:#333;">' + precioVenta + '</span></div>';
+				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+				finalHtml += '<span class="text-bold" style="color:#555;">Precio Venta: </span><span style="color:#333; text-align: right;">' + precioVenta + '</span></div>';
 
 				// Section 3: Supplier
-				finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
+				finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
 				finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Proveedor</h5></div>';
 
-				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-				finalHtml += '<span class="text-bold" style="color:#555;">Proveedor: </span><span class="pull-right" style="color:#333;">' + (proveedor ? proveedor : 'Sin proveedor') + '</span></div>';
+				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+				finalHtml += '<span class="text-bold" style="color:#555;">Proveedor: </span><span style="color:#333; text-align: right;">' + (proveedor ? proveedor : 'Sin proveedor') + '</span></div>';
 
 				// Actions (if hidden in main row, though usually visible)
 				// finalHtml += '<div class="col-xs-12">' + acciones + '</div>';
@@ -93,12 +96,12 @@ var table = $(".tablaProductos").DataTable({
 	},
 	"columnDefs": [
 		{
-			"targets": 0, // # column (ID + Control)
-			"className": 'control', // This makes it the expand/collapse button
+			"targets": 0, // # Número correlativo
 			"orderable": false,
 			"responsivePriority": 1,
-			"render": function (data, type, row) {
-				return ''; // Hide the ID number, keep the control button
+			"className": "text-center control",
+			"render": function (data, type, row, meta) {
+				return ''; // El numero se inyecta via CSS (content: counter) y Responsive maneja el +
 			}
 		},
 		{
@@ -151,6 +154,13 @@ var table = $(".tablaProductos").DataTable({
 		}
 	},
 	"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
+	"drawCallback": function () {
+		// Configurar el counter CSS para la paginación correcta
+		var api = this.api();
+		var start = api.page.info().start;
+		$(api.table().node()).css('counter-reset', 'rowNum ' + start);
+	}
+
 });
 
 /*=============================================

@@ -101,6 +101,14 @@ $(".tablas").not('.tablas1, .tablas2, #example').DataTable({
 
 if ($('#example').length > 0) {
 	$('#example').DataTable({
+		"order": [[0, "asc"]],
+		"columnDefs": [
+			{
+				"targets": 0,
+				"className": "text-center",
+				"type": "num"
+			}
+		],
 		"language": {
 			"sProcessing": "Procesando...",
 			"sLengthMenu": "Mostrar _MENU_ registros",

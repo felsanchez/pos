@@ -435,7 +435,14 @@ $(document).ready(function () {
     }
 
     $(".tablaActividades").DataTable({
-      "order": [[1, "desc"]], // Ordenar por ID (columna 1) desc
+      "order": [[1, "asc"]], // Ordenar por # (columna 1) asc
+      "columnDefs": [
+        {
+          "targets": 1, // Columna #
+          "className": "text-center",
+          "type": "num"
+        }
+      ],
       "responsive": {
         "details": {
           "type": "column",
@@ -527,6 +534,22 @@ $(document).ready(function () {
         }
       },
       "dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
+      "drawCallback": function (settings) {
+        // Inicializar Tippy en cada redibujado de la tabla (paginación, búsqueda, etc.)
+        if (typeof tippy === 'function') {
+          tippy('.has-tooltip', {
+            theme: 'pos-premium',
+            allowHTML: true,
+            placement: 'top',
+            arrow: true,
+            animation: 'shift-away',
+            delay: [150, 0],
+            interactive: true,
+            appendTo: document.body,
+            zIndex: 9999
+          });
+        }
+      },
       "initComplete": function () {
         // Asegurar visibilidad tras inicializar
         $(".tablaActividades").addClass("datatable-ready").css("visibility", "visible");

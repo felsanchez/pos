@@ -2,122 +2,122 @@
 // Obtener configuración del sistema
 $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
 $nombreEmpresa = !empty($configuracion["nombre_empresa"]) ? $configuracion["nombre_empresa"] : "Tablero";
-?> 
+?>
 
- <div class="content-wrapper">
+<div class="content-wrapper">
 
-    <section class="content-header"> 
+  <section class="content-header">
 
-      <h1>
+    <h1>
 
-        <?php echo $nombreEmpresa; ?>
+      <?php echo $nombreEmpresa; ?>
 
-        <small>Panel de Control</small>
+      <small>Panel de Control</small>
 
-      </h1> 
+    </h1>
 
-      <ol class="breadcrumb"> 
+    <ol class="breadcrumb">
 
-        <li><a href="salir"><i class="fa fa-dashboard"></i> Salir</a></li> 
+      <li><a href="salir"><i class="fa fa-dashboard"></i> Salir</a></li>
 
-        <li class="active"><?php echo $nombreEmpresa; ?></li> 
+      <li class="active"><?php echo $nombreEmpresa; ?></li>
 
-      </ol>
+    </ol>
+
+  </section>
+
+
+  <section class="content">
+
+    <div class="row">
+
+      <?php
+
+      //if($_SESSION["perfil"] =="Administrador"){
       
-    </section>
-    
+      include "inicio/cajas-superiores.php";
 
-    <section class="content">
+      //}
+      
+      ?>
 
-      <div class="row">
-        
+    </div>
+
+
+    <div class="row">
+
+      <div class="col-lg-12">
+
+        <?php
+        if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") {
+          ?>
+          <!--include "reportes/grafico-ventas.php";-->
+          <div id="contenedor-barras-formas-pago">
+            <div class="col-12 col-md-12">
+              <?php include "reportes/analisis-ventas1.php"; ?>
+            </div>
+          </div>
+          <?php
+        }
+        ?>
+
+      </div>
+
+
+      <div class="col-lg-6">
+
         <?php
 
-          //if($_SESSION["perfil"] =="Administrador"){
+        if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial") {
 
-            include "inicio/cajas-superiores.php";
+          include "reportes/productos-mas-vendidos.php";
 
-          //}
+        }
 
         ?>
 
       </div>
 
 
-       <div class="row">
+      <div class="col-lg-6">
 
-        <div class="col-lg-12">
-        
-          <?php
-              if($_SESSION["perfil"] =="Administrador" || $_SESSION["perfil"] =="Vendedor"){
-            ?>
-              <!--include "reportes/grafico-ventas.php";-->
-              <div id="contenedor-barras-formas-pago">
-                  <div class="col-12 col-md-12">
-                    <?php include "reportes/analisis-ventas1.php"; ?>
-                  </div>
-                </div> 
-          <?php
-                }
-            ?>        
+        <?php
 
-        </div>
+        if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial") {
+
+          include "inicio/productos-recientes.php";
+
+        }
+
+        ?>
+
+      </div>
 
 
-        <div class="col-lg-6">
-        
-          <?php
+      <div class="col-lg-12">
 
-            if($_SESSION["perfil"] =="Administrador" || $_SESSION["perfil"] =="Especial"){
+        <?php
 
-              include "reportes/productos-mas-vendidos.php";
+        if ($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor") {
 
-            }
-
-          ?>
-
-        </div>
-
-
-        <div class="col-lg-6">
-        
-          <?php
-
-            if($_SESSION["perfil"] =="Administrador" || $_SESSION["perfil"] =="Especial"){
-
-              include "inicio/productos-recientes.php";
-
-            }
-
-          ?>
-
-        </div>
-
-
-        <div class="col-lg-12">
-          
-          <?php
-
-            if($_SESSION["perfil"] =="Especial" || $_SESSION["perfil"] =="Vendedor"){
-
-               echo '<div class="box box-success">
+          echo '<div class="box box-success">
 
                <div class="box-header">
 
-               <h1>Bienvenid@ ' .$_SESSION["nombre"].'</h1>
+               <h1>Bienvenid@ ' . $_SESSION["nombre"] . '</h1>
 
                </div>
 
                </div>';
-            }
+        }
 
-          ?>
-
-        </div>
-
+        ?>
 
       </div>
 
-    </section>
 
-  </div>
+    </div>
+
+  </section>
+
+</div>

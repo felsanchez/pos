@@ -1,20 +1,7 @@
-<!-- Solo muestra 2 campos en movil en la Tabla 1-->
+<!-- Estilos para tabla de Categorías -->
 <style>
   @media (max-width: 767px) {
-
-    /* Mostrar #, Categoría, Productos y Acciones */
-    .tablas td:first-child,
-    .tablas td:nth-child(2),
-    .tablas td:nth-child(3),
-    .tablas td:nth-child(4),
-    .tablas th:first-child,
-    .tablas th:nth-child(2),
-    .tablas th:nth-child(3),
-    .tablas th:nth-child(4) {
-      display: table-cell;
-    }
-
-    .tablas .btn-group .btn {
+    .tablaCategorias .btn-group .btn {
       padding: 1px 5px;
       font-size: 12px;
       line-height: 1.5;
@@ -23,94 +10,49 @@
   }
 </style>
 
-<style>
-  /* Solo muestra el botón en móvil */
-  .solo-movil {
-    display: none;
-  }
-
-  @media (max-width: 767px) {
-    .solo-movil {
-      display: inline-block !important;
-    }
-  }
-</style>
-
-
-
 <div class="content-wrapper">
   <section class="content-header">
-
-    <h1>
-      Administrar categorías
-    </h1>
-
+    <h1>Administrar categorías</h1>
     <ol class="breadcrumb">
       <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
       <li class="active">Administrar categorías</li>
     </ol>
-
   </section>
 
   <section class="content">
-
     <div class="box">
-
       <div class="box-header with-border">
         <?php if (puedeAccion('categorias', 'crear')): ?>
           <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarCategoria">
-
             <i class="fa fa-plus"></i> Agregar categoría
-
           </button>
         <?php endif; ?>
       </div>
 
-
       <div class="box-body table-responsive">
-
-        <table class="table table-bordered table-striped tablas">
-
+        <table class="table table-bordered table-striped tablaCategorias">
           <thead>
-            <tr>
-              <th style="width: 10px">#</th>
               <th>Categoría</th>
               <th>Productos</th>
-              <th>Acciones</th>
+              <th style="width: 100px">Acciones</th>
             </tr>
           </thead>
 
           <tbody>
-
             <?php
-
             $item = null;
             $valor = null;
-
             $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
 
-            /* echo "<pre>";
-             var_dump($categorias);
-             echo "</pre>";  */
-
             foreach ($categorias as $key => $value) {
-
-              // Contar productos asociados a esta categoría
-            
               $totalProductos = ModeloCategorias::mdlContarProductosPorCategoria($value["id"]);
 
               echo '<tr>
-
-                            <td>' . $value["id"] . '</td> 
-
-                            <td class="text-uppercase">' . $value["categoria"] . '</td> 
-
-                            <td><span class="badge bg-blue">' . $totalProductos . '</span></td> 
-
-                            <td>
-
-                              <div class="btn-group">';
-
+                      <td class="text-uppercase">' . $value["categoria"] . '</td> 
+                      <td><span class="badge bg-blue">' . $totalProductos . '</span></td> 
+                      <td>
+                        <div class="btn-group">';
+              
               if (puedeAccion('categorias', 'editar')) {
                 echo '<button class="btn btn-warning btnEditarCategoria" idCategoria="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarCategoria"><i class="fa fa-pencil"></i></button>';
               }
@@ -119,26 +61,16 @@
                 echo '<button class="btn btn-danger btnEliminarCategoria" idCategoria="' . $value["id"] . '"><i class="fa fa-times"></i></button>';
               }
 
-              echo '</div>
-
-                             </td> 
-
-                           </tr>';
+              echo '    </div>
+                      </td> 
+                    </tr>';
             }
-
             ?>
-
-
           </tbody>
-
         </table>
-
       </div>
-
     </div>
-
   </section>
-
 </div>
 
 

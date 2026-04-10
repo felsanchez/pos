@@ -4,10 +4,14 @@
 <!-- FullCalendar CSS -->
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.css' rel='stylesheet' />
 
+<!-- Librerías para Tooltips (Tippy.js + Popper.js) -->
+<script src="https://unpkg.com/@popperjs/core@2"></script>
+<script src="https://unpkg.com/tippy.js@6"></script>
+<link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />
+<link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light-border.css" />
 
-<!-- Centrar filtro -->
+<!-- Estilos para filtros estandarizados -->
 <style>
-  /* Estilos para filtros estandarizados */
   @media (max-width: 767px) {
     .pull-right {
       float: none !important;
@@ -16,22 +20,14 @@
       margin-top: 10px;
     }
   }
-</style>
 
-<!-- DataTables Responsive manejará la visualización móvil -->
-
-
-
-<style>
   .card-actividad.actividad-hoy {
     border-left: 5px solid #28a745 !important;
     background-color: #f0f9f4;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
   }
 
-  /* Ocultar columna de control (botón responsive) en escritorio */
   @media (min-width: 768px) {
-
     .tabla-actividades .table tr th:first-child,
     .tabla-actividades .table tr td:first-child {
       display: none !important;
@@ -39,73 +35,47 @@
   }
 </style>
 
-
-
-
 <?php
-// Calcular la URL actual con filtros para redirecciones dinámicas
 $urlActual = "actividades";
 $params = [];
-if (isset($_GET['filtroTipo']) && !empty($_GET['filtroTipo'])) {
-  $params[] = "filtroTipo=" . $_GET['filtroTipo'];
-}
-if (isset($_GET['filtroEstado']) && !empty($_GET['filtroEstado'])) {
-  $params[] = "filtroEstado=" . $_GET['filtroEstado'];
-}
-if (!empty($params)) {
-  $urlActual .= "?" . implode("&", $params);
-}
+if (isset($_GET['filtroTipo']) && !empty($_GET['filtroTipo'])) { $params[] = "filtroTipo=" . $_GET['filtroTipo']; }
+if (isset($_GET['filtroEstado']) && !empty($_GET['filtroEstado'])) { $params[] = "filtroEstado=" . $_GET['filtroEstado']; }
+if (!empty($params)) { $urlActual .= "?" . implode("&", $params); }
 ?>
 
 <div class="content-wrapper">
   <section class="content-header">
-
     <?php
     $editarActividad = new ControladorActividades();
     $editarActividad->ctrEditarActividad();
     ?>
-
-    <h1>
-      Administrar Actividades
-    </h1>
-
+    <h1>Administrar Actividades</h1>
     <ol class="breadcrumb">
       <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
       <li class="active">Administrar Actividades</li>
     </ol>
-
   </section>
 
   <section class="content">
-
     <div class="box">
-
       <div class="box-header with-border">
-
         <?php if (puedeAccion('actividades', 'crear')): ?>
           <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarActividad">
             <i class="fa fa-plus"></i> Agregar Actividad
           </button>
         <?php endif; ?>
-
         <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
           <i class="fa fa-flag"></i> Gestionar estados
         </button>
-
         <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarTipos">
           <i class="fa fa-tags"></i> Gestionar tipos
         </button>
 
-        <!-- Filtros Estandarizados en el Header (Compatibilidad con pattern de Usuarios/Productos/Clientes) -->
         <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-
-          <!-- Filtro por Tipo -->
           <div style="display: flex; align-items: center; gap: 8px;">
             <span class="hidden-xs"><b>Filtrar por Tipo:</b></span>
             <div class="input-group" style="width: 200px;">
-              <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
-                <i class="fa fa-search text-primary"></i>
-              </span>
+              <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;"><i class="fa fa-search text-primary"></i></span>
               <select class="form-control select2" id="filtroTipo" style="width: 100%;">
                 <option value="">Seleccionar tipo...</option>
                 <?php
@@ -119,14 +89,10 @@ if (!empty($params)) {
               </select>
             </div>
           </div>
-
-          <!-- Filtro por Estado -->
           <div style="display: flex; align-items: center; gap: 8px;">
             <span class="hidden-xs"><b>Filtrar por Estado:</b></span>
             <div class="input-group" style="width: 200px;">
-              <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
-                <i class="fa fa-search text-primary"></i>
-              </span>
+              <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;"><i class="fa fa-search text-primary"></i></span>
               <select class="form-control select2" id="filtroEstado" style="width: 100%;">
                 <option value="">Seleccionar estado...</option>
                 <?php
@@ -143,31 +109,13 @@ if (!empty($params)) {
         </div>
       </div>
 
-
-      <!--Filtro Tipos-->
-      <?php
-      $filtroTipo = isset($_GET['filtroTipo']) ? $_GET['filtroTipo'] : '';  // Captura el valor del filtro tipo si existe
-      // Aplica el filtro para obtener las actividades correctas
-      $item = "tipo";
-      $valor = $filtroTipo;
-      $actividades = ControladorActividades::ctrMostrarActividades($item, $valor);
-      ?>
-
-
       <div class="box-body table-responsive">
-
-
-
-
-        <!-- TABLA PARA ESCRITORIO -->
         <div class="tabla-actividades">
-
           <table class="table table-bordered table-striped tablaActividades" style="width: 100%">
-
             <thead>
               <tr>
                 <th></th>
-                <th style="width: 5px" class="none">#</th>
+                <th style="width: 10px" class="all text-center">#</th>
                 <th class="all">Descripción</th>
                 <th class="all">Tipo</th>
                 <th class="desktop">Responsable</th>
@@ -176,34 +124,98 @@ if (!empty($params)) {
                 <th class="desktop">Cliente</th>
                 <th class="desktop"><i class="fa fa-pencil-square"></i> Observación</th>
                 <th class="all">Acciones</th>
-
               </tr>
             </thead>
-
             <tbody>
-
               <?php
+              // --- LÓGICA DE FILTRADO POR SERVIDOR ---
               $item = null;
               $valor = null;
-              $actividades = ControladorActividades::ctrMostrarActividades($item, $valor);
 
-              // Obtener estados una sola vez para toda la tabla
+              // Capturar filtros de la URL si existen
+              $filtroTipoActual = isset($_GET['filtroTipo']) && !empty($_GET['filtroTipo']) ? $_GET['filtroTipo'] : null;
+              $filtroEstadoActual = isset($_GET['filtroEstado']) && !empty($_GET['filtroEstado']) ? $_GET['filtroEstado'] : null;
+
+              if($filtroTipoActual != null || $filtroEstadoActual != null){
+                $item = array();
+                $valor = array();
+                
+                if($filtroTipoActual != null){
+                  $item[] = "tipo";
+                  $valor[] = $filtroTipoActual;
+                }
+                
+                if($filtroEstadoActual != null){
+                  $item[] = "estado";
+                  $valor[] = $filtroEstadoActual;
+                }
+              }
+
+              // Realizar la consulta optimizada
+              $actividadesAll = ControladorActividades::ctrMostrarActividades($item, $valor);
               $estadosActividades = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
-              ?>
-
-              <?php
-              foreach ($actividades as $key => $value):
-                // Verificar si es hoy
+              
+              foreach ($actividadesAll as $key => $value):
                 $fechaHoy = date('Y-m-d');
+
                 $fechaActividad = !empty($value["fecha"]) ? substr($value["fecha"], 0, 10) : '';
                 $esHoy = ($fechaActividad == $fechaHoy);
                 $rowStyle = $esHoy ? 'style="border-left: 6px solid #28a745 !important; background-color: #f0f9f4; box-shadow: inset 6px 0 0 #28a745;"' : '';
-                ?>
+                
+                // --- PREPARAR CONTENIDO DEL TOOLTIP ---
+                $estadoActualTooltip = $value["estado"] ?? "S/E";
+                $colorEstadoTooltip = "#999";
+                foreach ($estadosActividades as $estadoFor) {
+                  if (strcasecmp($estadoFor["nombre"], $estadoActualTooltip) == 0) {
+                    $colorEstadoTooltip = $estadoFor["color"];
+                    break;
+                  }
+                }
 
-                <tr <?php echo $rowStyle; ?> data-tipo="<?php echo strtolower($value["tipo"]); ?>"
-                  data-estado="<?php echo strtolower($value["estado"]); ?>">
+                $respUserTooltip = ControladorUsuarios::ctrMostrarUsuarios("id", $value["id_user"]);
+                $nomUserTooltip = $respUserTooltip ? $respUserTooltip["nombre"] : "Sin asignar";
+
+                $respCliTooltip = ControladorClientes::ctrMostrarClientes("id", $value["id_cliente"]);
+                $nomCliTooltip = $respCliTooltip ? $respCliTooltip["nombre"] : "Sin cliente";
+
+                $tooltipHTMLBody = '
+                  <div class="tooltip-card" style="border-left: 5px solid '.$colorEstadoTooltip.'">
+                    <div class="tooltip-header">
+                      <span><i class="fa fa-info-circle"></i> VISTA RÁPIDA</span>
+                      <span class="badge" style="background-color: '.$colorEstadoTooltip.'">'.ucfirst($estadoActualTooltip).'</span>
+                    </div>
+                    <div class="tooltip-body">
+                      <div class="tooltip-item">
+                        <i class="fa fa-tasks"></i>
+                        <div><span class="tooltip-label">Descripción</span><span class="tooltip-value">'.$value["descripcion"].'</span></div>
+                      </div>
+                      <div class="tooltip-item">
+                        <i class="fa fa-calendar-check-o"></i>
+                        <div><span class="tooltip-label">Fecha y Hora</span><span class="tooltip-value">'.$value["fecha"].'</span></div>
+                      </div>
+                      <div class="tooltip-item">
+                        <i class="fa fa-tags"></i>
+                        <div><span class="tooltip-label">Tipo</span><span class="tooltip-value">'.$value["tipo"].'</span></div>
+                      </div>
+                      <div class="tooltip-item">
+                        <i class="fa fa-user"></i>
+                        <div><span class="tooltip-label">Cliente</span><span class="tooltip-value">'.$nomCliTooltip.'</span></div>
+                      </div>
+                      <div class="tooltip-item">
+                        <i class="fa fa-user-circle"></i>
+                        <div><span class="tooltip-label">Responsable</span><span class="tooltip-value">'.$nomUserTooltip.'</span></div>
+                      </div>
+                    </div>
+                    <div class="tooltip-footer">ID Actividad: #'.$value["id"].'</div>
+                  </div>';
+                ?>
+                <tr <?php echo $rowStyle; ?> 
+                    class="has-tooltip" 
+                    data-tippy-content="<?php echo htmlspecialchars($tooltipHTMLBody); ?>"
+                    data-tipo="<?php echo strtolower($value["tipo"]); ?>"
+                    data-estado="<?php echo strtolower($value["estado"]); ?>">
                   <td class="control"></td>
-                  <td data-order="<?php echo $value["id"]; ?>"><?php echo $key + 1; ?></td>
+                  <td class="text-center"><?php echo $key + 1; ?></td>
                   <td><?php echo $value["descripcion"]; ?></td>
 
                   <td><?php echo $value["tipo"]; ?></td>

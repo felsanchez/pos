@@ -1,103 +1,103 @@
-<!-- En tu <head>, usar SOLO esta línea: -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<!-- Ruta actividades.css -->
+<link rel="stylesheet" href="assets/css/actividades.css">
 
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.css' rel='stylesheet' />
+
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
-/* Mejoras visuales para el modal */
-.modal-content {
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+/* Diseño Base y Tipografía Modernizada */
+#calendar-principal {
+    font-family: 'Inter', sans-serif !important;
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
 }
 
-.modal-header {
-  border-radius: 10px 10px 0 0;
-  border-bottom: 3px solid rgba(255,255,255,0.2);
+/* Eventos Estilo floating-card (Glassmorphism sutil) */
+.fc-event {
+    border-radius: 8px !important;
+    border: none !important;
+    padding: 3px 6px !important;
+    margin: 2px 0 !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
+    transition: all 0.25s ease !important;
+    cursor: pointer !important;
+    font-weight: 500 !important;
+    font-size: 0.88em !important;
 }
 
-.card {
-  border: none;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  border-radius: 8px;
-  transition: all 0.3s ease;
+.fc-event:hover {
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15) !important;
+    z-index: 5 !important;
 }
 
-.card:hover {
-  box-shadow: 0 4px 15px rgba(0,0,0,0.12);
-  transform: translateY(-1px);
+/* Rediseño de Botones de Navegación */
+.fc .fc-button-primary {
+    background-color: #f8f9fa !important;
+    border-color: #e9ecef !important;
+    color: #495057 !important;
+    border-radius: 8px !important;
+    text-transform: capitalize !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important;
 }
 
-.card-title {
-  color: #495057;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid #e9ecef;
-  padding-bottom: 8px;
-  margin-bottom: 15px;
+.fc .fc-button-primary:hover {
+    background-color: #e9ecef !important;
+    border-color: #dee2e6 !important;
+    color: #212529 !important;
 }
 
-.form-control[readonly] {
-  background-color: #f8f9fa !important;
-  opacity: 1;
-  cursor: default;
+.fc .fc-button-active {
+    background-color: #3c8dbc !important;
+    border-color: #3c8dbc !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(60, 141, 188, 0.3) !important;
 }
 
-.form-control[readonly]:focus {
-  border-color: #80bdff;
-  box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+.fc .fc-today-button {
+    background-color: #fff !important;
+    border-color: #3c8dbc !important;
+    color: #3c8dbc !important;
+    opacity: 1 !important;
 }
 
-label.font-weight-bold {
-  color: #495057;
-  font-size: 13px;
-  margin-bottom: 5px;
+/* Cabecera del Calendario */
+.fc-toolbar-title {
+    font-size: 1.4em !important;
+    font-weight: 600 !important;
+    color: #333 !important;
+    letter-spacing: -0.5px;
 }
 
-.modal-footer {
-  padding: 20px;
+/* Ajustes de Cuadrícula */
+.fc-theme-standard td, .fc-theme-standard th {
+    border-color: #f1f3f5 !important;
 }
 
-/* Indicadores de estado por colores */
-.border-primary { border-color: #007bff !important; }
-.border-success { border-color: #28a745 !important; }
-.border-warning { border-color: #ffc107 !important; }
-.border-secondary { border-color: #6c757d !important; }
-
-/* Animaciones suaves */
-.modal.fade .modal-dialog {
-  transition: transform 0.4s ease-out;
+.fc-col-header-cell {
+    background: #f8f9fa !important;
+    padding: 10px 0 !important;
+    color: #6c757d !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    font-size: 0.75em !important;
 }
 
-/* Responsive */
+/* Ajuste móvil */
 @media (max-width: 768px) {
-  .modal-dialog {
-    margin: 10px;
-  }
-  
-  .card {
-    margin-bottom: 15px;
-  }
-  
-  .row .col-md-6 {
-    margin-bottom: 10px;
-  }
-}
-</style>
-
-
-<!--Cambia los tamaños de los botones del calendario-->
-<style>
-/* Botones normales en desktop */
-#calendar .fc-button {
-    font-size: 0.95em !important;
-    padding: 0.25em 0.5em !important;
-}
-
-/* Botones más pequeños en móvil */
-@media (max-width: 768px) {
-    #calendar .fc-button {
-        font-size: 0.80em !important;
-        padding: 0.2em 0.4em !important;
+    .fc-toolbar {
+        flex-direction: column !important;
+        gap: 10px;
+    }
+    .fc-toolbar-title {
+        font-size: 1.1em !important;
     }
 }
 </style>
@@ -123,12 +123,18 @@ MODAL MOSTRAR actividad
   <section class="content">
     <div class="container-fluid">
       <div class="card">
-        <div class="card-header bg-primary text-white">
-          <!--<h3 class="card-title"><i class="fa fa-calendar-alt"></i> Calendario</h3>-->
-          <h3 class="card-title"></h3>
+        <div class="card-header" style="background-color: #3c8dbc; color: white; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px;">
+          <h3 class="card-title" style="color: white !important; margin: 0; font-size: 18px;">
+            <i class="fa fa-calendar"></i> Calendario de Actividades
+          </h3>
+          <?php if(puedeAccion('actividades', 'crear')): ?>
+            <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#modalAgregarActividad" style="font-weight: bold; color: #333;">
+              <i class="fa fa-plus"></i> Agregar actividad
+            </button>
+          <?php endif; ?>
         </div>
         <div class="card-body">
-          <div id="calendar"></div>
+          <div id="calendar-principal"></div>
         </div>
       </div>
     </div>
@@ -614,11 +620,20 @@ MODAL AGREGAR actividad
 <!-- Scripts necesarios -->
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/locales/es.global.min.js"></script>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  
+  // Obtener el token directamente de PHP para máxima seguridad
+  var csrfTokenValue = '<?php echo CSRF::getToken(); ?>';
 
-  var calendarEl = document.getElementById('calendar');
+  // Configuración global de AJAX para incluir el token CSRF
+  $.ajaxSetup({
+    headers: {
+      'X-CSRF-TOKEN': csrfTokenValue
+    }
+  });
+
+  var calendarEl = document.getElementById('calendar-principal');
   var fechaSeleccionada = null; // Variable para guardar la fecha
 
   // -------------------------
@@ -635,16 +650,59 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // -------------------------
+  // Manejador único de eventos del calendario (clics y selección)
+  // -------------------------
+  function manejadorDeClicCalendario(fechaObj, fechaStr) {
+    if (!fechaStr) return;
+    
+    $.ajax({
+      url: 'ajax/actividades.ajax.php',
+      type: 'POST',
+      dataType: 'json',
+      data: { fecha: fechaStr },
+      success: function(respuesta) {
+        var hayActividades = false;
+        if (respuesta && !respuesta.error) {
+          if (Array.isArray(respuesta) && respuesta.length > 0) hayActividades = true;
+          else if (typeof respuesta === 'object' && respuesta.id !== undefined) hayActividades = true;
+        }
+        
+        if (hayActividades) {
+          fillFields(respuesta);
+          if (modalSelector) $(modalSelector).find('.modal-title').text('Actividad en ' + fechaStr);
+          setTimeout(function() { if (modalSelector) $(modalSelector).modal('show'); }, 50);
+        } else {
+          mostrarModalSinActividades(fechaObj, fechaStr);
+        }
+      },
+      error: function(err) {
+        console.error('Error en AJAX:', err);
+        mostrarModalSinActividades(fechaObj, fechaStr);
+      }
+    });
+  }
+
+  // -------------------------
   // Función para mostrar modal sin actividades
   // -------------------------
-  function mostrarModalSinActividades(fecha) {
-    fechaSeleccionada = fecha; // Guardar fecha
-    var fechaFormateada = new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+  function mostrarModalSinActividades(fechaObj, fechaStr) {
+    fechaSeleccionada = fechaStr; // Guardar fecha string para el input
+    
+    var opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    var fechaFormateada = "";
+    
+    try {
+      // Intentar formatear desde el objeto fecha si existe
+      if (fechaObj instanceof Date && !isNaN(fechaObj)) {
+        fechaFormateada = fechaObj.toLocaleDateString('es-ES', opciones);
+      } else {
+        // Fallback a string
+        fechaFormateada = new Date(fechaStr + 'T12:00:00').toLocaleDateString('es-ES', opciones);
+      }
+    } catch (e) {
+      fechaFormateada = fechaStr;
+    }
+
     $('#fechaSinActividad').text(fechaFormateada);
     $('#sinActividadesModal').modal('show');
   }
@@ -717,7 +775,6 @@ document.addEventListener('DOMContentLoaded', function() {
       center: 'title',
       right: 'dayGridMonth,timeGridWeek,timeGridDay'
     },
-
     buttonText: {
      prev: 'Mes anterior',
      next: 'Mes siguiente',
@@ -726,53 +783,13 @@ document.addEventListener('DOMContentLoaded', function() {
      week: 'Sem',
      day: 'Día',
      list: 'Lista'
-   },
-
-    events: 'ajax/actividades.ajax.php?action=listar',
-
-    // CLICK EN UNA FECHA
-    dateClick: function(info) {
-      console.log("Fecha clickeada:", info.dateStr);
-      
-      $.ajax({
-        url: 'ajax/actividades.ajax.php',
-        type: 'POST',
-        dataType: 'json',
-        data: { fecha: info.dateStr },
-        success: function(respuesta) {
-          console.log("Respuesta del servidor:", respuesta);
-          
-          var hayActividades = false;
-          if (respuesta) {
-            if (Array.isArray(respuesta)) {
-              hayActividades = respuesta.length > 0;
-            } else if (typeof respuesta === 'object') {
-              hayActividades = Object.keys(respuesta).length > 0;
-            }
-          }
-          
-          if (hayActividades) {
-            // HAY ACTIVIDADES: Mostrar modal normal
-            console.log("✅ Hay actividades, mostrando modal de edición");
-            fillFields(respuesta);
-            if (modalSelector) $(modalSelector).find('.modal-title').text('Actividad en ' + info.dateStr);
-            setTimeout(function() {
-              if (modalSelector) $(modalSelector).modal('show');
-            }, 50);
-          } else {
-            // NO HAY ACTIVIDADES: Mostrar modal de "Sin Actividades"
-            console.log("❌ No hay actividades, mostrando modal de aviso");
-            mostrarModalSinActividades(info.dateStr);
-          }
-        },
-        error: function(err) {
-          console.error('Error al consultar actividades por fecha', err);
-          mostrarModalSinActividades(info.dateStr);
-        }
-      });
     },
-
-    // CLICK EN UN EVENTO
+    events: 'ajax/actividades.ajax.php?action=listar',
+    dateClick: function(info) { manejadorDeClicCalendario(info.date, info.dateStr); },
+    select: function(info) { 
+      calendar.unselect();
+      manejadorDeClicCalendario(info.start, info.startStr); 
+    },
     eventClick: function(info) {
       info.jsEvent.preventDefault();
       $.ajax({
@@ -795,6 +812,28 @@ document.addEventListener('DOMContentLoaded', function() {
           console.error('Error al pedir actividad por id', err);
         }
       });
+    },
+
+    // -------------------------
+    // LÓGICA DE TOOLTIPS PREMIUM (FIN DEL DIAGNÓSTICO)
+    // -------------------------
+    eventDidMount: function(info) {
+        var props = info.event.extendedProps;
+        var statusColor = info.event.backgroundColor || '#3c8dbc';
+        var titulo = props.descripcion_original || info.event.title;
+        var cliente = (props.nombre_cliente && props.nombre_cliente !== 'Sin cliente') ? "\n👤 Cliente: " + props.nombre_cliente : "";
+        var estado = props.estado ? "\n🚩 Estado: " + props.estado : "";
+        var fecha = props.fecha_full ? "\n📅 Fecha: " + props.fecha_full : "";
+        var usuario = props.nombre_usuario ? "\n👤 Resp: " + props.nombre_usuario : "";
+
+        // Tooltip nativo multilínea
+        var tooltipFull = "📝 Actividad: " + titulo + 
+                         cliente + 
+                         estado + 
+                         fecha + 
+                         usuario;
+
+        info.el.setAttribute('title', tooltipFull);
     },
 
     editable: true,
@@ -839,3 +878,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 </script>
+
+<?php
+// Inclusión de modales

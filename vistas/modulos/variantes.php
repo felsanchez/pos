@@ -41,7 +41,6 @@ if (!puedeVer('variantes')) {
 
           <thead>
             <tr>
-              <th style="width:10px">#</th>
               <th>Nombre</th>
               <th>Orden</th>
               <th>Estado</th>
@@ -61,8 +60,6 @@ if (!puedeVer('variantes')) {
             foreach ($tiposVariantes as $key => $value) {
 
               echo '<tr>
-
-                    <td>' . ($key + 1) . '</td>
 
                     <td>' . $value["nombre"] . '</td>
 
@@ -132,7 +129,6 @@ if (!puedeVer('variantes')) {
         <table class="table table-bordered table-striped" id="tablaOpciones">
           <thead>
             <tr>
-              <th style="width:10px">#</th>
               <th>Nombre</th>
               <th>Orden</th>
               <th>Estado</th>

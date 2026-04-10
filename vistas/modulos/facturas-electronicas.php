@@ -596,6 +596,7 @@ if ($xml) {
               $idsVentas = array_column($respuesta, 'id');
               $ventasConNC = ModeloFactus::mdlObtenerVentasConNotaCredito($idsVentas);
 
+              $contador = 1;
               foreach ($respuesta as $key => $value) {
 
                 // Lógica de numeración predictiva para borradores
@@ -615,7 +616,7 @@ if ($xml) {
                   }
                 }
 
-                echo '<td>' . e($key + 1) . '</td>
+                echo '<td>' . $contador++ . '</td>
                       <td' . ($esBorrador ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . e($numeroMostrar) . '</td>';
 
                 // Usar nombres que ya vienen del JOIN en la consulta SQL

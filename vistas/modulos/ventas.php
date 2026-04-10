@@ -535,10 +535,11 @@ if ($xml) {
               });
 
 
+              $contador = 1;
               foreach ($respuesta as $key => $value) {
 
                 echo '<tr>
-                        <td>' . ($key + 1) . '</td>
+                        <td>' . $contador++ . '</td>
 
                  <td>';
 

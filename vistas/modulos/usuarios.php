@@ -1,7 +1,17 @@
 <style>
-  /* Cursor for control column */
-  .tablaUsuarios td.control {
+  /* Forzar visibilidad del número en la primera columna */
+  .tablaUsuarios td:first-child {
     cursor: pointer;
+    min-width: 40px;
+    white-space: nowrap;
+  }
+
+  /* Override del plugin responsive que puede ocultar el contenido */
+  .tablaUsuarios.dtr-inline.collapsed > tbody > tr > td:first-child::before,
+  .tablaUsuarios.dtr-inline.collapsed > tbody > tr > th:first-child::before {
+    top: 50%;
+    transform: translateY(-50%);
+    left: 4px;
   }
 
   /* Resize action buttons on mobile */
@@ -18,6 +28,17 @@
   #modalAmpliarImagenUsuario .modal-body {
     max-height: 70vh;
     overflow-y: auto;
+  }
+
+  /* Ocultar iconos de ordenamiento en la primera columna */
+  .tablaUsuarios thead th:first-child::before,
+  .tablaUsuarios thead th:first-child::after {
+    display: none !important;
+    content: "" !important;
+  }
+
+  .tablaUsuarios thead th:first-child {
+    padding-right: 8px !important;
   }
 
   /* Asegurar que el footer del modal esté siempre visible */
@@ -82,7 +103,7 @@
 
           <thead>
             <tr>
-              <th></th>
+              <th style="width: 10px; background-image: none !important;" class="no-sort"><span class="hidden-xs">#</span></th>
               <th>Nombre</th>
               <th>Usuario</th>
               <th>Email</th>
@@ -106,6 +127,8 @@
             // Obtener el usuario logueado actualmente
             $usuarioLogueado = isset($_SESSION["usuario"]) ? $_SESSION["usuario"] : '';
 
+            $i = 1;
+
             foreach ($usuarios as $key => $value) {
 
               // Saltar el usuario que está logueado actualmente
@@ -114,7 +137,7 @@
               }
 
               echo '<tr>
-                        <td></td>
+                        <td class="text-center"><span class="hidden-xs">' . $i . '</span></td>
 
                         <td>' . e($value["nombre"]) . '</td>
 
@@ -173,6 +196,7 @@
                     </td>
 
                   </tr>';
+              $i++;
             }
 
             ?>

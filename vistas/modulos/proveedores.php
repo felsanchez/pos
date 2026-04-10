@@ -88,7 +88,6 @@ if (!puedeVer('proveedores')) {
           <thead>
             <tr>
               <th style="width: 10px"></th>
-              <th style="width: 10px">#</th>
               <th>Nombre</th>
               <th>Nombre Comercial</th>
               <th>Celular</th>
@@ -118,7 +117,6 @@ if (!puedeVer('proveedores')) {
 
               echo '<tr> 
                         <td></td>
-                        <td>' . ($key + 1) . '</td>
                         <td>' . $value["nombre"] . '</td>
                         <td>' . $value["marca"] . '</td>';
 

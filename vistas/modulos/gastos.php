@@ -287,7 +287,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                 echo '<tr ' . $rowStyle . '>';
 
                 // Columna 1: Número
-                echo '<td data-order="' . $value["id"] . '">' . ($key + 1) . '</td>';
+                echo '<td class="text-center">' . ($key + 1) . '</td>';
 
                 // Columna 2: Concepto
                 echo '<td>' . $value["concepto"] . '</td>';

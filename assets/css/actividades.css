@@ -198,3 +198,89 @@
       }
 
       /* DataTables responsive ahora maneja la visualización móvil */
+
+/* ==========================================================================
+   ESTILOS PARA TOOLTIPS PREMIUM (Tippy.js)
+   ========================================================================== */
+
+.tippy-box[data-theme~='pos-premium'] {
+  background-color: #ffffff;
+  color: #333333;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: 'Source Sans Pro', sans-serif;
+  border: 1px solid #e1e4e8;
+  z-index: 99999 !important; /* Forzar que esté siempre al frente */
+}
+
+/* Forzar cursor de mano en los eventos del calendario para indicar que hay tooltip */
+.fc-event {
+    cursor: pointer !important;
+}
+
+.tippy-content {
+  padding: 0 !important;
+}
+
+.tooltip-card {
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tooltip-header {
+  padding: 10px 15px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #eee;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tooltip-body {
+  padding: 12px 15px;
+}
+
+.tooltip-item {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.tooltip-item:last-child {
+  margin-bottom: 0;
+}
+
+.tooltip-item i {
+  color: #6c757d;
+  width: 16px;
+  text-align: center;
+  margin-top: 2px;
+}
+
+.tooltip-label {
+  font-weight: 600;
+  color: #495057;
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.tooltip-value {
+  color: #212529;
+  line-height: 1.4;
+}
+
+.tooltip-footer {
+  padding: 8px 15px;
+  background: #fff;
+  border-top: 1px dashed #eee;
+  font-size: 11px;
+  color: #adb5bd;
+}

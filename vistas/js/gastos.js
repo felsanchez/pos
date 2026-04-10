@@ -23,7 +23,14 @@ $(document).ready(function () {
             return $('#tablaGastos').DataTable({
                 "autoWidth": false,
                 "responsive": true,
-                "order": [[2, "desc"]], // Ordenar por fecha (columna 2) por defecto
+                "order": [[0, "asc"]], // Ordenar por # (columna 0) asc para mantener orden natural
+                "columnDefs": [
+                    {
+                        "targets": 0, // Columna #
+                        "className": "text-center",
+                        "type": "num"
+                    }
+                ],
                 "language": {
                     "sProcessing": "Procesando...",
                     "sLengthMenu": "Mostrar _MENU_ registros",

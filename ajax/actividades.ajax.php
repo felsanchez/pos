@@ -8,6 +8,8 @@ SessionManager::startSecure();
 
 require_once "../controladores/actividades.controlador.php";
 require_once "../modelos/actividades.modelo.php";
+require_once "../controladores/estados-actividades.controlador.php";
+require_once "../modelos/estados-actividades.modelo.php";
 require_once "../modelos/csrf.php";
 
 // VALIDAR CSRF para todas las peticiones POST
@@ -41,16 +43,42 @@ class AjaxActividades{
 
 	/*==============CUADRO ACTIVIDADES===============================*/
 	public function ajaxListarActividades() {
+    // Obtener actividades
     $actividades = ControladorActividades::ctrMostrarActividadesConCliente(null, null);
     
+    // Obtener estados para el mapeo de colores
+    $estados = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
+    $mapaEstados = [];
+    
+    if (is_array($estados)) {
+        foreach ($estados as $e) {
+            $mapaEstados[strtolower($e["nombre"])] = $e["color"] ?? "#3c8dbc";
+        }
+    }
+
     $eventos = [];
     
     foreach ($actividades as $actividad) {
+        // Normalizar estado para buscar el color
+        $estadoNombre = $actividad["estado"] ?? "";
+        $estadoLower = strtolower($estadoNombre);
+        
+        // Color por defecto (azul AdminLTE) si no hay match
+        $color = isset($mapaEstados[$estadoLower]) ? $mapaEstados[$estadoLower] : "#3c8dbc";
+
+        // Título con prefijo de estado
+        $tituloConEstado = !empty($estadoNombre) ? "[" . strtoupper($estadoNombre) . "] " . $actividad["descripcion"] : $actividad["descripcion"];
+
         $eventos[] = [
             "id"             => $actividad["id"],
-            "title"          => $actividad["descripcion"],
+            "title"          => $tituloConEstado,
+            "descripcion_original" => $actividad["descripcion"],
+            "fecha_full"     => $actividad["fecha"],
             "start"          => $actividad["fecha"],
             "end"            => $actividad["fecha"],
+            "backgroundColor"=> $color,
+            "borderColor"    => $color,
+            "textColor"      => "#fff", // Asegurar legibilidad
             "tipo"           => $actividad["tipo"],
             "estado"         => $actividad["estado"],
             "id_user"        => $actividad["id_user"],
@@ -106,16 +134,6 @@ if (isset($_GET["action"]) && $_GET["action"] == "listar") {
 /*=============================================
   BUSCAR ACTIVIDADES POR FECHA
 =============================================*/
-if (isset($_POST["fecha"])) {
-    $item = "fecha";
-    $valor = $_POST["fecha"];
-    $respuesta = ControladorActividades::ctrMostrarActividades($item, $valor);
-
-    echo json_encode($respuesta);
-    exit;
-}
-
-
 if (isset($_POST["fecha"]) && !isset($_POST["idActividad"])) {
     $item = "fecha";
     $valor = $_POST["fecha"];

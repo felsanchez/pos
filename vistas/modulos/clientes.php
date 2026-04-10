@@ -360,7 +360,7 @@ $editarCliente->ctrEditarCliente();
                 ?>
 
                 <tr>
-                  <td data-order="<?php echo $value["id"]; ?>"><?php echo ($key + 1); ?></td>
+                  <td class="text-center"><?php echo $key; ?></td>
 
                   <td><?php echo $value["nombre"]; ?></td>
                   <!-- BTN VERSION MOVIL-->

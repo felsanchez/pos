@@ -18,12 +18,14 @@ $(document).ready(function () {
 		var tablaUsuarios = $(".tablaUsuarios").DataTable({
 			"responsive": {
 				"details": {
+					"type": "column",
+					"target": 0, // Columna # como control en móvil
 					"renderer": function (api, rowIdx, columns) {
 						// Custom renderer logic
 						var rowData = api.row(rowIdx).data();
 
 						// Indices (0-based):
-						// 0: Control, 1: Nombre, 2: Usuario, 3: Email, 4: Foto, 5: Perfil, 
+						// 0: #, 1: Nombre, 2: Usuario, 3: Email, 4: Foto, 5: Perfil,
 						// 6: Estado, 7: Ultimo login, 8: Acciones
 
 						var nombre = rowData[1];
@@ -35,41 +37,42 @@ $(document).ready(function () {
 						var finalHtml = '';
 
 						// Section 1: Información Personal
-						finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
+						finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
 						finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información Personal</h5></div>';
 
-						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Nombre: </span><span class="pull-right" style="color:#333;">' + nombre + '</span></div>';
+						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+						finalHtml += '<span class="text-bold" style="color:#555;">Nombre: </span><span style="color:#333; text-align: right;">' + nombre + '</span></div>';
 
-						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Email: </span><span class="pull-right" style="color:#333;">' + email + '</span></div>';
+						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+						finalHtml += '<span class="text-bold" style="color:#555;">Email: </span><span style="color:#333; text-align: right;">' + email + '</span></div>';
 
-						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Foto: </span><span class="pull-right" style="color:#333;"><button class="btn btn-info btn-xs btnVerFotoUsuario">Ver foto</button></span></div>';
+						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+						finalHtml += '<span class="text-bold" style="color:#555;">Foto: </span><span style="color:#333; text-align: right;"><button class="btn btn-info btn-xs btnVerFotoUsuario">Ver foto</button></span></div>';
 
 						// Solo agregar fila de estado si la columna está visible en DataTables
 						if (api.column(6).visible()) {
-							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-							finalHtml += '<span class="text-bold" style="color:#555;">Estado: </span><span class="pull-right" style="color:#333;">' + estado + '</span></div>';
+							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+							finalHtml += '<span class="text-bold" style="color:#555;">Estado: </span><span style="color:#333; text-align: right;">' + estado + '</span></div>';
 						}
 
 						// Section 2: Actividad
-						finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
+						finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
 						finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Actividad</h5></div>';
 
-						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Último login: </span><span class="pull-right" style="color:#333;">' + ultimoLogin + '</span></div>';
+						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+						finalHtml += '<span class="text-bold" style="color:#555;">Último login: </span><span style="color:#333; text-align: right;">' + ultimoLogin + '</span></div>';
 
 						return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #f8f9fa; margin: 0;">').append(finalHtml) : false;
 					}
 				}
 			},
+			"order": [[1, 'asc']],
 			"columnDefs": [
 				{
-					"targets": 0, // Control column
-					"className": 'control',
+					"targets": 0, // # Número correlativo
 					"orderable": false,
-					"responsivePriority": 1
+					"responsivePriority": 1,
+					"className": "text-center control"
 				},
 				{
 					"targets": 2, // Usuario

@@ -41,32 +41,52 @@ class ModeloActividades{
 
 	static public function mdlMostrarActividades($tabla, $item, $valor){
 
-		//var_dump($item, $valor); 
-
 		if($item != null){
 
-			$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE $item = :$item");
+			// Si el item es un array (vinitiendo filtros combinados)
+			if(is_array($item)){
 
-			$stmt -> bindParam(":".$item, $valor, PDO::PARAM_STR);
+				$query = "SELECT * FROM $tabla WHERE ";
+				$condiciones = array();
+				
+				foreach($item as $key => $columna){
+					$condiciones[] = "$columna = :$columna";
+				}
+				
+				$query .= implode(" AND ", $condiciones) . " ORDER BY id DESC";
+				
+				$stmt = Conexion::conectar()->prepare($query);
+				
+				foreach($item as $key => $columna){
+					$stmt->bindParam(":".$columna, $valor[$key], PDO::PARAM_STR);
+				}
+				
+				$stmt->execute();
+				return $stmt->fetchAll();
 
-			$stmt -> execute();
+			} else {
+				// Comportamiento original para un solo item
+				$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE $item = :$item ORDER BY id DESC");
+				$stmt -> bindParam(":".$item, $valor, PDO::PARAM_STR);
+				$stmt -> execute();
 
-			return $stmt -> fetch();
+				// Si se busca por ID (usualmente para editar), se usa fetch(), sino fetchAll()
+				if($item == "id"){
+					return $stmt -> fetch();
+				} else {
+					return $stmt -> fetchAll();
+				}
+			}
 
 		}
 		else{
-
 			$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla ORDER BY id DESC");
-
 			$stmt -> execute();
-
 			return $stmt -> fetchAll();
 		}
 
 		$stmt -> close();
-
 		$stmt = null;
-
 	}
 
 

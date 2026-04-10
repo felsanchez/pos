@@ -1,5 +1,26 @@
 <!-- Estilos para el filtro de categoría -->
 <style>
+  /* Base Desktop CSS - Numeración por CSS Puro (Evita reseteos por DataTables) */
+  .tablaProductos {
+    counter-reset: rowNum;
+  }
+
+  .tablaProductos tbody tr {
+    counter-increment: rowNum;
+  }
+
+  .tablaProductos td:first-child {
+    white-space: nowrap;
+    vertical-align: middle;
+    text-align: center;
+    min-width: 32px;
+  }
+
+  .tablaProductos tbody tr td:first-child::after {
+    content: counter(rowNum);
+  }
+
+  /* Mobile overrides */
   @media (max-width: 767px) {
     .tablaProductos .btn-group .btn {
       padding: 1px 5px;
@@ -8,10 +29,9 @@
       border-radius: 3px;
     }
 
-    /* Prevent wrapping in the control column (ID + Icon) */
-    .tablaProductos td.control {
-      white-space: nowrap;
-      vertical-align: middle;
+    /* Ocultar el número generado por CSS para dejar lugar exclusivo al botón + */
+    .tablaProductos tbody tr td:first-child::after {
+      content: none !important;
     }
   }
 
@@ -278,7 +298,7 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
 
           <thead>
             <tr>
-              <th style="width: 5px">#</th>
+              <th style="width: 5px"></th>
               <th>Imagen</th>
               <th>Código</th>
               <th>Descripción</th>

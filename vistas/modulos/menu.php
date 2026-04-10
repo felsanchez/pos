@@ -66,42 +66,42 @@
                     </span>
                 </a>
                 <ul class="treeview-menu">';
-                  
-                  if (puedeVer('productos')) {
-                    echo '<li>
+
+        if (puedeVer('productos')) {
+          echo '<li>
                       <a href="productos">
                         <i class="fa fa-circle-o"></i>
                         <span>Productos</span>
                       </a>
                     </li>';
-                  }
+        }
 
-                  if (puedeVer('categorias')) {
-                    echo '<li>
+        if (puedeVer('categorias')) {
+          echo '<li>
                       <a href="categorias">
                         <i class="fa fa-circle-o"></i>
                         <span>Categorías</span>
                       </a>
                     </li>';
-                  }
+        }
 
-                  if (puedeVer('variantes')) {
-                    echo '<li>
+        if (puedeVer('variantes')) {
+          echo '<li>
                       <a href="variantes">
                         <i class="fa fa-circle-o"></i>
                         <span>Variantes</span>
                       </a>
                     </li>';
-                  }
+        }
 
-                  if (puedeVer('proveedores')) {
-                    echo '<li>
+        if (puedeVer('proveedores')) {
+          echo '<li>
                       <a href="proveedores">
                         <i class="fa fa-circle-o"></i>
                         <span>Proveedores</span>
                       </a>
                     </li>';
-                  }
+        }
 
         echo '</ul>
               </li>';
@@ -286,7 +286,7 @@
 
 
 <!-- scripts de AdminLTE -->
- <!-- <script src="bower_components/jquery/dist/jquery.min.js"></script> --> 
+<!-- <script src="bower_components/jquery/dist/jquery.min.js"></script> -->
 
 <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 <script src="dist/js/adminlte.min.js"></script>

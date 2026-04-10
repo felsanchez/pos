@@ -97,7 +97,8 @@ if ($_SESSION["perfil"] != "Visitante") {
         <p>Ventas</p>
       </div>
       <div class="icon">
-        <i class="ion ion-social-usd"></i>
+        <!--<i class="ion ion-social-usd"></i>-->
+        <i class="ion ion-stats-bars"></i>
       </div>
 
 
@@ -203,7 +204,8 @@ if ($_SESSION["perfil"] != "Visitante") {
 
       <div class="icon">
 
-        <i class="ion ion-ios-cart"></i>
+        <!--<i class="ion ion-ios-cart"></i>-->
+        <i class="ion ion-document-text"></i>
 
       </div>
 

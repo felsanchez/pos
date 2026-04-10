@@ -57,12 +57,12 @@ $(document).ready(function () {
   tabla1 = $('.tablas1').DataTable({
     "destroy": true,
     "stateSave": false,
-    "order": [[0, 'desc']],
+    "order": [[0, 'asc']],
     "autoWidth": true,
     "pageLength": 25,
     "dom": '<"row"<"col-sm-6"l><"col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
     "columnDefs": [
-      { "targets": 0, "orderable": true },
+      { "targets": 0, "orderable": true, "className": "text-center", "type": "num" },
       { "targets": 1, "orderable": true },
       { "targets": 2, "orderable": true },
       { "targets": 3, "orderable": true },

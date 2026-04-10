@@ -117,7 +117,6 @@ $(document).on("click", ".btnVerOpciones", function(){
                     }
 
                     html += '<tr>';
-                    html += '<td>'+(i+1)+'</td>';
                     html += '<td>'+respuesta[i].nombre+'</td>';
                     html += '<td>'+respuesta[i].orden+'</td>';
                     html += '<td>'+estadoHTML+'</td>';
