@@ -14,11 +14,10 @@ var table = $(".tablaProductos").DataTable({
 			console.log("Respuesta del servidor:", xhr.responseText);
 		}
 	},
-	"order": [[3, 'asc']],
+	"order": [[2, 'asc']],
 	"responsive": {
 		"details": {
-			"type": "column",
-			"target": 0, // Columna # como disparador en móvil
+			"type": "inline",
 			"renderer": function (api, rowIdx, columns) {
 				var data = $.map(columns, function (col, i) {
 					return col.hidden ?
@@ -32,9 +31,9 @@ var table = $(".tablaProductos").DataTable({
 				// Custom renderer logic
 				var rowData = api.row(rowIdx).data();
 
-				// Indices based on datatable-productos.ajax.php:
-				// 0: #, 1: Imagen, 2: Codigo, 3: Descripcion, 4: Categoria, 5: Stock, 
-				// 6: Precio Compra, 7: Precio Venta, 8: Proveedor, 9: Agregado, 10: Acciones
+				// Indices based on JSON response from datatable-productos.ajax.php:
+				// 0: ID, 1: Imagen, 2: Codigo, 3: Descripcion, 4: Categoria, 5: Stock, 
+				// 6: Impuesto, 7: Precio Venta, 8: Proveedor, 9: Fecha, 10: Acciones
 
 				var codigo = rowData[2];
 				var descripcion = rowData[3];
@@ -43,12 +42,11 @@ var table = $(".tablaProductos").DataTable({
 				var impuesto = rowData[6];
 				var precioVenta = rowData[7];
 				var proveedor = rowData[8];
-				// var fecha = rowData[9]; // Exclude date
 				var acciones = rowData[10];
 
-				// Clean stock value (remove HTML buttons from server)
-				var stockRaw = stock.replace(/<[^>]+>/g, '');
-				var stockValue = parseInt(stockRaw);
+				// Clean stock value (remove HTML buttons from server if present)
+				var stockRaw = stock.toString().replace(/<[^>]+>/g, '');
+				var stockValue = parseInt(stockRaw) || 0;
 
 				// Determine stock badge color
 				var stockBadgeClass = 'label-success';
@@ -59,7 +57,7 @@ var table = $(".tablaProductos").DataTable({
 
 				// Section 1: Code, Category, Stock
 				 finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
-				finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Descripción</h5></div>';
+				finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información</h5></div>';
 
 				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
 				finalHtml += '<span class="text-bold" style="color:#555;">Código: </span><span style="color:#333; text-align: right;">' + codigo + '</span></div>';
@@ -87,25 +85,13 @@ var table = $(".tablaProductos").DataTable({
 				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
 				finalHtml += '<span class="text-bold" style="color:#555;">Proveedor: </span><span style="color:#333; text-align: right;">' + (proveedor ? proveedor : 'Sin proveedor') + '</span></div>';
 
-				// Actions (if hidden in main row, though usually visible)
-				// finalHtml += '<div class="col-xs-12">' + acciones + '</div>';
-
 				return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #f8f9fa; margin: 0;">').append(finalHtml) : false;
 			}
 		}
 	},
 	"columnDefs": [
 		{
-			"targets": 0, // # Número correlativo
-			"orderable": false,
-			"responsivePriority": 1,
-			"className": "text-center control",
-			"render": function (data, type, row, meta) {
-				return ''; // El numero se inyecta via CSS (content: counter) y Responsive maneja el +
-			}
-		},
-		{
-			"targets": 1,  // Columna Imagen
+			"targets": 0,  // Columna Imagen
 			"data": null,
 			"responsivePriority": 1,
 			"render": function (data, type, row) {
@@ -113,17 +99,44 @@ var table = $(".tablaProductos").DataTable({
 			}
 		},
 		{
-			"targets": 3, // Descripcion
-			"responsivePriority": 1
+			"targets": 1, // Código
+			"data": null,
+			"render": function (data, type, row) {
+				return row[2];
+			}
 		},
 		{
-			"targets": 10, // Acciones
-			"responsivePriority": 2,
-			"orderable": false
+			"targets": 2, // Descripcion
+			"data": null,
+			"responsivePriority": 1,
+			"render": function (data, type, row) {
+				return row[3];
+			}
 		},
 		{
-			"targets": [2, 4, 5, 6, 7, 8, 9], // Other columns
-			"responsivePriority": 1000 // Low priority, hide on mobile
+			"targets": 9, // Acciones
+			"data": null,
+			"responsivePriority": 1,
+			"orderable": false,
+			"render": function (data, type, row) {
+				return row[10];
+			}
+		},
+		{
+			"targets": [3, 4, 5, 6, 7, 8], // Other columns
+			"responsivePriority": 1000, // Low priority, hide on mobile
+			"render": function (data, type, row, meta) {
+				// Mapear automáticamente al índice correcto del JSON
+				// JSON: [0:ID, 1:Imagen, 2:Codigo, 3:Desc, 4:Cat, 5:Stock, 6:Imp, 7:PV, 8:Prov, 9:Fecha, 10:Btn]
+				// Header: [0:Img, 1:Cod, 2:Desc, 3:Cat, 4:Stock, 5:Imp, 6:PV, 7:Prov, 8:Agregado, 9:Acciones]
+				// Para 3(Cat) -> row[4]
+				// Para 4(Stock) -> row[5]
+				// Para 5(Imp) -> row[6]
+				// Para 6(PV) -> row[7]
+				// Para 7(Prov) -> row[8]
+				// Para 8(Agregado) -> row[9]
+				return row[meta.col + 1];
+			}
 		}
 
 	],

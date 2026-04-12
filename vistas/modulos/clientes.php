@@ -80,42 +80,33 @@
   }
 </style>
 
-<!-- Solo muestra 2 campos en movil en la Tabla 1-->
 <style>
-  @media (max-width: 767px) {
-
-    /* Ocultar todas las columnas excepto las especificadas */
-    .tablas1 td,
-    .tablas1 th {
-      display: none;
-    }
-
-    /* Mostrar Responsive (+), Nombre (2), Teléfono (5), Acciones (10) */
-    .tablas1 td:first-child,
-    .tablas1 th:first-child,
-    .tablas1 td:nth-child(2),
-    .tablas1 th:nth-child(2),
-    .tablas1 td:nth-child(5),
-    .tablas1 th:nth-child(5),
-    .tablas1 td:nth-child(10),
-    .tablas1 th:nth-child(10) {
-      display: table-cell !important;
-    }
+  /* Espaciado automático para el botón de expansión en modo inline */
+  .tablas1.collapsed tbody td:first-child {
+    padding-left: 35px !important;
+    position: relative;
+    cursor: pointer;
   }
-</style>
 
-<style>
+  /* Posicionamiento del botón + de DataTables en modo inline */
+  .tablas1.collapsed tbody td:first-child::before {
+    left: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    box-shadow: none !important;
+    background-color: #3b8ab8 !important; /* Estilo azul AdminLTE */
+  }
+
+  /* Ajuste de botones de acción en móvil */
   @media (max-width: 767px) {
-
-    .tablas1 td:nth-child(10) .btn,
-    .tablas1 th:nth-child(10) .btn {
+    .tablas1 td:nth-child(9) .btn {
       padding: 1px 5px !important;
       font-size: 12px !important;
       line-height: 1.5 !important;
     }
   }
 
-  /* Solo muestra el botón en móvil */
+  /* Visibilidad de botones específicos en móvil */
   .solo-movil {
     display: none;
   }
@@ -123,34 +114,7 @@
   @media (max-width: 767px) {
     .solo-movil {
       display: inline-block !important;
-    }
-  }
-</style>
-
-<!--Agregar espacio entre los btones en móvil-->
-<style>
-  @media (max-width: 767px) {
-    .solo-movil {
       margin-left: 3px !important;
-    }
-  }
-</style>
-
-
-<!-- Solo muestra 2 campos en movil en la Tabla 2-->
-<style>
-  @media (max-width: 767px) {
-
-    .tablas2 td:nth-child(n+3),
-    .tablas2 th:nth-child(n+3) {
-      display: none;
-    }
-
-    .tablas2 td:first-child,
-    .tablas2 td:nth-child(2),
-    .tablas2 th:first-child,
-    .tablas2 th:nth-child(2) {
-      display: table-cell;
     }
   }
 </style>
@@ -312,7 +276,6 @@ $editarCliente->ctrEditarCliente();
         <table class="table table-bordered table-striped tablas1">
           <thead>
             <tr>
-              <th style="width:10px">#</th>
               <th>Nombre</th>
               <th>Documento</th>
               <th>Email</th>
@@ -327,7 +290,6 @@ $editarCliente->ctrEditarCliente();
               <th>Acciones</th>
               <th>Ingreso al sistema</th>
             </tr>
-            </tr>
           </thead>
           <tbody>
             <?php
@@ -336,7 +298,6 @@ $editarCliente->ctrEditarCliente();
             $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
 
             if (is_array($clientes) && count($clientes) > 0):
-              $key = 1;
               // Pre-fetch states for efficiency
               $estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
               // Pre-cargar conteo de facturas electrónicas por cliente (evita N+1 queries)
@@ -359,9 +320,7 @@ $editarCliente->ctrEditarCliente();
                 $linkFE = $tieneFE ? "index.php?ruta=facturas-electronicas&cliente=" . $value['id'] : "#";
                 ?>
 
-                <tr>
-                  <td class="text-center"><?php echo $key; ?></td>
-
+                <tr data-cliente-id="<?= $value['id']; ?>">
                   <td><?php echo $value["nombre"]; ?></td>
                   <!-- BTN VERSION MOVIL-->
                   <td>
@@ -455,7 +414,6 @@ $editarCliente->ctrEditarCliente();
                   <td><?php echo $value["fecha"]; ?></td>
                 </tr>
                 <?php
-                $key++;
                 // endif;
               endforeach;
             else:

@@ -1,175 +1,45 @@
-console.warn("!!!! PLANTILLA JAVASCRIPT CARGADA !!!!");
-
-/*=============================================
-SideBar Menu
-=============================================*/
-
-$('.sidebar-menu').tree()
-
-
-/*=============================================
-Data Table
-=============================================*/
-
-// Inicializar todas las tablas con clase .tablas EXCEPTO .tablas1, .tablas2 y #example
-
-// (esas tienen inicialización personalizada)
-$(".tablas").not('.tablas1, .tablas2, #example').DataTable({
-
-	"autoWidth": false,
-	"responsive": true,
-
-	"language": {
-
-		"sProcessing": "Procesando...",
-
-		"sLengthMenu": "Mostrar _MENU_ registros",
-
-		"sZeroRecords": "No se encontraron resultados",
-
-		"sEmptyTable": "Ningún dato disponible en esta tabla",
-
-		"sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-
-		"sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
-
-		"sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-
-		"sInfoPostFix": "",
-
-		"sSearch": "Buscar:",
-
-		"sUrl": "",
-
-		"sInfoThousands": ",",
-
-		"sLoadingRecords": "Cargando...",
-
-		"oPaginate": {
-
-			"sFirst": "Primero",
-
-			"sLast": "Último",
-
-			"sNext": "Siguiente",
-
-			"sPrevious": "Anterior"
-
-		},
-
-		"oAria": {
-
-			"sSortAscending": ": Activar para ordenar la columna de manera ascendente",
-
-			"sSortDescending": ": Activar para ordenar la columna de manera descendente"
-
-		}
-
-	},
-
-	"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
-
-
-
-
-	"preDrawCallback": function () {
-
-		// Ocultar tabla antes de dibujarla por primera vez
-
-		if (!$(this).hasClass('datatable-ready')) {
-
-			$(this).css('visibility', 'hidden');
-
-		}
-
-	},
-
-
-
-	"initComplete": function () {
-
-		// Mostrar tabla solo cuando esté completamente inicializada
-
-		$(this).addClass('datatable-ready').css('visibility', 'visible');
+$(document).ready(function () {
+	/*=============================================
+	SideBar Menu
+	=============================================*/
+	if (typeof $.fn.tree === 'function') {
+		$('.sidebar-menu').tree();
 	}
 
-});
-
-
-// Inicialización específica para tabla de ventas (#example)
-// Oculta la tabla hasta que esté completamente procesada para evitar el efecto de "acomodamiento"
-
-if ($('#example').length > 0) {
-	$('#example').DataTable({
-		"order": [[0, "asc"]],
-		"columnDefs": [
-			{
-				"targets": 0,
-				"className": "text-center",
-				"type": "num"
-			}
-		],
+	/*=============================================
+	Data Table Global (.tablas)
+	=============================================*/
+	$(".tablas").DataTable({
+		"autoWidth": false,
+		"responsive": true,
 		"language": {
 			"sProcessing": "Procesando...",
 			"sLengthMenu": "Mostrar _MENU_ registros",
 			"sZeroRecords": "No se encontraron resultados",
 			"sEmptyTable": "Ningún dato disponible en esta tabla",
 			"sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-			"sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
-			"sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-			"sInfoPostFix": "",
 			"sSearch": "Buscar:",
-			"sUrl": "",
-			"sInfoThousands": ",",
-			"sLoadingRecords": "Cargando...",
-			"oPaginate": {
-				"sFirst": "Primero",
-				"sLast": "Último",
-				"sNext": "Siguiente",
-				"sPrevious": "Anterior"
-			},
-			"oAria": {
-				"sSortAscending": ": Activar para ordenar la columna de manera ascendente",
-				"sSortDescending": ": Activar para ordenar la columna de manera descendente"
-			}
+			"oPaginate": { "sFirst": "Primero", "sLast": "Último", "sNext": "Siguiente", "sPrevious": "Anterior" }
 		},
-
 		"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
-		"autoWidth": false,
-		"responsive": true,
-
-
-		"preDrawCallback": function () {
-			// Ocultar tabla antes de dibujarla por primera vez
-			if (!$(this).hasClass('datatable-ready')) {
-				$(this).css('visibility', 'hidden');
-			}
-		},
-
-		"initComplete": function () {
-
-			// Mostrar tabla solo cuando esté completamente inicializada
-			$(this).addClass('datatable-ready').css('visibility', 'visible');
+		"initComplete": function(settings, json) {
+			// CRITICO: El sistema oculta las tablas por CSS hasta que tienen esta clase.
+			$(this).addClass('datatable-ready');
+			console.log("DataTable Global: Clase datatable-ready añadida.");
 		}
 	});
-}
 
+	/*=============================================
+	Otras Funciones
+	=============================================*/
+	if (typeof $.fn.iCheck === 'function') {
+		$('input[type="checkbox"].minimal, input[type="radio"].minimal').iCheck({
+			checkboxClass: 'icheckbox_minimal-blue',
+			radioClass: 'iradio_minimal-blue'
+		});
+	}
 
-/*=============================================
-iCheck for checkbox and radio inputs
-=============================================*/
-$('input[type="checkbox"].minimal, input[type="radio"].minimal').iCheck({
-	checkboxClass: 'icheckbox_minimal-blue',
-	radioClass: 'iradio_minimal-blue'
-})
-
-
-/*=============================================
-input Mask
-=============================================*/
-//Datemask dd/mm/yyyy
-$('#datemask').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' })
-//Datemask2 mm/dd/yyyy
-$('#datemask2').inputmask('mm/dd/yyyy', { 'placeholder': 'mm/dd/yyyy' })
-//Money Euro
-$('[data-mask]').inputmask()
+	if (typeof $.fn.inputmask === 'function') {
+		$('[data-mask]').inputmask();
+	}
+});

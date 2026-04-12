@@ -23,168 +23,46 @@
     display: none !important;
   }
 
-  /* Ocultar tabla de ventas hasta que DataTables termine de procesarla */
-  #example:not(.datatable-ready) {
-    visibility: hidden;
-  }
 
-  /* Mostrar un indicador de carga mientras se procesa */
-  #example:not(.datatable-ready)+.dataTables_wrapper {
+
+
+
+<style>
+  /* Estilo para botón de expansión responsivo '+' */
+  table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control,
+  table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control {
     position: relative;
-  }
-
-  /* Cards para móvil */
-  .cards-ventas {
-    display: none;
-  }
-
-  .card-venta {
-    background: #fff;
-    border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-bottom: 10px;
-    padding: 10px;
-    position: relative;
-    border-left: 4px solid #00a65a;
-  }
-
-  .card-venta-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #eee;
-  }
-
-  .card-venta-codigo {
-    font-size: 14px;
-    font-weight: bold;
-    color: #00a65a;
-  }
-
-  .card-venta-acciones .btn-group {
-    display: flex;
-    gap: 3px;
-  }
-
-  .card-venta-info-principal {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    gap: 10px;
-  }
-
-  .card-venta-cliente {
-    font-size: 15px;
-    font-weight: bold;
-    color: #333;
-    flex: 1;
-    margin: 0;
-  }
-
-  .card-venta-total {
-    font-size: 16px;
-    font-weight: bold;
-    color: #00a65a;
-    white-space: nowrap;
-    margin: 0;
-  }
-
-  .card-venta-info {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    margin-bottom: 8px;
-  }
-
-  .card-venta-info-fila {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  .card-venta-info-item {
-    display: flex;
-    align-items: center;
-    font-size: 12px;
-    color: #666;
-    flex: 1;
-  }
-
-  .card-venta-info-item i {
-    margin-right: 5px;
-    width: 15px;
-    text-align: center;
-  }
-
-  .card-venta-notas {
-    background: #f9f9f9;
-    padding: 8px;
-    border-radius: 3px;
-    margin-top: 8px;
-    font-size: 12px;
-    color: #666;
-    border-left: 2px solid #3c8dbc;
-  }
-
-  .card-venta-observacion {
-    background: #fff9e6;
-    padding: 8px;
-    border-radius: 3px;
-    margin-top: 8px;
-    font-size: 12px;
-    color: #666;
-    border-left: 2px solid #f39c12;
-    cursor: text;
-    min-height: 30px;
-  }
-
-  .card-venta-observacion:empty:before {
-    content: "Escribe una observación...";
-    color: #999;
-    font-style: italic;
-  }
-
-  .card-venta-observacion:focus {
-    outline: 2px solid #f39c12;
-    background: #fffef5;
-  }
-
-  .card-venta-imagen-icono {
-    display: inline-block;
-    padding: 4px 8px;
-    background: #3c8dbc;
-    color: white;
-    border-radius: 3px;
+    padding-left: 30px !important;
     cursor: pointer;
-    font-size: 11px;
   }
 
-  .card-venta-imagen-icono:hover {
-    background: #2e6da4;
+  table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control:before,
+  table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
+    top: 50%;
+    left: 5px;
+    height: 18px;
+    width: 18px;
+    margin-top: -9px;
+    display: block;
+    position: absolute;
+    color: white;
+    border: 2px solid white;
+    border-radius: 14px;
+    box-shadow: 0 0 3px #444;
+    box-sizing: content-box;
+    text-align: center;
+    text-indent: 0 !important;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    line-height: 18px;
+    content: '+';
+    background-color: #31b0d5;
   }
 
-  /* Responsive */
-  @media (max-width: 767px) {
-    .tabla-ventas {
-      display: none !important;
-    }
-
-    .cards-ventas {
-      display: block !important;
-    }
-  }
-
-  @media (min-width: 768px) {
-    .tabla-ventas {
-      display: block !important;
-    }
-
-    .cards-ventas {
-      display: none !important;
-    }
+  table.dataTable.dtr-inline.collapsed > tbody > tr.parent > td.dtr-control:before,
+  table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before {
+    content: '-';
+    background-color: #d33333;
   }
 </style>
 
@@ -214,54 +92,11 @@
 </style>
 
 
-<!-- Ocultar todas las columnas por defecto -->
-<style>
-  @media (max-width: 767px) {
 
-    .tablas td,
-    .tablas th {
-      display: none;
-    }
 
-    /* Mostrar solo las columnas 2, 6, 7 y 8 en MOVIL*/
-    .tablas td:nth-child(2),
-    .tablas td:nth-child(3),
-    .tablas td:nth-child(6),
-    .tablas td:nth-child(8),
-    .tablas td:nth-child(9),
-    .tablas td:nth-child(10),
-    .tablas th:nth-child(2),
-    .tablas th:nth-child(3),
-    .tablas th:nth-child(6),
-    .tablas th:nth-child(8),
-    .tablas th:nth-child(9),
-    .tablas th:nth-child(10) {
-      display: table-cell;
-    }
-  }
-</style>
 
-<style>
-  /* Solo muestra el botón en móvil */
-  .solo-movil {
-    display: none;
-  }
 
-  @media (max-width: 767px) {
-    .solo-movil {
-      display: inline-block !important;
-    }
-  }
-</style>
 
-<!--Agregar espacio entre los btones en móvil-->
-<style>
-  @media (max-width: 767px) {
-    .solo-movil {
-      margin-left: 3px !important;
-    }
-  }
-</style>
 
 
 <!-- DateRangePicker -->
@@ -462,25 +297,7 @@ if ($xml) {
             color: #666;
             font-weight: 500;
           }
-
-          /* Hide table while loading to prevent layout jump */
-          .tablas:not(.datatable-ready) {
-            visibility: hidden;
-            height: 0;
-            overflow: hidden;
-            opacity: 0;
-          }
-
-          .tablas.datatable-ready {
-            transition: opacity 0.5s ease;
-            opacity: 1;
-          }
         </style>
-
-        <div id="loader-table-fe" class="loader-container">
-          <i class="fa fa-refresh fa-spin"></i>
-          <span>Cargando Facturas Electrónicas...</span>
-        </div>
 
         <div class="tabla-ventas table-responsive">
           <table id="example" class="table table-bordered table-striped tablas display nowrap">
@@ -616,6 +433,7 @@ if ($xml) {
                   }
                 }
 
+                echo '<tr data-fe-id="' . e($value['id']) . '">';
                 echo '<td>' . $contador++ . '</td>
                       <td' . ($esBorrador ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . e($numeroMostrar) . '</td>';
 
@@ -672,31 +490,10 @@ if ($xml) {
                 echo '<td ' . $contentEditableAttr . ' class="' . $claseEditable . '" data-id="' . e($value["id"]) . '">' . e($value["observacion"]) . '</td>
 
                         
-                       <td>' . e($value["fecha"]);
-
-                // 1. Botón Eliminar - Solo Administrador
-                // 1. Botón Eliminar
-                if (puedeAccion('factura_electronica', 'eliminar')) {
-                  echo '<button class="btn btn-danger btn-xs solo-movil btnEliminarVenta" style="float: right;" idVenta="' . e($value["id"]) . '">
-                                      <i class="fa fa-times"></i>
-                                    </button>';
-                }
-
-                // 2. Botón Imprimir
-                echo '<button class="btn btn-info btn-xs solo-movil btnImprimirFactura" style="float: right;" codigoVenta="' . e($value["codigo"]) . '">
-                              <i class="fa fa-print"></i>
-                            </button>
-                            ';
-
-                // 3. Botón Editar (Ver)
-                echo '<button class="btn btn-warning btn-xs solo-movil btnEditarVenta" style="float: right;" idVenta="' . e($value["id"]) . '">
-                              <i class="fa fa-eye"></i>
-                            </button>';
-
-                echo '</td>
+                       <td>' . e($value["fecha"]) . '</td>
 
                         <td>
-                          <div class="btn-group">
+                          <div class="btn-group col-acciones">
 
                                <button class="btn btn-info btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver Detalles">
                                 <i class="fa fa-eye"></i>
@@ -754,164 +551,11 @@ if ($xml) {
 
           </table>
         </div>
+        <?php
+        $eliminarVenta = new ControladorVentas();
+        $eliminarVenta->ctrEliminarVenta();
+        ?>
 
-        <!-- CARDS PARA MÓVIL -->
-        <div class="cards-ventas">
-
-          <?php
-          // Reutilizar la misma consulta de la tabla para evitar duplicar carga
-          // $respuesta ya contiene las ventas, no hacer nueva consulta
-          
-          foreach ($respuesta as $key => $value) {
-
-            // Usar nombres que ya vienen del JOIN en la consulta SQL
-            $nombreCliente = !empty($value["nombre_cliente"]) ? $value["nombre_cliente"] : "Cliente no encontrado";
-            $nombreVendedor = !empty($value["nombre_vendedor"]) ? $value["nombre_vendedor"] : "Vendedor no encontrado";
-
-            // Imagen
-            $imagenVenta = !empty($value["imagen"]) ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
-
-            // Estado DIAN Badge
-            $estadoDian = isset($value["estado_dian"]) ? $value["estado_dian"] : 'pendiente';
-            $badgeDian = '';
-            if ($estadoDian == 'aceptada') {
-              $badgeDian = '<span class="badge bg-green">DIAN: Aceptada</span>';
-            } elseif ($estadoDian == 'rechazada') {
-              $badgeDian = '<span class="badge bg-red">DIAN: Rechazada</span>';
-            } elseif ($estadoDian == 'enviada') {
-              $badgeDian = '<span class="badge bg-yellow">DIAN: Enviada</span>';
-            } else {
-              // Opcional: No mostrar nada si es pendiente para no saturar, o mostrar gris
-              //$badgeDian = '<span class="badge bg-gray">DIAN: Pendiente</span>';
-            }
-
-            // Numeración predictiva para móvil
-            if (!empty($value["numero_factura"])) {
-              $numeroMostrarMovil = $value["numero_factura"];
-            } else {
-              // Buscar el índice del borrador actual en la lista filtrada de borradores reales
-              $mismaVenta = array_filter($respuesta, function ($v) {
-                return empty($v["numero_factura"]) && in_array(($v["estado_dian"] ?? 'pendiente'), ['pendiente', 'creada', 'borrador']);
-              });
-              $idsBorradores = array_values(array_map(function ($v) {
-                return $v["id"];
-              }, $mismaVenta));
-              $indexBorrador = array_search($value["id"], $idsBorradores);
-
-              if ($indexBorrador !== false) {
-                $numeroMostrarMovil = $prefijoDian . ($siguienteConsecutivoBase - 1 - $indexBorrador);
-              } else {
-                $numeroMostrarMovil = $prefijoDian . $value["codigo"];
-              }
-            }
-
-            echo '<div class="card-venta">
-
-                      <div class="card-venta-header">
-                        <div class="card-venta-codigo">
-                          ' . $numeroMostrarMovil . ' ' . $badgeDian . '
-                        </div>
-                        <div class="card-venta-acciones">
-                          <div class="btn-group">
-                            <button class="btn btn-info btn-xs btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver Detalles">
-                              <i class="fa fa-eye"></i>
-                            </button>
-
-                            ' . (!empty($value["qr_data"]) ? '<a class="btn btn-success btn-xs" href="' . $value["qr_data"] . '" target="_blank" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>' : '') . '';
-
-            if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
-              echo ' <button class="btn btn-primary btn-xs btnEnviarEmail" idVenta="' . $value["id"] . '" nombreCliente="' . $nombreCliente . '" emailCliente="' . $value["email_cliente"] . '" title="Enviar por Correo">
-                                <i class="fa fa-envelope"></i>
-                              </button>';
-            }
-
-            // Botón de las Notas Crédito movil
-            if (in_array($value["id"], $ventasConNC)) {
-              echo '<button class="btn btn-warning btn-xs btnVerNotasCredito" idVenta="' . $value["id"] . '" data-toggle="modal" data-target="#modalNotasCredito" title="Ver Notas Crédito">
-                                   <i class="fa fa-list"></i>
-                                 </button>';
-            }
-
-            echo ' ';
-            if (puedeAccion('factura_electronica', 'editar')) {
-              echo ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
-                '<button class="btn btn-xs btnFirmarFactura" style="background-color: black; color: white;" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
-                                    <i class="fa fa-paper-plane"></i>
-                                </button>' : '') . '
-                                ' . ((isset($value["estado_dian"]) && in_array($value["estado_dian"], ['creada', 'pendiente'])) ?
-                '<a class="btn btn-warning btn-xs" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador">
-                                    <i class="fa fa-pencil"></i>
-                                </a>' : '');
-            }
-            echo ' ';
-
-            if (puedeAccion('factura_electronica', 'eliminar')) {
-              // Solo mostrar botón eliminar si la factura NO ha sido firmada/aceptada
-              $estadosNoEliminables = ['enviada', 'aceptada'];
-              if (!in_array($value["estado_dian"], $estadosNoEliminables)) {
-                echo '<button class="btn btn-danger btn-xs btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar Borrador">
-                          <i class="fa fa-trash"></i>
-                        </button>';
-              }
-            }
-
-            echo '      </div>
-                        </div>
-                      </div>
-
-                      <div class="card-venta-info-principal">
-                        <div class="card-venta-cliente">
-                          <span class="btnVerClienteDesdeVenta"
-                                data-toggle="modal"
-                                data-target="#modalEditarCliente"
-                                idCliente="' . $value["id_cliente"] . '"
-                                style="cursor: pointer; color: #337ab7; text-decoration: underline;">
-                            ' . $nombreCliente . '
-                          </span>
-                        </div>
-                        <div class="card-venta-total">
-                          ' . $moneda . ' ' . number_format($value["total"], 2) . '
-                        </div>
-                      </div>
-
-                      <div class="card-venta-info">
-                        <div class="card-venta-info-fila">
-                          <div class="card-venta-info-item">
-                            <i class="fa fa-calendar"></i> ' . $value["fecha"] . '
-                          </div>
-                          <div class="card-venta-info-item">
-                            <i class="fa fa-credit-card"></i> ' . $value["metodo_pago"] . '
-                          </div>
-                        </div>
-                        <div class="card-venta-info-fila">
-                          <div class="card-venta-info-item">
-                            <i class="fa fa-user"></i> ' . $nombreVendedor . '
-                          </div>
-
-                        </div>
-                      </div>
-
-                      <div class="card-venta-imagen-icono img-ampliar-venta"
-                           data-imagen="' . $imagenVenta . '"
-                           data-idventa="' . $value["id"] . '">
-                        <i class="fa fa-image"></i> Ver comprobante
-                      </div>';
-
-            // Notas solo visualización
-            if (!empty($value["notas"])) {
-              echo '<div class="card-venta-notas">
-                        <i class="fa fa-magic"></i> ' . $value["notas"] . '
-                      </div>';
-            }
-
-            // Observación editable
-            echo '<div class="card-venta-observacion celda-observacion" contenteditable="true" data-id="' . $value["id"] . '">' . $value["observacion"] . '</div>';
-
-            echo '</div>';
-          }
-          ?>
-
-        </div>
 
 
         <!-- Modal para ampliar/editar imagen de venta -->
@@ -947,10 +591,7 @@ if ($xml) {
         </div>
 
 
-        <?php
-        $eliminarVenta = new ControladorVentas();
-        $eliminarVenta->ctrEliminarVenta();
-        ?>
+
 
       </div>
     </div>
@@ -1243,7 +884,7 @@ MODAL EDITAR CLIENTE
 <!--Guardar observaciones-->
 <script>
   $(document).on('blur', '.celda-observacion', function () {
-    const idVenta = $(this).data('id');
+    const idVenta = $(this).attr('data-id'); // .attr() para elementos dinámicos
     const nuevaObservacion = $(this).text().trim();
     console.log("Guardando observación:", nuevaObservacion, "para ID:", idVenta);
     $.ajax({
@@ -1549,4 +1190,6 @@ MODAL ENVIAR EMAIL
       </form>
     </div>
   </div>
+</div>
+
 </div>

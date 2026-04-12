@@ -1,17 +1,18 @@
 <style>
-  /* Forzar visibilidad del número en la primera columna */
-  .tablaUsuarios td:first-child {
+  /* Espaciado automático para el botón de expansión en modo inline */
+  .tablaUsuarios.collapsed tbody td:first-child {
+    padding-left: 35px !important;
+    position: relative;
     cursor: pointer;
-    min-width: 40px;
-    white-space: nowrap;
   }
 
-  /* Override del plugin responsive que puede ocultar el contenido */
-  .tablaUsuarios.dtr-inline.collapsed > tbody > tr > td:first-child::before,
-  .tablaUsuarios.dtr-inline.collapsed > tbody > tr > th:first-child::before {
-    top: 50%;
-    transform: translateY(-50%);
-    left: 4px;
+  /* Posicionamiento del botón + (estilo variantes) */
+  .tablaUsuarios.collapsed tbody td:first-child::before {
+    left: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background-color: #3c8dbc !important;
+    box-shadow: none !important;
   }
 
   /* Resize action buttons on mobile */
@@ -30,16 +31,6 @@
     overflow-y: auto;
   }
 
-  /* Ocultar iconos de ordenamiento en la primera columna */
-  .tablaUsuarios thead th:first-child::before,
-  .tablaUsuarios thead th:first-child::after {
-    display: none !important;
-    content: "" !important;
-  }
-
-  .tablaUsuarios thead th:first-child {
-    padding-right: 8px !important;
-  }
 
   /* Asegurar que el footer del modal esté siempre visible */
   #modalAmpliarImagenUsuario .modal-footer {
@@ -103,9 +94,8 @@
 
           <thead>
             <tr>
-              <th style="width: 10px; background-image: none !important;" class="no-sort"><span class="hidden-xs">#</span></th>
-              <th>Nombre</th>
               <th>Usuario</th>
+              <th>Nombre</th>
               <th>Email</th>
               <th>Foto</th>
               <th>Perfil</th>
@@ -137,11 +127,8 @@
               }
 
               echo '<tr>
-                        <td class="text-center"><span class="hidden-xs">' . $i . '</span></td>
-
-                        <td>' . e($value["nombre"]) . '</td>
-
                         <td>' . e($value["usuario"]) . '</td>
+                        <td>' . e($value["nombre"]) . '</td>
 
                         <td>' . e($value["email"]) . '</td>';
 

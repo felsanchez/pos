@@ -8,118 +8,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 <link rel="stylesheet" href="assets/css/gastos.css">
 
 <!-- Estilos responsive -->
-<style>
-  /* Cards para móvil */
-  .cards-gastos {
-    display: none;
-  }
-
-  .card-gasto {
-    background: #fff;
-    border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-bottom: 10px;
-    padding: 10px;
-    position: relative;
-    border-left: 4px solid #3c8dbc;
-  }
-
-  .card-gasto.gasto-hoy {
-    border-left: 5px solid #28a745 !important;
-    background-color: #f0f9f4;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
-  }
-
-  .card-gasto-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-
-  .card-gasto-concepto {
-    font-size: 15px;
-    font-weight: bold;
-    color: #333;
-    margin: 0;
-    flex: 1;
-    padding-right: 10px;
-  }
-
-  .card-gasto-detalles {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-
-  .card-gasto-fila {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .card-gasto-imagen-icono {
-    display: inline-block;
-    padding: 4px 8px;
-    background: #3c8dbc;
-    color: white;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 11px;
-  }
-
-  .card-gasto-imagen-icono:hover {
-    background: #2e6da4;
-  }
-
-  .card-gasto-fecha {
-    color: #666;
-    font-size: 12px;
-  }
-
-  .card-gasto-monto {
-    font-size: 16px;
-    font-weight: bold;
-    color: #3c8dbc;
-  }
-
-  .card-gasto-categoria {
-    margin: 0;
-  }
-
-  .card-gasto-categoria .label {
-    font-size: 10px;
-    padding: 3px 6px;
-  }
-
-  .card-gasto-proveedor {
-    color: #666;
-    font-size: 12px;
-  }
-
-  /* Responsive */
-  @media (max-width: 767px) {
-    .tabla-gastos {
-      display: none !important;
-    }
-
-    .cards-gastos {
-      display: block !important;
-    }
-  }
-
-  @media (min-width: 768px) {
-    .tabla-gastos {
-      display: block !important;
-    }
-
-    .cards-gastos {
-      display: none !important;
-    }
-  }
-
+  /* Solo muestra el botón en móvil */
   .solo-movil {
     display: none;
   }
@@ -129,6 +18,43 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
       display: inline-block !important;
       margin-left: 3px !important;
     }
+  }
+
+  /* Estilo para botón de expansión responsivo '+' */
+  table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control,
+  table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control {
+    position: relative;
+    padding-left: 30px !important;
+    cursor: pointer;
+  }
+
+  table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control:before,
+  table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
+    top: 50%;
+    left: 5px;
+    height: 18px;
+    width: 18px;
+    margin-top: -9px;
+    display: block;
+    position: absolute;
+    color: white;
+    border: 2px solid white;
+    border-radius: 14px;
+    box-shadow: 0 0 3px #444;
+    box-sizing: content-box;
+    text-align: center;
+    text-indent: 0 !important;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    line-height: 18px;
+    content: '+';
+    background-color: #31b0d5;
+  }
+
+  table.dataTable.dtr-inline.collapsed > tbody > tr.parent > td.dtr-control:before,
+  table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before {
+    content: '-';
+    background-color: #d33333;
   }
 </style>
 
@@ -234,7 +160,6 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
             <thead>
               <tr>
-                <th style="width: 10px">#</th>
                 <th>Concepto</th>
                 <th>Fecha</th>
                 <th>Monto</th>
@@ -286,8 +211,6 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
                 echo '<tr ' . $rowStyle . '>';
 
-                // Columna 1: Número
-                echo '<td class="text-center">' . ($key + 1) . '</td>';
 
                 // Columna 2: Concepto
                 echo '<td>' . $value["concepto"] . '</td>';
@@ -342,105 +265,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
           </table>
         </div>
 
-        <!-- CARDS PARA MÓVIL -->
-        <div class="cards-gastos">
 
-          <?php
-          foreach ($gastos as $key => $value) {
-
-            // Preparar badge de categoría
-            $categoriaBadge = '';
-            if (!empty($value["categoria_nombre"])) {
-              $categoriaBadge = '<span class="badge" style="background-color: ' . $value["categoria_color"] . '">' . $value["categoria_nombre"] . '</span>';
-            } else {
-              $categoriaBadge = '<span class="text-muted">Sin categoría</span>';
-            }
-
-            // Preparar texto/color de estado
-            $estadoColor = '#333';
-            if ($value["estado"] == "aprobado")
-              $estadoColor = '#00a65a'; // green
-            if ($value["estado"] == "pendiente")
-              $estadoColor = '#f39c12'; // orange
-            if ($value["estado"] == "rechazado")
-              $estadoColor = '#dd4b39'; // red
-          
-            // Verificar si el gasto es de hoy para resaltarlo
-            $fechaHoy = date('Y-m-d');
-            $esHoy = (!empty($value["fecha"]) && $value["fecha"] == $fechaHoy);
-            $claseHoy = $esHoy ? ' gasto-hoy' : '';
-
-            // Formatear datos
-            $fecha = !empty($value["fecha"]) ? date("d/m/Y", strtotime($value["fecha"])) : '-';
-            $monto = !empty($value["monto"]) ? '$' . number_format($value["monto"], 2, ',', '.') : '-';
-            $proveedor = !empty($value["proveedor_nombre"]) ? $value["proveedor_nombre"] : 'Sin proveedor';
-
-            echo '<div class="card-gasto' . $claseHoy . '">
-
-                    <div class="card-gasto-header">
-                      <div class="card-gasto-concepto">
-                        ' . $value["concepto"] . '
-                      </div>
-                      <div class="btn-group">';
-            if (puedeAccion('gastos', 'editar')) {
-              echo '<button class="btn btn-warning btn-xs btnEditarGasto" idGasto="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarGasto">
-                                    <i class="fa fa-pencil"></i>
-                                  </button>';
-            }
-            if (puedeAccion('gastos', 'eliminar')) {
-              echo '<button class="btn btn-danger btn-xs btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . $value["concepto"] . '">
-                                    <i class="fa fa-times"></i>
-                                  </button>';
-            }
-            echo '</div>
-                    </div>
-
-                    <div class="card-gasto-detalles">
-                      <div class="card-gasto-fila">
-                        <div class="card-gasto-monto">
-                          <i class="fa fa-money"></i> ' . $monto . '
-                        </div>
-                        <div class="card-gasto-categoria">
-                          ' . $categoriaBadge . '
-                        </div>
-                      </div>
-                      <div class="card-gasto-fila">
-                        <div class="card-gasto-fecha">
-                          <i class="fa fa-calendar"></i> ' . $fecha . '
-                        </div>
-                         <div style="font-size:12px; font-weight:bold; color:' . $estadoColor . '">
-                          ' . ucfirst($value["estado"]) . '
-                        </div>
-                      </div>
-                      <div class="card-gasto-fila">
-                        <div class="card-gasto-proveedor">
-                          <i class="fa fa-user"></i> ' . $proveedor . '
-                        </div>
-                      </div>';
-
-            // Notas editables directamente
-            $notasMovil = !empty($value["notas"]) ? htmlspecialchars($value["notas"]) : '';
-
-            echo '</div>';
-
-            // Campo de notas editable (contenteditable)
-            echo '<div class="card-gasto-notas celda-notas-gasto" contenteditable="true" data-id="' . $value["id"] . '">' . $notasMovil . '</div>';
-
-            // Icono de imagen clickeable
-            $imagenGasto = !empty($value["imagen_comprobante"]) ? $value["imagen_comprobante"] : "";
-
-            echo '<div class="card-gasto-imagen-icono img-comprobante-clickeable"
-                       data-imagen="' . $imagenGasto . '"
-                       data-idgasto="' . $value["id"] . '"
-                       data-concepto="' . $value["concepto"] . '">
-                    <i class="fa fa-image"></i> Ver imagen
-                  </div>
-
-                  </div>';
-          }
-          ?>
-
-        </div>
 
       </div>
 

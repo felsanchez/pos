@@ -18,19 +18,46 @@ $(document).ready(function () {
             // Si ya existe, destruirla para evitar errores al re-filtrar
             if ($.fn.DataTable.isDataTable('#tablaGastos')) {
                 $('#tablaGastos').DataTable().destroy();
-            }
-
-            return $('#tablaGastos').DataTable({
+                      return $('#tablaGastos').DataTable({
                 "autoWidth": false,
-                "responsive": true,
-                "order": [[0, "asc"]], // Ordenar por # (columna 0) asc para mantener orden natural
+                "order": [[1, "desc"]], // Ordenar por fecha (columna 1) desc
                 "columnDefs": [
                     {
-                        "targets": 0, // Columna #
-                        "className": "text-center",
-                        "type": "num"
+                        "targets": [3, 4, 5, 6, 7], // Categoría, Estado, Proveedor, Imagen, Notas
+                        "className": "none" // Siempre ocultas en la tabla principal, solo visibles al expandir
+                    },
+                    {
+                        "targets": [1], // Fecha
+                        "responsivePriority": 3
+                    },
+                    {
+                        "targets": [8], // Acciones
+                        "responsivePriority": 2
                     }
                 ],
+                "responsive": {
+                    "details": {
+                        "type": "inline",
+                        "renderer": function (api, rowIdx, columns) {
+                            var data = $.map(columns, function (col, i) {
+                                return col.hidden ?
+                                    '<tr data-dt-row="' + col.rowIndex + '" data-dt-column="' + col.columnIndex + '">' +
+                                    '<td style="padding: 10px; border-bottom: 1px solid #eee;">' +
+                                    '<strong>' + col.title + ':</strong>' +
+                                    '</td> ' +
+                                    '<td style="padding: 10px; border-bottom: 1px solid #eee;">' +
+                                    col.data +
+                                    '</td>' +
+                                    '</tr>' :
+                                    '';
+                            }).join('');
+
+                            return data ?
+                                $('<table/>').append(data) :
+                                false;
+                        }
+                    }
+                },
                 "language": {
                     "sProcessing": "Procesando...",
                     "sLengthMenu": "Mostrar _MENU_ registros",
@@ -62,7 +89,7 @@ $(document).ready(function () {
                 "initComplete": function () {
                     $(this).addClass('datatable-ready').css('visibility', 'visible');
                 }
-            });
+            });      });
         }
     };
 
@@ -517,13 +544,11 @@ $("#btnFiltrarGastos").on("click", function () {
 
             console.log("Gastos filtrados respuesta:", respuesta);
 
-            // Limpiar tabla y cards
+            // Limpiar tabla
             $("#tablaGastos tbody").empty();
-            $(".cards-gastos").empty();
 
             if (!respuesta || !Array.isArray(respuesta) || respuesta.length == 0) {
-                $("#tablaGastos tbody").html('<tr><td colspan="10" class="text-center">No se encontraron gastos con los filtros seleccionados</td></tr>');
-                $(".cards-gastos").html('<div class="alert alert-info"><i class="fa fa-info-circle"></i> No se encontraron productos con los filtros seleccionados</div>');
+                $("#tablaGastos tbody").html('<tr><td colspan="9" class="text-center">No se encontraron gastos con los filtros seleccionados</td></tr>');
             } else {
 
                 // Llenar tabla con resultados
@@ -575,9 +600,8 @@ $("#btnFiltrarGastos").on("click", function () {
                     // Notas (editable)
                     var notas = gasto.notas ? gasto.notas : '';
 
-                    // Crear fila (10 columnas)
+                    // Crear fila (9 columnas)
                     var fila = '<tr ' + rowStyle + '>';
-                    fila += '<td>' + (index + 1) + '</td>';
                     fila += '<td>' + (gasto.concepto || '-') + '</td>';
                     fila += '<td>' + fechaFormateada + '</td>';
                     fila += '<td><strong>' + monto + '</strong></td>';
@@ -595,30 +619,6 @@ $("#btnFiltrarGastos").on("click", function () {
                     fila += '</tr>';
 
                     $("#tablaGastos tbody").append(fila);
-
-                    // CREAR CARD PARA MÓVIL
-                    var claseHoy = esHoy ? ' gasto-hoy' : '';
-                    var categoriaBadgeCard = gasto.categoria_nombre ?
-                        '<span class="badge" style="background-color: ' + gasto.categoria_color + '">' + gasto.categoria_nombre + '</span>' :
-                        '<span class="text-muted">Sin categoría</span>';
-                    var proveedorCard = gasto.proveedor_nombre ? gasto.proveedor_nombre : 'Sin proveedor';
-
-                    var card = '<div class="card-gasto' + claseHoy + '">';
-                    card += '<div class="card-gasto-header">';
-                    card += '<div class="card-gasto-concepto">' + (gasto.concepto || '-') + '</div>';
-                    card += '<div class="btn-group">';
-                    card += '<button class="btn btn-warning btn-xs btnEditarGasto" idGasto="' + gasto.id + '" data-toggle="modal" data-target="#modalEditarGasto"><i class="fa fa-pencil"></i></button>';
-                    card += '<button class="btn btn-danger btn-xs btnEliminarGasto" idGasto="' + gasto.id + '" conceptoGasto="' + (gasto.concepto || '') + '"><i class="fa fa-times"></i></button>';
-                    card += '</div></div>';
-                    card += '<div class="card-gasto-detalles">';
-                    card += '<div class="card-gasto-fila"><div class="card-gasto-monto"><i class="fa fa-money"></i> ' + monto + '</div><div class="card-gasto-categoria">' + categoriaBadgeCard + '</div></div>';
-                    card += '<div class="card-gasto-fila"><div class="card-gasto-fecha"><i class="fa fa-calendar"></i> ' + fechaFormateada + '</div><div class="card-gasto-proveedor"><i class="fa fa-user"></i> ' + proveedorCard + '</div></div>';
-                    card += '</div>';
-                    var imagenGasto = (gasto.imagen_comprobante && gasto.imagen_comprobante != '') ? gasto.imagen_comprobante : "";
-                    card += '<div class="card-gasto-imagen-icono img-comprobante-clickeable" data-imagen="' + imagenGasto + '" data-idgasto="' + gasto.id + '" data-concepto="' + gasto.concepto + '"><i class="fa fa-image"></i> Ver imagen</div>';
-                    card += '</div>';
-
-                    $(".cards-gastos").append(card);
                 });
             }
 

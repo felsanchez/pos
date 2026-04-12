@@ -194,6 +194,33 @@
   }
 </style>
 
+<style>
+  /* Botón de expansión integrado en la columna Código */
+  .tablaOrdenes.collapsed tbody tr td.dtr-control,
+  .tablaOrdenes.collapsed tbody tr.parent td:first-child {
+    padding-left: 35px !important;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .tablaOrdenes.collapsed tbody td.dtr-control::before {
+    left: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    box-shadow: none !important;
+    background-color: #dd4b39 !important;
+  }
+
+  /* Botones de acción pequeños en móvil */
+  @media (max-width: 767px) {
+    .tablaOrdenes td:last-child .btn {
+      padding: 1px 5px !important;
+      font-size: 12px !important;
+      line-height: 1.5 !important;
+    }
+  }
+</style>
+
 <!-- Estilos para campo observación -->
 <style>
   .celda-observacion {
@@ -348,7 +375,7 @@ if ($xml) {
             <thead>
               <tr>
                 <th style="width:10px"></th>
-                <th style="width: 10px">#</th>
+                <th style="width: 10px" class="hidden-xs">#</th>
                 <th>Código</th>
                 <th>Cliente</th>
                 <th>Vendedor</th>
@@ -437,9 +464,9 @@ if ($xml) {
 
               foreach ($respuesta as $key => $value) {
 
-                echo '<tr>
+                echo '<tr data-orden-id="' . e($value['id']) . '">
                         <td></td>
-                        <td>' . e($key + 1) . '</td>  
+                        <td class="hidden-xs">' . e($key + 1) . '</td>  
                         <td>' . e($formatoCodigoVenta) . e($value["codigo"]) . '</td>';
 
                 /*
@@ -973,7 +1000,7 @@ MODAL EDITAR CLIENTE
 <!--Guardar observaciones-->
 <script>
   $(document).on('blur', '.celda-observacion', function () {
-    const idVenta = $(this).data('id');
+    const idVenta = $(this).attr('data-id'); // .attr() para compatibilidad con elementos dinámicos
     const nuevaObservacion = $(this).text().trim();
 
     console.log("Guardando observación:", nuevaObservacion, "para ID:", idVenta);
@@ -1408,7 +1435,15 @@ MODAL EDITAR CLIENTE
               var obs = dataMap['Observación'] || '';
               var fecha = dataMap['Fecha'] || '';
               var seguimiento = dataMap['Seguimiento'] || '';
-              var acciones = dataMap['Acciones'] || '';
+              var imagen = dataMap['Imagen'] || '';
+
+              // Extraer ruta de imagen del HTML de la celda
+              var imagenSrc = 'vistas/img/ventas/default/sinventa.png';
+              var matchImagen = imagen.match(/data-imagen=["']([^"']+)["']/i);
+              if (matchImagen) imagenSrc = matchImagen[1];
+
+              // Leer ID de la orden desde el atributo data-orden-id del <tr>
+              var idOrden = $(api.row(rowIdx).node()).attr('data-orden-id') || '';
 
               var finalHtml = '';
 
@@ -1423,8 +1458,8 @@ MODAL EDITAR CLIENTE
               finalHtml += '<span class="text-bold" style="color:#555;">Vendedor: </span><span class="pull-right" style="color:#333;">' + vendedor + '</span></div>';
 
               // SECCION 2: Información de Venta
-              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #dd4b39;">';
-              finalHtml += '<h5 style="font-weight:bold; color:#dd4b39; margin:0;">Información de Ventas</h5></div>';
+              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
+              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información de Ventas</h5></div>';
 
               finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
               finalHtml += '<span class="text-bold" style="color:#555;">Fecha: </span><span class="pull-right" style="color:#333;">' + fecha + '</span></div>';
@@ -1435,34 +1470,31 @@ MODAL EDITAR CLIENTE
               finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
               finalHtml += '<span class="text-bold" style="color:#555;">Total: </span><span class="pull-right" style="color:#333;">' + total + '</span></div>';
 
-              // SECCION 3: Información Adicional
-              var hasNotas = notas && typeof notas === 'string' && notas.replace(/<[^>]*>?/gm, '').trim() !== "";
-              var hasObs = obs && typeof obs === 'string' && obs.replace(/<[^>]*>?/gm, '').trim() !== "";
+              // Botón Ver imagen
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+              finalHtml += '<span class="text-bold" style="color:#555;">Imagen: </span>';
+              finalHtml += '<button class="btn btn-info btn-xs img-ampliar-orden" data-imagen="' + imagenSrc + '" data-idventa="' + idOrden + '">';
+              finalHtml += '<i class="fa fa-image"></i> Ver imagen</button></div>';
 
-              if (hasNotas || hasObs) {
-                finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #f39c12;">';
-                finalHtml += '<h5 style="font-weight:bold; color:#f39c12; margin:0;">Información Adicional</h5></div>';
+              // SECCION 3: Información Adicional (siempre visible)
+              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
+              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información adicional</h5></div>';
 
-                if (hasNotas) {
-                  finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-                  finalHtml += '<span class="text-bold" style="display:block; color:#555;">Notas:</span><span style="color:#333;">' + notas + '</span></div>';
-                }
-                if (hasObs) {
-                  finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-                  finalHtml += '<span class="text-bold" style="display:block; color:#555;">Observación:</span><span style="color:#333;">' + obs + '</span></div>';
-                }
-              }
+              // Notas (solo lectura)
+              var notasTexto = $('<div>').html(notas).text().trim();
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+              finalHtml += '<span class="text-bold" style="display:block; color:#555; margin-bottom:4px;"><i class="fa fa-magic"></i> Notas:</span>';
+              finalHtml += '<span style="color:#333;">' + (notasTexto || '<em style="color:#999;">Sin notas</em>') + '</span></div>';
 
-              // SECCION 4: Acciones
-              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #00a65a;">';
-              finalHtml += '<h5 style="font-weight:bold; color:#00a65a; margin:0;">Acciones</h5></div>';
+              // Observación (editable)
+              var obsTexto = $('<div>').html(obs).text().trim();
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+              finalHtml += '<span class="text-bold" style="display:block; color:#555; margin-bottom:4px;"><i class="fa fa-pencil-square"></i> Observación:</span>';
+              finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idOrden + '" style="min-height:30px;">' + obsTexto + '</div></div>';
 
-              finalHtml += '<div class="col-xs-12" style="padding: 10px 0; text-align:center;">' + acciones + '</div>';
-
-              // SECCION 5: Seguimientos
-              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #605ca8;">';
-              finalHtml += '<h5 style="font-weight:bold; color:#605ca8; margin:0;">Seguimientos</h5></div>';
-
+              // SECCION 4: Seguimiento
+              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
+              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Seguimiento</h5></div>';
               finalHtml += '<div class="col-xs-12" style="padding: 10px 0; text-align:center;">' + seguimiento + '</div>';
 
               return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #fcfcfc; margin: 0;">').append(finalHtml) : false;
@@ -1475,14 +1507,14 @@ MODAL EDITAR CLIENTE
             "className": 'control',
             "orderable": false,
             "data": null,
-            "defaultContent": ""
+            "defaultContent": "",
+            "responsivePriority": 1000
           },
-          { "targets": 2, "responsivePriority": 1 }, // Codigo
-          { "targets": 8, "responsivePriority": 1 }, // Total
-          // 12 is implicitly handled by generic hide below
-
+          { "targets": 1, "responsivePriority": 1000 }, // # (ocultar en móvil)
+          { "targets": 2, "responsivePriority": 1 }, // Codigo (visible + botón expand)
+          { "targets": 13, "responsivePriority": 1, "orderable": false }, // Acciones (visible en móvil)
           // Hide from main view
-          { "targets": [1, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13], "responsivePriority": 10000 }
+          { "targets": [3, 4, 5, 6, 7, 8, 9, 10, 11, 12], "responsivePriority": 10000 }
         ],
         "language": {
           "sProcessing": "Procesando...",

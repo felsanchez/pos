@@ -6,6 +6,22 @@ if (!puedeVer('proveedores')) {
 ?>
 <!-- Solo muestra 2 campos en movil en la Tabla 1-->
 <style>
+  /* Espaciado automático para el botón de expansión en modo inline */
+  .tablaProveedores.collapsed tbody td:first-child {
+    padding-left: 35px !important;
+    position: relative;
+    cursor: pointer;
+  }
+
+  /* Posicionamiento del botón + de DataTables en modo inline */
+  .tablaProveedores.collapsed tbody td:first-child::before {
+    left: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    box-shadow: none !important;
+    background-color: #3b8ab8 !important; /* Estilo azul AdminLTE */
+  }
+
   /* Estilos para el botón de expansión en móvil */
   @media (max-width: 767px) {
     .tablaProveedores td.control {
@@ -87,7 +103,6 @@ if (!puedeVer('proveedores')) {
 
           <thead>
             <tr>
-              <th style="width: 10px"></th>
               <th>Nombre</th>
               <th>Nombre Comercial</th>
               <th>Celular</th>
@@ -116,7 +131,6 @@ if (!puedeVer('proveedores')) {
               $totalProductos = ModeloProveedores::mdlContarProductosPorProveedor($value["id"]);
 
               echo '<tr> 
-                        <td></td>
                         <td>' . $value["nombre"] . '</td>
                         <td>' . $value["marca"] . '</td>';
 

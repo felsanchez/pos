@@ -21,18 +21,38 @@
     }
   }
 
+  /* Espaciado automático para el botón de expansión en modo inline */
+  .tablaActividades.collapsed tbody td.dtr-control {
+    padding-left: 35px !important;
+    position: relative;
+    cursor: pointer;
+  }
+
+  /* Posicionamiento del botón + de DataTables en la columna principal */
+  .tablaActividades.collapsed tbody td.dtr-control::before {
+    left: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    box-shadow: none !important;
+    background-color: #3b8ab8 !important; /* Azul AdminLTE */
+  }
+
+  /* Ajuste de botones de acción en móvil */
+  @media (max-width: 767px) {
+    .tablaActividades td.col-acciones .btn {
+      padding: 1px 5px !important;
+      font-size: 12px !important;
+      line-height: 1.5 !important;
+    }
+  }
+
   .card-actividad.actividad-hoy {
     border-left: 5px solid #28a745 !important;
     background-color: #f0f9f4;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
   }
 
-  @media (min-width: 768px) {
-    .tabla-actividades .table tr th:first-child,
-    .tabla-actividades .table tr td:first-child {
-      display: none !important;
-    }
-  }
+
 </style>
 
 <?php
@@ -114,8 +134,6 @@ if (!empty($params)) { $urlActual .= "?" . implode("&", $params); }
           <table class="table table-bordered table-striped tablaActividades" style="width: 100%">
             <thead>
               <tr>
-                <th></th>
-                <th style="width: 10px" class="all text-center">#</th>
                 <th class="all">Descripción</th>
                 <th class="all">Tipo</th>
                 <th class="desktop">Responsable</th>
@@ -123,7 +141,7 @@ if (!empty($params)) { $urlActual .= "?" . implode("&", $params); }
                 <th class="desktop">Estado</th>
                 <th class="desktop">Cliente</th>
                 <th class="desktop"><i class="fa fa-pencil-square"></i> Observación</th>
-                <th class="all">Acciones</th>
+                <th class="all col-acciones">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -213,9 +231,8 @@ if (!empty($params)) { $urlActual .= "?" . implode("&", $params); }
                     class="has-tooltip" 
                     data-tippy-content="<?php echo htmlspecialchars($tooltipHTMLBody); ?>"
                     data-tipo="<?php echo strtolower($value["tipo"]); ?>"
-                    data-estado="<?php echo strtolower($value["estado"]); ?>">
-                  <td class="control"></td>
-                  <td class="text-center"><?php echo $key + 1; ?></td>
+                    data-estado="<?php echo strtolower($value["estado"]); ?>"
+                    data-actividad-id="<?= $value['id']; ?>">
                   <td><?php echo $value["descripcion"]; ?></td>
 
                   <td><?php echo $value["tipo"]; ?></td>
@@ -273,7 +290,7 @@ if (!empty($params)) { $urlActual .= "?" . implode("&", $params); }
                     <?= $value['observacion']; ?>
                   </td>
 
-                  <td>
+                  <td class="col-acciones">
                     <div class="btn-group">
                       <?php if (puedeAccion('actividades', 'editar')): ?>
                         <button class="btn btn-warning btnEditarActividad" data-id="<?php echo $value['id'] ?? ''; ?>"

@@ -1,54 +1,32 @@
 <!-- Estilos para el filtro de categoría -->
 <style>
-  /* Base Desktop CSS - Numeración por CSS Puro (Evita reseteos por DataTables) */
-  .tablaProductos {
-    counter-reset: rowNum;
+<style>
+  /* Espaciado automático para el botón de expansión en modo inline */
+  .tablaProductos.collapsed tbody td:first-child {
+    padding-left: 35px !important;
+    position: relative;
+    cursor: pointer;
   }
 
-  .tablaProductos tbody tr {
-    counter-increment: rowNum;
+  /* Posicionamiento del botón + de DataTables en modo inline */
+  .tablaProductos.collapsed tbody td:first-child::before {
+    left: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    box-shadow: none !important;
+    background-color: #3b8ab8 !important; /* Estilo azul AdminLTE */
   }
 
-  .tablaProductos td:first-child {
-    white-space: nowrap;
-    vertical-align: middle;
-    text-align: center;
-    min-width: 32px;
-  }
-
-  .tablaProductos tbody tr td:first-child::after {
-    content: counter(rowNum);
-  }
-
-  /* Mobile overrides */
+  /* Ajuste de botones de acción en móvil */
   @media (max-width: 767px) {
     .tablaProductos .btn-group .btn {
-      padding: 1px 5px;
-      font-size: 12px;
-      line-height: 1.5;
-      border-radius: 3px;
-    }
-
-    /* Ocultar el número generado por CSS para dejar lugar exclusivo al botón + */
-    .tablaProductos tbody tr td:first-child::after {
-      content: none !important;
+      padding: 1px 5px !important;
+      font-size: 12px !important;
+      line-height: 1.5 !important;
     }
   }
 
-  /* Estilos para filtros estandarizados */
-  @media (max-width: 767px) {
-    .pull-right {
-      float: none !important;
-      justify-content: center !important;
-      width: 100% !important;
-      margin-top: 10px;
-    }
-  }
-</style>
-
-
-<style>
-  /* Solo muestra el botón en móvil */
+  /* Visibilidad de botones específicos en móvil */
   .solo-movil {
     display: none;
   }
@@ -56,18 +34,13 @@
   @media (max-width: 767px) {
     .solo-movil {
       display: inline-block !important;
-    }
-  }
-</style>
-
-<!--Agregar espacio entre los btones en móvil-->
-<style>
-  @media (max-width: 767px) {
-    .solo-movil {
       margin-left: 3px !important;
     }
   }
 </style>
+</style>
+
+
 
 
 <!-- Fix para modal de importación -->
@@ -298,7 +271,6 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
 
           <thead>
             <tr>
-              <th style="width: 5px"></th>
               <th>Imagen</th>
               <th>Código</th>
               <th>Descripción</th>

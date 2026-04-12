@@ -125,6 +125,39 @@ $totalNoLeidas = ControladorNotificaciones::ctrContarNoLeidas();
 	.swal-overlay {
 		z-index: 20000 !important;
 	}
+
+	/* Optimización de cabecera móvil - Logo pequeño y elegante */
+	@media (max-width: 767px) {
+		.main-header .logo {
+			width: 100% !important;
+			height: 45px !important;
+			line-height: 45px !important;
+			padding: 0 !important;
+			display: flex !important;
+			justify-content: center !important;
+			align-items: center !important;
+		}
+
+		.main-header .logo .logo-lg {
+			display: block !important;
+		}
+
+		.main-header .logo .logo-lg img {
+			max-height: 30px !important;
+			width: auto !important;
+			margin: 0 auto !important;
+			padding: 0 !important;
+		}
+
+		.main-header .navbar {
+			margin: 0 !important;
+			min-height: 45px !important;
+		}
+
+		.main-header .navbar .sidebar-toggle {
+			padding: 12px 15px !important;
+		}
+	}
 </style>
 
 <header class="main-header">

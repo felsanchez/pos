@@ -42,15 +42,15 @@ function filterTable1() {
 
 $(document).ready(function () {
 
-	// Inicializar Select2 para el filtro de estado
-	if ($("#filtroEstatus1").length > 0 && typeof $.fn.select2 !== 'undefined') {
-		$("#filtroEstatus1").select2({
-			placeholder: "Seleccionar estado...",
-			allowClear: true,
-			minimumResultsForSearch: 0,
-			width: '100%'
-		});
-	}
+  // Inicializar Select2 para el filtro de estado
+  if ($("#filtroEstatus1").length > 0 && typeof $.fn.select2 !== 'undefined') {
+    $("#filtroEstatus1").select2({
+      placeholder: "Seleccionar estado...",
+      allowClear: true,
+      minimumResultsForSearch: 0,
+      width: '100%'
+    });
+  }
 
   if ($('.tablas1').length === 0) return;
 
@@ -60,19 +60,87 @@ $(document).ready(function () {
     "order": [[0, 'asc']],
     "autoWidth": true,
     "pageLength": 25,
+    "responsive": {
+      "details": {
+        "type": "inline",
+        "renderer": function (api, rowIdx, columns) {
+          var rowData = api.row(rowIdx).data();
+
+          // Índices (0-based):
+          // 0: Nombre, 1: Documento, 2: Email, 3: Teléfono, 4: Dirección,
+          // 5: Estado (HTML), 6: Notas, 7: Última compra, 8: Acciones (HTML), 9: Ingreso al sistema
+
+          // Extraer solo el texto del documento (evitando los botones solo-movil que están en la misma celda)
+          var documento = $('<div>').html(rowData[1]).contents().filter(function () {
+            return this.nodeType === 3; // Nodo de texto
+          }).text().trim();
+
+          var email = rowData[2];
+          var direccion = rowData[4];
+          var estado = rowData[5];
+          var notas = rowData[6];
+          var ultimaCompra = rowData[7];
+          var ingreso = rowData[9];
+
+          // Leer ID del cliente desde el atributo data-cliente-id del <tr>
+          var idCliente = $(api.row(rowIdx).node()).attr('data-cliente-id') || "";
+
+          var finalHtml = '';
+
+          // Sección 1: Información Personal
+          finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
+          finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información Personal</h5></div>';
+
+          finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+          finalHtml += '<span class="text-bold" style="color:#555;">Documento: </span><span style="color:#333; text-align: right;">' + documento + '</span></div>';
+
+          finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+          finalHtml += '<span class="text-bold" style="color:#555;">Correo: </span><span style="color:#333; text-align: right;">' + email + '</span></div>';
+
+          finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+          finalHtml += '<span class="text-bold" style="color:#555;">Dirección: </span><span style="color:#333; text-align: right;">' + direccion + '</span></div>';
+
+          finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+          finalHtml += '<span class="text-bold" style="color:#555;">Estado: </span><span style="color:#333; text-align: right;">' + estado + '</span></div>';
+
+          // Sección 2: Actividad
+          finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
+          finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Actividad</h5></div>';
+
+          finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+          finalHtml += '<span class="text-bold" style="color:#555;">Última compra: </span><span style="color:#333; text-align: right;">' + ultimaCompra + '</span></div>';
+
+          finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+          finalHtml += '<span class="text-bold" style="color:#555;">Ingreso al sistema: </span><span style="color:#333; text-align: right;">' + ingreso + '</span></div>';
+
+          // Notas editable con el mismo estilo que en escritorio
+          finalHtml += '<div class="col-xs-12" style="padding: 10px 0; border-bottom: 1px solid #eee;">';
+          finalHtml += '<span class="text-bold" style="color:#555; display:block; margin-bottom:5px;">Notas: </span>';
+          finalHtml += '<div class="celda-notas" contenteditable="true" data-id="' + idCliente + '" style="width: 100%;">' + notas + '</div></div>';
+
+          return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #f8f9fa; margin: 0;">').append(finalHtml) : false;
+        }
+      }
+    },
     "dom": '<"row"<"col-sm-6"l><"col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
     "columnDefs": [
-      { "targets": 0, "orderable": true, "className": "text-center", "type": "num" },
-      { "targets": 1, "orderable": true },
-      { "targets": 2, "orderable": true },
-      { "targets": 3, "orderable": true },
-      { "targets": 4, "orderable": true },
-      { "targets": 5, "orderable": true },
-      { "targets": 6, "orderable": true },
-      { "targets": 7, "orderable": true },
-      { "targets": 8, "orderable": true },
-      { "targets": 9, "orderable": false },
-      { "targets": 10, "orderable": true }
+      {
+        "targets": 0, // Nombre
+        "responsivePriority": 1
+      },
+      {
+        "targets": 3, // Teléfono
+        "responsivePriority": 2
+      },
+      {
+        "targets": 8, // Acciones
+        "responsivePriority": 1,
+        "orderable": false
+      },
+      {
+        "targets": [1, 2, 4, 5, 6, 7, 9], // Otros
+        "responsivePriority": 1000
+      }
     ],
     "language": {
       url: "vistas/bower_components/datatables.net/Spanish.json",
@@ -94,8 +162,8 @@ $(document).ready(function () {
     if (settings.nTable !== $('.tablas1')[0]) return true;
     var filtro = $('#filtroEstatus1').val();
     if (!filtro || filtro === '') return true;
-    // columna 6 (índice 6) = Estado — extraer texto del badge, ignorar HTML
-    var rawHtml = data[6] || '';
+    // columna 5 (índice 5) = Estado — extraer texto del badge, ignorar HTML
+    var rawHtml = data[5] || '';
     var estadoCelda = rawHtml ? $('<div>').html(rawHtml).text().toLowerCase() : '';
     return estadoCelda.indexOf(filtro.toLowerCase()) !== -1;
   });
@@ -116,26 +184,37 @@ $(document).on('focus', '.celda-notas', function () {
 
 $(document).on('blur', '.celda-notas', function () {
   var nuevaNota = $(this).text().trim();
-  var id = $(this).data('id');
+  var id = $(this).attr('data-id'); // Usamos .attr() para asegurar la lectura en elementos dinámicos
 
   if (nuevaNota === '') {
     $(this).attr('data-placeholder', 'true');
   }
 
-  if (id) {
-    $.ajax({
-      url: 'ajax/clientes.ajax.php',
-      method: 'POST',
-      data: {
-        id: id,
-        notas: nuevaNota,
-        accion: 'actualizarNota'
-      },
-      error: function () {
-        alert('Error al actualizar la nota');
-      }
-    });
+  if (!id) {
+    console.warn('⚠️ celda-notas: no se encontró data-id en el elemento.');
+    return;
   }
+
+  // Obtener token CSRF (requerido por el servidor)
+  var csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+  $.ajax({
+    url: 'ajax/clientes.ajax.php',
+    method: 'POST',
+    data: {
+      id: id,
+      notas: nuevaNota,
+      accion: 'actualizarNota',
+      csrf_token: csrfToken
+    },
+    dataType: 'json',
+    success: function (respuesta) {
+      console.log('✅ Nota guardada correctamente (ID: ' + id + ')');
+    },
+    error: function () {
+      alert('Error al actualizar la nota');
+    }
+  });
 });
 
 // Inicializar placeholder en celdas vacías al cargar

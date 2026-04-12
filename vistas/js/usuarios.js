@@ -18,21 +18,20 @@ $(document).ready(function () {
 		var tablaUsuarios = $(".tablaUsuarios").DataTable({
 			"responsive": {
 				"details": {
-					"type": "column",
-					"target": 0, // Columna # como control en móvil
+					"type": "inline",
 					"renderer": function (api, rowIdx, columns) {
 						// Custom renderer logic
 						var rowData = api.row(rowIdx).data();
 
 						// Indices (0-based):
-						// 0: #, 1: Nombre, 2: Usuario, 3: Email, 4: Foto, 5: Perfil,
-						// 6: Estado, 7: Ultimo login, 8: Acciones
+						// 0: Usuario, 1: Nombre, 2: Email, 3: Foto, 4: Perfil,
+						// 5: Estado, 6: Ultimo login, 7: Acciones
 
 						var nombre = rowData[1];
-						var email = rowData[3];
-						var foto = rowData[4]; // HTML content (img tag)
-						var estado = rowData[6]; // HTML content (button)
-						var ultimoLogin = rowData[7];
+						var email = rowData[2];
+						var foto = rowData[3]; // HTML content (img tag)
+						var estado = rowData[5]; // HTML content (button)
+						var ultimoLogin = rowData[6];
 
 						var finalHtml = '';
 
@@ -47,10 +46,10 @@ $(document).ready(function () {
 						finalHtml += '<span class="text-bold" style="color:#555;">Email: </span><span style="color:#333; text-align: right;">' + email + '</span></div>';
 
 						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Foto: </span><span style="color:#333; text-align: right;"><button class="btn btn-info btn-xs btnVerFotoUsuario">Ver foto</button></span></div>';
+						finalHtml += '<span class="text-bold" style="color:#555;">Foto: </span><span style="color:#333; text-align: right;"><button class="btn btn-info btn-xs btnVerFotoUsuario"><i class="fa fa-image"></i> Ver foto</button></span></div>';
 
 						// Solo agregar fila de estado si la columna está visible en DataTables
-						if (api.column(6).visible()) {
+						if (api.column(5).visible()) {
 							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
 							finalHtml += '<span class="text-bold" style="color:#555;">Estado: </span><span style="color:#333; text-align: right;">' + estado + '</span></div>';
 						}
@@ -69,31 +68,29 @@ $(document).ready(function () {
 			"order": [[1, 'asc']],
 			"columnDefs": [
 				{
-					"targets": 0, // # Número correlativo
-					"orderable": false,
-					"responsivePriority": 1,
-					"className": "text-center control"
-				},
-				{
-					"targets": 2, // Usuario
+					"targets": 0, // Usuario
 					"responsivePriority": 1
 				},
 				{
-					"targets": 5, // Perfil
+					"targets": 1, // Nombre
+					"responsivePriority": 1000
+				},
+				{
+					"targets": 4, // Perfil
 					"responsivePriority": 1
 				},
 				{
-					"targets": 6, // Estado
+					"targets": 5, // Estado
 					"visible": $("#puedeEditarUsuarios").val() == "1",
 					"responsivePriority": 1000
 				},
 				{
-					"targets": 8, // Acciones
+					"targets": 7, // Acciones
 					"responsivePriority": 1,
 					"orderable": false
 				},
 				{
-					"targets": [1, 3, 4, 7], // Nombre, Email, Foto, Ultimo login (hidden on mobile)
+					"targets": [2, 3, 6], // Email, Foto, Ultimo login (hidden on mobile)
 					"responsivePriority": 1000
 				}
 			],
@@ -132,12 +129,12 @@ $(document).ready(function () {
 
 			console.log("Filtrando usuarios por perfil:", perfil);
 
-			// Usamos una expresión regular para una búsqueda exacta en la columna 5 (Perfil)
-			// El índice 5 corresponde a la columna de Perfil
+			// Usamos una expresión regular para una búsqueda exacta en la columna 4 (Perfil)
+			// El índice 4 corresponde a la columna de Perfil
 			if (perfil != "") {
-				tablaUsuarios.column(5).search('^' + perfil + '$', true, false).draw();
+				tablaUsuarios.column(4).search('^' + perfil + '$', true, false).draw();
 			} else {
-				tablaUsuarios.column(5).search("").draw();
+				tablaUsuarios.column(4).search("").draw();
 			}
 		});
 	}

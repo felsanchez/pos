@@ -435,77 +435,75 @@ $(document).ready(function () {
     }
 
     $(".tablaActividades").DataTable({
-      "order": [[1, "asc"]], // Ordenar por # (columna 1) asc
+      "order": [[0, "asc"]], // Ordenar por Descripción (columna 0)
       "columnDefs": [
         {
-          "targets": 1, // Columna #
-          "className": "text-center",
-          "type": "num"
+          "targets": 0, // Descripción
+          "responsivePriority": 1
+        },
+        {
+          "targets": 1, // Tipo
+          "responsivePriority": 1
+        },
+        {
+          "targets": 7, // Acciones
+          "responsivePriority": 1,
+          "orderable": false
+        },
+        {
+          "targets": [2, 3, 4, 5, 6], // Responsable, Fecha, Estado, Cliente, Observación
+          "responsivePriority": 1000
         }
       ],
       "responsive": {
         "details": {
-          "type": "column",
-          "target": 0,
+          "type": "inline",
           "renderer": function (api, rowIdx, columns) {
-            // Mapear datos por título de columna
-            var dataMap = {};
-            columns.forEach(function (col) {
-              var headerText = col.title ? col.title.replace(/<[^>]*>?/gm, '').trim() : '';
-              dataMap[headerText] = col.data;
-            });
+            var rowData = api.row(rowIdx).data();
 
-            // Obtener datos
-            var descripcion = dataMap['Descripción'] || '';
-            var tipo = dataMap['Tipo'] || '';
-            var responsable = dataMap['Responsable'] || '';
-            var fecha = dataMap['Fecha'] || '';
-            var estado = dataMap['Estado'] || '';
-            var cliente = dataMap['Cliente'] || '';
-            var observacion = dataMap['Observación'] || '';
+            // Índices (0-based):
+            // 0: Descripción, 1: Tipo, 2: Responsable, 3: Fecha, 4: Estado,
+            // 5: Cliente, 6: Observación, 7: Acciones
+
+            var responsable = rowData[2];
+            var fecha = rowData[3];
+            var estado = rowData[4];
+            var cliente = rowData[5];
+            var observacionRaw = rowData[6] || "";
+            // Extraer solo texto plano (rowData contiene el innerHTML del td, con posibles tags HTML)
+            var observacion = $('<div>').html(observacionRaw).text().trim();
+
+            // Leer ID de la actividad desde el atributo data-actividad-id del <tr>
+            var idActividad = $(api.row(rowIdx).node()).attr('data-actividad-id') || "";
 
             var finalHtml = '';
 
-            // SECCIÓN 1: Información General
-            finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
-            finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información General</h5></div>';
+            // SECCIÓN 1: Detalles de la actividad
+            finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
+            finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Detalles de la actividad</h5></div>';
 
-            finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-            finalHtml += '<span class="text-bold" style="color:#555;">Descripción: </span><span class="pull-right" style="color:#333;">' + descripcion + '</span></div>';
+            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+            finalHtml += '<span class="text-bold" style="color:#555;">Responsable: </span><span style="color:#333; text-align: right;">' + responsable + '</span></div>';
 
-            finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-            finalHtml += '<span class="text-bold" style="color:#555;">Fecha: </span><span class="pull-right" style="color:#333;">' + fecha + '</span></div>';
+            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+            finalHtml += '<span class="text-bold" style="color:#555;">Fecha: </span><span style="color:#333; text-align: right;">' + fecha + '</span></div>';
 
-            // SECCIÓN 2: Categoría
-            finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #f39c12;">';
-            finalHtml += '<h5 style="font-weight:bold; color:#f39c12; margin:0;">Categoría</h5></div>';
+            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+            finalHtml += '<span class="text-bold" style="color:#555;">Estado: </span><span style="color:#333; text-align: right;">' + estado + '</span></div>';
 
-            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-            finalHtml += '<span class="text-bold" style="color:#555;">Estado: </span><span class="pull-right" style="color:#333;">' + estado + '</span></div>';
+            // SECCIÓN 2: Información adicional
+            finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
+            finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información adicional</h5></div>';
 
-            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-            finalHtml += '<span class="text-bold" style="color:#555;">Tipo: </span><span class="pull-right" style="color:#333;">' + tipo + '</span></div>';
+            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+            finalHtml += '<span class="text-bold" style="color:#555;">Cliente: </span><span style="color:#333; text-align: right;">' + cliente + '</span></div>';
 
-            // SECCIÓN 3: Clientes
-            finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #00a65a;">';
-            finalHtml += '<h5 style="font-weight:bold; color:#00a65a; margin:0;">Clientes</h5></div>';
+            // Observación editable
+            finalHtml += '<div class="col-xs-12" style="padding: 10px 0; border-bottom: 1px solid #eee;">';
+            finalHtml += '<span class="text-bold" style="color:#555; display:block; margin-bottom:5px;">Observación: </span>';
+            finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idActividad + '" style="width: 100%;">' + observacion + '</div></div>';
 
-            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-            finalHtml += '<span class="text-bold" style="color:#555;">Responsable: </span><span class="pull-right" style="color:#333;">' + responsable + '</span></div>';
-
-            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-            finalHtml += '<span class="text-bold" style="color:#555;">Cliente: </span><span class="pull-right" style="color:#333;">' + cliente + '</span></div>';
-
-            // SECCIÓN 4: Observación
-            if (observacion && observacion.trim() !== '') {
-              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #605ca8;">';
-              finalHtml += '<h5 style="font-weight:bold; color:#605ca8; margin:0;">Información Adicional</h5></div>';
-
-              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-              finalHtml += '<span class="text-bold" style="color:#555;">Observación: </span><span class="pull-right" style="color:#333;">' + observacion + '</span></div>';
-            }
-
-            return finalHtml;
+            return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #f8f9fa; margin: 0;">').append(finalHtml) : false;
           }
         }
       },
@@ -583,7 +581,7 @@ $(document).on('focus', '.celda-observacion', function() {
 
 $(document).on('blur', '.celda-observacion', function() {
     var elemento = $(this);
-    var id = elemento.data('id');
+    var id = elemento.attr('data-id'); // Usamos .attr() para mayor compatibilidad con elementos dinámicos
     var nuevaObservacion = elemento.text().trim();
 
     // Manejar placeholder visual
