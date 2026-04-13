@@ -57,17 +57,80 @@ if ($_SESSION["perfil"] == "Especial") {
                     font-weight: 500;
                 }
 
+                /* 1. LÓGICA DESKTOP-FIRST: Ocultar botón de expansión por defecto en Notas Crédito */
+                .tablaNotasCredito td.dtr-control:before,
+                .tablaNotasCredito th.dtr-control:before {
+                    display: none !important;
+                    content: "" !important;
+                }
+
+                .tablaNotasCredito td.dtr-control,
+                .tablaNotasCredito th.dtr-control {
+                    padding-left: 8px !important;
+                    cursor: default !important;
+                }
+
+                /* 2. ACTIVACIÓN EXCLUSIVA PARA MÓVIL (Menos de 767px) */
+                @media (max-width: 767px) {
+                    .tablaNotasCredito td.dtr-control {
+                        position: relative !important;
+                        padding-left: 30px !important;
+                        cursor: pointer !important;
+                    }
+
+                    .tablaNotasCredito td.dtr-control:before {
+                        top: 50% !important;
+                        left: 5px !important;
+                        height: 18px !important;
+                        width: 18px !important;
+                        margin-top: -9px !important;
+                        display: block !important;
+                        position: absolute !important;
+                        color: white !important;
+                        border: 2px solid white !important;
+                        border-radius: 14px !important;
+                        box-shadow: 0 0 3px #444 !important;
+                        box-sizing: content-box !important;
+                        text-align: center !important;
+                        text-indent: 0 !important;
+                        font-family: 'Courier New', Courier, monospace !important;
+                        font-weight: bold !important;
+                        line-height: 18px !important;
+                        content: '+' !important;
+                        background-color: #3c8dbc !important; /* Azul al estar contraído (+) */
+                    }
+
+                    .tablaNotasCredito tr.parent td.dtr-control:before {
+                        content: '-' !important;
+                        background-color: #dd4b39 !important; /* Rojo al estar expandido (-) */
+                    }
+                }
+
                 /* Hide table while loading to prevent layout jump */
-                .tablas:not(.datatable-ready) {
+                .tablaNotasCredito:not(.datatable-ready) {
                     visibility: hidden;
                     height: 0;
                     overflow: hidden;
                     opacity: 0;
                 }
 
-                .tablas.datatable-ready {
+                .tablaNotasCredito.datatable-ready {
                     transition: opacity 0.5s ease;
                     opacity: 1;
+                }
+
+                /* Botones de acción compactos en móvil */
+                @media (max-width: 767px) {
+                    .tablaNotasCredito td:last-child .btn {
+                        padding: 1px 5px !important;
+                        font-size: 12px !important;
+                        line-height: 1.5 !important;
+                    }
+
+                    .tablaNotasCredito td:last-child .btn-group {
+                        display: flex;
+                        gap: 2px;
+                    }
                 }
             </style>
 
@@ -78,10 +141,9 @@ if ($_SESSION["perfil"] == "Especial") {
                     <span>Cargando Notas Crédito...</span>
                 </div>
 
-                <table class="table table-bordered table-striped dt-responsive tablas" width="100%">
+                <table id="tablaListadoNotasCredito" class="table table-bordered table-striped dt-responsive tablaNotasCredito display nowrap" width="100%">
                     <thead>
                         <tr>
-                            <th style="width:10px">#</th>
                             <th>Código Nota</th>
                             <th>Factura Original</th>
                             <th>Cliente</th>
@@ -102,7 +164,6 @@ if ($_SESSION["perfil"] == "Especial") {
                             $cliente = ControladorClientes::ctrMostrarClientes("id", $value["id_cliente"]);
 
                             echo '<tr>
-                                    <td>' . e($key + 1) . '</td>
                                     <td' . ($value["estado_dian"] == "borrador" ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . e($value["numero_nota_credito"]) . '</td>
                                     <td>' . e($value["numero_factura_original"]) . '</td>
                                     <td>' . e(($cliente["nombre"] ?? "N/A")) . '</td>
@@ -164,6 +225,84 @@ if ($_SESSION["perfil"] == "Especial") {
 </div>
 
 <script src="vistas/js/notas-credito.js?v=<?php echo time(); ?>"></script>
+
+<!-- DataTables Personalizado para Notas Crédito -->
+<script>
+$(document).ready(function () {
+  setTimeout(function () {
+    if ($("#tablaListadoNotasCredito").length > 0) {
+      if ($.fn.DataTable.isDataTable('#tablaListadoNotasCredito')) {
+        $('#tablaListadoNotasCredito').DataTable().destroy();
+      }
+
+      $("#tablaListadoNotasCredito").DataTable({
+        "autoWidth": false,
+        "initComplete": function(settings, json) {
+           $(this.api().table().node()).addClass('datatable-ready');
+           $("#loader-table").fadeOut(200);
+        },
+        "order": [[4, "desc"]], // Fecha (ahora índice 4)
+        "responsive": {
+          "details": {
+            "type": "column",
+            "target": 0, // En la columna de Código Nota (ahora índice 0)
+            "renderer": function (api, rowIdx, columns) {
+              if ($(window).width() >= 768) return false;
+
+              // Mapeo por índices directos (ajustados tras eliminar la columna #)
+              var codigo = columns[0].data || '';
+              var facturaOrig = columns[1].data || '';
+              var cliente = columns[2].data || '';
+              var total = columns[3].data || '';
+              var fecha = columns[4].data || '';
+              var estadoDian = columns[5].data || '';
+              var acciones = columns[6].data || '';
+
+              var finalHtml = '';
+
+              // SECCION 1: Información de Nota
+              finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
+              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información de Nota</h5></div>';
+
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+              finalHtml += '<span class="text-bold">Factura Original: </span><span class="pull-right">' + facturaOrig + '</span></div>';
+
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+              finalHtml += '<span class="text-bold">Total: </span><span class="pull-right">' + total + '</span></div>';
+
+              // SECCION 2: Estado y Fecha
+              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
+              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Estado y Fecha</h5></div>';
+
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+              finalHtml += '<span class="text-bold">Estado DIAN: </span><span class="pull-right">' + estadoDian + '</span></div>';
+
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+              finalHtml += '<span class="text-bold">Fecha: </span><span class="pull-right">' + fecha + '</span></div>';
+
+              return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #fcfcfc; margin: 0;">').append(finalHtml) : false;
+            }
+          }
+        },
+        "columnDefs": [
+          { "targets": 0, "className": 'dtr-control', "responsivePriority": 1 },
+          { "targets": [2, 6], "responsivePriority": 1 },
+          { "targets": [1, 3, 4, 5], "responsivePriority": 2 }
+        ],
+        "language": {
+          "sProcessing": "Procesando...",
+          "sLengthMenu": "Mostrar _MENU_ registros",
+          "sZeroRecords": "No se encontraron resultados",
+          "sEmptyTable": "Ningún dato disponible en esta tabla",
+          "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+          "sSearch": "Buscar:",
+          "oPaginate": { "sFirst": "Primero", "sLast": "Último", "sNext": "Siguiente", "sPrevious": "Anterior" }
+        }
+      });
+    }
+  }, 200);
+});
+</script>
 
 <!--=====================================
 MODAL ENVIAR EMAIL NC

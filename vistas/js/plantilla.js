@@ -7,6 +7,24 @@ $(document).ready(function () {
 	}
 
 	/*=============================================
+	Lógica de Loader Global
+	=============================================*/
+	function quitarLoaderGlobal() {
+		if ($("#loader-table").length > 0) {
+			$("#loader-table").fadeOut(400, function () {
+				$(this).remove();
+			});
+		}
+	}
+
+	// Escuchar cuando cualquier DataTable con clase .tablas se inicialice
+	$(document).on('init.dt', '.tablas', function () {
+		console.log("DataTable inicializado. Quitando loader...");
+		$(this).addClass('datatable-ready');
+		quitarLoaderGlobal();
+	});
+
+	/*=============================================
 	Data Table Global (.tablas)
 	=============================================*/
 	$(".tablas").DataTable({
@@ -18,14 +36,21 @@ $(document).ready(function () {
 			"sZeroRecords": "No se encontraron resultados",
 			"sEmptyTable": "Ningún dato disponible en esta tabla",
 			"sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+			"sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
+			"sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
 			"sSearch": "Buscar:",
-			"oPaginate": { "sFirst": "Primero", "sLast": "Último", "sNext": "Siguiente", "sPrevious": "Anterior" }
+			"oPaginate": {
+				"sFirst": "Primero",
+				"sLast": "Último",
+				"sNext": "Siguiente",
+				"sPrevious": "Anterior"
+			}
 		},
 		"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
 		"initComplete": function(settings, json) {
-			// CRITICO: El sistema oculta las tablas por CSS hasta que tienen esta clase.
+			// Respaldo por si el evento init.dt no se dispara a tiempo
 			$(this).addClass('datatable-ready');
-			console.log("DataTable Global: Clase datatable-ready añadida.");
+			quitarLoaderGlobal();
 		}
 	});
 

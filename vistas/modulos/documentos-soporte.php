@@ -53,6 +53,76 @@
                     font-weight: 500;
                 }
 
+                /* 1. LÓGICA DESKTOP-FIRST: Ocultar botón de expansión por defecto en Documentos Soporte */
+                .tablaDocumentosSoporte td.dtr-control:before,
+                .tablaDocumentosSoporte th.dtr-control:before {
+                    display: none !important;
+                    content: "" !important;
+                }
+
+                .tablaDocumentosSoporte td.dtr-control,
+                .tablaDocumentosSoporte th.dtr-control {
+                    padding-left: 8px !important;
+                    cursor: default !important;
+                }
+
+                /* 2. ACTIVACIÓN EXCLUSIVA PARA MÓVIL (Menos de 767px) */
+                @media (max-width: 767px) {
+                    .tablaDocumentosSoporte td.dtr-control {
+                        position: relative !important;
+                        padding-left: 30px !important;
+                        cursor: pointer !important;
+                    }
+
+                    .tablaDocumentosSoporte td.dtr-control:before {
+                        top: 50% !important;
+                        left: 5px !important;
+                        height: 18px !important;
+                        width: 18px !important;
+                        margin-top: -9px !important;
+                        display: block !important;
+                        position: absolute !important;
+                        color: white !important;
+                        border: 2px solid white !important;
+                        border-radius: 14px !important;
+                        box-shadow: 0 0 3px #444 !important;
+                        box-sizing: content-box !important;
+                        text-align: center !important;
+                        text-indent: 0 !important;
+                        font-family: 'Courier New', Courier, monospace !important;
+                        font-weight: bold !important;
+                        line-height: 18px !important;
+                        content: '+' !important;
+                        background-color: #3c8dbc !important; /* Azul al estar contraído (+) */
+                    }
+
+                    .tablaDocumentosSoporte tr.parent td.dtr-control:before {
+                        content: '-' !important;
+                        background-color: #dd4b39 !important; /* Rojo al estar expandido (-) */
+                    }
+                }
+
+                /* Botones de acción compactos en móvil */
+                @media (max-width: 767px) {
+                    .tablaDocumentosSoporte td:last-child .btn {
+                        padding: 1px 5px !important;
+                        font-size: 12px !important;
+                        line-height: 1.5 !important;
+                    }
+
+                    .tablaDocumentosSoporte td:last-child .btn-group {
+                        display: flex;
+                        gap: 2px;
+                    }
+
+                    /* Forzar que las acciones tengan espacio */
+                    .tablaDocumentosSoporte td:last-child {
+                        width: 1% !important;
+                        white-space: nowrap !important;
+                        text-align: right !important;
+                    }
+                }
+
                 /* Hide table while loading to prevent layout jump */
                 .tablaDocumentosSoporte:not(.datatable-ready) {
                     visibility: hidden;
@@ -74,11 +144,10 @@
                     <span>Cargando Documentos Soporte...</span>
                 </div>
 
-                <table class="table table-bordered table-striped dt-responsive tablaDocumentosSoporte" width="100%">
+                <table id="tablaListadoDocumentoSoporte" class="table table-bordered table-striped dt-responsive tablaDocumentosSoporte display nowrap" width="100%">
 
                     <thead>
                         <tr>
-                            <th style="width:10px">#</th>
                             <th>Código</th>
                             <th>Proveedor</th>
                             <th>Fecha</th>
@@ -113,7 +182,6 @@
                                 $proveedor = ControladorProveedores::ctrMostrarProveedores("id", $value["id_proveedor"]);
 
                                 echo '<tr>
-                                    <td>' . e($key + 1) . '</td>
                                     <td' . (empty($value["numero_ds"]) ? ' class="text-yellow" style="font-weight:bold"' : '') . '>';
 
                                 if (!empty($value["numero_ds"])) {
@@ -184,9 +252,86 @@
 
         </div>
 
-    </section>
+    </section><!-- DataTables Personalizado para Documento Soporte -->
+<script>
+$(document).ready(function () {
+  setTimeout(function () {
+    if ($("#tablaListadoDocumentoSoporte").length > 0) {
+      if ($.fn.DataTable.isDataTable('#tablaListadoDocumentoSoporte')) {
+        $('#tablaListadoDocumentoSoporte').DataTable().destroy();
+      }
 
-</div>
+      $("#tablaListadoDocumentoSoporte").DataTable({
+        "autoWidth": false,
+        "initComplete": function(settings, json) {
+           $(this.api().table().node()).addClass('datatable-ready');
+           $("#loader-table-ds").fadeOut(200);
+        },
+        "order": [[2, "desc"]], // Fecha
+        "responsive": {
+          "details": {
+            "type": "column",
+            "target": 0, // En la columna de Código
+            "renderer": function (api, rowIdx, columns) {
+              if ($(window).width() >= 768) return false;
+
+              // Mapeo por índices directos (0-5)
+              var codigo = columns[0].data || '';
+              var proveedor = columns[1].data || '';
+              var fecha = columns[2].data || '';
+              var estadoDian = columns[3].data || '';
+              var total = columns[4].data || '';
+              var acciones = columns[5].data || '';
+
+              var finalHtml = '';
+
+              // SECCION 1: Información del Documento
+              finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
+              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Información del Documento</h5></div>';
+
+              // REINTEGRO REPALDO: Proveedor por si se oculta de la fila principal
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+              finalHtml += '<span class="text-bold">Proveedor: </span><span class="pull-right">' + proveedor + '</span></div>';
+
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+              finalHtml += '<span class="text-bold">Total: </span><span class="pull-right">' + total + '</span></div>';
+
+              // SECCION 2: Estado y Fecha
+              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
+              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Estado y Fecha</h5></div>';
+
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+              finalHtml += '<span class="text-bold">Estado DIAN: </span><span class="pull-right">' + estadoDian + '</span></div>';
+
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+              finalHtml += '<span class="text-bold">Fecha: </span><span class="pull-right">' + fecha + '</span></div>';
+
+              // NO incluimos Acciones aquí, se mantienen compactas en la fila principal
+
+              return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #fcfcfc; margin: 0; text-align: left;">').append(finalHtml) : false;
+            }
+          }
+        },
+        "columnDefs": [
+          { "targets": 0, "className": 'dtr-control', "responsivePriority": 1 },
+          { "targets": 5, "responsivePriority": 1 }, // Acciones con MÁXIMA prioridad
+          { "targets": 1, "responsivePriority": 2 }, // Proveedor con prioridad 2 (se oculta si no cabe y pasa al detalle)
+          { "targets": [2, 3, 4], "responsivePriority": 3 }
+        ],
+        "language": {
+          "sProcessing": "Procesando...",
+          "sLengthMenu": "Mostrar _MENU_ registros",
+          "sZeroRecords": "No se encontraron resultados",
+          "sEmptyTable": "Ningún dato disponible en esta tabla",
+          "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+          "sSearch": "Buscar:",
+          "oPaginate": { "sFirst": "Primero", "sLast": "Último", "sNext": "Siguiente", "sPrevious": "Anterior" }
+        }
+      });
+    }
+  }, 200);
+});
+</script>
 
 <!--=====================================
 MODAL ENVIAR EMAIL DS

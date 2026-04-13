@@ -7,12 +7,13 @@
   }
 
   /* Posicionamiento del botón + (estilo variantes) */
-  .tablaUsuarios.collapsed tbody td:first-child::before {
-    left: 8px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    background-color: #3c8dbc !important;
+    background-color: #3c8dbc !important; /* Azul al estar contraído (+) */
     box-shadow: none !important;
+  }
+
+  /* Color rojo cuando está expandido (-) */
+  .tablaUsuarios.collapsed tbody tr.parent td:first-child::before {
+    background-color: #dd4b39 !important;
   }
 
   /* Resize action buttons on mobile */

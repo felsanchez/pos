@@ -208,6 +208,11 @@
     top: 50% !important;
     transform: translateY(-50%) !important;
     box-shadow: none !important;
+    background-color: #3c8dbc !important; /* Azul al estar contraído (+) */
+  }
+
+  /* Color rojo cuando está expandido (-) */
+  .tablaOrdenes.collapsed tbody tr.parent td:first-child::before {
     background-color: #dd4b39 !important;
   }
 
@@ -375,13 +380,11 @@ if ($xml) {
             <thead>
               <tr>
                 <th style="width:10px"></th>
-                <th style="width: 10px" class="hidden-xs">#</th>
                 <th>Código</th>
                 <th>Cliente</th>
                 <th>Vendedor</th>
                 <th>Imagen</th>
                 <th>Forma de pago</th>
-                <th>Neto</th>
                 <th>Total</th>
                 <th><i class="fa fa-magic"></i> Notas</th>
                 <th><i class="fa fa-pencil-square"></i> Observación</th>
@@ -466,7 +469,6 @@ if ($xml) {
 
                 echo '<tr data-orden-id="' . e($value['id']) . '">
                         <td></td>
-                        <td class="hidden-xs">' . e($key + 1) . '</td>  
                         <td>' . e($formatoCodigoVenta) . e($value["codigo"]) . '</td>';
 
                 /*
@@ -504,8 +506,6 @@ if ($xml) {
                 }
 
                 echo '<td>' . e($moneda) . ' ' . e($value["metodo_pago"]) . '</td> 
-
-                        <td>' . e($moneda) . ' ' . e(number_format($value["neto"], 2)) . '</td> 
 
                         <td>' . e($moneda) . ' ' . e(number_format($value["total"], 2)) . '</td>
 
@@ -1410,7 +1410,7 @@ MODAL EDITAR CLIENTE
       }
 
       $(".tablaOrdenes").DataTable({
-        "order": [[11, "desc"]],
+        "order": [[9, "desc"]],
         "responsive": {
           "details": {
             "type": "column",
@@ -1447,15 +1447,6 @@ MODAL EDITAR CLIENTE
 
               var finalHtml = '';
 
-              // SECCION 1: Información del Cliente
-              finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
-              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información del Cliente</h5></div>';
-
-              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-              finalHtml += '<span class="text-bold" style="color:#555;">Cliente: </span><span class="pull-right" style="color:#333;">' + cliente + '</span></div>';
-
-              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-              finalHtml += '<span class="text-bold" style="color:#555;">Vendedor: </span><span class="pull-right" style="color:#333;">' + vendedor + '</span></div>';
 
               // SECCION 2: Información de Venta
               finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
@@ -1479,6 +1470,10 @@ MODAL EDITAR CLIENTE
               // SECCION 3: Información Adicional (siempre visible)
               finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
               finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información adicional</h5></div>';
+
+              // Vendedor (movido desde sección 1)
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+              finalHtml += '<span class="text-bold" style="color:#555;">Vendedor: </span><span class="pull-right" style="color:#333;">' + vendedor + '</span></div>';
 
               // Notas (solo lectura)
               var notasTexto = $('<div>').html(notas).text().trim();
@@ -1510,11 +1505,10 @@ MODAL EDITAR CLIENTE
             "defaultContent": "",
             "responsivePriority": 1000
           },
-          { "targets": 1, "responsivePriority": 1000 }, // # (ocultar en móvil)
-          { "targets": 2, "responsivePriority": 1 }, // Codigo (visible + botón expand)
-          { "targets": 13, "responsivePriority": 1, "orderable": false }, // Acciones (visible en móvil)
-          // Hide from main view
-          { "targets": [3, 4, 5, 6, 7, 8, 9, 10, 11, 12], "responsivePriority": 10000 }
+          { "targets": 1, "responsivePriority": 1 }, // Código (Columna 1 ahora)
+          { "targets": 11, "responsivePriority": 1, "orderable": false }, // Acciones (Columna 11 ahora)
+          // Ocultar del listado principal en escritorio si no caben
+          { "targets": [2, 3, 4, 5, 6, 7, 8, 9, 10], "responsivePriority": 10000 }
         ],
         "language": {
           "sProcessing": "Procesando...",

@@ -13,13 +13,12 @@ if (!puedeVer('proveedores')) {
     cursor: pointer;
   }
 
-  /* Posicionamiento del botón + de DataTables en modo inline */
-  .tablaProveedores.collapsed tbody td:first-child::before {
-    left: 8px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    box-shadow: none !important;
-    background-color: #3b8ab8 !important; /* Estilo azul AdminLTE */
+    background-color: #3c8dbc !important; /* Estilo azul AdminLTE */
+  }
+
+  /* Color rojo cuando está expandido (-) */
+  .tablaProveedores.collapsed tbody tr.parent td:first-child::before {
+    background-color: #dd4b39 !important;
   }
 
   /* Estilos para el botón de expansión en móvil */

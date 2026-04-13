@@ -33,41 +33,53 @@
     position: relative;
   }
 
-  /* Estilo para botón de expansión responsivo '+' */
-  table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control,
-  table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control {
-    position: relative;
-    padding-left: 30px !important;
-    cursor: pointer;
+  /* 1. LÓGICA DESKTOP-FIRST: Ocultar botón de expansión por defecto en VentasListado */
+  .tablaVentasListado td.dtr-control:before,
+  .tablaVentasListado th.dtr-control:before {
+    display: none !important;
+    content: "" !important;
   }
 
-  table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control:before,
-  table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
-    top: 50%;
-    left: 5px;
-    height: 18px;
-    width: 18px;
-    margin-top: -9px;
-    display: block;
-    position: absolute;
-    color: white;
-    border: 2px solid white;
-    border-radius: 14px;
-    box-shadow: 0 0 3px #444;
-    box-sizing: content-box;
-    text-align: center;
-    text-indent: 0 !important;
-    font-family: 'Courier New', Courier, monospace;
-    font-weight: bold;
-    line-height: 18px;
-    content: '+';
-    background-color: #31b0d5;
+  .tablaVentasListado td.dtr-control,
+  .tablaVentasListado th.dtr-control {
+    padding-left: 8px !important;
+    cursor: default !important;
   }
 
-  table.dataTable.dtr-inline.collapsed > tbody > tr.parent > td.dtr-control:before,
-  table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before {
-    content: '-';
-    background-color: #d33333;
+  /* 2. ACTIVACIÓN EXCLUSIVA PARA MÓVIL (Menos de 767px) */
+  @media (max-width: 767px) {
+    .tablaVentasListado td.dtr-control {
+      position: relative !important;
+      padding-left: 30px !important;
+      cursor: pointer !important;
+    }
+
+    .tablaVentasListado td.dtr-control:before {
+      top: 50%;
+      left: 5px;
+      height: 18px;
+      width: 18px;
+      margin-top: -9px;
+      display: block !important;
+      position: absolute;
+      color: white !important;
+      border: 2px solid white !important;
+      border-radius: 14px !important;
+      box-shadow: 0 0 3px #444 !important;
+      box-sizing: content-box !important;
+      text-align: center !important;
+      text-indent: 0 !important;
+      font-family: 'Courier New', Courier, monospace !important;
+      font-weight: bold !important;
+      line-height: 18px !important;
+      content: '+' !important;
+      background-color: #3c8dbc !important; /* Azul al estar contraído (+) */
+    }
+
+    .tablaVentasListado tr.parent td.dtr-control:before {
+      content: '-' !important;
+      background-color: #dd4b39 !important; /* Rojo al estar expandido (-) */
+    }
   }
 </style>
 
@@ -240,41 +252,41 @@ if ($xml) {
           }
         </style>
 
-<style>
-  /* Botones de acción pequeños en móvil para ventas */
-  @media (max-width: 767px) {
-    .tabla-ventas .col-acciones .btn {
-      padding: 1px 5px !important;
-      font-size: 12px !important;
-      line-height: 1.5 !important;
-    }
-  }
-</style>
+        <style>
+          /* Botones de acción pequeños en móvil para ventas */
+          @media (max-width: 767px) {
+            .tabla-ventas .col-acciones .btn {
+              padding: 1px 5px !important;
+              font-size: 12px !important;
+              line-height: 1.5 !important;
+            }
+          }
+        </style>
 
-<style>
-  /* Estilo campo observación — igual que en ordenes */
-  .celda-observacion {
-    background: #fff9e6;
-    padding: 8px;
-    border-radius: 3px;
-    font-size: 12px;
-    color: #666;
-    border-left: 2px solid #f39c12;
-    cursor: text;
-    min-height: 30px;
-  }
+        <style>
+          /* Estilo campo observación — igual que en ordenes */
+          .celda-observacion {
+            background: #fff9e6;
+            padding: 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            color: #666;
+            border-left: 2px solid #f39c12;
+            cursor: text;
+            min-height: 30px;
+          }
 
-  .celda-observacion:empty:before {
-    content: "Escribe una observación...";
-    color: #999;
-    font-style: italic;
-  }
+          .celda-observacion:empty:before {
+            content: "Escribe una observación...";
+            color: #999;
+            font-style: italic;
+          }
 
-  .celda-observacion:focus {
-    outline: 2px solid #f39c12;
-    background: #fffef5;
-  }
-</style>
+          .celda-observacion:focus {
+            outline: 2px solid #f39c12;
+            background: #fffef5;
+          }
+        </style>
 
 
       </div>
@@ -282,18 +294,16 @@ if ($xml) {
       <div class="box-body">
 
         <div class="tabla-ventas table-responsive">
-          <table id="example" class="table table-bordered table-striped tablas display nowrap">
+          <table id="tablaListaVentas" class="table table-bordered table-striped tablaVentasListado display nowrap" width="100%">
 
             <thead>
               <tr>
-                <th>Código / Factura</th>
+                <th>Código</th>
                 <th>Cliente</th>
                 <th>Vendedor</th>
                 <th>Forma de pago</th>
                 <th>Imagen</th>
-
                 <th>Total</th>
-                <!--<th>Estado DIAN</th>-->
                 <th><i class="fa fa-magic"></i> Notas</th>
                 <th><i class="fa fa-pencil-square"></i> Observación</th>
                 <th>Fecha</th>
@@ -740,9 +750,141 @@ MODAL EDITAR CLIENTE
   });
 </script>
 
+<!-- DataTables Personalizado para Ventas (Mobile First) -->
 <script>
-  $(document).ready(function() {
-    setTimeout(function() {
+  $(document).ready(function () {
+    // Retraso para asegurar que sobreescribimos cualquier inicialización global
+    setTimeout(function () {
+      if ($("#tablaListaVentas").length > 0) {
+        // Destruir instancia previa si existe
+        if ($.fn.DataTable.isDataTable('#tablaListaVentas')) {
+          $('#tablaListaVentas').DataTable().destroy();
+        }
+
+        $("#tablaListaVentas").DataTable({
+          "autoWidth": false,
+          "initComplete": function(settings, json) {
+             $(this.api().table().node()).addClass('datatable-ready');
+             if (typeof quitarLoaderGlobal === 'function') {
+                quitarLoaderGlobal();
+             }
+          },
+          "order": [
+            [8, "desc"]
+          ], // Ordenar por Fecha por defecto
+          "responsive": {
+            "details": {
+              "type": "column",
+              "target": 0, // El primer campo (+)
+              "renderer": function(api, rowIdx, columns) {
+                // GUARDIA: Si estamos en escritorio (> 768px), NO permitir expansión
+                if ($(window).width() >= 768) {
+                  return false;
+                }
+
+                // USO DE ÍNDICES DIRECTOS (0-9) para evitar errores de desalineación
+                var vendedor = columns[2].data || '';
+                var formaPago = columns[3].data || '';
+                var imagen = columns[4].data || '';
+                var total = columns[5].data || '';
+                var notas = columns[6].data || '';
+                var obs = columns[7].data || '';
+                var fecha = columns[8].data || '';
+
+                // Extraer ruta de imagen del HTML
+                var imagenSrc = 'vistas/img/ventas/default/sinventa.png';
+                var matchImagen = imagen.match(/data-imagen=["']([^"']+)["']/i);
+                if (matchImagen) imagenSrc = matchImagen[1];
+
+                var idVenta = $(api.row(rowIdx).node()).attr('data-venta-id') || '';
+
+                var finalHtml = '';
+
+                // SECCION 1: Información de ventas
+                finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #605ca8;">';
+                finalHtml += '<h5 style="font-weight:bold; color:#605ca8; margin:0;">Información de ventas</h5></div>';
+
+                finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+                finalHtml += '<span class="text-bold" style="color:#555;">Fecha: </span><span class="pull-right" style="color:#333;">' + fecha + '</span></div>';
+
+                finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+                finalHtml += '<span class="text-bold" style="color:#555;">Forma de Pago: </span><span class="pull-right" style="color:#333;">' + formaPago + '</span></div>';
+
+                finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+                finalHtml += '<span class="text-bold" style="color:#555;">Total: </span><span class="pull-right" style="color:#333;">' + total + '</span></div>';
+
+                // Botón Ver imagen
+                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+                finalHtml += '<span class="text-bold" style="color:#555;">Imagen: </span>';
+                finalHtml += '<button class="btn btn-info btn-xs img-ampliar-venta" data-imagen="' + imagenSrc + '" data-idventa="' + idVenta + '">';
+                finalHtml += '<i class="fa fa-image"></i> Ver imagen</button></div>';
+
+                // SECCION 2: Información adicional
+                finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #605ca8;">';
+                finalHtml += '<h5 style="font-weight:bold; color:#605ca8; margin:0;">Información adicional</h5></div>';
+
+                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+                finalHtml += '<span class="text-bold" style="color:#555;">Vendedor: </span><span class="pull-right" style="color:#333;">' + vendedor + '</span></div>';
+
+                // Notas (solo lectura)
+                var notasTexto = $('<div>').html(notas).text().trim();
+                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+                finalHtml += '<span class="text-bold" style="display:block; color:#555; margin-bottom:4px;"><i class="fa fa-magic"></i> Notas:</span>';
+                finalHtml += '<span style="color:#333;">' + (notasTexto || '<em style="color:#999;">Sin notas</em>') + '</span></div>';
+
+                // Observación (editable)
+                var obsTexto = $('<div>').html(obs).text().trim();
+                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
+                finalHtml += '<span class="text-bold" style="display:block; color:#555; margin-bottom:4px;"><i class="fa fa-pencil-square"></i> Observación:</span>';
+                finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:30px;">' + obsTexto + '</div></div>';
+
+                return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #fcfcfc; margin: 0;">').append(finalHtml) : false;
+              }
+            }
+          },
+          "columnDefs": [{
+            "className": 'dtr-control',
+            "targets": 0, // Código (para usarlo como botón expand)
+            "responsivePriority": 1
+          },
+          {
+            "targets": 1, // Cliente
+            "responsivePriority": 1
+          },
+          {
+            "targets": 9, // Acciones
+            "responsivePriority": 1
+          },
+          // Ocultar resto después de los prioritarios en móvil
+          {
+            "targets": [2, 3, 4, 5, 6, 7, 8],
+            "responsivePriority": 2
+          }
+          ],
+          "language": {
+            "sProcessing": "Procesando...",
+            "sLengthMenu": "Mostrar _MENU_ registros",
+            "sZeroRecords": "No se encontraron resultados",
+            "sEmptyTable": "Ningún dato disponible en esta tabla",
+            "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+            "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
+            "sSearch": "Buscar:",
+            "oPaginate": {
+              "sFirst": "Primero",
+              "sLast": "Último",
+              "sNext": "Siguiente",
+              "sPrevious": "Anterior"
+            }
+          }
+        });
+      }
+    }, 200);
+  });
+</script>
+
+<script>
+  $(document).ready(function () {
+    setTimeout(function () {
       if ($('#tablaVentasEspecial').length > 0) {
         $('#tablaVentasEspecial').DataTable({
           "order": [[0, "asc"]],

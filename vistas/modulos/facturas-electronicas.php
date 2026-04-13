@@ -27,42 +27,72 @@
 
 
 
-<style>
-  /* Estilo para botón de expansión responsivo '+' */
-  table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control,
-  table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control {
-    position: relative;
-    padding-left: 30px !important;
-    cursor: pointer;
+  /* 1. LÓGICA DESKTOP-FIRST: Ocultar botón de expansión por defecto en Facturas */
+  .tablaFacturasListado td.dtr-control:before,
+  .tablaFacturasListado th.dtr-control:before {
+    display: none !important;
+    content: "" !important;
   }
 
-  table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control:before,
-  table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
-    top: 50%;
-    left: 5px;
-    height: 18px;
-    width: 18px;
-    margin-top: -9px;
-    display: block;
-    position: absolute;
-    color: white;
-    border: 2px solid white;
-    border-radius: 14px;
-    box-shadow: 0 0 3px #444;
-    box-sizing: content-box;
-    text-align: center;
-    text-indent: 0 !important;
-    font-family: 'Courier New', Courier, monospace;
-    font-weight: bold;
-    line-height: 18px;
-    content: '+';
-    background-color: #31b0d5;
+  .tablaFacturasListado td.dtr-control,
+  .tablaFacturasListado th.dtr-control {
+    padding-left: 8px !important;
+    cursor: default !important;
   }
 
-  table.dataTable.dtr-inline.collapsed > tbody > tr.parent > td.dtr-control:before,
-  table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before {
-    content: '-';
-    background-color: #d33333;
+  /* 2. ACTIVACIÓN EXCLUSIVA PARA MÓVIL (Menos de 767px) */
+  @media (max-width: 767px) {
+    .tablaFacturasListado td.dtr-control {
+      position: relative !important;
+      padding-left: 30px !important;
+      cursor: pointer !important;
+    }
+
+    .tablaFacturasListado td.dtr-control:before {
+      top: 50% !important;
+      left: 5px !important;
+      height: 18px !important;
+      width: 18px !important;
+      margin-top: -9px !important;
+      display: block !important;
+      position: absolute !important;
+      color: white !important;
+      border: 2px solid white !important;
+      border-radius: 14px !important;
+      box-shadow: 0 0 3px #444 !important;
+      box-sizing: content-box !important;
+      text-align: center !important;
+      text-indent: 0 !important;
+      font-family: 'Courier New', Courier, monospace !important;
+      font-weight: bold !important;
+      line-height: 18px !important;
+      content: '+' !important;
+      background-color: #3c8dbc !important; /* Azul al estar contraído (+) */
+    }
+
+    .tablaFacturasListado tr.parent td.dtr-control:before {
+      content: '-' !important;
+      background-color: #dd4b39 !important; /* Rojo al estar expandido (-) */
+    }
+
+    /* Botones de acción compactos en móvil */
+    .tablaFacturasListado td:last-child .btn {
+      padding: 1px 5px !important;
+      font-size: 12px !important;
+      line-height: 1.5 !important;
+    }
+
+    .tablaFacturasListado td:last-child .btn-group {
+      display: flex;
+      gap: 2px;
+    }
+
+    /* Forzar que las acciones tengan espacio */
+    .tablaFacturasListado td:last-child {
+      width: 1% !important;
+      white-space: nowrap !important;
+      text-align: right !important;
+    }
   }
 </style>
 
@@ -297,14 +327,33 @@ if ($xml) {
             color: #666;
             font-weight: 500;
           }
+
+          /* Ocultar tabla mientras carga para evitar saltos */
+          .tablaFacturasListado:not(.datatable-ready) {
+            visibility: hidden;
+            height: 0;
+            overflow: hidden;
+            opacity: 0;
+          }
+
+          .tablaFacturasListado.datatable-ready {
+            transition: opacity 0.5s ease;
+            opacity: 1;
+          }
         </style>
 
-        <div class="tabla-ventas table-responsive">
-          <table id="example" class="table table-bordered table-striped tablas display nowrap">
+        <div class="box-body">
+
+          <div id="loader-table" class="loader-container">
+            <i class="fa fa-refresh fa-spin"></i>
+            <span>Cargando Facturas Electrónicas...</span>
+          </div>
+
+          <div class="tabla-facturas table-responsive">
+            <table id="tablaFacturasElectronicas" class="table table-bordered table-striped tablaFacturasListado display nowrap" width="100%">
 
             <thead>
               <tr>
-                <th style="width: 10px">#</th>
                 <th>Código</th>
                 <th>Cliente</th>
                 <th>Vendedor</th>
@@ -434,8 +483,7 @@ if ($xml) {
                 }
 
                 echo '<tr data-fe-id="' . e($value['id']) . '">';
-                echo '<td>' . $contador++ . '</td>
-                      <td' . ($esBorrador ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . e($numeroMostrar) . '</td>';
+                echo '<td' . ($esBorrador ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . e($numeroMostrar) . '</td>';
 
                 // Usar nombres que ya vienen del JOIN en la consulta SQL
                 $nombreCliente = !empty($value["nombre_cliente"]) ? $value["nombre_cliente"] : "Cliente no encontrado";
@@ -1193,3 +1241,136 @@ MODAL ENVIAR EMAIL
 </div>
 
 </div>
+<!-- DataTables Personalizado para Facturas -->
+<script>
+$(document).ready(function () {
+  setTimeout(function () {
+    if ($("#tablaFacturasElectronicas").length > 0) {
+      if ($.fn.DataTable.isDataTable('#tablaFacturasElectronicas')) {
+        $('#tablaFacturasElectronicas').DataTable().destroy();
+      }
+
+      $("#tablaFacturasElectronicas").DataTable({
+        "autoWidth": false,
+        "initComplete": function(settings, json) {
+           $(this.api().table().node()).addClass('datatable-ready');
+           if (typeof quitarLoaderGlobal === 'function') {
+              quitarLoaderGlobal();
+           }
+        },
+        "order": [[10, "desc"]], // Fecha
+        "responsive": {
+          "details": {
+            "type": "column",
+            "target": 0, // En la columna #
+            "renderer": function (api, rowIdx, columns) {
+              if ($(window).width() >= 768) return false;
+
+              // Mapeo corregido por índices tras eliminar la columna #
+              var codigo = columns[0].data || '';
+              var cliente = columns[1].data || '';
+              var vendedor = columns[2].data || '';
+              var formaPago = columns[3].data || '';
+              var imagen = columns[4].data || '';
+              var total = columns[5].data || '';
+              var estadoDian = columns[6].data || '';
+              var notas = columns[7].data || '';
+              var obs = columns[8].data || '';
+              var fecha = columns[9].data || '';
+
+              // Extraer ruta de imagen
+              var imagenSrc = 'vistas/img/ventas/default/sinventa.png';
+              var matchImagen = imagen.match(/src=["']([^"']+)["']/i);
+              if (matchImagen) imagenSrc = matchImagen[1];
+              
+              var idVenta = $(api.row(rowIdx).node()).attr('data-fe-id') || '';
+              var finalHtml = '';
+
+              // SECCION 1: Datos de Facturación
+              finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
+              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Información de Facturación</h5></div>';
+
+              finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+              finalHtml += '<span class="text-bold">Cliente: </span><span class="pull-right">' + cliente + '</span></div>';
+
+              finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+              finalHtml += '<span class="text-bold">Pago: </span><span class="pull-right">' + formaPago + '</span></div>';
+
+              finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+              finalHtml += '<span class="text-bold">Total: </span><span class="pull-right">' + total + '</span></div>';
+
+              finalHtml += '<div class="col-xs-12" style="padding: 10px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; text-align: left;">';
+              finalHtml += '<span class="text-bold">Imagen: </span>';
+              finalHtml += '<button class="btn btn-info btn-xs img-ampliar-venta" data-imagen="' + imagenSrc + '" data-idventa="' + idVenta + '"><i class="fa fa-image"></i> Ver imagen</button></div>';
+
+              // SECCION 2: Estado y Fecha
+              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
+              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Estado y Fecha</h5></div>';
+
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+              finalHtml += '<span class="text-bold">Estado DIAN: </span><span class="pull-right">' + estadoDian + '</span></div>';
+
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+              finalHtml += '<span class="text-bold">Fecha: </span><span class="pull-right">' + fecha + '</span></div>';
+
+              // SECCION 3: Notas y Observaciones
+              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
+              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Notas y Observaciones</h5></div>';
+
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+              finalHtml += '<span class="text-bold" style="display:block; margin-bottom:4px;">Notas:</span>';
+              finalHtml += '<span>' + (notas || '<em style="color:#999;">Sin notas</em>') + '</span></div>';
+
+              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+              finalHtml += '<span class="text-bold" style="display:block; margin-bottom:4px;">Observación:</span>';
+              finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:30px; text-align: left;">' + obs + '</div></div>';
+
+              return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #fcfcfc; margin: 0; text-align: left;">').append(finalHtml) : false;
+            }
+          }
+        },
+        "columnDefs": [
+          { "targets": 0, "className": 'dtr-control', "responsivePriority": 1 },
+          { "targets": 10, "responsivePriority": 1 }, // Acciones con máxima prioridad
+          { "targets": 1, "responsivePriority": 2 }, // Cliente con prioridad 2
+          { "targets": [2, 3, 4, 5, 6, 7, 8, 9], "responsivePriority": 3 }
+        ],
+        "language": {
+          "sProcessing": "Procesando...",
+          "sLengthMenu": "Mostrar _MENU_ registros",
+          "sZeroRecords": "No se encontraron resultados",
+          "sEmptyTable": "Ningún dato disponible en esta tabla",
+          "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+          "sSearch": "Buscar:",
+          "oPaginate": { "sFirst": "Primero", "sLast": "Último", "sNext": "Siguiente", "sPrevious": "Anterior" }
+        }
+      });
+    }
+  }, 200);
+});
+</script>
+
+<script>
+  /*=============================================
+  RANGO DE FECHAS FACTUS
+  =============================================*/
+  $('#daterange-btn-factus').daterangepicker(
+    {
+      ranges: {
+        'Hoy': [moment(), moment()],
+        'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+        'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
+        'Este mes': [moment().startOf('month'), moment().endOf('month')],
+        'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+      },
+      startDate: moment(),
+      endDate: moment()
+    },
+    function (start, end) {
+      $('#fechaInicial').val(start.format('YYYY-MM-DD'));
+      $('#fechaFinal').val(end.format('YYYY-MM-DD'));
+      $('#daterange-btn-factus span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+    }
+  );
+</script>
