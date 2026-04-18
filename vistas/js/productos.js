@@ -197,49 +197,42 @@ $(document).ready(function () {
 		});
 	}
 
-	// Agregar filtro personalizado a DataTables
-	if (typeof $.fn.dataTable !== 'undefined' && $.fn.dataTable.ext && $.fn.dataTable.ext.search) {
+	// Evento al cambiar los filtros (MÉTODO API DIRECTA: Más seguro y aislado)
+	$(document).on('change', '#filtroCategoria, #filtroProveedor', function () {
 		
-		// Limpiar búsquedas previas para evitar duplicidad si se recarga el script
-		$.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(function(item) {
-			return true; 
-		});
+		var valor = $(this).val() || "";
+		var idSelector = $(this).attr('id');
+		var tituloBuscado = (idSelector === "filtroCategoria") ? "Categoría" : "Proveedor";
 
-		$.fn.dataTable.ext.search.push(
-			function (settings, data, dataIndex) {
-				// Verificar si es la tabla de productos
-				if (settings.nTable.className.indexOf('tablaProductos') === -1) {
-					return true;
+		if (typeof table !== 'undefined' && table.column) {
+			
+			// Paso 1: Encontrar el índice de la columna de forma dinámica por su nombre
+			var colIdx = -1;
+			table.columns().every(function () {
+				var headerText = $(this.header()).text().trim();
+				if (headerText === tituloBuscado) {
+					colIdx = this.index();
 				}
+			});
 
-				var filtroCategoria = $('#filtroCategoria').val() ? $('#filtroCategoria').val().toLowerCase() : "";
-				var filtroProveedor = $('#filtroProveedor').val() ? $('#filtroProveedor').val().toLowerCase() : "";
-
-				// Si no hay filtro seleccionado, mostrar todo
-				if (filtroCategoria === "" && filtroProveedor === "") {
-					return true;
-				}
-
-				// La columna 4 (índice 4) es la categoría
-				var categoriaTexto = data[4] ? data[4].toLowerCase() : "";
-				// La columna 8 (índice 8) es el proveedor
-				var proveedorTexto = data[8] ? data[8].toLowerCase() : "";
-
-				// Verificar coincidencia
-				var matchCategoria = (filtroCategoria === "" || categoriaTexto.indexOf(filtroCategoria) !== -1);
-				var matchProveedor = (filtroProveedor === "" || proveedorTexto.indexOf(filtroProveedor) !== -1);
-
-				return matchCategoria && matchProveedor;
+			// Paso 2: Aplicar la búsqueda directa sobre esa columna e ignorar otras tablas
+			if (colIdx !== -1) {
+				// Usamos búsqueda flexible (contains) para evitar fallos por espacios invisibles
+				// que el servidor pudiera añadir dependiendo del perfil del usuario.
+				table.column(colIdx).search(valor).draw();
 			}
-		);
-	}
 
-	// Evento al cambiar los filtros
-	$('#filtroCategoria, #filtroProveedor').on('change', function () {
-		if (typeof table !== 'undefined') {
-			table.draw();
 		} else if ($.fn.DataTable.isDataTable('.tablaProductos')) {
-			$('.tablaProductos').DataTable().draw();
+			
+			// Fallback si la variable global 'table' no estuviera disponible
+			var t = $('.tablaProductos').DataTable();
+			var idx = -1;
+			t.columns().every(function () {
+				if ($(this.header()).text().trim() === tituloBuscado) idx = this.index();
+			});
+			if (idx !== -1) {
+				t.column(idx).search(valor).draw();
+			}
 		}
 	});
 

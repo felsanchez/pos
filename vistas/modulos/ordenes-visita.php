@@ -60,7 +60,7 @@
         <div class="box-body table-responsive">
 
 
-         <table id="example" class="table table-bordered table-striped tablas display nowrap">
+         <table id="example" class="table table-bordered table-striped display nowrap">
               
             <thead>
               <tr>
@@ -259,7 +259,7 @@ MODAL EDITAR CLIENTE
 
 
 <!--Ruta Clientes.js-->
-<script src="vistas/js/ventas.js"></script>
+<!--Ruta Ventas.js quitada por estar en plantilla.php-->
 
 <!-- DateRangePicker -->
 <script src="vistas/bower_components/moment/min/moment.min.js"></script>
@@ -284,7 +284,7 @@ $('#daterange-btn').daterangepicker(
     var fechaInicial = start.format('YYYY-MM-DD');
     var fechaFinal = end.format('YYYY-MM-DD');
 
-    var nuevaURL = 'index.php?ruta=ordenes&fechaInicial=' + fechaInicial + '&fechaFinal=' + fechaFinal;
+    var nuevaURL = 'index.php?ruta=ordenes-visita&fechaInicial=' + fechaInicial + '&fechaFinal=' + fechaFinal;
     window.location.href = nuevaURL;
   }
 );

@@ -813,11 +813,10 @@ MODAL EDITAR CLIENTE
                 finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
                 finalHtml += '<span class="text-bold" style="color:#555;">Total: </span><span class="pull-right" style="color:#333;">' + total + '</span></div>';
 
-                // Botón Ver imagen
+                // Imagen miniatura directa (Estilizada para móvil)
                 finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
                 finalHtml += '<span class="text-bold" style="color:#555;">Imagen: </span>';
-                finalHtml += '<button class="btn btn-info btn-xs img-ampliar-venta" data-imagen="' + imagenSrc + '" data-idventa="' + idVenta + '">';
-                finalHtml += '<i class="fa fa-image"></i> Ver imagen</button></div>';
+                finalHtml += '<span style="text-align: right;">' + imagen + '</span></div>';
 
                 // SECCION 2: Información adicional
                 finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #605ca8;">';

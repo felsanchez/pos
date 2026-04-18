@@ -4,6 +4,8 @@ TABLA SEGUIMIENTO LEADS
 $(".tablaSeguimiento").DataTable({
     "responsive": {
         details: {
+            type: "column",
+            target: 1, // Fuerza a que el clic de expansión ocurra estrictamente en la columna 1 (Fecha)
             renderer: function (api, rowIdx, columns) {
                 var data = $.map(columns, function (col, i) {
                     return col;
@@ -15,48 +17,52 @@ $(".tablaSeguimiento").DataTable({
                     return api.cell(rowIdx, idx).render('display');
                 }
 
-                // NOTA: Se ajustaron los índices +1 debido a la nueva columna Checkbox en índice 0
-                // 0: Checkbox, 1: #, 2: Fecha, 3: Nombre, 4: Celular, 5: Contexto, 6: Estado, 7: Seg1, 8: Seg2, 9: Seg3, 10: Pedido
+                // Índices actualizados (Columna # eliminada)
+                // 0: Checkbox, 1: Fecha, 2: Nombre, 3: Celular, 4: Contexto, 5: Estado, 6: Seg1, 7: Seg2, 8: Seg3, 9: Pedido
+                var finalHtml = '';
 
-                // Definir secciones
-                var html = '<div class="dtr-details-custom">';
+                // SECCION 1: Información del cliente
+                finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
+                finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Información del cliente</h5></div>';
 
-                // 1. Información del cliente (Fecha(2), Nombre(3), Celular(4))
-                html += '<div class="box box-solid box-primary" style="margin-bottom:10px; border:1px solid #ddd; box-shadow:none;">';
-                html += '<div class="box-header with-border"><h5 class="box-title" style="font-weight:bold; font-size:14px;">Información del cliente</h5></div>';
-                html += '<div class="box-body" style="padding:10px;">';
-                html += '<p style="margin-bottom:5px;"><strong>Último seguimiento:</strong> ' + getVal(2) + '</p>';
-                html += '<p style="margin-bottom:5px;"><strong>Nombre:</strong> ' + getVal(3) + '</p>';
-                html += '<p style="margin-bottom:5px;"><strong>Celular:</strong> ' + getVal(4) + '</p>';
-                html += '</div></div>';
+                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                finalHtml += '<span class="text-bold">Último seguimiento: </span><span class="pull-right">' + getVal(1) + '</span></div>';
 
-                // 2. Conversación (Contexto(5), Estado(6))
-                html += '<div class="box box-solid box-info" style="margin-bottom:10px; border:1px solid #ddd; box-shadow:none;">';
-                html += '<div class="box-header with-border"><h5 class="box-title" style="font-weight:bold; font-size:14px;">Conversación</h5></div>';
-                html += '<div class="box-body" style="padding:10px;">';
-                html += '<p style="margin-bottom:5px;"><strong>Contexto:</strong> ' + getVal(5) + '</p>';
-                html += '<p style="margin-bottom:5px;"><strong>Estado:</strong> ' + getVal(6) + '</p>';
-                html += '</div></div>';
+                finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                finalHtml += '<span class="text-bold">Nombre: </span><span class="pull-right">' + getVal(2) + '</span></div>';
 
-                // 3. Seguimientos (Seg1(7), Seg2(8), Seg3(9))
-                html += '<div class="box box-solid box-warning" style="margin-bottom:10px; border:1px solid #ddd; box-shadow:none;">';
-                html += '<div class="box-header with-border"><h5 class="box-title" style="font-weight:bold; font-size:14px;">Seguimientos</h5></div>';
-                html += '<div class="box-body" style="padding:10px;">';
-                html += '<p style="margin-bottom:5px;"><strong>Seguimiento 1:</strong> ' + getVal(7) + '</p>';
-                html += '<p style="margin-bottom:5px;"><strong>Seguimiento 2:</strong> ' + getVal(8) + '</p>';
-                html += '<p style="margin-bottom:5px;"><strong>Seguimiento 3:</strong> ' + getVal(9) + '</p>';
-                html += '</div></div>';
+                finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                finalHtml += '<span class="text-bold">Celular: </span><span class="pull-right">' + getVal(3) + '</span></div>';
 
-                // 4. Pedido (Hizo pedido(10))
-                html += '<div class="box box-solid box-success" style="margin-bottom:0px; border:1px solid #ddd; box-shadow:none;">';
-                html += '<div class="box-header with-border"><h5 class="box-title" style="font-weight:bold; font-size:14px;">Pedido</h5></div>';
-                html += '<div class="box-body" style="padding:10px;">';
-                html += '<p style="margin-bottom:5px;"><strong>¿Completó pedido?:</strong> ' + getVal(10) + '</p>';
-                html += '</div></div>';
+                // SECCION 2: Conversación
+                finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
+                finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Conversación</h5></div>';
 
-                html += '</div>';
+                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                finalHtml += '<span class="text-bold" style="display:block; margin-bottom:4px;">Contexto: </span><span>' + getVal(4) + '</span></div>';
 
-                return html;
+                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                finalHtml += '<span class="text-bold">Estado: </span><span class="pull-right">' + getVal(5) + '</span></div>';
+
+                // SECCION 3: Seguimientos
+                finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
+                finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Seguimientos</h5></div>';
+
+                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                finalHtml += '<span class="text-bold">Seguimiento 1: </span><span class="pull-right">' + getVal(6) + '</span></div>';
+                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                finalHtml += '<span class="text-bold">Seguimiento 2: </span><span class="pull-right">' + getVal(7) + '</span></div>';
+                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                finalHtml += '<span class="text-bold">Seguimiento 3: </span><span class="pull-right">' + getVal(8) + '</span></div>';
+
+                // SECCION 4: Pedido
+                finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
+                finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Pedido</h5></div>';
+
+                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                finalHtml += '<span class="text-bold">¿Completó pedido?: </span><span class="pull-right">' + getVal(9) + '</span></div>';
+
+                return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #fcfcfc; margin: 0; text-align: left;">').append(finalHtml) : false;
             }
         }
     },
@@ -64,14 +70,24 @@ $(".tablaSeguimiento").DataTable({
         {
             "targets": 0, // La columna del checkbox
             "orderable": false,
-            "className": "text-center"
+            "className": "text-center",
+            "responsivePriority": 1
         },
         {
-            "targets": 1, // La columna #
-            "className": "dtr-control" // Aquí aparecerá el botón (+) en móvil
+            "targets": 1, // La columna Fecha (que tendra el boton de expansion)
+            "className": "dtr-control",
+            "responsivePriority": 1
+        },
+        {
+            "targets": 2, // Nombre
+            "responsivePriority": 2
+        },
+        {
+            "targets": [3, 4, 5, 6, 7, 8, 9], // El resto se colapsa
+            "responsivePriority": 3
         }
     ],
-    "order": [[2, 'desc']], // Ordenar por fecha (índice 2) descendente por defecto
+    "order": [[1, 'desc']], // Ordenar por fecha (índice 1 tras eliminar '#') descendente por defecto
     "language": {
         "sProcessing": "Procesando...",
         "sLengthMenu": "Mostrar _MENU_ registros",

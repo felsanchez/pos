@@ -113,10 +113,11 @@ $(document).ready(function () {
           finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
           finalHtml += '<span class="text-bold" style="color:#555;">Ingreso al sistema: </span><span style="color:#333; text-align: right;">' + ingreso + '</span></div>';
 
-          // Notas editable con el mismo estilo que en escritorio
+          // Notas editable con el mismo estilo que en escritorio (con placeholder dinámico)
+          var placeholderAttr = (notas === "") ? ' data-placeholder="true"' : "";
           finalHtml += '<div class="col-xs-12" style="padding: 10px 0; border-bottom: 1px solid #eee;">';
           finalHtml += '<span class="text-bold" style="color:#555; display:block; margin-bottom:5px;">Notas: </span>';
-          finalHtml += '<div class="celda-notas" contenteditable="true" data-id="' + idCliente + '" style="width: 100%;">' + notas + '</div></div>';
+          finalHtml += '<div class="celda-notas" contenteditable="true" data-id="' + idCliente + '"' + placeholderAttr + ' style="width: 100%;">' + notas + '</div></div>';
 
           return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #f8f9fa; margin: 0;">').append(finalHtml) : false;
         }
@@ -142,6 +143,11 @@ $(document).ready(function () {
         "responsivePriority": 1000
       }
     ],
+    "drawCallback": function (settings) {
+      if (typeof inicializarPlaceholdersClientes === "function") {
+        inicializarPlaceholdersClientes();
+      }
+    },
     "language": {
       url: "vistas/bower_components/datatables.net/Spanish.json",
       search: "Buscar:",
@@ -183,11 +189,13 @@ $(document).on('focus', '.celda-notas', function () {
 });
 
 $(document).on('blur', '.celda-notas', function () {
-  var nuevaNota = $(this).text().trim();
-  var id = $(this).attr('data-id'); // Usamos .attr() para asegurar la lectura en elementos dinámicos
+  console.log('🔹 Blur detectado en Notas Cliente (ID: ' + $(this).attr('data-id') + ')');
+  var elemento = $(this);
+  var id = elemento.attr('data-id'); 
+  var nuevaNota = elemento.text().trim();
 
   if (nuevaNota === '') {
-    $(this).attr('data-placeholder', 'true');
+    elemento.attr('data-placeholder', 'true');
   }
 
   if (!id) {
@@ -209,7 +217,14 @@ $(document).on('blur', '.celda-notas', function () {
     },
     dataType: 'json',
     success: function (respuesta) {
-      console.log('✅ Nota guardada correctamente (ID: ' + id + ')');
+      if (respuesta == "ok") {
+        console.log('✅ Nota guardada correctamente (Cliente ID: ' + id + ')');
+        // Feedback visual (destello verde)
+        elemento.css('background-color', '#dff0d8');
+        setTimeout(function () {
+          elemento.css('background-color', '');
+        }, 500);
+      }
     },
     error: function () {
       alert('Error al actualizar la nota');
@@ -218,12 +233,18 @@ $(document).on('blur', '.celda-notas', function () {
 });
 
 // Inicializar placeholder en celdas vacías al cargar
-$(document).ready(function () {
+function inicializarPlaceholdersClientes() {
   $('.celda-notas').each(function () {
     if ($(this).text().trim() === '') {
       $(this).attr('data-placeholder', 'true');
+    } else {
+      $(this).removeAttr('data-placeholder');
     }
   });
+}
+
+$(document).ready(function () {
+  inicializarPlaceholdersClientes();
 });
 
 

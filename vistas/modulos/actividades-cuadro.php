@@ -238,11 +238,11 @@ MODAL MOSTRAR actividad
             </div>
           </div>
 
-          <!-- Sección de Observaciones -->
+          <!-- Sección de Notas -->
           <div class="card mb-3" style="border-left: 4px solid #6c757d;">
             <div class="card-body">
               <h6 class="card-title mb-3">
-                <i class="fa fa-sticky-note text-secondary"></i> Observaciones
+                <i class="fa fa-sticky-note text-secondary"></i> Notas
               </h6>
               <div class="form-group">
                 <label for="observacion" class="font-weight-bold">
@@ -250,7 +250,7 @@ MODAL MOSTRAR actividad
                 </label>
                 <textarea class="form-control" id="observacion" name="observacion" rows="4" readonly
                           style="background-color: #f8f9fa; border: 1px solid #ced4da; resize: none;"
-                          placeholder="Sin observaciones registradas..."></textarea>
+                          placeholder="Sin notas registradas..."></textarea>
               </div>
             </div>
           </div>
@@ -543,13 +543,13 @@ MODAL AGREGAR actividad
 
                     <div class="form-group">
 
-                        <label>Observación</label>
+                        <label>Notas</label>
 
                         <div class="input-group">
 
                             <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
 
-                            <input type="text" class="form-control" name="nuevaObservacion" id="nuevaObservacion" placeholder="Observaciones adicionales">
+                            <input type="text" class="form-control" name="nuevaObservacion" id="nuevaObservacion" placeholder="Escribe una nota...">
 
                         </div>
 

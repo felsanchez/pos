@@ -947,7 +947,7 @@ class ModeloFactus
     /*=============================================
     OBTENER SIGUIENTE CONSECUTIVO FACTUS
     =============================================*/
-    static public function mdlObtenerSiguienteConsecutivoFactus()
+    static public function mdlObtenerSiguienteConsecutivoFactus($omitirApi = false)
     {
         $rango = self::mdlObtenerRangoActivo();
 
@@ -1005,29 +1005,33 @@ class ModeloFactus
         }
 
         // El siguiente será el mayor entre lo que dice la API y lo que tenemos en BD
-        // 1. Consultar a la API el estado REAL del rango para evitar conflictos (409)
-        $token = self::mdlObtenerAccessToken();
         $numeroApiReal = $numeroActualApi;
+        $json = null;
 
-        if ($token && !empty($rangoId)) { // Si tenemos token y rango ID
-            $config = self::mdlObtenerConfiguracion();
-            $url = $config['api_url'] . '/v1/numbering-ranges/' . $rangoId;
+        if (!$omitirApi) {
+            // 1. Consultar a la API el estado REAL del rango para evitar conflictos (409)
+            $token = self::mdlObtenerAccessToken();
 
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                'Authorization: Bearer ' . $token,
-                'Accept: application/json'
-            ));
-            $res = curl_exec($ch);
-            $json = json_decode($res, true);
-            curl_close($ch);
+            if ($token && !empty($rangoId)) { // Si tenemos token y rango ID
+                $config = self::mdlObtenerConfiguracion();
+                $url = $config['api_url'] . '/v1/numbering-ranges/' . $rangoId;
 
-            if (isset($json['data']['current'])) {
-                $numeroApiReal = intval($json['data']['current']);
-            } elseif (isset($json['data']['current_number'])) {
-                $numeroApiReal = intval($json['data']['current_number']);
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                    'Authorization: Bearer ' . $token,
+                    'Accept: application/json'
+                ));
+                $res = curl_exec($ch);
+                $json = json_decode($res, true);
+                curl_close($ch);
+
+                if (isset($json['data']['current'])) {
+                    $numeroApiReal = intval($json['data']['current']);
+                } elseif (isset($json['data']['current_number'])) {
+                    $numeroApiReal = intval($json['data']['current_number']);
+                }
             }
         }
 
@@ -1038,7 +1042,7 @@ class ModeloFactus
 
         // El siguiente real será el mayor de los siguientes propuestos
         // Priorizamos la API REAL si la tenemos (Live)
-        if (isset($json['data']['current']) || isset($json['data']['current_number'])) {
+        if ($json !== null && (isset($json['data']['current']) || isset($json['data']['current_number']))) {
             $ultimoSugerido = max($siguienteLocal, $siguienteApiLive);
         } else {
             $ultimoSugerido = max($siguienteLocal, $siguienteApiCached);

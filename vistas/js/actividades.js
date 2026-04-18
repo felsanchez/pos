@@ -427,201 +427,222 @@ $(document).ready(function () {
 		});
 	}
 
-  // Verificar si existe la tabla antes de inicializar
-  if ($(".tablaActividades").length > 0) {
-    // Destruir instancia previa si existe por alguna razón
-    if ($.fn.DataTable.isDataTable('.tablaActividades')) {
-      $('.tablaActividades').DataTable().destroy();
-    }
+	// Verificar si existe la tabla antes de inicializar
+	if ($(".tablaActividades").length > 0) {
+		// Destruir instancia previa si existe por alguna razón
+		if ($.fn.DataTable.isDataTable('.tablaActividades')) {
+			$('.tablaActividades').DataTable().destroy();
+		}
 
-    $(".tablaActividades").DataTable({
-      "order": [[0, "asc"]], // Ordenar por Descripción (columna 0)
-      "columnDefs": [
-        {
-          "targets": 0, // Descripción
-          "responsivePriority": 1
-        },
-        {
-          "targets": 1, // Tipo
-          "responsivePriority": 1
-        },
-        {
-          "targets": 7, // Acciones
-          "responsivePriority": 1,
-          "orderable": false
-        },
-        {
-          "targets": [2, 3, 4, 5, 6], // Responsable, Fecha, Estado, Cliente, Observación
-          "responsivePriority": 1000
-        }
-      ],
-      "responsive": {
-        "details": {
-          "type": "inline",
-          "renderer": function (api, rowIdx, columns) {
-            var rowData = api.row(rowIdx).data();
+		$(".tablaActividades").DataTable({
+			"order": [[0, "asc"]], // Ordenar por Descripción (columna 0)
+			"columnDefs": [
+				{
+					"targets": 0, // Descripción
+					"responsivePriority": 1
+				},
+				{
+					"targets": 1, // Tipo
+					"responsivePriority": 1
+				},
+				{
+					"targets": 7, // Acciones
+					"responsivePriority": 1,
+					"orderable": false
+				},
+				{
+					"targets": [2, 3, 4, 5, 6], // Responsable, Fecha, Estado, Cliente, Observación
+					"responsivePriority": 1000
+				}
+			],
+			"responsive": {
+				"details": {
+					"type": "inline",
+					"renderer": function (api, rowIdx, columns) {
+						var rowData = api.row(rowIdx).data();
 
-            // Índices (0-based):
-            // 0: Descripción, 1: Tipo, 2: Responsable, 3: Fecha, 4: Estado,
-            // 5: Cliente, 6: Observación, 7: Acciones
+						// Índices (0-based):
+						// 0: Descripción, 1: Tipo, 2: Responsable, 3: Fecha, 4: Estado,
+						// 5: Cliente, 6: Observación, 7: Acciones
 
-            var responsable = rowData[2];
-            var fecha = rowData[3];
-            var estado = rowData[4];
-            var cliente = rowData[5];
-            var observacionRaw = rowData[6] || "";
-            // Extraer solo texto plano (rowData contiene el innerHTML del td, con posibles tags HTML)
-            var observacion = $('<div>').html(observacionRaw).text().trim();
+						var responsable = rowData[2];
+						var fecha = rowData[3];
+						var estado = rowData[4];
+						var cliente = rowData[5];
+						var observacionRaw = rowData[6] || "";
+						// Extraer solo texto plano (rowData contiene el innerHTML del td, con posibles tags HTML)
+						var observacion = $('<div>').html(observacionRaw).text().trim();
 
-            // Leer ID de la actividad desde el atributo data-actividad-id del <tr>
-            var idActividad = $(api.row(rowIdx).node()).attr('data-actividad-id') || "";
+						// Leer ID de la actividad desde el atributo data-actividad-id del <tr>
+						var idActividad = $(api.row(rowIdx).node()).attr('data-actividad-id') || "";
 
-            var finalHtml = '';
+						var finalHtml = '';
 
-            // SECCIÓN 1: Detalles de la actividad
-            finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
-            finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Detalles de la actividad</h5></div>';
+						// SECCIÓN 1: Detalles de la actividad
+						finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
+						finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Detalles de la actividad</h5></div>';
 
-            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-            finalHtml += '<span class="text-bold" style="color:#555;">Responsable: </span><span style="color:#333; text-align: right;">' + responsable + '</span></div>';
+						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+						finalHtml += '<span class="text-bold" style="color:#555;">Responsable: </span><span style="color:#333; text-align: right;">' + responsable + '</span></div>';
 
-            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-            finalHtml += '<span class="text-bold" style="color:#555;">Fecha: </span><span style="color:#333; text-align: right;">' + fecha + '</span></div>';
+						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+						finalHtml += '<span class="text-bold" style="color:#555;">Fecha: </span><span style="color:#333; text-align: right;">' + fecha + '</span></div>';
 
-            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-            finalHtml += '<span class="text-bold" style="color:#555;">Estado: </span><span style="color:#333; text-align: right;">' + estado + '</span></div>';
+						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+						finalHtml += '<span class="text-bold" style="color:#555;">Estado: </span><span style="color:#333; text-align: right;">' + estado + '</span></div>';
 
-            // SECCIÓN 2: Información adicional
-            finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
-            finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información adicional</h5></div>';
+						// SECCIÓN 2: Información adicional
+						finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
+						finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información adicional</h5></div>';
 
-            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-            finalHtml += '<span class="text-bold" style="color:#555;">Cliente: </span><span style="color:#333; text-align: right;">' + cliente + '</span></div>';
+						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
+						finalHtml += '<span class="text-bold" style="color:#555;">Cliente: </span><span style="color:#333; text-align: right;">' + cliente + '</span></div>';
 
-            // Observación editable
-            finalHtml += '<div class="col-xs-12" style="padding: 10px 0; border-bottom: 1px solid #eee;">';
-            finalHtml += '<span class="text-bold" style="color:#555; display:block; margin-bottom:5px;">Observación: </span>';
-            finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idActividad + '" style="width: 100%;">' + observacion + '</div></div>';
+						// Notas editable (con placeholder dinámico)
+						var placeholderAttr = (observacion === "") ? ' data-placeholder="true"' : "";
+						finalHtml += '<div class="col-xs-12" style="padding: 10px 0; border-bottom: 1px solid #eee;">';
+						finalHtml += '<span class="text-bold" style="color:#555; display:block; margin-bottom:5px;">Notas: </span>';
+						finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idActividad + '"' + placeholderAttr + ' style="width: 100%;">' + observacion + '</div></div>';
 
-            return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #f8f9fa; margin: 0;">').append(finalHtml) : false;
-          }
-        }
-      },
-      "language": {
-        "sProcessing": "Procesando...",
-        "sLengthMenu": "Mostrar _MENU_ registros",
-        "sZeroRecords": "No se encontraron resultados",
-        "sEmptyTable": "Ningún dato disponible en esta tabla",
-        "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-        "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
-        "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-        "sInfoPostFix": "",
-        "sSearch": "Buscar:",
-        "sUrl": "",
-        "sInfoThousands": ",",
-        "sLoadingRecords": "Cargando...",
-        "oPaginate": {
-          "sFirst": "Primero",
-          "sLast": "Último",
-          "sNext": "Siguiente",
-          "sPrevious": "Anterior"
-        },
-        "oAria": {
-          "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
-          "sSortDescending": ": Activar para ordenar la columna de manera descendente"
-        }
-      },
-      "dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
-      "drawCallback": function (settings) {
-        // Inicializar Tippy en cada redibujado de la tabla (paginación, búsqueda, etc.)
-        if (typeof tippy === 'function') {
-          tippy('.has-tooltip', {
-            theme: 'pos-premium',
-            allowHTML: true,
-            placement: 'top',
-            arrow: true,
-            animation: 'shift-away',
-            delay: [150, 0],
-            interactive: true,
-            appendTo: document.body,
-            zIndex: 9999
-          });
-        }
-      },
-      "initComplete": function () {
-        // Asegurar visibilidad tras inicializar
-        $(".tablaActividades").addClass("datatable-ready").css("visibility", "visible");
-      }
-    });
+						return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #f8f9fa; margin: 0;">').append(finalHtml) : false;
+					}
+				}
+			},
+			"language": {
+				"sProcessing": "Procesando...",
+				"sLengthMenu": "Mostrar _MENU_ registros",
+				"sZeroRecords": "No se encontraron resultados",
+				"sEmptyTable": "Ningún dato disponible en esta tabla",
+				"sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+				"sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
+				"sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+				"sInfoPostFix": "",
+				"sSearch": "Buscar:",
+				"sUrl": "",
+				"sInfoThousands": ",",
+				"sLoadingRecords": "Cargando...",
+				"oPaginate": {
+					"sFirst": "Primero",
+					"sLast": "Último",
+					"sNext": "Siguiente",
+					"sPrevious": "Anterior"
+				},
+				"oAria": {
+					"sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+					"sSortDescending": ": Activar para ordenar la columna de manera descendente"
+				}
+			},
+			"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
+			"drawCallback": function (settings) {
+				// Inicializar Tippy en cada redibujado de la tabla (paginación, búsqueda, etc.)
+				if (typeof tippy === 'function') {
+					tippy('.has-tooltip', {
+						theme: 'pos-premium',
+						allowHTML: true,
+						placement: 'top',
+						arrow: true,
+						animation: 'shift-away',
+						delay: [150, 0],
+						interactive: true,
+						appendTo: document.body,
+						zIndex: 9999
+					});
+				}
 
-    var table = $('.tablaActividades').DataTable();
+				// Inicializar placeholders en las celdas de la tabla
+				inicializarPlaceholders();
+			},
+			"initComplete": function () {
+				// Asegurar visibilidad tras inicializar
+				$(".tablaActividades").addClass("datatable-ready").css("visibility", "visible");
+			}
+		});
 
-    // Filtro por Tipo
-    $('#filtroTipo').on('change', function () {
-      console.log('Filtrando por Tipo:', this.value);
-      filtroTipoActual = this.value;
-      table.draw();
-    });
+		var table = $('.tablaActividades').DataTable();
 
-    // Filtro por Estado
-    $('#filtroEstado').on('change', function () {
-      console.log('Filtrando por Estado:', this.value);
-      filtroEstadoActual = this.value;
-      table.draw();
-    });
-  }
+		// Filtro por Tipo
+		$('#filtroTipo').on('change', function () {
+			console.log('Filtrando por Tipo:', this.value);
+			filtroTipoActual = this.value;
+			table.draw();
+		});
+
+		// Filtro por Estado
+		$('#filtroEstado').on('change', function () {
+			console.log('Filtrando por Estado:', this.value);
+			filtroEstadoActual = this.value;
+			table.draw();
+		});
+	}
 });
 
 /*=============================================
 AUTOGUARDADO DE OBSERVACIONES (DELEGADO)
 =============================================*/
-$(document).on('focus', '.celda-observacion', function() {
-    $(this).removeAttr('data-placeholder');
+
+// Función para inicializar placeholders en celdas vacías
+function inicializarPlaceholders() {
+	$('.celda-observacion').each(function () {
+		if ($(this).text().trim() === '') {
+			$(this).attr('data-placeholder', 'true');
+		} else {
+			$(this).removeAttr('data-placeholder');
+		}
+	});
+}
+
+// Inicializar al cargar el documento
+$(document).ready(function () {
+	inicializarPlaceholders();
 });
 
-$(document).on('blur', '.celda-observacion', function() {
-    var elemento = $(this);
-    var id = elemento.attr('data-id'); // Usamos .attr() para mayor compatibilidad con elementos dinámicos
-    var nuevaObservacion = elemento.text().trim();
+$(document).on('focus', '.celda-observacion', function () {
+	$(this).removeAttr('data-placeholder');
+});
 
-    // Manejar placeholder visual
-    if (nuevaObservacion === '') {
-        elemento.attr('data-placeholder', 'true');
-    } else {
-        elemento.removeAttr('data-placeholder');
-    }
+$(document).on('blur', '.celda-observacion', function () {
+	var elemento = $(this);
+	var id = elemento.attr('data-id'); // Usamos .attr() para mayor compatibilidad con elementos dinámicos
+	var nuevaObservacion = elemento.text().trim();
 
-    // Obtener token CSRF del meta tag (doble chequeo)
-    var csrfToken = $('meta[name="csrf-token"]').attr('content');
+	// Manejar placeholder visual
+	if (nuevaObservacion === '') {
+		elemento.attr('data-placeholder', 'true');
+	} else {
+		elemento.removeAttr('data-placeholder');
+	}
 
-    // Guardar en la base de datos vía AJAX
-    $.ajax({
-        url: 'ajax/actividades.ajax.php',
-        method: 'POST',
-        data: {
-          id: id,
-          observacion: nuevaObservacion,
-          accion: 'actualizarObservacion',
-          csrf_token: csrfToken // Enviar explícitamente por si acaso ajaxSetup no lo capturó
-        },
-        dataType: 'json',
-        success: function(respuesta) {
-          if (respuesta == "ok") {
-            console.log('✅ Observación guardada correctamente (ID: ' + id + ')');
-            // Opcional: mostrar un pequeño feedback visual momentáneo
-            elemento.css('background-color', '#dff0d8');
-            setTimeout(function() {
-                elemento.css('background-color', '');
-            }, 500);
-          } else {
-            console.error('❌ Error al guardar:', respuesta);
-          }
-        },
-        error: function(xhr, status, error) {
-          console.error('❌ Error AJAX:', status, error);
-          alert('No se pudo guardar la observación. Por favor, intenta de nuevo.');
-        }
-    });
+	// Obtener token CSRF del meta tag (doble chequeo)
+	var csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+	// Guardar en la base de datos vía AJAX
+	$.ajax({
+		url: 'ajax/actividades.ajax.php',
+		method: 'POST',
+		data: {
+			id: id,
+			observacion: nuevaObservacion,
+			accion: 'actualizarObservacion',
+			csrf_token: csrfToken // Enviar explícitamente por si acaso ajaxSetup no lo capturó
+		},
+		dataType: 'json',
+		success: function (respuesta) {
+			if (respuesta == "ok") {
+				console.log('✅ Nota guardada correctamente (ID: ' + id + ')');
+				// Opcional: mostrar un pequeño feedback visual momentáneo
+				elemento.css('background-color', '#dff0d8');
+				setTimeout(function () {
+					elemento.css('background-color', '');
+				}, 500);
+			} else {
+				console.error('❌ Error al guardar:', respuesta);
+			}
+		},
+		error: function (xhr, status, error) {
+			console.error('❌ Error AJAX:', status, error);
+			alert('No se pudo guardar la nota. Por favor, intenta de nuevo.');
+		}
+	});
 });
 
 /*=============================================
@@ -631,49 +652,49 @@ var filtroTipoActual = '';
 var filtroEstadoActual = '';
 
 $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-  // Solo aplicar este filtro a la tabla de actividades
-  if (!$(settings.nTable).hasClass('tablaActividades')) {
-    return true;
-  }
+	// Solo aplicar este filtro a la tabla de actividades
+	if (!$(settings.nTable).hasClass('tablaActividades')) {
+		return true;
+	}
 
-  // Obtener la fila actual
-  var row = $(settings.aoData[dataIndex].nTr);
+	// Obtener la fila actual
+	var row = $(settings.aoData[dataIndex].nTr);
 
-  // Obtener los valores de los atributos data-*
-  var rowTipo = row.attr('data-tipo') || '';
-  var rowEstado = row.attr('data-estado') || '';
+	// Obtener los valores de los atributos data-*
+	var rowTipo = row.attr('data-tipo') || '';
+	var rowEstado = row.attr('data-estado') || '';
 
-  // Aplicar filtros
-  var pasaTipoFiltro = true;
-  var pasaEstadoFiltro = true;
+	// Aplicar filtros
+	var pasaTipoFiltro = true;
+	var pasaEstadoFiltro = true;
 
-  if (filtroTipoActual !== '') {
-    pasaTipoFiltro = (rowTipo.toLowerCase() === filtroTipoActual.toLowerCase());
-  }
+	if (filtroTipoActual !== '') {
+		pasaTipoFiltro = (rowTipo.toLowerCase() === filtroTipoActual.toLowerCase());
+	}
 
-  if (filtroEstadoActual !== '') {
-    pasaEstadoFiltro = (rowEstado.toLowerCase() === filtroEstadoActual.toLowerCase());
-  }
+	if (filtroEstadoActual !== '') {
+		pasaEstadoFiltro = (rowEstado.toLowerCase() === filtroEstadoActual.toLowerCase());
+	}
 
-  return pasaTipoFiltro && pasaEstadoFiltro;
+	return pasaTipoFiltro && pasaEstadoFiltro;
 });
 
 /*=============================================
 CALENDARIO DE ACTIVIDADES
 =============================================*/
-document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar');
-    if (calendarEl && typeof FullCalendar !== 'undefined') {
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            locale: 'es',
-            initialView: 'dayGridMonth',
-            eventTimeFormat: {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-            },
-            events: 'ajax/eventos.php'
-        });
-        calendar.render();
-    }
+document.addEventListener('DOMContentLoaded', function () {
+	var calendarEl = document.getElementById('calendar');
+	if (calendarEl && typeof FullCalendar !== 'undefined') {
+		var calendar = new FullCalendar.Calendar(calendarEl, {
+			locale: 'es',
+			initialView: 'dayGridMonth',
+			eventTimeFormat: {
+				hour: '2-digit',
+				minute: '2-digit',
+				hour12: false
+			},
+			events: 'ajax/eventos.php'
+		});
+		calendar.render();
+	}
 });

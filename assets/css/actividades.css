@@ -4,200 +4,205 @@
 
 /* Aumentar grosor del borde del dropdown */
 .choices.is-open .choices__list--dropdown {
-    border-width: 2px !important;
-    border-color: #999 !important;
-    border-radius: 15px;
-    border-style: inset;
+  border-width: 2px !important;
+  border-color: #999 !important;
+  border-radius: 15px;
+  border-style: inset;
 }
-  
-  /*Buscador estatus**/
-  .filtro-tipo-container {
-    margin-bottom: 20px;
-  }
-  .filtro-tipo-container label {
-    display: block;
-    margin-bottom: 5px;
-  }
-  
-  .filtro-tipo-wrapper {
-    min-width: 250px;
 
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .filtro-tipo {
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 14px;
-  }
+/*Buscador estatus**/
+.filtro-tipo-container {
+  margin-bottom: 20px;
+}
 
-  .filtro-tipo-wrapper label {
-    font-weight: 400 !important;
-  }
-  
+.filtro-tipo-container label {
+  display: block;
+  margin-bottom: 5px;
+}
 
-    /*Buscador estatus**/
-    .filtro-estado-container {
-        margin-bottom: 20px;
-      }
-      .filtro-estado-container label {
-        display: block;
-        margin-bottom: 5px;
-      }
-      
-      .filtro-estado-wrapper {
-        min-width: 250px;
-    
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      
-      .filtro-estado {
-        padding: 5px 10px;
-        border-radius: 4px;
-        font-size: 14px;
-      }
-    
-      .filtro-estado-wrapper label {
-        font-weight: 400 !important;
-      }
+.filtro-tipo-wrapper {
+  min-width: 250px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filtro-tipo {
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.filtro-tipo-wrapper label {
+  font-weight: 400 !important;
+}
 
 
-      .calendar-container {
-        display: flex;
-        justify-content: center; /* Centra horizontalmente */
-        align-items: center;     /* Centra verticalmente */
-        background-color: white;
-      }
-      
-      /* Ocultar tabla durante carga inicial para evitar reajuste visible de columnas */
-      .tablas:not(.datatable-ready) {
-        visibility: hidden !important;
-      }
-      .tablas.datatable-ready {
-        visibility: visible !important;
-      }
+/*Buscador estatus**/
+.filtro-estado-container {
+  margin-bottom: 20px;
+}
 
-      /* Estilos para campo observación editable */
-      .celda-observacion {
-        background: #fff9e6;
-        padding: 8px;
-        border-radius: 3px;
-        cursor: text;
-        font-size: 13px;
-        color: #333;
-        min-height: 30px;
-       position: relative;
+.filtro-estado-container label {
+  display: block;
+  margin-bottom: 5px;
+}
 
-      }
+.filtro-estado-wrapper {
+  min-width: 250px;
 
-      /* Placeholder para cuando está vacío */
-      .celda-observacion:empty:before,
-      .celda-observacion[data-placeholder]:before {
-        content: "Escribe una observación...";
-        color: #999;
-        font-style: italic;
-      }
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-       /* Ocultar placeholder cuando tiene foco */
-      .celda-observacion:focus:before {
-        content: none;
-      }
- 
-      .celda-observacion:focus {
-        outline: 2px solid #f39c12;
-        background: #fffef5;
-      }
+.filtro-estado {
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.filtro-estado-wrapper label {
+  font-weight: 400 !important;
+}
 
 
-      /* Cards para móvil */
+.calendar-container {
+  display: flex;
+  justify-content: center;
+  /* Centra horizontalmente */
+  align-items: center;
+  /* Centra verticalmente */
+  background-color: white;
+}
 
-      .cards-actividades {
-        display: none;
-      }
+/* Ocultar tabla durante carga inicial para evitar reajuste visible de columnas */
+.tablas:not(.datatable-ready) {
+  visibility: hidden !important;
+}
 
-      .card-actividad {
-        background: #fff;
-        border-radius: 6px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        margin-bottom: 10px;
-        padding: 10px;
-        position: relative;
-        border-left: 4px solid #3c8dbc;
-      }
+.tablas.datatable-ready {
+  visibility: visible !important;
+}
 
-      .card-actividad.actividad-hoy {
-        border-left: 5px solid #28a745 !important;
-        background-color: #f0f9f4;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
-      }
+/* Estilos para campo observación editable */
+.celda-observacion {
+  background: #fff9e6;
+  padding: 8px;
+  border-radius: 3px;
+  cursor: text;
+  font-size: 13px;
+  color: #333;
+  min-height: 30px;
+  position: relative;
 
-      .card-actividad-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-      }
+}
 
-      .card-actividad-descripcion {
-        font-size: 15px;
-        font-weight: bold;
-        color: #333;
-        margin: 0;
-        flex: 1;
-        padding-right: 10px;
-      }
+/* Placeholder para cuando está vacío */
+.celda-observacion:empty:before,
+.celda-observacion[data-placeholder]:before {
+  content: "Escribe una nota...";
+  color: #999;
+  font-style: italic;
+}
 
-      .card-actividad-detalles {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        margin-bottom: 8px;
-      }
+/* Ocultar placeholder cuando tiene foco */
+.celda-observacion:focus:before {
+  content: none;
+}
 
-       .card-actividad-fila {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 10px;
-      } 
+.celda-observacion:focus {
+  outline: 2px solid #f39c12;
+  background: #fffef5;
+}
 
-      .card-actividad-tipo,
-      .card-actividad-responsable,
-      .card-actividad-fecha,
-      .card-actividad-cliente {
-        color: #666;
-        font-size: 12px;
-      }
- 
-      .card-actividad-estado {
-        margin: 0;
-      }
 
-      .card-actividad-estado .badge {
-        font-size: 10px;
-        padding: 3px 6px;
-      }
+/* Cards para móvil */
 
-      .card-actividad-observacion {
-        background: #fff9e6;
-        padding: 6px 8px;
-        border-radius: 3px;
-        font-size: 12px;
-        color: #666;
-        font-style: italic;
-        margin-top: 4px;
-      }
+.cards-actividades {
+  display: none;
+}
 
-      .card-actividad-observacion:empty:before {
-        content: "Sin observación";
-        color: #999;
-      }
+.card-actividad {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+  padding: 10px;
+  position: relative;
+  border-left: 4px solid #3c8dbc;
+}
 
-      /* DataTables responsive ahora maneja la visualización móvil */
+.card-actividad.actividad-hoy {
+  border-left: 5px solid #28a745 !important;
+  background-color: #f0f9f4;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+.card-actividad-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.card-actividad-descripcion {
+  font-size: 15px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+  flex: 1;
+  padding-right: 10px;
+}
+
+.card-actividad-detalles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.card-actividad-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-actividad-tipo,
+.card-actividad-responsable,
+.card-actividad-fecha,
+.card-actividad-cliente {
+  color: #666;
+  font-size: 12px;
+}
+
+.card-actividad-estado {
+  margin: 0;
+}
+
+.card-actividad-estado .badge {
+  font-size: 10px;
+  padding: 3px 6px;
+}
+
+.card-actividad-observacion {
+  background: #fff9e6;
+  padding: 6px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+.card-actividad-observacion:empty:before {
+  content: "Sin notas";
+  color: #999;
+}
+
+/* DataTables responsive ahora maneja la visualización móvil */
 
 /* ==========================================================================
    ESTILOS PARA TOOLTIPS PREMIUM (Tippy.js)
@@ -206,17 +211,18 @@
 .tippy-box[data-theme~='pos-premium'] {
   background-color: #ffffff;
   color: #333333;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
   border-radius: 8px;
   overflow: hidden;
   font-family: 'Source Sans Pro', sans-serif;
   border: 1px solid #e1e4e8;
-  z-index: 99999 !important; /* Forzar que esté siempre al frente */
+  z-index: 99999 !important;
+  /* Forzar que esté siempre al frente */
 }
 
 /* Forzar cursor de mano en los eventos del calendario para indicar que hay tooltip */
 .fc-event {
-    cursor: pointer !important;
+  cursor: pointer !important;
 }
 
 .tippy-content {

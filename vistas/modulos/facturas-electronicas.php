@@ -422,15 +422,8 @@ if ($xml) {
                 echo "<p style='background: #d4edda; padding: 10px; border-left: 4px solid #28a745; color: #155724;'><i class='fa fa-file-text'></i> Mostrando solo ventas con factura electrónica generada</p>";
               }
 
-              // Obtener ventas según filtros
-              $respuesta = ControladorVentas::ctrRangoFechasVentasPorEstado($fechaInicial, $fechaFinal, "venta");
-
-              // 🔹 FILTRO ESPECÍFICO PARA FACTURAS ELECTRÓNICAS
-              // Solo mostrar ventas con factura emitida (numero_factura) O borradores FE (tienen resolucion_id)
-              // Las ventas regulares NO tienen resolucion_id ni numero_factura
-              $respuesta = array_filter($respuesta, function ($venta) {
-                return !empty($venta["numero_factura"]) || !empty($venta["resolucion_id"]);
-              });
+              // Obtener facturas electrónicas según filtros (Directo desde SQL acelerado)
+              $respuesta = ControladorVentas::ctrRangoFechasFacturasElectronicas($fechaInicial, $fechaFinal, "venta");
 
               // Si hay filtro por cliente, filtrar el resultado
               if ($clienteId !== null) {
@@ -455,7 +448,7 @@ if ($xml) {
                 }
               }
 
-              $siguienteConsecutivoBase = ModeloFactus::mdlObtenerSiguienteConsecutivoFactus();
+              $siguienteConsecutivoBase = ModeloFactus::mdlObtenerSiguienteConsecutivoFactus(true); // Pasar 'true' para omitir la lenta llamada al API
               $borradoresEncontrados = 0;
 
               // Obtener pre-cargado las IDs de ventas que tienen nota crédito para evitar N+1
@@ -1299,9 +1292,10 @@ $(document).ready(function () {
               finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
               finalHtml += '<span class="text-bold">Total: </span><span class="pull-right">' + total + '</span></div>';
 
+              // Imagen miniatura directa (Estilizada para móvil)
               finalHtml += '<div class="col-xs-12" style="padding: 10px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; text-align: left;">';
               finalHtml += '<span class="text-bold">Imagen: </span>';
-              finalHtml += '<button class="btn btn-info btn-xs img-ampliar-venta" data-imagen="' + imagenSrc + '" data-idventa="' + idVenta + '"><i class="fa fa-image"></i> Ver imagen</button></div>';
+              finalHtml += '<span style="text-align: right;">' + imagen + '</span></div>';
 
               // SECCION 2: Estado y Fecha
               finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';

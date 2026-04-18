@@ -12,7 +12,8 @@ if (!puedeVer('proveedores')) {
     position: relative;
     cursor: pointer;
   }
-
+  /* Estilo del botón de expansión */
+  .tablaProveedores.collapsed tbody tr td:first-child::before {
     background-color: #3c8dbc !important; /* Estilo azul AdminLTE */
   }
 
@@ -141,7 +142,7 @@ if (!puedeVer('proveedores')) {
 
               // Columna notas editable
               $notas = isset($value["notas"]) ? $value["notas"] : '';
-              echo '<td contenteditable="true" class="celda-notas-proveedor" data-id="' . $value['id'] . '">' . $notas . '</td>';
+               echo '<td contenteditable="true" class="celda-notas-proveedor" tabindex="0" data-id="' . $value['id'] . '">' . $notas . '</td>';
 
               echo '<td>
                       <div class="btn-group">';
@@ -581,3 +582,73 @@ $borrarProveedor = new ControladorProveedores();
 $borrarProveedor->ctrBorrarProveedor();
 
 ?>
+
+<script>
+$(document).ready(function() {
+    console.log("🚀 Lógica de Notas Proveedores Estandarizada");
+
+    var celdaEditada = null;
+
+    // Detectar entrada
+    $(document).on('focus click', '.celda-notas-proveedor', function() {
+        celdaEditada = $(this);
+    });
+
+    // Observador Global para guardar al salir
+    $(document).on('mousedown touchstart', function(e) {
+        if (celdaEditada && !celdaEditada.is(e.target) && celdaEditada.has(e.target).length === 0) {
+            guardarNotasProveedor(celdaEditada);
+            celdaEditada = null;
+        }
+    });
+
+    function guardarNotasProveedor(elemento) {
+        var id = elemento.attr('data-id');
+        var nuevasNotas = elemento.text().trim();
+
+        if (!id) return;
+
+        // Evitar múltiples peticiones simultáneas
+        if (elemento.data('guardando')) return;
+        elemento.data('guardando', true);
+
+        var csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+        $.ajax({
+            url: 'ajax/proveedores.ajax.php',
+            method: 'POST',
+            data: {
+                id: id,
+                notas: nuevasNotas,
+                accion: 'actualizarNotas',
+                csrf_token: csrfToken
+            },
+            success: function (respuesta) {
+                elemento.data('guardando', false);
+                
+                // Normalización de respuesta
+                var resStr = String(respuesta).toLowerCase();
+                
+                // NOTA: Disparamos el destello verde SIEMPRE en el éxito (aunque no haya cambios)
+                // para que la UX sea consistente con Clientes.
+                if (resStr.indexOf('ok') !== -1) {
+                    
+                    // Feedback visual suave (Estandarizado con Clientes)
+                    elemento[0].style.setProperty('background-color', '#dff0d8', 'important');
+                    elemento[0].style.setProperty('transition', 'background-color 0.2s', 'important');
+                    
+                    setTimeout(function () {
+                        elemento[0].style.removeProperty('background-color');
+                    }, 500);
+
+                    console.log('✅ Nota procesada (Módulo Proveedores)');
+                }
+            },
+            error: function (xhr, status, error) {
+                elemento.data('guardando', false);
+                console.error('Error AJAX:', error);
+            }
+        });
+    }
+});
+</script>

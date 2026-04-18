@@ -88,7 +88,8 @@
     cursor: pointer;
   }
 
-    background-color: #3c8dbc !important; /* Estilo azul AdminLTE */
+  background-color: #3c8dbc !important;
+  /* Estilo azul AdminLTE */
   }
 
   /* Color rojo cuando está expandido (-) */
@@ -283,7 +284,8 @@ $editarCliente->ctrEditarCliente();
               <!--<th>Ciudad</th>-->
               <th>Dirección</th>
               <th>Estado</th>
-              <th><i class="fa fa-pencil-square"></i> Notas</th>
+              <!--<th><i class="fa fa-pencil-square"></i> Notas</th>-->
+              <th></i> Notas</th>
               <!--<th>Total compras</th>-->
               <th>Última compra</th>
               <th>Acciones</th>
@@ -326,17 +328,21 @@ $editarCliente->ctrEditarCliente();
 
                     <?php echo $value["documento"]; ?>
 
-                    <a href="<?php echo $linkVentas; ?>"
-                      class="btn btn-success btn-xs <?php echo $claseVentas; ?> solo-movil"
-                      style="float: right; <?php echo $styleVentas; ?>" title="Ver ventas de este cliente">
-                      <i class="fa fa-line-chart"></i>
-                    </a>
+                    <?php if (puedeAccion('ventas', 'editar')): ?>
+                      <a href="<?php echo $linkVentas; ?>"
+                        class="btn btn-success btn-xs <?php echo $claseVentas; ?> solo-movil"
+                        style="float: right; <?php echo $styleVentas; ?>" title="Ver ventas de este cliente">
+                        <i class="fa fa-line-chart"></i>
+                      </a>
+                    <?php endif; ?>
 
-                    <a href="<?php echo $linkFE; ?>" class="btn btn-info btn-xs <?php echo $claseFE; ?> solo-movil"
-                      style="float: right; margin-right: 3px; <?php echo $styleFE; ?>"
-                      title="Ver facturas electrónicas de este cliente">
-                      <i class="fa fa-file-text"></i>
-                    </a>
+                    <?php if (puedeAccion('factura_electronica', 'editar')): ?>
+                      <a href="<?php echo $linkFE; ?>" class="btn btn-info btn-xs <?php echo $claseFE; ?> solo-movil"
+                        style="float: right; margin-right: 3px; <?php echo $styleFE; ?>"
+                        title="Ver facturas electrónicas de este cliente">
+                        <i class="fa fa-file-text"></i>
+                      </a>
+                    <?php endif; ?>
 
                     <?php if (puedeAccion('clientes', 'editar')): ?>
                       <a href="cliente-detalle?id=<?php echo $value['id']; ?>" class="btn btn-warning btn-xs solo-movil"
@@ -373,9 +379,7 @@ $editarCliente->ctrEditarCliente();
                     ?>
                   </td>
 
-                  <td contenteditable="true" class="celda-notas" data-id="<?= $value['id']; ?>">
-                    <?= $value['notas'] ?? ''; ?>
-                  </td>
+                  <td contenteditable="true" class="celda-notas" data-id="<?= $value['id']; ?>"><?= trim($value['notas'] ?? ''); ?></td>
 
                   <!--<td><?php //echo $value["compras"]; ?></td>-->
                   <td><?php echo $value["ultima_compra"]; ?></td>
@@ -391,15 +395,19 @@ $editarCliente->ctrEditarCliente();
 
                       <?php // Variables calculadas al inicio del loop, disponibles aquí. ?>
 
-                      <a href="<?php echo $linkVentas; ?>" class="btn btn-success <?php echo $claseVentas; ?>"
-                        title="Ver ventas de este cliente" style="<?php echo $styleVentas; ?>">
-                        <i class="fa fa-line-chart"></i>
-                      </a>
+                      <?php if (puedeAccion('ventas', 'editar')): ?>
+                        <a href="<?php echo $linkVentas; ?>" class="btn btn-success <?php echo $claseVentas; ?>"
+                          title="Ver ventas de este cliente" style="<?php echo $styleVentas; ?>">
+                          <i class="fa fa-line-chart"></i>
+                        </a>
+                      <?php endif; ?>
 
-                      <a href="<?php echo $linkFE; ?>" class="btn btn-info <?php echo $claseFE; ?>"
-                        title="Ver facturas electrónicas de este cliente" style="<?php echo $styleFE; ?>">
-                        <i class="fa fa-file-text"></i>
-                      </a>
+                      <?php if (puedeAccion('factura_electronica', 'editar')): ?>
+                        <a href="<?php echo $linkFE; ?>" class="btn btn-info <?php echo $claseFE; ?>"
+                          title="Ver facturas electrónicas de este cliente" style="<?php echo $styleFE; ?>">
+                          <i class="fa fa-file-text"></i>
+                        </a>
+                      <?php endif; ?>
 
                       <?php if (puedeAccion('clientes', 'eliminar')): ?>
                         <button class="btn btn-danger btnEliminarCliente" idCliente="<?php echo $value["id"]; ?>"

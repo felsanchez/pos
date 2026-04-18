@@ -548,6 +548,100 @@ class ModeloVentas
 		return $stmt->fetch();
 	}
 
+	/*=============================================
+	RANGO FECHAS FACTURAS ELECTRONICAS
+	=============================================*/
+	static public function mdlRangoFechasFacturasElectronicas($tabla, $fechaInicial, $fechaFinal, $estado)
+	{
+
+		if ($fechaInicial == null) {
+
+			$stmt = Conexion::conectar()->prepare("SELECT v.*,
+													c.nombre AS nombre_cliente,
+													c.email AS email_cliente,
+													u.nombre AS nombre_vendedor
+													FROM $tabla v
+													LEFT JOIN clientes c ON v.id_cliente = c.id
+													LEFT JOIN usuarios u ON v.id_vendedor = u.id
+													WHERE v.estado = :estado 
+													AND (v.numero_factura != '' OR v.resolucion_id IS NOT NULL)
+													ORDER BY v.id DESC");
+
+			$stmt->bindParam(":estado", $estado, PDO::PARAM_STR);
+
+			$stmt->execute();
+
+			return $stmt->fetchAll();
+
+
+		} else if ($fechaInicial == $fechaFinal) {
+
+			$stmt = Conexion::conectar()->prepare("SELECT v.*,
+													c.nombre AS nombre_cliente,
+													c.email AS email_cliente,
+													u.nombre AS nombre_vendedor
+													FROM $tabla v
+													LEFT JOIN clientes c ON v.id_cliente = c.id
+													LEFT JOIN usuarios u ON v.id_vendedor = u.id
+													WHERE v.fecha like '%$fechaInicial%' AND v.estado = :estado
+													AND (v.numero_factura != '' OR v.resolucion_id IS NOT NULL)
+													ORDER BY v.id DESC");
+
+			$stmt->bindParam(":estado", $estado, PDO::PARAM_STR);
+
+			$stmt->execute();
+
+			return $stmt->fetchAll();
+
+		} else {
+
+			$fechaActual = new DateTime();
+			$fechaActual->add(new DateInterval("P1D"));
+			$fechaActualMasUno = $fechaActual->format("Y-m-d");
+
+			$fechaFinal2 = new DateTime($fechaFinal);
+			$fechaFinal2->add(new DateInterval("P1D"));
+			$fechaFinalMasUno = $fechaFinal2->format("Y-m-d");
+
+			if ($fechaFinalMasUno == $fechaActualMasUno) {
+
+				$stmt = Conexion::conectar()->prepare("SELECT v.*,
+														c.nombre AS nombre_cliente,
+														c.email AS email_cliente,
+														u.nombre AS nombre_vendedor
+														FROM $tabla v
+														LEFT JOIN clientes c ON v.id_cliente = c.id
+														LEFT JOIN usuarios u ON v.id_vendedor = u.id
+														WHERE v.fecha BETWEEN '$fechaInicial' AND '$fechaFinalMasUno' AND v.estado = :estado
+														AND (v.numero_factura != '' OR v.resolucion_id IS NOT NULL)
+														ORDER BY v.id DESC");
+
+			} else {
+
+
+				$stmt = Conexion::conectar()->prepare("SELECT v.*,
+														c.nombre AS nombre_cliente,
+														c.email AS email_cliente,
+														u.nombre AS nombre_vendedor
+														FROM $tabla v
+														LEFT JOIN clientes c ON v.id_cliente = c.id
+														LEFT JOIN usuarios u ON v.id_vendedor = u.id
+														WHERE v.fecha BETWEEN '$fechaInicial' AND '$fechaFinal' AND v.estado = :estado
+														AND (v.numero_factura != '' OR v.resolucion_id IS NOT NULL)
+														ORDER BY v.id DESC");
+
+			}
+
+			$stmt->bindParam(":estado", $estado, PDO::PARAM_STR);
+
+			$stmt->execute();
+
+			return $stmt->fetchAll();
+
+		}
+
+	}
+
 }
 
 }

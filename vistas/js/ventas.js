@@ -1,26 +1,26 @@
 $(document).ready(function () {
-	// Función para quitar el loader de Facturas Electrónicas
-	function quitarLoaderFE() {
-		if ($("#loader-table-fe").length > 0) {
-			$("#loader-table-fe").fadeOut(400, function () {
+	// Función para quitar el loader de Facturas Electrónicas (Hacerla global)
+	window.quitarLoaderGlobal = function () {
+		if ($("#loader-table").length > 0) {
+			$("#loader-table").fadeOut(200, function () {
 				$(this).remove();
 			});
 		}
 	}
 
-	// 1. Escuchar el evento de inicialización de DataTables de la tabla de Facturas Electrónicas (#example)
-	$(document).on('init.dt', '#example', function () {
+	// 1. Escuchar el evento de inicialización de DataTables de la tabla de Facturas Electrónicas
+	$(document).on('init.dt', '#tablaFacturasElectronicas', function () {
 		console.log("DataTables inicializado (evento delegado) para Facturas Electrónicas");
-		quitarLoaderFE();
+		window.quitarLoaderGlobal();
 	});
 
 	// 2. Respaldo: Si la tabla ya tiene la clase 'datatable-ready', quitar loader
-	if ($('#example').hasClass('datatable-ready')) {
-		quitarLoaderFE();
+	if ($('#tablaFacturasElectronicas').hasClass('datatable-ready')) {
+		window.quitarLoaderGlobal();
 	}
 
-	// 3. Respaldo adicional: Si por alguna razón pasan 4 segundos y sigue el spinner, quitarlo
-	setTimeout(quitarLoaderFE, 4000);
+	// 3. Respaldo adicional: Si por alguna razón pasan 5 segundos y sigue el spinner, quitarlo
+	setTimeout(window.quitarLoaderGlobal, 5000);
 
 	// Inicializar Select2 para los filtros de Cliente y Usuario
 	if (typeof $.fn.select2 !== 'undefined') {
@@ -1670,6 +1670,10 @@ $(".btnCancelarVenta").click(function(){
 let minDate, maxDate; 
 // Custom filtering function which will search data in column four between two values
 DataTable.ext.search.push(function (settings, data, dataIndex) {
+	// Solo aplicar este filtro a las tablas de ventas u ordenes
+	if (!$(settings.nTable).hasClass('tablaVentas') && !$(settings.nTable).hasClass('tablaOrdenes')) {
+		return true;
+	}
 	let min = minDate.val();
 	let max = maxDate.val();
 	let date = new Date(data[4]);

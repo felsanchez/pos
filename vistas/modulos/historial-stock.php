@@ -1,14 +1,65 @@
 <style>
+  /* 1. LÓGICA DESKTOP-FIRST: Ocultar botón de expansión por defecto en la tabla */
+  .tablaHistorialStock td.dtr-control:before,
+  .tablaHistorialStock th.dtr-control:before {
+    display: none !important;
+    content: "" !important;
+  }
+
+  .tablaHistorialStock td.dtr-control,
+  .tablaHistorialStock th.dtr-control {
+    padding-left: 8px !important;
+    cursor: default !important;
+  }
+
+  /* 2. ACTIVACIÓN EXCLUSIVA PARA MÓVIL (Menos de 767px) */
+  @media (max-width: 767px) {
+    .tablaHistorialStock td.dtr-control {
+      position: relative !important;
+      padding-left: 30px !important;
+      cursor: pointer !important;
+    }
+
+    .tablaHistorialStock td.dtr-control:before {
+      top: 50% !important;
+      left: 5px !important;
+      height: 18px !important;
+      width: 18px !important;
+      margin-top: -9px !important;
+      display: block !important;
+      position: absolute !important;
+      color: white !important;
+      border: 2px solid white !important;
+      border-radius: 14px !important;
+      box-shadow: 0 0 3px #444 !important;
+      box-sizing: content-box !important;
+      text-align: center !important;
+      text-indent: 0 !important;
+      font-family: 'Courier New', Courier, monospace !important;
+      font-weight: bold !important;
+      line-height: 18px !important;
+      content: '+' !important;
+      background-color: #3c8dbc !important; /* Azul */
+    }
+
+    .tablaHistorialStock tr.parent td.dtr-control:before {
+      content: '-' !important;
+      background-color: #dd4b39 !important; /* Rojo */
+    }
+  }
+
   /* Estilos para campo notas editable */
   .celda-notas-movimiento {
     background: #fff9e6;
     padding: 8px;
-    border-radius: 3px;
+    border: 1px solid #eee;
+    border-radius: 4px;
     cursor: text;
     font-size: 13px;
     color: #333;
-    min-height: 30px;
+    min-height: 35px;
     position: relative;
+    transition: background 0.4s ease, border-color 0.4s ease, color 0.4s ease;
   }
 
   /* Placeholder para cuando está vacío */

@@ -8,53 +8,63 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 <link rel="stylesheet" href="assets/css/gastos.css">
 
 <!-- Estilos responsive -->
-  /* Solo muestra el botón en móvil */
-  .solo-movil {
-    display: none;
+<style>
+  /* 1. LÓGICA DESKTOP-FIRST: Ocultar botón de expansión por defecto en la tabla */
+  #tablaGastos td.dtr-control:before,
+  #tablaGastos th.dtr-control:before {
+    display: none !important;
+    content: "" !important;
   }
 
+  #tablaGastos td.dtr-control,
+  #tablaGastos th.dtr-control {
+    padding-left: 8px !important;
+    cursor: default !important;
+  }
+
+  /* 2. ACTIVACIÓN EXCLUSIVA PARA MÓVIL (Menos de 767px) */
   @media (max-width: 767px) {
-    .solo-movil {
-      display: inline-block !important;
-      margin-left: 3px !important;
+    #tablaGastos td.dtr-control {
+      position: relative !important;
+      padding-left: 30px !important;
+      cursor: pointer !important;
     }
-  }
 
-  /* Estilo para botón de expansión responsivo '+' */
-  table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control,
-  table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control {
-    position: relative;
-    padding-left: 30px !important;
-    cursor: pointer;
-  }
+    #tablaGastos td.dtr-control:before {
+      top: 50% !important;
+      left: 5px !important;
+      height: 18px !important;
+      width: 18px !important;
+      margin-top: -9px !important;
+      display: block !important;
+      position: absolute !important;
+      color: white !important;
+      border: 2px solid white !important;
+      border-radius: 14px !important;
+      box-shadow: 0 0 3px #444 !important;
+      box-sizing: content-box !important;
+      text-align: center !important;
+      text-indent: 0 !important;
+      font-family: 'Courier New', Courier, monospace !important;
+      font-weight: bold !important;
+      line-height: 18px !important;
+      content: '+' !important;
+      background-color: #3c8dbc !important; /* Azul */
+    }
 
-  table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control:before,
-  table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
-    top: 50%;
-    left: 5px;
-    height: 18px;
-    width: 18px;
-    margin-top: -9px;
-    display: block;
-    position: absolute;
-    color: white;
-    border: 2px solid white;
-    border-radius: 14px;
-    box-shadow: 0 0 3px #444;
-    box-sizing: content-box;
-    text-align: center;
-    text-indent: 0 !important;
-    font-family: 'Courier New', Courier, monospace;
-    font-weight: bold;
-    line-height: 18px;
-    content: '+';
-    background-color: #31b0d5;
-  }
+    #tablaGastos tr.parent td.dtr-control:before {
+      content: '-' !important;
+      background-color: #dd4b39 !important; /* Rojo */
+    }
 
-  table.dataTable.dtr-inline.collapsed > tbody > tr.parent > td.dtr-control:before,
-  table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before {
-    content: '-';
-    background-color: #d33333;
+    /* Reducir tamaño de botones de acción solo en vista móvil (Equivalente a btn-xs) */
+    #tablaGastos .btnEditarGasto,
+    #tablaGastos .btnEliminarGasto {
+      padding: 1px 5px !important;
+      font-size: 12px !important;
+      line-height: 1.5 !important;
+      border-radius: 3px !important;
+    }
   }
 </style>
 
@@ -155,21 +165,20 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
       <div class="box-body">
 
-        <div class="tabla-gastos table-responsive">
-          <table id="tablaGastos" class="table table-bordered table-striped tablas" width="100%">
+        <div class="tabla-gastos">
+          <table id="tablaGastos" class="table table-bordered table-striped dt-responsive" width="100%">
 
             <thead>
               <tr>
-                <th>Concepto</th>
-                <th>Fecha</th>
-                <th>Monto</th>
-
-                <th>Categoría</th>
-                <th>Estado</th>
-                <th>Proveedor</th>
-                <th>Imagen</th>
-                <th>Notas</th>
-                <th>Acciones</th>
+                <th class="all">Concepto</th>
+                <th class="all">Monto</th>
+                <th class="min-tablet">Categoría</th>
+                <th class="min-tablet">Estado</th>
+                <th class="min-tablet">Proveedor</th>
+                <th class="min-tablet">Imagen</th>
+                <th class="min-tablet">Notas</th>
+                <th class="min-tablet">Fecha</th>
+                <th class="all">Acciones</th>
               </tr>
             </thead>
 
@@ -212,16 +221,14 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                 echo '<tr ' . $rowStyle . '>';
 
 
-                // Columna 2: Concepto
+                // Columna 1: Concepto
                 echo '<td>' . $value["concepto"] . '</td>';
 
-                // Columna 3: Fecha
-                $fecha = !empty($value["fecha"]) ? date("d/m/Y", strtotime($value["fecha"])) : '-';
-                echo '<td>' . $fecha . '</td>';
-
-                // Columna 4: Monto
+                // Columna 2: Monto
                 $monto = !empty($value["monto"]) ? '$' . number_format($value["monto"], 2, ',', '.') : '-';
                 echo '<td><strong>' . $monto . '</strong></td>';
+
+
 
                 // Columna 5: Categoría
                 echo '<td>' . $categoriaBadge . '</td>';
@@ -233,18 +240,22 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                 $proveedor = !empty($value["proveedor_nombre"]) ? $value["proveedor_nombre"] : '-';
                 echo '<td>' . $proveedor . '</td>';
 
-                // Columna 8: Imagen
+                // Columna 7: Imagen
                 if (!empty($value["imagen_comprobante"])) {
                   echo '<td><img src="' . $value["imagen_comprobante"] . '" class="img-thumbnail img-comprobante-clickeable" width="40px" style="cursor: pointer;" data-imagen="' . $value["imagen_comprobante"] . '" data-idgasto="' . $value["id"] . '" data-concepto="' . $value["concepto"] . '"></td>';
                 } else {
                   echo '<td><img src="vistas/img/gastos/default/sin-imagen.png" class="img-thumbnail img-comprobante-clickeable" width="40px" style="cursor: pointer;" data-imagen="" data-idgasto="' . $value["id"] . '" data-concepto="' . $value["concepto"] . '"></td>';
                 }
 
-                // Columna 9: Notas (editable)
+                // Columna 8: Notas (editable)
                 $notas = !empty($value["notas"]) ? htmlspecialchars($value["notas"]) : '';
                 echo '<td contenteditable="true" class="celda-notas-gasto" data-id="' . $value["id"] . '">' . $notas . '</td>';
 
-                // Columna 10: Acciones
+                // Columna 9: Fecha
+                $fecha = !empty($value["fecha"]) ? date("d/m/Y", strtotime($value["fecha"])) : '-';
+                echo '<td>' . $fecha . '</td>';
+
+                // Columna Final: Acciones
                 echo '<td>
                   <div class="btn-group">';
                 if (puedeAccion('gastos', 'editar')) {
@@ -254,9 +265,9 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                   echo '<button class="btn btn-danger btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . $value["concepto"] . '"><i class="fa fa-times"></i></button>';
                 }
                 echo '</div>
-                </td>
+                </td>';
 
-              </tr>';
+              echo '</tr>';
               }
               ?>
 

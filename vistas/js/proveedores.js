@@ -3,10 +3,11 @@ console.log("✅ Archivo JS cargado correctamente");
 $(document).ready(function () {
 	console.log("✅ jQuery está funcionando");
 
-	// Verificar si la tabla ya está inicializada
-	if (!$.fn.DataTable.isDataTable('.tablaProveedores')) {
-		$(".tablaProveedores").DataTable({
+	// Forzar inicialización limpia para asegurar modo responsivo
+	$(".tablaProveedores").DataTable({
+			"destroy": true,
 			"order": [[0, "asc"]],
+			"autoWidth": false,
 			"responsive": {
 				"details": {
 					"type": "inline",
@@ -62,13 +63,14 @@ $(document).ready(function () {
 
 						finalHtml += '<div style="padding: 8px 0;">';
 
-						// Get the ID from the row node (the main table row)
+						// Obtener el ID del proveedor de forma robusta
 						var rowNode = api.row(rowIdx).node();
-						var notasCell = $(rowNode).find('.celda-notas-proveedor');
-						var providerId = notasCell.attr('data-id');
-						var notasText = notasCell.text().trim();
+						var providerId = $(rowNode).find('.btnEditarProveedor').attr('idProveedor');
+						var notasText = $(rowNode).find('.celda-notas-proveedor').text().trim();
 
-						finalHtml += '<div contenteditable="true" class="celda-notas-proveedor" data-id="' + providerId + '" style="width: 100%; outline: none; display: block; border: 1px solid #ddd;">' + (notasText || "") + '</div></div>';
+						// Notas (con placeholder dinámico)
+						var placeholderAttr = (notasText === "") ? ' data-placeholder="true"' : "";
+						finalHtml += '<div contenteditable="true" class="celda-notas-proveedor" data-id="' + providerId + '"' + placeholderAttr + ' style="width: 100%; outline: none; display: block; border: 1px solid #ddd; padding: 8px; background: #ffff9e6;">' + (notasText || "") + '</div></div>';
 
 						return finalHtml ? $('<div style="background-color: #f8f9fa; margin: -8px; padding: 10px;">').append(finalHtml) : false;
 					}
@@ -89,6 +91,11 @@ $(document).ready(function () {
 					"responsivePriority": 1000
 				}
 			],
+			"drawCallback": function (settings) {
+				if (typeof inicializarPlaceholdersProveedores === "function") {
+					inicializarPlaceholdersProveedores();
+				}
+			},
 			"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
 			"language": {
 				"sProcessing": "Procesando...",
@@ -114,8 +121,7 @@ $(document).ready(function () {
 					"sSortDescending": ": Activar para ordenar la columna de manera descendente"
 				}
 			}
-		});
-	}
+	});
 
 	// Inicializar Select2 al abrir los modales
 	$('#modalAgregarProveedor, #modalEditarProveedor').on('shown.bs.modal', function () {
@@ -128,6 +134,21 @@ $(document).ready(function () {
 	});
 });
 
+// Inicializar placeholder en celdas vacías al cargar
+function inicializarPlaceholdersProveedores() {
+	$('.celda-notas-proveedor').each(function () {
+		if ($(this).text().trim() === '') {
+			$(this).attr('data-placeholder', 'true');
+		} else {
+			$(this).removeAttr('data-placeholder');
+		}
+	});
+}
+
+// Ejecutar inicialización al cargar el documento
+$(document).ready(function () {
+	inicializarPlaceholdersProveedores();
+});
 
 
 /*=============================================
@@ -253,36 +274,5 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 })
 
 
-/*=============================================
-EDITAR NOTAS PROVEEDOR - Edición en línea
-=============================================*/
-
-// Usar event delegation para que funcione con elementos dinámicos (móvil)
-$(document).on('blur', '.celda-notas-proveedor', function () {
-	const id = $(this).data('id');
-	const nuevasNotas = $(this).text().trim();
-
-	if (!id) {
-		console.error('ERROR: No se encontró el ID del proveedor');
-		return;
-	}
-
-	$.ajax({
-		url: 'ajax/proveedores.ajax.php',
-		method: 'POST',
-		data: {
-			id: id,
-			notas: nuevasNotas,
-			accion: 'actualizarNotas'
-			// csrf_token removido - manejado por csrf-helper.js
-		},
-
-		success: function (respuesta) {
-			console.log('Notas actualizadas exitosamente');
-		},
-
-		error: function (xhr, status, error) {
-			console.error('Error al actualizar las notas:', error);
-		}
-	});
-});
+// La lógica de guardado de notas se ha movido directamente a proveedores.php 
+// para asegurar la carga y evitar problemas de caché.

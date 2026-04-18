@@ -123,7 +123,7 @@ class TablaProductos
 			if (puedeAccion('productos', 'eliminar')) {
 				$botonesAcciones .= '<button class="btn btn-danger btnEliminarProducto" idProducto="' . $productos[$i]["id"] . '" codigo="' . $productos[$i]["codigo"] . '" imagen="' . $productos[$i]["imagen"] . '"><i class="fa fa-times"></i></button>';
 			}
-			if ($productos[$i]["tiene_variantes"] == 1) {
+			if ($productos[$i]["tiene_variantes"] == 1 && puedeAccion('variantes', 'editar')) {
 				$botonesAcciones .= '<button class="btn btn-info btnExpandirVariantes" data-id-producto="' . $productos[$i]["id"] . '" title="Ver variantes"><i class="fa fa-plus"></i></button>';
 			}
 			$botonesAcciones .= '</div>';

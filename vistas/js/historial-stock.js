@@ -33,7 +33,63 @@ function cargarTablaMovimientos() {
 				data: movimientos,
 
 				responsive: {
-					details: true
+					details: {
+						type: "column",
+						target: 0, // El clic recae estrictamente sobre la Fecha (índice 0)
+						renderer: function (api, rowIdx, columns) {
+							var data = $.map(columns, function (col, i) {
+								return col;
+							});
+
+							function getVal(idx) {
+								return api.cell(rowIdx, idx).render('display');
+							}
+
+							var finalHtml = '';
+
+							// SECCIÓN 1: Producto Afectado (Producto(1), Tipo(2))
+							finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
+							finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Producto Afectado</h5></div>';
+
+							finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+							finalHtml += '<span class="text-bold">Producto: </span><span class="pull-right">' + getVal(1) + '</span></div>';
+
+							finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+							finalHtml += '<span class="text-bold">Tipo: </span><span class="pull-right">' + getVal(2) + '</span></div>';
+
+							// SECCIÓN 2: Detalle del Movimiento (Tipo Mov(3), Cantidad(4), Stock Ant(5), Stock Nuevo(6))
+							finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
+							finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Detalle del Movimiento</h5></div>';
+
+							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+							finalHtml += '<span class="text-bold">Tipo Movimiento: </span><span class="pull-right">' + getVal(3) + '</span></div>';
+
+							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+							finalHtml += '<span class="text-bold">Cantidad: </span><span class="pull-right">' + getVal(4) + '</span></div>';
+
+							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+							finalHtml += '<span class="text-bold">Stock Anterior: </span><span class="pull-right">' + getVal(5) + '</span></div>';
+
+							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+							finalHtml += '<span class="text-bold">Stock Nuevo: </span><span class="pull-right">' + getVal(6) + '</span></div>';
+
+							// SECCIÓN 3: Información Adicional (Usuario(7), Referencia(8), Notas(9))
+							finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
+							finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Información Adicional</h5></div>';
+
+							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+							finalHtml += '<span class="text-bold">Usuario: </span><span class="pull-right">' + getVal(7) + '</span></div>';
+
+							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+							finalHtml += '<span class="text-bold">Referencia: </span><span class="pull-right">' + getVal(8) + '</span></div>';
+
+							finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+							finalHtml += '<span class="text-bold" style="display:block; margin-bottom:4px;">Notas:</span>';
+							finalHtml += '<span>' + getVal(9) + '</span></div>';
+
+							return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #fcfcfc; margin: 0; text-align: left;">').append(finalHtml) : false;
+						}
+					}
 				},
 
 				autoWidth: false,
@@ -41,7 +97,7 @@ function cargarTablaMovimientos() {
 				columns: [
 					{
 						data: "fecha",
-						className: "all",
+						className: "all dtr-control",
 						responsivePriority: 1, 
 						render: function (data) {
 							var fecha = new Date(data);
@@ -341,8 +397,15 @@ EDICIÓN INLINE DE NOTAS
 =============================================*/
 function inicializarEdicionNotas() {
 	$(document).off('blur', '.celda-notas-movimiento').on('blur', '.celda-notas-movimiento', function () {
-		const id = $(this).data('id');
-		const nuevaNota = $(this).text().trim();
+		const $celda = $(this);
+		const id = $celda.data('id');
+		const nuevaNota = $celda.text().trim();
+
+		// Feedback visual inicial: NARANJA (Guardando...)
+		$celda.css({
+			'background-color': '#fff4e6',
+			'border-color': '#ffd8a8'
+		});
 
 		$.ajax({
 			url: 'ajax/movimientos.ajax.php',
@@ -355,9 +418,44 @@ function inicializarEdicionNotas() {
 			},
 			success: function (respuesta) {
 				console.log('Nota actualizada:', respuesta);
+
+				// Verificar éxito de forma flexible (soporta "ok" o JSON true/success)
+				if (respuesta === "ok" || respuesta === "\"ok\"" || respuesta === true || 
+					(typeof respuesta === 'object' && (respuesta.success || respuesta.id))) {
+					
+					// Feedback de éxito: VERDE
+					$celda.css({
+						'background-color': '#d4edda',
+						'border-color': '#c3e6cb',
+						'color': '#155724'
+					});
+
+					// Volver al estado normal después de un breve destello
+					setTimeout(function () {
+						$celda.css({
+							'background-color': '',
+							'border-color': '',
+							'color': ''
+						});
+					}, 800);
+
+				} else {
+					// Feedback de error: ROJO
+					$celda.css({
+						'background-color': '#f8d7da',
+						'border-color': '#f5c6cb',
+						'color': '#721c24'
+					});
+					alert('Error: El servidor no confirmó el guardado.');
+				}
 			},
 			error: function () {
-				alert('Error al actualizar la nota');
+				// Feedback de error crítico: ROJO INTENSO
+				$celda.css({
+					'background-color': '#f8d7da',
+					'border-color': '#f5c6cb'
+				});
+				alert('Error crítico al conectar con el servidor.');
 			}
 		});
 	});

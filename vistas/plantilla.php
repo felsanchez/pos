@@ -253,21 +253,21 @@ CUERPO DOCUMENTO
   <script src="vistas/js/usuarios.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/clientes.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/estados-clientes.js?v=<?php echo time(); ?>"></script>
-  <script src="vistas/js/categorias.js"></script>
-  <script src="vistas/js/productos.js"></script>
+  <script src="vistas/js/categorias.js?v=<?php echo time(); ?>"></script>
+  <script src="vistas/js/productos.js?v=<?php echo time(); ?>"></script>
 
   <script src="vistas/js/ventas.js?v=<?php echo time(); ?>"></script>
-  <script src="vistas/js/actividades.js"></script>
-  <script src="vistas/js/proveedores.js"></script>
-  <script src="vistas/js/variantes.js"></script>
-  <script src="vistas/js/documentos-soporte.js"></script>
+  <script src="vistas/js/actividades.js?v=<?php echo time(); ?>"></script>
+  <script src="vistas/js/proveedores.js?v=<?php echo time(); ?>"></script>
+  <script src="vistas/js/variantes.js?v=<?php echo time(); ?>"></script>
+  <script src="vistas/js/documentos-soporte.js?v=<?php echo time(); ?>"></script>
 
-  <script src="vistas/js/reportes.js"></script>
+  <script src="vistas/js/reportes.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/historial-stock.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/tipos-actividades.js"></script>
   <script src="vistas/js/gastos.js?v=<?php echo time(); ?>"></script>
-  <script src="vistas/js/logs.js"></script>
-  <script src="vistas/js/seguimiento-leads.js"></script>
+  <script src="vistas/js/logs.js?v=<?php echo time(); ?>"></script>
+  <script src="vistas/js/seguimiento-leads.js?v=<?php echo time(); ?>"></script>
 
   <!-- Prevenir que los enlaces se abran en nueva pestaña -->
   <script>

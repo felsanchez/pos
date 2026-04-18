@@ -46,7 +46,7 @@ $(document).ready(function () {
 						finalHtml += '<span class="text-bold" style="color:#555;">Email: </span><span style="color:#333; text-align: right;">' + email + '</span></div>';
 
 						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Foto: </span><span style="color:#333; text-align: right;"><button class="btn btn-info btn-xs btnVerFotoUsuario"><i class="fa fa-image"></i> Ver foto</button></span></div>';
+						finalHtml += '<span class="text-bold" style="color:#555;">Foto: </span><span style="color:#333; text-align: right;">' + foto + '</span></div>';
 
 						// Solo agregar fila de estado si la columna está visible en DataTables
 						if (api.column(5).visible()) {

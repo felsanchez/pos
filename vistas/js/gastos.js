@@ -18,43 +18,72 @@ $(document).ready(function () {
             // Si ya existe, destruirla para evitar errores al re-filtrar
             if ($.fn.DataTable.isDataTable('#tablaGastos')) {
                 $('#tablaGastos').DataTable().destroy();
+            }
                       return $('#tablaGastos').DataTable({
                 "autoWidth": false,
-                "order": [[1, "desc"]], // Ordenar por fecha (columna 1) desc
+                "order": [[8, "desc"]], // Ordenar por fecha (columna 8) desc
                 "columnDefs": [
                     {
-                        "targets": [3, 4, 5, 6, 7], // Categoría, Estado, Proveedor, Imagen, Notas
-                        "className": "none" // Siempre ocultas en la tabla principal, solo visibles al expandir
-                    },
-                    {
-                        "targets": [1], // Fecha
-                        "responsivePriority": 3
+                        "targets": [0], // Concepto
+                        "className": "dtr-control",
+                        "responsivePriority": 1
                     },
                     {
                         "targets": [8], // Acciones
+                        "orderable": false,
                         "responsivePriority": 2
                     }
                 ],
                 "responsive": {
                     "details": {
-                        "type": "inline",
+                        "type": "column",
+                        "target": 0, // Click de expansión exclusivo sobre el Concepto
                         "renderer": function (api, rowIdx, columns) {
-                            var data = $.map(columns, function (col, i) {
-                                return col.hidden ?
-                                    '<tr data-dt-row="' + col.rowIndex + '" data-dt-column="' + col.columnIndex + '">' +
-                                    '<td style="padding: 10px; border-bottom: 1px solid #eee;">' +
-                                    '<strong>' + col.title + ':</strong>' +
-                                    '</td> ' +
-                                    '<td style="padding: 10px; border-bottom: 1px solid #eee;">' +
-                                    col.data +
-                                    '</td>' +
-                                    '</tr>' :
-                                    '';
-                            }).join('');
 
-                            return data ?
-                                $('<table/>').append(data) :
-                                false;
+                            function getVal(idx) {
+                                return api.cell(rowIdx, idx).render('display');
+                            }
+
+                            var finalHtml = '';
+
+                            // SECCIÓN 1: Detalles del Gasto (Concepto(0), Monto(1), Fecha(8))
+                            finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
+                            finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Detalles del Gasto</h5></div>';
+
+                            finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                            finalHtml += '<span class="text-bold">Concepto: </span><span class="pull-right">' + getVal(0) + '</span></div>';
+
+                            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                            finalHtml += '<span class="text-bold">Monto: </span><span class="pull-right">' + getVal(1) + '</span></div>';
+
+                            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                            finalHtml += '<span class="text-bold">Fecha: </span><span class="pull-right">' + getVal(7) + '</span></div>';
+
+                            // SECCIÓN 2: Clasificación (Categoría(2), Estado(3))
+                            finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
+                            finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Clasificación</h5></div>';
+
+                            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                            finalHtml += '<span class="text-bold">Categoría: </span><span class="pull-right">' + getVal(2) + '</span></div>';
+
+                            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                            finalHtml += '<span class="text-bold">Estado: </span><span class="pull-right">' + getVal(3) + '</span></div>';
+
+                            // SECCIÓN 3: Información Adicional (Proveedor(4), Imagen(5), Notas(6))
+                            finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
+                            finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Información Adicional</h5></div>';
+
+                            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                            finalHtml += '<span class="text-bold">Proveedor: </span><span class="pull-right">' + getVal(4) + '</span></div>';
+                            
+                            finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                            finalHtml += '<span class="text-bold">Comprobante: </span><span class="pull-right">' + getVal(5) + '</span></div>';
+
+                            finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
+                            finalHtml += '<span class="text-bold" style="display:block; margin-bottom:4px;">Notas:</span>';
+                            finalHtml += '<span>' + getVal(6) + '</span></div>';
+
+                            return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #fcfcfc; margin: 0; text-align: left;">').append(finalHtml) : false;
                         }
                     }
                 },
@@ -89,7 +118,8 @@ $(document).ready(function () {
                 "initComplete": function () {
                     $(this).addClass('datatable-ready').css('visibility', 'visible');
                 }
-            });      });
+            });
+
         }
     };
 
@@ -603,19 +633,22 @@ $("#btnFiltrarGastos").on("click", function () {
                     // Crear fila (9 columnas)
                     var fila = '<tr ' + rowStyle + '>';
                     fila += '<td>' + (gasto.concepto || '-') + '</td>';
-                    fila += '<td>' + fechaFormateada + '</td>';
                     fila += '<td><strong>' + monto + '</strong></td>';
+
                     fila += '<td>' + categoriaBadge + '</td>';
                     fila += '<td>' + estadoBadge + '</td>';
                     fila += '<td>' + proveedor + '</td>';
                     fila += '<td>' + imagen + '</td>';
                     fila += '<td contenteditable="true" class="celda-notas-gasto" data-id="' + gasto.id + '">' + notas + '</td>';
+                    fila += '<td>' + fechaFormateada + '</td>';
+                    
                     fila += '<td>';
                     fila += '<div class="btn-group">';
                     fila += '<button class="btn btn-warning btnEditarGasto" idGasto="' + gasto.id + '" data-toggle="modal" data-target="#modalEditarGasto"><i class="fa fa-pencil"></i></button>';
                     fila += '<button class="btn btn-danger btnEliminarGasto" idGasto="' + gasto.id + '" conceptoGasto="' + (gasto.concepto || '') + '"><i class="fa fa-times"></i></button>';
                     fila += '</div>';
                     fila += '</td>';
+
                     fila += '</tr>';
 
                     $("#tablaGastos tbody").append(fila);

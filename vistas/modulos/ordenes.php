@@ -527,16 +527,18 @@ if ($xml) {
                   if ($recibido == 1) {
                     echo '<span class="label label-success" style="margin-right:5px;">Enviado (R)</span>';
                   } else {
-                    echo '<button class="btn btn-default btn-xs btnSeguimientoRecibido" 
-                                idOrden="' . e($value["id"]) . '" 
-                                codigoOrden="' . e($value["codigo"]) . '"
-                                cliente="' . e($respuestaCliente["nombre"]) . '"
-                                telefono="' . e($respuestaCliente["telefono"]) . '"
-                                data-mensaje-recibido="' . e(htmlspecialchars($mensajeRecibido)) . '"
-                                style="margin-right:5px; border: 1px solid #ccc; color: green; width: auto !important;" 
-                                title="Enviar mensaje: Pedido Recibido">
-                                1er mensaje
-                            </button>';
+                    if (puedeAccion('ordenes', 'editar')) {
+                      echo '<button class="btn btn-default btn-xs btnSeguimientoRecibido" 
+                                  idOrden="' . e($value["id"]) . '" 
+                                  codigoOrden="' . e($value["codigo"]) . '"
+                                  cliente="' . e($respuestaCliente["nombre"]) . '"
+                                  telefono="' . e($respuestaCliente["telefono"]) . '"
+                                  data-mensaje-recibido="' . e(htmlspecialchars($mensajeRecibido)) . '"
+                                  style="margin-right:5px; border: 1px solid #ccc; color: green; width: auto !important;" 
+                                  title="Enviar mensaje: Pedido Recibido">
+                                  1er mensaje
+                              </button>';
+                    }
                   }
                 }
 
@@ -549,16 +551,18 @@ if ($xml) {
                   if ($procesado == 1) {
                     echo '<span class="label label-success" style="margin-right:5px;">Enviado (P)</span>';
                   } else {
-                    echo '<button class="btn btn-default btn-xs btnSeguimientoProcesado" 
-                                  idOrden="' . e($value["id"]) . '" 
-                                  codigoOrden="' . e($value["codigo"]) . '"
-                                  cliente="' . e($respuestaCliente["nombre"]) . '"
-                                  telefono="' . e($respuestaCliente["telefono"]) . '"
-                                  data-mensaje-procesado="' . e(htmlspecialchars($mensajeProcesado)) . '"
-                                  style="margin-right:5px; border: 1px solid #ccc; color: blue; width: auto !important;" 
-                                  title="Enviar mensaje: Pedido Procesado">
-                                  2do mensaje
-                               </button>';
+                    if (puedeAccion('ordenes', 'editar')) {
+                      echo '<button class="btn btn-default btn-xs btnSeguimientoProcesado" 
+                                    idOrden="' . e($value["id"]) . '" 
+                                    codigoOrden="' . e($value["codigo"]) . '"
+                                    cliente="' . e($respuestaCliente["nombre"]) . '"
+                                    telefono="' . e($respuestaCliente["telefono"]) . '"
+                                    data-mensaje-procesado="' . e(htmlspecialchars($mensajeProcesado)) . '"
+                                    style="margin-right:5px; border: 1px solid #ccc; color: blue; width: auto !important;" 
+                                    title="Enviar mensaje: Pedido Procesado">
+                                    2do mensaje
+                                 </button>';
+                    }
                   }
                 }
 
@@ -577,12 +581,14 @@ if ($xml) {
                 }
 
                 // Botón 4: Convertir a Factura Electrónica
-                echo ' <a href="index.php?ruta=orden-a-factura-electronica&idVenta=' . $value["id"] . '" 
-                            class="btn btn-xs btn-primary" 
-                            title="Convertir a Factura Electrónica" 
-                            style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;">
-                            <i class="fa fa-file-text-o"></i> Enviar a FE
-                        </a>';
+                if (puedeAccion('ordenes', 'editar')) {
+                  echo ' <a href="index.php?ruta=orden-a-factura-electronica&idVenta=' . $value["id"] . '" 
+                              class="btn btn-xs btn-primary" 
+                              title="Convertir a Factura Electrónica" 
+                              style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;">
+                              <i class="fa fa-file-text-o"></i> Enviar a FE
+                          </a>';
+                }
 
                 echo '</td>';
 
@@ -1461,11 +1467,10 @@ MODAL EDITAR CLIENTE
               finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
               finalHtml += '<span class="text-bold" style="color:#555;">Total: </span><span class="pull-right" style="color:#333;">' + total + '</span></div>';
 
-              // Botón Ver imagen
+              // Imagen miniatura directa (Estilizada para móvil)
               finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
               finalHtml += '<span class="text-bold" style="color:#555;">Imagen: </span>';
-              finalHtml += '<button class="btn btn-info btn-xs img-ampliar-orden" data-imagen="' + imagenSrc + '" data-idventa="' + idOrden + '">';
-              finalHtml += '<i class="fa fa-image"></i> Ver imagen</button></div>';
+              finalHtml += '<span style="text-align: right;">' + imagen + '</span></div>';
 
               // SECCION 3: Información Adicional (siempre visible)
               finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';

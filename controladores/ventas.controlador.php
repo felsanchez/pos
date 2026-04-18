@@ -1833,6 +1833,17 @@ class ControladorVentas
 
 		return $respuesta;
 	}
+	
+	//Rango fechas específico para Facturas Electrónicas (Optimizado)
+	static public function ctrRangoFechasFacturasElectronicas($fechaInicial, $fechaFinal, $estado)
+	{
+
+		$tabla = "ventas";
+
+		$respuesta = ModeloVentas::mdlRangoFechasFacturasElectronicas($tabla, $fechaInicial, $fechaFinal, $estado);
+
+		return $respuesta;
+	}
 
 
 	//Para los reportes
