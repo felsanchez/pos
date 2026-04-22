@@ -23,75 +23,12 @@
     display: none !important;
   }
 
-
-
-
-
-  /* 1. LÓGICA DESKTOP-FIRST: Ocultar botón de expansión por defecto en Facturas */
-  .tablaFacturasListado td.dtr-control:before,
-  .tablaFacturasListado th.dtr-control:before {
-    display: none !important;
-    content: "" !important;
-  }
-
-  .tablaFacturasListado td.dtr-control,
-  .tablaFacturasListado th.dtr-control {
-    padding-left: 8px !important;
-    cursor: default !important;
-  }
-
-  /* 2. ACTIVACIÓN EXCLUSIVA PARA MÓVIL (Menos de 767px) */
+  /* Botones de acción compactos en móvil */
   @media (max-width: 767px) {
-    .tablaFacturasListado td.dtr-control {
-      position: relative !important;
-      padding-left: 30px !important;
-      cursor: pointer !important;
-    }
-
-    .tablaFacturasListado td.dtr-control:before {
-      top: 50% !important;
-      left: 5px !important;
-      height: 18px !important;
-      width: 18px !important;
-      margin-top: -9px !important;
-      display: block !important;
-      position: absolute !important;
-      color: white !important;
-      border: 2px solid white !important;
-      border-radius: 14px !important;
-      box-shadow: 0 0 3px #444 !important;
-      box-sizing: content-box !important;
-      text-align: center !important;
-      text-indent: 0 !important;
-      font-family: 'Courier New', Courier, monospace !important;
-      font-weight: bold !important;
-      line-height: 18px !important;
-      content: '+' !important;
-      background-color: #3c8dbc !important; /* Azul al estar contraído (+) */
-    }
-
-    .tablaFacturasListado tr.parent td.dtr-control:before {
-      content: '-' !important;
-      background-color: #dd4b39 !important; /* Rojo al estar expandido (-) */
-    }
-
-    /* Botones de acción compactos en móvil */
-    .tablaFacturasListado td:last-child .btn {
+    .tablaFacturasListado tbody td .btn {
       padding: 1px 5px !important;
       font-size: 12px !important;
       line-height: 1.5 !important;
-    }
-
-    .tablaFacturasListado td:last-child .btn-group {
-      display: flex;
-      gap: 2px;
-    }
-
-    /* Forzar que las acciones tengan espacio */
-    .tablaFacturasListado td:last-child {
-      width: 1% !important;
-      white-space: nowrap !important;
-      text-align: right !important;
     }
   }
 </style>
@@ -1254,80 +1191,59 @@ $(document).ready(function () {
         "order": [[10, "desc"]], // Fecha
         "responsive": {
           "details": {
-            "type": "column",
-            "target": 0, // En la columna #
+            "type": "inline",
             "renderer": function (api, rowIdx, columns) {
-              if ($(window).width() >= 768) return false;
-
-              // Mapeo corregido por índices tras eliminar la columna #
-              var codigo = columns[0].data || '';
-              var cliente = columns[1].data || '';
-              var vendedor = columns[2].data || '';
-              var formaPago = columns[3].data || '';
-              var imagen = columns[4].data || '';
-              var total = columns[5].data || '';
-              var estadoDian = columns[6].data || '';
-              var notas = columns[7].data || '';
-              var obs = columns[8].data || '';
-              var fecha = columns[9].data || '';
-
-              // Extraer ruta de imagen
-              var imagenSrc = 'vistas/img/ventas/default/sinventa.png';
-              var matchImagen = imagen.match(/src=["']([^"']+)["']/i);
-              if (matchImagen) imagenSrc = matchImagen[1];
-              
-              var idVenta = $(api.row(rowIdx).node()).attr('data-fe-id') || '';
               var finalHtml = '';
+              var hasHidden = false;
 
-              // SECCION 1: Datos de Facturación
-              finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
-              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Información de Facturación</h5></div>';
+              $.each(columns, function (i, col) {
+                if (!col.hidden) return;
+                hasHidden = true;
 
-              finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-              finalHtml += '<span class="text-bold">Cliente: </span><span class="pull-right">' + cliente + '</span></div>';
+                var label = col.title || ('Columna ' + col.columnIndex);
+                
+                // Excepciones para no romper layout (Notas y Observacion)
+                if(col.columnIndex === 7 || col.columnIndex === 8) {
+                    finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
+                    finalHtml += '<span class="text-bold" style="display:block; color:#555; margin-bottom:5px;">' + label + ':</span>';
+                } else {
+                    finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+                    finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
+                }
 
-              finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-              finalHtml += '<span class="text-bold">Pago: </span><span class="pull-right">' + formaPago + '</span></div>';
+                if (col.columnIndex === 8) {
+                    // Celda de observación editable
+                    var rowNode = api.row(rowIdx).node();
+                    var idFactura = $(rowNode).attr('data-fe-id') || "";
+                    var observacionText = $(rowNode).find('.celda-observacion').text().trim();
+                    var placeholderAttr = (observacionText === "") ? ' data-placeholder="true"' : "";
+                    
+                    finalHtml += '<div contenteditable="true" class="celda-observacion" data-id="' + idFactura + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + observacionText + '</div>';
+                } else {
+                    // El resto pasa su HTML o texto tal cual
+                    finalHtml += '<span style="color:#333;">' + col.data + '</span>';
+                }
+                
+                finalHtml += '</div>';
+              });
 
-              finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-              finalHtml += '<span class="text-bold">Total: </span><span class="pull-right">' + total + '</span></div>';
-
-              // Imagen miniatura directa (Estilizada para móvil)
-              finalHtml += '<div class="col-xs-12" style="padding: 10px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; text-align: left;">';
-              finalHtml += '<span class="text-bold">Imagen: </span>';
-              finalHtml += '<span style="text-align: right;">' + imagen + '</span></div>';
-
-              // SECCION 2: Estado y Fecha
-              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
-              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Estado y Fecha</h5></div>';
-
-              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-              finalHtml += '<span class="text-bold">Estado DIAN: </span><span class="pull-right">' + estadoDian + '</span></div>';
-
-              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-              finalHtml += '<span class="text-bold">Fecha: </span><span class="pull-right">' + fecha + '</span></div>';
-
-              // SECCION 3: Notas y Observaciones
-              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
-              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Notas y Observaciones</h5></div>';
-
-              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-              finalHtml += '<span class="text-bold" style="display:block; margin-bottom:4px;">Notas:</span>';
-              finalHtml += '<span>' + (notas || '<em style="color:#999;">Sin notas</em>') + '</span></div>';
-
-              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-              finalHtml += '<span class="text-bold" style="display:block; margin-bottom:4px;">Observación:</span>';
-              finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:30px; text-align: left;">' + obs + '</div></div>';
-
-              return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #fcfcfc; margin: 0; text-align: left;">').append(finalHtml) : false;
+              if (!hasHidden) return false;
+              return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
             }
           }
         },
         "columnDefs": [
-          { "targets": 0, "className": 'dtr-control', "responsivePriority": 1 },
-          { "targets": 10, "responsivePriority": 1 }, // Acciones con máxima prioridad
-          { "targets": 1, "responsivePriority": 2 }, // Cliente con prioridad 2
-          { "targets": [2, 3, 4, 5, 6, 7, 8, 9], "responsivePriority": 3 }
+            { "targets": 0, "responsivePriority": 1 }, // Código
+            { "targets": 10, "responsivePriority": 2, "orderable": false }, // Acciones
+            { "targets": 1, "responsivePriority": 3 }, // Cliente
+            { "targets": 2, "responsivePriority": 4 }, // Vendedor
+            { "targets": 3, "responsivePriority": 5 }, // Forma de pago
+            { "targets": 4, "responsivePriority": 6 }, // Imagen
+            { "targets": 5, "responsivePriority": 7 }, // Total
+            { "targets": 6, "responsivePriority": 8 }, // Estado Dian
+            { "targets": 7, "responsivePriority": 9 }, // Notas
+            { "targets": 8, "responsivePriority": 10 }, // Observación
+            { "targets": 9, "responsivePriority": 11 } // Fecha
         ],
         "language": {
           "sProcessing": "Procesando...",

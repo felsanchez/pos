@@ -37,18 +37,68 @@ $(document).ready(function () {
 			width: '100%'
 		});
 	}
+
+	/*=============================================
+	RANGO DE FECHAS (dentro de document.ready para que el DOM exista)
+	=============================================*/
+	if ($('#daterange-btn').length > 0 && typeof $.fn.daterangepicker !== 'undefined') {
+
+		// Restaurar el label visual del botón desde la URL actual (más confiable que localStorage)
+		var urlParams = new URLSearchParams(window.location.search);
+		var fechaInicialUrl = urlParams.get('fechaInicial');
+		var fechaFinalUrl = urlParams.get('fechaFinal');
+
+		if (fechaInicialUrl && fechaFinalUrl) {
+			// Hay fechas en la URL: mostrar el rango en el botón
+			var inicio = moment(fechaInicialUrl).format('MMMM D, YYYY');
+			var fin = moment(fechaFinalUrl).format('MMMM D, YYYY');
+			$('#daterange-btn span').html('<i class="fa fa-calendar"></i> ' + inicio + ' - ' + fin);
+		} else {
+			$('#daterange-btn span').html('<i class="fa fa-calendar"></i> Rango de fecha');
+		}
+
+		$('#daterange-btn').daterangepicker(
+			{
+				ranges: {
+					'Todos los documentos': [moment('2000-01-01'), moment()],
+					'Hoy': [moment(), moment()],
+					'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+					'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+					'Este mes': [moment().startOf('month'), moment().endOf('month')],
+					'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+				},
+				startDate: fechaInicialUrl ? moment(fechaInicialUrl) : moment().subtract(29, 'days'),
+				endDate: fechaFinalUrl ? moment(fechaFinalUrl) : moment()
+			},
+			function (start, end) {
+				$('#daterange-btn span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+
+				// Escribir directamente en los inputs del formulario
+				$('#fechaInicial').val(start.format('YYYY-MM-DD'));
+				$('#fechaFinal').val(end.format('YYYY-MM-DD'));
+			}
+		);
+
+		// Interceptar el submit del formulario para garantizar que las fechas estén siempre correctas
+		$('#daterange-btn').closest('form').on('submit', function(e) {
+			var picker = $('#daterange-btn').data('daterangepicker');
+			if (picker) {
+				var fi = $('#fechaInicial').val();
+				var ff = $('#fechaFinal').val();
+				// Si los inputs están vacíos pero el picker tiene fechas seleccionadas, rellenarlos
+				if (!fi || !ff) {
+					$('#fechaInicial').val(picker.startDate.format('YYYY-MM-DD'));
+					$('#fechaFinal').val(picker.endDate.format('YYYY-MM-DD'));
+				}
+			}
+		});
+	}
 });
 
 /*=============================================
-VARIABLE LOCAL STORAGE
+VARIABLE LOCAL STORAGE (solo el texto visual del botón)
 =============================================*/
-if (localStorage.getItem("capturarRango") != null) {
-
-	$("#daterange-btn span").html(localStorage.getItem("capturarRango"));
-}
-else {
-	$("#daterange-btn span").html('<i class="fa fa-calendar"></i>Rango de fecha')
-}
+// Nota: La restauración de fechas en inputs se hace dentro de document.ready más abajo
 
 
 /*=============================================  
@@ -1561,41 +1611,8 @@ $(document).off("click", ".btnImprimirFactura").on("click", ".btnImprimirFactura
 
 
 /*=============================================
-RANGO DE FECHAS
+RANGO DE FECHAS - inicializado dentro de document.ready (ver inicio del archivo)
 =============================================*/
-$('#daterange-btn').daterangepicker(
-	{
-		ranges: {
-			'': [moment().subtract(29, 'days'), moment()],
-			'Hoy': [moment(), moment()],
-			'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-			'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
-			//'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
-			'Este mes': [moment().startOf('month'), moment().endOf('month')],
-			'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-		},
-		startDate: moment().subtract(29, 'days'),
-		endDate: moment()
-	},
-	function (start, end) {
-		$('#daterange-btn span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-
-		var fechaInicial = start.startOf('day').format('YYYY-MM-DD HH:mm:ss');
-		var fechaFinal = end.endOf('day').format('YYYY-MM-DD HH:mm:ss');
-
-		var capturarRango = $("#daterange-btn span").html();
-
-		localStorage.setItem("capturarRango", capturarRango);
-
-		// Actualizar inputs ocultos
-		$("#fechaInicial").val(fechaInicial);
-		$("#fechaFinal").val(fechaFinal);
-
-		// Ya NO redirigimos automáticamente, el usuario debe dar click en "Buscar"
-		// const urlParams = new URLSearchParams(window.location.search); ...
-		// window.location = ...
-	}
-)
 
 /*=============================================
 CANCELAR RANGO DE FECHAS

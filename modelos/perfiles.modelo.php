@@ -12,7 +12,7 @@ class ModeloPerfiles
         'clientes'             => 'Clientes',
         'actividades'          => 'Actividades',
         'ordenes'              => 'Órdenes',
-        'ordenes-visita'       => 'Órdenes de Visita',
+        'ordenes-visita'       => 'Consulta de ventas',
         'ventas'               => 'Ventas',
         'factura_electronica'  => 'Factura Electrónica',
         'documento_soporte'    => 'Documento Soporte',

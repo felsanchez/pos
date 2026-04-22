@@ -81,40 +81,12 @@
 </style>
 
 <style>
-  /* Espaciado automático para el botón de expansión en modo inline */
-  .tablas1.collapsed tbody td:first-child {
-    padding-left: 35px !important;
-    position: relative;
-    cursor: pointer;
-  }
-
-  background-color: #3c8dbc !important;
-  /* Estilo azul AdminLTE */
-  }
-
-  /* Color rojo cuando está expandido (-) */
-  .tablas1.collapsed tbody tr.parent td:first-child::before {
-    background-color: #dd4b39 !important;
-  }
-
   /* Ajuste de botones de acción en móvil */
   @media (max-width: 767px) {
-    .tablas1 td:nth-child(9) .btn {
+    .tablas1 tbody td .btn {
       padding: 1px 5px !important;
       font-size: 12px !important;
       line-height: 1.5 !important;
-    }
-  }
-
-  /* Visibilidad de botones específicos en móvil */
-  .solo-movil {
-    display: none;
-  }
-
-  @media (max-width: 767px) {
-    .solo-movil {
-      display: inline-block !important;
-      margin-left: 3px !important;
     }
   }
 </style>
@@ -269,11 +241,9 @@ $editarCliente->ctrEditarCliente();
 
 
 
-      <div class="box-body table-responsive">
-
-
-
-        <table class="table table-bordered table-striped tablas1">
+      <div class="box-body">
+        <div class="tabla-clientes table-responsive">
+        <table class="table table-bordered table-striped tablas1 display nowrap" style="width: 100%;">
           <thead>
             <tr>
               <th>Nombre</th>
@@ -300,58 +270,21 @@ $editarCliente->ctrEditarCliente();
 
             if (is_array($clientes) && count($clientes) > 0):
               // Pre-fetch states for efficiency
+              // Pre-fetch states for efficiency
               $estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
-              // Pre-cargar conteo de facturas electrónicas por cliente (evita N+1 queries)
-              $feMapClientes = ModeloVentas::mdlContarFacturasElectronicasPorCliente("ventas");
 
               foreach ($clientes as $value):
                 // if (isset($value["compras"]) && $value["compras"] > 0):
                 $estatus = $value["estatus"] ?? "";
                 $estatusClass = "estatus-" . str_replace(" ", "-", strtolower($estatus));
-
-                // Calcular variables de botones (deben estar antes del primer uso en móvil y desktop)
-                $tieneVentas = (isset($value["compras"]) && $value["compras"] > 0);
-                $styleVentas = $tieneVentas ? "" : "opacity: 0.6;";
-                $claseVentas = $tieneVentas ? "btnVerVentasCliente" : "btnSinVentas";
-                $linkVentas = $tieneVentas ? "index.php?ruta=cliente-ventas&idCliente=" . $value['id'] : "#";
-
-                $tieneFE = isset($feMapClientes[$value['id']]) && $feMapClientes[$value['id']] > 0;
-                $styleFE = $tieneFE ? "" : "opacity: 0.6;";
-                $claseFE = $tieneFE ? "" : "btnSinFacturas";
-                $linkFE = $tieneFE ? "index.php?ruta=facturas-electronicas&cliente=" . $value['id'] : "#";
                 ?>
 
                 <tr data-cliente-id="<?= $value['id']; ?>">
                   <td><?php echo $value["nombre"]; ?></td>
-                  <!-- BTN VERSION MOVIL-->
+                  <!-- CELDA DOCUMENTO -->
                   <td>
-
                     <?php echo $value["documento"]; ?>
-
-                    <?php if (puedeAccion('ventas', 'editar')): ?>
-                      <a href="<?php echo $linkVentas; ?>"
-                        class="btn btn-success btn-xs <?php echo $claseVentas; ?> solo-movil"
-                        style="float: right; <?php echo $styleVentas; ?>" title="Ver ventas de este cliente">
-                        <i class="fa fa-line-chart"></i>
-                      </a>
-                    <?php endif; ?>
-
-                    <?php if (puedeAccion('factura_electronica', 'editar')): ?>
-                      <a href="<?php echo $linkFE; ?>" class="btn btn-info btn-xs <?php echo $claseFE; ?> solo-movil"
-                        style="float: right; margin-right: 3px; <?php echo $styleFE; ?>"
-                        title="Ver facturas electrónicas de este cliente">
-                        <i class="fa fa-file-text"></i>
-                      </a>
-                    <?php endif; ?>
-
-                    <?php if (puedeAccion('clientes', 'editar')): ?>
-                      <a href="cliente-detalle?id=<?php echo $value['id']; ?>" class="btn btn-warning btn-xs solo-movil"
-                        style="float: right;" title="Editar cliente">
-                        <i class="fa fa-pencil"></i>
-                      </a>
-                    <?php endif; ?>
                   </td>
-                  <!-- FIN BTN MOVIL-->
 
                   <td><?php echo $value["email"]; ?></td>
                   <td><?php echo $value["telefono"]; ?></td>
@@ -392,23 +325,6 @@ $editarCliente->ctrEditarCliente();
                           <i class="fa fa-pencil"></i>
                         </a>
                       <?php endif; ?>
-
-                      <?php // Variables calculadas al inicio del loop, disponibles aquí. ?>
-
-                      <?php if (puedeAccion('ventas', 'editar')): ?>
-                        <a href="<?php echo $linkVentas; ?>" class="btn btn-success <?php echo $claseVentas; ?>"
-                          title="Ver ventas de este cliente" style="<?php echo $styleVentas; ?>">
-                          <i class="fa fa-line-chart"></i>
-                        </a>
-                      <?php endif; ?>
-
-                      <?php if (puedeAccion('factura_electronica', 'editar')): ?>
-                        <a href="<?php echo $linkFE; ?>" class="btn btn-info <?php echo $claseFE; ?>"
-                          title="Ver facturas electrónicas de este cliente" style="<?php echo $styleFE; ?>">
-                          <i class="fa fa-file-text"></i>
-                        </a>
-                      <?php endif; ?>
-
                       <?php if (puedeAccion('clientes', 'eliminar')): ?>
                         <button class="btn btn-danger btnEliminarCliente" idCliente="<?php echo $value["id"]; ?>"
                           title="Eliminar cliente">
@@ -432,7 +348,7 @@ $editarCliente->ctrEditarCliente();
             endif; ?>
           </tbody>
         </table>
-
+        </div><!-- /.tabla-clientes -->
       </div>
 
     </div>

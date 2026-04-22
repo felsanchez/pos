@@ -6,9 +6,12 @@ $(document).ready(function () {
 
     // Inicializar Select2 en los nuevos filtros
     if ($.fn.select2) {
-        $("#seleccionarClienteReporte").select2({ width: '100%' });
-        $("#seleccionarProveedorReporte").select2({ width: '100%' });
-        $("#seleccionarUsuarioReporte").select2({ width: '100%', placeholder: 'Todos los usuarios' });
+        $(".select2").select2({
+            width: '100%'
+        });
+        $("#seleccionarUsuarioReporte").select2({ 
+            width: '100%' 
+        });
     }
 
     /*=============================================
@@ -30,6 +33,7 @@ $(document).ready(function () {
     $('#daterange-btn-reportes').daterangepicker(
         {
             ranges: {
+                'Todos los documentos': [moment().subtract(20, 'years'), moment()],
                 'Hoy': [moment(), moment()],
                 'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
                 'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
@@ -57,13 +61,13 @@ $(document).ready(function () {
     $("#seleccionarCategoriaReporte").change(function () {
         var categoria = $(this).val();
 
-        // Mostrar select correspondiente al tercero
+        // Mostrar div correspondiente al tercero (Cliente o Proveedor)
         if (categoria == "ds" || categoria == "na") {
-            $("#seleccionarClienteReporte").hide();
-            $("#seleccionarProveedorReporte").show();
+            $("#divClienteReporte").hide();
+            $("#divProveedorReporte").show();
         } else {
-            $("#seleccionarProveedorReporte").hide();
-            $("#seleccionarClienteReporte").show();
+            $("#divProveedorReporte").hide();
+            $("#divClienteReporte").show();
         }
     });
 

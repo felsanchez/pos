@@ -311,7 +311,7 @@ $retencionesDS = !empty($documentoSoporte["retenciones"]) ? json_decode($documen
                                     </a>
 
                                     <a href="extensiones/tcpdf/pdf/descargar-pdf-documento-soporte.php?idDS=<?php echo $idDS; ?>"
-                                        target="_blank" class="btn btn-primary pull-right" style="margin-right: 5px;">
+                                        target="_blank" class="btn btn-danger pull-right" style="margin-right: 5px;">
                                         <i class="fa fa-file-pdf-o"></i> Descargar PDF
                                     </a>
 

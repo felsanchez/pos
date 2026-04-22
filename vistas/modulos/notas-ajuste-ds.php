@@ -57,54 +57,7 @@ if ($_SESSION["perfil"] == "Especial") {
                     font-weight: 500;
                 }
 
-                /* 1. LÓGICA DESKTOP-FIRST: Ocultar botón de expansión por defecto en Notas Ajuste DS */
-                .tablaNotasAjusteDS td.dtr-control:before,
-                .tablaNotasAjusteDS th.dtr-control:before {
-                    display: none !important;
-                    content: "" !important;
-                }
 
-                .tablaNotasAjusteDS td.dtr-control,
-                .tablaNotasAjusteDS th.dtr-control {
-                    padding-left: 8px !important;
-                    cursor: default !important;
-                }
-
-                /* 2. ACTIVACIÓN EXCLUSIVA PARA MÓVIL (Menos de 767px) */
-                @media (max-width: 767px) {
-                    .tablaNotasAjusteDS td.dtr-control {
-                        position: relative !important;
-                        padding-left: 30px !important;
-                        cursor: pointer !important;
-                    }
-
-                    .tablaNotasAjusteDS td.dtr-control:before {
-                        top: 50% !important;
-                        left: 5px !important;
-                        height: 18px !important;
-                        width: 18px !important;
-                        margin-top: -9px !important;
-                        display: block !important;
-                        position: absolute !important;
-                        color: white !important;
-                        border: 2px solid white !important;
-                        border-radius: 14px !important;
-                        box-shadow: 0 0 3px #444 !important;
-                        box-sizing: content-box !important;
-                        text-align: center !important;
-                        text-indent: 0 !important;
-                        font-family: 'Courier New', Courier, monospace !important;
-                        font-weight: bold !important;
-                        line-height: 18px !important;
-                        content: '+' !important;
-                        background-color: #3c8dbc !important; /* Azul al estar contraído (+) */
-                    }
-
-                    .tablaNotasAjusteDS tr.parent td.dtr-control:before {
-                        content: '-' !important;
-                        background-color: #dd4b39 !important; /* Rojo al estar expandido (-) */
-                    }
-                }
 
                 /* Botones de acción compactos en móvil */
                 @media (max-width: 767px) {
@@ -316,55 +269,36 @@ $(document).ready(function () {
         "order": [[4, "desc"]], // Fecha
         "responsive": {
           "details": {
-            "type": "column",
-            "target": 0, // Código Nota
+            "type": "inline",
             "renderer": function (api, rowIdx, columns) {
-              if ($(window).width() >= 768) return false;
-
-              // Mapeo por índices directos (ajustados tras eliminar #)
-              var codigo = columns[0].data || '';
-              var docOrig = columns[1].data || '';
-              var proveedor = columns[2].data || '';
-              var total = columns[3].data || '';
-              var fecha = columns[4].data || '';
-              var estadoDian = columns[5].data || '';
-              var acciones = columns[6].data || '';
-
               var finalHtml = '';
+              var hasHidden = false;
 
-              // SECCION 1: Información de la Nota
-              finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
-              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Información de la Nota</h5></div>';
+              $.each(columns, function (i, col) {
+                if (!col.hidden) return;
+                hasHidden = true;
 
-              // Respaldo de Proveedor
-              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-              finalHtml += '<span class="text-bold">Proveedor: </span><span class="pull-right">' + proveedor + '</span></div>';
+                var label = col.title || ('Columna ' + col.columnIndex);
+                
+                finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+                finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
+                finalHtml += '<span style="color:#333;">' + col.data + '</span>';
+                finalHtml += '</div>';
+              });
 
-              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-              finalHtml += '<span class="text-bold">Doc. Original: </span><span class="pull-right">' + docOrig + '</span></div>';
-
-              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-              finalHtml += '<span class="text-bold">Total: </span><span class="pull-right">' + total + '</span></div>';
-
-              // SECCION 2: Estado y Fecha
-              finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
-              finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Estado y Fecha</h5></div>';
-
-              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-              finalHtml += '<span class="text-bold">Estado DIAN: </span><span class="pull-right">' + estadoDian + '</span></div>';
-
-              finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-              finalHtml += '<span class="text-bold">Fecha: </span><span class="pull-right">' + fecha + '</span></div>';
-
-              return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #fcfcfc; margin: 0; text-align: left;">').append(finalHtml) : false;
+              if (!hasHidden) return false;
+              return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
             }
           }
         },
         "columnDefs": [
-          { "targets": 0, "className": 'dtr-control', "responsivePriority": 1 },
-          { "targets": 6, "responsivePriority": 1 }, // Acciones con máxima prioridad
-          { "targets": 2, "responsivePriority": 2 }, // Proveedor con prioridad 2
-          { "targets": [1, 3, 4, 5], "responsivePriority": 3 }
+            { "targets": 0, "responsivePriority": 1 }, // Código
+            { "targets": 6, "responsivePriority": 2, "orderable": false }, // Acciones
+            { "targets": 1, "responsivePriority": 3 }, // Doc Original
+            { "targets": 2, "responsivePriority": 4 }, // Proveedor
+            { "targets": 3, "responsivePriority": 5 }, // Total
+            { "targets": 4, "responsivePriority": 6 }, // Fecha
+            { "targets": 5, "responsivePriority": 7 }  // Estado DIAN
         ],
         "language": {
           "sProcessing": "Procesando...",

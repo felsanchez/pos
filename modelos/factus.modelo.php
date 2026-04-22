@@ -2104,6 +2104,11 @@ class ModeloFactus
     static public function mdlObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos")
     {
         $db = Conexion::conectar();
+        
+        if ($fechaInicial == null || $fechaInicial == "") {
+            $fechaInicial = "2000-01-01";
+            $fechaFinal = "2100-12-31";
+        }
 
         // Ajustar fechas para incluir todo el día
         $inicio = $fechaInicial . " 00:00:00";
@@ -2191,13 +2196,13 @@ class ModeloFactus
         }
 
         // Doc Soporte (Solo DS)
-        if ($categoria == "todos" || $categoria == "ds") {
+        if (($categoria == "todos" && $tercero == "todos") || $categoria == "ds") {
             $totalDSLiquido += ($resDS["t"] ?? 0);
             $totalDocs += ($resDS["c"] ?? 0);
         }
 
         // Notas Ajuste (Restan a DS)
-        if ($categoria == "todos" || $categoria == "na") {
+        if (($categoria == "todos" && $tercero == "todos") || $categoria == "na") {
             $totalDSLiquido -= ($resNA["t"] ?? 0);
             $totalDocs += ($resNA["c"] ?? 0);
         }
@@ -2285,6 +2290,12 @@ class ModeloFactus
     static public function mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos")
     {
         $db = Conexion::conectar();
+        
+        if ($fechaInicial == null || $fechaInicial == "") {
+            $fechaInicial = "2000-01-01";
+            $fechaFinal = "2100-12-31";
+        }
+        
         $inicio = $fechaInicial . " 00:00:00";
         $fin = $fechaFinal . " 23:59:59";
 
@@ -2332,12 +2343,14 @@ class ModeloFactus
             $uniones[] = $queryNC;
         }
 
-        if ($categoria == "todos" || $categoria == "ds") {
-            $uniones[] = $queryDS;
-        }
+        if (!($categoria == "todos" && $tercero != "todos")) {
+            if ($categoria == "todos" || $categoria == "ds") {
+                $uniones[] = $queryDS;
+            }
 
-        if ($categoria == "todos" || $categoria == "na") {
-            $uniones[] = $queryNA;
+            if ($categoria == "todos" || $categoria == "na") {
+                $uniones[] = $queryNA;
+            }
         }
 
         $sql = implode(" UNION ALL ", $uniones) . " ORDER BY fecha DESC";
@@ -2363,22 +2376,24 @@ class ModeloFactus
                 $stmt->bindParam(":uidu1", $idUsuario, PDO::PARAM_INT);
         }
 
-        if ($categoria == "todos" || $categoria == "ds") {
-            $stmt->bindParam(":i4", $inicio, PDO::PARAM_STR);
-            $stmt->bindParam(":f4", $fin, PDO::PARAM_STR);
-            if ($filtroProveedor != "")
-                $stmt->bindParam(":tp1", $tercero, PDO::PARAM_INT);
-            if ($filtroDSUsuario != "")
-                $stmt->bindParam(":uidu2", $idUsuario, PDO::PARAM_INT);
-        }
+        if (!($categoria == "todos" && $tercero != "todos")) {
+            if ($categoria == "todos" || $categoria == "ds") {
+                $stmt->bindParam(":i4", $inicio, PDO::PARAM_STR);
+                $stmt->bindParam(":f4", $fin, PDO::PARAM_STR);
+                if ($filtroProveedor != "")
+                    $stmt->bindParam(":tp1", $tercero, PDO::PARAM_INT);
+                if ($filtroDSUsuario != "")
+                    $stmt->bindParam(":uidu2", $idUsuario, PDO::PARAM_INT);
+            }
 
-        if ($categoria == "todos" || $categoria == "na") {
-            $stmt->bindParam(":i5", $inicio, PDO::PARAM_STR);
-            $stmt->bindParam(":f5", $fin, PDO::PARAM_STR);
-            if ($filtroProveedor != "")
-                $stmt->bindParam(":tp2", $tercero, PDO::PARAM_INT);
-            if ($filtroNAUsuario != "")
-                $stmt->bindParam(":uidu3", $idUsuario, PDO::PARAM_INT);
+            if ($categoria == "todos" || $categoria == "na") {
+                $stmt->bindParam(":i5", $inicio, PDO::PARAM_STR);
+                $stmt->bindParam(":f5", $fin, PDO::PARAM_STR);
+                if ($filtroProveedor != "")
+                    $stmt->bindParam(":tp2", $tercero, PDO::PARAM_INT);
+                if ($filtroNAUsuario != "")
+                    $stmt->bindParam(":uidu3", $idUsuario, PDO::PARAM_INT);
+            }
         }
 
         $stmt->execute();

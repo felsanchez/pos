@@ -1,120 +1,11 @@
+<!-- La estandarización de DataTables Responsive funciona nativamente (inline) -->
 <style>
-  /* 
-  . LÓGICA DESKTOP-FIRST: Ocultar botón de expansión por defecto en Categorías */
-  .tablaCategorias td.dtr-control:before,
-  .tablaCategorias th.dtr-control:before {
-    display: none !important;
-    content: "" !important;
-  }
-
-  .tablaCategorias td.dtr-control,
-  .tablaCategorias th.dtr-control {
-    padding-left: 8px !important;
-    cursor: default !important;
-  }
-
-  /* 2. ACTIVACIÓN EXCLUSIVA PARA MÓVIL (Menos de 767px) */
+  /* Ajuste de botones de acción en móvil */
   @media (max-width: 767px) {
-    .tablaCategorias td.dtr-control {
-      position: relative !important;
-      padding-left: 30px !important;
-      cursor: pointer !important;
-    }
-
-    .tablaCategorias td.dtr-control:before {
-      top: 50% !important;
-      left: 5px !important;
-      height: 18px !important;
-      width: 18px !important;
-      margin-top: -9px !important;
-      display: block !important;
-      position: absolute !important;
-      color: white !important;
-      border: 2px solid white !important;
-      border-radius: 14px !important;
-      box-shadow: 0 0 3px #444 !important;
-      box-sizing: content-box !important;
-      text-align: center !important;
-      text-indent: 0 !important;
-      font-family: 'Courier New', Courier, monospace !important;
-      font-weight: bold !important;
-      line-height: 18px !important;
-      content: '+' !important;
-      background-color: #3c8dbc !important;
-      /* Azul al estar contraído (+) */
-    }
-
-    .tablaCategorias tr.parent td.dtr-control:before {
-      content: '-' !important;
-      background-color: #dd4b39 !important;
-      /* Rojo al estar expandido (-) */
-    }
-
     .tablaCategorias .btn-group .btn {
-      padding: 1px 5px;
-      font-size: 12px;
-      line-height: 1.5;
-      border-radius: 3px;
-    }
-  }
-
-  */
-
-  /* 1. LÓGICA DESKTOP-FIRST: Ocultar botón de expansión por defecto en Categorías */
-  .tablaCategorias td.dtr-control:before,
-  .tablaCategorias th.dtr-control:before {
-    display: none !important;
-    content: "" !important;
-  }
-
-  .tablaCategorias td.dtr-control,
-  .tablaCategorias th.dtr-control {
-    padding-left: 8px !important;
-    cursor: default !important;
-  }
-
-  /* 2. ACTIVACIÓN EXCLUSIVA PARA MÓVIL (Menos de 767px) */
-  @media (max-width: 767px) {
-    .tablaCategorias td.dtr-control {
-      position: relative !important;
-      padding-left: 30px !important;
-      cursor: pointer !important;
-    }
-
-    .tablaCategorias td.dtr-control:before {
-      top: 50% !important;
-      left: 5px !important;
-      height: 18px !important;
-      width: 18px !important;
-      margin-top: -9px !important;
-      display: block !important;
-      position: absolute !important;
-      color: white !important;
-      border: 2px solid white !important;
-      border-radius: 14px !important;
-      box-shadow: 0 0 3px #444 !important;
-      box-sizing: content-box !important;
-      text-align: center !important;
-      text-indent: 0 !important;
-      font-family: 'Courier New', Courier, monospace !important;
-      font-weight: bold !important;
-      line-height: 18px !important;
-      content: '+' !important;
-      background-color: #3c8dbc !important;
-      /* Azul al estar contraído (+) */
-    }
-
-    .tablaCategorias tr.parent td.dtr-control:before {
-      content: '-' !important;
-      background-color: #dd4b39 !important;
-      /* Rojo al estar expandido (-) */
-    }
-
-    .tablaCategorias .btn-group .btn {
-      padding: 1px 5px;
-      font-size: 12px;
-      line-height: 1.5;
-      border-radius: 3px;
+      padding: 1px 5px !important;
+      font-size: 12px !important;
+      line-height: 1.5 !important;
     }
   }
 </style>
@@ -138,9 +29,10 @@
         <?php endif; ?>
       </div>
 
-      <div class="box-body table-responsive">
+      <div class="box-body">
+        <div class="tabla-categorias table-responsive">
         <table id="tablaCategoriasListado" class="table table-bordered table-striped tablaCategorias display nowrap"
-          width="100%">
+          style="width: 100%;">
           <thead>
             <th>Categoría</th>
             <th>Productos</th>
@@ -178,6 +70,7 @@
             ?>
           </tbody>
         </table>
+        </div> <!-- /.tabla-categorias -->
       </div>
     </div>
   </section>
@@ -373,37 +266,33 @@ $borrarCategoria->ctrBorrarCategoria();
           "autoWidth": false,
           "responsive": {
             "details": {
-              "type": "column",
-              "target": 0, // En la primera columna (Categoría)
+              "type": "inline",
               "renderer": function (api, rowIdx, columns) {
-                if ($(window).width() >= 768) return false;
-
-                var nombre = columns[0].data || '';
-                var productos = columns[1].data || '';
                 var finalHtml = '';
+                var hasHidden = false;
 
-                // SECCION 1: Información Categoría
-                finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
-                finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información Categoría</h5></div>';
+                $.each(columns, function (i, col) {
+                  if (!col.hidden) return; // Solo muestra lo oculto
 
-                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-                finalHtml += '<span class="text-bold">Nombre: </span><span class="pull-right">' + nombre + '</span></div>';
+                  hasHidden = true;
+                  var label = col.title || ('Columna ' + col.columnIndex);
+                  var data = col.data || '';
 
-                // SECCION 2: Información Productos
-                finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc;">';
-                finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información Productos</h5></div>';
+                  finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+                  finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
+                  finalHtml += '<span style="color:#333;">' + data + '</span>';
+                  finalHtml += '</div>';
+                });
 
-                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-                finalHtml += '<span class="text-bold">Total productos: </span><span class="pull-right">' + productos + '</span></div>';
-
-                return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #fcfcfc; margin: 0;">').append(finalHtml) : false;
+                if (!hasHidden) return false;
+                return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
               }
             }
           },
           "columnDefs": [
-            { "targets": 0, "className": 'dtr-control', "responsivePriority": 1 },
-            { "targets": 2, "responsivePriority": 1, "orderable": false },
-            { "targets": 1, "responsivePriority": 2 }
+            { "targets": 0, "responsivePriority": 1 },
+            { "targets": 2, "responsivePriority": 2, "orderable": false },
+            { "targets": 1, "responsivePriority": 3 }
           ],
           "language": {
             "sProcessing": "Procesando...",

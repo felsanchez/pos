@@ -545,7 +545,7 @@ $configFactus = ControladorFactus::ctrObtenerConfiguracion();
         <?php endif; ?>
 
         <!-- Boton PDF -->
-        <a class="btn btn-success pull-right" style="margin-right: 5px;"
+        <a class="btn btn-danger pull-right" style="margin-right: 5px;"
           href="extensiones/tcpdf/pdf/descargar-pdf-detalle.php?idVenta=<?php echo $venta["id"]; ?>" target="_blank">
           <i class="fa fa-file-pdf-o"></i> Descargar PDF
         </a>

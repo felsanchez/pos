@@ -135,11 +135,11 @@ $tipoDocumento = "Orden de Venta";
 $etiquetaDocumento = "Orden";
 
 if (!empty($venta["numero_factura"])) {
-    $tipoDocumento = "Factura Electrónica";
-    $etiquetaDocumento = "Factura";
+  $tipoDocumento = "Factura Electrónica";
+  $etiquetaDocumento = "Factura";
 } else if ($venta["estado"] == "venta") {
-    $tipoDocumento = "Detalle de Venta";
-    $etiquetaDocumento = "Venta";
+  $tipoDocumento = "Detalle de Venta";
+  $etiquetaDocumento = "Venta";
 }
 ?>
 
@@ -159,7 +159,8 @@ if (!empty($venta["numero_factura"])) {
   <div class="pad margin no-print">
     <div class="callout callout-info" style="margin-bottom: 0!important;">
       <h4><i class="fa fa-info"></i> Nota:</h4>
-      Esta página es solo para ver detalles de la <?php echo strtolower($etiquetaDocumento); ?>. No se pueden realizar cambios.
+      Esta página es solo para ver detalles de la <?php echo strtolower($etiquetaDocumento); ?>. No se pueden realizar
+      cambios.
     </div>
   </div>
 
@@ -223,7 +224,8 @@ if (!empty($venta["numero_factura"])) {
       <div class="col-sm-4 invoice-col">
         <span
           style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #d2d6de; display: block; margin-bottom: 10px; width: fit-content;">Detalles</span>
-        <b><?php echo $etiquetaDocumento; ?> #<?php echo (!empty($venta["numero_factura"]) ? $venta["numero_factura"] : ($venta["codigo"] ?? '')); ?></b><br>
+        <b><?php echo $etiquetaDocumento; ?>
+          #<?php echo (!empty($venta["numero_factura"]) ? $venta["numero_factura"] : ($venta["codigo"] ?? '')); ?></b><br>
         <br>
         <b>Vendedor:</b> <?php echo $vendedor["nombre"] ?? ''; ?><br>
         <b>Método de Pago:</b> <?php echo $venta["metodo_pago"] ?? ''; ?><br>
@@ -416,7 +418,8 @@ if (!empty($venta["numero_factura"])) {
             </tr>
             <tr>
               <th style="font-size: 1.1em; color: #333;">Valor Neto:</th>
-              <td style="font-size: 1.1em; font-weight: bold;">$<?php echo number_format((float) $valorNetoPagar, 2); ?></td>
+              <td style="font-size: 1.1em; font-weight: bold;">$<?php echo number_format((float) $valorNetoPagar, 2); ?>
+              </td>
             </tr>
           </table>
         </div>
@@ -429,7 +432,7 @@ if (!empty($venta["numero_factura"])) {
     <div class="row no-print">
       <div class="col-xs-12">
         <!-- Boton PDF -->
-        <a class="btn btn-success pull-right" style="margin-right: 5px;"
+        <a class="btn btn-danger pull-right" style="margin-right: 5px;"
           href="extensiones/tcpdf/pdf/descargar-pdf-orden.php?idVenta=<?php echo $venta["id"]; ?>" target="_blank">
           <i class="fa fa-file-pdf-o"></i> Descargar PDF de <?php echo $etiquetaDocumento; ?>
         </a>

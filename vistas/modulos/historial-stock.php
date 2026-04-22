@@ -1,52 +1,4 @@
 <style>
-  /* 1. LÓGICA DESKTOP-FIRST: Ocultar botón de expansión por defecto en la tabla */
-  .tablaHistorialStock td.dtr-control:before,
-  .tablaHistorialStock th.dtr-control:before {
-    display: none !important;
-    content: "" !important;
-  }
-
-  .tablaHistorialStock td.dtr-control,
-  .tablaHistorialStock th.dtr-control {
-    padding-left: 8px !important;
-    cursor: default !important;
-  }
-
-  /* 2. ACTIVACIÓN EXCLUSIVA PARA MÓVIL (Menos de 767px) */
-  @media (max-width: 767px) {
-    .tablaHistorialStock td.dtr-control {
-      position: relative !important;
-      padding-left: 30px !important;
-      cursor: pointer !important;
-    }
-
-    .tablaHistorialStock td.dtr-control:before {
-      top: 50% !important;
-      left: 5px !important;
-      height: 18px !important;
-      width: 18px !important;
-      margin-top: -9px !important;
-      display: block !important;
-      position: absolute !important;
-      color: white !important;
-      border: 2px solid white !important;
-      border-radius: 14px !important;
-      box-shadow: 0 0 3px #444 !important;
-      box-sizing: content-box !important;
-      text-align: center !important;
-      text-indent: 0 !important;
-      font-family: 'Courier New', Courier, monospace !important;
-      font-weight: bold !important;
-      line-height: 18px !important;
-      content: '+' !important;
-      background-color: #3c8dbc !important; /* Azul */
-    }
-
-    .tablaHistorialStock tr.parent td.dtr-control:before {
-      content: '-' !important;
-      background-color: #dd4b39 !important; /* Rojo */
-    }
-  }
 
   /* Estilos para campo notas editable */
   .celda-notas-movimiento {
@@ -127,6 +79,33 @@
   }
 </style>
 
+<?php
+// Asegurar carga de controladores/modelos para la pre-carga
+require_once "controladores/movimientos.controlador.php";
+require_once "modelos/movimientos.modelo.php";
+
+// Pre-cargar datos para aparición inmediata
+$pre_movimientos = ControladorMovimientos::ctrMostrarMovimientos();
+$pre_resumen = ControladorMovimientos::ctrObtenerResumen();
+
+$tv = 0;
+$tc = 0;
+$te = 0;
+$tm = 0;
+
+foreach ($pre_resumen as $item) {
+    $tm += intval($item["total_movimientos"]);
+    if ($item["tipo_movimiento"] == "venta") $tv = $item["total_unidades"];
+    if ($item["tipo_movimiento"] == "creacion_producto" || $item["tipo_movimiento"] == "creacion_variante") $tc += intval($item["total_unidades"]);
+    if ($item["tipo_movimiento"] == "edicion_stock") $te = $item["total_unidades"];
+}
+?>
+
+<script>
+  window.preloadedMovimientos = <?php echo json_encode($pre_movimientos); ?>;
+  window.preloadedResumen = <?php echo json_encode($pre_resumen); ?>;
+</script>
+
 <div class="content-wrapper">
 
   <section class="content-header">
@@ -158,7 +137,7 @@
       <div class="col-lg-3 col-xs-6">
         <div class="small-box bg-aqua">
           <div class="inner">
-            <h3 id="totalVentas">0</h3>
+            <h3 id="totalVentas"><?php echo $tv; ?></h3>
             <p>Ventas Totales</p>
           </div>
           <div class="icon">
@@ -170,7 +149,7 @@
       <div class="col-lg-3 col-xs-6">
         <div class="small-box bg-green">
           <div class="inner">
-            <h3 id="totalCreaciones">0</h3>
+            <h3 id="totalCreaciones"><?php echo $tc; ?></h3>
             <p>Creación Productos/Variantes</p>
           </div>
           <div class="icon">
@@ -182,7 +161,7 @@
       <div class="col-lg-3 col-xs-6">
         <div class="small-box bg-yellow">
           <div class="inner">
-            <h3 id="totalEdiciones">0</h3>
+            <h3 id="totalEdiciones"><?php echo $te; ?></h3>
             <p>Edición de Stock</p>
           </div>
           <div class="icon">
@@ -194,7 +173,7 @@
       <div class="col-lg-3 col-xs-6">
         <div class="small-box bg-red">
           <div class="inner">
-            <h3 id="totalMovimientos">0</h3>
+            <h3 id="totalMovimientos"><?php echo $tm; ?></h3>
             <p>Total Movimientos</p>
           </div>
           <div class="icon">
@@ -295,9 +274,11 @@
             <button type="button" class="btn btn-default" id="btnLimpiar" title="Limpiar">
               <i class="fa fa-refresh"></i>
             </button>
-            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalDescargarExcelStock">
-              <i class="fa fa-file-excel-o"></i> Exportar a Excel
-            </button>
+            <?php if (puedeAccion('historial_stock', 'imprimir')): ?>
+              <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalDescargarExcelStock">
+                <i class="fa fa-file-excel-o"></i> Exportar a Excel
+              </button>
+            <?php endif; ?>
 
           </form>
 
@@ -314,10 +295,10 @@
 
             <tr>
 
-              <th>Fecha</th>
               <th>Producto</th>
-              <th>Tipo</th>
               <th>Tipo Movimiento</th>
+              <th>Tipo</th>
+              <th>Fecha</th>
               <th>Cantidad</th>
               <th>Stock Anterior</th>
               <th>Stock Nuevo</th>
@@ -329,7 +310,54 @@
           </thead>
 
           <tbody>
-            <!-- Se llenará dinámicamente con DataTables -->
+            <?php
+            // SSR: Renderizar las primeras 25 filas directamente en el servidor para carga instantánea
+            $initialRows = array_slice($pre_movimientos, 0, 25);
+            foreach ($initialRows as $row) {
+              
+              // 1. Tipo Movimiento Badge
+              $badges = [
+                "venta" => '<span class="label label-success">Venta</span>',
+                "devolucion" => '<span class="label label-warning">Devolución</span>',
+                "eliminacion_venta" => '<span class="label label-danger">Eliminación Venta</span>',
+                "ajuste_manual" => '<span class="label label-default">Ajuste Manual</span>',
+                "creacion_producto" => '<span class="label label-primary">Creación</span>',
+                "creacion_variante" => '<span class="label label-info">Creación Variante</span>',
+                "edicion_stock" => '<span class="label label-default">Edición Stock</span>'
+              ];
+              $badgeMov = isset($badges[$row["tipo_movimiento"]]) ? $badges[$row["tipo_movimiento"]] : $row["tipo_movimiento"];
+
+              // 2. Tipo Producto Label
+              $badgeTipo = ($row["tipo_producto"] == "producto") ? '<span class="label label-primary">Producto</span>' : '<span class="label label-info">Variante</span>';
+
+              // 3. Fecha Formateada
+              $fechaObj = new DateTime($row["fecha"]);
+              $fechaFormateada = $fechaObj->format('d/m/Y H:i');
+
+              // 4. Cantidad Formateada
+              $cantidad = intval($row["cantidad"]);
+              $badgeCant = ($cantidad > 0) ? '<span class="text-green"><i class="fa fa-arrow-up"></i> +' . $cantidad . '</span>' : '<span class="text-red"><i class="fa fa-arrow-down"></i> ' . $cantidad . '</span>';
+
+              // 5. Stock Nuevo Colorido
+              $cambio = intval($row["stock_nuevo"]) - intval($row["stock_anterior"]);
+              $stockNuevoHtml = $row["stock_nuevo"];
+              if ($cambio > 0) $stockNuevoHtml = '<strong class="text-green">' . $row["stock_nuevo"] . '</strong>';
+              if ($cambio < 0) $stockNuevoHtml = '<strong class="text-red">' . $row["stock_nuevo"] . '</strong>';
+
+              echo '<tr>';
+              echo '<td>' . e($row["nombre_producto"]) . '</td>';
+              echo '<td>' . $badgeMov . '</td>';
+              echo '<td>' . $badgeTipo . '</td>';
+              echo '<td>' . $fechaFormateada . '</td>';
+              echo '<td>' . $badgeCant . '</td>';
+              echo '<td>' . $row["stock_anterior"] . '</td>';
+              echo '<td>' . $stockNuevoHtml . '</td>';
+              echo '<td>' . e($row["nombre_usuario"]) . '</td>';
+              echo '<td>' . e($row["referencia"]) . '</td>';
+              echo '<td><div contenteditable="true" class="celda-notas-movimiento" data-id="' . $row["id"] . '">' . e($row["notas"]) . '</div></td>';
+              echo '</tr>';
+            }
+            ?>
           </tbody>
 
         </table>
@@ -378,9 +406,11 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-        <a id="btn-descargar-excel-stock" href="vistas/modulos/descargar-historial-stock.php" class="btn btn-success">
-          <i class="fa fa-download"></i> Descargar
-        </a>
+        <?php if (puedeAccion('historial_stock', 'imprimir')): ?>
+          <a id="btn-descargar-excel-stock" href="vistas/modulos/descargar-historial-stock.php" class="btn btn-success">
+            <i class="fa fa-download"></i> Descargar
+          </a>
+        <?php endif; ?>
       </div>
     </div>
   </div>

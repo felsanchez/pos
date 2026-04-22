@@ -42,6 +42,19 @@ class imprimirDetalleVenta
 
         $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
+        // --- EXTRACCION CUFE (Lógica mejorada) ---
+        $cufeDisplay = $venta["cufe"] ?? '';
+        
+        if (empty($cufeDisplay) && !empty($venta["qr_data"])) {
+            $parts = parse_url($venta["qr_data"], PHP_URL_QUERY);
+            if ($parts) {
+                parse_str($parts, $query);
+                if (isset($query['documentkey'])) {
+                    $cufeDisplay = $query['documentkey'];
+                }
+            }
+        }
+
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetAuthor('Sistema POS');
         $pdf->SetTitle('Factura de Venta #' . $venta["codigo"]);
@@ -213,16 +226,22 @@ class imprimirDetalleVenta
                     'module_height' => 1
                 );
                 $pdf->write2DBarcode(trim($venta["qr_data"]), 'QRCODE,H', 15, $yQR, 35, 35, $styleQR, 'N');
+                
                 $pdf->SetY($yQR + 36);
+                $pdf->SetFont('helvetica', '', 8);
+                $pdf->SetTextColor(119, 119, 119);
+                $pdf->MultiCell(105, 0, trim($venta["qr_data"]), 0, 'L', false, 1, 12, '', true);
+                
+                $pdf->SetTextColor(68, 68, 68); // Restaurar color texto
             }
 
             // CUFE
-            if (!empty($venta["cufe"])) {
+            if (!empty($cufeDisplay)) {
                 $pdf->Ln(2);
                 $pdf->SetFont('helvetica', 'B', 9);
                 $pdf->Cell(110, 5, ' CUFE:', 'L', 1, 'L', true);
                 $pdf->SetFont('helvetica', '', 8);
-                $pdf->MultiCell(110, 0, $venta["cufe"], 1, 'L', true, 1, 10, '', true);
+                $pdf->MultiCell(110, 0, $cufeDisplay, 1, 'L', true, 1, 10, '', true);
             }
         }
 

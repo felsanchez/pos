@@ -200,53 +200,43 @@ if($xml){
                       <td>'.($key+1).'</td>
                       <td>'.$value["codigo"].'</td>';
 
-                      /*
-                      $itemCliente = "id";
-                      $valorCliente = $value["id_cliente"];
-                      $respuestaCliente = ControladorClientes::ctrMostrarClientes($itemCliente, $valorCliente);
-                      echo'<td>'.$respuestaCliente["nombre"].'</td>';
-                      */
-
                       $itemUsuario = "id";
                       $valorUsuario = $value["id_vendedor"];
                       $respuestaUsuario = ControladorUsuarios::ctrMostrarUsuarios($itemUsuario, $valorUsuario);
-                      echo'<td>'.$respuestaUsuario["nombre"].'</td>
 
+                      echo '<td>'.$respuestaUsuario["nombre"].'</td>
                       <td>'.$value["metodo_pago"].'</td>
                       <td>$ '.number_format($value["neto"]).'</td>
                       <td>$ '.number_format($value["total"]).'</td>
                       <td contenteditable="true" class="celda-nota" data-id="'.$value['id'].'">'.$value['notas'].'</td>
                       
-                      
                       <td>' . $value["fecha"] . '
-
-                       
                         <!-- **********BTN VERSION MOVIL******** -->
                         <button class="btn btn-warning btn-xs solo-movil btnEditarVenta" idVenta="' . $value["id"] . '">
                             <i class="fa fa-eye"></i>
                           </button>
                       </td>
 
-
                       <td>
-                        <div class="btn-group">
+                        <div class="btn-group">';
 
-                          <!--<a class="btn btn-success" href="index.php?ruta=ventas&xml=' . $value["codigo"] . '">xml</a> -->
+                        if (puedeAccion('ventas', 'imprimir')) {
+                          echo '<button class="btn btn-info btnImprimirFactura" codigoVenta="' . $value["codigo"] . '">
+                                  <i class="fa fa-print"></i>
+                                </button>';
+                        }
 
-                          <button class="btn btn-info btnImprimirFactura" codigoVenta="' . $value["codigo"] . '">
-                            <i class="fa fa-print"></i>
-                          </button>
+                        echo '<button class="btn btn-warning btnEditarVenta" idVenta="' . $value["id"] . '">
+                                <i class="fa fa-eye"></i>
+                              </button>';
 
-                          <button class="btn btn-warning btnEditarVenta" idVenta="' . $value["id"] . '">
-                            <i class="fa fa-eye"></i>
-                          </button>';
+                        if (puedeAccion('ventas', 'eliminar')) {
+                          echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '">
+                                  <i class="fa fa-times"></i>
+                                </button>';
+                        }
 
-                          if ($_SESSION["perfil"] == "Administrador") {
-                            echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '">
-                                    <i class="fa fa-times"></i>
-                                  </button>';
-                          }
-                          echo '</div>
+                        echo '</div>
                       </td>
                     </tr>';
                 }

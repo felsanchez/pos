@@ -4,6 +4,17 @@ if (!puedeVer('variantes')) {
   return;
 }
 ?>
+<style>
+  /* Ajuste de botones de acción en móvil */
+  @media (max-width: 767px) {
+    .tabla-tipos .btn-group .btn,
+    .tabla-opciones .btn-group .btn {
+      padding: 1px 5px !important;
+      font-size: 12px !important;
+      line-height: 1.5 !important;
+    }
+  }
+</style>
 <div class="content-wrapper">
 
   <section class="content-header">
@@ -36,8 +47,8 @@ if (!puedeVer('variantes')) {
       </div>
 
       <div class="box-body">
-
-        <table class="table table-bordered table-striped dt-responsive tablas" width="100%">
+        <div class="tabla-tipos table-responsive">
+        <table id="tablaTiposVariantes" class="table table-bordered table-striped display nowrap" style="width: 100%;">
 
           <thead>
             <tr>
@@ -101,7 +112,7 @@ if (!puedeVer('variantes')) {
           </tbody>
 
         </table>
-
+        </div> <!-- /.tabla-tipos -->
       </div>
 
     </div>
@@ -125,8 +136,8 @@ if (!puedeVer('variantes')) {
       </div>
 
       <div class="box-body">
-
-        <table class="table table-bordered table-striped" id="tablaOpciones">
+        <div class="tabla-opciones table-responsive">
+        <table id="tablaOpciones" class="table table-bordered table-striped display nowrap" style="width: 100%;">
           <thead>
             <tr>
               <th>Nombre</th>
@@ -139,7 +150,7 @@ if (!puedeVer('variantes')) {
             <!-- Se carga dinámicamente con AJAX -->
           </tbody>
         </table>
-
+        </div> <!-- /.tabla-opciones -->
       </div>
 
     </div>

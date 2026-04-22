@@ -6,34 +6,13 @@ if (!puedeVer('proveedores')) {
 ?>
 <!-- Solo muestra 2 campos en movil en la Tabla 1-->
 <style>
-  /* Espaciado automático para el botón de expansión en modo inline */
-  .tablaProveedores.collapsed tbody td:first-child {
-    padding-left: 35px !important;
-    position: relative;
-    cursor: pointer;
-  }
-  /* Estilo del botón de expansión */
-  .tablaProveedores.collapsed tbody tr td:first-child::before {
-    background-color: #3c8dbc !important; /* Estilo azul AdminLTE */
-  }
-
-  /* Color rojo cuando está expandido (-) */
-  .tablaProveedores.collapsed tbody tr.parent td:first-child::before {
-    background-color: #dd4b39 !important;
-  }
-
   /* Estilos para el botón de expansión en móvil */
   @media (max-width: 767px) {
-    .tablaProveedores td.control {
-      cursor: pointer;
-    }
-
     /* Resize action buttons on mobile */
     .tablaProveedores .btn-group .btn {
-      padding: 1px 5px;
-      font-size: 12px;
-      line-height: 1.5;
-      border-radius: 3px;
+      padding: 1px 5px !important;
+      font-size: 12px !important;
+      line-height: 1.5 !important;
     }
   }
 
@@ -97,9 +76,9 @@ if (!puedeVer('proveedores')) {
       </div>
 
 
-      <div class="box-body table-responsive">
-
-        <table class="table table-bordered table-striped dt-responsive tablaProveedores" width="100%">
+      <div class="box-body">
+        <div class="tabla-proveedores table-responsive">
+        <table class="table table-bordered table-striped tablaProveedores display nowrap" style="width: 100%;">
 
           <thead>
             <tr>
@@ -166,7 +145,7 @@ if (!puedeVer('proveedores')) {
           </tbody>
 
         </table>
-
+        </div><!-- /.tabla-proveedores -->
       </div>
 
     </div>

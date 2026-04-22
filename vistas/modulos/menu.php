@@ -154,8 +154,8 @@
       if (puedeVer('ordenes-visita')) {
         echo '<li>
                       <a href="ordenes-visita">
-                        <i class="fa fa-circle-o"></i>
-                        <span>Ordenes de Venta</span>
+                        <i class="fa fa-search"></i>
+                        <span>Consulta de ventas</span>
                       </a>
                     </li>';
       }

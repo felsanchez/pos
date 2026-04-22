@@ -5,226 +5,143 @@ var tablaMovimientos;
 
 function cargarTablaMovimientos() {
 
-	if (tablaMovimientos) {
-		tablaMovimientos.destroy();
+	// Si ya existen datos pre-cargados y no hemos inicializado la tabla, usarlos para saltar el primer AJAX
+	var usePreloaded = window.preloadedMovimientos && !$.fn.DataTable.isDataTable('.tablaHistorialStock');
+	
+	if ($.fn.DataTable.isDataTable('.tablaHistorialStock')) {
+		tablaMovimientos.ajax.reload();
+		return;
 	}
 
-	var filtros = {
-		accion: "obtenerMovimientos",
-		id_producto: $("#filtroProducto").val() || "",
-		tipo_movimiento: $("#filtroTipo").val() || "",
-		fecha_desde: $("#filtroFechaDesde").val() || "",
-		fecha_hasta: $("#filtroFechaHasta").val() || "",
-		usuario: $("#filtroUsuario").val() || "",
-		csrf_token: $('meta[name="csrf-token"]').attr('content')
-	};
-
-	$.ajax({
-		url: "ajax/movimientos.ajax.php",
-		method: "POST",
-		data: filtros,
-		dataType: "json",
-		success: function (movimientos) {
-
-			console.log("Movimientos cargados:", movimientos);
-
-			tablaMovimientos = $(".tablaHistorialStock").DataTable({
-
-				data: movimientos,
-
-				responsive: {
-					details: {
-						type: "column",
-						target: 0, // El clic recae estrictamente sobre la Fecha (índice 0)
-						renderer: function (api, rowIdx, columns) {
-							var data = $.map(columns, function (col, i) {
-								return col;
-							});
-
-							function getVal(idx) {
-								return api.cell(rowIdx, idx).render('display');
-							}
-
-							var finalHtml = '';
-
-							// SECCIÓN 1: Producto Afectado (Producto(1), Tipo(2))
-							finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
-							finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Producto Afectado</h5></div>';
-
-							finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-							finalHtml += '<span class="text-bold">Producto: </span><span class="pull-right">' + getVal(1) + '</span></div>';
-
-							finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-							finalHtml += '<span class="text-bold">Tipo: </span><span class="pull-right">' + getVal(2) + '</span></div>';
-
-							// SECCIÓN 2: Detalle del Movimiento (Tipo Mov(3), Cantidad(4), Stock Ant(5), Stock Nuevo(6))
-							finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
-							finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Detalle del Movimiento</h5></div>';
-
-							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-							finalHtml += '<span class="text-bold">Tipo Movimiento: </span><span class="pull-right">' + getVal(3) + '</span></div>';
-
-							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-							finalHtml += '<span class="text-bold">Cantidad: </span><span class="pull-right">' + getVal(4) + '</span></div>';
-
-							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-							finalHtml += '<span class="text-bold">Stock Anterior: </span><span class="pull-right">' + getVal(5) + '</span></div>';
-
-							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-							finalHtml += '<span class="text-bold">Stock Nuevo: </span><span class="pull-right">' + getVal(6) + '</span></div>';
-
-							// SECCIÓN 3: Información Adicional (Usuario(7), Referencia(8), Notas(9))
-							finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align: left;">';
-							finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0; text-align: left;">Información Adicional</h5></div>';
-
-							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-							finalHtml += '<span class="text-bold">Usuario: </span><span class="pull-right">' + getVal(7) + '</span></div>';
-
-							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-							finalHtml += '<span class="text-bold">Referencia: </span><span class="pull-right">' + getVal(8) + '</span></div>';
-
-							finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: left;">';
-							finalHtml += '<span class="text-bold" style="display:block; margin-bottom:4px;">Notas:</span>';
-							finalHtml += '<span>' + getVal(9) + '</span></div>';
-
-							return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #fcfcfc; margin: 0; text-align: left;">').append(finalHtml) : false;
-						}
-					}
-				},
-
-				autoWidth: false,
-
-				columns: [
-					{
-						data: "fecha",
-						className: "all dtr-control",
-						responsivePriority: 1, 
-						render: function (data) {
-							var fecha = new Date(data);
-							return fecha.toLocaleString('es-ES', {
-								year: 'numeric',
-								month: '2-digit',
-								day: '2-digit',
-								hour: '2-digit',
-								minute: '2-digit'
-							});
-						}
-					},
-					{
-						data: "nombre_producto",
-						className: "all",
-						responsivePriority: 1
-					},
-					{
-						data: "tipo_producto",
-						responsivePriority: 100,
-						render: function (data) {
-							if (data == "producto") {
-								return '<span class="label label-primary">Producto</span>';
-							} else {
-								return '<span class="label label-info">Variante</span>';
-							}
-						}
-					},
-					{
-						data: "tipo_movimiento",
-						className: "all",
-						responsivePriority: 1,
-						render: function (data) {
-							var badges = {
-								"venta": '<span class="label label-success">Venta</span>',
-								"devolucion": '<span class="label label-warning">Devolución</span>',
-								"eliminacion_venta": '<span class="label label-danger">Eliminación Venta</span>',
-								"ajuste_manual": '<span class="label label-default">Ajuste Manual</span>',
-								"creacion_producto": '<span class="label label-primary">Creación</span>',
-								"creacion_variante": '<span class="label label-info">Creación Variante</span>',
-								"edicion_stock": '<span class="label label-default">Edición Stock</span>'
-							};
-							return badges[data] || data;
-						}
-					},
-					{
-						data: "cantidad",
-						responsivePriority: 100,
-						render: function (data) {
-							if (data > 0) {
-								return '<span class="text-green"><i class="fa fa-arrow-up"></i> +' + data + '</span>';
-							} else {
-								return '<span class="text-red"><i class="fa fa-arrow-down"></i> ' + data + '</span>';
-							}
-						}
-					},
-					{
-						data: "stock_anterior",
-						responsivePriority: 100
-					},
-					{
-						data: "stock_nuevo",
-						responsivePriority: 100,
-						render: function (data, type, row) {
-							var cambio = row.stock_nuevo - row.stock_anterior;
-							if (cambio > 0) {
-								return '<strong class="text-green">' + data + '</strong>';
-							} else if (cambio < 0) {
-								return '<strong class="text-red">' + data + '</strong>';
-							} else {
-								return data;
-							}
-						}
-					},
-					{
-						data: "nombre_usuario",
-						responsivePriority: 100
-					},
-					{
-						data: "referencia",
-						responsivePriority: 100
-					},
-					{
-						data: "notas",
-						responsivePriority: 100,
-						render: function (data, type, row) {
-							return '<div contenteditable="true" class="celda-notas-movimiento" data-id="' + row.id + '">' + data + '</div>';
-						}
-					}
-				],
-
-				"language": {
-					"sProcessing": "Procesando...",
-					"sLengthMenu": "Mostrar _MENU_ registros",
-					"sZeroRecords": "No se encontraron resultados",
-					"sEmptyTable": "Ningún dato disponible en esta tabla",
-					"sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-					"sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
-					"sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-					"sSearch": "Buscar:",
-					"oPaginate": {
-						"sFirst": "Primero",
-						"sLast": "Último",
-						"sNext": "Siguiente",
-						"sPrevious": "Anterior"
-					}
-				},
-
-				"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
-				"order": [],
-				"ordering": false,
-				"pageLength": 25,
-				"preDrawCallback": function () {
-					if (!$(this).hasClass('datatable-ready')) {
-						$(this).css('visibility', 'hidden');
-					}
-				},
-				"initComplete": function () {
-					$(this).addClass('datatable-ready').css('visibility', 'visible');
-					this.api().responsive.recalc();
-				}
-
-			});
-
+	tablaMovimientos = $(".tablaHistorialStock").DataTable({
+		"data": usePreloaded ? window.preloadedMovimientos : null,
+		"ajax": usePreloaded ? null : {
+			"url": "ajax/movimientos.ajax.php",
+			"method": "POST",
+			"data": function (d) {
+				d.accion = "obtenerMovimientos";
+				d.id_producto = $("#filtroProducto").val() || "";
+				d.tipo_movimiento = $("#filtroTipo").val() || "";
+				d.fecha_desde = $("#filtroFechaDesde").val() || "";
+				d.fecha_hasta = $("#filtroFechaHasta").val() || "";
+				d.usuario = $("#filtroUsuario").val() || "";
+				d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+			},
+			"dataSrc": ""
 		},
-		error: function (jqXHR, textStatus, errorThrown) {
-			console.error("Error al cargar movimientos:", textStatus, errorThrown);
+		"deferRender": true,
+		"responsive": {
+			"details": {
+				"type": "inline",
+				"renderer": function (api, rowIdx, columns) {
+					var finalHtml = '';
+					var hasHidden = false;
+
+					$.each(columns, function (i, col) {
+						if (!col.hidden) return;
+						hasHidden = true;
+
+						var label = col.title || ('Columna ' + col.columnIndex);
+						
+						finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+						finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
+						finalHtml += '<span style="color:#333;">' + col.data + '</span>';
+						finalHtml += '</div>';
+					});
+
+					if (!hasHidden) return false;
+					return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
+				}
+			}
+		},
+		"autoWidth": false,
+		"columns": [
+			{ "data": "nombre_producto" },
+			{
+				"data": "tipo_movimiento",
+				"render": function (data) {
+					var badges = {
+						"venta": '<span class="label label-success">Venta</span>',
+						"devolucion": '<span class="label label-warning">Devolución</span>',
+						"eliminacion_venta": '<span class="label label-danger">Eliminación Venta</span>',
+						"ajuste_manual": '<span class="label label-default">Ajuste Manual</span>',
+						"creacion_producto": '<span class="label label-primary">Creación</span>',
+						"creacion_variante": '<span class="label label-info">Creación Variante</span>',
+						"edicion_stock": '<span class="label label-default">Edición Stock</span>'
+					};
+					return badges[data] || data;
+				}
+			},
+			{
+				"data": "tipo_producto",
+				"render": function (data) {
+					return data == "producto" ? '<span class="label label-primary">Producto</span>' : '<span class="label label-info">Variante</span>';
+				}
+			},
+			{
+				"data": "fecha",
+				"render": function (data, type, row) {
+					if (type === 'display' || type === 'filter') {
+						var fecha = new Date(data);
+						return fecha.toLocaleString('es-ES', {
+							year: 'numeric', month: '2-digit', day: '2-digit',
+							hour: '2-digit', minute: '2-digit'
+						});
+					}
+					return data;
+				}
+			},
+			{
+				"data": "cantidad",
+				"render": function (data) {
+					return data > 0 ? '<span class="text-green"><i class="fa fa-arrow-up"></i> +' + data + '</span>' : '<span class="text-red"><i class="fa fa-arrow-down"></i> ' + data + '</span>';
+				}
+			},
+			{ "data": "stock_anterior" },
+			{
+				"data": "stock_nuevo",
+				"render": function (data, type, row) {
+					var cambio = row.stock_nuevo - row.stock_anterior;
+					if (cambio > 0) return '<strong class="text-green">' + data + '</strong>';
+					if (cambio < 0) return '<strong class="text-red">' + data + '</strong>';
+					return data;
+				}
+			},
+			{ "data": "nombre_usuario" },
+			{ "data": "referencia" },
+			{
+				"data": "notas",
+				"render": function (data, type, row) {
+					return '<div contenteditable="true" class="celda-notas-movimiento" data-id="' + row.id + '">' + data + '</div>';
+				}
+			}
+		],
+		"language": {
+			"sProcessing": "Procesando...",
+			"sLengthMenu": "Mostrar _MENU_ registros",
+			"sZeroRecords": "No se encontraron resultados",
+			"sEmptyTable": "Ningún dato disponible en esta tabla",
+			"sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+			"sSearch": "Buscar:",
+			"oPaginate": { "sFirst": "Primero", "sLast": "Último", "sNext": "Siguiente", "sPrevious": "Anterior" }
+		},
+		"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
+		"columnDefs": [
+			{ "targets": 0, "responsivePriority": 1 },
+			{ "targets": 1, "responsivePriority": 1 },
+			{ "targets": 4, "responsivePriority": 1 },
+			{ "targets": 2, "responsivePriority": 2 },
+			{ "targets": 3, "responsivePriority": 2 },
+			{ "targets": [5, 6, 7, 8, 9], "responsivePriority": 3 }
+		],
+		"order": [[3, "desc"]],
+		"ordering": true,
+		"processing": true,
+		"pageLength": 25,
+		"initComplete": function () {
+			this.api().responsive.recalc();
+			// Limpiar datos pre-cargados después del primer uso
+			window.preloadedMovimientos = null;
 		}
 	});
 }
@@ -233,6 +150,13 @@ function cargarTablaMovimientos() {
 CARGAR RESUMEN DE MOVIMIENTOS
 =============================================*/
 function cargarResumen() {
+
+	if (window.preloadedResumen) {
+		// Los valores ya fueron inyectados directamente en el HTML por PHP
+		// Solo limpiamos la variable para el siguiente refresco manual
+		window.preloadedResumen = null;
+		return;
+	}
 
 	var filtros = {
 		accion: "obtenerResumen",

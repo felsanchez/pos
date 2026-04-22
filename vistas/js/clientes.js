@@ -64,84 +64,50 @@ $(document).ready(function () {
       "details": {
         "type": "inline",
         "renderer": function (api, rowIdx, columns) {
-          var rowData = api.row(rowIdx).data();
-
-          // Índices (0-based):
-          // 0: Nombre, 1: Documento, 2: Email, 3: Teléfono, 4: Dirección,
-          // 5: Estado (HTML), 6: Notas, 7: Última compra, 8: Acciones (HTML), 9: Ingreso al sistema
-
-          // Extraer solo el texto del documento (evitando los botones solo-movil que están en la misma celda)
-          var documento = $('<div>').html(rowData[1]).contents().filter(function () {
-            return this.nodeType === 3; // Nodo de texto
-          }).text().trim();
-
-          var email = rowData[2];
-          var direccion = rowData[4];
-          var estado = rowData[5];
-          var notas = rowData[6];
-          var ultimaCompra = rowData[7];
-          var ingreso = rowData[9];
-
-          // Leer ID del cliente desde el atributo data-cliente-id del <tr>
-          var idCliente = $(api.row(rowIdx).node()).attr('data-cliente-id') || "";
-
           var finalHtml = '';
+          var hasHidden = false;
 
-          // Sección 1: Información Personal
-          finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
-          finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información Personal</h5></div>';
+          $.each(columns, function (i, col) {
+            if (!col.hidden) return;
+            hasHidden = true;
 
-          finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-          finalHtml += '<span class="text-bold" style="color:#555;">Documento: </span><span style="color:#333; text-align: right;">' + documento + '</span></div>';
+            var label = col.title || ('Columna ' + col.columnIndex);
+            finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+            finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
 
-          finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-          finalHtml += '<span class="text-bold" style="color:#555;">Correo: </span><span style="color:#333; text-align: right;">' + email + '</span></div>';
+            if (col.columnIndex === 6) {
+                // Reconstruimos la celda editable de notas
+                var rowNode = api.row(rowIdx).node();
+                var idCliente = $(rowNode).attr('data-cliente-id') || "";
+                var notasText = $(rowNode).find('.celda-notas').text().trim();
+                var placeholderAttr = (notasText === "") ? ' data-placeholder="true"' : "";
+                
+                finalHtml += '<div contenteditable="true" class="celda-notas" data-id="' + idCliente + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + notasText + '</div>';
+            } else {
+                // El resto pasa su HTML o texto tal cual
+                finalHtml += '<span style="color:#333;">' + col.data + '</span>';
+            }
+            
+            finalHtml += '</div>';
+          });
 
-          finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-          finalHtml += '<span class="text-bold" style="color:#555;">Dirección: </span><span style="color:#333; text-align: right;">' + direccion + '</span></div>';
-
-          finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-          finalHtml += '<span class="text-bold" style="color:#555;">Estado: </span><span style="color:#333; text-align: right;">' + estado + '</span></div>';
-
-          // Sección 2: Actividad
-          finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
-          finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Actividad</h5></div>';
-
-          finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-          finalHtml += '<span class="text-bold" style="color:#555;">Última compra: </span><span style="color:#333; text-align: right;">' + ultimaCompra + '</span></div>';
-
-          finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-          finalHtml += '<span class="text-bold" style="color:#555;">Ingreso al sistema: </span><span style="color:#333; text-align: right;">' + ingreso + '</span></div>';
-
-          // Notas editable con el mismo estilo que en escritorio (con placeholder dinámico)
-          var placeholderAttr = (notas === "") ? ' data-placeholder="true"' : "";
-          finalHtml += '<div class="col-xs-12" style="padding: 10px 0; border-bottom: 1px solid #eee;">';
-          finalHtml += '<span class="text-bold" style="color:#555; display:block; margin-bottom:5px;">Notas: </span>';
-          finalHtml += '<div class="celda-notas" contenteditable="true" data-id="' + idCliente + '"' + placeholderAttr + ' style="width: 100%;">' + notas + '</div></div>';
-
-          return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #f8f9fa; margin: 0;">').append(finalHtml) : false;
+          if (!hasHidden) return false;
+          return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
         }
       }
     },
     "dom": '<"row"<"col-sm-6"l><"col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
     "columnDefs": [
-      {
-        "targets": 0, // Nombre
-        "responsivePriority": 1
-      },
-      {
-        "targets": 3, // Teléfono
-        "responsivePriority": 2
-      },
-      {
-        "targets": 8, // Acciones
-        "responsivePriority": 1,
-        "orderable": false
-      },
-      {
-        "targets": [1, 2, 4, 5, 6, 7, 9], // Otros
-        "responsivePriority": 1000
-      }
+      { "targets": 0, "responsivePriority": 1 }, // Nombre
+      { "targets": 8, "responsivePriority": 2, "orderable": false }, // Acciones
+      { "targets": 1, "responsivePriority": 3 }, // Documento
+      { "targets": 2, "responsivePriority": 4 }, // Email
+      { "targets": 3, "responsivePriority": 5 }, // Teléfono
+      { "targets": 4, "responsivePriority": 6 }, // Dirección
+      { "targets": 5, "responsivePriority": 7 }, // Estado
+      { "targets": 6, "responsivePriority": 8 }, // Notas
+      { "targets": 7, "responsivePriority": 9 }, // Última compra
+      { "targets": 9, "responsivePriority": 10 } // Ingreso al sistema
     ],
     "drawCallback": function (settings) {
       if (typeof inicializarPlaceholdersClientes === "function") {

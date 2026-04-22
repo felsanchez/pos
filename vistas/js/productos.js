@@ -19,79 +19,34 @@ var table = $(".tablaProductos").DataTable({
 		"details": {
 			"type": "inline",
 			"renderer": function (api, rowIdx, columns) {
-				var data = $.map(columns, function (col, i) {
-					return col.hidden ?
-						'<tr data-dt-row="' + col.rowIndex + '" data-dt-column="' + col.columnIndex + '">' +
-						'<td>' + col.title + ':' + '</td> ' +
-						'<td>' + col.data + '</td>' +
-						'</tr>' :
-						'';
-				}).join('');
-
-				// Custom renderer logic
-				var rowData = api.row(rowIdx).data();
-
-				// Indices based on JSON response from datatable-productos.ajax.php:
-				// 0: ID, 1: Imagen, 2: Codigo, 3: Descripcion, 4: Categoria, 5: Stock, 
-				// 6: Impuesto, 7: Precio Venta, 8: Proveedor, 9: Fecha, 10: Acciones
-
-				var codigo = rowData[2];
-				var descripcion = rowData[3];
-				var categoria = rowData[4];
-				var stock = rowData[5];
-				var impuesto = rowData[6];
-				var precioVenta = rowData[7];
-				var proveedor = rowData[8];
-				var acciones = rowData[10];
-
-				// Clean stock value (remove HTML buttons from server if present)
-				var stockRaw = stock.toString().replace(/<[^>]+>/g, '');
-				var stockValue = parseInt(stockRaw) || 0;
-
-				// Determine stock badge color
-				var stockBadgeClass = 'label-success';
-				if (stockValue <= 10) stockBadgeClass = 'label-danger';
-				else if (stockValue <= 15) stockBadgeClass = 'label-warning';
-
 				var finalHtml = '';
+				var hasHidden = false;
 
-				// Section 1: Code, Category, Stock
-				 finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
-				finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información</h5></div>';
+				$.each(columns, function (i, col) {
+					// Solo renderiza si DataTables ocultó la columna
+					if (!col.hidden) return;
 
-				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-				finalHtml += '<span class="text-bold" style="color:#555;">Código: </span><span style="color:#333; text-align: right;">' + codigo + '</span></div>';
+					hasHidden = true;
+					var label = col.title || ('Columna ' + col.columnIndex);
+					var data = col.data || '';
 
-				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-				finalHtml += '<span class="text-bold" style="color:#555;">Categoría: </span><span style="color:#333; text-align: right;">' + categoria + '</span></div>';
+					// Limpiar badages o botones si se quiere, pero el HTML nativo suele servir bien.
+					// Dejamos que pase el HTML original (DataTables lo gestiona)
 
-				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-				finalHtml += '<span class="text-bold" style="color:#555;">Stock: </span><span style="color:#333; text-align: right;"><span class="label ' + stockBadgeClass + '">' + stockValue + '</span></span></div>';
+					finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+					finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
+					finalHtml += '<span style="color:#333;">' + data + '</span>';
+					finalHtml += '</div>';
+				});
 
-				// Section 2: Prices
-				finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
-				finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Precios</h5></div>';
-
-				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-				finalHtml += '<span class="text-bold" style="color:#555;">Impuesto: </span><span style="color:#333; text-align: right;">' + impuesto + '</span></div>';
-
-				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-				finalHtml += '<span class="text-bold" style="color:#555;">Precio Venta: </span><span style="color:#333; text-align: right;">' + precioVenta + '</span></div>';
-
-				// Section 3: Supplier
-				finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
-				finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Proveedor</h5></div>';
-
-				finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-				finalHtml += '<span class="text-bold" style="color:#555;">Proveedor: </span><span style="color:#333; text-align: right;">' + (proveedor ? proveedor : 'Sin proveedor') + '</span></div>';
-
-				return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #f8f9fa; margin: 0;">').append(finalHtml) : false;
+				if (!hasHidden) return false;
+				return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
 			}
 		}
 	},
 	"columnDefs": [
 		{
-			"targets": 0,  // Columna Imagen
+			"targets": 0,  // Imagen
 			"data": null,
 			"responsivePriority": 1,
 			"render": function (data, type, row) {
@@ -101,44 +56,52 @@ var table = $(".tablaProductos").DataTable({
 		{
 			"targets": 1, // Código
 			"data": null,
-			"render": function (data, type, row) {
-				return row[2];
-			}
+			"responsivePriority": 4,
+			"render": function (data, type, row) { return row[2]; }
 		},
 		{
 			"targets": 2, // Descripcion
 			"data": null,
-			"responsivePriority": 1,
-			"render": function (data, type, row) {
-				return row[3];
-			}
+			"responsivePriority": 3,
+			"render": function (data, type, row) { return row[3]; }
 		},
 		{
 			"targets": 9, // Acciones
 			"data": null,
-			"responsivePriority": 1,
+			"responsivePriority": 2,
 			"orderable": false,
-			"render": function (data, type, row) {
-				return row[10];
-			}
+			"render": function (data, type, row) { return row[10]; }
 		},
 		{
-			"targets": [3, 4, 5, 6, 7, 8], // Other columns
-			"responsivePriority": 1000, // Low priority, hide on mobile
-			"render": function (data, type, row, meta) {
-				// Mapear automáticamente al índice correcto del JSON
-				// JSON: [0:ID, 1:Imagen, 2:Codigo, 3:Desc, 4:Cat, 5:Stock, 6:Imp, 7:PV, 8:Prov, 9:Fecha, 10:Btn]
-				// Header: [0:Img, 1:Cod, 2:Desc, 3:Cat, 4:Stock, 5:Imp, 6:PV, 7:Prov, 8:Agregado, 9:Acciones]
-				// Para 3(Cat) -> row[4]
-				// Para 4(Stock) -> row[5]
-				// Para 5(Imp) -> row[6]
-				// Para 6(PV) -> row[7]
-				// Para 7(Prov) -> row[8]
-				// Para 8(Agregado) -> row[9]
-				return row[meta.col + 1];
-			}
+			"targets": 3, // Categoria
+			"responsivePriority": 5,
+			"render": function (data, type, row) { return row[4]; }
+		},
+		{
+			"targets": 4, // Stock
+			"responsivePriority": 6,
+			"render": function (data, type, row) { return row[5]; }
+		},
+		{
+			"targets": 6, // Precio Venta
+			"responsivePriority": 7,
+			"render": function (data, type, row) { return row[7]; }
+		},
+		{
+			"targets": 5, // Impuesto
+			"responsivePriority": 8,
+			"render": function (data, type, row) { return row[6]; }
+		},
+		{
+			"targets": 7, // Proveedor
+			"responsivePriority": 9,
+			"render": function (data, type, row) { return row[8]; }
+		},
+		{
+			"targets": 8, // Fecha (Agregado)
+			"responsivePriority": 10,
+			"render": function (data, type, row) { return row[9]; }
 		}
-
 	],
 
 	"language": {

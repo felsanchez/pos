@@ -1,27 +1,5 @@
-<!-- Estilos para el filtro de categoría -->
+<!-- Estilos para de comportamiento en móvil -->
 <style>
-<style>
-  /* Espaciado automático para el botón de expansión en modo inline */
-  .tablaProductos.collapsed tbody td:first-child {
-    padding-left: 35px !important;
-    position: relative;
-    cursor: pointer;
-  }
-
-  /* Posicionamiento del botón + de DataTables en modo inline */
-  .tablaProductos.collapsed tbody td:first-child::before {
-    left: 8px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    box-shadow: none !important;
-    background-color: #3c8dbc !important; /* Azul al estar contraído (+) */
-  }
-
-  /* Color rojo cuando está expandido (-) */
-  .tablaProductos.collapsed tbody tr.parent td:first-child::before {
-    background-color: #dd4b39 !important;
-  }
-
   /* Ajuste de botones de acción en móvil */
   @media (max-width: 767px) {
     .tablaProductos .btn-group .btn {
@@ -43,8 +21,6 @@
     }
   }
 </style>
-</style>
-
 
 
 
@@ -270,9 +246,10 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
 
 
 
-      <div class="box-body table-responsive">
+      <div class="box-body">
 
-        <table class="table table-bordered table-striped dt-responsive tablaProductos" style="width: 100%">
+        <div class="tabla-productos table-responsive">
+          <table class="table table-bordered table-striped tablaProductos display nowrap" style="width: 100%">
 
           <thead>
             <tr>
@@ -290,6 +267,7 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
           </thead>
 
         </table>
+        </div> <!-- /.tabla-productos -->
 
         <input type="hidden" value="<?php echo $_SESSION['perfil']; ?>" class="perfilUsuario" id="perfilOculto">
 

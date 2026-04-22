@@ -41,12 +41,12 @@
     <section class="content-header">
 
       <h1>
-        Administrar orden de venta
+        Administrar Consulta de ventas
       </h1>
 
       <ol class="breadcrumb">
         <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-        <li class="active">Administrar Ordenes de Venta</li>
+        <li class="active">Administrar Consulta de ventas</li>
       </ol>
 
     </section>
@@ -96,7 +96,7 @@
   </div>
  
 
-<!-- Modal para ampliar/editar imagen de orden de venta -->
+<!-- Modal para ampliar/editar imagen de consulta de venta -->
 <div class="modal fade" id="modalAmpliarImagenOrden" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
@@ -104,7 +104,7 @@
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
-        <h4 class="modal-title">Imagen de la Orden de Venta</h4>
+        <h4 class="modal-title">Imagen de la Consulta de Venta</h4>
       </div>
       <div class="modal-body text-center">
         <img id="imagenOrdenAmpliada" src="" class="img-responsive" style="max-width: 100%; margin: 0 auto; margin-bottom: 20px;">

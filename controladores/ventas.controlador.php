@@ -1687,6 +1687,11 @@ class ControladorVentas
 					continue;
 				}
 
+				// Filtrar por cliente si existe el parámetro
+				if (isset($_GET["cliente"]) && $_GET["cliente"] != "" && $_GET["cliente"] != "todos" && (string)$item["id_cliente"] != (string)$_GET["cliente"]) {
+					continue;
+				}
+
 				$cliente = ControladorClientes::ctrMostrarClientes("id", $item["id_cliente"]);
 				$vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $item["id_vendedor"]);
 

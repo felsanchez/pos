@@ -21,26 +21,9 @@
     }
   }
 
-  /* Espaciado automático para el botón de expansión en modo inline */
-  .tablaActividades.collapsed tbody td.dtr-control {
-    padding-left: 35px !important;
-    position: relative;
-    cursor: pointer;
-  }
-
-  /* Posicionamiento del botón + de DataTables en la columna principal */
-  .tablaActividades.collapsed tbody td.dtr-control::before {
-    left: 8px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    box-shadow: none !important;
-    background-color: #3b8ab8 !important;
-    /* Azul AdminLTE */
-  }
-
   /* Ajuste de botones de acción en móvil */
   @media (max-width: 767px) {
-    .tablaActividades td.col-acciones .btn {
+    .tablaActividades tbody td .btn {
       padding: 1px 5px !important;
       font-size: 12px !important;
       line-height: 1.5 !important;
@@ -136,19 +119,19 @@ if (!empty($params)) {
         </div>
       </div>
 
-      <div class="box-body table-responsive">
-        <div class="tabla-actividades">
-          <table class="table table-bordered table-striped tablaActividades" style="width: 100%">
+      <div class="box-body">
+        <div class="tabla-actividades table-responsive">
+          <table class="table table-bordered table-striped tablaActividades display nowrap" style="width: 100%">
             <thead>
               <tr>
-                <th class="all">Descripción</th>
-                <th class="all">Tipo</th>
-                <th class="desktop">Responsable</th>
-                <th class="desktop">Fecha</th>
-                <th class="desktop">Estado</th>
-                <th class="desktop">Cliente</th>
-                <th class="desktop">Notas</th>
-                <th class="all col-acciones">Acciones</th>
+                <th>Descripción</th>
+                <th>Tipo</th>
+                <th>Responsable</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Cliente</th>
+                <th>Notas</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>

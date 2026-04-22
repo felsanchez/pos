@@ -2408,6 +2408,31 @@ class ControladorFactus
 			header("Pragma: public");
 			header('Content-Disposition:; filename="' . $Name . '"');
 			header("Content-Transfer-Encoding: binary");
+
+			echo utf8_decode("<table border='0'> 
+				<tr> 
+				<td style='font-weight:bold; border:1px solid #eee;'>TIPO DOC.</td> 
+				<td style='font-weight:bold; border:1px solid #eee;'>NÚMERO</td>
+				<td style='font-weight:bold; border:1px solid #eee;'>TERCERO</td>
+				<td style='font-weight:bold; border:1px solid #eee;'>VENDEDOR</td>
+				<td style='font-weight:bold; border:1px solid #eee;'>FECHA</td>
+				<td style='font-weight:bold; border:1px solid #eee;'>MONTO TOTAL</td>		
+				<td style='font-weight:bold; border:1px solid #eee;'>ESTADO DIAN</td>		
+				</tr>");
+
+			foreach ($reporte as $row => $item) {
+				echo utf8_decode("<tr>
+				 			<td style='border:1px solid #eee;'>" . $item["tipo"] . "</td> 
+				 			<td style='border:1px solid #eee;'>" . $item["numero"] . "</td>
+				 			<td style='border:1px solid #eee;'>" . $item["tercero"] . "</td>
+				 			<td style='border:1px solid #eee;'>" . $item["vendedor"] . "</td>
+				 			<td style='border:1px solid #eee;'>" . substr($item["fecha"], 0, 10) . "</td>
+					<td style='border:1px solid #eee;'>$ " . number_format($item["monto"], 2) . "</td>
+					<td style='border:1px solid #eee;'>" . strtoupper($item["estado"]) . "</td>		
+		 			</tr>");
+			}
+
+			echo "</table>";
 		}
 	}
 }

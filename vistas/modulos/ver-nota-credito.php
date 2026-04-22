@@ -395,11 +395,7 @@ if (empty($cufeFactura) && !empty($venta["qr_data"])) {
                             <div class="row no-print">
                                 <div class="col-xs-12">
 
-                                    <!-- Descargar PDF (vista interna - TCPDF) -->
-                                    <a href="extensiones/tcpdf/pdf/descargar-pdf-nota-credito.php?idNota=<?php echo $idNota; ?>"
-                                        target="_blank" class="btn btn-success pull-right" style="margin-right: 5px;">
-                                        <i class="fa fa-file-pdf-o"></i> Descargar PDF
-                                    </a>
+
 
                                     <!-- Descargar XML (desde Factus API usando número de la NC) -->
                                     <?php if (!empty($notaCredito["numero_nota_credito"])): ?>
@@ -409,6 +405,12 @@ if (empty($cufeFactura) && !empty($venta["qr_data"])) {
                                             <i class="fa fa-file-code-o"></i> Descargar XML
                                         </a>
                                     <?php endif; ?>
+
+                                    <!-- Descargar PDF (vista interna - TCPDF) -->
+                                    <a href="extensiones/tcpdf/pdf/descargar-pdf-nota-credito.php?idNota=<?php echo $idNota; ?>"
+                                        target="_blank" class="btn btn-danger pull-right" style="margin-right: 5px;">
+                                        <i class="fa fa-file-pdf-o"></i> Descargar PDF
+                                    </a>
 
                                     <a href="notas-credito" class="btn btn-default pull-right"
                                         style="margin-right: 5px;">

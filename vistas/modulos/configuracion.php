@@ -1204,38 +1204,38 @@ MODAL: CREAR / EDITAR PERFIL (FUERA DEL FORM)
                 <th class="text-center">Crear</th>
                 <th class="text-center">Editar</th>
                 <th class="text-center">Eliminar</th>
-                <th class="text-center">Imprimir</th>
-                <th class="text-center">Exportar</th>
+                <th class="text-center">Descargar</th>
               </tr>
             </thead>
             <tbody>
               <?php
               $modulosMatriz = ControladorPerfiles::ctrObtenerModulos();
               $accionesNoAplica = [
-                'inicio'               => ['crear','editar','eliminar','imprimir','exportar'],
-                'usuarios'             => ['imprimir','exportar'],
-                'productos'            => ['imprimir','exportar'],
-                'variantes'            => ['imprimir','exportar'],
-                'categorias'           => ['imprimir','exportar'],
-                'proveedores'          => ['imprimir','exportar'],
-                'clientes'             => ['imprimir','exportar'],
-                'actividades'          => ['imprimir','exportar'],
-                'seguimiento_leads'    => ['imprimir','exportar'],
-                'gastos'               => ['imprimir','exportar'],
-                'notificaciones'       => ['crear','editar','eliminar','imprimir','exportar'],
-                'configuracion'        => ['crear','editar','eliminar','imprimir','exportar'],
-                'reporte_ventas'       => ['crear','editar','eliminar','imprimir'],
-                'historial_stock'      => ['crear','editar','eliminar','imprimir'],
-                'ordenes-visita'       => ['crear','exportar'],
-                // Estos SI tienen imprimir (no están en la lista de exclusión para imprimir)
-                // ventas, factura_electronica, documento_soporte, notas_credito, notas_ajuste, ordenes
+                'inicio'               => ['crear','editar','eliminar','imprimir'],
+                'usuarios'             => ['imprimir'],
+                'productos'            => ['imprimir'],
+                'variantes'            => ['imprimir'],
+                'categorias'           => ['imprimir'],
+                'proveedores'          => ['imprimir'],
+                'clientes'             => ['imprimir'],
+                'actividades'          => ['imprimir'],
+                'seguimiento_leads'    => ['imprimir'],
+                'gastos'               => ['imprimir'],
+                'notificaciones'       => ['crear','editar','eliminar','imprimir'],
+                'configuracion'        => ['crear','editar','eliminar','imprimir'],
+                'reporte_ventas'       => ['crear','editar','eliminar'],
+                'historial_stock'      => ['crear','editar','eliminar'],
+                'ordenes-visita'       => ['crear', 'editar', 'eliminar', 'imprimir'],
+                'ordenes'              => ['imprimir'],
+                'ventas'               => ['imprimir'],
+                // factura_electronica, documento_soporte, notas_credito, notas_ajuste conservan 'imprimir' (Descargar)
               ];
               foreach ($modulosMatriz as $slug => $nombreModulo):
                 $noAplica = $accionesNoAplica[$slug] ?? [];
               ?>
               <tr data-modulo="<?php echo $slug; ?>">
                 <td><strong><?php echo $nombreModulo; ?></strong></td>
-                <?php foreach (['ver','crear','editar','eliminar','imprimir','exportar'] as $accion): ?>
+                <?php foreach (['ver','crear','editar','eliminar','imprimir'] as $accion): ?>
                 <td class="text-center">
                   <?php if (in_array($accion, $noAplica)): ?>
                     <span class="text-muted">—</span>

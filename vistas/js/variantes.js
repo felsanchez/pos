@@ -1,4 +1,57 @@
 /*=============================================
+CONFIGURACION DATATABLES ESTANDARIZADA
+=============================================*/
+var dtVariantesOptions = {
+    "autoWidth": false,
+    "responsive": {
+        "details": {
+            "type": "inline",
+            "renderer": function (api, rowIdx, columns) {
+                var finalHtml = '';
+                var hasHidden = false;
+                $.each(columns, function (i, col) {
+                    if (!col.hidden) return;
+                    hasHidden = true;
+                    var label = col.title || ('Columna ' + col.columnIndex);
+                    var data = col.data || '';
+                    finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+                    finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
+                    finalHtml += '<span style="color:#333;">' + data + '</span>';
+                    finalHtml += '</div>';
+                });
+                if (!hasHidden) return false;
+                return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
+            }
+        }
+    },
+    // Priority: 1:Nombre, 2:Acciones, 3:Estado, 4:Orden
+    "columnDefs": [
+        { "targets": 0, "responsivePriority": 1 },
+        { "targets": 3, "responsivePriority": 2, "orderable": false },
+        { "targets": 2, "responsivePriority": 3 },
+        { "targets": 1, "responsivePriority": 4 }
+    ],
+    "language": {
+        "sProcessing": "Procesando...",
+        "sLengthMenu": "Mostrar _MENU_ registros",
+        "sZeroRecords": "No se encontraron resultados",
+        "sEmptyTable": "Ningún dato disponible",
+        "sInfo": "Registros del _START_ al _END_ de _TOTAL_",
+        "sInfoEmpty": "Registros del 0 al 0 de 0",
+        "sInfoFiltered": "(filtrado de _MAX_ registros)",
+        "sSearch": "Buscar:",
+        "oPaginate": { "sFirst": "Primero", "sLast": "Último", "sNext": "Siguiente", "sPrevious": "Anterior" }
+    }
+};
+
+$(document).ready(function() {
+    if ($.fn.DataTable.isDataTable('#tablaTiposVariantes')) {
+        $('#tablaTiposVariantes').DataTable().destroy();
+    }
+    $("#tablaTiposVariantes").DataTable(dtVariantesOptions);
+});
+
+/*=============================================
 AUTOCOMPLETAR ORDEN AL ABRIR MODAL DE TIPO
 =============================================*/
 $(document).on("click", ".btnAbrirModalTipo", function(){
@@ -123,10 +176,10 @@ $(document).on("click", ".btnVerOpciones", function(){
                     html += '<td>';
                     html += '<div class="btn-group">';
                     if(puedeEditar){
-                        html += '<button class="btn btn-warning btn-xs btnEditarOpcion" idOpcion="'+respuesta[i].id+'" data-toggle="modal" data-target="#modalEditarOpcion"><i class="fa fa-pencil"></i></button>';
+                        html += '<button class="btn btn-warning btnEditarOpcion" idOpcion="'+respuesta[i].id+'" data-toggle="modal" data-target="#modalEditarOpcion"><i class="fa fa-pencil"></i></button>';
                     }
                     if(puedeEliminar){
-                        html += '<button class="btn btn-danger btn-xs btnEliminarOpcion" idOpcion="'+respuesta[i].id+'" nombreOpcion="'+respuesta[i].nombre+'"><i class="fa fa-times"></i></button>';
+                        html += '<button class="btn btn-danger btnEliminarOpcion" idOpcion="'+respuesta[i].id+'" nombreOpcion="'+respuesta[i].nombre+'"><i class="fa fa-times"></i></button>';
                     }
                     html += '</div>';
                     html += '</td>';
@@ -137,7 +190,13 @@ $(document).on("click", ".btnVerOpciones", function(){
                 html = '<tr><td colspan="5" class="text-center">No hay opciones registradas</td></tr>';
             }
 
+            if ($.fn.DataTable.isDataTable('#tablaOpciones')) {
+                $('#tablaOpciones').DataTable().destroy();
+            }
+
             $("#bodyOpciones").html(html);
+
+            $("#tablaOpciones").DataTable(dtVariantesOptions);
         },
         error: function(jqXHR, textStatus, errorThrown){
             console.log("Error al cargar opciones:", textStatus, errorThrown);

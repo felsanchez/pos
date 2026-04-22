@@ -106,10 +106,12 @@
       <div class="box-header with-border">
         <h3 class="box-title"><i class="fa fa-line-chart"></i> Análisis de Ventas</h3>
         <div class="box-tools pull-right">
-          <button class="btn btn-success btn-sm" style="margin-right: 5px;" data-toggle="modal"
-            data-target="#modalDescargarExcel">
-            <i class="fa fa-file-excel-o"></i> Descargar Reporte
-          </button>
+          <?php if (puedeAccion('reporte_ventas', 'imprimir')): ?>
+            <button class="btn btn-success btn-sm" style="margin-right: 5px;" data-toggle="modal"
+              data-target="#modalDescargarExcel">
+              <i class="fa fa-file-excel-o"></i> Descargar Reporte
+            </button>
+          <?php endif; ?>
           <button type="button" class="btn btn-box-tool" data-widget="collapse">
             <i class="fa fa-minus"></i>
           </button>
@@ -132,7 +134,7 @@
         <h3 class="box-title"><i class="fa fa-pie-chart"></i> Gráficos de Rendimiento</h3>
         <div class="box-tools pull-right">
           <button type="button" class="btn btn-box-tool" data-widget="collapse">
-            <i class="fa fa-minus"></i>
+            <i class="fa fa-plus"></i>
           </button>
         </div>
       </div>
@@ -177,7 +179,7 @@
         <h3 class="box-title"><i class="fa fa-balance-scale"></i> Estado de Resultados</h3>
         <div class="box-tools pull-right">
           <button type="button" class="btn btn-box-tool" data-widget="collapse">
-            <i class="fa fa-minus"></i>
+            <i class="fa fa-plus"></i>
           </button>
         </div>
       </div>
@@ -193,7 +195,7 @@
         <h3 class="box-title"><i class="fa fa-shopping-cart"></i> Análisis de Órdenes</h3>
         <div class="box-tools pull-right">
           <button type="button" class="btn btn-box-tool" data-widget="collapse">
-            <i class="fa fa-minus"></i>
+            <i class="fa fa-plus"></i>
           </button>
         </div>
       </div>
@@ -204,47 +206,39 @@
     </div>
 
     <!-- SECCIÓN 5: ESTADO DE RESULTADOS (FACTURACIÓN ELECTRÓNICA) -->
-    <div class="box box-info" id="seccion-estado-resultados-facturacion">
+    <div class="box box-info collapsed-box" id="seccion-estado-resultados-facturacion">
       <div class="box-header with-border">
         <h3 class="box-title"><i class="fa fa-balance-scale"></i> Estado de Resultados (Facturación Electrónica)</h3>
         <div class="box-tools pull-right">
           <button type="button" class="btn btn-box-tool" data-widget="collapse">
-            <i class="fa fa-minus"></i>
+            <i class="fa fa-plus"></i>
           </button>
         </div>
       </div>
 
-      <div class="box-body">
+      <div class="box-body" style="display: none;">
         <?php include "reportes/estado-resultados-facturacion.php"; ?>
       </div>
     </div>
 
     <!-- SECCIÓN 6: REPORTE DE FACTURACIÓN ELECTRÓNICA -->
-    <div class="box box-danger" id="seccion-reportes-facturacion">
+    <div class="box box-danger collapsed-box" id="seccion-reportes-facturacion">
       <div class="box-header with-border">
         <h3 class="box-title"><i class="fa fa-file-text-o"></i> Reportes Facturación Electrónica</h3>
         <div class="box-tools pull-right">
           <button type="button" class="btn btn-box-tool" data-widget="collapse">
-            <i class="fa fa-minus"></i>
+            <i class="fa fa-plus"></i>
           </button>
         </div>
       </div>
-      <div class="box-body">
+      <div class="box-body" style="display: none;">
         <div class="row" style="display: flex; align-items: center; flex-wrap: wrap;">
-          <div class="col-md-3" style="margin-bottom: 10px;">
-            <div class="input-group">
-              <button type="button" class="btn btn-default" id="daterange-btn-reportes" style="width: 100%;">
-                <span><i class="fa fa-calendar"></i> Rango de fecha</span>
-                <i class="fa fa-caret-down"></i>
-              </button>
-            </div>
-          </div>
+          <!-- 1. Categoría -->
           <div class="col-md-2" style="margin-bottom: 10px;">
             <div class="input-group">
-              <span class="input-group-addon" style="background-color: #f4f4f4;"><i class="fa fa-filter"></i>
-                Categoría</span>
+              <span class="input-group-addon" style="background-color: #f4f4f4;"><i class="fa fa-filter"></i></span>
               <select class="form-control" id="seleccionarCategoriaReporte">
-                <option value="todos">Todos los documentos</option>
+                <option value="todos">Categoría...</option>
                 <option value="facturas">Facturas Electrónicas</option>
                 <option value="nc">Notas Crédito</option>
                 <option value="ds">Documentos Soporte</option>
@@ -252,35 +246,45 @@
               </select>
             </div>
           </div>
+
+          <!-- 2. Tercero (Cliente/Proveedor) -->
           <div class="col-md-3" style="margin-bottom: 10px;">
             <div class="input-group" style="width: 100%;">
               <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
                   class="fa fa-users"></i></span>
-              <select class="form-control" id="seleccionarClienteReporte" style="display:block; width: 100%;">
-                <option value="todos">Todos los clientes</option>
-                <?php
-                $clientes = ControladorClientes::ctrMostrarClientes(null, null);
-                foreach ($clientes as $key => $value) {
-                  echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                }
-                ?>
-              </select>
-              <select class="form-control" id="seleccionarProveedorReporte" style="display:none; width: 100%;">
-                <option value="todos">Todos los proveedores</option>
-                <?php
-                $proveedores = ControladorProveedores::ctrMostrarProveedores(null, null);
-                foreach ($proveedores as $key => $value) {
-                  echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                }
-                ?>
-              </select>
+
+              <div id="divClienteReporte" style="display: block; width: 100%;">
+                <select class="form-control select2" id="seleccionarClienteReporte" style="width: 100%;">
+                  <option value="todos">Todos los clientes</option>
+                  <?php
+                  $clientes = ControladorClientes::ctrMostrarClientes(null, null);
+                  foreach ($clientes as $key => $value) {
+                    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                  }
+                  ?>
+                </select>
+              </div>
+
+              <div id="divProveedorReporte" style="display: none; width: 100%;">
+                <select class="form-control select2" id="seleccionarProveedorReporte" style="width: 100%;">
+                  <option value="todos">Todos los proveedores</option>
+                  <?php
+                  $proveedores = ControladorProveedores::ctrMostrarProveedores(null, null);
+                  foreach ($proveedores as $key => $value) {
+                    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                  }
+                  ?>
+                </select>
+              </div>
             </div>
           </div>
-          <div class="col-md-3" style="margin-bottom: 10px;">
+
+          <!-- 3. Usuario -->
+          <div class="col-md-2" style="margin-bottom: 10px;">
             <div class="input-group" style="width: 100%;">
               <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
                   class="fa fa-user"></i></span>
-              <select class="form-control" id="seleccionarUsuarioReporte" style="width: 100%;">
+              <select class="form-control select2" id="seleccionarUsuarioReporte" style="width: 100%;">
                 <option value="todos">Todos los usuarios</option>
                 <?php
                 $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
@@ -291,14 +295,29 @@
               </select>
             </div>
           </div>
-          <div class="col-md-1" style="margin-bottom: 10px; display: flex; gap: 5px;">
-            <button type="button" class="btn btn-primary" id="btnFiltrarReportes" style="flex: 1;">
-              <i class="fa fa-search"></i> Buscar
-            </button>
-            <button type="button" class="btn btn-default" id="btnLimpiarFiltrosReportes" style="flex: 1;"
-              title="Limpiar filtros">
-              <i class="fa fa-refresh"></i>
-            </button>
+
+          <!-- 4. Rango de fecha -->
+          <div class="col-md-3" style="margin-bottom: 10px;">
+            <div class="input-group" style="width: 100%;">
+              <button type="button" class="btn btn-default" id="daterange-btn-reportes" style="width: 100%;">
+                <span><i class="fa fa-calendar"></i> Rango de fecha</span>
+                <i class="fa fa-caret-down"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- 5. Botones -->
+          <div class="col-md-2" style="margin-bottom: 10px;">
+            <div class="btn-group" style="width: 100%; display: flex;">
+              <button type="button" class="btn btn-primary" id="btnFiltrarReportes" style="flex: 1; margin-right: 2px;"
+                title="Buscar">
+                <i class="fa fa-search"></i>
+              </button>
+              <button type="button" class="btn btn-default" id="btnLimpiarFiltrosReportes" title="Limpiar Filtros"
+                style="flex: 1;">
+                <i class="fa fa-refresh"></i>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -345,28 +364,31 @@
         <!-- Fila para Tabla Detallada -->
         <div class="row" style="margin-top: 20px;">
           <div class="col-md-12">
-            <div class="box-header with-border" style="padding-left: 0; padding-right: 0;">
-              <h3 class="box-title">Listado Consolidado de Documentos</h3>
-              <button type="button" class="btn btn-success pull-right" id="btnExportarExcelFacturacion">
-                <i class="fa fa-file-excel-o"></i> Exportar a Excel
-              </button>
-            </div>
-            <div class="box-body" style="padding-left: 0; padding-right: 0;">
-              <table class="table table-bordered table-striped dt-responsive tablaReporteFacturacion" width="100%">
-                <thead>
-                  <tr>
-                    <th style="width:10px">#</th>
-                    <th>Tipo</th>
-                    <th>Número</th>
-                    <th>Cliente/Proveedor</th>
-                    <th>Vendedor</th>
-                    <th>Fecha</th>
-                    <th>Monto Total</th>
-                    <th>Estado</th>
-                    <th>Ver</th>
-                  </tr>
-                </thead>
-              </table>
+            <div class="box box-default">
+              <div class="box-header with-border">
+                <h3 class="box-title">Listado Consolidado de Documentos</h3>
+                <button type="button" class="btn btn-success pull-right" data-toggle="modal"
+                  data-target="#modalDescargarExcelFacturacion">
+                  <i class="fa fa-file-excel-o"></i> Descargar Reporte
+                </button>
+              </div>
+              <div class="box-body" style="padding-left: 0; padding-right: 0;">
+                <table class="table table-bordered table-striped dt-responsive tablaReporteFacturacion" width="100%">
+                  <thead>
+                    <tr>
+                      <th style="width:10px">#</th>
+                      <th>Tipo</th>
+                      <th>Número</th>
+                      <th>Cliente/Proveedor</th>
+                      <th>Vendedor</th>
+                      <th>Fecha</th>
+                      <th>Monto Total</th>
+                      <th>Estado</th>
+                      <th>Ver</th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -405,6 +427,19 @@
           </div>
 
           <div class="form-group">
+            <label for="filtro-cliente-excel">Filtrar por cliente</label>
+            <select id="filtro-cliente-excel" class="form-control select2" style="width: 100%;">
+              <option value="todos">Todos los clientes</option>
+              <?php
+              $clientesA = ControladorClientes::ctrMostrarClientes(null, null);
+              foreach ($clientesA as $key => $value) {
+                echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+              }
+              ?>
+            </select>
+          </div>
+
+          <div class="form-group">
             <label for="tipo-fecha-excel">Filtrar por fecha</label>
             <select id="tipo-fecha-excel" class="form-control">
               <option value="todo">Todas las ventas</option>
@@ -428,9 +463,105 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-        <a id="btn-descargar-excel" href="vistas/modulos/descargar-reporte.php?reporte=reporte" class="btn btn-success">
-          <i class="fa fa-download"></i> Descargar
-        </a>
+        <?php if (puedeAccion('reporte_ventas', 'imprimir')): ?>
+          <a id="btn-descargar-excel" href="vistas/modulos/descargar-reporte.php?reporte=reporte" class="btn btn-success">
+            <i class="fa fa-download"></i> Descargar
+          </a>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para descargar Excel Facturación Electrónica con filtro de fechas -->
+<div class="modal fade" id="modalDescargarExcelFacturacion" tabindex="-1" role="dialog"
+  aria-labelledby="modalDescargarExcelFacturacionLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+            aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="modalDescargarExcelFacturacionLabel"><i class="fa fa-file-excel-o"></i> Descargar
+          Reporte en Excel (Facturación)</h4>
+      </div>
+      <div class="modal-body">
+        <div class="filtro-excel-container">
+          <div class="form-group">
+            <label for="filtro-usuario-excel-fact">Filtrar por usuario</label>
+            <select id="filtro-usuario-excel-fact" class="form-control">
+              <option value="todos">Todos los usuarios</option>
+              <?php
+              foreach ($usuarios as $key => $value) {
+                echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+              }
+              ?>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="filtro-categoria-excel-fact">Tipo de Documento</label>
+            <select id="filtro-categoria-excel-fact" class="form-control">
+              <option value="todos">Todas las categorías</option>
+              <option value="facturas">Facturas Electrónicas</option>
+              <option value="nc">Notas Crédito</option>
+              <option value="ds">Documentos Soporte</option>
+              <option value="na">Notas de Ajuste DS</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="divFiltroClienteModal">
+            <label for="filtro-cliente-excel-fact">Filtrar por Cliente</label>
+            <select id="filtro-cliente-excel-fact" class="form-control select2" style="width: 100%;">
+              <option value="todos">Todos los clientes</option>
+              <?php
+              foreach ($clientes as $key => $value) {
+                echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+              }
+              ?>
+            </select>
+          </div>
+
+          <div class="form-group" id="divFiltroProveedorModal" style="display: none;">
+            <label for="filtro-proveedor-excel-fact">Filtrar por Proveedor</label>
+            <select id="filtro-proveedor-excel-fact" class="form-control select2" style="width: 100%;">
+              <option value="todos">Todos los proveedores</option>
+              <?php
+              foreach ($proveedores as $key => $value) {
+                echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+              }
+              ?>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="tipo-fecha-excel-fact">Filtrar por fecha</label>
+            <select id="tipo-fecha-excel-fact" class="form-control">
+              <option value="todo">Todos los documentos</option>
+              <option value="hoy">Hoy</option>
+              <option value="ayer">Ayer</option>
+              <option value="mes">Mes actual</option>
+              <option value="personalizado">Personalizado</option>
+            </select>
+          </div>
+
+          <div id="campo-desde-excel-fact" class="form-group" style="display:none;">
+            <label for="fecha-desde-excel-fact">Desde</label>
+            <input type="date" id="fecha-desde-excel-fact" class="form-control">
+          </div>
+
+          <div id="campo-hasta-excel-fact" class="form-group" style="display:none;">
+            <label for="fecha-hasta-excel-fact">Hasta</label>
+            <input type="date" id="fecha-hasta-excel-fact" class="form-control">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+        <?php if (puedeAccion('reporte_ventas', 'imprimir')): ?>
+          <a id="btn-descargar-excel-fact" href="#" class="btn btn-success">
+            <i class="fa fa-download"></i> Descargar
+          </a>
+        <?php endif; ?>
       </div>
     </div>
   </div>
@@ -458,6 +589,7 @@
   document.getElementById('fecha-desde-excel').addEventListener('change', actualizarEnlaceExcel);
   document.getElementById('fecha-hasta-excel').addEventListener('change', actualizarEnlaceExcel);
   document.getElementById('filtro-usuario-excel').addEventListener('change', actualizarEnlaceExcel);
+  document.getElementById('filtro-cliente-excel').addEventListener('change', actualizarEnlaceExcel);
 
   function actualizarEnlaceExcel() {
     const tipo = document.getElementById('tipo-fecha-excel').value;
@@ -499,8 +631,117 @@
       url += `&usuario=${usuario}`;
     }
 
+    const cliente = document.getElementById('filtro-cliente-excel').value;
+    if (cliente && cliente !== "todos") {
+      url += `&cliente=${cliente}`;
+    }
+
     btnDescargar.href = url;
   }
+
+  // --- LOGICA MODAL FACTURACION ELECTRONICA ---
+  document.getElementById('tipo-fecha-excel-fact').addEventListener('change', function () {
+    const tipo = this.value;
+    const campoDesde = document.getElementById('campo-desde-excel-fact');
+    const campoHasta = document.getElementById('campo-hasta-excel-fact');
+
+    if (tipo === 'personalizado') {
+      campoDesde.style.display = 'block';
+      campoHasta.style.display = 'block';
+    } else {
+      campoDesde.style.display = 'none';
+      campoHasta.style.display = 'none';
+    }
+    actualizarEnlaceExcelFacturacion();
+  });
+
+  document.getElementById('fecha-desde-excel-fact').addEventListener('change', actualizarEnlaceExcelFacturacion);
+  document.getElementById('fecha-hasta-excel-fact').addEventListener('change', actualizarEnlaceExcelFacturacion);
+  document.getElementById('filtro-usuario-excel-fact').addEventListener('change', actualizarEnlaceExcelFacturacion);
+  document.getElementById('filtro-cliente-excel-fact').addEventListener('change', actualizarEnlaceExcelFacturacion);
+  document.getElementById('filtro-proveedor-excel-fact').addEventListener('change', actualizarEnlaceExcelFacturacion);
+
+  // Al cambiar categoría en el modal
+  document.getElementById('filtro-categoria-excel-fact').addEventListener('change', function () {
+    const cat = this.value;
+    if (cat == "ds" || cat == "na") {
+      document.getElementById('divFiltroClienteModal').style.display = 'none';
+      document.getElementById('divFiltroProveedorModal').style.display = 'block';
+    } else {
+      document.getElementById('divFiltroProveedorModal').style.display = 'none';
+      document.getElementById('divFiltroClienteModal').style.display = 'block';
+    }
+    actualizarEnlaceExcelFacturacion();
+  });
+
+  // También queremos que lea 'categoria' y 'tercero' actuales
+  $('#seleccionarCategoriaReporte, #seleccionarClienteReporte, #seleccionarProveedorReporte').on('change', function () {
+    actualizarEnlaceExcelFacturacion();
+  });
+
+  // Al abrir la ventana modal actualizar el enlace
+  $('#modalDescargarExcelFacturacion').on('show.bs.modal', function () {
+    actualizarEnlaceExcelFacturacion();
+  });
+
+  function actualizarEnlaceExcelFacturacion() {
+    const tipo = document.getElementById('tipo-fecha-excel-fact').value;
+    const btnDescargar = document.getElementById('btn-descargar-excel-fact');
+
+    // Obtener los otros filtros (categoría desde el modal)
+    var cat = document.getElementById('filtro-categoria-excel-fact').value;
+    var tercero = "todos";
+
+    // Obtener el tercero desde el modal
+    if (cat == "ds" || cat == "na") {
+      tercero = document.getElementById('filtro-proveedor-excel-fact').value;
+    } else {
+      tercero = document.getElementById('filtro-cliente-excel-fact').value;
+    }
+
+    let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";
+    let url = `${rutaBase}/vistas/modulos/descargar-reporte-facturacion.php?reporte=reporte_facturacion&categoria=${cat}&tercero=${tercero}`;
+
+    let fechaInicial, fechaFinal;
+    const hoy = new Date();
+
+    switch (tipo) {
+      case 'hoy':
+        fechaInicial = fechaFinal = hoy.toISOString().split('T')[0];
+        break;
+      case 'ayer':
+        const ayer = new Date(hoy);
+        ayer.setDate(ayer.getDate() - 1);
+        fechaInicial = fechaFinal = ayer.toISOString().split('T')[0];
+        break;
+      case 'mes':
+        fechaInicial = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+        fechaFinal = hoy.toISOString().split('T')[0];
+        break;
+      case 'personalizado':
+        fechaInicial = document.getElementById('fecha-desde-excel-fact').value;
+        fechaFinal = document.getElementById('fecha-hasta-excel-fact').value;
+        break;
+      default:
+        // "todo" - sin filtro de fechas
+        break;
+    }
+
+    if (fechaInicial && fechaFinal) {
+      url += `&fechaInicial=${fechaInicial}&fechaFinal=${fechaFinal}`;
+    }
+
+    const usuario = document.getElementById('filtro-usuario-excel-fact').value;
+    if (usuario) {
+      url += `&idUsuario=${usuario}`;
+    }
+
+    if (btnDescargar) {
+      btnDescargar.href = url;
+    }
+  }
+
+  // --- FIN LOGICA MODAL FACTURACION ELECTRONICA ---
 
   // Función para mostrar toast notification
   function mostrarToast(mensaje) {
@@ -527,8 +768,15 @@
     mostrarToast('¡Descarga iniciada! El archivo Excel se está descargando...');
   });
 
+  $('#btn-descargar-excel-fact').on('click', function (e) {
+    mostrarToast('¡Descarga iniciada! El archivo Excel de Facturación se está descargando...');
+    setTimeout(function () {
+      $('#modalDescargarExcelFacturacion').modal('hide');
+    }, 1000);
+  });
+
   // Limpiar completamente cuando el modal se cierra
-  $('#modalDescargarExcel').on('hidden.bs.modal', function () {
+  $('#modalDescargarExcel, #modalDescargarExcelFacturacion').on('hidden.bs.modal', function () {
     setTimeout(function () {
       $('.modal-backdrop').remove();
       $('body').removeClass('modal-open');

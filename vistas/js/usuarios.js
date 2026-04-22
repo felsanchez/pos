@@ -14,85 +14,65 @@ $(document).ready(function () {
 		});
 	}
 
-	if (!$.fn.DataTable.isDataTable('.tablaUsuarios')) {
-		var tablaUsuarios = $(".tablaUsuarios").DataTable({
+	if (!$.fn.DataTable.isDataTable('#tablaListaUsuarios')) {
+		var tablaUsuarios = $("#tablaListaUsuarios").DataTable({
 			"responsive": {
 				"details": {
 					"type": "inline",
 					"renderer": function (api, rowIdx, columns) {
-						// Custom renderer logic
-						var rowData = api.row(rowIdx).data();
-
-						// Indices (0-based):
-						// 0: Usuario, 1: Nombre, 2: Email, 3: Foto, 4: Perfil,
-						// 5: Estado, 6: Ultimo login, 7: Acciones
-
-						var nombre = rowData[1];
-						var email = rowData[2];
-						var foto = rowData[3]; // HTML content (img tag)
-						var estado = rowData[5]; // HTML content (button)
-						var ultimoLogin = rowData[6];
+						// Mapeo de índice → etiqueta
+						var labels = {
+							0: 'Usuario',
+							1: 'Nombre',
+							2: 'Email',
+							3: 'Imagen',
+							4: 'Perfil',
+							5: 'Estado',
+							6: 'Último login',
+							7: 'Acciones'
+						};
 
 						var finalHtml = '';
+						var hasHidden = false;
 
-						// Section 1: Información Personal
-						finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
-						finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información Personal</h5></div>';
+						$.each(columns, function (i, col) {
+							// Solo columnas que DataTables realmente ocultó
+							if (!col.hidden) return;
 
-						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Nombre: </span><span style="color:#333; text-align: right;">' + nombre + '</span></div>';
+							hasHidden = true;
+							var colIdx = col.columnIndex;
+							var label  = labels[colIdx] || col.title || ('Columna ' + colIdx);
+							var data   = col.data || '';
 
-						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Email: </span><span style="color:#333; text-align: right;">' + email + '</span></div>';
+							finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+							finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
+							finalHtml += '<span style="color:#333;">' + data + '</span>';
+							finalHtml += '</div>';
+						});
 
-						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Foto: </span><span style="color:#333; text-align: right;">' + foto + '</span></div>';
-
-						// Solo agregar fila de estado si la columna está visible en DataTables
-						if (api.column(5).visible()) {
-							finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-							finalHtml += '<span class="text-bold" style="color:#555;">Estado: </span><span style="color:#333; text-align: right;">' + estado + '</span></div>';
-						}
-
-						// Section 2: Actividad
-						finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left;">';
-						finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Actividad</h5></div>';
-
-						finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Último login: </span><span style="color:#333; text-align: right;">' + ultimoLogin + '</span></div>';
-
-						return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #f8f9fa; margin: 0;">').append(finalHtml) : false;
+						if (!hasHidden) return false;
+						return $('<div style="padding:8px 12px; background:#f8f9fa;">').append(finalHtml);
 					}
 				}
 			},
-			"order": [[1, 'asc']],
+			"order": [[0, 'asc']],
 			"columnDefs": [
 				{
-					"targets": 0, // Usuario
-					"responsivePriority": 1
+					"targets": 0,        // Usuario: botón expand automáticamente por dtr-inline
+					"responsivePriority": 1,
+					"orderable": true
 				},
-				{
-					"targets": 1, // Nombre
-					"responsivePriority": 1000
-				},
-				{
-					"targets": 4, // Perfil
-					"responsivePriority": 1
-				},
+				{ "targets": 7, "responsivePriority": 1, "orderable": false }, // Acciones: siempre visible
+				{ "targets": 1, "responsivePriority": 2 }, // Nombre
+				{ "targets": 3, "responsivePriority": 3 }, // Imagen
+				{ "targets": 4, "responsivePriority": 4 }, // Perfil
+				{ "targets": 2, "responsivePriority": 5 }, // Email
 				{
 					"targets": 5, // Estado
-					"visible": $("#puedeEditarUsuarios").val() == "1",
-					"responsivePriority": 1000
+					"responsivePriority": 6,
+					"visible": $("#puedeEditarUsuarios").val() == "1"
 				},
-				{
-					"targets": 7, // Acciones
-					"responsivePriority": 1,
-					"orderable": false
-				},
-				{
-					"targets": [2, 3, 6], // Email, Foto, Ultimo login (hidden on mobile)
-					"responsivePriority": 1000
-				}
+				{ "targets": 6, "responsivePriority": 7 }  // Último login
 			],
 			"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
 			"language": {

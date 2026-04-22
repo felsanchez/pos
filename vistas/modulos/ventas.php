@@ -33,54 +33,6 @@
     position: relative;
   }
 
-  /* 1. LÓGICA DESKTOP-FIRST: Ocultar botón de expansión por defecto en VentasListado */
-  .tablaVentasListado td.dtr-control:before,
-  .tablaVentasListado th.dtr-control:before {
-    display: none !important;
-    content: "" !important;
-  }
-
-  .tablaVentasListado td.dtr-control,
-  .tablaVentasListado th.dtr-control {
-    padding-left: 8px !important;
-    cursor: default !important;
-  }
-
-  /* 2. ACTIVACIÓN EXCLUSIVA PARA MÓVIL (Menos de 767px) */
-  @media (max-width: 767px) {
-    .tablaVentasListado td.dtr-control {
-      position: relative !important;
-      padding-left: 30px !important;
-      cursor: pointer !important;
-    }
-
-    .tablaVentasListado td.dtr-control:before {
-      top: 50%;
-      left: 5px;
-      height: 18px;
-      width: 18px;
-      margin-top: -9px;
-      display: block !important;
-      position: absolute;
-      color: white !important;
-      border: 2px solid white !important;
-      border-radius: 14px !important;
-      box-shadow: 0 0 3px #444 !important;
-      box-sizing: content-box !important;
-      text-align: center !important;
-      text-indent: 0 !important;
-      font-family: 'Courier New', Courier, monospace !important;
-      font-weight: bold !important;
-      line-height: 18px !important;
-      content: '+' !important;
-      background-color: #3c8dbc !important; /* Azul al estar contraído (+) */
-    }
-
-    .tablaVentasListado tr.parent td.dtr-control:before {
-      content: '-' !important;
-      background-color: #dd4b39 !important; /* Rojo al estar expandido (-) */
-    }
-  }
 </style>
 
 
@@ -323,7 +275,7 @@ if ($xml) {
               $mensajeFiltro = "";
 
               // Filtro por fechas
-              if (isset($_GET["fechaInicial"]) && isset($_GET["fechaFinal"])) {
+              if (isset($_GET["fechaInicial"]) && !empty($_GET["fechaInicial"]) && isset($_GET["fechaFinal"]) && !empty($_GET["fechaFinal"])) {
                 $fechaInicial = $_GET["fechaInicial"];
                 $fechaFinal = $_GET["fechaFinal"];
                 $mensajeFiltro .= "Filtrando desde $fechaInicial hasta $fechaFinal";
@@ -366,6 +318,8 @@ if ($xml) {
 
               // Obtener ventas según filtros
               $respuesta = ControladorVentas::ctrRangoFechasVentasPorEstado($fechaInicial, $fechaFinal, "venta");
+
+
 
               // Si hay filtro por cliente, filtrar el resultado
               if ($clienteId !== null) {
@@ -699,33 +653,7 @@ MODAL EDITAR CLIENTE
 <script src="vistas/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
 
 
-<!-- Filtro de Fechas -->
-<script>
-  $('#daterange-btn').daterangepicker(
-    {
-      ranges: {
-        'Hoy': [moment(), moment()],
-        'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-        'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
-        'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
-        'Este mes': [moment().startOf('month'), moment().endOf('month')],
-        'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-      },
-      startDate: moment(),
-      endDate: moment()
-    },
-    function (start, end) {
-      var fechaInicial = start.format('YYYY-MM-DD');
-      //var fechaFinal = end.format('YYYY-MM-DD');
-      var fechaFinal = end.endOf('day').format('YYYY-MM-DD HH:mm:ss');
-      var fechaInicial = start.startOf('day').format('YYYY-MM-DD HH:mm:ss');
-
-      var nuevaURL = 'index.php?ruta=ventas&fechaInicial=' + encodeURIComponent(fechaInicial) + '&fechaFinal=' + encodeURIComponent(fechaFinal);
-      //var nuevaURL = 'index.php?ruta=ventas&fechaInicial=' + fechaInicial + '&fechaFinal=' + fechaFinal;
-      window.location.href = nuevaURL;
-    }
-  );
-</script>
+<!-- El script duplicado de Fecha ha sido removido y ahora opera centralizado en ventas.js -->
 
 <!--Guardar observaciones-->
 <script>
@@ -774,91 +702,76 @@ MODAL EDITAR CLIENTE
           ], // Ordenar por Fecha por defecto
           "responsive": {
             "details": {
-              "type": "column",
-              "target": 0, // El primer campo (+)
+              "type": "inline",
               "renderer": function(api, rowIdx, columns) {
-                // GUARDIA: Si estamos en escritorio (> 768px), NO permitir expansión
-                if ($(window).width() >= 768) {
-                  return false;
-                }
+                  // Mapeo de índice de columna → etiqueta y tipo especial
+                  var labels = {
+                    2: 'Vendedor',
+                    3: 'Forma de Pago',
+                    4: 'Imagen',
+                    5: 'Total',
+                    6: 'Notas',
+                    7: 'Observación',
+                    8: 'Fecha'
+                  };
 
-                // USO DE ÍNDICES DIRECTOS (0-9) para evitar errores de desalineación
-                var vendedor = columns[2].data || '';
-                var formaPago = columns[3].data || '';
-                var imagen = columns[4].data || '';
-                var total = columns[5].data || '';
-                var notas = columns[6].data || '';
-                var obs = columns[7].data || '';
-                var fecha = columns[8].data || '';
+                  var idVenta = $(api.row(rowIdx).node()).attr('data-venta-id') || '';
+                  var finalHtml = '';
+                  var hasHidden = false;
 
-                // Extraer ruta de imagen del HTML
-                var imagenSrc = 'vistas/img/ventas/default/sinventa.png';
-                var matchImagen = imagen.match(/data-imagen=["']([^"']+)["']/i);
-                if (matchImagen) imagenSrc = matchImagen[1];
+                  $.each(columns, function(i, col) {
+                    // Solo mostrar columnas que DataTables realmente ocultó
+                    if (!col.hidden) return;
 
-                var idVenta = $(api.row(rowIdx).node()).attr('data-venta-id') || '';
+                    hasHidden = true;
+                    var colIdx = col.columnIndex;
+                    var label = labels[colIdx] || col.title || ('Columna ' + colIdx);
+                    var data  = col.data || '';
 
-                var finalHtml = '';
+                    // Tratamiento especial para la columna de Observación (editable)
+                    if (colIdx === 7) {
+                      var obsTexto = $('<div>').html(data).text().trim();
+                      finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
+                      finalHtml += '<span class="text-bold" style="display:block;color:#555;margin-bottom:4px;"><i class="fa fa-pencil-square"></i> ' + label + ':</span>';
+                      finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:24px;">' + obsTexto + '</div>';
+                      finalHtml += '</div>';
+                      return;
+                    }
 
-                // SECCION 1: Información de ventas
-                finalHtml += '<div class="col-xs-12" style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #605ca8;">';
-                finalHtml += '<h5 style="font-weight:bold; color:#605ca8; margin:0;">Información de ventas</h5></div>';
+                    // Tratamiento especial para la columna de Notas (quitar HTML)
+                    if (colIdx === 6) {
+                      var notasTexto = $('<div>').html(data).text().trim();
+                      finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
+                      finalHtml += '<span class="text-bold" style="color:#555;"><i class="fa fa-magic"></i> ' + label + ': </span>';
+                      finalHtml += '<span style="color:#333;">' + (notasTexto || '<em style="color:#999;">Sin notas</em>') + '</span>';
+                      finalHtml += '</div>';
+                      return;
+                    }
 
-                finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-                finalHtml += '<span class="text-bold" style="color:#555;">Fecha: </span><span class="pull-right" style="color:#333;">' + fecha + '</span></div>';
+                    // Columnas genéricas
+                    finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+                    finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
+                    finalHtml += '<span style="color:#333;">' + data + '</span>';
+                    finalHtml += '</div>';
+                  });
 
-                finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-                finalHtml += '<span class="text-bold" style="color:#555;">Forma de Pago: </span><span class="pull-right" style="color:#333;">' + formaPago + '</span></div>';
+                  if (!hasHidden) return false;
 
-                finalHtml += '<div class="col-xs-12 col-sm-6" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-                finalHtml += '<span class="text-bold" style="color:#555;">Total: </span><span class="pull-right" style="color:#333;">' + total + '</span></div>';
-
-                // Imagen miniatura directa (Estilizada para móvil)
-                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-                finalHtml += '<span class="text-bold" style="color:#555;">Imagen: </span>';
-                finalHtml += '<span style="text-align: right;">' + imagen + '</span></div>';
-
-                // SECCION 2: Información adicional
-                finalHtml += '<div class="col-xs-12" style="margin-top:15px; margin-bottom:5px; border-bottom: 2px solid #605ca8;">';
-                finalHtml += '<h5 style="font-weight:bold; color:#605ca8; margin:0;">Información adicional</h5></div>';
-
-                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-                finalHtml += '<span class="text-bold" style="color:#555;">Vendedor: </span><span class="pull-right" style="color:#333;">' + vendedor + '</span></div>';
-
-                // Notas (solo lectura)
-                var notasTexto = $('<div>').html(notas).text().trim();
-                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-                finalHtml += '<span class="text-bold" style="display:block; color:#555; margin-bottom:4px;"><i class="fa fa-magic"></i> Notas:</span>';
-                finalHtml += '<span style="color:#333;">' + (notasTexto || '<em style="color:#999;">Sin notas</em>') + '</span></div>';
-
-                // Observación (editable)
-                var obsTexto = $('<div>').html(obs).text().trim();
-                finalHtml += '<div class="col-xs-12" style="padding: 8px 0; border-bottom: 1px solid #eee;">';
-                finalHtml += '<span class="text-bold" style="display:block; color:#555; margin-bottom:4px;"><i class="fa fa-pencil-square"></i> Observación:</span>';
-                finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:30px;">' + obsTexto + '</div></div>';
-
-                return finalHtml ? $('<div class="row" style="padding: 10px; background-color: #fcfcfc; margin: 0;">').append(finalHtml) : false;
+                  return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
               }
             }
           },
-          "columnDefs": [{
-            "className": 'dtr-control',
-            "targets": 0, // Código (para usarlo como botón expand)
-            "responsivePriority": 1
-          },
-          {
-            "targets": 1, // Cliente
-            "responsivePriority": 1
-          },
-          {
-            "targets": 9, // Acciones
-            "responsivePriority": 1
-          },
-          // Ocultar resto después de los prioritarios en móvil
-          {
-            "targets": [2, 3, 4, 5, 6, 7, 8],
-            "responsivePriority": 2
-          }
+          "columnDefs": [
+            { "targets": 0, "responsivePriority": 1 }, // Código
+            { "targets": 9, "responsivePriority": 2, "orderable": false }, // Acciones
+            { "targets": 1, "responsivePriority": 3 }, // Cliente
+            { "targets": 2, "responsivePriority": 4 }, // Vendedor
+            { "targets": 3, "responsivePriority": 5 }, // Forma de Pago
+            { "targets": 4, "responsivePriority": 6 }, // Imagen
+            { "targets": 5, "responsivePriority": 7 }, // Total
+            { "targets": 6, "responsivePriority": 8 }, // Notas
+            { "targets": 7, "responsivePriority": 9 }, // Observación
+            { "targets": 8, "responsivePriority": 10 } // Fecha
           ],
           "language": {
             "sProcessing": "Procesando...",

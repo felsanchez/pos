@@ -157,16 +157,25 @@ $listaProducto = json_decode($nota["productos"], true);
                                 </div>
                             </div>
 
-                            <div class="row">
-                                <div class="well well-sm" style="margin-top: 20px; background-color: #f9fafc;">
-                                    <b style="color: #3c8dbc;">CUDS Documento Soporte Original:</b><br>
-                                    <span
-                                        style="font-size: 11px; word-break: break-all;"><?php echo $documentoSoporte["cuds"]; ?></span><br><br>
 
-                                    <b style="color: #3c8dbc;">CUDS Nota de Ajuste:</b><br>
-                                    <span
-                                        style="font-size: 11px; word-break: break-all;"><?php echo $nota["cuds_ajuste"]; ?></span>
+                            <div class="row">
+                                <div class="col-xs-6 col-xs-offset-6">
+                                    <p class="lead">Resumen Financiero</p>
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <tr style="font-size: 18px;">
+                                                <th style="width:50%">Total Ajustado:</th>
+                                                <td><strong>$
+                                                        <?php echo number_format((float) ($nota["monto_total"] ?? 0), 2); ?></strong>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
                                 </div>
+                            </div>
+
+                            <div class="row">
+
 
                                 <p class="lead" style="margin-top: 20px;">Código QR DIAN:</p>
                                 <?php if (!empty($nota["qr_data"])):
@@ -210,7 +219,9 @@ $listaProducto = json_decode($nota["productos"], true);
                                 <?php endif; ?>
                             </div>
 
-                            <div class="col-xs-6">
+
+                            <div class="row">
+                                <div class="col-xs-6">
                                 <p class="lead">Observación:</p>
                                 <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
                                     <?php echo $nota["motivo"] ?: ($nota["observacion"] ?: "Sin observaciones adicionales."); ?>
@@ -245,32 +256,36 @@ $listaProducto = json_decode($nota["productos"], true);
                                 </div>
                             </div>
 
-                            <div class="col-xs-6">
-                                <p class="lead">Resumen Financiero</p>
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <tr style="font-size: 18px;">
-                                            <th>Total Ajustado:</th>
-                                            <td><strong>$
-                                                    <?php echo number_format((float) ($nota["monto_total"] ?? 0), 2); ?></strong>
-                                            </td>
-                                        </tr>
-                                    </table>
+
+
+
+                            <div class="row no-print" style="margin-top: 20px;">
+                                <div class="col-xs-12">
+                                    <!-- Descargar XML (Local Downloader - Con validación de estado) -->
+                                    <?php if ($nota["estado_dian"] != "borrador" && !empty($nota["numero_nota_ajuste"])): ?>
+                                        <a href="descargar-xml-na.php?id=<?php echo $idNota; ?>"
+                                            target="_blank" class="btn pull-right"
+                                            style="margin-right: 5px; background-color: #00c0ef; color: white; border-color: #00acd6;">
+                                            <i class="fa fa-file-code-o"></i> Descargar XML
+                                        </a>
+                                    <?php endif; ?>
+
+                                    <!-- Descargar PDF (TCPDF Local) -->
+                                    <a href="extensiones/tcpdf/pdf/descargar-pdf-nota-ajuste-ds.php?idNota=<?php echo $idNota; ?>"
+                                        target="_blank" class="btn btn-danger pull-right" style="margin-right: 5px;">
+                                        <i class="fa fa-file-pdf-o"></i> Descargar PDF
+                                    </a>
+
+                                    <a href="notas-ajuste-ds" class="btn btn-default pull-right"
+                                        style="margin-right: 5px;">
+                                        <i class="fa fa-arrow-left"></i> Volver
+                                    </a>
                                 </div>
                             </div>
+                        </section>
                     </div>
-
-                    <div class="row no-print">
-                        <div class="col-xs-12">
-                            <a href="notas-ajuste-ds" class="btn btn-default pull-right">
-                                <i class="fa fa-arrow-left"></i> Volver a la Lista
-                            </a>
-                        </div>
-                    </div>
+                </div>
+            </div>
+        </div>
     </section>
-</div>
-</div>
-</div>
-</div>
-</section>
 </div>

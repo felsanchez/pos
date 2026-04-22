@@ -9,62 +9,41 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
 <!-- Estilos responsive -->
 <style>
-  /* 1. LÓGICA DESKTOP-FIRST: Ocultar botón de expansión por defecto en la tabla */
-  #tablaGastos td.dtr-control:before,
-  #tablaGastos th.dtr-control:before {
-    display: none !important;
-    content: "" !important;
+  /* Los estilos de tabla se manejan ahora mediante la estandarización global de DataTables */
+  
+  /* Garantizar que el botón de expansión se vea siempre que haya columnas ocultas */
+  #tablaGastos.collapsed td.dtr-control {
+    position: relative !important;
+    padding-left: 30px !important;
+    cursor: pointer !important;
   }
 
-  #tablaGastos td.dtr-control,
-  #tablaGastos th.dtr-control {
-    padding-left: 8px !important;
-    cursor: default !important;
+  #tablaGastos.collapsed td.dtr-control:before {
+    top: 50% !important;
+    left: 5px !important;
+    height: 18px !important;
+    width: 18px !important;
+    margin-top: -9px !important;
+    display: block !important;
+    position: absolute !important;
+    color: white !important;
+    border: 2px solid white !important;
+    border-radius: 14px !important;
+    box-shadow: 0 0 3px #444 !important;
+    box-sizing: content-box !important;
+    text-align: center !important;
+    text-indent: 0 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-weight: bold !important;
+    line-height: 18px !important;
+    content: '+' !important;
+    background-color: #3c8dbc !important;
   }
 
-  /* 2. ACTIVACIÓN EXCLUSIVA PARA MÓVIL (Menos de 767px) */
-  @media (max-width: 767px) {
-    #tablaGastos td.dtr-control {
-      position: relative !important;
-      padding-left: 30px !important;
-      cursor: pointer !important;
-    }
-
-    #tablaGastos td.dtr-control:before {
-      top: 50% !important;
-      left: 5px !important;
-      height: 18px !important;
-      width: 18px !important;
-      margin-top: -9px !important;
-      display: block !important;
-      position: absolute !important;
-      color: white !important;
-      border: 2px solid white !important;
-      border-radius: 14px !important;
-      box-shadow: 0 0 3px #444 !important;
-      box-sizing: content-box !important;
-      text-align: center !important;
-      text-indent: 0 !important;
-      font-family: 'Courier New', Courier, monospace !important;
-      font-weight: bold !important;
-      line-height: 18px !important;
-      content: '+' !important;
-      background-color: #3c8dbc !important; /* Azul */
-    }
-
-    #tablaGastos tr.parent td.dtr-control:before {
-      content: '-' !important;
-      background-color: #dd4b39 !important; /* Rojo */
-    }
-
-    /* Reducir tamaño de botones de acción solo en vista móvil (Equivalente a btn-xs) */
-    #tablaGastos .btnEditarGasto,
-    #tablaGastos .btnEliminarGasto {
-      padding: 1px 5px !important;
-      font-size: 12px !important;
-      line-height: 1.5 !important;
-      border-radius: 3px !important;
-    }
+  /* Cambiar a '-' cuando está expandido */
+  #tablaGastos.collapsed tr.parent td.dtr-control:before {
+    content: '-' !important;
+    background-color: #dd4b39 !important;
   }
 </style>
 
@@ -166,19 +145,19 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
       <div class="box-body">
 
         <div class="tabla-gastos">
-          <table id="tablaGastos" class="table table-bordered table-striped dt-responsive" width="100%">
+          <table id="tablaGastos" class="table table-bordered table-striped display nowrap" width="100%">
 
             <thead>
               <tr>
-                <th class="all">Concepto</th>
-                <th class="all">Monto</th>
-                <th class="min-tablet">Categoría</th>
-                <th class="min-tablet">Estado</th>
-                <th class="min-tablet">Proveedor</th>
-                <th class="min-tablet">Imagen</th>
-                <th class="min-tablet">Notas</th>
-                <th class="min-tablet">Fecha</th>
-                <th class="all">Acciones</th>
+                <th>Concepto</th>
+                <th>Monto</th>
+                <th>Categoría</th>
+                <th>Estado</th>
+                <th>Proveedor</th>
+                <th>Imagen</th>
+                <th>Fecha</th>
+                <th>Notas</th>
+                <th>Acciones</th>
               </tr>
             </thead>
 
@@ -222,7 +201,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
 
                 // Columna 1: Concepto
-                echo '<td>' . $value["concepto"] . '</td>';
+                echo '<td class="dtr-control">' . $value["concepto"] . '</td>';
 
                 // Columna 2: Monto
                 $monto = !empty($value["monto"]) ? '$' . number_format($value["monto"], 2, ',', '.') : '-';
@@ -247,13 +226,13 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                   echo '<td><img src="vistas/img/gastos/default/sin-imagen.png" class="img-thumbnail img-comprobante-clickeable" width="40px" style="cursor: pointer;" data-imagen="" data-idgasto="' . $value["id"] . '" data-concepto="' . $value["concepto"] . '"></td>';
                 }
 
+                // Columna 7: Fecha
+                $fecha = !empty($value["fecha"]) ? date("d/m/Y", strtotime($value["fecha"])) : '-';
+                echo '<td>' . $fecha . '</td>';
+
                 // Columna 8: Notas (editable)
                 $notas = !empty($value["notas"]) ? htmlspecialchars($value["notas"]) : '';
                 echo '<td contenteditable="true" class="celda-notas-gasto" data-id="' . $value["id"] . '">' . $notas . '</td>';
-
-                // Columna 9: Fecha
-                $fecha = !empty($value["fecha"]) ? date("d/m/Y", strtotime($value["fecha"])) : '-';
-                echo '<td>' . $fecha . '</td>';
 
                 // Columna Final: Acciones
                 echo '<td>

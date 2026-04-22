@@ -1,24 +1,7 @@
 <style>
-  /* Espaciado automático para el botón de expansión en modo inline */
-  .tablaUsuarios.collapsed tbody td:first-child {
-    padding-left: 35px !important;
-    position: relative;
-    cursor: pointer;
-  }
-
-  /* Posicionamiento del botón + (estilo variantes) */
-    background-color: #3c8dbc !important; /* Azul al estar contraído (+) */
-    box-shadow: none !important;
-  }
-
-  /* Color rojo cuando está expandido (-) */
-  .tablaUsuarios.collapsed tbody tr.parent td:first-child::before {
-    background-color: #dd4b39 !important;
-  }
-
-  /* Resize action buttons on mobile */
+  /* Reajuste en pantallas pequeñas */
   @media (max-width: 767px) {
-    .tablaUsuarios .btn-group .btn {
+    .tablaUsuariosListado .btn-group .btn {
       padding: 1px 5px;
       font-size: 12px;
       line-height: 1.5;
@@ -26,14 +9,11 @@
     }
   }
 
-  /* Limitar altura del modal de ampliar imagen y agregar scroll */
+  /* Modal imagen */
   #modalAmpliarImagenUsuario .modal-body {
     max-height: 70vh;
     overflow-y: auto;
   }
-
-
-  /* Asegurar que el footer del modal esté siempre visible */
   #modalAmpliarImagenUsuario .modal-footer {
     position: relative;
     z-index: 10;
@@ -85,13 +65,14 @@
       </div>
 
 
-      <div class="box-body table-responsive">
+      <div class="box-body">
 
         <!-- Variable oculta para que JS sepa si el usuario actual puede editar la columna estado -->
         <input type="hidden" id="puedeEditarUsuarios"
           value="<?php echo puedeAccion('usuarios', 'editar') ? '1' : '0'; ?>">
 
-        <table class="table table-bordered table-striped dt-responsive tablaUsuarios" style="width: 100%">
+        <div class="tabla-usuarios table-responsive">
+          <table id="tablaListaUsuarios" class="table table-bordered table-striped tablaUsuariosListado display nowrap" style="width: 100%">
 
           <thead>
             <tr>
@@ -193,6 +174,8 @@
           </tbody>
 
         </table>
+
+        </div><!-- /.tabla-usuarios -->
 
       </div>
 
@@ -741,3 +724,7 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
     });
   });
 </script>
+
+
+
+<!-- La inicialización de DataTables se maneja en vistas/js/usuarios.js -->

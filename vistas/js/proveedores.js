@@ -12,84 +12,47 @@ $(document).ready(function () {
 				"details": {
 					"type": "inline",
 					"renderer": function (api, rowIdx, columns) {
-						var data = $.map(columns, function (col, i) {
-							return col.hidden ?
-								'<tr data-dt-row="' + col.rowIndex + '" data-dt-column="' + col.columnIndex + '">' +
-								'<td>' + col.title + ':' + '</td> ' +
-								'<td>' + col.data + '</td>' +
-								'</tr>' :
-								'';
-						}).join('');
-
-						// Custom renderer logic
-						var rowData = api.row(rowIdx).data();
-
-						// Indices (0-based) after removing redundant index column:
-						// 0: Nombre, 1: Marca, 2: Celular, 3: Correo, 
-						// 4: Dirección, 5: Productos, 6: Notas, 7: Acciones
-
-						var nombre = rowData[0];
-						var marca = rowData[1];
-						var celular = rowData[2];
-						var correo = rowData[3];
-						var direccion = rowData[4];
-						var productos = rowData[5]; // HTML content (badge)
-						var notas = rowData[6]; // HTML content (editable)
 						var finalHtml = '';
+						var hasHidden = false;
 
-						// Section 1: Contacto
-						finalHtml += '<div style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left; padding-left: 15px;">';
-						finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Contacto</h5></div>';
+						$.each(columns, function (i, col) {
+							if (!col.hidden) return;
+							hasHidden = true;
 
-						finalHtml += '<div style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Celular: </span><span style="color:#333; text-align: right;">' + celular + '</span></div>';
+							var label = col.title || ('Columna ' + col.columnIndex);
+							finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+							finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
 
-						finalHtml += '<div style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Correo: </span><span style="color:#333; text-align: right;">' + correo + '</span></div>';
+							if (col.columnIndex === 6) {
+								// Reconstruimos la celda editable de notas si está escondida
+								var rowNode = api.row(rowIdx).node();
+								var providerId = $(rowNode).find('.btnEditarProveedor').attr('idProveedor');
+								var notasText = $(rowNode).find('.celda-notas-proveedor').text().trim();
+								var placeholderAttr = (notasText === "") ? ' data-placeholder="true"' : "";
+								
+								finalHtml += '<div contenteditable="true" class="celda-notas-proveedor" data-id="' + providerId + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + (notasText || "") + '</div>';
+							} else {
+								// El resto pasa su HTML tal cual (badges de productos, etc)
+								finalHtml += '<span style="color:#333;">' + col.data + '</span>';
+							}
+							
+							finalHtml += '</div>';
+						});
 
-						finalHtml += '<div style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Dirección: </span><span style="color:#333; text-align: right;">' + direccion + '</span></div>';
-
-						// Section 2: Información (Productos, Marca)
-						finalHtml += '<div style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left; padding-left: 15px;">';
-						finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Información</h5></div>';
-
-						finalHtml += '<div style="padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">';
-						finalHtml += '<span class="text-bold" style="color:#555;">Productos: </span><span style="color:#333; text-align: right;">' + productos + '</span></div>';
-
-						// Section 3: Notas
-						finalHtml += '<div style="margin-top:10px; margin-bottom:5px; border-bottom: 2px solid #3c8dbc; text-align:left; padding-left: 15px;">';
-						finalHtml += '<h5 style="font-weight:bold; color:#3c8dbc; margin:0;">Notas</h5></div>';
-
-						finalHtml += '<div style="padding: 8px 0;">';
-
-						// Obtener el ID del proveedor de forma robusta
-						var rowNode = api.row(rowIdx).node();
-						var providerId = $(rowNode).find('.btnEditarProveedor').attr('idProveedor');
-						var notasText = $(rowNode).find('.celda-notas-proveedor').text().trim();
-
-						// Notas (con placeholder dinámico)
-						var placeholderAttr = (notasText === "") ? ' data-placeholder="true"' : "";
-						finalHtml += '<div contenteditable="true" class="celda-notas-proveedor" data-id="' + providerId + '"' + placeholderAttr + ' style="width: 100%; outline: none; display: block; border: 1px solid #ddd; padding: 8px; background: #ffff9e6;">' + (notasText || "") + '</div></div>';
-
-						return finalHtml ? $('<div style="background-color: #f8f9fa; margin: -8px; padding: 10px;">').append(finalHtml) : false;
+						if (!hasHidden) return false;
+						return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
 					}
 				}
 			},
 			"columnDefs": [
-				{
-					"targets": 0, // Nombre
-					"responsivePriority": 1
-				},
-				{
-					"targets": 7, // Acciones
-					"responsivePriority": 2,
-					"orderable": false
-				},
-				{
-					"targets": [1, 2, 3, 4, 5, 6], // Other columns hidden on mobile
-					"responsivePriority": 1000
-				}
+				{ "targets": 0, "responsivePriority": 1 }, // Nombre
+				{ "targets": 7, "responsivePriority": 2, "orderable": false }, // Acciones
+				{ "targets": 1, "responsivePriority": 3 }, // Nombre comercial
+				{ "targets": 2, "responsivePriority": 4 }, // Celular
+				{ "targets": 3, "responsivePriority": 5 }, // Correo
+				{ "targets": 4, "responsivePriority": 6 }, // Dirección
+				{ "targets": 5, "responsivePriority": 7 }, // Productos
+				{ "targets": 6, "responsivePriority": 8 }  // Notas
 			],
 			"drawCallback": function (settings) {
 				if (typeof inicializarPlaceholdersProveedores === "function") {

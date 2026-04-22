@@ -346,40 +346,20 @@ class ModeloVentas
 
 		} else {
 
-			$fechaActual = new DateTime();
-			$fechaActual->add(new DateInterval("P1D"));
-			$fechaActualMasUno = $fechaActual->format("Y-m-d");
-
 			$fechaFinal2 = new DateTime($fechaFinal);
 			$fechaFinal2->add(new DateInterval("P1D"));
 			$fechaFinalMasUno = $fechaFinal2->format("Y-m-d");
 
-			if ($fechaFinalMasUno == $fechaActualMasUno) {
-
-				$stmt = Conexion::conectar()->prepare("SELECT v.*,
-														c.nombre AS nombre_cliente,
-														c.email AS email_cliente,
-														u.nombre AS nombre_vendedor
-														FROM $tabla v
-														LEFT JOIN clientes c ON v.id_cliente = c.id
-														LEFT JOIN usuarios u ON v.id_vendedor = u.id
-														WHERE v.fecha BETWEEN '$fechaInicial' AND '$fechaFinalMasUno' AND v.estado = :estado
-														ORDER BY v.id DESC");
-
-			} else {
-
-
-				$stmt = Conexion::conectar()->prepare("SELECT v.*,
-														c.nombre AS nombre_cliente,
-														c.email AS email_cliente,
-														u.nombre AS nombre_vendedor
-														FROM $tabla v
-														LEFT JOIN clientes c ON v.id_cliente = c.id
-														LEFT JOIN usuarios u ON v.id_vendedor = u.id
-														WHERE v.fecha BETWEEN '$fechaInicial' AND '$fechaFinal' AND v.estado = :estado
-														ORDER BY v.id DESC");
-
-			}
+			// Usamos un solo BETWEEN que cubre todo el rango incluyendo el fin del día final
+			$stmt = Conexion::conectar()->prepare("SELECT v.*,
+													c.nombre AS nombre_cliente,
+													c.email AS email_cliente,
+													u.nombre AS nombre_vendedor
+													FROM $tabla v
+													LEFT JOIN clientes c ON v.id_cliente = c.id
+													LEFT JOIN usuarios u ON v.id_vendedor = u.id
+													WHERE v.fecha BETWEEN '$fechaInicial 00:00:00' AND '$fechaFinal 23:59:59' AND v.estado = :estado
+													ORDER BY v.id DESC");
 
 			$stmt->bindParam(":estado", $estado, PDO::PARAM_STR);
 
