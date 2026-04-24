@@ -4,22 +4,16 @@ require_once "controladores/factus.controlador.php";
 require_once "modelos/factus.modelo.php";
 require_once "modelos/conexion.php";
 
-if (isset($_GET["id"])) {
+if (isset($_GET["xml"])) {
 
-    $idNota = (int)$_GET["id"];
+    $numeroDS = $_GET["xml"];
 
-    // 1. Buscar la nota localmente
-    $nota = ControladorFactus::ctrMostrarNotasAjusteDS("id", $idNota);
+    // 1. Buscar el DS localmente para validar que existe
+    $documento = ControladorFactus::ctrMostrarDocumentosSoporte("numero_ds", $numeroDS);
 
-    if (!$nota) {
-        die("No se encontró el registro de la nota de ajuste con ID: " . htmlspecialchars($idNota));
+    if (!$documento) {
+        die("No se encontró registro del documento soporte: " . htmlspecialchars($numeroDS));
     }
-
-    if ($nota["estado_dian"] == "borrador" || empty($nota["numero_nota_ajuste"])) {
-        die("La nota es un borrador y aún no ha sido procesada por la DIAN. No hay XML disponible.");
-    }
-
-    $numeroNA = $nota["numero_nota_ajuste"];
 
     // 2. Autenticar con Factus
     $auth = ControladorFactus::ctrAutenticar();
@@ -31,7 +25,7 @@ if (isset($_GET["id"])) {
 
     // 3. Llamar al endpoint correcto de descarga de XML
     $config = ModeloFactus::mdlObtenerConfiguracion();
-    $url = $config['api_url'] . '/v1/adjustment-notes/download-xml/' . $numeroNA;
+    $url = $config['api_url'] . '/v1/support-documents/download-xml/' . $numeroDS;
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -46,18 +40,18 @@ if (isset($_GET["id"])) {
     curl_close($ch);
 
     if ($httpCode !== 200) {
-        die("Error al obtener el XML de la Nota de Ajuste desde Factus (HTTP $httpCode). Verifique que la nota haya sido enviada correctamente.");
+        die("Error al obtener el XML del Documento Soporte desde Factus (HTTP $httpCode).");
     }
 
     $data = json_decode($respuesta, true);
     $xmlBase64 = $data['data']['xml_base_64_encoded'] ?? '';
-    $fileName   = $data['data']['file_name'] ?? $numeroNA;
+    $fileName   = $data['data']['file_name'] ?? $numeroDS;
     if (substr($fileName, -4) !== '.xml') {
         $fileName .= '.xml';
     }
 
     if (empty($xmlBase64)) {
-        die("Factus no devolvió el contenido del XML.");
+        die("Factus no devolvió el contenido del XML para este Documento Soporte.");
     }
 
     // 4. Decodificar y servir el archivo
@@ -70,5 +64,5 @@ if (isset($_GET["id"])) {
     exit;
 
 } else {
-    die("Falta el parámetro ID para la descarga.");
+    die("Parámetro de documento no definido.");
 }

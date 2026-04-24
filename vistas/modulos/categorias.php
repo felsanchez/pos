@@ -30,46 +30,46 @@
       </div>
 
       <div class="box-body">
-        <div class="tabla-categorias table-responsive">
-        <table id="tablaCategoriasListado" class="table table-bordered table-striped tablaCategorias display nowrap"
-          style="width: 100%;">
-          <thead>
-            <th>Categoría</th>
-            <th>Productos</th>
-            <th style="width: 100px">Acciones</th>
-            </tr>
-          </thead>
+        <div class="tabla-categorias tablas table-responsive">
+          <table id="tablaCategoriasListado" class="table table-bordered table-striped tablaCategorias display nowrap"
+            style="width: 100%;">
+            <thead>
+              <th>Categoría</th>
+              <th>Productos</th>
+              <th style="width: 100px">Acciones</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            <?php
-            $item = null;
-            $valor = null;
-            $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
+            <tbody>
+              <?php
+              $item = null;
+              $valor = null;
+              $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
 
-            foreach ($categorias as $key => $value) {
-              $totalProductos = ModeloCategorias::mdlContarProductosPorCategoria($value["id"]);
+              foreach ($categorias as $key => $value) {
+                $totalProductos = ModeloCategorias::mdlContarProductosPorCategoria($value["id"]);
 
-              echo '<tr>
+                echo '<tr>
                       <td class="text-uppercase">' . $value["categoria"] . '</td> 
                       <td><span class="badge bg-blue">' . $totalProductos . '</span></td> 
                       <td>
                         <div class="btn-group">';
 
-              if (puedeAccion('categorias', 'editar')) {
-                echo '<button class="btn btn-warning btnEditarCategoria" idCategoria="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarCategoria"><i class="fa fa-pencil"></i></button>';
-              }
+                if (puedeAccion('categorias', 'editar')) {
+                  echo '<button class="btn btn-warning btnEditarCategoria" idCategoria="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarCategoria" title="Editar categoría"><i class="fa fa-pencil"></i></button>';
+                }
 
-              if (puedeAccion('categorias', 'eliminar')) {
-                echo '<button class="btn btn-danger btnEliminarCategoria" idCategoria="' . $value["id"] . '"><i class="fa fa-times"></i></button>';
-              }
+                if (puedeAccion('categorias', 'eliminar')) {
+                  echo '<button class="btn btn-danger btnEliminarCategoria" idCategoria="' . $value["id"] . '" title="Eliminar categoría"><i class="fa fa-times"></i></button>';
+                }
 
-              echo '    </div>
+                echo '    </div>
                       </td> 
                     </tr>';
-            }
-            ?>
-          </tbody>
-        </table>
+              }
+              ?>
+            </tbody>
+          </table>
         </div> <!-- /.tabla-categorias -->
       </div>
     </div>

@@ -105,7 +105,7 @@ VARIABLE LOCAL STORAGE (solo el texto visual del botón)
 CARGAR TABLA DINAMICA
 =============================================*/
 
-var table2 = $(".tablaVentas").DataTable({
+var table2 = $("table.tablaVentas").DataTable({
 
 	"ajax": "ajax/datatable-ventas.ajax.php",
 	"columnDefs": [

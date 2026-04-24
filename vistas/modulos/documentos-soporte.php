@@ -169,25 +169,34 @@
                                         <div class="btn-group">
                                             <a href="index.php?ruta=ver-documento-soporte&idDS=' . e($value["id"]) . '" class="btn btn-info" title="Ver Detalle"><i class="fa fa-eye"></i></a>';
 
-                                if ($value["estado_dian"] == "borrador") {
-                                    if (puedeAccion('documento_soporte', 'editar')) {
+                                // Botón para ver en DIAN (Disponible con el permiso "Ver")
+                                if (!empty($value["cuds"])) {
+                                    echo '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . e($value["cuds"]) . '" target="_blank" class="btn btn-success" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>';
+                                }
+
+                                if (puedeAccion('documento_soporte', 'editar')) {
+                                    // Botón Firmar
+                                    if ($value["estado_dian"] == "borrador") {
                                         echo '<button class="btn btnFirmarDS" style="background-color: black; color: white;" idDS="' . e($value["id"]) . '" title="Firmar y Enviar a Factus"><i class="fa fa-paper-plane"></i></button>';
                                     }
-                                    if (puedeAccion('documento_soporte', 'eliminar')) {
-                                        echo '<button class="btn btn-danger btnEliminarDS" idDS="' . e($value["id"]) . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
-                                    }
-                                } else {
-                                    echo '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . e($value["cuds"]) . '" target="_blank" class="btn btn-success" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>';
 
                                     // Botón para enviar por correo
                                     if ($value["estado_dian"] == "aceptada" || $value["estado_dian"] == "enviada") {
                                         echo '<button class="btn btn-primary btnEnviarEmailDS" idDS="' . e($value["id"]) . '" nombreProveedor="' . e(($proveedor["nombre"] ?? "N/A")) . '" emailProveedor="' . e(($proveedor["correo"] ?? "")) . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
                                     }
 
+                                    // Ver Notas de Ajuste
                                     if (ModeloFactus::mdlTieneNotaAjusteDS($value["id"])) {
-                                        echo '<button class="btn btn-warning btnVerNotasAjusteDS" idDS="' . e($value["id"]) . '" data-toggle="modal" data-target="#modalNotasAjusteDS" title="Ver Notas de Ajuste">
+                                        echo ' <button class="btn btn-warning btnVerNotasAjusteDS" idDS="' . e($value["id"]) . '" data-toggle="modal" data-target="#modalNotasAjusteDS" title="Ver Notas de Ajuste">
                                                 <i class="fa fa-list"></i>
                                               </button>';
+                                    }
+                                }
+
+                                // Botón Eliminar (Permiso Eliminar)
+                                if (puedeAccion('documento_soporte', 'eliminar')) {
+                                    if ($value["estado_dian"] == "borrador") {
+                                        echo '<button class="btn btn-danger btnEliminarDS" idDS="' . e($value["id"]) . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
                                     }
                                 }
 

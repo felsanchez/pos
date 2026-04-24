@@ -151,9 +151,9 @@
           </li>';
       }
 
-      if (puedeVer('ordenes-visita')) {
+      if (puedeVer('consulta-ventas')) {
         echo '<li>
-                      <a href="ordenes-visita">
+                      <a href="consulta-ventas">
                         <i class="fa fa-search"></i>
                         <span>Consulta de ventas</span>
                       </a>
@@ -169,7 +169,7 @@
                     </li>';
       }
 
-      if (puedeVer('factura_electronica')) {
+      if (puedeVer('factura_electronica') || puedeVer('notas_credito')) {
         echo '<li class="treeview">
             <a href="">
                 <i class="fa fa-file-text-o"></i>
@@ -178,24 +178,31 @@
                     <i class="fa fa-angle-left pull-right"></i>
                 </span>
             </a>
-            <ul class="treeview-menu">
-                <li>
+            <ul class="treeview-menu">';
+
+        if (puedeVer('factura_electronica')) {
+          echo '<li>
                     <a href="facturas-electronicas">
                         <i class="fa fa-circle-o"></i>
                         <span>Administrar Facturas</span>
                     </a>
-                </li>
-                <li>
+                </li>';
+        }
+
+        if (puedeVer('notas_credito')) {
+          echo '<li>
                     <a href="notas-credito">
                         <i class="fa fa-circle-o"></i>
                         <span>Notas Crédito</span>
                     </a>
-                </li>
-            </ul>
+                </li>';
+        }
+
+        echo '</ul>
         </li>';
       }
 
-      if (puedeVer('documento_soporte')) {
+      if (puedeVer('documento_soporte') || puedeVer('notas_ajuste')) {
         echo '<li class="treeview">
             <a href="">
                 <i class="fa fa-file-powerpoint-o"></i>
@@ -204,20 +211,27 @@
                     <i class="fa fa-angle-left pull-right"></i>
                 </span>
             </a>
-            <ul class="treeview-menu">
-                <li>
+            <ul class="treeview-menu">';
+
+        if (puedeVer('documento_soporte')) {
+          echo '<li>
                     <a href="documentos-soporte">
                         <i class="fa fa-circle-o"></i>
                         <span>Documentos soporte</span>
                     </a>
-                </li>
-                <li>
+                </li>';
+        }
+
+        if (puedeVer('notas_ajuste')) {
+          echo '<li>
                     <a href="notas-ajuste-ds">
                         <i class="fa fa-circle-o"></i>
                         <span>Notas de ajuste</span>
                     </a>
-                </li>
-            </ul>
+                </li>';
+        }
+
+        echo '</ul>
         </li>';
       }
 

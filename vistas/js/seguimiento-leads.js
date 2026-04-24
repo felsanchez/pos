@@ -1,7 +1,7 @@
 /*=============================================
 TABLA SEGUIMIENTO LEADS
 =============================================*/
-$(".tablaSeguimiento").DataTable({
+$("table.tablaSeguimiento").DataTable({
     "responsive": {
         details: {
             type: "inline",

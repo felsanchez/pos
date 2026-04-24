@@ -10,7 +10,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 <!-- Estilos responsive -->
 <style>
   /* Los estilos de tabla se manejan ahora mediante la estandarización global de DataTables */
-  
+
   /* Garantizar que el botón de expansión se vea siempre que haya columnas ocultas */
   #tablaGastos.collapsed td.dtr-control {
     position: relative !important;
@@ -85,7 +85,8 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
               <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Categoría:</label>
               <div class="input-group">
-                <span class="input-group-addon" style="background-color: #f9f9f9;"><i class="fa fa-search text-primary"></i></span>
+                <span class="input-group-addon" style="background-color: #f9f9f9;"><i
+                    class="fa fa-search text-primary"></i></span>
                 <select class="form-control select2" id="filtroCategoria" style="width: 150px; border-left: 0;">
                   <option value="">Seleccionar Categoría</option>
                   <?php
@@ -102,7 +103,8 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
               <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Proveedor:</label>
               <div class="input-group">
-                <span class="input-group-addon" style="background-color: #f9f9f9;"><i class="fa fa-search text-primary"></i></span>
+                <span class="input-group-addon" style="background-color: #f9f9f9;"><i
+                    class="fa fa-search text-primary"></i></span>
                 <select class="form-control select2" id="filtroProveedor" style="width: 150px; border-left: 0;">
                   <option value="">Seleccionar Proveedor</option>
                   <?php
@@ -238,15 +240,15 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                 echo '<td>
                   <div class="btn-group">';
                 if (puedeAccion('gastos', 'editar')) {
-                  echo '<button class="btn btn-warning btnEditarGasto" idGasto="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarGasto"><i class="fa fa-pencil"></i></button>';
+                  echo '<button class="btn btn-warning btnEditarGasto" idGasto="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarGasto" title="Editar gasto"><i class="fa fa-pencil"></i></button>';
                 }
                 if (puedeAccion('gastos', 'eliminar')) {
-                  echo '<button class="btn btn-danger btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . $value["concepto"] . '"><i class="fa fa-times"></i></button>';
+                  echo '<button class="btn btn-danger btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . $value["concepto"] . '" title="Eliminar gasto"><i class="fa fa-times"></i></button>';
                 }
                 echo '</div>
                 </td>';
 
-              echo '</tr>';
+                echo '</tr>';
               }
               ?>
 

@@ -274,24 +274,24 @@ if (!empty($params)) {
                   }
                   ?>
 
-                  <td contenteditable="true" class="celda-observacion" data-id="<?= $value['id']; ?>"><?= trim($value['observacion']); ?></td>
+                  <td contenteditable="true" class="celda-observacion" data-id="<?= $value['id']; ?>">
 
+                    <?= trim($value['observacion']); ?>
+                  </td>
                   <td class="col-acciones">
                     <div class="btn-group">
                       <?php if (puedeAccion('actividades', 'editar')): ?>
                         <button class="btn btn-warning btnEditarActividad" data-id="<?php echo $value['id'] ?? ''; ?>"
-                          data-toggle="modal" data-target="#modalEditarActividad"
-                          idActividad="<?php echo $value["id"]; ?>"><i class="fa fa-pencil"></i></button>
+                          data-toggle="modal" data-target="#modalEditarActividad" idActividad="<?php echo $value["id"]; ?>"
+                          title="Editar actividad"><i class="fa fa-pencil"></i></button>
                       <?php endif; ?>
-
                       <?php if (puedeAccion('actividades', 'eliminar')): ?>
-                        <button class="btn btn-danger btnEliminarActividad" idActividad="<?php echo $value["id"]; ?>"><i
-                            class="fa fa-times"></i></button>
+                        <button class="btn btn-danger btnEliminarActividad" idActividad="<?php echo $value["id"]; ?>"
+                          title="Eliminar actividad"><i class="fa fa-times"></i></button>
                       <?php endif; ?>
                     </div>
                   </td>
                 </tr>
-
                 <?php
               endforeach;
               ?>

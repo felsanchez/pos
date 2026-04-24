@@ -2,7 +2,7 @@
 CARGAR TABLA DINAMICA
 =============================================*/
 
-var table = $(".tablaProductos").DataTable({
+var table = $("table.tablaProductos").DataTable({
 	"ajax": {
 		"url": "ajax/datatable-productos.ajax.php",
 		"dataSrc": function (json) {
@@ -188,7 +188,7 @@ $(document).ready(function () {
 		} else if ($.fn.DataTable.isDataTable('.tablaProductos')) {
 			
 			// Fallback si la variable global 'table' no estuviera disponible
-			var t = $('.tablaProductos').DataTable();
+			var t = $('table.tablaProductos').DataTable();
 			var idx = -1;
 			t.columns().every(function () {
 				if ($(this.header()).text().trim() === tituloBuscado) idx = this.index();

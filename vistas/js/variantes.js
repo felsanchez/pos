@@ -44,7 +44,7 @@ var dtVariantesOptions = {
     }
 };
 
-$(document).ready(function() {
+$(document).ready(function () {
     if ($.fn.DataTable.isDataTable('#tablaTiposVariantes')) {
         $('#tablaTiposVariantes').DataTable().destroy();
     }
@@ -54,7 +54,7 @@ $(document).ready(function() {
 /*=============================================
 AUTOCOMPLETAR ORDEN AL ABRIR MODAL DE TIPO
 =============================================*/
-$(document).on("click", ".btnAbrirModalTipo", function(){
+$(document).on("click", ".btnAbrirModalTipo", function () {
 
     $.ajax({
         url: "ajax/variantes.ajax.php",
@@ -64,16 +64,16 @@ $(document).on("click", ".btnAbrirModalTipo", function(){
             // csrf_token removido - manejado por csrf-helper.js
         },
         dataType: "json",
-        success: function(respuesta){
+        success: function (respuesta) {
             console.log("Siguiente orden tipo:", respuesta);
             $("#nuevoOrdenTipo").val(respuesta);
-            
+
             // Mensaje informativo
-            if(respuesta > 1){
+            if (respuesta > 1) {
                 $(".help-block").html("El orden se agregará al final de la lista. Puedes cambiarlo manualmente para insertarlo en otra posición.");
             }
         },
-        error: function(){
+        error: function () {
             $("#nuevoOrdenTipo").val(1);
         }
     });
@@ -84,7 +84,7 @@ $(document).on("click", ".btnAbrirModalTipo", function(){
 /*=============================================
 AUTOCOMPLETAR ORDEN AL ABRIR MODAL DE OPCIÓN
 =============================================*/
-$(document).on("click", "[data-target='#modalAgregarOpcion']", function(){
+$(document).on("click", "[data-target='#modalAgregarOpcion']", function () {
 
     var idTipo = $("#idTipoVarianteActual").val();
 
@@ -100,11 +100,11 @@ $(document).on("click", "[data-target='#modalAgregarOpcion']", function(){
         contentType: false,
         processData: false,
         dataType: "json",
-        success: function(respuesta){
+        success: function (respuesta) {
             console.log("Siguiente orden opción:", respuesta);
             $("#nuevoOrdenOpcion").val(respuesta);
         },
-        error: function(){
+        error: function () {
             $("#nuevoOrdenOpcion").val(1);
         }
     });
@@ -115,7 +115,7 @@ $(document).on("click", "[data-target='#modalAgregarOpcion']", function(){
 /*=============================================
 VER OPCIONES DE UN TIPO DE VARIANTE
 =============================================*/
-$(document).on("click", ".btnVerOpciones", function(){
+$(document).on("click", ".btnVerOpciones", function () {
 
     var idTipo = $(this).attr("idTipo");
     var nombreTipo = $(this).attr("nombreTipo");
@@ -140,29 +140,29 @@ $(document).on("click", ".btnVerOpciones", function(){
         contentType: false,
         processData: false,
         dataType: "json",
-        success: function(respuesta){
-            
+        success: function (respuesta) {
+
             console.log("Opciones cargadas:", respuesta);
 
             var html = "";
 
-            if(respuesta.length > 0){
+            if (respuesta.length > 0) {
 
                 var puedeEditar = $("#puedeEditarVariante").val() == "1";
                 var puedeEliminar = $("#puedeEliminarVariante").val() == "1";
 
-                for(var i = 0; i < respuesta.length; i++){
+                for (var i = 0; i < respuesta.length; i++) {
 
                     // Estado
                     var estadoHTML = "";
-                    if(puedeEditar){
-                        if(respuesta[i].estado == 1){
-                            estadoHTML = '<button class="btn btn-success btn-xs btnActivarOpcion" idOpcion="'+respuesta[i].id+'" estadoOpcion="0">Activado</button>';
+                    if (puedeEditar) {
+                        if (respuesta[i].estado == 1) {
+                            estadoHTML = '<button class="btn btn-success btn-xs btnActivarOpcion" idOpcion="' + respuesta[i].id + '" estadoOpcion="0">Activado</button>';
                         } else {
-                            estadoHTML = '<button class="btn btn-danger btn-xs btnActivarOpcion" idOpcion="'+respuesta[i].id+'" estadoOpcion="1">Desactivado</button>';
+                            estadoHTML = '<button class="btn btn-danger btn-xs btnActivarOpcion" idOpcion="' + respuesta[i].id + '" estadoOpcion="1">Desactivado</button>';
                         }
                     } else {
-                        if(respuesta[i].estado == 1){
+                        if (respuesta[i].estado == 1) {
                             estadoHTML = '<button class="btn btn-success btn-xs">Activado</button>';
                         } else {
                             estadoHTML = '<button class="btn btn-danger btn-xs">Desactivado</button>';
@@ -170,16 +170,16 @@ $(document).on("click", ".btnVerOpciones", function(){
                     }
 
                     html += '<tr>';
-                    html += '<td>'+respuesta[i].nombre+'</td>';
-                    html += '<td>'+respuesta[i].orden+'</td>';
-                    html += '<td>'+estadoHTML+'</td>';
+                    html += '<td>' + respuesta[i].nombre + '</td>';
+                    html += '<td>' + respuesta[i].orden + '</td>';
+                    html += '<td>' + estadoHTML + '</td>';
                     html += '<td>';
                     html += '<div class="btn-group">';
-                    if(puedeEditar){
-                        html += '<button class="btn btn-warning btnEditarOpcion" idOpcion="'+respuesta[i].id+'" data-toggle="modal" data-target="#modalEditarOpcion"><i class="fa fa-pencil"></i></button>';
+                    if (puedeEditar) {
+                        html += '<button class="btn btn-warning btnEditarOpcion" idOpcion="' + respuesta[i].id + '" data-toggle="modal" data-target="#modalEditarOpcion" title="Editar opción"><i class="fa fa-pencil"></i></button>';
                     }
-                    if(puedeEliminar){
-                        html += '<button class="btn btn-danger btnEliminarOpcion" idOpcion="'+respuesta[i].id+'" nombreOpcion="'+respuesta[i].nombre+'"><i class="fa fa-times"></i></button>';
+                    if (puedeEliminar) {
+                        html += '<button class="btn btn-danger btnEliminarOpcion" idOpcion="' + respuesta[i].id + '" nombreOpcion="' + respuesta[i].nombre + '" title="Eliminar opción"><i class="fa fa-times"></i></button>';
                     }
                     html += '</div>';
                     html += '</td>';
@@ -198,7 +198,7 @@ $(document).on("click", ".btnVerOpciones", function(){
 
             $("#tablaOpciones").DataTable(dtVariantesOptions);
         },
-        error: function(jqXHR, textStatus, errorThrown){
+        error: function (jqXHR, textStatus, errorThrown) {
             console.log("Error al cargar opciones:", textStatus, errorThrown);
         }
     });
@@ -210,7 +210,7 @@ $(document).on("click", ".btnVerOpciones", function(){
 /*=============================================
 ACTIVAR/DESACTIVAR TIPO DE VARIANTE CON EFECTO
 =============================================*/
-$(document).on("click", ".btnActivarTipo", function(){
+$(document).on("click", ".btnActivarTipo", function () {
 
     var idTipo = $(this).attr("idTipo");
     var estadoTipo = $(this).attr("estadoTipo");
@@ -219,7 +219,7 @@ $(document).on("click", ".btnActivarTipo", function(){
 
     // Agregar efecto de fade
     fila.css('opacity', '0.5');
-    
+
     // Deshabilitar botón temporalmente
     boton.prop('disabled', true);
     var textoOriginal = boton.html();
@@ -237,15 +237,15 @@ $(document).on("click", ".btnActivarTipo", function(){
         cache: false,
         contentType: false,
         processData: false,
-        success: function(respuesta){
-            
+        success: function (respuesta) {
+
             // Pequeño delay para ver el efecto
-            setTimeout(function(){
-                
-                if(respuesta == "ok"){
-                    
+            setTimeout(function () {
+
+                if (respuesta == "ok") {
+
                     // Cambiar el estado del botón con animación
-                    if(estadoTipo == 0){
+                    if (estadoTipo == 0) {
                         boton.removeClass('btn-success').addClass('btn-danger');
                         boton.html('Desactivado');
                         boton.attr('estadoTipo', 1);
@@ -257,9 +257,9 @@ $(document).on("click", ".btnActivarTipo", function(){
 
                     // Efecto de "parpadeo" para indicar cambio
                     fila.css('background-color', '#d4edda');
-                    fila.animate({opacity: 1}, 300);
-                    
-                    setTimeout(function(){
+                    fila.animate({ opacity: 1 }, 300);
+
+                    setTimeout(function () {
                         fila.css('background-color', '');
                     }, 1000);
 
@@ -269,7 +269,7 @@ $(document).on("click", ".btnActivarTipo", function(){
                     boton.html(textoOriginal);
                     boton.prop('disabled', false);
                     fila.css('opacity', '1');
-                    
+
                     swal({
                         type: "error",
                         title: "Error al actualizar el estado",
@@ -277,15 +277,15 @@ $(document).on("click", ".btnActivarTipo", function(){
                         confirmButtonText: "Cerrar"
                     });
                 }
-                
+
             }, 400); // Delay para ver el efecto
-            
+
         },
-        error: function(){
+        error: function () {
             boton.html(textoOriginal);
             boton.prop('disabled', false);
             fila.css('opacity', '1');
-            
+
             swal({
                 type: "error",
                 title: "Error en la conexión",
@@ -300,7 +300,7 @@ $(document).on("click", ".btnActivarTipo", function(){
 /*=============================================
 ACTIVAR/DESACTIVAR OPCIÓN DE VARIANTE CON EFECTO
 =============================================*/
-$(document).on("click", ".btnActivarOpcion", function(){
+$(document).on("click", ".btnActivarOpcion", function () {
 
     var idOpcion = $(this).attr("idOpcion");
     var estadoOpcion = $(this).attr("estadoOpcion");
@@ -309,7 +309,7 @@ $(document).on("click", ".btnActivarOpcion", function(){
 
     // Agregar efecto de fade
     fila.css('opacity', '0.5');
-    
+
     // Deshabilitar botón temporalmente
     boton.prop('disabled', true);
     var textoOriginal = boton.html();
@@ -327,15 +327,15 @@ $(document).on("click", ".btnActivarOpcion", function(){
         cache: false,
         contentType: false,
         processData: false,
-        success: function(respuesta){
-            
+        success: function (respuesta) {
+
             // Pequeño delay para ver el efecto
-            setTimeout(function(){
-                
-                if(respuesta == "ok"){
-                    
+            setTimeout(function () {
+
+                if (respuesta == "ok") {
+
                     // Cambiar el estado del botón con animación
-                    if(estadoOpcion == 0){
+                    if (estadoOpcion == 0) {
                         boton.removeClass('btn-success').addClass('btn-danger');
                         boton.html('Desactivado');
                         boton.attr('estadoOpcion', 1);
@@ -347,9 +347,9 @@ $(document).on("click", ".btnActivarOpcion", function(){
 
                     // Efecto de "parpadeo" para indicar cambio
                     fila.css('background-color', '#d4edda');
-                    fila.animate({opacity: 1}, 300);
-                    
-                    setTimeout(function(){
+                    fila.animate({ opacity: 1 }, 300);
+
+                    setTimeout(function () {
                         fila.css('background-color', '');
                     }, 1000);
 
@@ -359,7 +359,7 @@ $(document).on("click", ".btnActivarOpcion", function(){
                     boton.html(textoOriginal);
                     boton.prop('disabled', false);
                     fila.css('opacity', '1');
-                    
+
                     swal({
                         type: "error",
                         title: "Error al actualizar el estado",
@@ -367,15 +367,15 @@ $(document).on("click", ".btnActivarOpcion", function(){
                         confirmButtonText: "Cerrar"
                     });
                 }
-                
+
             }, 400); // Delay para ver el efecto
-            
+
         },
-        error: function(){
+        error: function () {
             boton.html(textoOriginal);
             boton.prop('disabled', false);
             fila.css('opacity', '1');
-            
+
             swal({
                 type: "error",
                 title: "Error en la conexión",
@@ -392,7 +392,7 @@ $(document).on("click", ".btnActivarOpcion", function(){
 /*=============================================
 EDITAR TIPO DE VARIANTE
 =============================================*/
-$(document).on("click", ".btnEditarTipoVariante", function(){
+$(document).on("click", ".btnEditarTipoVariante", function () {
 
     var idTipo = $(this).attr("idTipo");
 
@@ -408,8 +408,8 @@ $(document).on("click", ".btnEditarTipoVariante", function(){
         contentType: false,
         processData: false,
         dataType: "json",
-        success: function(respuesta){
-            
+        success: function (respuesta) {
+
             $("#editarTipoVariante").val(respuesta["nombre"]);
             $("#editarOrdenTipo").val(respuesta["orden"]);
             $("#idTipo").val(respuesta["id"]);
@@ -423,7 +423,7 @@ $(document).on("click", ".btnEditarTipoVariante", function(){
 /*=============================================
 EDITAR OPCIÓN DE VARIANTE
 =============================================*/
-$(document).on("click", ".btnEditarOpcion", function(){
+$(document).on("click", ".btnEditarOpcion", function () {
 
     var idOpcion = $(this).attr("idOpcion");
 
@@ -439,8 +439,8 @@ $(document).on("click", ".btnEditarOpcion", function(){
         contentType: false,
         processData: false,
         dataType: "json",
-        success: function(respuesta){
-            
+        success: function (respuesta) {
+
             console.log("Datos de opción:", respuesta);
 
             $("#editarOpcion").val(respuesta["nombre"]);
@@ -448,7 +448,7 @@ $(document).on("click", ".btnEditarOpcion", function(){
             $("#idOpcion").val(respuesta["id"]);
 
         },
-        error: function(jqXHR, textStatus, errorThrown){
+        error: function (jqXHR, textStatus, errorThrown) {
             console.log("Error al cargar opción:", textStatus, errorThrown);
         }
     });
@@ -460,11 +460,11 @@ $(document).on("click", ".btnEditarOpcion", function(){
 ELIMINAR TIPO DE VARIANTE
 =============================================*/
 
-$(document).on("click", ".btnEliminarTipo", function(){ 
+$(document).on("click", ".btnEliminarTipo", function () {
 
     var idTipo = $(this).attr("idTipo");
 
-    var nombreTipo = $(this).attr("nombreTipo"); 
+    var nombreTipo = $(this).attr("nombreTipo");
 
     swal({
 
@@ -476,40 +476,40 @@ $(document).on("click", ".btnEliminarTipo", function(){
         cancelButtonColor: '#d33',
         cancelButtonText: 'Cancelar',
         confirmButtonText: 'Sí, eliminar tipo!'
-    }).then(function(result){ 
+    }).then(function (result) {
 
-        if(result.value){ 
+        if (result.value) {
 
             var datos = new FormData();
 
-            datos.append("idEliminarTipo", idTipo); 
+            datos.append("idEliminarTipo", idTipo);
             // csrf_token removido - manejado por csrf-helper.js
 
-            $.ajax({ 
+            $.ajax({
 
-                url:"ajax/variantes.ajax.php",
+                url: "ajax/variantes.ajax.php",
                 method: "POST",
                 data: datos,
                 cache: false,
                 contentType: false,
                 processData: false,
                 dataType: "json",
-                success: function(respuesta){
+                success: function (respuesta) {
 
-                    if(respuesta == "ok"){
+                    if (respuesta == "ok") {
 
                         swal({
                             type: "success",
                             title: "¡El tipo de variante ha sido eliminado correctamente!",
                             showConfirmButton: true,
                             confirmButtonText: "Cerrar"
-                        }).then(function(result){
-                            if(result.value){
+                        }).then(function (result) {
+                            if (result.value) {
                                 window.location = "variantes";
                             }
                         });
 
-                     } else {
+                    } else {
                         swal({
                             type: "error",
                             title: "¡No se puede eliminar!",
@@ -518,9 +518,9 @@ $(document).on("click", ".btnEliminarTipo", function(){
                             confirmButtonText: "Cerrar"
                         });
 
-                     }
+                    }
 
-                } 
+                }
 
             });
 
@@ -529,17 +529,17 @@ $(document).on("click", ".btnEliminarTipo", function(){
     });
 
 });
- 
+
 
 /*=============================================
 ELIMINAR OPCIÓN DE VARIANTE
 =============================================*/
 
-$(document).on("click", ".btnEliminarOpcion", function(){ 
+$(document).on("click", ".btnEliminarOpcion", function () {
 
     var idOpcion = $(this).attr("idOpcion");
 
-    var nombreOpcion = $(this).attr("nombreOpcion"); 
+    var nombreOpcion = $(this).attr("nombreOpcion");
 
     swal({
 
@@ -551,47 +551,47 @@ $(document).on("click", ".btnEliminarOpcion", function(){
         cancelButtonColor: '#d33',
         cancelButtonText: 'Cancelar',
         confirmButtonText: 'Sí, eliminar opción!'
-    }).then(function(result){
+    }).then(function (result) {
 
-         if(result.value){ 
+        if (result.value) {
 
             var datos = new FormData();
 
-            datos.append("idEliminarOpcion", idOpcion); 
+            datos.append("idEliminarOpcion", idOpcion);
             // csrf_token removido - manejado por csrf-helper.js
 
             $.ajax({
 
-                 url:"ajax/variantes.ajax.php",
+                url: "ajax/variantes.ajax.php",
                 method: "POST",
                 data: datos,
                 cache: false,
                 contentType: false,
                 processData: false,
                 dataType: "json",
-                success: function(respuesta){
+                success: function (respuesta) {
 
-                     if(respuesta == "ok"){
+                    if (respuesta == "ok") {
                         swal({
                             type: "success",
                             title: "¡La opción ha sido eliminada correctamente!",
                             showConfirmButton: true,
                             confirmButtonText: "Cerrar"
-                        }).then(function(result){
+                        }).then(function (result) {
 
-                            if(result.value){
+                            if (result.value) {
 
                                 // Recargar las opciones del tipo actual
 
                                 var idTipo = $("#idTipoVarianteActual").val();
 
-                                $(".btnVerOpciones[idTipo='"+idTipo+"']").click();
+                                $(".btnVerOpciones[idTipo='" + idTipo + "']").click();
 
                             }
 
-                        }); 
+                        });
 
-                    } else { 
+                    } else {
 
                         swal({
                             type: "error",
@@ -599,9 +599,9 @@ $(document).on("click", ".btnEliminarOpcion", function(){
                             text: "Esta opción está siendo usada en productos existentes",
                             showConfirmButton: true,
                             confirmButtonText: "Cerrar"
-                        }); 
+                        });
 
-                    } 
+                    }
 
                 }
             });
@@ -609,6 +609,6 @@ $(document).on("click", ".btnEliminarOpcion", function(){
         }
 
     });
- 
+
 
 });

@@ -477,41 +477,49 @@ if ($xml) {
                                 <i class="fa fa-eye"></i>
                                </button>
 
-                             ' . (!empty($value["qr_data"]) ? '<a class="btn btn-success" href="' . $value["qr_data"] . '" target="_blank" data-toggle="tooltip" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>' : '') . '
-
                              ';
+
+                // Ver en DIAN (Disponible con el permiso "Ver")
+                if (!empty($value["qr_data"])) {
+                  echo '<a class="btn btn-success" href="' . $value["qr_data"] . '" target="_blank" data-toggle="tooltip" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>';
+                }
+
                 if (puedeAccion('factura_electronica', 'editar')) {
-                  echo ((isset($value["estado_dian"]) && $value["estado_dian"] == "creada") ?
-                    '<button class="btn btnFirmarFactura" style="background-color: black; color: white;" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
+
+                  // Firmar (para borradores)
+                  if (isset($value["estado_dian"]) && $value["estado_dian"] == "creada") {
+                    echo '<button class="btn btnFirmarFactura" style="background-color: black; color: white;" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
                                         <i class="fa fa-paper-plane"></i>
-                                    </button>' : '') . '
-                                    ' . ((isset($value["estado_dian"]) && in_array($value["estado_dian"], ['creada', 'pendiente'])) ?
-                    '<a class="btn btn-warning" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador">
+                                    </button>';
+                  }
+
+                  // Editar Borrador
+                  if (isset($value["estado_dian"]) && in_array($value["estado_dian"], ['creada', 'pendiente'])) {
+                    echo '<a class="btn btn-warning" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador">
                                         <i class="fa fa-pencil"></i>
-                                    </a>' : '');
-                }
-                echo ' ';
+                                    </a>';
+                  }
 
-                if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
-                  echo ' <button class="btn btn-primary btnEnviarEmail" idVenta="' . $value["id"] . '" nombreCliente="' . $nombreCliente . '" emailCliente="' . $value["email_cliente"] . '" title="Enviar por Correo">
-                                <i class="fa fa-envelope"></i>
-                              </button>';
-                }
+                  // Enviar por Correo
+                  if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
+                    echo ' <button class="btn btn-primary btnEnviarEmail" idVenta="' . $value["id"] . '" nombreCliente="' . $nombreCliente . '" emailCliente="' . $value["email_cliente"] . '" title="Enviar por Correo">
+                                  <i class="fa fa-envelope"></i>
+                                </button>';
+                  }
 
-                echo ' ';
-
-                // Botón de las Notas Crédito (solo si la factura tiene NC)
-                if (in_array($value["id"], $ventasConNC)) {
-                  echo '<button class="btn btn-warning btnVerNotasCredito" idVenta="' . $value["id"] . '" data-toggle="modal" data-target="#modalNotasCredito" title="Ver Notas Crédito">
-                                       <i class="fa fa-list"></i>
-                                     </button>';
+                  // Botón de las Notas Crédito (solo si la factura tiene NC)
+                  if (in_array($value["id"], $ventasConNC)) {
+                    echo ' <button class="btn btn-warning btnVerNotasCredito" idVenta="' . $value["id"] . '" data-toggle="modal" data-target="#modalNotasCredito" title="Ver Notas Crédito">
+                                         <i class="fa fa-list"></i>
+                                       </button>';
+                  }
                 }
 
                 if (puedeAccion('factura_electronica', 'eliminar')) {
                   // Solo mostrar botón eliminar si la factura NO ha sido firmada/aceptada
                   $estadosNoEliminables = ['enviada', 'aceptada'];
                   if (!in_array($value["estado_dian"], $estadosNoEliminables)) {
-                    echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar Borrador">
+                    echo ' <button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar Borrador">
                                         <i class="fa fa-trash"></i>
                                       </button>';
                   }
@@ -1188,7 +1196,7 @@ $(document).ready(function () {
               quitarLoaderGlobal();
            }
         },
-        "order": [[10, "desc"]], // Fecha
+        "order": [[9, "desc"]], // Fecha
         "responsive": {
           "details": {
             "type": "inline",

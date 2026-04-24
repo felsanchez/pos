@@ -4,7 +4,7 @@ $(document).ready(function () {
 	console.log("✅ jQuery está funcionando");
 
 	// Forzar inicialización limpia para asegurar modo responsivo
-	$(".tablaProveedores").DataTable({
+	$("table.tablaProveedores").DataTable({
 			"destroy": true,
 			"order": [[0, "asc"]],
 			"autoWidth": false,

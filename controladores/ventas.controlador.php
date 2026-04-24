@@ -455,7 +455,7 @@ class ControladorVentas
 
 			$respuesta = ModeloVentas::mdlIngresarVenta($tabla, $datos);
 
-			if ($respuesta == "ok") {
+			if (is_numeric($respuesta)) {
 
 				// 🔹 ACTUALIZAR EL CONSECUTIVO en la BD ahora que la venta se guardó correctamente
 				ModeloVentas::mdlActualizarConsecutivo($tabla, $codigoVenta);
@@ -473,7 +473,8 @@ class ControladorVentas
 				 =============================================*/
 				if ((isset($_POST["activarFacturaElectronica"]) && $_POST["activarFacturaElectronica"] == "1") || isset($_POST["guardarVentaFactus"])) {
 					// Obtener el ID de la venta recién insertada
-					$ultimaVenta = ModeloVentas::mdlMostrarVentas("ventas", "codigo", $codigoVenta);
+					$idVenta = $respuesta;
+					$ultimaVenta = ModeloVentas::mdlMostrarVentas("ventas", "id", $idVenta);
 
 					if ($ultimaVenta) {
 						require_once __DIR__ . "/factus.controlador.php";
@@ -2068,7 +2069,7 @@ class ControladorVentas
 			// INSERTAR COMO UNA NUEVA VENTA (TIPO FE)
 			$respuesta = ModeloVentas::mdlIngresarVenta($tabla, $datos);
 
-			if ($respuesta == "ok") {
+			if (is_numeric($respuesta)) {
 
 				// Verificar stock
 				ControladorNotificaciones::ctrVerificarStockProductos();
@@ -2083,8 +2084,7 @@ class ControladorVentas
 				require_once __DIR__ . "/factus.controlador.php";
 
 				// Recuperar ID venta
-				$ventaGuardada = ModeloVentas::mdlMostrarVentas($tabla, "codigo", $codigoVenta);
-				$idVenta = $ventaGuardada["id"];
+				$idVenta = $respuesta;
 
 				// Generar factura electrónica utilizando el controlador unificado
 				// Se usa false para guardar como borrador (SIN FIRMAR)

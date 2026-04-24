@@ -1204,7 +1204,6 @@ MODAL: CREAR / EDITAR PERFIL (FUERA DEL FORM)
                 <th class="text-center">Crear</th>
                 <th class="text-center">Editar</th>
                 <th class="text-center">Eliminar</th>
-                <th class="text-center">Descargar</th>
               </tr>
             </thead>
             <tbody>
@@ -1219,13 +1218,13 @@ MODAL: CREAR / EDITAR PERFIL (FUERA DEL FORM)
                 'proveedores'          => ['imprimir'],
                 'clientes'             => ['imprimir'],
                 'actividades'          => ['imprimir'],
-                'seguimiento_leads'    => ['imprimir'],
+                'seguimiento_leads'    => ['crear', 'editar', 'imprimir'],
                 'gastos'               => ['imprimir'],
                 'notificaciones'       => ['crear','editar','eliminar','imprimir'],
                 'configuracion'        => ['crear','editar','eliminar','imprimir'],
                 'reporte_ventas'       => ['crear','editar','eliminar'],
                 'historial_stock'      => ['crear','editar','eliminar'],
-                'ordenes-visita'       => ['crear', 'editar', 'eliminar', 'imprimir'],
+                'consulta-ventas'      => ['crear', 'editar', 'eliminar', 'imprimir'],
                 'ordenes'              => ['imprimir'],
                 'ventas'               => ['imprimir'],
                 // factura_electronica, documento_soporte, notas_credito, notas_ajuste conservan 'imprimir' (Descargar)
@@ -1235,7 +1234,7 @@ MODAL: CREAR / EDITAR PERFIL (FUERA DEL FORM)
               ?>
               <tr data-modulo="<?php echo $slug; ?>">
                 <td><strong><?php echo $nombreModulo; ?></strong></td>
-                <?php foreach (['ver','crear','editar','eliminar','imprimir'] as $accion): ?>
+                <?php foreach (['ver','crear','editar','eliminar'] as $accion): ?>
                 <td class="text-center">
                   <?php if (in_array($accion, $noAplica)): ?>
                     <span class="text-muted">—</span>
@@ -1400,6 +1399,9 @@ $(document).ready(function() {
         var accion = $(this).data('accion');
         permisos[modulo][accion] = $(this).is(':checked') ? 1 : 0;
       });
+
+      // Automatización: Si puede VER, habilitar automáticamente IMPRIMIR (Descargar)
+      permisos[modulo]['imprimir'] = (permisos[modulo]['ver'] == 1) ? 1 : 0;
     });
 
     var accion = id ? 'actualizarPerfil' : 'crearPerfil';

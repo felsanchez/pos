@@ -19,9 +19,9 @@ $(document).ready(function () {
             if ($.fn.DataTable.isDataTable('#tablaGastos')) {
                 $('#tablaGastos').DataTable().destroy();
             }
-                      return $('#tablaGastos').DataTable({
+            return $('#tablaGastos').DataTable({
                 "autoWidth": false,
-                "order": [[6, "desc"]], // Ordenar por fecha (columna 6 - nueva posición) desc
+                "order": [], // Respetar el orden del servidor (id DESC) para mostrar los más recientes arriba
                 "columnDefs": [
                     { 
                         "targets": 0, 
@@ -133,26 +133,144 @@ $(document).ready(function () {
             }
         });
     }
+
+    /*=============================================
+    FILTRAR GASTOS
+    =============================================*/
+    $("#btnFiltrarGastos").on("click", function () {
+        var fechaInicio = $("#filtroFechaInicio").val();
+        var fechaFin = $("#filtroFechaFin").val();
+        var categoria = $("#filtroCategoria").val();
+        var proveedor = $("#filtroProveedor").val();
+
+        console.log("Filtros:", fechaInicio, fechaFin, categoria, proveedor);
+
+        if ($.fn.DataTable.isDataTable('#tablaGastos')) {
+            $('#tablaGastos').DataTable().destroy();
+        }
+
+        var datos = new FormData();
+        datos.append("accion", "filtrarGastos");
+        datos.append("fechaInicio", fechaInicio);
+        datos.append("fechaFin", fechaFin);
+        datos.append("categoria", categoria);
+        datos.append("proveedor", proveedor);
+
+        $.ajax({
+            url: "ajax/gastos.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function (respuesta) {
+                $("#tablaGastos tbody").empty();
+
+                if (!respuesta || !Array.isArray(respuesta) || respuesta.length == 0) {
+                    $("#tablaGastos tbody").html('<tr><td colspan="9" class="text-center">No se encontraron gastos con los filtros seleccionados</td></tr>');
+                } else {
+                    respuesta.forEach(function (gasto) {
+                        var fecha = gasto.fecha ? new Date(gasto.fecha + 'T00:00:00') : null;
+                        var fechaFormateada = fecha ? ("0" + fecha.getDate()).slice(-2) + "/" +
+                            ("0" + (fecha.getMonth() + 1)).slice(-2) + "/" +
+                            fecha.getFullYear() : '-';
+
+                        var hoy = new Date();
+                        var esHoy = fecha && fecha.toDateString() === hoy.toDateString();
+                        var rowStyle = esHoy ? 'style="border-left: 6px solid #28a745 !important; background-color: #f0f9f4; box-shadow: inset 6px 0 0 #28a745;"' : '';
+
+                        var categoriaBadge = gasto.categoria_nombre ? '<span class="badge" style="background-color: ' + gasto.categoria_color + '">' + gasto.categoria_nombre + '</span>' : '-';
+                        
+                        var estadoBadge = '';
+                        if (gasto.estado == "aprobado") estadoBadge = '<button class="btn btn-success btn-xs">Aprobado</button>';
+                        else if (gasto.estado == "pendiente") estadoBadge = '<button class="btn btn-warning btn-xs">Pendiente</button>';
+                        else estadoBadge = '<button class="btn btn-danger btn-xs">Rechazado</button>';
+
+                        var monto = gasto.monto ? '$' + parseFloat(gasto.monto).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
+                        var imagen = gasto.imagen_comprobante ? '<img src="' + gasto.imagen_comprobante + '" class="img-thumbnail img-comprobante-clickeable" width="40px" style="cursor: pointer;" data-imagen="' + gasto.imagen_comprobante + '" data-idgasto="' + gasto.id + '" data-concepto="' + gasto.concepto + '">' : '<img src="vistas/img/gastos/default/sin-imagen.png" class="img-thumbnail img-comprobante-clickeable" width="40px" style="cursor: pointer;" data-imagen="" data-idgasto="' + gasto.id + '" data-concepto="' + gasto.concepto + '">';
+
+                        var fila = '<tr ' + rowStyle + '>';
+                        fila += '<td class="dtr-control">' + (gasto.concepto || '-') + '</td>';
+                        fila += '<td><strong>' + monto + '</strong></td>';
+                        fila += '<td>' + categoriaBadge + '</td>';
+                        fila += '<td>' + estadoBadge + '</td>';
+                        fila += '<td>' + (gasto.proveedor_nombre || '-') + '</td>';
+                        fila += '<td>' + imagen + '</td>';
+                        fila += '<td>' + fechaFormateada + '</td>';
+                        fila += '<td contenteditable="true" class="celda-notas-gasto" data-id="' + gasto.id + '">' + (gasto.notas || '') + '</td>';
+                        
+                        fila += '<td><div class="btn-group">';
+                        fila += '<button class="btn btn-warning btnEditarGasto" idGasto="' + gasto.id + '" data-toggle="modal" data-target="#modalEditarGasto"><i class="fa fa-pencil"></i></button>';
+                        fila += '<button class="btn btn-danger btnEliminarGasto" idGasto="' + gasto.id + '" conceptoGasto="' + (gasto.concepto || '') + '"><i class="fa fa-times"></i></button>';
+                        fila += '</div></td></tr>';
+
+                        $("#tablaGastos tbody").append(fila);
+                    });
+                }
+                window.inicializarTablaGastos();
+            }
+        });
+    });
+
+    /*=============================================
+    LIMPIAR FILTROS GASTOS
+    =============================================*/
+    $("#btnLimpiarGastos").on("click", function () {
+        $("#filtroFechaInicio").val("");
+        $("#filtroFechaFin").val("");
+        $("#filtroCategoria").val("").trigger('change');
+        $("#filtroProveedor").val("").trigger('change');
+        $("#daterange-btn span").html('<i class="fa fa-calendar"></i> Rango de fecha');
+        $("#btnFiltrarGastos").click();
+    });
+
+    /*=============================================
+    RANGO DE FECHAS GASTOS
+    =============================================*/
+    if ($('#daterange-btn').length > 0) {
+        $('#daterange-btn').daterangepicker(
+            {
+                ranges: {
+                    'Hoy': [moment(), moment()],
+                    'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+                    'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
+                    'Este mes': [moment().startOf('month'), moment().endOf('month')],
+                    'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                },
+                startDate: moment().subtract(29, 'days'),
+                endDate: moment(),
+                opens: 'left'
+            },
+            function (start, end) {
+                $('#daterange-btn span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                $("#filtroFechaInicio").val(start.format('YYYY-MM-DD'));
+                $("#filtroFechaFin").val(end.format('YYYY-MM-DD'));
+            }
+        );
+
+        // Inicializar los inputs ocultos con el valor por defecto al cargar
+        var drp = $('#daterange-btn').data('daterangepicker');
+        if (drp) {
+            $("#filtroFechaInicio").val(drp.startDate.format('YYYY-MM-DD'));
+            $("#filtroFechaFin").val(drp.endDate.format('YYYY-MM-DD'));
+        }
+    }
+
 });
 
 /*=============================================
 EDITAR GASTO
 =============================================*/
-
 $(document).on("click", ".btnEditarGasto", function () {
-
     var idGasto = $(this).attr("idGasto");
-    console.log("ID Gasto: " + idGasto);
-
-    // Rellenar el input hidden
     $('#modalEditarGasto input[name="idGasto"]').val(idGasto);
 
     var datos = new FormData();
     datos.append("idGasto", idGasto);
-    // csrf_token removido - manejado por csrf-helper.js
 
     $.ajax({
-
         url: "ajax/gastos.ajax.php",
         method: "POST",
         data: datos,
@@ -161,9 +279,6 @@ $(document).on("click", ".btnEditarGasto", function () {
         processData: false,
         dataType: "json",
         success: function (respuesta) {
-
-            console.log("Respuesta AJAX:", respuesta);
-
             $("#editarConceptoGasto").val(respuesta["concepto"]);
             $("#editarMontoGasto").val(respuesta["monto"]);
             $("#editarFechaGasto").val(respuesta["fecha"]);
@@ -175,33 +290,23 @@ $(document).on("click", ".btnEditarGasto", function () {
             $("#editarNotasGasto").val(respuesta["notas"]);
             $("#imagenActual").val(respuesta["imagen_comprobante"]);
 
-            // Mostrar preview de imagen si existe
             if (respuesta["imagen_comprobante"] != "" && respuesta["imagen_comprobante"] != null) {
                 $("#previsualizarImagen").html('<img src="' + respuesta["imagen_comprobante"] + '" class="img-thumbnail img-ampliar-gasto" style="width: 100px; height: 100px; object-fit: cover; cursor: pointer;">');
             } else {
                 $("#previsualizarImagen").html('');
             }
-
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            console.error("Error en AJAX:", textStatus, errorThrown);
         }
-
-    })
-
+    });
 });
 
 /*=============================================
 ELIMINAR GASTO
 =============================================*/
-
 $(document).on("click", ".btnEliminarGasto", function () {
-
 	var idGasto = $(this).attr("idGasto");
 	var conceptoGasto = $(this).attr("conceptoGasto");
 
 	swal({
-
 		title: '¿Está seguro de eliminar el gasto: "' + conceptoGasto + '"?',
 		text: "¡Si no lo está puede cancelar la acción!",
 		icon: 'warning',
@@ -211,13 +316,9 @@ $(document).on("click", ".btnEliminarGasto", function () {
 		cancelButtonText: 'Cancelar',
 		confirmButtonText: 'Sí, eliminar gasto!'
 	}).then((result) => {
-
 		if (result.value) {
-
 			var datos = new FormData();
 			datos.append("idGastoEliminar", idGasto);
-			// csrf_token removido - manejado por csrf-helper.js
-
 			$.ajax({
 				url: "ajax/gastos.ajax.php",
 				method: "POST",
@@ -227,50 +328,27 @@ $(document).on("click", ".btnEliminarGasto", function () {
 				processData: false,
 				success: function (respuesta) {
 					if (respuesta == "ok") {
-						swal({
-							icon: "success",
-							title: "¡Eliminado!",
-							text: "El gasto ha sido eliminado correctamente.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						}).then((result) => {
-							if (result.value) {
-								window.location.reload();
-							}
-						});
+						swal({ icon: "success", title: "¡Eliminado!", text: "El gasto ha sido eliminado correctamente." }).then(() => { location.reload(); });
 					} else {
-						swal({
-							icon: "error",
-							title: "Error",
-							text: "No se pudo eliminar el gasto. " + respuesta,
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
+						swal({ icon: "error", title: "Error", text: respuesta });
 					}
 				}
 			})
 		}
 	})
-})
+});
 
 /*=============================================
-EDITAR CATEGORÍA DE GASTO
+GESTIÓN DE CATEGORÍAS (EDITAR/ELIMINAR)
 =============================================*/
-
 $("#modalGestionarCategorias").on("click", ".btnEditarCategoriaGasto", function () {
-
     var idCategoria = $(this).attr("idCategoria");
-    console.log("ID Categoría: " + idCategoria);
-
-    // Rellenar el input hidden
     $('#modalEditarCategoria input[name="idCategoriaGasto"]').val(idCategoria);
 
     var datos = new FormData();
     datos.append("idCategoria", idCategoria);
-    // csrf_token removido - manejado por csrf-helper.js
 
     $.ajax({
-
         url: "ajax/categorias_gastos.ajax.php",
         method: "POST",
         data: datos,
@@ -279,49 +357,26 @@ $("#modalGestionarCategorias").on("click", ".btnEditarCategoriaGasto", function 
         processData: false,
         dataType: "json",
         success: function (respuesta) {
-
-            console.log("Respuesta AJAX Categoría:", respuesta);
-
             $("#editarNombreCategoriaGasto").val(respuesta["nombre"]);
             $("#editarColorCategoriaGasto").val(respuesta["color"]);
             $("#editarDescripcionCategoriaGasto").val(respuesta["descripcion"]);
-
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            console.error("Error en AJAX:", textStatus, errorThrown);
         }
-
-    })
-
+    });
 });
 
-/*=============================================
-ELIMINAR CATEGORÍA DE GASTO
-=============================================*/
-
 $("#modalGestionarCategorias").on("click", ".btnEliminarCategoriaGasto", function () {
-
 	var idCategoria = $(this).attr("idCategoria");
 	var nombreCategoria = $(this).attr("nombreCategoria");
 
 	swal({
-
 		title: '¿Está seguro de eliminar la categoría "' + nombreCategoria + '"?',
-		text: "¡Si no lo está puede cancelar la acción!",
 		icon: 'warning',
 		showCancelButton: true,
-		confirmButtonColor: '#3085d6',
-		cancelButtonColor: '#d33',
-		cancelButtonText: 'Cancelar',
-		confirmButtonText: 'Sí, eliminar categoría!'
+		confirmButtonText: 'Sí, eliminar!'
 	}).then((result) => {
-
 		if (result.value) {
-
 			var datos = new FormData();
 			datos.append("idCategoriaGastoEliminar", idCategoria);
-			// csrf_token removido - manejado por csrf-helper.js
-
 			$.ajax({
 				url: "ajax/categorias_gastos.ajax.php",
 				method: "POST",
@@ -331,58 +386,25 @@ $("#modalGestionarCategorias").on("click", ".btnEliminarCategoriaGasto", functio
 				processData: false,
 				success: function (respuesta) {
 					if (respuesta == "ok") {
-						swal({
-							icon: "success",
-							title: "¡Eliminada!",
-							text: "La categoría ha sido eliminada correctamente.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						}).then((result) => {
-							if (result.value) {
-								window.location.reload();
-							}
-						});
-					} else if (respuesta == "error_gastos_asociados") {
-						swal({
-							icon: "error",
-							title: "¡No se puede eliminar!",
-							text: "Esta categoría tiene gastos asociados.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
+						swal({ icon: "success", title: "¡Eliminada!" }).then(() => { location.reload(); });
 					} else {
-						swal({
-							icon: "error",
-							title: "Error",
-							text: "No se pudo eliminar la categoría. " + respuesta,
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
+						swal({ icon: "error", title: "Error", text: respuesta });
 					}
 				}
 			})
 		}
 	})
-})
+});
 
 /*=============================================
-AMPLIAR Y EDITAR IMAGEN COMPROBANTE
+IMAGEN COMPROBANTE (AMPLIAR/CAMBIAR)
 =============================================*/
-
-// Ampliar imagen de comprobante al hacer clic desde la tabla
-$(document).on("click", ".img-comprobante-clickeable", function () {
-    var rutaImagen = $(this).attr("data-imagen");
+$(document).on("click", ".img-comprobante-clickeable, .img-ampliar-gasto", function () {
+    var rutaImagen = $(this).attr("data-imagen") || $(this).attr("src");
     var idGasto = $(this).attr("data-idgasto");
     var concepto = $(this).attr("data-concepto");
 
-    // Si no hay imagen, mostrar placeholder
-    if (!rutaImagen || rutaImagen === "") {
-        rutaImagen = "vistas/img/gastos/default/sin-imagen.png";
-    }
-
-    console.log("ID Gasto:", idGasto);
-    console.log("Concepto:", concepto);
-    console.log("Ruta Imagen:", rutaImagen);
+    if (!rutaImagen || rutaImagen === "") rutaImagen = "vistas/img/gastos/default/sin-imagen.png";
 
     $("#imagenComprobanteAmpliada").attr("src", rutaImagen);
     $("#idGastoImagen").val(idGasto);
@@ -391,91 +413,31 @@ $(document).on("click", ".img-comprobante-clickeable", function () {
     $("#modalAmpliarComprobanteGasto").modal("show");
 });
 
-// Ampliar imagen desde el modal de editar (thumbnail)
-$(document).on("click", ".img-ampliar-gasto", function () {
-    var rutaImagen = $(this).attr("src");
-    $("#imagenComprobanteAmpliada").attr("src", rutaImagen);
-    $("#modalAmpliarComprobanteGasto").modal("show");
-});
-
-// Previsualizar nueva imagen cuando se selecciona
 $(document).on("change", ".nuevaImagenComprobante", function () {
     var imagen = this.files[0];
-
     if (imagen) {
         if (imagen["type"] != "image/jpeg" && imagen["type"] != "image/png") {
             $(".nuevaImagenComprobante").val("");
-            swal({
-                title: "Error al subir la imagen",
-                text: "¡La imagen debe estar en formato JPG o PNG!",
-                icon: "error",
-                confirmButtonText: "¡Cerrar!"
-            });
-        } else if (imagen["size"] > 2000000) {
-            $(".nuevaImagenComprobante").val("");
-            swal({
-                title: "Error al subir la imagen",
-                text: "¡La imagen no debe pesar más de 2MB!",
-                icon: "error",
-                confirmButtonText: "¡Cerrar!"
-            });
+            swal({ title: "Error", text: "Formato inválido", icon: "error" });
         } else {
-            var datosImagen = new FileReader;
-            datosImagen.readAsDataURL(imagen);
-
-            $(datosImagen).on("load", function (event) {
-                var rutaImagen = event.target.result;
-                $("#imagenComprobanteAmpliada").attr("src", rutaImagen);
-            });
+            var reader = new FileReader();
+            reader.readAsDataURL(imagen);
+            reader.onload = e => $("#imagenComprobanteAmpliada").attr("src", e.target.result);
         }
     }
 });
 
-// Guardar la nueva imagen del comprobante
 $(document).on("click", ".btnGuardarImagenComprobante", function () {
-
     var idGasto = $("#idGastoImagen").val();
     var concepto = $("#conceptoGasto").val();
     var imagen = $(".nuevaImagenComprobante")[0].files[0];
 
-    console.log("ID al guardar:", idGasto);
-    console.log("Concepto al guardar:", concepto);
-    console.log("Imagen al guardar:", imagen);
-
-    if (!imagen) {
-        swal({
-            title: "Advertencia",
-            text: "No has seleccionado ninguna imagen",
-            icon: "warning",
-            confirmButtonText: "¡Cerrar!"
-        });
-        return;
-    }
-
-    if (!idGasto) {
-        swal({
-            title: "Error",
-            text: "No se pudo obtener el ID del gasto",
-            icon: "error",
-            confirmButtonText: "¡Cerrar!"
-        });
-        return;
-    }
+    if (!imagen) return;
 
     var datos = new FormData();
     datos.append("idGastoImagen", idGasto);
     datos.append("conceptoGasto", concepto);
     datos.append("nuevaImagenComprobante", imagen);
-    // csrf_token removido - manejado por csrf-helper.js
-
-    // Mostrar loading
-    swal({
-        title: 'Cargando...',
-        allowOutsideClick: false,
-        didOpen: () => {
-            swal.showLoading()
-        }
-    });
 
     $.ajax({
         url: "ajax/gastos.ajax.php",
@@ -486,192 +448,23 @@ $(document).on("click", ".btnGuardarImagenComprobante", function () {
         processData: false,
         dataType: "json",
         success: function (respuesta) {
-            console.log("Respuesta del servidor:", respuesta);
-
             if (respuesta == "ok") {
-                swal({
-                    icon: "success",
-                    title: "¡La imagen ha sido actualizada correctamente!",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                }).then(function (result) {
-                    if (result.value) {
-                        window.location = "gastos";
-                    }
-                });
-            } else {
-                swal({
-                    icon: "error",
-                    title: "Error al actualizar la imagen",
-                    text: respuesta,
-                    confirmButtonText: "¡Cerrar!"
-                });
+                swal({ icon: "success", title: "Imagen actualizada" }).then(() => { location.reload(); });
             }
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            console.error("Error en AJAX:", textStatus, errorThrown);
-            console.error("Respuesta:", jqXHR.responseText);
-            swal({
-                icon: "error",
-                title: "Error de conexión",
-                text: "No se pudo conectar con el servidor",
-                confirmButtonText: "¡Cerrar!"
-            });
         }
     });
 });
 
 /*=============================================
-FILTRAR GASTOS
+EDITAR NOTAS (CONTENTEDITABLE)
 =============================================*/
-
-$("#btnFiltrarGastos").on("click", function () {
-
-    var fechaInicio = $("#filtroFechaInicio").val();
-    var fechaFin = $("#filtroFechaFin").val();
-    var categoria = $("#filtroCategoria").val();
-    var proveedor = $("#filtroProveedor").val();
-
-    console.log("Filtros:", fechaInicio, fechaFin, categoria, proveedor);
-
-    // Destruir instancia previa de DataTable para poder reconstruir
-    if ($.fn.DataTable.isDataTable('#tablaGastos')) {
-        $('#tablaGastos').DataTable().destroy();
-    }
-
-    var datos = new FormData();
-    datos.append("accion", "filtrarGastos");
-    datos.append("fechaInicio", fechaInicio);
-    datos.append("fechaFin", fechaFin);
-    datos.append("categoria", categoria);
-    datos.append("proveedor", proveedor);
-    // csrf_token removido - manejado por csrf-helper.js
-
-    $.ajax({
-
-        url: "ajax/gastos.ajax.php",
-        method: "POST",
-        data: datos,
-        cache: false,
-        contentType: false,
-        processData: false,
-        dataType: "json",
-        success: function (respuesta) {
-
-            console.log("Gastos filtrados respuesta:", respuesta);
-
-            // Limpiar tabla
-            $("#tablaGastos tbody").empty();
-
-            if (!respuesta || !Array.isArray(respuesta) || respuesta.length == 0) {
-                $("#tablaGastos tbody").html('<tr><td colspan="9" class="text-center">No se encontraron gastos con los filtros seleccionados</td></tr>');
-            } else {
-
-                // Llenar tabla con resultados
-                respuesta.forEach(function (gasto, index) {
-
-                    // Formatear fecha
-                    var fecha = gasto.fecha ? new Date(gasto.fecha + 'T00:00:00') : null;
-                    var fechaFormateada = fecha ? ("0" + fecha.getDate()).slice(-2) + "/" +
-                        ("0" + (fecha.getMonth() + 1)).slice(-2) + "/" +
-                        fecha.getFullYear() : '-';
-
-                    // Verificar si es hoy
-                    var hoy = new Date();
-                    var esHoy = fecha && fecha.toDateString() === hoy.toDateString();
-                    var rowStyle = esHoy ? 'style="border-left: 6px solid #28a745 !important; background-color: #f0f9f4; box-shadow: inset 6px 0 0 #28a745;"' : '';
-
-                    // Categoría badge
-                    var categoriaBadge = '';
-                    if (gasto.categoria_nombre) {
-                        categoriaBadge = '<span class="badge" style="background-color: ' + gasto.categoria_color + '">' + gasto.categoria_nombre + '</span>';
-                    } else {
-                        categoriaBadge = '-';
-                    }
-
-                    // Estado badge
-                    var estadoBadge = '';
-                    if (gasto.estado == "aprobado") {
-                        estadoBadge = '<button class="btn btn-success btn-xs">Aprobado</button>';
-                    } else if (gasto.estado == "pendiente") {
-                        estadoBadge = '<button class="btn btn-warning btn-xs">Pendiente</button>';
-                    } else {
-                        estadoBadge = '<button class="btn btn-danger btn-xs">Rechazado</button>';
-                    }
-
-                    // Formatear monto
-                    var monto = gasto.monto ? '$' + parseFloat(gasto.monto).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
-
-                    // Proveedor
-                    var proveedor = gasto.proveedor_nombre ? gasto.proveedor_nombre : '-';
-
-                    // Imagen
-                    var imagen = '';
-                    if (gasto.imagen_comprobante && gasto.imagen_comprobante != '') {
-                        imagen = '<img src="' + gasto.imagen_comprobante + '" class="img-thumbnail img-comprobante-clickeable" width="40px" style="cursor: pointer;" data-imagen="' + gasto.imagen_comprobante + '" data-idgasto="' + gasto.id + '" data-concepto="' + gasto.concepto + '">';
-                    } else {
-                        imagen = '<img src="vistas/img/gastos/default/sin-imagen.png" class="img-thumbnail img-comprobante-clickeable" width="40px" style="cursor: pointer;" data-imagen="" data-idgasto="' + gasto.id + '" data-concepto="' + gasto.concepto + '">';
-                    }
-
-                    // Notas (editable)
-                    var notas = gasto.notas ? gasto.notas : '';
-
-                    // Crear fila (9 columnas)
-                    var fila = '<tr ' + rowStyle + '>';
-                    fila += '<td class="dtr-control">' + (gasto.concepto || '-') + '</td>';
-                    fila += '<td><strong>' + monto + '</strong></td>';
-
-                    fila += '<td>' + categoriaBadge + '</td>';
-                    fila += '<td>' + estadoBadge + '</td>';
-                    fila += '<td>' + proveedor + '</td>';
-                    fila += '<td>' + imagen + '</td>';
-                    fila += '<td>' + fechaFormateada + '</td>';
-                    fila += '<td contenteditable="true" class="celda-notas-gasto" data-id="' + gasto.id + '">' + notas + '</td>';
-                    
-                    fila += '<td>';
-                    fila += '<div class="btn-group">';
-                    fila += '<button class="btn btn-warning btnEditarGasto" idGasto="' + gasto.id + '" data-toggle="modal" data-target="#modalEditarGasto"><i class="fa fa-pencil"></i></button>';
-                    fila += '<button class="btn btn-danger btnEliminarGasto" idGasto="' + gasto.id + '" conceptoGasto="' + (gasto.concepto || '') + '"><i class="fa fa-times"></i></button>';
-                    fila += '</div>';
-                    fila += '</td>';
-
-                    fila += '</tr>';
-
-                    $("#tablaGastos tbody").append(fila);
-                });
-            }
-
-            // Reinicializar DataTable tras cargar los nuevos datos
-            if (typeof window.inicializarTablaGastos === 'function') {
-                window.inicializarTablaGastos();
-            }
-
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            console.error("❌ Error en AJAX de filtrado:", textStatus, errorThrown);
-            console.error("Respuesta cruda del servidor:", jqXHR.responseText);
-        }
-
-    })
-
-});
-
-/*=============================================
-EDITAR NOTAS (CONTENTEDITABLE - DESKTOP Y MÓVIL)
-=============================================*/
-
-// Usar event delegation para que funcione con elementos dinámicos (desktop y móvil)
 $(document).on('blur', '.celda-notas-gasto', function () {
     const id = $(this).data('id');
     const nuevasNotas = $(this).text().trim();
     const $celdaActual = $(this);
 
-    if (!id) {
-        console.error('ERROR: No se encontró el ID del gasto');
-        return;
-    }
+    if (!id) return;
 
-    // Añadir clase de guardando
     $celdaActual.addClass('guardando');
 
     $.ajax({
@@ -683,79 +476,13 @@ $(document).on('blur', '.celda-notas-gasto', function () {
             csrf_token: $('meta[name="csrf-token"]').attr('content')
         },
         dataType: 'json',
-
         success: function (respuesta) {
-            console.log('Notas actualizadas exitosamente');
             $celdaActual.removeClass('guardando');
-
-            // Feedback visual: destello verde (estilo Actividades)
             $('.celda-notas-gasto[data-id="' + id + '"]').css('background-color', '#dff0d8');
-            setTimeout(function () {
+            setTimeout(() => {
                 $('.celda-notas-gasto[data-id="' + id + '"]').css('background-color', '');
             }, 500);
-
-            // Sincronizar con todas las celdas del mismo gasto (desktop y móvil)
-            $('.celda-notas-gasto[data-id="' + id + '"]').not($celdaActual).each(function () {
-                $(this).text(nuevasNotas);
-            });
-        },
-
-        error: function (xhr, status, error) {
-            console.error('Error al actualizar las notas:', error);
-            $celdaActual.removeClass('guardando');
-
-            swal({
-                icon: "error",
-                title: "Error al guardar la nota",
-                text: "No se pudo guardar la nota. Por favor, intente nuevamente.",
-                confirmButtonText: "Cerrar"
-            });
+            $('.celda-notas-gasto[data-id="' + id + '"]').not($celdaActual).text(nuevasNotas);
         }
     });
 });
-
-/*=============================================
-LIMPIAR FILTROS GASTOS
-=============================================*/
-
-$("#btnLimpiarGastos").on("click", function () {
-    $("#filtroFechaInicio").val("");
-    $("#filtroFechaFin").val("");
-    $("#filtroCategoria").val("").trigger('change');
-    $("#filtroProveedor").val("").trigger('change');
-
-    // Resetear texto del botón de rango
-    $("#daterange-btn span").html('<i class="fa fa-calendar"></i> Rango de fecha');
-
-    // Disparar el filtrado con campos vacíos (esto recargará todo)
-    $("#btnFiltrarGastos").click();
-});
-
-/*=============================================
-RANGO DE FECHAS GASTOS
-=============================================*/
-if ($('#daterange-btn').length > 0) {
-    $('#daterange-btn').daterangepicker(
-        {
-            ranges: {
-                'Hoy': [moment(), moment()],
-                'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
-                'Este mes': [moment().startOf('month'), moment().endOf('month')],
-                'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-            },
-            startDate: moment().subtract(29, 'days'),
-            endDate: moment()
-        },
-        function (start, end) {
-            $('#daterange-btn span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-
-            var fechaInicial = start.format('YYYY-MM-DD');
-            var fechaFinal = end.format('YYYY-MM-DD');
-
-            // Actualizar inputs ocultos
-            $("#filtroFechaInicio").val(fechaInicial);
-            $("#filtroFechaFin").val(fechaFinal);
-        }
-    );
-}

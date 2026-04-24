@@ -32,7 +32,6 @@
   #example:not(.datatable-ready)+.dataTables_wrapper {
     position: relative;
   }
-
 </style>
 
 
@@ -245,8 +244,9 @@ if ($xml) {
 
       <div class="box-body">
 
-        <div class="tabla-ventas table-responsive">
-          <table id="tablaListaVentas" class="table table-bordered table-striped tablaVentasListado display nowrap" width="100%">
+        <div class="tabla-ventas tablas tablaVentas table-responsive">
+          <table id="tablaListaVentas" class="table table-bordered table-striped tablaVentasListado display nowrap"
+            width="100%">
 
             <thead>
               <tr>
@@ -416,13 +416,13 @@ if ($xml) {
                           <div class="btn-group col-acciones">';
 
                 if (puedeAccion('ventas', 'editar')) {
-                  echo '<button class="btn btn-warning btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver Detalle de Venta" style="width: auto !important;">
+                  echo '<button class="btn btn-warning btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver detalle" style="width: auto !important;">
                               <i class="fa fa-eye"></i>
                             </button>';
                 }
 
                 if (puedeAccion('ventas', 'eliminar')) {
-                  echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '">
+                  echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar venta">
                                       <i class="fa fa-times"></i>
                                     </button>';
                 }
@@ -691,11 +691,11 @@ MODAL EDITAR CLIENTE
 
         $("#tablaListaVentas").DataTable({
           "autoWidth": false,
-          "initComplete": function(settings, json) {
-             $(this.api().table().node()).addClass('datatable-ready');
-             if (typeof quitarLoaderGlobal === 'function') {
-                quitarLoaderGlobal();
-             }
+          "initComplete": function (settings, json) {
+            $(this.api().table().node()).addClass('datatable-ready');
+            if (typeof quitarLoaderGlobal === 'function') {
+              quitarLoaderGlobal();
+            }
           },
           "order": [
             [8, "desc"]
@@ -703,61 +703,61 @@ MODAL EDITAR CLIENTE
           "responsive": {
             "details": {
               "type": "inline",
-              "renderer": function(api, rowIdx, columns) {
-                  // Mapeo de índice de columna → etiqueta y tipo especial
-                  var labels = {
-                    2: 'Vendedor',
-                    3: 'Forma de Pago',
-                    4: 'Imagen',
-                    5: 'Total',
-                    6: 'Notas',
-                    7: 'Observación',
-                    8: 'Fecha'
-                  };
+              "renderer": function (api, rowIdx, columns) {
+                // Mapeo de índice de columna → etiqueta y tipo especial
+                var labels = {
+                  2: 'Vendedor',
+                  3: 'Forma de Pago',
+                  4: 'Imagen',
+                  5: 'Total',
+                  6: 'Notas',
+                  7: 'Observación',
+                  8: 'Fecha'
+                };
 
-                  var idVenta = $(api.row(rowIdx).node()).attr('data-venta-id') || '';
-                  var finalHtml = '';
-                  var hasHidden = false;
+                var idVenta = $(api.row(rowIdx).node()).attr('data-venta-id') || '';
+                var finalHtml = '';
+                var hasHidden = false;
 
-                  $.each(columns, function(i, col) {
-                    // Solo mostrar columnas que DataTables realmente ocultó
-                    if (!col.hidden) return;
+                $.each(columns, function (i, col) {
+                  // Solo mostrar columnas que DataTables realmente ocultó
+                  if (!col.hidden) return;
 
-                    hasHidden = true;
-                    var colIdx = col.columnIndex;
-                    var label = labels[colIdx] || col.title || ('Columna ' + colIdx);
-                    var data  = col.data || '';
+                  hasHidden = true;
+                  var colIdx = col.columnIndex;
+                  var label = labels[colIdx] || col.title || ('Columna ' + colIdx);
+                  var data = col.data || '';
 
-                    // Tratamiento especial para la columna de Observación (editable)
-                    if (colIdx === 7) {
-                      var obsTexto = $('<div>').html(data).text().trim();
-                      finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
-                      finalHtml += '<span class="text-bold" style="display:block;color:#555;margin-bottom:4px;"><i class="fa fa-pencil-square"></i> ' + label + ':</span>';
-                      finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:24px;">' + obsTexto + '</div>';
-                      finalHtml += '</div>';
-                      return;
-                    }
-
-                    // Tratamiento especial para la columna de Notas (quitar HTML)
-                    if (colIdx === 6) {
-                      var notasTexto = $('<div>').html(data).text().trim();
-                      finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
-                      finalHtml += '<span class="text-bold" style="color:#555;"><i class="fa fa-magic"></i> ' + label + ': </span>';
-                      finalHtml += '<span style="color:#333;">' + (notasTexto || '<em style="color:#999;">Sin notas</em>') + '</span>';
-                      finalHtml += '</div>';
-                      return;
-                    }
-
-                    // Columnas genéricas
-                    finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
-                    finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
-                    finalHtml += '<span style="color:#333;">' + data + '</span>';
+                  // Tratamiento especial para la columna de Observación (editable)
+                  if (colIdx === 7) {
+                    var obsTexto = $('<div>').html(data).text().trim();
+                    finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
+                    finalHtml += '<span class="text-bold" style="display:block;color:#555;margin-bottom:4px;"><i class="fa fa-pencil-square"></i> ' + label + ':</span>';
+                    finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:24px;">' + obsTexto + '</div>';
                     finalHtml += '</div>';
-                  });
+                    return;
+                  }
 
-                  if (!hasHidden) return false;
+                  // Tratamiento especial para la columna de Notas (quitar HTML)
+                  if (colIdx === 6) {
+                    var notasTexto = $('<div>').html(data).text().trim();
+                    finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
+                    finalHtml += '<span class="text-bold" style="color:#555;"><i class="fa fa-magic"></i> ' + label + ': </span>';
+                    finalHtml += '<span style="color:#333;">' + (notasTexto || '<em style="color:#999;">Sin notas</em>') + '</span>';
+                    finalHtml += '</div>';
+                    return;
+                  }
 
-                  return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
+                  // Columnas genéricas
+                  finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+                  finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
+                  finalHtml += '<span style="color:#333;">' + data + '</span>';
+                  finalHtml += '</div>';
+                });
+
+                if (!hasHidden) return false;
+
+                return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
               }
             }
           },

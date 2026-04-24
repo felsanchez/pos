@@ -198,7 +198,7 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "orden-a-factura-electronica" ||
         $_GET["ruta"] == "cliente-ventas" ||
         $_GET["ruta"] == "actividades-cuadro" ||
-        $_GET["ruta"] == "ordenes-visita" ||
+        $_GET["ruta"] == "consulta-ventas" ||
         $_GET["ruta"] == "editarordenes-visita" ||
         $_GET["ruta"] == "proveedores" ||
         $_GET["ruta"] == "variantes" ||

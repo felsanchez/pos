@@ -1,6 +1,6 @@
 <?php
 
-if ($_SESSION["perfil"] == "Especial") {
+if ($_SESSION["perfil"] == "Especial" || !puedeAccion('seguimiento_leads', 'ver')) {
 
     echo '<script>
 
@@ -59,7 +59,9 @@ if ($_SESSION["perfil"] == "Especial") {
                         <tr>
 
                             <th style="width:10px">
-                                <input type="checkbox" id="checkAll">
+                                <?php if (puedeAccion('seguimiento_leads', 'eliminar')): ?>
+                                    <input type="checkbox" id="checkAll">
+                                <?php endif; ?>
                             </th>
                             <th>Ultimo seguimiento</th>
                             <th>Nombre Lead</th>
@@ -109,7 +111,11 @@ if ($_SESSION["perfil"] == "Especial") {
                             $pedido = !empty($value["hizo_pedido"]) ? '<span class="badge" style="background-color: #006400">' . $value["hizo_pedido"] . '</span>' : '';
 
                             echo '<tr>
-                    <td><input type="checkbox" class="checkItem" value="' . $value["id"] . '"></td>
+                    <td>';
+                            if (puedeAccion('seguimiento_leads', 'eliminar')) {
+                                echo '<input type="checkbox" class="checkItem" value="' . $value["id"] . '">';
+                            }
+                            echo '</td>
                     <td>' . $value["fecha"] . '</td>
                     <td>' . $value["nombre"] . '</td>
                     <td>' . $value["celular"] . '</td>

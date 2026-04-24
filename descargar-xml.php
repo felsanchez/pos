@@ -1,25 +1,29 @@
 <?php
 
+require_once "controladores/ventas.controlador.php";
+require_once "modelos/ventas.modelo.php";
 require_once "controladores/factus.controlador.php";
 require_once "modelos/factus.modelo.php";
 require_once "modelos/conexion.php";
 
-if (isset($_GET["id"])) {
+if (isset($_GET["xml"])) {
 
-    $idNota = (int)$_GET["id"];
+    $codigo = $_GET["xml"];
 
-    // 1. Buscar la nota localmente
-    $nota = ControladorFactus::ctrMostrarNotasAjusteDS("id", $idNota);
-
-    if (!$nota) {
-        die("No se encontró el registro de la nota de ajuste con ID: " . htmlspecialchars($idNota));
+    // 1. Buscar la venta localmente
+    $venta = ControladorVentas::ctrMostrarVentas("codigo", $codigo);
+    if (!$venta) {
+        $venta = ControladorVentas::ctrMostrarVentas("numero_factura", $codigo);
     }
 
-    if ($nota["estado_dian"] == "borrador" || empty($nota["numero_nota_ajuste"])) {
-        die("La nota es un borrador y aún no ha sido procesada por la DIAN. No hay XML disponible.");
+    if (!$venta) {
+        die("No se encontró registro de la venta: " . htmlspecialchars($codigo));
     }
 
-    $numeroNA = $nota["numero_nota_ajuste"];
+    $numeroFactura = $venta["numero_factura"];
+    if (empty($numeroFactura)) {
+        die("Esta factura no tiene un número oficial de la DIAN aún. Sólo se puede descargar el XML de facturas ya enviadas.");
+    }
 
     // 2. Autenticar con Factus
     $auth = ControladorFactus::ctrAutenticar();
@@ -29,9 +33,9 @@ if (isset($_GET["id"])) {
         exit;
     }
 
-    // 3. Llamar al endpoint correcto de descarga de XML
+    // 3. Llamar al endpoint de descarga de XML
     $config = ModeloFactus::mdlObtenerConfiguracion();
-    $url = $config['api_url'] . '/v1/adjustment-notes/download-xml/' . $numeroNA;
+    $url = $config['api_url'] . '/v1/bills/download-xml/' . $numeroFactura;
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -46,12 +50,13 @@ if (isset($_GET["id"])) {
     curl_close($ch);
 
     if ($httpCode !== 200) {
-        die("Error al obtener el XML de la Nota de Ajuste desde Factus (HTTP $httpCode). Verifique que la nota haya sido enviada correctamente.");
+        die("Error al obtener el XML desde Factus (HTTP $httpCode). Verifique que la factura haya sido enviada correctamente a la DIAN.");
     }
 
     $data = json_decode($respuesta, true);
     $xmlBase64 = $data['data']['xml_base_64_encoded'] ?? '';
-    $fileName   = $data['data']['file_name'] ?? $numeroNA;
+    $fileName   = $data['data']['file_name'] ?? $numeroFactura;
+    // Asegurar que siempre tenga la extensión .xml
     if (substr($fileName, -4) !== '.xml') {
         $fileName .= '.xml';
     }
@@ -70,5 +75,5 @@ if (isset($_GET["id"])) {
     exit;
 
 } else {
-    die("Falta el parámetro ID para la descarga.");
+    die("Parámetro de factura no definido.");
 }

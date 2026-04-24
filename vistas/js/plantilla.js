@@ -27,7 +27,7 @@ $(document).ready(function () {
 	/*=============================================
 	Data Table Global (.tablas)
 	=============================================*/
-	$(".tablas").DataTable({
+	$("table.tablas").DataTable({
 		"autoWidth": false,
 		"responsive": true,
 		"language": {

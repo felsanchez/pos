@@ -80,7 +80,7 @@ class ModeloVentas
 
 		if ($stmt->execute()) {
 
-			return "ok";
+			return Conexion::conectar()->lastInsertId();
 
 		} else {
 
@@ -336,6 +336,7 @@ class ModeloVentas
 													LEFT JOIN clientes c ON v.id_cliente = c.id
 													LEFT JOIN usuarios u ON v.id_vendedor = u.id
 													WHERE v.fecha like '%$fechaInicial%' AND v.estado = :estado
+													AND (v.numero_factura != '' OR v.resolucion_id IS NOT NULL)
 													ORDER BY v.id DESC");
 
 			$stmt->bindParam(":estado", $estado, PDO::PARAM_STR);

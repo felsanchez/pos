@@ -81,9 +81,7 @@ $productos = ControladorProductos::ctrMostrarProductos($item, $valor, $orden);
 $totalProductos = count($productos);
 
 ?>
-<?php
-if ($_SESSION["perfil"] != "Visitante") {
-  ?>
+<?php if (puedeAccion('inicio', 'ver')): ?>
 
 
 
@@ -102,16 +100,11 @@ if ($_SESSION["perfil"] != "Visitante") {
       </div>
 
 
-      <?php
-      if ($_SESSION["perfil"] == "Administrador") {
-        ?>
+      <?php if (puedeAccion('ventas', 'ver')): ?>
         <a href="ventas" class="small-box-footer">
           Más info <i class="fa fa-arrow-circle-right"></i>
         </a>
-
-        <?php
-      }
-      ?>
+      <?php endif; ?>
 
     </div>
   </div>
@@ -136,17 +129,11 @@ if ($_SESSION["perfil"] != "Visitante") {
 
       </div>
 
-      <?php
-      if ($_SESSION["perfil"] == "Administrador") {
-        ?>
-
+      <?php if (puedeAccion('clientes', 'ver')): ?>
         <a href="clientes" class="small-box-footer">
           Más info <i class="fa fa-arrow-circle-right"></i>
         </a>
-
-        <?php
-      }
-      ?>
+      <?php endif; ?>
 
     </div>
 
@@ -172,17 +159,11 @@ if ($_SESSION["perfil"] != "Visitante") {
 
       </div>
 
-      <?php
-      if ($_SESSION["perfil"] == "Administrador") {
-        ?>
-
+      <?php if (puedeAccion('productos', 'ver')): ?>
         <a href="productos" class="small-box-footer">
           Más info <i class="fa fa-arrow-circle-right"></i>
         </a>
-
-        <?php
-      }
-      ?>
+      <?php endif; ?>
 
     </div>
 
@@ -209,17 +190,11 @@ if ($_SESSION["perfil"] != "Visitante") {
 
       </div>
 
-      <?php
-      if ($_SESSION["perfil"] == "Administrador") {
-        ?>
-
+      <?php if (puedeAccion('ordenes', 'ver')): ?>
         <a href="ordenes" class="small-box-footer">
           Más info <i class="fa fa-arrow-circle-right"></i>
         </a>
-
-        <?php
-      }
-      ?>
+      <?php endif; ?>
 
     </div>
 
@@ -228,22 +203,14 @@ if ($_SESSION["perfil"] != "Visitante") {
 
 
 
-  <?php
-}
-?>
+<?php endif; ?>
 
 
-<?php
-if ($_SESSION["perfil"] == "Visitante") {
-  ?>
-
+<?php if (!puedeAccion('inicio', 'ver')): ?>
   <h1>Bienvenido a Grupo Fej Technologies</h1>
   <h2>Consulta el estado de tu orden con tu código del pedido</h2>
-
-  <a href="ordenes-visita" class="small-box-footer">
+ 
+  <a href="consulta-ventas" class="small-box-footer">
     Consulta <i class="fa fa-arrow-circle-right"></i>
   </a>
-
-  <?php
-}
-?>
+<?php endif; ?>

@@ -6,7 +6,7 @@ if (typeof window.estadosActividadesJsLoaded === 'undefined') {
 DATATABLE ESTADOS
 =============================================*/
 if (!$.fn.DataTable.isDataTable('.tablaEstadosActividades')) {
-	$(".tablaEstadosActividades").DataTable({
+	$("table.tablaEstadosActividades").DataTable({
 
 		"language": {
 			"sProcessing": "Procesando...",

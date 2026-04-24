@@ -8,6 +8,7 @@ if (!puedeVer('proveedores')) {
 <style>
   /* Estilos para el botón de expansión en móvil */
   @media (max-width: 767px) {
+
     /* Resize action buttons on mobile */
     .tablaProveedores .btn-group .btn {
       padding: 1px 5px !important;
@@ -78,73 +79,73 @@ if (!puedeVer('proveedores')) {
 
       <div class="box-body">
         <div class="tabla-proveedores table-responsive">
-        <table class="table table-bordered table-striped tablaProveedores display nowrap" style="width: 100%;">
+          <table class="table table-bordered table-striped tablaProveedores display nowrap" style="width: 100%;">
 
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Nombre Comercial</th>
-              <th>Celular</th>
-              <th>Correo</th>
-              <th>Dirección</th>
-              <th>Productos</th>
-              <th>Notas</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Nombre Comercial</th>
+                <th>Celular</th>
+                <th>Correo</th>
+                <th>Dirección</th>
+                <th>Productos</th>
+                <th>Notas</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
 
-          <tbody>
+            <tbody>
 
-            <?php
+              <?php
 
-            $item = null;
-            $valor = null;
+              $item = null;
+              $valor = null;
 
-            $proveedores = ControladorProveedores::ctrMostrarProveedores($item, $valor);
+              $proveedores = ControladorProveedores::ctrMostrarProveedores($item, $valor);
 
 
-            foreach ($proveedores as $key => $value) {
+              foreach ($proveedores as $key => $value) {
 
-              // Contar productos asociados a este proveedor
-            
-              $totalProductos = ModeloProveedores::mdlContarProductosPorProveedor($value["id"]);
+                // Contar productos asociados a este proveedor
+              
+                $totalProductos = ModeloProveedores::mdlContarProductosPorProveedor($value["id"]);
 
-              echo '<tr> 
+                echo '<tr> 
                         <td>' . $value["nombre"] . '</td>
                         <td>' . $value["marca"] . '</td>';
 
-              echo '<td>' . $value["celular"] . '</td>';
-              echo '<td>' . $value["correo"] . '</td>';
-              echo '<td>' . $value["direccion"] . '</td>';
+                echo '<td>' . $value["celular"] . '</td>';
+                echo '<td>' . $value["correo"] . '</td>';
+                echo '<td>' . $value["direccion"] . '</td>';
 
-              echo '<td><span class="badge bg-blue">' . $totalProductos . '</span></td>';
+                echo '<td><span class="badge bg-blue">' . $totalProductos . '</span></td>';
 
-              // Columna notas editable
-              $notas = isset($value["notas"]) ? $value["notas"] : '';
-               echo '<td contenteditable="true" class="celda-notas-proveedor" tabindex="0" data-id="' . $value['id'] . '">' . $notas . '</td>';
+                // Columna notas editable
+                $notas = isset($value["notas"]) ? $value["notas"] : '';
+                echo '<td contenteditable="true" class="celda-notas-proveedor" tabindex="0" data-id="' . $value['id'] . '">' . $notas . '</td>';
 
-              echo '<td>
+                echo '<td>
                       <div class="btn-group">';
 
-              if (puedeAccion('proveedores', 'editar')) {
-                echo '<button class="btn btn-warning btnEditarProveedor" idProveedor="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarProveedor"><i class="fa fa-pencil"></i></button>';
-              }
+                if (puedeAccion('proveedores', 'editar')) {
+                  echo '<button class="btn btn-warning btnEditarProveedor" idProveedor="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarProveedor" title="Editar proveedor"><i class="fa fa-pencil"></i></button>';
+                }
 
-              if (puedeAccion('proveedores', 'eliminar')) {
-                echo '<button class="btn btn-danger btnEliminarProveedor" idProveedor="' . $value["id"] . '"><i class="fa fa-times"></i></button>';
-              }
+                if (puedeAccion('proveedores', 'eliminar')) {
+                  echo '<button class="btn btn-danger btnEliminarProveedor" idProveedor="' . $value["id"] . '" title="Eliminar proveedor"><i class="fa fa-times"></i></button>';
+                }
 
-              echo '</div>
+                echo '</div>
                     </td>
 
                   </tr>';
-            }
-            ?>
+              }
+              ?>
 
 
-          </tbody>
+            </tbody>
 
-        </table>
+          </table>
         </div><!-- /.tabla-proveedores -->
       </div>
 
@@ -563,71 +564,71 @@ $borrarProveedor->ctrBorrarProveedor();
 ?>
 
 <script>
-$(document).ready(function() {
+  $(document).ready(function () {
     console.log("🚀 Lógica de Notas Proveedores Estandarizada");
 
     var celdaEditada = null;
 
     // Detectar entrada
-    $(document).on('focus click', '.celda-notas-proveedor', function() {
-        celdaEditada = $(this);
+    $(document).on('focus click', '.celda-notas-proveedor', function () {
+      celdaEditada = $(this);
     });
 
     // Observador Global para guardar al salir
-    $(document).on('mousedown touchstart', function(e) {
-        if (celdaEditada && !celdaEditada.is(e.target) && celdaEditada.has(e.target).length === 0) {
-            guardarNotasProveedor(celdaEditada);
-            celdaEditada = null;
-        }
+    $(document).on('mousedown touchstart', function (e) {
+      if (celdaEditada && !celdaEditada.is(e.target) && celdaEditada.has(e.target).length === 0) {
+        guardarNotasProveedor(celdaEditada);
+        celdaEditada = null;
+      }
     });
 
     function guardarNotasProveedor(elemento) {
-        var id = elemento.attr('data-id');
-        var nuevasNotas = elemento.text().trim();
+      var id = elemento.attr('data-id');
+      var nuevasNotas = elemento.text().trim();
 
-        if (!id) return;
+      if (!id) return;
 
-        // Evitar múltiples peticiones simultáneas
-        if (elemento.data('guardando')) return;
-        elemento.data('guardando', true);
+      // Evitar múltiples peticiones simultáneas
+      if (elemento.data('guardando')) return;
+      elemento.data('guardando', true);
 
-        var csrfToken = $('meta[name="csrf-token"]').attr('content');
+      var csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-        $.ajax({
-            url: 'ajax/proveedores.ajax.php',
-            method: 'POST',
-            data: {
-                id: id,
-                notas: nuevasNotas,
-                accion: 'actualizarNotas',
-                csrf_token: csrfToken
-            },
-            success: function (respuesta) {
-                elemento.data('guardando', false);
-                
-                // Normalización de respuesta
-                var resStr = String(respuesta).toLowerCase();
-                
-                // NOTA: Disparamos el destello verde SIEMPRE en el éxito (aunque no haya cambios)
-                // para que la UX sea consistente con Clientes.
-                if (resStr.indexOf('ok') !== -1) {
-                    
-                    // Feedback visual suave (Estandarizado con Clientes)
-                    elemento[0].style.setProperty('background-color', '#dff0d8', 'important');
-                    elemento[0].style.setProperty('transition', 'background-color 0.2s', 'important');
-                    
-                    setTimeout(function () {
-                        elemento[0].style.removeProperty('background-color');
-                    }, 500);
+      $.ajax({
+        url: 'ajax/proveedores.ajax.php',
+        method: 'POST',
+        data: {
+          id: id,
+          notas: nuevasNotas,
+          accion: 'actualizarNotas',
+          csrf_token: csrfToken
+        },
+        success: function (respuesta) {
+          elemento.data('guardando', false);
 
-                    console.log('✅ Nota procesada (Módulo Proveedores)');
-                }
-            },
-            error: function (xhr, status, error) {
-                elemento.data('guardando', false);
-                console.error('Error AJAX:', error);
-            }
-        });
+          // Normalización de respuesta
+          var resStr = String(respuesta).toLowerCase();
+
+          // NOTA: Disparamos el destello verde SIEMPRE en el éxito (aunque no haya cambios)
+          // para que la UX sea consistente con Clientes.
+          if (resStr.indexOf('ok') !== -1) {
+
+            // Feedback visual suave (Estandarizado con Clientes)
+            elemento[0].style.setProperty('background-color', '#dff0d8', 'important');
+            elemento[0].style.setProperty('transition', 'background-color 0.2s', 'important');
+
+            setTimeout(function () {
+              elemento[0].style.removeProperty('background-color');
+            }, 500);
+
+            console.log('✅ Nota procesada (Módulo Proveedores)');
+          }
+        },
+        error: function (xhr, status, error) {
+          elemento.data('guardando', false);
+          console.error('Error AJAX:', error);
+        }
+      });
     }
-});
+  });
 </script>

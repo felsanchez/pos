@@ -24,7 +24,7 @@ if ($_SESSION["perfil"] == "Especial") {
     <section class="content">
         <div class="box">
             <div class="box-header with-border">
-                <?php if (puedeAccion('documento_soporte', 'crear')): ?>
+                <?php if (puedeAccion('notas_ajuste', 'crear')): ?>
                     <a href="crear-nota-ajuste-ds">
                         <button class="btn btn-primary">
                             <i class="fa fa-plus"></i> Crear Nota de Ajuste
@@ -101,7 +101,9 @@ if ($_SESSION["perfil"] == "Especial") {
                     <span>Cargando Notas de Ajuste...</span>
                 </div>
 
-                <table id="tablaListadoNotasAjusteDS" class="table table-bordered table-striped dt-responsive tablaNotasAjusteDS display nowrap" width="100%">
+                <table id="tablaListadoNotasAjusteDS"
+                    class="table table-bordered table-striped dt-responsive tablaNotasAjusteDS display nowrap"
+                    width="100%">
                     <thead>
                         <tr>
                             <th>Código Nota</th>
@@ -167,34 +169,39 @@ if ($_SESSION["perfil"] == "Especial") {
 
                             echo '<td>
                                         <div class="btn-group">
-                                            <a href="index.php?ruta=ver-nota-ajuste-ds&idNota=' . e($value["id"]) . '" class="btn btn-info"><i class="fa fa-eye"></i></a>';
+                                            <a href="index.php?ruta=ver-nota-ajuste-ds&idNota=' . e($value["id"]) . '" class="btn btn-info" title="Ver detalle"><i class="fa fa-eye"></i></a>';
 
-                            if ($value["estado_dian"] == "borrador") {
+                            // Botón para ver en la DIAN (Disponible con el permiso "Ver")
+                            if (!empty($value["cuds_ajuste"])) {
+                                echo '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . e($value["cuds_ajuste"]) . '" target="_blank" class="btn btn-success" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>';
+                            }
+
+                            if (puedeAccion('notas_ajuste', 'editar')) {
                                 // Botón Firmar
-                                if (puedeAccion('documento_soporte', 'editar')) {
+                                if ($value["estado_dian"] == "borrador") {
                                     echo '<button class="btn btnFirmarNotaAjusteDS" style="background-color: black; color: white;" idNota="' . e($value["id"]) . '" title="Firmar y Enviar a DIAN"><i class="fa fa-paper-plane"></i></button>';
                                 }
-                                // Botón Eliminar
-                                if (puedeAccion('documento_soporte', 'eliminar')) {
-                                    echo '<button class="btn btn-danger btnEliminarNotaAjusteDS" idNota="' . e($value["id"]) . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
-                                }
-                            } else {
-                                // Botón PDF si tiene URL
+
+                                // Botón PDF
                                 if (!empty($value["pdf_dian"])) {
                                     echo '<a href="' . e($value["pdf_dian"]) . '" target="_blank" class="btn btn-danger" title="Ver PDF Factus"><i class="fa fa-file-pdf-o"></i></a>';
                                 }
 
-                                // Botón XML si tiene URL
+                                // Botón XML
                                 if (!empty($value["xml_dian"])) {
                                     echo '<a href="' . e($value["xml_dian"]) . '" target="_blank" class="btn btn-primary" title="Ver XML Factus"><i class="fa fa-file-code-o"></i></a>';
                                 }
 
-                                // Botón para ver en la DIAN
-                                echo '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . e($value["cuds_ajuste"]) . '" target="_blank" class="btn btn-success" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>';
-
-                                // Botón para enviar por correo (Solo si está aceptada o enviada)
+                                // Botón para enviar por correo
                                 if ($value["estado_dian"] == "aceptada" || $value["estado_dian"] == "enviada") {
                                     echo '<button class="btn btn-primary btnEnviarEmailNA" idNA="' . e($value["id"]) . '" nombreProveedor="' . e(($proveedor["nombre"] ?? "N/A")) . '" emailProveedor="' . e(($proveedor["correo"] ?? '')) . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
+                                }
+                            }
+
+                            // Botón Eliminar (Permiso Eliminar)
+                            if (puedeAccion('notas_ajuste', 'eliminar')) {
+                                if ($value["estado_dian"] == "borrador") {
+                                    echo '<button class="btn btn-danger btnEliminarNotaAjusteDS" idNota="' . e($value["id"]) . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
                                 }
                             }
 
@@ -253,66 +260,66 @@ MODAL ENVIAR EMAIL NOTA AJUSTE
 
 <!-- DataTables Personalizado para Notas de Ajuste DS -->
 <script>
-$(document).ready(function () {
-  setTimeout(function () {
-    if ($("#tablaListadoNotasAjusteDS").length > 0) {
-      if ($.fn.DataTable.isDataTable('#tablaListadoNotasAjusteDS')) {
-        $('#tablaListadoNotasAjusteDS').DataTable().destroy();
-      }
+    $(document).ready(function () {
+        setTimeout(function () {
+            if ($("#tablaListadoNotasAjusteDS").length > 0) {
+                if ($.fn.DataTable.isDataTable('#tablaListadoNotasAjusteDS')) {
+                    $('#tablaListadoNotasAjusteDS').DataTable().destroy();
+                }
 
-      $("#tablaListadoNotasAjusteDS").DataTable({
-        "autoWidth": false,
-        "initComplete": function(settings, json) {
-           $(this.api().table().node()).addClass('datatable-ready');
-           $("#loader-table-na").fadeOut(200);
-        },
-        "order": [[4, "desc"]], // Fecha
-        "responsive": {
-          "details": {
-            "type": "inline",
-            "renderer": function (api, rowIdx, columns) {
-              var finalHtml = '';
-              var hasHidden = false;
+                $("#tablaListadoNotasAjusteDS").DataTable({
+                    "autoWidth": false,
+                    "initComplete": function (settings, json) {
+                        $(this.api().table().node()).addClass('datatable-ready');
+                        $("#loader-table-na").fadeOut(200);
+                    },
+                    "order": [[4, "desc"]], // Fecha
+                    "responsive": {
+                        "details": {
+                            "type": "inline",
+                            "renderer": function (api, rowIdx, columns) {
+                                var finalHtml = '';
+                                var hasHidden = false;
 
-              $.each(columns, function (i, col) {
-                if (!col.hidden) return;
-                hasHidden = true;
+                                $.each(columns, function (i, col) {
+                                    if (!col.hidden) return;
+                                    hasHidden = true;
 
-                var label = col.title || ('Columna ' + col.columnIndex);
-                
-                finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
-                finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
-                finalHtml += '<span style="color:#333;">' + col.data + '</span>';
-                finalHtml += '</div>';
-              });
+                                    var label = col.title || ('Columna ' + col.columnIndex);
 
-              if (!hasHidden) return false;
-              return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
+                                    finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+                                    finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
+                                    finalHtml += '<span style="color:#333;">' + col.data + '</span>';
+                                    finalHtml += '</div>';
+                                });
+
+                                if (!hasHidden) return false;
+                                return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
+                            }
+                        }
+                    },
+                    "columnDefs": [
+                        { "targets": 0, "responsivePriority": 1 }, // Código
+                        { "targets": 6, "responsivePriority": 2, "orderable": false }, // Acciones
+                        { "targets": 1, "responsivePriority": 3 }, // Doc Original
+                        { "targets": 2, "responsivePriority": 4 }, // Proveedor
+                        { "targets": 3, "responsivePriority": 5 }, // Total
+                        { "targets": 4, "responsivePriority": 6 }, // Fecha
+                        { "targets": 5, "responsivePriority": 7 }  // Estado DIAN
+                    ],
+                    "language": {
+                        "sProcessing": "Procesando...",
+                        "sLengthMenu": "Mostrar _MENU_ registros",
+                        "sZeroRecords": "No se encontraron resultados",
+                        "sEmptyTable": "Ningún dato disponible en esta tabla",
+                        "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+                        "sSearch": "Buscar:",
+                        "oPaginate": { "sFirst": "Primero", "sLast": "Último", "sNext": "Siguiente", "sPrevious": "Anterior" }
+                    }
+                });
             }
-          }
-        },
-        "columnDefs": [
-            { "targets": 0, "responsivePriority": 1 }, // Código
-            { "targets": 6, "responsivePriority": 2, "orderable": false }, // Acciones
-            { "targets": 1, "responsivePriority": 3 }, // Doc Original
-            { "targets": 2, "responsivePriority": 4 }, // Proveedor
-            { "targets": 3, "responsivePriority": 5 }, // Total
-            { "targets": 4, "responsivePriority": 6 }, // Fecha
-            { "targets": 5, "responsivePriority": 7 }  // Estado DIAN
-        ],
-        "language": {
-          "sProcessing": "Procesando...",
-          "sLengthMenu": "Mostrar _MENU_ registros",
-          "sZeroRecords": "No se encontraron resultados",
-          "sEmptyTable": "Ningún dato disponible en esta tabla",
-          "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-          "sSearch": "Buscar:",
-          "oPaginate": { "sFirst": "Primero", "sLast": "Último", "sNext": "Siguiente", "sPrevious": "Anterior" }
-        }
-      });
-    }
-  }, 200);
-});
+        }, 200);
+    });
 </script>
 
 <script src="vistas/js/notas-ajuste-ds.js?v=<?php echo time(); ?>"></script>

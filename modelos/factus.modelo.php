@@ -547,8 +547,16 @@ class ModeloFactus
     =============================================*/
     static public function mdlObtenerFactura($token, $invoiceId)
     {
+        return self::mdlObtenerDetalleDocumento($token, "bills", $invoiceId);
+    }
+
+    /*=============================================
+    OBTENER DETALLE DE CUALQUIER DOCUMENTO (GENÉRICO)
+    =============================================*/
+    static public function mdlObtenerDetalleDocumento($token, $endpoint, $id)
+    {
         $config = self::mdlObtenerConfiguracion();
-        $url = $config['api_url'] . '/v1/bills/' . $invoiceId;
+        $url = $config['api_url'] . '/v1/' . $endpoint . '/' . $id;
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);

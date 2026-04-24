@@ -115,18 +115,33 @@ class tablaVentas
 			$botones .= '<i class="fa fa-eye"></i>';
 			$botones .= '</a>';
 
-			// 2. Botón Descargar PDF (Verde)
-			$botones .= '<a href="extensiones/tcpdf/pdf/descargar-pdf-orden.php?idVenta=' . (isset($venta["id"]) ? $venta["id"] : "") . '" target="_blank" class="btn btn-success" title="Descargar PDF" style="margin-right: 3px;">';
+			// 2. Botón Descargar PDF (Rojo)
+			$botones .= '<a href="extensiones/tcpdf/pdf/descargar-pdf-orden.php?idVenta=' . (isset($venta["id"]) ? $venta["id"] : "") . '" target="_blank" class="btn btn-danger" title="Descargar PDF" style="margin-right: 3px;">';
 			$botones .= '<i class="fa fa-file-pdf-o"></i>';
 			$botones .= '</a>';
 
-			$botones .= '</div>';
+            $botones .= '</div>';
+
+			// Determinar tipo de documento
+			$estadoDian     = $venta['estado_dian'] ?? '';
+			$numeroFactura  = $venta['numero_factura'] ?? '';
+
+			if (!empty($numeroFactura)) {
+				$tipoBadge = '<span class="label label-success"><i class="fa fa-file-text-o"></i> Factura Elect.</span>';
+			} elseif ($estadoDian === 'borrador') {
+				$tipoBadge = '<span class="label label-warning"><i class="fa fa-clock-o"></i> Borrador FE</span>';
+			} elseif (!empty($estadoDian) && $estadoDian !== 'pendiente') {
+				$tipoBadge = '<span class="label label-info"><i class="fa fa-file-o"></i> Venta c/FE</span>';
+			} else {
+				$tipoBadge = '<span class="label label-primary"><i class="fa fa-shopping-cart"></i> Venta</span>';
+			}
 
 			$data[] = array(
 				isset($venta["codigo"]) ? $venta["codigo"] : "",
 				$nombreCliente,
 				isset($venta["metodo_pago"]) ? $venta["metodo_pago"] : "",
-				isset($venta["total"]) ? $venta["total"] : "",
+				'$ ' . number_format(floatval($venta["total"] ?? 0), 0, ',', '.'),
+				$tipoBadge,
 				isset($venta["fecha"]) ? $venta["fecha"] : "",
 				$botones
 			);

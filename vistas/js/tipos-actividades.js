@@ -5,7 +5,7 @@ DATATABLE TIPOS
 DATATABLE TIPOS
 =============================================*/
 if (!$.fn.DataTable.isDataTable('.tablaTiposActividades')) {
-	$(".tablaTiposActividades").DataTable({
+	$("table.tablaTiposActividades").DataTable({
 
 		"language": {
 			"sProcessing": "Procesando...",

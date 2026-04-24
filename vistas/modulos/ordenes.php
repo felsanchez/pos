@@ -22,8 +22,6 @@
   .d-none {
     display: none !important;
   }
-
-
 </style>
 
 <style>
@@ -330,7 +328,7 @@ if ($xml) {
                 echo '<td>' . e($respuestaUsuario["nombre"]) . '</td>';
 
                 echo '<td>' . e($moneda) . ' ' . e($value["metodo_pago"]) . '</td>';
-                
+
                 // Validación de la foto
                 if ($value["imagen"] != "") {
                   echo '<td><img src="' . $value["imagen"] . '" class="img-thumbnail img-ampliar-orden" width="40px" style="cursor: pointer;" data-imagen="' . $value["imagen"] . '" data-idventa="' . $value["id"] . '"></td>';
@@ -426,13 +424,13 @@ if ($xml) {
                 echo '<td> 
                           <div class="btn-group">
 
-                            <a class="btn btn-warning" href="index.php?ruta=ver-detalle-orden&idVenta=' . $value["id"] . '" title="Ver Detalle de Orden" style="width: auto !important;">
+                            <a class="btn btn-warning" href="index.php?ruta=ver-detalle-orden&idVenta=' . $value["id"] . '" title="Ver Detalle" style="width: auto !important;">
                               <i class="fa fa-eye"></i>
                             </a>';
 
                 // Mostrar el botón solo si el usuario tiene permiso
                 if (puedeAccion('ordenes', 'eliminar')) {
-                  echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" style="width: auto !important;">
+                  echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar Orden" style="width: auto !important;">
                                       <i class="fa fa-times"></i>
                                     </button>';
                 }
@@ -1158,29 +1156,29 @@ MODAL EDITAR CLIENTE
                 hasHidden = true;
 
                 var label = col.title || ('Columna ' + col.columnIndex);
-                
+
                 // Excepciones para no romper layout (Notas y Observacion)
-                if(col.columnIndex === 6 || col.columnIndex === 7) {
-                    finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
-                    finalHtml += '<span class="text-bold" style="display:block; color:#555; margin-bottom:5px;">' + label + ':</span>';
+                if (col.columnIndex === 6 || col.columnIndex === 7) {
+                  finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
+                  finalHtml += '<span class="text-bold" style="display:block; color:#555; margin-bottom:5px;">' + label + ':</span>';
                 } else {
-                    finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
-                    finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
+                  finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+                  finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
                 }
 
                 if (col.columnIndex === 7) {
-                    // Celda de observación editable
-                    var rowNode = api.row(rowIdx).node();
-                    var idOrden = $(rowNode).attr('data-orden-id') || "";
-                    var observacionText = $(rowNode).find('.celda-observacion').text().trim();
-                    var placeholderAttr = (observacionText === "") ? ' data-placeholder="true"' : "";
-                    
-                    finalHtml += '<div contenteditable="true" class="celda-observacion" data-id="' + idOrden + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + observacionText + '</div>';
+                  // Celda de observación editable
+                  var rowNode = api.row(rowIdx).node();
+                  var idOrden = $(rowNode).attr('data-orden-id') || "";
+                  var observacionText = $(rowNode).find('.celda-observacion').text().trim();
+                  var placeholderAttr = (observacionText === "") ? ' data-placeholder="true"' : "";
+
+                  finalHtml += '<div contenteditable="true" class="celda-observacion" data-id="' + idOrden + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + observacionText + '</div>';
                 } else {
-                    // El resto pasa su HTML o texto tal cual
-                    finalHtml += '<span style="color:#333;">' + col.data + '</span>';
+                  // El resto pasa su HTML o texto tal cual
+                  finalHtml += '<span style="color:#333;">' + col.data + '</span>';
                 }
-                
+
                 finalHtml += '</div>';
               });
 
