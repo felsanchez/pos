@@ -9,6 +9,9 @@ require_once "../modelos/usuarios.modelo.php";
 require_once "../modelos/actividades.modelo.php";
 require_once "../modelos/ventas.modelo.php";
 require_once "../modelos/factus.modelo.php";
+require_once "../modelos/perfiles.modelo.php";
+require_once "../modelos/helpers.php";
+require_once "../modelos/sanitizer.php";
 require_once "../modelos/csrf.php";
 
 // NOTA TEMPORAL: Validación CSRF deshabilitada para peticiones AJAX con FormData
@@ -83,6 +86,15 @@ class AjaxUsuarios
 
 		$respuesta = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
 
+		echo json_encode($respuesta);
+	}
+
+	/*=============================================
+	MOSTRAR USUARIOS SERVER-SIDE
+	=============================================*/
+	public function ajaxMostrarUsuariosServerSide()
+	{
+		$respuesta = ControladorUsuarios::ctrMostrarUsuariosServerSide($_POST);
 		echo json_encode($respuesta);
 	}
 
@@ -217,4 +229,12 @@ if (isset($_POST["actualizarPerfil"])) {
 	ControladorUsuarios::ctrActualizarPerfil();
 
 	exit;
+}
+
+/*=============================================
+MOSTRAR USUARIOS SERVER-SIDE
+=============================================*/
+if (isset($_POST["draw"])) {
+	$mostrar = new AjaxUsuarios();
+	$mostrar->ajaxMostrarUsuariosServerSide();
 }

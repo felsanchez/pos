@@ -16,11 +16,19 @@ $(document).ready(function () {
 
 	if (!$.fn.DataTable.isDataTable('#tablaListaUsuarios')) {
 		var tablaUsuarios = $("#tablaListaUsuarios").DataTable({
+			"processing": true,
+			"serverSide": true,
+			"ajax": {
+				"url": "ajax/usuarios.ajax.php",
+				"type": "POST",
+				"data": function(d) {
+					d.perfilFiltro = $("#seleccionarPerfilFiltro").val();
+				}
+			},
 			"responsive": {
 				"details": {
 					"type": "inline",
 					"renderer": function (api, rowIdx, columns) {
-						// Mapeo de índice → etiqueta
 						var labels = {
 							0: 'Usuario',
 							1: 'Nombre',
@@ -36,7 +44,6 @@ $(document).ready(function () {
 						var hasHidden = false;
 
 						$.each(columns, function (i, col) {
-							// Solo columnas que DataTables realmente ocultó
 							if (!col.hidden) return;
 
 							hasHidden = true;
@@ -58,21 +65,21 @@ $(document).ready(function () {
 			"order": [[0, 'asc']],
 			"columnDefs": [
 				{
-					"targets": 0,        // Usuario: botón expand automáticamente por dtr-inline
+					"targets": 0,
 					"responsivePriority": 1,
 					"orderable": true
 				},
-				{ "targets": 7, "responsivePriority": 1, "orderable": false }, // Acciones: siempre visible
-				{ "targets": 1, "responsivePriority": 2 }, // Nombre
-				{ "targets": 3, "responsivePriority": 3 }, // Imagen
-				{ "targets": 4, "responsivePriority": 4 }, // Perfil
-				{ "targets": 2, "responsivePriority": 5 }, // Email
+				{ "targets": 7, "responsivePriority": 1, "orderable": false },
+				{ "targets": 1, "responsivePriority": 2 },
+				{ "targets": 3, "responsivePriority": 3, "orderable": false },
+				{ "targets": 4, "responsivePriority": 4 },
+				{ "targets": 2, "responsivePriority": 5 },
 				{
-					"targets": 5, // Estado
+					"targets": 5,
 					"responsivePriority": 6,
 					"visible": $("#puedeEditarUsuarios").val() == "1"
 				},
-				{ "targets": 6, "responsivePriority": 7 }  // Último login
+				{ "targets": 6, "responsivePriority": 7 }
 			],
 			"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
 			"language": {
@@ -105,17 +112,8 @@ $(document).ready(function () {
 		FILTRAR POR PERFIL (NUEVO BUSCADOR)
 		=============================================*/
 		$("#seleccionarPerfilFiltro").on("change", function () {
-			var perfil = $(this).val();
-
-			console.log("Filtrando usuarios por perfil:", perfil);
-
-			// Usamos una expresión regular para una búsqueda exacta en la columna 4 (Perfil)
-			// El índice 4 corresponde a la columna de Perfil
-			if (perfil != "") {
-				tablaUsuarios.column(4).search('^' + perfil + '$', true, false).draw();
-			} else {
-				tablaUsuarios.column(4).search("").draw();
-			}
+			console.log("Recargando tabla por cambio de perfil...");
+			tablaUsuarios.ajax.reload();
 		});
 	}
 });

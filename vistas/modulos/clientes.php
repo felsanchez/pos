@@ -5,18 +5,6 @@
 <link rel="stylesheet" href="assets/css/clientes.css">
 
 
-<!-- Centrar filtro -->
-<style>
-  /* Estilos para filtros estandarizados */
-  @media (max-width: 767px) {
-    .pull-right {
-      float: none !important;
-      justify-content: center !important;
-      width: 100% !important;
-      margin-top: 10px;
-    }
-  }
-</style>
 
 
 <style>
@@ -59,37 +47,7 @@
   }
 </style>
 
-<style>
-  /* Asegurar que los modales estén por encima del backdrop */
-  #modalGestionarEstados,
-  #modalEditarEstado,
-  #modalImportarClientes {
-    z-index: 10050 !important;
-    opacity: 1 !important;
-  }
 
-  #modalGestionarEstados .modal-dialog,
-  #modalEditarEstado .modal-dialog,
-  #modalImportarClientes .modal-dialog {
-    z-index: 10051 !important;
-  }
-
-  /* Ajustar z-index del backdrop */
-  .modal-backdrop.in {
-    z-index: 10040 !important;
-  }
-</style>
-
-<style>
-  /* Ajuste de botones de acción en móvil */
-  @media (max-width: 767px) {
-    .tablas1 tbody td .btn {
-      padding: 1px 5px !important;
-      font-size: 12px !important;
-      line-height: 1.5 !important;
-    }
-  }
-</style>
 
 
 <!-- Estilos dinámicos para colores de estados -->
@@ -163,11 +121,12 @@ $editarCliente->ctrEditarCliente();
 
     <h1>
       Administrar Clientes
+      <small>Fidelización y seguimiento</small>
     </h1>
 
     <ol class="breadcrumb">
       <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-      <li class="active">Administrar Clientes</li>
+      <li class="active">Clientes</li>
     </ol>
 
   </section>

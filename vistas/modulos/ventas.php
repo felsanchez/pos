@@ -1,38 +1,3 @@
-<style>
-  .formulario-fechas-container {
-    max-width: 300px;
-    padding: 15px;
-    border-radius: 10px;
-    background-color: #ffffff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-  }
-
-  .formulario-fechas label {
-    font-weight: 600;
-    margin-top: 10px;
-  }
-
-  .formulario-fechas select,
-  .formulario-fechas input[type="date"] {
-    border-radius: 8px;
-    margin-bottom: 10px;
-  }
-
-  .d-none {
-    display: none !important;
-  }
-
-  /* Ocultar tabla de ventas hasta que DataTables termine de procesarla */
-  #example:not(.datatable-ready) {
-    visibility: hidden;
-  }
-
-  /* Mostrar un indicador de carga mientras se procesa */
-  #example:not(.datatable-ready)+.dataTables_wrapper {
-    position: relative;
-  }
-</style>
 
 
 <!-- DateRangePicker -->
@@ -66,11 +31,12 @@ if ($xml) {
 
     <h1>
       Administrar ventas
+      <small>Control de facturación</small>
     </h1>
 
     <ol class="breadcrumb">
       <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-      <li class="active">Administrar ventas</li>
+      <li class="active">Ventas</li>
     </ol>
 
   </section>

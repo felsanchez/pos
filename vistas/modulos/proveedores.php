@@ -5,17 +5,6 @@ if (!puedeVer('proveedores')) {
 }
 ?>
 <!-- Solo muestra 2 campos en movil en la Tabla 1-->
-<style>
-  /* Estilos para el botón de expansión en móvil */
-  @media (max-width: 767px) {
-
-    /* Resize action buttons on mobile */
-    .tablaProveedores .btn-group .btn {
-      padding: 1px 5px !important;
-      font-size: 12px !important;
-      line-height: 1.5 !important;
-    }
-  }
 
   /* Estilos para campo notas editable */
   .celda-notas-proveedor {
@@ -53,11 +42,12 @@ if (!puedeVer('proveedores')) {
 
     <h1>
       Administrar proveedores
+      <small>Relación con suministros</small>
     </h1>
 
     <ol class="breadcrumb">
       <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-      <li class="active">Administrar proveedores</li>
+      <li class="active">Proveedores</li>
     </ol>
 
   </section>

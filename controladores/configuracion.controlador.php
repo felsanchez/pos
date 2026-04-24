@@ -23,7 +23,7 @@ class ControladorConfiguracion
 	static public function ctrActualizarConfiguracion()
 	{
 
-		if (isset($_POST["nombreEmpresa"])) {
+		if (isset($_POST["actualizarConfiguracion"])) {
 
 			/*=============================================
 			VALIDAR CSRF

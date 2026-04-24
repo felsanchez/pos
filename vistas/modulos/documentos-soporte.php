@@ -3,12 +3,13 @@
     <section class="content-header">
 
         <h1>
-            Administrar Documentos Soporte
+            Documentos soporte
+            <small>Adquisiciones a no obligados</small>
         </h1>
 
         <ol class="breadcrumb">
             <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-            <li class="active">Administrar Documentos Soporte</li>
+            <li class="active">Documentos soporte</li>
         </ol>
 
     </section>
@@ -29,66 +30,6 @@
 
             </div>
 
-            <style>
-                .loader-container {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 60px;
-                    background: #fff;
-                    margin-bottom: 20px;
-                    transition: opacity 0.3s ease;
-                }
-
-                .loader-container i {
-                    font-size: 45px;
-                    color: #3c8dbc;
-                    margin-bottom: 15px;
-                }
-
-                .loader-container span {
-                    font-size: 16px;
-                    color: #666;
-                    font-weight: 500;
-                }
-
-
-
-                /* Botones de acción compactos en móvil */
-                @media (max-width: 767px) {
-                    .tablaDocumentosSoporte td:last-child .btn {
-                        padding: 1px 5px !important;
-                        font-size: 12px !important;
-                        line-height: 1.5 !important;
-                    }
-
-                    .tablaDocumentosSoporte td:last-child .btn-group {
-                        display: flex;
-                        gap: 2px;
-                    }
-
-                    /* Forzar que las acciones tengan espacio */
-                    .tablaDocumentosSoporte td:last-child {
-                        width: 1% !important;
-                        white-space: nowrap !important;
-                        text-align: right !important;
-                    }
-                }
-
-                /* Hide table while loading to prevent layout jump */
-                .tablaDocumentosSoporte:not(.datatable-ready) {
-                    visibility: hidden;
-                    height: 0;
-                    overflow: hidden;
-                    opacity: 0;
-                }
-
-                .tablaDocumentosSoporte.datatable-ready {
-                    transition: opacity 0.5s ease;
-                    opacity: 1;
-                }
-            </style>
 
             <div class="box-body">
 

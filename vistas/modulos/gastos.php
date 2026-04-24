@@ -7,55 +7,17 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 <!-- Estilos de gastos -->
 <link rel="stylesheet" href="assets/css/gastos.css">
 
-<!-- Estilos responsive -->
-<style>
-  /* Los estilos de tabla se manejan ahora mediante la estandarización global de DataTables */
-
-  /* Garantizar que el botón de expansión se vea siempre que haya columnas ocultas */
-  #tablaGastos.collapsed td.dtr-control {
-    position: relative !important;
-    padding-left: 30px !important;
-    cursor: pointer !important;
-  }
-
-  #tablaGastos.collapsed td.dtr-control:before {
-    top: 50% !important;
-    left: 5px !important;
-    height: 18px !important;
-    width: 18px !important;
-    margin-top: -9px !important;
-    display: block !important;
-    position: absolute !important;
-    color: white !important;
-    border: 2px solid white !important;
-    border-radius: 14px !important;
-    box-shadow: 0 0 3px #444 !important;
-    box-sizing: content-box !important;
-    text-align: center !important;
-    text-indent: 0 !important;
-    font-family: 'Courier New', Courier, monospace !important;
-    font-weight: bold !important;
-    line-height: 18px !important;
-    content: '+' !important;
-    background-color: #3c8dbc !important;
-  }
-
-  /* Cambiar a '-' cuando está expandido */
-  #tablaGastos.collapsed tr.parent td.dtr-control:before {
-    content: '-' !important;
-    background-color: #dd4b39 !important;
-  }
-</style>
 
 <div class="content-wrapper">
 
   <section class="content-header">
     <h1>
       Administrar gastos
+      <small>Control de egresos</small>
     </h1>
     <ol class="breadcrumb">
       <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-      <li class="active">Administrar gastos</li>
+      <li class="active">Gastos</li>
     </ol>
   </section>
 

@@ -1,145 +1,3 @@
-<!-- Estilos para de comportamiento en móvil -->
-<style>
-  /* Ajuste de botones de acción en móvil */
-  @media (max-width: 767px) {
-    .tablaProductos .btn-group .btn {
-      padding: 1px 5px !important;
-      font-size: 12px !important;
-      line-height: 1.5 !important;
-    }
-  }
-
-  /* Visibilidad de botones específicos en móvil */
-  .solo-movil {
-    display: none;
-  }
-
-  @media (max-width: 767px) {
-    .solo-movil {
-      display: inline-block !important;
-      margin-left: 3px !important;
-    }
-  }
-</style>
-
-
-
-<!-- Fix para modal de importación -->
-<style>
-  /* Forzar z-index del modal por encima del backdrop */
-
-  #modalImportarProductos {
-    z-index: 10050 !important;
-    opacity: 1 !important;
-  }
-
-  #modalImportarProductos .modal-dialog {
-    z-index: 10051 !important;
-  }
-
-  #modalImportarProductos .modal-content {
-    opacity: 1 !important;
-  }
-
-  /* Ajustar z-index del backdrop debajo del modal */
-  #modalImportarProductos~.modal-backdrop,
-  .modal-backdrop.in {
-    z-index: 10040 !important;
-  }
-
-  /* Asegurar que el modal sea completamente visible */
-  #modalImportarProductos .modal-body,
-  #modalImportarProductos .modal-header,
-  #modalImportarProductos .modal-footer {
-    opacity: 1 !important;
-  }
-</style>
-
-
-<!-- Fix para modal de agregar producto -->
-<style>
-  /* Forzar z-index del modal por encima del backdrop */
-  #modalAgregarProducto {
-    z-index: 10050 !important;
-    opacity: 1 !important;
-  }
-
-  #modalAgregarProducto .modal-dialog {
-    z-index: 10051 !important;
-  }
-
-  #modalAgregarProducto .modal-content {
-    opacity: 1 !important;
-  }
-
-  /* Ajustar z-index del backdrop debajo del modal */
-  #modalAgregarProducto~.modal-backdrop,
-  .modal-backdrop.in {
-    z-index: 10040 !important;
-  }
-
-  /* Asegurar que el modal sea completamente visible */
-  #modalAgregarProducto.in {
-    opacity: 1 !important;
-  }
-</style>
-
-<!-- Fix para modal de editar variante -->
-<style>
-  /* Forzar z-index del modal por encima del backdrop */
-  #modalEditarVariante {
-    z-index: 10060 !important;
-    opacity: 1 !important;
-  }
-
-  #modalEditarVariante .modal-dialog {
-    z-index: 10061 !important;
-  }
-
-  #modalEditarVariante .modal-content {
-    opacity: 1 !important;
-  }
-
-  /* Asegurar que el modal sea completamente visible */
-  #modalEditarVariante .modal-body,
-  #modalEditarVariante .modal-header,
-  #modalEditarVariante .modal-footer {
-    opacity: 1 !important;
-  }
-
-  /* Asegurar que los inputs sean visibles y funcionales */
-  #modalEditarVariante input {
-    pointer-events: auto !important;
-  }
-</style>
-
-<!-- Fix para modal de ajuste de stock -->
-<style>
-  /* Forzar z-index del modal por encima del backdrop */
-  #modalAjusteStock {
-    z-index: 10050 !important;
-    opacity: 1 !important;
-  }
-
-  #modalAjusteStock .modal-dialog {
-    z-index: 10051 !important;
-  }
-
-  #modalAjusteStock .modal-content {
-    opacity: 1 !important;
-  }
-
-  /* Ajustar z-index del backdrop debajo del modal */
-  #modalAjusteStock~.modal-backdrop,
-  .modal-backdrop.in {
-    z-index: 10040 !important;
-  }
-
-  /* Asegurar que el modal sea completamente visible */
-  #modalAjusteStock.in {
-    opacity: 1 !important;
-  }
-</style>
 
 <?php
 ini_set('display_errors', 1);
@@ -161,11 +19,12 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
 
     <h1>
       Administrar productos
+      <small>Gestión de inventario</small>
     </h1>
 
     <ol class="breadcrumb">
       <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-      <li class="active">Administrar productos</li>
+      <li class="active">Productos</li>
     </ol>
 
   </section>

@@ -11,24 +11,6 @@
 <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light-border.css" />
 
 <!-- Estilos para filtros estandarizados -->
-<style>
-  @media (max-width: 767px) {
-    .pull-right {
-      float: none !important;
-      justify-content: center !important;
-      width: 100% !important;
-      margin-top: 10px;
-    }
-  }
-
-  /* Ajuste de botones de acción en móvil */
-  @media (max-width: 767px) {
-    .tablaActividades tbody td .btn {
-      padding: 1px 5px !important;
-      font-size: 12px !important;
-      line-height: 1.5 !important;
-    }
-  }
 
   .card-actividad.actividad-hoy {
     border-left: 5px solid #28a745 !important;
@@ -57,10 +39,13 @@ if (!empty($params)) {
     $editarActividad = new ControladorActividades();
     $editarActividad->ctrEditarActividad();
     ?>
-    <h1>Administrar Actividades</h1>
+    <h1>
+      Agenda de actividades
+      <small>Seguimiento comercial</small>
+    </h1>
     <ol class="breadcrumb">
       <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-      <li class="active">Administrar Actividades</li>
+      <li class="active">Actividades</li>
     </ol>
   </section>
 

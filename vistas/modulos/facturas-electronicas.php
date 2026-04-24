@@ -1,37 +1,3 @@
-<style>
-  .formulario-fechas-container {
-    max-width: 300px;
-    padding: 15px;
-    border-radius: 10px;
-    background-color: #ffffff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-  }
-
-  .formulario-fechas label {
-    font-weight: 600;
-    margin-top: 10px;
-  }
-
-  .formulario-fechas select,
-  .formulario-fechas input[type="date"] {
-    border-radius: 8px;
-    margin-bottom: 10px;
-  }
-
-  .d-none {
-    display: none !important;
-  }
-
-  /* Botones de acción compactos en móvil */
-  @media (max-width: 767px) {
-    .tablaFacturasListado tbody td .btn {
-      padding: 1px 5px !important;
-      font-size: 12px !important;
-      line-height: 1.5 !important;
-    }
-  }
-</style>
 
 <!-- Estilos para campo observación -->
 <style>
@@ -96,12 +62,13 @@ if ($xml) {
 
 
     <h1>
-      Administrar Facturas electronicas
+      Facturación electrónica
+      <small>Comprobantes fiscales</small>
     </h1>
 
     <ol class="breadcrumb">
       <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-      <li class="active">Administrar Facturas electronicas</li>
+      <li class="active">Facturas electrónicas</li>
     </ol>
 
   </section>
@@ -203,81 +170,12 @@ if ($xml) {
 
         </div>
 
-        <style>
-          @media (max-width: 767px) {
-            .box-header .btn-primary:not([type="submit"]) {
-              width: 100%;
-              margin-bottom: 10px;
-            }
-
-            .pull-right.contenedor-filtros {
-              float: none !important;
-              width: 100%;
-            }
-
-            .pull-right.contenedor-filtros form {
-              flex-direction: column;
-              align-items: stretch !important;
-              width: 100%;
-              gap: 10px !important;
-            }
-
-            .pull-right.contenedor-filtros form .input-group,
-            .pull-right.contenedor-filtros form div {
-              width: 100% !important;
-            }
-
-            #daterange-btn-factus,
-            [type="submit"],
-            .btn-default {
-              width: 100% !important;
-              margin-bottom: 5px;
-            }
-          }
-        </style>
 
 
       </div>
 
       <div class="box-body">
 
-        <style>
-          .loader-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px;
-            background: #fff;
-            margin-bottom: 20px;
-            transition: opacity 0.3s ease;
-          }
-
-          .loader-container i {
-            font-size: 45px;
-            color: #3c8dbc;
-            margin-bottom: 15px;
-          }
-
-          .loader-container span {
-            font-size: 16px;
-            color: #666;
-            font-weight: 500;
-          }
-
-          /* Ocultar tabla mientras carga para evitar saltos */
-          .tablaFacturasListado:not(.datatable-ready) {
-            visibility: hidden;
-            height: 0;
-            overflow: hidden;
-            opacity: 0;
-          }
-
-          .tablaFacturasListado.datatable-ready {
-            transition: opacity 0.5s ease;
-            opacity: 1;
-          }
-        </style>
 
         <div class="box-body">
 

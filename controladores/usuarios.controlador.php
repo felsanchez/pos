@@ -304,6 +304,125 @@ class ControladorUsuarios
 		return $respuesta;
 	}
 
+	/*=============================================
+	MOSTRAR USUARIOS SERVER-SIDE
+	=============================================*/
+	static public function ctrMostrarUsuariosServerSide($params)
+	{
+		$tabla = "usuarios";
+
+		// Columnas para ordenar
+		$columns = array(
+			0 => 'usuario',
+			1 => 'nombre',
+			2 => 'email',
+			3 => 'foto',
+			4 => 'perfil',
+			5 => 'estado',
+			6 => 'ultimo_login'
+		);
+
+		$where = " WHERE 1=1 ";
+		
+		// Omitir el usuario logueado actualmente
+		if(isset($_SESSION["usuario"])){
+			$where .= " AND usuario != '".$_SESSION["usuario"]."' ";
+		}
+
+		// Filtro de búsqueda (DataTables)
+		if (!empty($params['search']['value'])) {
+			$searchValue = $params['search']['value'];
+			$where .= " AND (usuario LIKE '%$searchValue%' OR nombre LIKE '%$searchValue%' OR email LIKE '%$searchValue%' OR perfil LIKE '%$searchValue%') ";
+		}
+
+		// Filtro por Perfil (Personalizado)
+		if (!empty($params['perfilFiltro'])) {
+			$perfilFiltro = $params['perfilFiltro'];
+			$where .= " AND perfil = '$perfilFiltro' ";
+		}
+
+		// Ordenar
+		$order = "";
+		if (isset($params['order'][0]['column'])) {
+			$order = " ORDER BY " . $columns[$params['order'][0]['column']] . " " . $params['order'][0]['dir'];
+		} else {
+			$order = " ORDER BY id DESC";
+		}
+
+		// Paginación
+		$limit = "";
+		if ($params['length'] != -1) {
+			$limit = " LIMIT " . $params['start'] . ", " . $params['length'];
+		}
+
+		// Obtener datos
+		$usuarios = ModeloUsuarios::mdlMostrarUsuariosServerSide($tabla, $where, $order, $limit);
+		$totalData = ModeloUsuarios::mdlGetTotalUsuarios($tabla, " WHERE 1=1 " . (isset($_SESSION["usuario"]) ? " AND usuario != '".$_SESSION["usuario"]."' " : ""));
+		$totalFiltered = ModeloUsuarios::mdlGetTotalUsuarios($tabla, $where);
+
+		$data = array();
+
+		foreach ($usuarios as $key => $value) {
+			
+			$nestedData = array();
+
+			$nestedData[] = e($value["usuario"]);
+			$nestedData[] = e($value["nombre"]);
+			$nestedData[] = e($value["email"]);
+
+			// Foto
+			if ($value["foto"] != "") {
+				$fotoHtml = '<img src="' . $value["foto"] . '" class="img-thumbnail img-usuario-clickeable" width="40px" style="cursor: pointer;" data-foto="' . $value["foto"] . '" data-idusuario="' . $value["id"] . '" data-usuario="' . $value["usuario"] . '">';
+			} else {
+				$fotoHtml = '<img src="vistas/img/usuarios/default/anonymous.png" class="img-thumbnail img-usuario-clickeable" width="40px" style="cursor: pointer;" data-foto="vistas/img/usuarios/default/anonymous.png" data-idusuario="' . $value["id"] . '" data-usuario="' . $value["usuario"] . '">';
+			}
+			$nestedData[] = $fotoHtml;
+
+			$nestedData[] = e($value["perfil"]);
+
+			// Estado
+			$estadoHtml = "";
+			if (puedeAccion('usuarios', 'editar')) {
+				if ($value["estado"] != 0) {
+					$estadoHtml = '<button class="btn btn-success btn-xs btnActivar" idUsuario="' . $value["id"] . '" estadoUsuario="0">Activado</button>';
+				} else {
+					$estadoHtml = '<button class="btn btn-danger btn-xs btnActivar" idUsuario="' . $value["id"] . '" estadoUsuario="1">Desactivado</button>';
+				}
+			} else {
+				if ($value["estado"] != 0) {
+					$estadoHtml = '<button class="btn btn-success btn-xs">Activado</button>';
+				} else {
+					$estadoHtml = '<button class="btn btn-danger btn-xs">Desactivado</button>';
+				}
+			}
+			$nestedData[] = $estadoHtml;
+
+			$nestedData[] = $value["ultimo_login"];
+
+			// Acciones
+			$accionesHtml = '<div class="btn-group">';
+			if (puedeAccion('usuarios', 'editar')) {
+				$accionesHtml .= '<button class="btn btn-warning btnEditarUsuario" idUsuario="' . $value["id"] . '" title="Editar usuario"><i class="fa fa-pencil"></i></button>';
+			}
+			if (puedeAccion('usuarios', 'eliminar')) {
+				$accionesHtml .= '<button class="btn btn-danger btnEliminarUsuario" idUsuario="' . $value["id"] . '" fotoUsuario="' . $value["foto"] . '" usuario="' . $value["usuario"] . '" title="Eliminar usuario"><i class="fa fa-times"></i></button>';
+			}
+			$accionesHtml .= '</div>';
+			$nestedData[] = $accionesHtml;
+
+			$data[] = $nestedData;
+		}
+
+		$json_data = array(
+			"draw"            => intval($params['draw']),
+			"recordsTotal"    => intval($totalData),
+			"recordsFiltered" => intval($totalFiltered),
+			"data"            => $data
+		);
+
+		return $json_data;
+	}
+
 
 	/*=============================================
 	EDITAR USUARIOS

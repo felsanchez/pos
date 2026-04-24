@@ -1,15 +1,19 @@
 <?php
 // Obtener configuración del sistema
 $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
+$configFactus = ControladorFactus::ctrObtenerConfiguracion();
 
 // Definir logo a usar
 $logoEmpresa = "vistas/img/plantilla/logo-blanco-lineal.png"; // Logo por defecto
 $logoMini = "vistas/img/plantilla/icono-blanco.png"; // Logo mini por defecto
 
-// Si existe logo en configuración, usarlo
-if (!empty($configuracion["logo"]) && file_exists($configuracion["logo"])) {
+// Priorizar Logo de Facturación Electrónica (Factus)
+if (!empty($configFactus["logo_empresa"]) && file_exists($configFactus["logo_empresa"])) {
+	$logoEmpresa = $configFactus["logo_empresa"];
+	$logoMini = $configFactus["logo_empresa"];
+} else if (!empty($configuracion["logo"]) && file_exists($configuracion["logo"])) {
 	$logoEmpresa = $configuracion["logo"];
-	$logoMini = $configuracion["logo"]; // Usar el mismo logo para ambos
+	$logoMini = $configuracion["logo"];
 }
 
 // Verificar actividades y gastos próximos (genera notificaciones automáticamente)

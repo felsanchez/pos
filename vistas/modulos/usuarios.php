@@ -1,36 +1,15 @@
-<style>
-  /* Reajuste en pantallas pequeñas */
-  @media (max-width: 767px) {
-    .tablaUsuariosListado .btn-group .btn {
-      padding: 1px 5px;
-      font-size: 12px;
-      line-height: 1.5;
-      border-radius: 3px;
-    }
-  }
-
-  /* Modal imagen */
-  #modalAmpliarImagenUsuario .modal-body {
-    max-height: 70vh;
-    overflow-y: auto;
-  }
-
-  #modalAmpliarImagenUsuario .modal-footer {
-    position: relative;
-    z-index: 10;
-  }
-</style>
 
 <div class="content-wrapper">
   <section class="content-header">
 
     <h1>
       Administrar usuarios
+      <small>Control de personal</small>
     </h1>
 
     <ol class="breadcrumb">
       <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-      <li class="active">Administrar usuarios</li>
+      <li class="active">Usuarios</li>
     </ol>
 
   </section>
@@ -91,87 +70,7 @@
 
             <tbody>
 
-              <?php
-
-              $item = null;
-              $valor = null;
-
-              $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
-
-              // Obtener el usuario logueado actualmente
-              $usuarioLogueado = isset($_SESSION["usuario"]) ? $_SESSION["usuario"] : '';
-
-              $i = 1;
-
-              foreach ($usuarios as $key => $value) {
-
-                // Saltar el usuario que está logueado actualmente
-                if ($value["usuario"] == $usuarioLogueado) {
-                  continue;
-                }
-
-                echo '<tr>
-                        <td>' . e($value["usuario"]) . '</td>
-                        <td>' . e($value["nombre"]) . '</td>
-
-                        <td>' . e($value["email"]) . '</td>';
-
-
-                /*if($value["foto"] != ""){ 
-                  echo '<td><img src="'.$value["foto"].'" class="img-thumbnail" width="40px"></td>';
-                }
-                else{
-                  echo '<td><img src="vistas/img/usuarios/default/anonymous.png" class="img-thumbnail" width="40px"></td>';
-                } */
-
-                if ($value["foto"] != "") {
-                  echo '<td><img src="' . $value["foto"] . '" class="img-thumbnail img-usuario-clickeable" width="40px" style="cursor: pointer;" data-foto="' . $value["foto"] . '" data-idusuario="' . $value["id"] . '" data-usuario="' . $value["usuario"] . '"></td>';
-                } else {
-                  echo '<td><img src="vistas/img/usuarios/default/anonymous.png" class="img-thumbnail img-usuario-clickeable" width="40px" style="cursor: pointer;" data-foto="vistas/img/usuarios/default/anonymous.png" data-idusuario="' . $value["id"] . '" data-usuario="' . $value["usuario"] . '"></td>';
-                }
-
-
-                echo '<td>' . e($value["perfil"]) . '</td>';
-
-                if (puedeAccion('usuarios', 'editar')) {
-                  if ($value["estado"] != 0) {
-
-                    echo '<td><button class="btn btn-success btn-xs btnActivar" idUsuario="' . $value["id"] . '" estadoUsuario="0">Activado</button></td>';
-                  } else {
-
-                    echo '<td><button class="btn btn-danger btn-xs btnActivar" idUsuario="' . $value["id"] . '" estadoUsuario="1">Desactivado</button></td>';
-                  }
-                } else {
-                  if ($value["estado"] != 0) {
-                    echo '<td><button class="btn btn-success btn-xs">Activado</button></td>';
-                  } else {
-                    echo '<td><button class="btn btn-danger btn-xs">Desactivado</button></td>';
-                  }
-                }
-
-
-                echo '<td>' . $value["ultimo_login"] . '</td>
-
-                    <td>
-                      <div class="btn-group">';
-
-                if (puedeAccion('usuarios', 'editar')) {
-                  echo '<button class="btn btn-warning btnEditarUsuario" idUsuario="' . $value["id"] . '" title="Editar usuario"><i class="fa fa-pencil"></i></button>';
-                }
-
-                if (puedeAccion('usuarios', 'eliminar')) {
-                  echo '<button class="btn btn-danger btnEliminarUsuario" idUsuario="' . $value["id"] . '" fotoUsuario="' . $value["foto"] . '" usuario="' . $value["usuario"] . '" title="Eliminar usuario"><i class="fa fa-times"></i></button>';
-                }
-
-                echo '</div>
-                    </td>
-
-                  </tr>';
-                $i++;
-              }
-
-              ?>
-
+              <!-- Los datos se cargan dinámicamente mediante DataTables Server-Side -->
 
             </tbody>
 

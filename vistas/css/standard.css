@@ -1,0 +1,125 @@
+/*=============================================
+SISTEMA DE DISEÑO ESTÁNDAR - POS PREMIUM
+=============================================*/
+
+/* 1. TIPOGRAFÍA Y CABECERAS */
+.content-header h1 {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 300 !important;
+    color: #2c3e50 !important;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-size: 24px !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 5px;
+    text-shadow: none !important;
+}
+
+.content-header h1 small {
+    font-weight: 400 !important;
+    text-transform: none;
+    letter-spacing: 0;
+    color: #7f8c8d !important;
+    font-size: 15px !important;
+    border-left: 2px solid #bdc3c7;
+    padding-left: 12px;
+    display: inline-block;
+    text-shadow: none !important;
+}
+
+/* 2. CAJAS (BOXES) Y CONTENEDORES */
+.box {
+    border-top: 3px solid #d2d6de;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    border-top: none !important; /* Quitar la línea de color superior por defecto */
+}
+
+.box-header {
+    padding: 15px !important;
+    border-bottom: 1px solid #f4f4f4 !important;
+}
+
+.box-header .box-title {
+    font-weight: 600 !important;
+    color: #444 !important;
+}
+
+/* 3. MENSAJES DE BIENVENIDA */
+.box-bienvenida {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin-top: 20px;
+}
+
+.titulo-bienvenida {
+    font-weight: 300 !important;
+    color: #34495e !important;
+    font-size: 26px !important;
+    text-shadow: none !important;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+/* 4. TABLAS DATATABLES */
+.table thead th {
+    background-color: #f9fafb !important;
+    color: #4b5563 !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    font-size: 12px !important;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #e5e7eb !important;
+    padding: 12px 8px !important;
+}
+
+.table tbody td {
+    vertical-align: middle !important;
+    color: #374151 !important;
+}
+
+/* 5. RESPONSIVIDAD */
+@media (max-width: 767px) {
+    .content-header h1 {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        font-size: 20px !important;
+    }
+    .content-header h1 small {
+        border-left: none;
+        padding-left: 0;
+    }
+    .titulo-bienvenida {
+        font-size: 20px !important;
+    }
+
+    /* Botones de acción compactos en móviles para todas las tablas */
+    .table .btn-group .btn {
+        padding: 2px 6px !important;
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+    }
+}
+
+/* 6. CORRECCIONES DE MODALES (Z-INDEX) */
+.modal {
+    z-index: 10050 !important;
+}
+
+.modal-backdrop {
+    z-index: 10040 !important;
+}
+
+/* Modales anidados o especiales */
+.modal-lg {
+    z-index: 10051 !important;
+}
+
+/* Forzar visibilidad y opacidad */
+.modal.fade.in {
+    opacity: 1 !important;
+}

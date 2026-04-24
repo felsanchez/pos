@@ -1,21 +1,13 @@
-<!-- La estandarización de DataTables Responsive funciona nativamente (inline) -->
-<style>
-  /* Ajuste de botones de acción en móvil */
-  @media (max-width: 767px) {
-    .tablaCategorias .btn-group .btn {
-      padding: 1px 5px !important;
-      font-size: 12px !important;
-      line-height: 1.5 !important;
-    }
-  }
-</style>
 
 <div class="content-wrapper">
   <section class="content-header">
-    <h1>Administrar categorías</h1>
+    <h1>
+      Administrar categorías
+      <small>Clasificación de productos</small>
+    </h1>
     <ol class="breadcrumb">
       <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-      <li class="active">Administrar categorías</li>
+      <li class="active">Categorías</li>
     </ol>
   </section>
 

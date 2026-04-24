@@ -25,183 +25,19 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
       <form role="form" method="post" enctype="multipart/form-data">
 
         <?php CSRF::insertToken(); ?>
+        <input type="hidden" name="actualizarConfiguracion" value="ok">
+        <input type="hidden" name="logoActual" value="<?php echo $configuracion["logo"]; ?>">
+        <input type="hidden" name="nombreEmpresa" value="<?php echo $configuracion["nombre_empresa"]; ?>">
+        <input type="hidden" name="nitEmpresa" value="<?php echo $configuracion["nit"]; ?>">
+        <input type="hidden" name="direccionEmpresa" value="<?php echo $configuracion["direccion"]; ?>">
+        <input type="hidden" name="telefonoEmpresa" value="<?php echo $configuracion["telefono"]; ?>">
+        <input type="hidden" name="correoEmpresa" value="<?php echo $configuracion["correo"]; ?>">
+        <input type="hidden" name="colorPrincipal" value="<?php echo $configuracion["color_principal"]; ?>">
+        <input type="hidden" name="colorSecundario" value="<?php echo $configuracion["color_secundario"]; ?>">
+        <input type="hidden" name="mensajeTicket" value="<?php echo $configuracion["mensaje_ticket"]; ?>">
 
-        <div class="box-body">
 
-          <!--=====================================
-          SECCIÓN 1: DATOS PARA LA FACTURA
-          ======================================-->
 
-          <div class="box box-primary collapsed-box">
-            <div class="box-header with-border">
-              <h3 class="box-title"><i class="fa fa-file-text"></i> Datos para la Factura</h3>
-              <div class="box-tools pull-right">
-                <button type="button" class="btn btn-box-tool" data-widget="custom-collapse"><i
-                    class="fa fa-plus"></i></button>
-              </div>
-            </div>
-            <div class="box-body" style="display: none;">
-
-              <div class="row">
-
-                <!-- Logo de la Empresa -->
-                <div class="col-md-3">
-                  <div class="form-group text-center">
-                    <label>Logo de la Empresa</label>
-                    <div class="panel panel-default">
-                      <div class="panel-body">
-                        <?php if (!empty($configuracion["logo"]) && file_exists($configuracion["logo"])): ?>
-                          <img src="<?php echo $configuracion["logo"]; ?>" class="img-responsive" id="previsualizarLogo"
-                            style="max-width: 200px; margin: 0 auto;">
-                        <?php else: ?>
-                          <img src="vistas/img/plantilla/logo-blanco-bloque.png" class="img-responsive"
-                            id="previsualizarLogo" style="max-width: 200px; margin: 0 auto;">
-                        <?php endif; ?>
-                      </div>
-                    </div>
-                    <input type="file" class="form-control" name="nuevoLogo" id="nuevoLogo" accept="image/*">
-                    <input type="hidden" name="logoActual" value="<?php echo $configuracion["logo"]; ?>">
-                    <p class="help-block">Formatos: JPG, PNG (Máx: 500x500px)</p>
-                  </div>
-                </div>
-
-                <!-- Datos de la Empresa -->
-                <div class="col-md-9">
-
-                  <div class="row">
-
-                    <!-- Nombre de la Empresa -->
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label>Nombre de la Empresa *</label>
-                        <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-building"></i></span>
-                          <input type="text" class="form-control" name="nombreEmpresa"
-                            value="<?php echo $configuracion["nombre_empresa"]; ?>" required>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- NIT / RUT -->
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label>NIT / RUT / Identificación Fiscal</label>
-                        <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-id-card"></i></span>
-                          <input type="text" class="form-control" name="nitEmpresa"
-                            value="<?php echo $configuracion["nit"]; ?>" placeholder="Ej: 123456789-0">
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  <div class="row">
-
-                    <!-- Dirección -->
-                    <div class="col-md-12">
-                      <div class="form-group">
-                        <label>Dirección</label>
-                        <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
-                          <input type="text" class="form-control" name="direccionEmpresa"
-                            value="<?php echo $configuracion["direccion"]; ?>" placeholder="Dirección completa">
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  <div class="row">
-
-                    <!-- Teléfono -->
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label>Teléfono</label>
-                        <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-phone"></i></span>
-                          <input type="text" class="form-control" name="telefonoEmpresa"
-                            value="<?php echo $configuracion["telefono"]; ?>" placeholder="Ej: +56 9 1234 5678">
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Correo -->
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label>Correo Electrónico</label>
-                        <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
-                          <input type="email" class="form-control" name="correoEmpresa"
-                            value="<?php echo $configuracion["correo"]; ?>" placeholder="contacto@empresa.com">
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-              <hr>
-
-              <!-- Colores de Factura -->
-              <h5 class="text-muted"><i class="fa fa-paint-brush"></i> Colores de Factura</h5>
-
-              <div class="row">
-
-                <!-- Color Principal -->
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label>Color Principal</label>
-                    <div class="input-group">
-                      <span class="input-group-addon"><i class="fa fa-square"></i></span>
-                      <input type="color" class="form-control" name="colorPrincipal"
-                        value="<?php echo !empty($configuracion["color_principal"]) ? $configuracion["color_principal"] : '#667eea'; ?>"
-                        style="height: 40px;">
-                    </div>
-                    <p class="help-block">Color de cabecera y borde de "Información del Cliente"</p>
-                  </div>
-                </div>
-
-                <!-- Color Secundario -->
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label>Color Secundario</label>
-                    <div class="input-group">
-                      <span class="input-group-addon"><i class="fa fa-square"></i></span>
-                      <input type="color" class="form-control" name="colorSecundario"
-                        value="<?php echo !empty($configuracion["color_secundario"]) ? $configuracion["color_secundario"] : '#764ba2'; ?>"
-                        style="height: 40px;">
-                    </div>
-                    <p class="help-block">Color del borde de "Detalles de la Venta"</p>
-                  </div>
-                </div>
-
-              </div>
-
-              <hr>
-
-              <!-- Mensaje de Ticket -->
-              <h5 class="text-muted"><i class="fa fa-comment"></i> Mensaje de Ticket</h5>
-
-              <div class="row">
-                <div class="col-md-12">
-                  <div class="form-group">
-                    <label>Mensaje de Pie de Ticket</label>
-                    <div class="input-group">
-                      <span class="input-group-addon"><i class="fa fa-print"></i></span>
-                      <textarea class="form-control" name="mensajeTicket" rows="2"
-                        placeholder="Mensaje que aparecerá al final del ticket"><?php echo $configuracion["mensaje_ticket"]; ?></textarea>
-                    </div>
-                    <p class="help-block">Ej: ¡Gracias por su compra! Vuelva pronto.</p>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
 
           <!--=====================================
           SECCIÓN 2: CONFIGURACIÓN DE VENTAS
@@ -493,12 +329,12 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
           </div>
 
           <!--=====================================
-          SECCIÓN 5: CONFIGURACIÓN FACTUS
+          SECCIÓN 1: DATOS PARA LA FACTURA
           ======================================-->
 
           <div class="box box-primary collapsed-box">
             <div class="box-header with-border">
-              <h3 class="box-title"><i class="fa fa-file-code-o"></i> Facturación Electrónica (Factus)</h3>
+              <h3 class="box-title"><i class="fa fa-file-text"></i> Datos para la Factura</h3>
               <div class="box-tools pull-right">
                 <button type="button" class="btn btn-box-tool" data-widget="custom-collapse"><i
                     class="fa fa-plus"></i></button>
@@ -846,10 +682,20 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
             </div>
           </div>
 
+        </div> <!-- /.box-body -->
+
+        <div class="box-footer">
+          <button type="submit" class="btn btn-primary pull-right" style="margin-right: 20px;">
+            <i class="fa fa-save"></i> Guardar configuración
+          </button>
         </div>
 
+      </form>
+
+    </div> <!-- /.box -->
+
           <!--=====================================
-          SECCIÓN 6: GESTIÓN DE PERFILES
+          SECCIÓN 5: GESTIÓN DE PERFILES
           ======================================-->
 
           <?php
@@ -1448,3 +1294,6 @@ $(document).ready(function() {
   });
 });
 </script>
+  </section>
+
+</div>
