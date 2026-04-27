@@ -2023,6 +2023,38 @@ class ModeloFactus
             return $stmt->fetchAll();
         }
     }
+
+    /*=============================================
+    MOSTRAR NOTAS CREDITO SERVER-SIDE
+    =============================================*/
+    static public function mdlMostrarNotasCreditoServerSide($where, $order, $limit)
+    {
+        $stmt = Conexion::conectar()->prepare(
+            "SELECT nc.*,
+                    c.nombre AS cliente_nombre,
+                    c.email  AS cliente_email
+             FROM notas_credito nc
+             LEFT JOIN clientes c ON nc.id_cliente = c.id
+             $where $order $limit"
+        );
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /*=============================================
+    TOTAL NOTAS CREDITO SERVER-SIDE
+    =============================================*/
+    static public function mdlGetTotalNotasCredito($where)
+    {
+        $stmt = Conexion::conectar()->prepare(
+            "SELECT COUNT(*) FROM notas_credito nc
+             LEFT JOIN clientes c ON nc.id_cliente = c.id
+             $where"
+        );
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
+
     /*=============================================
     ACTUALIZAR DATOS DE NOTA CREDITO
     =============================================*/

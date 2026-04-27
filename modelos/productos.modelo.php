@@ -38,6 +38,40 @@ class ModeloProductos
 
 	}
 
+	/*=============================================
+	MOSTRAR PRODUCTOS SERVER-SIDE
+	=============================================*/
+	static public function mdlMostrarProductosServerSide($tabla, $where, $order, $limit)
+	{
+		$stmt = Conexion::conectar()->prepare("
+			SELECT p.*, c.categoria AS nombre_categoria, prov.nombre AS nombre_proveedor, t.nombre AS nombre_tributo
+			FROM $tabla p
+			LEFT JOIN categorias c ON p.id_categoria = c.id
+			LEFT JOIN proveedores prov ON p.id_proveedor = prov.id
+			LEFT JOIN factus_tributos t ON p.tributo_id = t.id
+			$where $order $limit
+		");
+		$stmt->execute();
+		return $stmt->fetchAll();
+	}
+
+	/*=============================================
+	OBTENER TOTAL PRODUCTOS (PARA SERVER-SIDE)
+	=============================================*/
+	static public function mdlGetTotalProductos($tabla, $where)
+	{
+		$stmt = Conexion::conectar()->prepare("
+			SELECT COUNT(*) 
+			FROM $tabla p
+			LEFT JOIN categorias c ON p.id_categoria = c.id
+			LEFT JOIN proveedores prov ON p.id_proveedor = prov.id
+			LEFT JOIN factus_tributos t ON p.tributo_id = t.id
+			$where
+		");
+		$stmt->execute();
+		return $stmt->fetchColumn();
+	}
+
 
 
 	/*=============================================

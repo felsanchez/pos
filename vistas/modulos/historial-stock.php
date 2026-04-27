@@ -1,5 +1,4 @@
 <style>
-
   /* Estilos para campo notas editable */
   .celda-notas-movimiento {
     background: #fff9e6;
@@ -84,8 +83,7 @@
 require_once "controladores/movimientos.controlador.php";
 require_once "modelos/movimientos.modelo.php";
 
-// Pre-cargar datos para aparición inmediata
-$pre_movimientos = ControladorMovimientos::ctrMostrarMovimientos();
+// Pre-cargar solo el resumen para aparición inmediata (Las tarjetas)
 $pre_resumen = ControladorMovimientos::ctrObtenerResumen();
 
 $tv = 0;
@@ -94,15 +92,17 @@ $te = 0;
 $tm = 0;
 
 foreach ($pre_resumen as $item) {
-    $tm += intval($item["total_movimientos"]);
-    if ($item["tipo_movimiento"] == "venta") $tv = $item["total_unidades"];
-    if ($item["tipo_movimiento"] == "creacion_producto" || $item["tipo_movimiento"] == "creacion_variante") $tc += intval($item["total_unidades"]);
-    if ($item["tipo_movimiento"] == "edicion_stock") $te = $item["total_unidades"];
+  $tm += intval($item["total_movimientos"]);
+  if ($item["tipo_movimiento"] == "venta")
+    $tv = $item["total_unidades"];
+  if ($item["tipo_movimiento"] == "creacion_producto" || $item["tipo_movimiento"] == "creacion_variante")
+    $tc += intval($item["total_unidades"]);
+  if ($item["tipo_movimiento"] == "edicion_stock")
+    $te = $item["total_unidades"];
 }
 ?>
 
 <script>
-  window.preloadedMovimientos = <?php echo json_encode($pre_movimientos); ?>;
   window.preloadedResumen = <?php echo json_encode($pre_resumen); ?>;
 </script>
 
@@ -194,7 +194,7 @@ foreach ($pre_resumen as $item) {
 
         <div class="pull-right contenedor-filtros">
 
-          <form id="formFiltros" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+          <div id="formFiltros" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
 
             <!-- Filtro por Producto -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
@@ -202,8 +202,7 @@ foreach ($pre_resumen as $item) {
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                     class="fa fa-search text-primary"></i></span>
-                <select class="form-control select2" id="filtroProducto" name="filtroProducto"
-                  style="width: 140px; border-left: 0;">
+                <select class="form-control select2" id="cat_s" style="width: 140px; border-left: 0;">
                   <option value="">Seleccionar Producto</option>
                   <?php
                   $item = null;
@@ -220,18 +219,19 @@ foreach ($pre_resumen as $item) {
 
             <!-- Filtro por Movimiento -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Tipo:</label>
+              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Movimiento:</label>
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                     class="fa fa-search text-primary"></i></span>
-                <select class="form-control select2" id="filtroTipo" name="filtroTipo"
-                  style="width: 130px; border-left: 0;">
+                <select class="form-control select2" id="tipo_s" style="width: 130px; border-left: 0;">
                   <option value="">Seleccionar Tipo</option>
                   <option value="venta">Venta</option>
                   <option value="eliminacion_venta">Eliminación Venta</option>
+                  <option value="devolucion">Devolución</option>
                   <option value="creacion_producto">Creación</option>
-                  <option value="creacion_variante">Creación Variación</option>
+                  <option value="creacion_variante">Creación Variante</option>
                   <option value="edicion_stock">Edición Stock</option>
+                  <option value="ajuste_manual">Ajuste Manual</option>
                 </select>
               </div>
             </div>
@@ -242,8 +242,7 @@ foreach ($pre_resumen as $item) {
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                     class="fa fa-search text-primary"></i></span>
-                <select class="form-control select2" id="filtroUsuario" name="filtroUsuario"
-                  style="width: 120px; border-left: 0;">
+                <select class="form-control select2" id="user_s" style="width: 120px; border-left: 0;">
                   <option value="">Seleccionar Usuario</option>
                   <?php
                   $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
@@ -256,21 +255,21 @@ foreach ($pre_resumen as $item) {
             </div>
 
             <!-- Filtro por Rango de Fecha -->
-            <div class="form-group" style="margin-bottom: 0;">
-              <button type="button" class="btn btn-default" id="daterange-btn">
-                <span>
-                  <i class="fa fa-calendar"></i> Rango
-                </span>
-                <i class="fa fa-caret-down"></i>
-              </button>
-              <input type="hidden" id="filtroFechaDesde" name="filtroFechaDesde">
-              <input type="hidden" id="filtroFechaHasta" name="filtroFechaHasta">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="hidden-xs"><b>Filtrar por Fecha:</b></span>
+              <div class="form-group" style="margin-bottom: 0;">
+                <button type="button" class="btn btn-default" id="btn-rango-stock">
+                  <span id="span-rango-stock">
+                    <i class="fa fa-calendar"></i> Rango de fecha
+                  </span>
+                  <i class="fa fa-caret-down"></i>
+                </button>
+                <input type="hidden" id="fi_s">
+                <input type="hidden" id="ff_s">
+              </div>
             </div>
 
             <!-- Botones de Acción (Separados para mantener gap consistente) -->
-            <button type="button" class="btn btn-primary" id="btnFiltrar" title="Filtrar">
-              <i class="fa fa-search"></i>
-            </button>
             <button type="button" class="btn btn-default" id="btnLimpiar" title="Limpiar">
               <i class="fa fa-refresh"></i>
             </button>
@@ -280,7 +279,7 @@ foreach ($pre_resumen as $item) {
               </button>
             <?php endif; ?>
 
-          </form>
+          </div>
 
         </div>
 
@@ -289,12 +288,12 @@ foreach ($pre_resumen as $item) {
 
       <div class="box-body">
 
-        <table class="table table-bordered table-striped tablaHistorialStock" width="100%">
+        <table class="table table-bordered table-striped tablaHistorialStock display nowrap" width="100%">
 
           <thead>
 
             <tr>
-
+              <th width="10"></th>
               <th>Producto</th>
               <th>Tipo Movimiento</th>
               <th>Tipo</th>
@@ -304,60 +303,12 @@ foreach ($pre_resumen as $item) {
               <th>Stock Nuevo</th>
               <th>Usuario</th>
               <th>Referencia</th>
-              <th><i class="fa fa-pencil-square"></i> Notas</th>
+              <th>Notas</th>
             </tr>
 
           </thead>
 
           <tbody>
-            <?php
-            // SSR: Renderizar las primeras 25 filas directamente en el servidor para carga instantánea
-            $initialRows = array_slice($pre_movimientos, 0, 25);
-            foreach ($initialRows as $row) {
-              
-              // 1. Tipo Movimiento Badge
-              $badges = [
-                "venta" => '<span class="label label-success">Venta</span>',
-                "devolucion" => '<span class="label label-warning">Devolución</span>',
-                "eliminacion_venta" => '<span class="label label-danger">Eliminación Venta</span>',
-                "ajuste_manual" => '<span class="label label-default">Ajuste Manual</span>',
-                "creacion_producto" => '<span class="label label-primary">Creación</span>',
-                "creacion_variante" => '<span class="label label-info">Creación Variante</span>',
-                "edicion_stock" => '<span class="label label-default">Edición Stock</span>'
-              ];
-              $badgeMov = isset($badges[$row["tipo_movimiento"]]) ? $badges[$row["tipo_movimiento"]] : $row["tipo_movimiento"];
-
-              // 2. Tipo Producto Label
-              $badgeTipo = ($row["tipo_producto"] == "producto") ? '<span class="label label-primary">Producto</span>' : '<span class="label label-info">Variante</span>';
-
-              // 3. Fecha Formateada
-              $fechaObj = new DateTime($row["fecha"]);
-              $fechaFormateada = $fechaObj->format('d/m/Y H:i');
-
-              // 4. Cantidad Formateada
-              $cantidad = intval($row["cantidad"]);
-              $badgeCant = ($cantidad > 0) ? '<span class="text-green"><i class="fa fa-arrow-up"></i> +' . $cantidad . '</span>' : '<span class="text-red"><i class="fa fa-arrow-down"></i> ' . $cantidad . '</span>';
-
-              // 5. Stock Nuevo Colorido
-              $cambio = intval($row["stock_nuevo"]) - intval($row["stock_anterior"]);
-              $stockNuevoHtml = $row["stock_nuevo"];
-              if ($cambio > 0) $stockNuevoHtml = '<strong class="text-green">' . $row["stock_nuevo"] . '</strong>';
-              if ($cambio < 0) $stockNuevoHtml = '<strong class="text-red">' . $row["stock_nuevo"] . '</strong>';
-
-              echo '<tr>';
-              echo '<td>' . e($row["nombre_producto"]) . '</td>';
-              echo '<td>' . $badgeMov . '</td>';
-              echo '<td>' . $badgeTipo . '</td>';
-              echo '<td>' . $fechaFormateada . '</td>';
-              echo '<td>' . $badgeCant . '</td>';
-              echo '<td>' . $row["stock_anterior"] . '</td>';
-              echo '<td>' . $stockNuevoHtml . '</td>';
-              echo '<td>' . e($row["nombre_usuario"]) . '</td>';
-              echo '<td>' . e($row["referencia"]) . '</td>';
-              echo '<td><div contenteditable="true" class="celda-notas-movimiento" data-id="' . $row["id"] . '">' . e($row["notas"]) . '</div></td>';
-              echo '</tr>';
-            }
-            ?>
           </tbody>
 
         </table>

@@ -55,6 +55,16 @@ $(document).ready(function () {
   if ($('.tablas1').length === 0) return;
 
   tabla1 = $('.tablas1').DataTable({
+    "processing": true,
+    "serverSide": true,
+    "ajax": {
+      "url": "ajax/clientes.ajax.php",
+      "type": "POST",
+      "data": function ( d ) {
+          d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+          d.filtroEstatus1 = $('#filtroEstatus1').val();
+      }
+    },
     "destroy": true,
     "stateSave": false,
     "order": [[0, 'asc']],
@@ -127,17 +137,6 @@ $(document).ready(function () {
         sPrevious: "Anterior"
       }
     }
-  });
-
-  // Filtro por estado: buscar en la celda de Estado por el texto del badge
-  $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-    if (settings.nTable !== $('.tablas1')[0]) return true;
-    var filtro = $('#filtroEstatus1').val();
-    if (!filtro || filtro === '') return true;
-    // columna 5 (índice 5) = Estado — extraer texto del badge, ignorar HTML
-    var rawHtml = data[5] || '';
-    var estadoCelda = rawHtml ? $('<div>').html(rawHtml).text().toLowerCase() : '';
-    return estadoCelda.indexOf(filtro.toLowerCase()) !== -1;
   });
 
   $('#filtroEstatus1').on('change', function () {

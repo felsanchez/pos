@@ -15,6 +15,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+/*=============================================
+TABLA CATEGORIAS SERVER-SIDE
+=============================================*/
+if (isset($_POST["draw"])) {
+    require_once "../modelos/sanitizer.php";
+    require_once "../modelos/helpers.php";
+    $respuesta = ControladorCategorias::ctrMostrarCategoriasServerSide($_POST);
+    echo json_encode($respuesta);
+    exit;
+}
+
 class AjaxCategorias{
 
 	/*=============================================

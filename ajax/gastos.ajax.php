@@ -1,12 +1,29 @@
 <?php
+ob_start();
 require_once "../modelos/session-manager.php";
 SessionManager::startSecure();
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
 
 require_once "../controladores/gastos.controlador.php";
 require_once "../modelos/gastos.modelo.php";
 require_once "../modelos/csrf.php";
+require_once "../modelos/helpers.php";
 
-// VALIDAR CSRF para todas las peticiones POST
+/*=============================================
+MOSTRAR GASTOS SERVER-SIDE (solo lectura, no requiere CSRF)
+=============================================*/
+if (isset($_POST["draw"])) {
+    if (ob_get_length()) ob_clean();
+    require_once "../controladores/configuracion.controlador.php";
+    require_once "../modelos/configuracion.modelo.php";
+    require_once "../modelos/sanitizer.php";
+    $respuesta = ControladorGastos::ctrMostrarGastosServerSide($_POST);
+    echo json_encode($respuesta);
+    exit;
+}
+
+// VALIDAR CSRF para todas las peticiones de escritura
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!CSRF::validateToken()) {
         http_response_code(403);

@@ -52,18 +52,27 @@ class RateLimiter
      */
     public static function recordAttempt($ip, $username = null)
     {
-        $stmt = Conexion::conectar()->prepare(
-            "INSERT INTO login_attempts (ip_address, username, attempt_time) 
-             VALUES (:ip, :username, NOW())"
-        );
+        try {
+            $stmt = Conexion::conectar()->prepare(
+                "INSERT INTO login_attempts (ip_address, username, attempt_time) 
+                 VALUES (:ip, :username, NOW())"
+            );
 
-        $stmt->bindParam(":ip", $ip, PDO::PARAM_STR);
-        $stmt->bindParam(":username", $username, PDO::PARAM_STR);
-        $stmt->execute();
-        $stmt = null;
+            $stmt->bindParam(":ip", $ip, PDO::PARAM_STR);
+            $stmt->bindParam(":username", $username, PDO::PARAM_STR);
+            $stmt->execute();
+            $stmt = null;
 
-        // Limpiar registros antiguos
-        self::cleanup();
+            // Limpiar registros antiguos
+            self::cleanup();
+        } catch (PDOException $e) {
+            // Error 1146 o SQLSTATE 42S02: Tabla no existe
+            if ($e->getCode() == '42S02' || strpos($e->getMessage(), '1146') !== false) {
+                self::createTable();
+            } else {
+                error_log("Error en RateLimiter::recordAttempt: " . $e->getMessage());
+            }
+        }
     }
 
     /**
@@ -74,22 +83,53 @@ class RateLimiter
      */
     public static function getAttempts($ip)
     {
-        $stmt = Conexion::conectar()->prepare(
-            "SELECT COUNT(*) as attempts 
-             FROM login_attempts 
-             WHERE ip_address = :ip 
-             AND attempt_time > DATE_SUB(NOW(), INTERVAL :lockout SECOND)"
-        );
+        try {
+            $stmt = Conexion::conectar()->prepare(
+                "SELECT COUNT(*) as attempts 
+                 FROM login_attempts 
+                 WHERE ip_address = :ip 
+                 AND attempt_time > DATE_SUB(NOW(), INTERVAL :lockout SECOND)"
+            );
 
-        $lockout = self::LOCKOUT_TIME;
-        $stmt->bindParam(":ip", $ip, PDO::PARAM_STR);
-        $stmt->bindParam(":lockout", $lockout, PDO::PARAM_INT);
-        $stmt->execute();
+            $lockout = self::LOCKOUT_TIME;
+            $stmt->bindParam(":ip", $ip, PDO::PARAM_STR);
+            $stmt->bindParam(":lockout", $lockout, PDO::PARAM_INT);
+            $stmt->execute();
 
-        $result = $stmt->fetch();
-        $stmt = null;
+            $result = $stmt->fetch();
+            $stmt = null;
 
-        return $result['attempts'] ?? 0;
+            return $result['attempts'] ?? 0;
+        } catch (PDOException $e) {
+            if ($e->getCode() == '42S02' || strpos($e->getMessage(), '1146') !== false) {
+                self::createTable();
+                return 0;
+            }
+            error_log("Error en RateLimiter::getAttempts: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Crea la tabla de intentos de login si no existe
+     */
+    private static function createTable()
+    {
+        $sql = "CREATE TABLE IF NOT EXISTS `login_attempts` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `ip_address` varchar(45) NOT NULL,
+          `username` varchar(100) DEFAULT NULL,
+          `attempt_time` datetime NOT NULL,
+          PRIMARY KEY (`id`),
+          KEY `ip_address` (`ip_address`),
+          KEY `attempt_time` (`attempt_time`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+        try {
+            Conexion::conectar()->exec($sql);
+        } catch (PDOException $e) {
+            error_log("Error crítico: No se pudo crear la tabla login_attempts: " . $e->getMessage());
+        }
     }
 
     /**
@@ -100,21 +140,25 @@ class RateLimiter
      */
     private static function getLastAttemptTime($ip)
     {
-        $stmt = Conexion::conectar()->prepare(
-            "SELECT attempt_time 
-             FROM login_attempts 
-             WHERE ip_address = :ip 
-             ORDER BY attempt_time DESC 
-             LIMIT 1"
-        );
+        try {
+            $stmt = Conexion::conectar()->prepare(
+                "SELECT attempt_time 
+                 FROM login_attempts 
+                 WHERE ip_address = :ip 
+                 ORDER BY attempt_time DESC 
+                 LIMIT 1"
+            );
 
-        $stmt->bindParam(":ip", $ip, PDO::PARAM_STR);
-        $stmt->execute();
+            $stmt->bindParam(":ip", $ip, PDO::PARAM_STR);
+            $stmt->execute();
 
-        $result = $stmt->fetch();
-        $stmt = null;
+            $result = $stmt->fetch();
+            $stmt = null;
 
-        return $result['attempt_time'] ?? null;
+            return $result['attempt_time'] ?? null;
+        } catch (PDOException $e) {
+            return null;
+        }
     }
 
     /**
@@ -124,13 +168,17 @@ class RateLimiter
      */
     public static function clearAttempts($ip)
     {
-        $stmt = Conexion::conectar()->prepare(
-            "DELETE FROM login_attempts WHERE ip_address = :ip"
-        );
+        try {
+            $stmt = Conexion::conectar()->prepare(
+                "DELETE FROM login_attempts WHERE ip_address = :ip"
+            );
 
-        $stmt->bindParam(":ip", $ip, PDO::PARAM_STR);
-        $stmt->execute();
-        $stmt = null;
+            $stmt->bindParam(":ip", $ip, PDO::PARAM_STR);
+            $stmt->execute();
+            $stmt = null;
+        } catch (PDOException $e) {
+            // Si falla la limpieza, no bloqueamos el flujo
+        }
     }
 
     /**
@@ -138,15 +186,19 @@ class RateLimiter
      */
     private static function cleanup()
     {
-        $stmt = Conexion::conectar()->prepare(
-            "DELETE FROM login_attempts 
-             WHERE attempt_time < DATE_SUB(NOW(), INTERVAL :cleanup SECOND)"
-        );
+        try {
+            $stmt = Conexion::conectar()->prepare(
+                "DELETE FROM login_attempts 
+                 WHERE attempt_time < DATE_SUB(NOW(), INTERVAL :cleanup SECOND)"
+            );
 
-        $cleanup = self::CLEANUP_TIME;
-        $stmt->bindParam(":cleanup", $cleanup, PDO::PARAM_INT);
-        $stmt->execute();
-        $stmt = null;
+            $cleanup = self::CLEANUP_TIME;
+            $stmt->bindParam(":cleanup", $cleanup, PDO::PARAM_INT);
+            $stmt->execute();
+            $stmt = null;
+        } catch (PDOException $e) {
+            // Ignorar errores en limpieza automática
+        }
     }
 
     /**

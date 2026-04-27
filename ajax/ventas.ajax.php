@@ -1,8 +1,7 @@
 <?php
 ob_start();
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . "/../modelos/session-manager.php";
+SessionManager::startSecure();
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
@@ -24,6 +23,15 @@ try {
     require_once __DIR__ . "/../modelos/factus.modelo.php";
     require_once __DIR__ . "/../controladores/movimientos.controlador.php";
     require_once __DIR__ . "/../modelos/movimientos.modelo.php";
+    require_once __DIR__ . "/../modelos/csrf.php";
+
+    // 2. VALIDAR CSRF para todas las peticiones POST
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (!CSRF::validateToken()) {
+            http_response_code(403);
+            die(json_encode(['error' => 'Token CSRF inválido', 'success' => false]));
+        }
+    }
 
     class AjaxVentas
     {
@@ -113,6 +121,30 @@ try {
     }
 
     // --- ACCIONES AJAX ---
+
+    /*=============================================
+    TABLA ORDENES SERVER-SIDE
+    =============================================*/
+    if (isset($_POST["drawOrdenes"])) {
+        if (ob_get_length()) ob_clean();
+        require_once "../modelos/sanitizer.php";
+        require_once "../modelos/helpers.php";
+        $respuesta = ControladorVentas::ctrMostrarOrdenesServerSide($_POST);
+        echo json_encode($respuesta);
+        exit;
+    }
+
+    /*=============================================
+    TABLA FACTURAS ELECTRÓNICAS SERVER-SIDE
+    =============================================*/
+    if (isset($_POST["drawFacturasElectronicas"])) {
+        if (ob_get_length()) ob_clean();
+        require_once "../modelos/sanitizer.php";
+        require_once "../modelos/helpers.php";
+        $respuesta = ControladorVentas::ctrMostrarFacturasElectronicasServerSide($_POST);
+        echo json_encode($respuesta);
+        exit;
+    }
 
     if (isset($_POST["idProducto"])) {
         $traerVariantes = new AjaxVentas();

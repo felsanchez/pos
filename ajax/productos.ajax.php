@@ -493,7 +493,7 @@ if (isset($_POST["editarVariante"])) {
             $nuevoStock,
 
             "Stock de variante editado manualmente",
-            "Cambio de stock: " . $stockAnterior . " → " . $nuevoStock
+            ""
         );
 
     }

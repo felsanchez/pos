@@ -17,6 +17,142 @@ class ControladorGastos{
 	}
 
 	/*=============================================
+	MOSTRAR GASTOS SERVER-SIDE
+	=============================================*/
+	static public function ctrMostrarGastosServerSide($params)
+	{
+		$tabla = "gastos";
+
+		// Mapeo de columnas para ordenamiento
+		$columnsMap = array(
+			0 => 'g.concepto',
+			1 => 'g.monto',
+			2 => 'c.nombre',
+			3 => 'g.estado',
+			4 => 'p.nombre',
+			5 => 'g.id', // Imagen
+			6 => 'g.fecha',
+			7 => 'g.notas'
+		);
+
+		$where = " WHERE 1=1 ";
+
+		// Filtro por Fechas
+		if (!empty($params['fechaInicio']) && !empty($params['fechaFin'])) {
+			$where .= " AND g.fecha BETWEEN '" . $params['fechaInicio'] . "' AND '" . $params['fechaFin'] . "' ";
+		}
+
+		// Filtro por Categoría
+		if (!empty($params['categoriaId'])) {
+			$where .= " AND g.id_categoria_gasto = " . $params['categoriaId'];
+		}
+
+		// Filtro por Proveedor
+		if (!empty($params['proveedorId'])) {
+			$where .= " AND g.id_proveedor = " . $params['proveedorId'];
+		}
+
+		// Búsqueda global
+		if (!empty($params['search']['value'])) {
+			$searchValue = $params['search']['value'];
+			$where .= " AND (g.concepto LIKE '%$searchValue%' OR g.codigo LIKE '%$searchValue%' OR p.nombre LIKE '%$searchValue%' OR g.notas LIKE '%$searchValue%') ";
+		}
+
+		// Orden
+		$order = "";
+		if (isset($params['order'][0]['column'])) {
+			$colIdx = $params['order'][0]['column'];
+			$colName = isset($columnsMap[$colIdx]) ? $columnsMap[$colIdx] : 'g.id';
+			$order = " ORDER BY " . $colName . " " . $params['order'][0]['dir'];
+		} else {
+			$order = " ORDER BY g.id DESC";
+		}
+
+		// Paginación
+		$limit = "";
+		if ($params['length'] != -1) {
+			$limit = " LIMIT " . $params['start'] . ", " . $params['length'];
+		}
+
+		// Obtener datos
+		$gastos = ModeloGastos::mdlMostrarGastosServerSide($tabla, $where, $order, $limit);
+		$totalData = ModeloGastos::mdlGetTotalGastos($tabla, " WHERE 1=1 ");
+		$totalFiltered = ModeloGastos::mdlGetTotalGastos($tabla, $where);
+
+		$data = array();
+		$fechaHoy = date('Y-m-d');
+
+		foreach ($gastos as $key => $value) {
+			
+			$nestedData = array();
+
+			// Columna 1: Concepto
+			$nestedData[] = e($value["concepto"]);
+
+			// Columna 2: Monto
+			$nestedData[] = '<strong>$' . number_format($value["monto"], 2, ',', '.') . '</strong>';
+
+			// Columna 3: Categoría
+			$categoriaBadge = '-';
+			if (!empty($value["categoria_nombre"])) {
+				$categoriaBadge = '<span class="badge" style="background-color: ' . $value["categoria_color"] . '">' . e($value["categoria_nombre"]) . '</span>';
+			}
+			$nestedData[] = $categoriaBadge;
+
+			// Columna 4: Estado
+			$estadoBadge = '';
+			if ($value["estado"] == "aprobado") {
+				$estadoBadge = '<button class="btn btn-success btn-xs">Aprobado</button>';
+			} else if ($value["estado"] == "pendiente") {
+				$estadoBadge = '<button class="btn btn-warning btn-xs">Pendiente</button>';
+			} else {
+				$estadoBadge = '<button class="btn btn-danger btn-xs">Rechazado</button>';
+			}
+			$nestedData[] = $estadoBadge;
+
+			// Columna 5: Proveedor
+			$nestedData[] = e(!empty($value["proveedor_nombre"]) ? $value["proveedor_nombre"] : '-');
+
+			// Columna 6: Imagen
+			$imgSrc = !empty($value["imagen_comprobante"]) ? $value["imagen_comprobante"] : "vistas/img/gastos/default/sin-imagen.png";
+			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-comprobante-clickeable" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idgasto="' . $value["id"] . '" data-concepto="' . e($value["concepto"]) . '">';
+
+			// Columna 7: Fecha
+			$nestedData[] = !empty($value["fecha"]) ? date("d/m/Y", strtotime($value["fecha"])) : '-';
+
+			// Columna 8: Notas (Editable)
+			$nestedData[] = '<div contenteditable="true" class="celda-notas-gasto" data-id="' . $value["id"] . '">' . e($value["notas"]) . '</div>';
+
+			// Columna 9: Acciones
+			$botonesAcciones = '<div class="btn-group">';
+			if (puedeAccion('gastos', 'editar')) {
+				$botonesAcciones .= '<button class="btn btn-warning btnEditarGasto" idGasto="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarGasto" title="Editar gasto"><i class="fa fa-pencil"></i></button>';
+			}
+			if (puedeAccion('gastos', 'eliminar')) {
+				$botonesAcciones .= '<button class="btn btn-danger btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . e($value["concepto"]) . '" title="Eliminar gasto"><i class="fa fa-times"></i></button>';
+			}
+			$botonesAcciones .= '</div>';
+			$nestedData[] = $botonesAcciones;
+
+			// Row attributes for styling
+			if ($value["fecha"] == $fechaHoy) {
+				$nestedData['DT_RowAttr'] = array(
+					'style' => 'border-left: 6px solid #28a745 !important; background-color: #f0f9f4; box-shadow: inset 6px 0 0 #28a745;'
+				);
+			}
+
+			$data[] = $nestedData;
+		}
+
+		return array(
+			"draw"            => intval($params['draw']),
+			"recordsTotal"    => intval($totalData),
+			"recordsFiltered" => intval($totalFiltered),
+			"data"            => $data
+		);
+	}
+
+	/*=============================================
 	MOSTRAR GASTOS CON FILTROS
 	=============================================*/
 

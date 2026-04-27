@@ -41,22 +41,11 @@ $(document).ready(function () {
 	/*=============================================
 	RANGO DE FECHAS (dentro de document.ready para que el DOM exista)
 	=============================================*/
-	if ($('#daterange-btn').length > 0 && typeof $.fn.daterangepicker !== 'undefined') {
-
-		// Restaurar el label visual del botón desde la URL actual (más confiable que localStorage)
-		var urlParams = new URLSearchParams(window.location.search);
-		var fechaInicialUrl = urlParams.get('fechaInicial');
-		var fechaFinalUrl = urlParams.get('fechaFinal');
-
-		if (fechaInicialUrl && fechaFinalUrl) {
-			// Hay fechas en la URL: mostrar el rango en el botón
-			var inicio = moment(fechaInicialUrl).format('MMMM D, YYYY');
-			var fin = moment(fechaFinalUrl).format('MMMM D, YYYY');
-			$('#daterange-btn span').html('<i class="fa fa-calendar"></i> ' + inicio + ' - ' + fin);
-		} else {
-			$('#daterange-btn span').html('<i class="fa fa-calendar"></i> Rango de fecha');
-		}
-
+	/*=============================================
+	RANGO DE FECHAS (Desactivado aquí para Administrar Ventas, se maneja en ventas.php)
+	=============================================*/
+	// Si no estamos en la vista de administrar ventas (ej: reportes), inicializarlo normalmente
+	if ($('#daterange-btn').length > 0 && !$('#tablaListaVentas').length) {
 		$('#daterange-btn').daterangepicker(
 			{
 				ranges: {
@@ -67,31 +56,15 @@ $(document).ready(function () {
 					'Este mes': [moment().startOf('month'), moment().endOf('month')],
 					'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
 				},
-				startDate: fechaInicialUrl ? moment(fechaInicialUrl) : moment().subtract(29, 'days'),
-				endDate: fechaFinalUrl ? moment(fechaFinalUrl) : moment()
+				startDate: moment().subtract(29, 'days'),
+				endDate: moment()
 			},
 			function (start, end) {
 				$('#daterange-btn span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-
-				// Escribir directamente en los inputs del formulario
 				$('#fechaInicial').val(start.format('YYYY-MM-DD'));
 				$('#fechaFinal').val(end.format('YYYY-MM-DD'));
 			}
 		);
-
-		// Interceptar el submit del formulario para garantizar que las fechas estén siempre correctas
-		$('#daterange-btn').closest('form').on('submit', function(e) {
-			var picker = $('#daterange-btn').data('daterangepicker');
-			if (picker) {
-				var fi = $('#fechaInicial').val();
-				var ff = $('#fechaFinal').val();
-				// Si los inputs están vacíos pero el picker tiene fechas seleccionadas, rellenarlos
-				if (!fi || !ff) {
-					$('#fechaInicial').val(picker.startDate.format('YYYY-MM-DD'));
-					$('#fechaFinal').val(picker.endDate.format('YYYY-MM-DD'));
-				}
-			}
-		});
 	}
 });
 
@@ -106,28 +79,34 @@ CARGAR TABLA DINAMICA
 =============================================*/
 
 var table2 = $("table.tablaVentas").DataTable({
-
-	"ajax": "ajax/datatable-ventas.ajax.php",
+	"processing": true,
+	"serverSide": true,
+	"ajax": {
+		"url": "ajax/datatable-ventas.ajax.php",
+		"type": "POST",
+		"data": function(d) {
+			d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+		}
+	},
 	"columnDefs": [
-
-
 		{
-			"targets": -5,
-			"data": null,
-			"defaultContent": '<img class="img-thumbnail imgTablaVenta" width="40px">'
+			"targets": 1, // Imagen
+			"render": function(data, type, row) {
+				return '<img class="img-thumbnail imgTablaVenta" src="'+row[1]+'" width="40px">';
+			}
 		},
-
-
 		{
-			"targets": -2,
-			"data": null,
-			"defaultContent": '<div class="btn-group"><button class="btn btn-success limiteStock"></button></div>'
+			"targets": 4, // Stock
+			"render": function(data, type, row) {
+				var stock = row[4];
+				var btnClass = "btn-success";
+				if(stock <= 10) btnClass = "btn-danger";
+				else if(stock >= 11 && stock <= 15) btnClass = "btn-warning";
+				return '<div class="btn-group"><button class="btn ' + btnClass + ' limiteStock">' + stock + '</button></div>';
+			}
 		},
-
 		{
-			"targets": -1,
-			"data": null,
-
+			"targets": 5, // Acciones
 			"render": function (data, type, row) {
 				// row[6] contiene si tiene variantes (1) o no (0)
 				// row[5] contiene el ID del producto
@@ -140,9 +119,7 @@ var table2 = $("table.tablaVentas").DataTable({
 					return '<div class="btn-group"><button class="btn btn-primary agregarProducto recuperarBoton" idProducto="' + row[5] + '">Agregar</button></div>';
 				}
 			}
-
 		}
-
 	],
 
 
@@ -345,77 +322,8 @@ $(document).on('click', '.btnVariantesVenta', function () {
 FUNCION PARA CARGAR CON EL PAGINADOR Y CON EL FILTRO
 =============================================*/
 
-function cargarImagenesProductos() {
-
-	var imgTabla = $(".imgTablaVenta");
-
-	var limiteStock = $(".limiteStock");
-
-	for (var i = 0; i < imgTabla.length; i++) {
-
-		var data = table2.row($(imgTabla[i]).parents("tr")).data();
-
-		$(imgTabla[i]).attr("src", data[1]);
 
 
-		if (data[4] <= 10) {
-
-			$(limiteStock[i]).addClass("btn-danger");
-			$(limiteStock[i]).html(data[4]);
-		}
-		else if (data[4] >= 11 && data[4] <= 15) {
-
-			$(limiteStock[i]).addClass("btn-warning");
-			$(limiteStock[i]).html(data[4]);
-		}
-		else {
-			$(limiteStock[i]).addClass("btn-success");
-			$(limiteStock[i]).html(data[4]);
-		}
-
-	}
-
-}
-
-
-// 🔹 CARGAR IMÁGENES CUANDO LA TABLA SE DIBUJA COMPLETAMENTE
-// Usar el evento 'draw.dt' en lugar de setTimeout para mayor confiabilidad
-table2.on('draw.dt', function () {
-	cargarImagenesProductos();
-});
-
-
-//CARGAMOS LAS IMAGENES CUANDO INTERACTUAMOS CON  EL FILTRO DE CANTIDAD
-$("select[name='DataTables_Table_0_length']").change(function () {
-
-	cargarImagenesProductos();
-})
-
-
-//CARGAMOS LAS IMAGENES CUANDO INTERACTUAMOS CON  EL PAGINADOR 
-$(".dataTables_paginate").click(function () {
-
-	cargarImagenesProductos();
-})
-
-
-//CARGAMOS LAS IMAGENES CUANDO INTERACTUAMOS CON  EL BUSCADOR
-$("input[aria-controls='DataTables_Table_0']").focus(function () {
-
-	$(document).keyup(function (event) {
-
-		event.preventDefault();
-
-		cargarImagenesProductos();
-	})
-})
-
-
-//CARGAMOS LAS IMAGENES CUANDO INTERACTUAMOS CON  EL FILTRO DE ORDENADOR 
-$(".sorting").click(function () {
-
-	cargarImagenesProductos();
-})
 
 
 /*=============================================

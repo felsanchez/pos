@@ -126,6 +126,142 @@ class ControladorClientes
 		return $respuesta;
 	}
 
+	/*=============================================
+	MOSTRAR CLIENTES SERVER-SIDE
+	=============================================*/
+	static public function ctrMostrarClientesServerSide($params)
+	{
+		$tabla = "clientes";
+
+		// Columnas para ordenar (coinciden con la vista)
+		$columnsMap = array(
+			0 => 'nombre',
+			1 => 'documento',
+			2 => 'email',
+			3 => 'telefono',
+			4 => 'direccion',
+			5 => 'estatus',
+			6 => 'notas',
+			7 => 'ultima_compra',
+			8 => 'id', // Acciones
+			9 => 'fecha'
+		);
+
+		$where = " WHERE 1=1 ";
+
+		// Búsqueda global (DataTables)
+		if (!empty($params['search']['value'])) {
+			$searchValue = $params['search']['value'];
+			$where .= " AND (c.nombre LIKE '%$searchValue%' OR c.documento LIKE '%$searchValue%' OR c.email LIKE '%$searchValue%' OR c.telefono LIKE '%$searchValue%' OR c.direccion LIKE '%$searchValue%' OR c.estatus LIKE '%$searchValue%' OR c.notas LIKE '%$searchValue%') ";
+		}
+
+		// Filtro por Estado (filtroEstatus1) pasado desde el request adicional si existe
+		if (isset($_POST['filtroEstatus1']) && !empty($_POST['filtroEstatus1'])) {
+			$estatusFilter = $_POST['filtroEstatus1'];
+			$where .= " AND c.estatus = '$estatusFilter' ";
+		}
+
+		// Ordenar
+		$order = "";
+		if (isset($params['order'][0]['column'])) {
+			$colIdx = $params['order'][0]['column'];
+			$colName = isset($columnsMap[$colIdx]) ? 'c.' . $columnsMap[$colIdx] : 'c.id';
+			$order = " ORDER BY " . $colName . " " . $params['order'][0]['dir'];
+		} else {
+			$order = " ORDER BY c.id DESC";
+		}
+
+		// Paginación
+		$limit = "";
+		if ($params['length'] != -1) {
+			$limit = " LIMIT " . $params['start'] . ", " . $params['length'];
+		}
+
+		// Obtener datos
+		$clientes = ModeloClientes::mdlMostrarClientesServerSide($tabla, $where, $order, $limit);
+		$totalData = ModeloClientes::mdlGetTotalClientes($tabla, " WHERE 1=1 ");
+		$totalFiltered = ModeloClientes::mdlGetTotalClientes($tabla, $where);
+
+		$data = array();
+
+		// Pre-fetch estados para los badges de colores
+		require_once "../controladores/estados-clientes.controlador.php";
+		require_once "../modelos/estados-clientes.modelo.php";
+		$estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
+
+		foreach ($clientes as $key => $value) {
+			
+			$nestedData = array();
+			
+			// Añadir ID como atributo TR es necesario para la vista actual
+			$nestedData['DT_RowAttr'] = array(
+				'data-cliente-id' => $value['id']
+			);
+
+			// 0: Nombre
+			$nestedData[] = e($value["nombre"]);
+
+			// 1: Documento
+			$nestedData[] = e($value["documento"]);
+
+			// 2: Email
+			$nestedData[] = e($value["email"]);
+
+			// 3: Teléfono
+			$nestedData[] = e($value["telefono"]);
+
+			// 4: Dirección
+			$nestedData[] = e($value["direccion"]);
+
+			// 5: Estado (Badge color)
+			$estatus = $value["estatus"] ?? "";
+			$colorEstado = "#999"; 
+			foreach ($estadosDisponibles as $estado) {
+				if (strcasecmp($estado["nombre"], $estatus) == 0) {
+					$colorEstado = $estado["color"];
+					break;
+				}
+			}
+			if (!empty($estatus)) {
+				$nestedData[] = '<span class="badge" style="background-color: ' . $colorEstado . '">' . ucfirst($estatus) . '</span>';
+			} else {
+				$nestedData[] = '<span class="text-muted">Sin estado</span>';
+			}
+
+			// 6: Notas (Editable)
+			$notas = trim($value["notas"] ?? "");
+			$nestedData[] = '<div contenteditable="true" class="celda-notas" tabindex="0" data-id="' . $value['id'] . '">' . e($notas) . '</div>';
+
+			// 7: Última compra
+			$nestedData[] = e($value["ultima_compra"]);
+
+			// 8: Acciones
+			$botonesAcciones = '<div class="btn-group">';
+			if (puedeAccion('clientes', 'editar')) {
+				$botonesAcciones .= '<a href="cliente-detalle?id=' . $value["id"] . '" class="btn btn-warning" title="Editar cliente"><i class="fa fa-pencil"></i></a>';
+			}
+			if (puedeAccion('clientes', 'eliminar')) {
+				$botonesAcciones .= '<button class="btn btn-danger btnEliminarCliente" idCliente="' . $value["id"] . '" title="Eliminar cliente"><i class="fa fa-times"></i></button>';
+			}
+			$botonesAcciones .= '</div>';
+			$nestedData[] = $botonesAcciones;
+
+			// 9: Ingreso al sistema
+			$nestedData[] = e($value["fecha"]);
+
+			$data[] = $nestedData;
+		}
+
+		$json_data = array(
+			"draw"            => intval($params['draw']),
+			"recordsTotal"    => intval($totalData),
+			"recordsFiltered" => intval($totalFiltered),
+			"data"            => $data
+		);
+
+		return $json_data;
+	}
+
 
 
 	/*=============================================

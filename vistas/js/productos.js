@@ -3,11 +3,14 @@ CARGAR TABLA DINAMICA
 =============================================*/
 
 var table = $("table.tablaProductos").DataTable({
+	"processing": true,
+	"serverSide": true,
 	"ajax": {
 		"url": "ajax/datatable-productos.ajax.php",
-		"dataSrc": function (json) {
-			console.log("Datos recibidos del servidor:", json);
-			return json.data;
+		"type": "POST",
+		"data": function (d) {
+			d.categoriaFiltro = $("#filtroCategoria").val();
+			d.proveedorFiltro = $("#filtroProveedor").val();
 		},
 		"error": function (xhr, error, thrown) {
 			console.error("Error al cargar productos:", error, thrown);
@@ -23,15 +26,11 @@ var table = $("table.tablaProductos").DataTable({
 				var hasHidden = false;
 
 				$.each(columns, function (i, col) {
-					// Solo renderiza si DataTables ocultó la columna
 					if (!col.hidden) return;
 
 					hasHidden = true;
 					var label = col.title || ('Columna ' + col.columnIndex);
 					var data = col.data || '';
-
-					// Limpiar badages o botones si se quiere, pero el HTML nativo suele servir bien.
-					// Dejamos que pase el HTML original (DataTables lo gestiona)
 
 					finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
 					finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
@@ -129,14 +128,7 @@ var table = $("table.tablaProductos").DataTable({
 			"sSortDescending": ": Activar para ordenar la columna de manera descendente"
 		}
 	},
-	"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
-	"drawCallback": function () {
-		// Configurar el counter CSS para la paginación correcta
-		var api = this.api();
-		var start = api.page.info().start;
-		$(api.table().node()).css('counter-reset', 'rowNum ' + start);
-	}
-
+	"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>'
 });
 
 /*=============================================
@@ -160,43 +152,10 @@ $(document).ready(function () {
 		});
 	}
 
-	// Evento al cambiar los filtros (MÉTODO API DIRECTA: Más seguro y aislado)
+	// Evento al cambiar los filtros
 	$(document).on('change', '#filtroCategoria, #filtroProveedor', function () {
-		
-		var valor = $(this).val() || "";
-		var idSelector = $(this).attr('id');
-		var tituloBuscado = (idSelector === "filtroCategoria") ? "Categoría" : "Proveedor";
-
-		if (typeof table !== 'undefined' && table.column) {
-			
-			// Paso 1: Encontrar el índice de la columna de forma dinámica por su nombre
-			var colIdx = -1;
-			table.columns().every(function () {
-				var headerText = $(this.header()).text().trim();
-				if (headerText === tituloBuscado) {
-					colIdx = this.index();
-				}
-			});
-
-			// Paso 2: Aplicar la búsqueda directa sobre esa columna e ignorar otras tablas
-			if (colIdx !== -1) {
-				// Usamos búsqueda flexible (contains) para evitar fallos por espacios invisibles
-				// que el servidor pudiera añadir dependiendo del perfil del usuario.
-				table.column(colIdx).search(valor).draw();
-			}
-
-		} else if ($.fn.DataTable.isDataTable('.tablaProductos')) {
-			
-			// Fallback si la variable global 'table' no estuviera disponible
-			var t = $('table.tablaProductos').DataTable();
-			var idx = -1;
-			t.columns().every(function () {
-				if ($(this.header()).text().trim() === tituloBuscado) idx = this.index();
-			});
-			if (idx !== -1) {
-				t.column(idx).search(valor).draw();
-			}
-		}
+		console.log("Recargando tabla de productos por cambio de filtros...");
+		table.ajax.reload();
 	});
 
 });

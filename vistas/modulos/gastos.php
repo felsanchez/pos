@@ -39,9 +39,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
         <div class="pull-right contenedor-filtros">
 
-          <form method="GET" action="index.php" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-
-            <input type="hidden" name="ruta" value="gastos">
+          <div id="formFiltrosGastos" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
 
             <!-- Filtro por Categoría -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
@@ -49,7 +47,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                     class="fa fa-search text-primary"></i></span>
-                <select class="form-control select2" id="filtroCategoria" style="width: 150px; border-left: 0;">
+                <select class="form-control select2" id="cat_g" style="width: 150px; border-left: 0;">
                   <option value="">Seleccionar Categoría</option>
                   <?php
                   $categorias = ControladorCategoriasGastos::ctrMostrarCategoriasGastos(null, null);
@@ -67,7 +65,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                     class="fa fa-search text-primary"></i></span>
-                <select class="form-control select2" id="filtroProveedor" style="width: 150px; border-left: 0;">
+                <select class="form-control select2" id="prov_g" style="width: 150px; border-left: 0;">
                   <option value="">Seleccionar Proveedor</option>
                   <?php
                   $proveedores = ControladorProveedores::ctrMostrarProveedores(null, null);
@@ -80,10 +78,11 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
             </div>
 
             <!-- Filtro por Fecha -->
-            <div class="form-group" style="margin-bottom: 0;">
+            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
+              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Fecha:</label>
               <button type="button" class="btn btn-default" id="daterange-btn">
                 <span>
-                  <i class="fa fa-calendar"></i> Rango
+                  <i class="fa fa-calendar"></i> Rango de fecha
                 </span>
                 <i class="fa fa-caret-down"></i>
               </button>
@@ -92,14 +91,11 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
             </div>
 
             <!-- Botones (Separados para mantener gap consistente) -->
-            <button type="button" class="btn btn-primary" id="btnFiltrarGastos" title="Filtrar">
-              <i class="fa fa-search"></i>
-            </button>
             <button type="button" class="btn btn-default" id="btnLimpiarGastos" title="Limpiar">
               <i class="fa fa-refresh"></i>
             </button>
 
-          </form>
+          </div>
 
         </div>
 
@@ -126,94 +122,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
             </thead>
 
             <tbody>
-
-              <?php
-
-              $item = null;
-              $valor = null;
-
-              $gastos = ControladorGastos::ctrMostrarGastos($item, $valor);
-
-              foreach ($gastos as $key => $value) {
-
-                // Preparar badge de categoría
-                $categoriaBadge = '';
-                if (!empty($value["categoria_nombre"])) {
-                  $categoriaBadge = '<span class="badge" style="background-color: ' . $value["categoria_color"] . '">' . $value["categoria_nombre"] . '</span>';
-                } else {
-                  $categoriaBadge = '-';
-                }
-
-                // Preparar badge de estado
-                $estadoBadge = '';
-                if ($value["estado"] == "aprobado") {
-                  $estadoBadge = '<button class="btn btn-success btn-xs">Aprobado</button>';
-                } else if ($value["estado"] == "pendiente") {
-                  $estadoBadge = '<button class="btn btn-warning btn-xs">Pendiente</button>';
-                } else {
-                  $estadoBadge = '<button class="btn btn-danger btn-xs">Rechazado</button>';
-                }
-
-                // Verificar si el gasto es de hoy para resaltarlo
-                $fechaHoy = date('Y-m-d');
-
-                $esHoy = (!empty($value["fecha"]) && $value["fecha"] == $fechaHoy);
-
-                $rowStyle = $esHoy ? 'style="border-left: 6px solid #28a745 !important; background-color: #f0f9f4; box-shadow: inset 6px 0 0 #28a745;"' : '';
-
-                echo '<tr ' . $rowStyle . '>';
-
-
-                // Columna 1: Concepto
-                echo '<td class="dtr-control">' . $value["concepto"] . '</td>';
-
-                // Columna 2: Monto
-                $monto = !empty($value["monto"]) ? '$' . number_format($value["monto"], 2, ',', '.') : '-';
-                echo '<td><strong>' . $monto . '</strong></td>';
-
-
-
-                // Columna 5: Categoría
-                echo '<td>' . $categoriaBadge . '</td>';
-
-                // Columna 6: Estado
-                echo '<td>' . $estadoBadge . '</td>';
-
-                // Columna 7: Proveedor
-                $proveedor = !empty($value["proveedor_nombre"]) ? $value["proveedor_nombre"] : '-';
-                echo '<td>' . $proveedor . '</td>';
-
-                // Columna 7: Imagen
-                if (!empty($value["imagen_comprobante"])) {
-                  echo '<td><img src="' . $value["imagen_comprobante"] . '" class="img-thumbnail img-comprobante-clickeable" width="40px" style="cursor: pointer;" data-imagen="' . $value["imagen_comprobante"] . '" data-idgasto="' . $value["id"] . '" data-concepto="' . $value["concepto"] . '"></td>';
-                } else {
-                  echo '<td><img src="vistas/img/gastos/default/sin-imagen.png" class="img-thumbnail img-comprobante-clickeable" width="40px" style="cursor: pointer;" data-imagen="" data-idgasto="' . $value["id"] . '" data-concepto="' . $value["concepto"] . '"></td>';
-                }
-
-                // Columna 7: Fecha
-                $fecha = !empty($value["fecha"]) ? date("d/m/Y", strtotime($value["fecha"])) : '-';
-                echo '<td>' . $fecha . '</td>';
-
-                // Columna 8: Notas (editable)
-                $notas = !empty($value["notas"]) ? htmlspecialchars($value["notas"]) : '';
-                echo '<td contenteditable="true" class="celda-notas-gasto" data-id="' . $value["id"] . '">' . $notas . '</td>';
-
-                // Columna Final: Acciones
-                echo '<td>
-                  <div class="btn-group">';
-                if (puedeAccion('gastos', 'editar')) {
-                  echo '<button class="btn btn-warning btnEditarGasto" idGasto="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarGasto" title="Editar gasto"><i class="fa fa-pencil"></i></button>';
-                }
-                if (puedeAccion('gastos', 'eliminar')) {
-                  echo '<button class="btn btn-danger btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . $value["concepto"] . '" title="Eliminar gasto"><i class="fa fa-times"></i></button>';
-                }
-                echo '</div>
-                </td>';
-
-                echo '</tr>';
-              }
-              ?>
-
+              <!-- Los datos se cargarán por DataTables Server-Side -->
             </tbody>
 
           </table>

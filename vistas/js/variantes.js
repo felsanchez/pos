@@ -48,7 +48,18 @@ $(document).ready(function () {
     if ($.fn.DataTable.isDataTable('#tablaTiposVariantes')) {
         $('#tablaTiposVariantes').DataTable().destroy();
     }
-    $("#tablaTiposVariantes").DataTable(dtVariantesOptions);
+    
+    // Configuración específica para Server-Side en Tipos de Variantes
+    var dtTiposOptions = $.extend(true, {}, dtVariantesOptions, {
+        "processing": true,
+        "serverSide": true,
+        "ajax": {
+            "url": "ajax/variantes.ajax.php",
+            "type": "POST"
+        }
+    });
+
+    $("#tablaTiposVariantes").DataTable(dtTiposOptions);
 });
 
 /*=============================================

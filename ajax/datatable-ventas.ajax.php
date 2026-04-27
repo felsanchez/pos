@@ -13,7 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die(json_encode(['error' => 'Token CSRF inválido', 'success' => false]));
     }
 }
-require_once "../modelos/productos.modelo.php";
+require_once "../modelos/categorias.modelo.php";
+require_once "../modelos/proveedores.modelo.php";
+require_once "../modelos/helpers.php";
+require_once "../modelos/sanitizer.php";
 
 class tablaProductos{
 
@@ -172,6 +175,10 @@ if(isset($_POST["idVentaImagen"])){
 /*=============================================
 	ACTIVAR TABLA DE PRODUCTOS
 =============================================*/
-
-$activar = new TablaProductos();
-$activar -> mostrarTabla();
+if (isset($_POST["draw"])) {
+	$respuesta = ControladorProductos::ctrMostrarProductosVentasServerSide($_POST);
+	echo json_encode($respuesta);
+} else {
+	$activar = new tablaProductos();
+	$activar -> mostrarTabla();
+}

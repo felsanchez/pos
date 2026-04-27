@@ -20,6 +20,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+/*=============================================
+TABLA ACTIVIDADES SERVER-SIDE
+=============================================*/
+if (isset($_POST["draw"])) {
+    require_once "../modelos/sanitizer.php";
+    require_once "../modelos/helpers.php";
+    $respuesta = ControladorActividades::ctrMostrarActividadesServerSide($_POST);
+    echo json_encode($respuesta);
+    exit;
+}
 
 class AjaxActividades{
 

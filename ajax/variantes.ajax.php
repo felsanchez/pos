@@ -14,6 +14,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+/*=============================================
+TABLA TIPOS VARIANTES SERVER-SIDE
+=============================================*/
+if (isset($_POST["draw"])) {
+    require_once "../modelos/sanitizer.php";
+    require_once "../modelos/helpers.php";
+    $respuesta = ControladorVariantes::ctrMostrarTiposVariantesServerSide($_POST);
+    echo json_encode($respuesta);
+    exit;
+}
+
 class AjaxVariantes{
 
 	/*=============================================

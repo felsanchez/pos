@@ -78,7 +78,7 @@ class ModeloMovimientos
 			$sql .= " AND m.id_usuario = :usuario";
 		}
 
-		$sql .= " ORDER BY m.fecha DESC";
+		$sql .= " ORDER BY m.fecha DESC, m.id DESC";
 
 		$stmt = Conexion::conectar()->prepare($sql);
 
@@ -243,6 +243,37 @@ class ModeloMovimientos
 		}
 
 		$stmt->closeCursor();
+		$stmt = null;
+	}
+
+	/*=============================================
+	MOSTRAR MOVIMIENTOS SERVER-SIDE
+	=============================================*/
+	static public function mdlMostrarMovimientosServerSide($tabla, $where, $order, $limit)
+	{
+		$sql = "SELECT * FROM $tabla $where $order $limit";
+		
+		$stmt = Conexion::conectar()->prepare($sql);
+		$stmt->execute();
+		
+		return $stmt->fetchAll();
+		
+		$stmt = null;
+	}
+
+	/*=============================================
+	OBTENER TOTAL MOVIMIENTOS (PARA SERVER-SIDE)
+	=============================================*/
+	static public function mdlGetTotalMovimientos($tabla, $where)
+	{
+		$sql = "SELECT COUNT(*) as total FROM $tabla $where";
+		
+		$stmt = Conexion::conectar()->prepare($sql);
+		$stmt->execute();
+		$resultado = $stmt->fetch();
+		
+		return $resultado["total"];
+		
 		$stmt = null;
 	}
 

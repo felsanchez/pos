@@ -5,6 +5,15 @@ $(document).ready(function () {
 
 	// Forzar inicialización limpia para asegurar modo responsivo
 	$("table.tablaProveedores").DataTable({
+			"processing": true,
+			"serverSide": true,
+			"ajax": {
+				"url": "ajax/proveedores.ajax.php",
+				"type": "POST",
+				"data": function (d) {
+					d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+				}
+			},
 			"destroy": true,
 			"order": [[0, "asc"]],
 			"autoWidth": false,

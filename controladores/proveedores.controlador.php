@@ -101,6 +101,107 @@ class ControladorProveedores
 		return $respuesta;
 	}
 
+	/*=============================================
+	MOSTRAR PROVEEDORES SERVER-SIDE
+	=============================================*/
+	static public function ctrMostrarProveedoresServerSide($params)
+	{
+		$tabla = "proveedores";
+
+		// Columnas para ordenar
+		$columnsMap = array(
+			0 => 'nombre',
+			1 => 'marca',
+			2 => 'celular',
+			3 => 'correo',
+			4 => 'direccion',
+			5 => 'id', // Productos (calculado)
+			6 => 'notas',
+			7 => 'id'  // Acciones
+		);
+
+		$where = " WHERE 1=1 ";
+
+		// Búsqueda global (DataTables)
+		if (!empty($params['search']['value'])) {
+			$searchValue = $params['search']['value'];
+			$where .= " AND (nombre LIKE '%$searchValue%' OR marca LIKE '%$searchValue%' OR celular LIKE '%$searchValue%' OR correo LIKE '%$searchValue%' OR documento LIKE '%$searchValue%' OR direccion LIKE '%$searchValue%' OR notas LIKE '%$searchValue%') ";
+		}
+
+		// Ordenar
+		$order = "";
+		if (isset($params['order'][0]['column'])) {
+			$colIdx = $params['order'][0]['column'];
+			$colName = isset($columnsMap[$colIdx]) ? $columnsMap[$colIdx] : 'id';
+			$order = " ORDER BY " . $colName . " " . $params['order'][0]['dir'];
+		} else {
+			$order = " ORDER BY id DESC";
+		}
+
+		// Paginación
+		$limit = "";
+		if ($params['length'] != -1) {
+			$limit = " LIMIT " . $params['start'] . ", " . $params['length'];
+		}
+
+		// Obtener datos
+		$proveedores = ModeloProveedores::mdlMostrarProveedoresServerSide($tabla, $where, $order, $limit);
+		$totalData = ModeloProveedores::mdlGetTotalProveedores($tabla, " WHERE 1=1 ");
+		$totalFiltered = ModeloProveedores::mdlGetTotalProveedores($tabla, $where);
+
+		$data = array();
+
+		foreach ($proveedores as $key => $value) {
+			
+			$nestedData = array();
+
+			// 0: Nombre
+			$nestedData[] = e($value["nombre"]);
+
+			// 1: Marca
+			$nestedData[] = e($value["marca"]);
+
+			// 2: Celular
+			$nestedData[] = e($value["celular"]);
+
+			// 3: Correo
+			$nestedData[] = e($value["correo"]);
+
+			// 4: Dirección
+			$nestedData[] = e($value["direccion"]);
+
+			// 5: Productos
+			$totalProductos = ModeloProveedores::mdlContarProductosPorProveedor($value["id"]);
+			$nestedData[] = '<span class="badge bg-blue">' . $totalProductos . '</span>';
+
+			// 6: Notas (Editable)
+			$notas = isset($value["notas"]) ? e($value["notas"]) : '';
+			$nestedData[] = '<div contenteditable="true" class="celda-notas-proveedor" tabindex="0" data-id="' . $value['id'] . '">' . $notas . '</div>';
+
+			// 7: Acciones
+			$botonesAcciones = '<div class="btn-group">';
+			if (puedeAccion('proveedores', 'editar')) {
+				$botonesAcciones .= '<button class="btn btn-warning btnEditarProveedor" idProveedor="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarProveedor" title="Editar proveedor"><i class="fa fa-pencil"></i></button>';
+			}
+			if (puedeAccion('proveedores', 'eliminar')) {
+				$botonesAcciones .= '<button class="btn btn-danger btnEliminarProveedor" idProveedor="' . $value["id"] . '" title="Eliminar proveedor"><i class="fa fa-times"></i></button>';
+			}
+			$botonesAcciones .= '</div>';
+			$nestedData[] = $botonesAcciones;
+
+			$data[] = $nestedData;
+		}
+
+		$json_data = array(
+			"draw"            => intval($params['draw']),
+			"recordsTotal"    => intval($totalData),
+			"recordsFiltered" => intval($totalFiltered),
+			"data"            => $data
+		);
+
+		return $json_data;
+	}
+
 
 	/*=============================================
 	EDITAR PROVEEDORES

@@ -16,6 +16,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+/*=============================================
+TABLA PROVEEDORES SERVER-SIDE
+=============================================*/
+if (isset($_POST["draw"])) {
+    require_once "../modelos/sanitizer.php";
+    require_once "../modelos/helpers.php";
+    $respuesta = ControladorProveedores::ctrMostrarProveedoresServerSide($_POST);
+    echo json_encode($respuesta);
+    exit;
+}
+
 class AjaxProveedores{
 
 	/*=============================================

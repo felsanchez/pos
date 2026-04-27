@@ -5,7 +5,7 @@ if (!puedeVer('proveedores')) {
 }
 ?>
 <!-- Solo muestra 2 campos en movil en la Tabla 1-->
-
+<style>
   /* Estilos para campo notas editable */
   .celda-notas-proveedor {
     background: #fff9e6;
@@ -85,54 +85,7 @@ if (!puedeVer('proveedores')) {
             </thead>
 
             <tbody>
-
-              <?php
-
-              $item = null;
-              $valor = null;
-
-              $proveedores = ControladorProveedores::ctrMostrarProveedores($item, $valor);
-
-
-              foreach ($proveedores as $key => $value) {
-
-                // Contar productos asociados a este proveedor
-              
-                $totalProductos = ModeloProveedores::mdlContarProductosPorProveedor($value["id"]);
-
-                echo '<tr> 
-                        <td>' . $value["nombre"] . '</td>
-                        <td>' . $value["marca"] . '</td>';
-
-                echo '<td>' . $value["celular"] . '</td>';
-                echo '<td>' . $value["correo"] . '</td>';
-                echo '<td>' . $value["direccion"] . '</td>';
-
-                echo '<td><span class="badge bg-blue">' . $totalProductos . '</span></td>';
-
-                // Columna notas editable
-                $notas = isset($value["notas"]) ? $value["notas"] : '';
-                echo '<td contenteditable="true" class="celda-notas-proveedor" tabindex="0" data-id="' . $value['id'] . '">' . $notas . '</td>';
-
-                echo '<td>
-                      <div class="btn-group">';
-
-                if (puedeAccion('proveedores', 'editar')) {
-                  echo '<button class="btn btn-warning btnEditarProveedor" idProveedor="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarProveedor" title="Editar proveedor"><i class="fa fa-pencil"></i></button>';
-                }
-
-                if (puedeAccion('proveedores', 'eliminar')) {
-                  echo '<button class="btn btn-danger btnEliminarProveedor" idProveedor="' . $value["id"] . '" title="Eliminar proveedor"><i class="fa fa-times"></i></button>';
-                }
-
-                echo '</div>
-                    </td>
-
-                  </tr>';
-              }
-              ?>
-
-
+              <!-- DataTables Server-Side -->
             </tbody>
 
           </table>

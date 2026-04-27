@@ -435,6 +435,21 @@ $(document).ready(function () {
 		}
 
 		$(".tablaActividades").DataTable({
+			"ajax": {
+				"url": "ajax/actividades.ajax.php",
+				"type": "POST",
+				"data": function(d) {
+					d.draw = d.draw || 1; // Usado por DataTables, el controlador lo lee.
+					d.filtroTipo = $('#filtroTipo').val() || '';
+					d.filtroEstado = $('#filtroEstado').val() || '';
+					
+					// Token CSRF obligatorio
+					d.csrf_token = $('meta[name="csrf-token"]').attr('content') || '';
+				}
+			},
+			"serverSide": true,
+			"processing": true,
+			"deferRender": true,
 			"order": [[0, "asc"]], // Ordenar por Descripción (columna 0)
 			"columnDefs": [
 				{ "targets": 0, "responsivePriority": 1 }, // Descripción
@@ -537,14 +552,12 @@ $(document).ready(function () {
 		// Filtro por Tipo
 		$('#filtroTipo').on('change', function () {
 			console.log('Filtrando por Tipo:', this.value);
-			filtroTipoActual = this.value;
 			table.draw();
 		});
 
 		// Filtro por Estado
 		$('#filtroEstado').on('change', function () {
 			console.log('Filtrando por Estado:', this.value);
-			filtroEstadoActual = this.value;
 			table.draw();
 		});
 	}
@@ -622,36 +635,8 @@ $(document).on('blur', '.celda-observacion', function () {
 /*=============================================
 FILTROS PERSONALIZADOS DATATABLES
 =============================================*/
-var filtroTipoActual = '';
-var filtroEstadoActual = '';
-
-$.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-	// Solo aplicar este filtro a la tabla de actividades
-	if (!$(settings.nTable).hasClass('tablaActividades')) {
-		return true;
-	}
-
-	// Obtener la fila actual
-	var row = $(settings.aoData[dataIndex].nTr);
-
-	// Obtener los valores de los atributos data-*
-	var rowTipo = row.attr('data-tipo') || '';
-	var rowEstado = row.attr('data-estado') || '';
-
-	// Aplicar filtros
-	var pasaTipoFiltro = true;
-	var pasaEstadoFiltro = true;
-
-	if (filtroTipoActual !== '') {
-		pasaTipoFiltro = (rowTipo.toLowerCase() === filtroTipoActual.toLowerCase());
-	}
-
-	if (filtroEstadoActual !== '') {
-		pasaEstadoFiltro = (rowEstado.toLowerCase() === filtroEstadoActual.toLowerCase());
-	}
-
-	return pasaTipoFiltro && pasaEstadoFiltro;
-});
+// Los filtros ahora se manejan del lado del servidor (Server-Side) mediante ajax.data
+// en la inicialización de la tabla.
 
 /*=============================================
 CALENDARIO DE ACTIVIDADES

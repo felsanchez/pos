@@ -22,6 +22,7 @@ $(document).ready(function () {
 				"url": "ajax/usuarios.ajax.php",
 				"type": "POST",
 				"data": function(d) {
+					d.csrf_token = $('meta[name="csrf-token"]').attr('content');
 					d.perfilFiltro = $("#seleccionarPerfilFiltro").val();
 				}
 			},

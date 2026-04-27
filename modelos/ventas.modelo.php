@@ -36,6 +36,35 @@ class ModeloVentas
 	}
 
 	/*=============================================
+	MOSTRAR VENTAS SERVER-SIDE
+	=============================================*/
+	static public function mdlMostrarVentasServerSide($tabla, $where, $order, $limit)
+	{
+		$stmt = Conexion::conectar()->prepare("SELECT v.*, 
+													c.nombre AS nombre_cliente, 
+													u.nombre AS nombre_vendedor 
+													FROM $tabla v 
+													LEFT JOIN clientes c ON v.id_cliente = c.id 
+													LEFT JOIN usuarios u ON v.id_vendedor = u.id 
+													$where $order $limit");
+		$stmt->execute();
+		return $stmt->fetchAll();
+	}
+
+	/*=============================================
+	OBTENER TOTAL VENTAS (PARA SERVER-SIDE)
+	=============================================*/
+	static public function mdlGetTotalVentas($tabla, $where)
+	{
+		$stmt = Conexion::conectar()->prepare("SELECT COUNT(*) FROM $tabla v 
+												LEFT JOIN clientes c ON v.id_cliente = c.id 
+												LEFT JOIN usuarios u ON v.id_vendedor = u.id 
+												$where");
+		$stmt->execute();
+		return $stmt->fetchColumn();
+	}
+
+	/*=============================================
 	REGISTRO DE VENTA
 	=============================================*/
 

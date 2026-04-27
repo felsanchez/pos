@@ -1,5 +1,3 @@
-
-
 <!-- DateRangePicker -->
 <link rel="stylesheet" href="vistas/bower_components/bootstrap-daterangepicker/daterangepicker.css">
 
@@ -115,17 +113,18 @@ if ($xml) {
 
 
             <!-- Botón Rango de Fecha -->
-            <button type="button" class="btn btn-default" id="daterange-btn">
-              <span>
-                <i class="fa fa-calendar"></i> Rango de fecha
-              </span>
-              <i class="fa fa-caret-down"></i>
-            </button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="hidden-xs"><b>Filtrar por Fecha:</b></span>
+              <button type="button" class="btn btn-default" id="daterange-btn">
+                <span>
+                  <i class="fa fa-calendar"></i> Rango de fecha
+                </span>
+                <i class="fa fa-caret-down"></i>
+              </button>
+            </div>
 
             <!-- Botón Buscar -->
-            <button type="submit" class="btn btn-primary" title="Filtrar">
-              <i class="fa fa-search"></i>
-            </button>
+
 
             <!-- Botón Limpiar -->
             <a href="index.php?ruta=ventas" class="btn btn-default" title="Limpiar">
@@ -223,184 +222,14 @@ if ($xml) {
                 <th>Imagen</th>
                 <th>Total</th>
                 <th><i class="fa fa-magic"></i> Notas</th>
-                <th><i class="fa fa-pencil-square"></i> Observación</th>
+                <th>Observación</th>
                 <th>Fecha</th>
                 <th>Acciones</th>
               </tr>
             </thead>
 
             <tbody>
-
-              <?php
-
-              // Determinar filtros activos
-              $fechaInicial = null;
-              $fechaFinal = null;
-              $clienteId = null;
-              $usuarioId = null;
-              $mensajeFiltro = "";
-
-              // Filtro por fechas
-              if (isset($_GET["fechaInicial"]) && !empty($_GET["fechaInicial"]) && isset($_GET["fechaFinal"]) && !empty($_GET["fechaFinal"])) {
-                $fechaInicial = $_GET["fechaInicial"];
-                $fechaFinal = $_GET["fechaFinal"];
-                $mensajeFiltro .= "Filtrando desde $fechaInicial hasta $fechaFinal";
-              }
-
-              // Filtro por cliente
-              if (isset($_GET["cliente"]) && !empty($_GET["cliente"])) {
-                $clienteId = $_GET["cliente"];
-
-                // Obtener nombre del cliente para mostrar
-                $clienteInfo = ControladorClientes::ctrMostrarClientes("id", $clienteId);
-                $nombreClienteFiltro = $clienteInfo["nombre"];
-
-                if ($mensajeFiltro != "") {
-                  $mensajeFiltro .= " | ";
-                }
-                $mensajeFiltro .= "Cliente: $nombreClienteFiltro";
-              }
-
-              // Filtro por usuario
-              if (isset($_GET["usuario"]) && !empty($_GET["usuario"])) {
-                $usuarioId = $_GET["usuario"];
-
-                // Obtener nombre del usuario para mostrar
-                $usuarioInfo = ControladorUsuarios::ctrMostrarUsuarios("id", $usuarioId);
-                $nombreUsuarioFiltro = $usuarioInfo["nombre"];
-
-                if ($mensajeFiltro != "") {
-                  $mensajeFiltro .= " | ";
-                }
-                $mensajeFiltro .= "Usuario: $nombreUsuarioFiltro";
-              }
-
-              // Mostrar mensaje de filtros activos
-              if ($mensajeFiltro != "") {
-                echo "<p style='background: #d9edf7; padding: 10px; border-left: 4px solid #31708f; color: #31708f;'><i class='fa fa-filter'></i> $mensajeFiltro</p>";
-              } else {
-                echo "<p>Mostrando todas las ventas</p>";
-              }
-
-              // Obtener ventas según filtros
-              $respuesta = ControladorVentas::ctrRangoFechasVentasPorEstado($fechaInicial, $fechaFinal, "venta");
-
-
-
-              // Si hay filtro por cliente, filtrar el resultado
-              if ($clienteId !== null) {
-                $respuesta = array_filter($respuesta, function ($venta) use ($clienteId) {
-                  return $venta["id_cliente"] == $clienteId;
-                });
-              }
-
-              // Si hay filtro por usuario, filtrar el resultado
-              if ($usuarioId !== null) {
-                $respuesta = array_filter($respuesta, function ($venta) use ($usuarioId) {
-                  return $venta["id_vendedor"] == $usuarioId;
-                });
-              }
-
-              // Filtrar SIEMPRE para excluir facturas electrónicas (tienen numero_factura o resolucion_id)
-              // Las FE tienen su propia vista dedicada
-              $respuesta = array_filter($respuesta, function ($venta) {
-                return empty($venta['numero_factura']) && empty($venta['resolucion_id']);
-              });
-
-
-              $contador = 1;
-              foreach ($respuesta as $key => $value) {
-
-                echo '<tr data-venta-id="' . $value['id'] . '">
-                  <td>';
-
-                if (!empty($value["numero_factura"])) {
-                  // Si hay factura oficial, mostrarla GRANDE
-                  echo '<span style="font-weight:bold; font-size:1.1em; color:#605ca8;">' . $value["numero_factura"] . '</span>';
-                  // Y el código interno pequeño
-                  echo '<br><span style="font-size:0.85em; color:#999;">Ref: ' . $formatoCodigoVenta . $value["codigo"] . '</span>';
-                } else {
-                  // Si no, mostrar código interno normal
-                  echo $formatoCodigoVenta . $value["codigo"];
-                }
-
-                echo '</td>';
-
-                // Usar nombres que ya vienen del JOIN en la consulta SQL
-                $nombreCliente = !empty($value["nombre_cliente"]) ? $value["nombre_cliente"] : "Cliente no encontrado";
-                $nombreVendedor = !empty($value["nombre_vendedor"]) ? $value["nombre_vendedor"] : "Vendedor no encontrado";
-
-                echo '<td>
-
-                                  <span class="btnVerClienteDesdeVenta"
-                                        data-toggle="modal"
-                                        data-target="#modalEditarCliente"
-                                        idCliente="' . $value["id_cliente"] . '"
-                                        style="cursor: pointer; color: #337ab7; text-decoration: underline;">
-                                      ' . $nombreCliente . '
-                                  </span>
-                              </td>';
-
-                echo '<td>' . $nombreVendedor . '</td> 
-
-                        <td>' . $moneda . ' ' . $value["metodo_pago"] . '</td>';
-
-                // Validación de la foto
-                if ($value["imagen"] != "") {
-                  echo '<td><img src="' . $value["imagen"] . '" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="' . $value["imagen"] . '" data-idventa="' . $value["id"] . '"></td>';
-                } else {
-                  echo '<td><img src="vistas/img/ventas/default/sinventa.png" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="vistas/img/ventas/default/sinventa.png" data-idventa="' . $value["id"] . '"></td>';
-                }
-
-
-
-                echo '<td>' . $moneda . ' ' . number_format($value["total"], 2) . '</td>';
-
-                // Estado DIAN
-                /*
-                $estadoDian = isset($value["estado_dian"]) ? $value["estado_dian"] : 'pendiente';
-                $badgeDian = '';
-                if ($estadoDian == 'aceptada') {
-                  $badgeDian = '<span class="badge bg-green">Aceptada</span>';
-                } elseif ($estadoDian == 'rechazada') {
-                  $badgeDian = '<span class="badge bg-red">Rechazada</span>';
-                } elseif ($estadoDian == 'enviada') {
-                  $badgeDian = '<span class="badge bg-yellow">Enviada</span>';
-                } else {
-                  $badgeDian = '<span class="badge bg-gray">Pendiente</span>';
-                }
-                echo '<td>' . $badgeDian . '</td>';
-                */
-
-                echo '<td>' . $value['notas'] . '</td>
-
-                        <td contenteditable="true" class="celda-observacion" data-id="' . $value['id'] . '">' . $value['observacion'] . '</td>
-                        
-                        <td>' . $value["fecha"] . '</td>
-
-                        <td>
-                          <div class="btn-group col-acciones">';
-
-                if (puedeAccion('ventas', 'editar')) {
-                  echo '<button class="btn btn-warning btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver detalle" style="width: auto !important;">
-                              <i class="fa fa-eye"></i>
-                            </button>';
-                }
-
-                if (puedeAccion('ventas', 'eliminar')) {
-                  echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar venta">
-                                      <i class="fa fa-times"></i>
-                                    </button>';
-                }
-
-                echo '</div>
-                        </td>
-
-
-                      </tr>';
-              }
-              ?>
-
+              <!-- Los datos se cargarán por DataTables Server-Side -->
             </tbody>
 
           </table>
@@ -631,6 +460,7 @@ MODAL EDITAR CLIENTE
       url: "ajax/datatable-ventas.ajax.php",
       method: "POST",
       data: {
+        csrf_token: $('meta[name="csrf-token"]').attr('content'),
         idVentaObservacion: idVenta,
         nuevaObservacion: nuevaObservacion
       },
@@ -655,12 +485,83 @@ MODAL EDITAR CLIENTE
           $('#tablaListaVentas').DataTable().destroy();
         }
 
-        $("#tablaListaVentas").DataTable({
-          "autoWidth": false,
+        var table = $("#tablaListaVentas").DataTable({
+          "processing": true,
+          "serverSide": true,
+          "ajax": {
+            "url": "ajax/ventas-listado.ajax.php",
+            "type": "POST",
+            "data": function (d) {
+              d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+              d.fechaInicial = $("#fechaInicial").val();
+              d.fechaFinal = $("#fechaFinal").val();
+              d.clienteId = $("select[name='cliente']").val();
+              d.usuarioId = $("select[name='usuario']").val();
+            }
+          },
+          "createdRow": function (row, data, dataIndex) {
+            // Añadir el atributo data-venta-id a cada fila
+            if (data.DT_RowAttr && data.DT_RowAttr['data-venta-id']) {
+              $(row).attr('data-venta-id', data.DT_RowAttr['data-venta-id']);
+            }
+          },
+
+          // Escuchar cambios en los filtros para recargar la tabla
           "initComplete": function (settings, json) {
             $(this.api().table().node()).addClass('datatable-ready');
             if (typeof quitarLoaderGlobal === 'function') {
               quitarLoaderGlobal();
+            }
+
+            // Definir función global para recargar la tabla
+            window.recargarTablaVentas = function() {
+              table.ajax.reload();
+            };
+
+            // Recargar tabla al cambiar filtros
+            $("select[name='cliente'], select[name='usuario']").on("change", function () {
+              window.recargarTablaVentas();
+            });
+
+            // Recargar tabla al cambiar fechas (escuchando el cambio en los inputs ocultos)
+            $("#fechaInicial, #fechaFinal").on("change", function () {
+              window.recargarTablaVentas();
+            });
+
+            // Recargar tabla al hacer clic en el botón Buscar
+            $(".btnBuscarFiltros").on("click", function () {
+              window.recargarTablaVentas();
+            });
+
+            // Prevenir el submit del formulario si se presiona Enter
+            $(".contenedor-filtros form").on("submit", function (e) {
+              e.preventDefault();
+              window.recargarTablaVentas();
+            });
+
+            // Inicializar DateRangePicker aquí mismo para tener acceso a la tabla
+            if ($('#daterange-btn').length > 0 && typeof $.fn.daterangepicker !== 'undefined') {
+              var urlParams = new URLSearchParams(window.location.search);
+              var fechaInicialUrl = urlParams.get('fechaInicial');
+              var fechaFinalUrl = urlParams.get('fechaFinal');
+
+              $('#daterange-btn').daterangepicker({
+                ranges: {
+                  'Todos los documentos': [moment('2000-01-01'), moment()],
+                  'Hoy': [moment(), moment()],
+                  'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                  'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+                  'Este mes': [moment().startOf('month'), moment().endOf('month')],
+                  'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                },
+                startDate: fechaInicialUrl ? moment(fechaInicialUrl) : moment(),
+                endDate: fechaFinalUrl ? moment(fechaFinalUrl) : moment()
+              }, function (start, end) {
+                $('#daterange-btn span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                $('#fechaInicial').val(start.format('YYYY-MM-DD'));
+                $('#fechaFinal').val(end.format('YYYY-MM-DD'));
+                window.recargarTablaVentas();
+              });
             }
           },
           "order": [
@@ -698,7 +599,7 @@ MODAL EDITAR CLIENTE
                   if (colIdx === 7) {
                     var obsTexto = $('<div>').html(data).text().trim();
                     finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
-                    finalHtml += '<span class="text-bold" style="display:block;color:#555;margin-bottom:4px;"><i class="fa fa-pencil-square"></i> ' + label + ':</span>';
+                    finalHtml += '<span class="text-bold" style="block;color:#555;margin-bottom:4px;"> ' + label + ':</span>';
                     finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:24px;">' + obsTexto + '</div>';
                     finalHtml += '</div>';
                     return;

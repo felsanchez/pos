@@ -88,6 +88,85 @@ class ControladorCategorias{
 		return $respuesta;
 	}
 
+	/*=============================================
+	MOSTRAR CATEGORIAS SERVER-SIDE
+	=============================================*/
+	static public function ctrMostrarCategoriasServerSide($params)
+	{
+		$tabla = "categorias";
+
+		// Columnas para ordenar
+		$columns = array(
+			0 => 'categoria',
+			1 => 'id' 
+		);
+
+		$where = " WHERE 1=1 ";
+
+		// Búsqueda global (DataTables)
+		if (!empty($params['search']['value'])) {
+			$searchValue = $params['search']['value'];
+			$where .= " AND categoria LIKE '%$searchValue%' ";
+		}
+
+		// Ordenar
+		$order = "";
+		if (isset($params['order'][0]['column'])) {
+			$colIdx = $params['order'][0]['column'];
+			$colName = isset($columns[$colIdx]) ? $columns[$colIdx] : 'id';
+			$order = " ORDER BY " . $colName . " " . $params['order'][0]['dir'];
+		} else {
+			$order = " ORDER BY id DESC";
+		}
+
+		// Paginación
+		$limit = "";
+		if ($params['length'] != -1) {
+			$limit = " LIMIT " . $params['start'] . ", " . $params['length'];
+		}
+
+		// Obtener datos
+		$categorias = ModeloCategorias::mdlMostrarCategoriasServerSide($tabla, $where, $order, $limit);
+		$totalData = ModeloCategorias::mdlGetTotalCategorias($tabla, " WHERE 1=1 ");
+		$totalFiltered = ModeloCategorias::mdlGetTotalCategorias($tabla, $where);
+
+		$data = array();
+
+		foreach ($categorias as $key => $value) {
+			
+			$nestedData = array();
+
+			// 0: Categoría
+			$nestedData[] = '<span class="text-uppercase">' . e($value["categoria"]) . '</span>';
+
+			// 1: Productos
+			$totalProductos = ModeloCategorias::mdlContarProductosPorCategoria($value["id"]);
+			$nestedData[] = '<span class="badge bg-blue">' . $totalProductos . '</span>';
+
+			// 2: Acciones
+			$botonesAcciones = '<div class="btn-group">';
+			if (puedeAccion('categorias', 'editar')) {
+				$botonesAcciones .= '<button class="btn btn-warning btnEditarCategoria" idCategoria="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarCategoria" title="Editar categoría"><i class="fa fa-pencil"></i></button>';
+			}
+			if (puedeAccion('categorias', 'eliminar')) {
+				$botonesAcciones .= '<button class="btn btn-danger btnEliminarCategoria" idCategoria="' . $value["id"] . '" title="Eliminar categoría"><i class="fa fa-times"></i></button>';
+			}
+			$botonesAcciones .= '</div>';
+			$nestedData[] = $botonesAcciones;
+
+			$data[] = $nestedData;
+		}
+
+		$json_data = array(
+			"draw"            => intval($params['draw']),
+			"recordsTotal"    => intval($totalData),
+			"recordsFiltered" => intval($totalFiltered),
+			"data"            => $data
+		);
+
+		return $json_data;
+	}
+
 
 	/*=============================================
 	EDITAR CATEGORIAS

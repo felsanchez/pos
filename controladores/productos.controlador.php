@@ -17,6 +17,253 @@ class ControladorProductos
 		return $respuesta;
 	}
 
+	/*=============================================
+	MOSTRAR PRODUCTOS SERVER-SIDE
+	=============================================*/
+	static public function ctrMostrarProductosServerSide($params)
+	{
+		$tabla = "productos";
+
+		// Columnas para ordenar (deben coincidir con el índice enviado por DataTables)
+		$columnsMap = array(
+			0 => 'p.id',
+			1 => 'p.imagen',
+			2 => 'p.codigo',
+			3 => 'p.descripcion',
+			4 => 'c.categoria',
+			5 => 'p.stock',
+			6 => 't.nombre',
+			7 => 'p.precio_venta',
+			8 => 'prov.nombre',
+			9 => 'p.fecha'
+		);
+
+		$where = " WHERE 1=1 ";
+
+		// Filtro de búsqueda (DataTables)
+		if (!empty($params['search']['value'])) {
+			$searchValue = $params['search']['value'];
+			$where .= " AND (p.codigo LIKE '%$searchValue%' OR p.descripcion LIKE '%$searchValue%' OR c.categoria LIKE '%$searchValue%' OR p.stock LIKE '%$searchValue%' OR t.nombre LIKE '%$searchValue%' OR p.precio_venta LIKE '%$searchValue%' OR prov.nombre LIKE '%$searchValue%') ";
+		}
+
+		// Filtros personalizados (Categoría y Proveedor)
+		if (!empty($params['categoriaFiltro'])) {
+			$categoriaFiltro = $params['categoriaFiltro'];
+			// Buscar ID de categoría por nombre
+			$cat = ModeloCategorias::mdlMostrarCategorias("categorias", "categoria", $categoriaFiltro);
+			if($cat){
+				$where .= " AND p.id_categoria = " . $cat["id"];
+			}
+		}
+
+		if (!empty($params['proveedorFiltro'])) {
+			$proveedorFiltro = $params['proveedorFiltro'];
+			// Buscar ID de proveedor por nombre
+			$prov = ModeloProveedores::mdlMostrarProveedores("proveedores", "nombre", $proveedorFiltro);
+			if($prov){
+				$where .= " AND p.id_proveedor = " . $prov["id"];
+			}
+		}
+
+		// Ordenar
+		$order = "";
+		if (isset($params['order'][0]['column'])) {
+			$colIdx = $params['order'][0]['column'];
+			$colName = isset($columnsMap[$colIdx]) ? $columnsMap[$colIdx] : 'p.id';
+			$order = " ORDER BY " . $colName . " " . $params['order'][0]['dir'];
+		} else {
+			$order = " ORDER BY p.id DESC";
+		}
+
+		// Paginación
+		$limit = "";
+		if ($params['length'] != -1) {
+			$limit = " LIMIT " . $params['start'] . ", " . $params['length'];
+		}
+
+		// Obtener datos
+		$productos = ModeloProductos::mdlMostrarProductosServerSide($tabla, $where, $order, $limit);
+		$totalData = ModeloProductos::mdlGetTotalProductos($tabla, " WHERE 1=1 ");
+		$totalFiltered = ModeloProductos::mdlGetTotalProductos($tabla, $where);
+
+		// Obtener tributos para mapeo rápido de porcentajes (aunque ya tenemos el nombre por el JOIN)
+		if (file_exists("modelos/factus.modelo.php")) {
+			require_once "modelos/factus.modelo.php";
+		} else {
+			require_once "../modelos/factus.modelo.php";
+		}
+		$tributos = ModeloFactus::mdlObtenerTributos();
+		$tributosMap = array();
+		foreach ($tributos as $t) {
+			$tributosMap[$t['id']] = $t;
+		}
+
+		$data = array();
+
+		foreach ($productos as $key => $value) {
+			
+			$nestedData = array();
+
+			// 0: ID
+			$nestedData[] = $value["id"];
+
+			// 1: Imagen
+			$nestedData[] = $value["imagen"] ? $value["imagen"] : "vistas/img/productos/default/anonymous.png";
+
+			// 2: Código
+			$nestedData[] = e($value["codigo"]);
+
+			// 3: Descripción
+			$nestedData[] = e($value["descripcion"]);
+
+			// 4: Categoría (Usando JOIN)
+			$nestedData[] = !empty($value["nombre_categoria"]) ? e($value["nombre_categoria"]) : "Sin categoría";
+
+			// 5: Stock (con badges)
+			if ($value["stock"] <= 10) {
+				$stockHtml = "<button class='btn btn-danger'>" . $value["stock"] . "</button>";
+			} else if ($value["stock"] >= 11 && $value["stock"] <= 15) {
+				$stockHtml = "<button class='btn btn-warning'>" . $value["stock"] . "</button>";
+			} else {
+				$stockHtml = "<button class='btn btn-success'>" . $value["stock"] . "</button>";
+			}
+			$nestedData[] = $stockHtml;
+
+			// 6: Impuesto (Usando JOIN y el map para el porcentaje)
+			$impuesto = "Sin Tributo";
+			if (!empty($value["nombre_tributo"])) {
+				$impuesto = $value["nombre_tributo"];
+				if ($value["tributo_id"] && isset($tributosMap[$value["tributo_id"]])) {
+					if (isset($tributosMap[$value["tributo_id"]]["porcentaje"])) {
+						$impuesto .= " - " . $tributosMap[$value["tributo_id"]]["porcentaje"] . "%";
+					}
+				}
+			}
+			$nestedData[] = $impuesto;
+
+			// 7: Precio Venta
+			$nestedData[] = "$ " . number_format($value["precio_venta"]);
+
+			// 8: Proveedor (Usando JOIN)
+			$nestedData[] = !empty($value["nombre_proveedor"]) ? e($value["nombre_proveedor"]) : "Sin proveedor";
+
+			// 9: Fecha
+			$nestedData[] = $value["fecha"];
+
+			// 10: Acciones
+			$botonesAcciones = '<div class="btn-group">';
+			if (puedeAccion('productos', 'editar')) {
+				$botonesAcciones .= '<button class="btn btn-warning btnEditarProducto" idProducto="' . $value["id"] . '" title="Editar Producto"><i class="fa fa-pencil"></i></button>';
+				$botonesAcciones .= '<button class="btn btn-primary btnAjusteStock" idProducto="' . $value["id"] . '" data-toggle="modal" data-target="#modalAjusteStock" title="Ajustar Stock"><i class="fa fa-cubes"></i></button>';
+			}
+			if (puedeAccion('productos', 'eliminar')) {
+				$botonesAcciones .= '<button class="btn btn-danger btnEliminarProducto" idProducto="' . $value["id"] . '" codigo="' . $value["codigo"] . '" imagen="' . $value["imagen"] . '" title="Eliminar Producto"><i class="fa fa-times"></i></button>';
+			}
+			if ($value["tiene_variantes"] == 1 && puedeAccion('variantes', 'editar')) {
+				$botonesAcciones .= '<button class="btn btn-info btnExpandirVariantes" data-id-producto="' . $value["id"] . '" title="Ver variantes"><i class="fa fa-plus"></i></button>';
+			}
+			$botonesAcciones .= '</div>';
+			$nestedData[] = $botonesAcciones;
+
+			$data[] = $nestedData;
+		}
+
+		$json_data = array(
+			"draw"            => intval($params['draw']),
+			"recordsTotal"    => intval($totalData),
+			"recordsFiltered" => intval($totalFiltered),
+			"data"            => $data
+		);
+
+		return $json_data;
+	}
+
+	/*=============================================
+	MOSTRAR PRODUCTOS PARA VENTAS SERVER-SIDE
+	=============================================*/
+	static public function ctrMostrarProductosVentasServerSide($params)
+	{
+		$tabla = "productos";
+
+		// Columnas para ordenar (coincidentes con vistas/js/ventas.js)
+		$columnsMap = array(
+			0 => 'p.id',
+			1 => 'p.id', // Imagen
+			2 => 'p.codigo',
+			3 => 'p.descripcion',
+			4 => 'p.stock',
+			5 => 'p.id'  // Acciones
+		);
+
+		$where = " WHERE 1=1 ";
+
+		// Filtro de búsqueda (DataTables)
+		if (!empty($params['search']['value'])) {
+			$searchValue = $params['search']['value'];
+			$where .= " AND (p.codigo LIKE '%$searchValue%' OR p.descripcion LIKE '%$searchValue%') ";
+		}
+
+		// Ordenar
+		$order = "";
+		if (isset($params['order'][0]['column'])) {
+			$colIdx = $params['order'][0]['column'];
+			$colName = isset($columnsMap[$colIdx]) ? $columnsMap[$colIdx] : 'p.id';
+			$order = " ORDER BY " . $colName . " " . $params['order'][0]['dir'];
+		} else {
+			$order = " ORDER BY p.id DESC";
+		}
+
+		// Paginación
+		$limit = "";
+		if (isset($params['length']) && $params['length'] != -1) {
+			$limit = " LIMIT " . intval($params['start']) . ", " . intval($params['length']);
+		}
+
+		// Obtener datos
+		$productos = ModeloProductos::mdlMostrarProductosServerSide($tabla, $where, $order, $limit);
+		$totalData = ModeloProductos::mdlGetTotalProductos($tabla, " WHERE 1=1 ");
+		$totalFiltered = ModeloProductos::mdlGetTotalProductos($tabla, $where);
+
+		$data = array();
+		$start = isset($params['start']) ? intval($params['start']) : 0;
+
+		foreach ($productos as $key => $value) {
+			$nestedData = array();
+
+			// 0: # (Índice visual)
+			$nestedData[] = ($start + $key + 1);
+
+			// 1: Imagen
+			$nestedData[] = $value["imagen"] ? $value["imagen"] : "vistas/img/productos/default/anonymous.png";
+
+			// 2: Código
+			$nestedData[] = e($value["codigo"]);
+
+			// 3: Descripción
+			$nestedData[] = e($value["descripcion"]);
+
+			// 4: Stock
+			$nestedData[] = $value["stock"];
+
+			// 5: ID (para botón de acciones)
+			$nestedData[] = $value["id"];
+
+			// 6: Tiene Variantes (Oculto)
+			$nestedData[] = $value["tiene_variantes"] > 0 ? "1" : "0";
+
+			$data[] = $nestedData;
+		}
+
+		$json_data = array(
+			"draw"            => isset($params['draw']) ? intval($params['draw']) : 0,
+			"recordsTotal"    => intval($totalData),
+			"recordsFiltered" => intval($totalFiltered),
+			"data"            => $data
+		);
+
+		return $json_data;
+	}
+
 
 	/*=============================================
 	CREAR PRODUCTO
@@ -636,7 +883,7 @@ class ControladorProductos
 							$stockAnterior,
 							$nuevoStock,
 							"Stock editado manualmente",
-							"Cambio de stock: " . $stockAnterior . " → " . $nuevoStock
+							""
 						);
 
 					}
@@ -729,7 +976,7 @@ class ControladorProductos
 													$stockAnteriorVariante,
 													$stockVariante,
 													"Stock de variante actualizado",
-													"Variante actualizada desde editar producto"
+													""
 												);
 											}
 
@@ -776,7 +1023,7 @@ class ControladorProductos
 												0,
 												$stockVariante,
 												"Variante creada con stock inicial: " . $nombreCombinacion,
-												"Variante agregada desde editar producto"
+												""
 											);
 
 										}
@@ -1550,7 +1797,7 @@ class ControladorProductos
 							$stockActual,
 							$nuevoStock,
 							"Ajuste rápido",
-							"Tipo: " . ucfirst($tipo)
+							""
 						);
 
 						echo '<script>

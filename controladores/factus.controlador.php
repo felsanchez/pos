@@ -1237,6 +1237,56 @@ class ControladorFactus
 			$guardado = ModeloFactus::mdlGuardarNotaCredito($datosGuardar);
 
 			if ($guardado == "ok") {
+
+				// =========================================================
+				// 🔄 ACTUALIZAR STOCK Y REGISTRAR MOVIMIENTO (DEVOLUCIÓN)
+				// =========================================================
+				require_once __DIR__ . "/../modelos/productos.modelo.php";
+				require_once __DIR__ . "/../modelos/movimientos.modelo.php";
+				require_once __DIR__ . "/../modelos/usuarios.modelo.php";
+
+				$productosNC = !empty($listaProductos) ? $listaProductos : json_decode($venta['productos'], true);
+				$idUsuario = !empty($_SESSION['id']) ? $_SESSION['id'] : (!empty($_POST['idUsuario']) ? intval($_POST['idUsuario']) : 1);
+				$datosUsuario = ModeloUsuarios::mdlMostrarUsuarios("usuarios", "id", $idUsuario);
+				$nombreUsuario = $datosUsuario ? $datosUsuario["nombre"] : "Sistema";
+
+				foreach ($productosNC as $prod) {
+					
+					$idProd = $prod["id"];
+					$cantidad = intval($prod["cantidad"]);
+					$esVariante = (isset($prod["idVariante"]) && $prod["idVariante"] > 0) || (isset($prod["variante"]) && $prod["variante"] == "si");
+
+					// 1. Obtener datos actuales para el historial
+					$itemActual = ModeloProductos::mdlMostrarProductos("productos", "id", $idProd, "id");
+					
+					if($itemActual){
+
+						$stockAnterior = $itemActual["stock"];
+						$stockNuevo = $stockAnterior + $cantidad;
+
+						// 2. Actualizar Stock físico
+						ModeloProductos::mdlActualizarProducto("productos", "stock", $stockNuevo, $idProd);
+
+						// 3. Registrar en Historial de Movimientos
+						$datosMov = [
+							"tipo_producto" => ($esVariante) ? "variante" : "producto",
+							"id_producto" => $idProd,
+							"id_variante" => isset($prod["idVariante"]) ? $prod["idVariante"] : 0,
+							"nombre_producto" => $itemActual["descripcion"],
+							"tipo_movimiento" => "devolucion",
+							"cantidad" => $cantidad,
+							"stock_anterior" => $stockAnterior,
+							"stock_nuevo" => $stockNuevo,
+							"id_usuario" => $idUsuario,
+							"nombre_usuario" => $nombreUsuario,
+							"referencia" => "NC: " . $datosGuardar["numero_nota_credito"],
+							"notas" => "Devolución por Nota de Crédito #" . $datosGuardar["numero_nota_credito"]
+						];
+
+						ModeloMovimientos::mdlRegistrarMovimiento($datosMov);
+					}
+				}
+
 				// Actualizar consecutivo del rango NC
 				$rangoNC = ModeloFactus::mdlObtenerRangoNC();
 				if ($rangoNC && !empty($datosGuardar["numero_nota_credito"])) {
@@ -1826,6 +1876,10 @@ class ControladorFactus
 			$actualizado = ModeloFactus::mdlActualizarNotaCredito($idNota, $datosActualizar);
 
 			if ($actualizado == "ok") {
+
+				// 🔄 Actualizar Inventario
+				self::actualizarInventarioPorNotaCredito($datosActualizar, $listaProductos, $venta);
+
 				// Actualizar consecutivo del rango NC
 				$rangoNC = ModeloFactus::mdlObtenerRangoNC();
 				if ($rangoNC && !empty($datosActualizar["numero_nota_credito"])) {
@@ -2319,6 +2373,118 @@ class ControladorFactus
 	}
 
 	/*=============================================
+	MOSTRAR NOTAS CREDITO SERVER-SIDE
+	=============================================*/
+	static public function ctrMostrarNotasCreditoServerSide($params)
+	{
+		$columnsMap = [
+			0 => 'nc.numero_nota_credito',
+			1 => 'nc.numero_factura_original',
+			2 => 'c.nombre',
+			3 => 'nc.monto_total',
+			4 => 'nc.fecha_creacion',
+			5 => 'nc.estado_dian',
+		];
+
+		$where = " WHERE 1=1 ";
+
+		// Búsqueda global
+		if (!empty($params['search']['value'])) {
+			$s = $params['search']['value'];
+			$where .= " AND (nc.numero_nota_credito LIKE '%$s%'
+						OR nc.numero_factura_original LIKE '%$s%'
+						OR c.nombre LIKE '%$s%'
+						OR nc.estado_dian LIKE '%$s%') ";
+		}
+
+		// Orden
+		$order = " ORDER BY nc.id DESC ";
+		if (isset($params['order'][0]['column'])) {
+			$colIdx  = $params['order'][0]['column'];
+			$colName = $columnsMap[$colIdx] ?? 'nc.id';
+			$dir     = $params['order'][0]['dir'] === 'asc' ? 'ASC' : 'DESC';
+			$order   = " ORDER BY $colName $dir ";
+		}
+
+		// Paginación
+		$limit = "";
+		if ($params['length'] != -1) {
+			$limit = " LIMIT " . intval($params['start']) . ", " . intval($params['length']);
+		}
+
+		$notas     = ModeloFactus::mdlMostrarNotasCreditoServerSide($where, $order, $limit);
+		$total     = ModeloFactus::mdlGetTotalNotasCredito(" WHERE 1=1 ");
+		$filtradas = ModeloFactus::mdlGetTotalNotasCredito($where);
+
+		$data = [];
+		foreach ($notas as $value) {
+			$row = [];
+
+			// Col 0: Código Nota
+			$estiloBorrador = ($value['estado_dian'] == 'borrador') ? ' style="color:#f39c12; font-weight:bold;"' : '';
+			$row[] = '<span' . $estiloBorrador . '>' . e($value['numero_nota_credito'] ?: 'Borrador') . '</span>';
+
+			// Col 1: Factura Original
+			$row[] = e($value['numero_factura_original']);
+
+			// Col 2: Cliente
+			$row[] = e($value['cliente_nombre'] ?? 'N/A');
+
+			// Col 3: Total
+			$row[] = '$ ' . number_format((float)($value['monto_total'] ?? 0), 2);
+
+			// Col 4: Fecha
+			$row[] = e(substr($value['fecha_creacion'], 0, 10));
+
+			// Col 5: Estado DIAN
+			$estado = $value['estado_dian'];
+			if ($estado == 'aceptada' || $estado == 'enviada') {
+				$row[] = '<button class="btn btn-success btn-xs">Exitosa</button>';
+			} elseif ($estado == 'borrador') {
+				$row[] = '<button class="btn btn-warning btn-xs">Borrador</button>';
+			} elseif ($estado == 'rechazada') {
+				$row[] = '<button class="btn btn-danger btn-xs">Rechazada</button>';
+			} else {
+				$row[] = '<button class="btn btn-danger btn-xs">Pendiente</button>';
+			}
+
+			// Col 6: Acciones
+			$btns = '<div class="btn-group">';
+			$btns .= '<a href="index.php?ruta=ver-nota-credito&idNota=' . $value['id'] . '" class="btn btn-info" title="Ver detalle"><i class="fa fa-eye"></i></a>';
+
+			if (!empty($value['cufe_nc'])) {
+				$btns .= '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . e($value['cufe_nc']) . '" target="_blank" class="btn btn-success" title="Ver en la DIAN"><i class="fa fa-external-link"></i></a>';
+			}
+
+			if (puedeAccion('notas_credito', 'editar')) {
+				if ($estado == 'borrador') {
+					$btns .= '<button class="btn btnFirmarNotaCredito" style="background-color:black;color:white;" idNota="' . $value['id'] . '" title="Firmar y Enviar a DIAN"><i class="fa fa-paper-plane"></i></button>';
+				}
+				if (!empty($value['xml_dian_nc'])) {
+					$btns .= '<a href="' . e($value['xml_dian_nc']) . '" target="_blank" class="btn btn-primary" title="Ver XML"><i class="fa fa-file-code-o"></i></a>';
+				}
+				if ($estado == 'aceptada' || $estado == 'enviada') {
+					$btns .= '<button class="btn btn-primary btnEnviarEmailNC" idNota="' . $value['id'] . '" nombreCliente="' . e($value['cliente_nombre'] ?? 'N/A') . '" emailCliente="' . e($value['cliente_email'] ?? '') . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
+				}
+			}
+			if (puedeAccion('notas_credito', 'eliminar') && $estado == 'borrador') {
+				$btns .= '<button class="btn btn-danger btnEliminarNotaCredito" idNota="' . $value['id'] . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
+			}
+			$btns .= '</div>';
+			$row[] = $btns;
+
+			$data[] = $row;
+		}
+
+		return [
+			'draw'            => intval($params['draw']),
+			'recordsTotal'    => intval($total),
+			'recordsFiltered' => intval($filtradas),
+			'data'            => $data,
+		];
+	}
+
+	/*=============================================
 	MOSTRAR NOTAS CREDITO
 	=============================================*/
 	static public function ctrMostrarNotasCredito($item, $valor)
@@ -2433,6 +2599,62 @@ class ControladorFactus
 			}
 
 			echo "</table>";
+		}
+	}
+
+	/*=============================================
+	MÉTODO AUXILIAR PARA ACTUALIZAR INVENTARIO (NC)
+	=============================================*/
+	private static function actualizarInventarioPorNotaCredito($datosNC, $listaProductos, $venta)
+	{
+		require_once __DIR__ . "/../modelos/productos.modelo.php";
+		require_once __DIR__ . "/../modelos/movimientos.modelo.php";
+		require_once __DIR__ . "/../modelos/usuarios.modelo.php";
+
+		$productosNC = !empty($listaProductos) ? $listaProductos : json_decode($venta['productos'], true);
+		
+		// Determinar usuario
+		$idUsuario = !empty($_SESSION['id']) ? $_SESSION['id'] : 1;
+		$datosUsuario = ModeloUsuarios::mdlMostrarUsuarios("usuarios", "id", $idUsuario);
+		$nombreUsuario = $datosUsuario ? $datosUsuario["nombre"] : "Sistema";
+
+		$numeroNC = $datosNC["numero_nota_credito"] ?? "NC-S/N";
+
+		foreach ($productosNC as $prod) {
+			
+			$idProd = $prod["id"];
+			$cantidad = intval($prod["cantidad"]);
+			$esVariante = (isset($prod["idVariante"]) && $prod["idVariante"] > 0) || (isset($prod["variante"]) && $prod["variante"] == "si");
+
+			// 1. Obtener datos actuales
+			$itemActual = ModeloProductos::mdlMostrarProductos("productos", "id", $idProd, "id");
+			
+			if($itemActual){
+
+				$stockAnterior = $itemActual["stock"];
+				$stockNuevo = $stockAnterior + $cantidad;
+
+				// 2. Actualizar Stock físico
+				ModeloProductos::mdlActualizarProducto("productos", "stock", $stockNuevo, $idProd);
+
+				// 3. Registrar en Historial
+				$datosMov = [
+					"tipo_producto" => ($esVariante) ? "variante" : "producto",
+					"id_producto" => $idProd,
+					"id_variante" => isset($prod["idVariante"]) ? $prod["idVariante"] : 0,
+					"nombre_producto" => $itemActual["descripcion"],
+					"tipo_movimiento" => "devolucion",
+					"cantidad" => $cantidad,
+					"stock_anterior" => $stockAnterior,
+					"stock_nuevo" => $stockNuevo,
+					"id_usuario" => $idUsuario,
+					"nombre_usuario" => $nombreUsuario,
+					"referencia" => "NC: " . $numeroNC,
+					"notas" => "Devolución por Nota de Crédito #" . $numeroNC
+				];
+
+				ModeloMovimientos::mdlRegistrarMovimiento($datosMov);
+			}
 		}
 	}
 }

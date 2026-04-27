@@ -20,6 +20,548 @@ class ControladorVentas
 	}
 
 	/*=============================================
+	MOSTRAR VENTAS SERVER-SIDE
+	=============================================*/
+	static public function ctrMostrarVentasServerSide($params)
+	{
+		$tabla = "ventas";
+
+		// Mapeo de columnas para ordenamiento
+		$columnsMap = array(
+			0 => 'v.codigo',
+			1 => 'c.nombre',
+			2 => 'u.nombre',
+			3 => 'v.metodo_pago',
+			4 => 'v.id', // Imagen
+			5 => 'v.total',
+			6 => 'v.notas',
+			7 => 'v.observacion',
+			8 => 'v.fecha'
+		);
+
+		// Obtener configuración para moneda y formato
+		$configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
+		$moneda = !empty($configuracion["moneda"]) ? $configuracion["moneda"] : "$";
+		$formatoCodigoVenta = !empty($configuracion["formato_codigo_venta"]) ? $configuracion["formato_codigo_venta"] : "";
+
+		// Filtros base (Excluir Facturas Electrónicas)
+		$where = " WHERE v.estado = 'venta' AND (v.numero_factura IS NULL OR v.numero_factura = '') AND (v.resolucion_id IS NULL OR v.resolucion_id = 0) ";
+
+		// Filtro por Fechas
+		if (!empty($params['fechaInicial']) && !empty($params['fechaFinal'])) {
+			$where .= " AND DATE(v.fecha) >= '" . $params['fechaInicial'] . "' AND DATE(v.fecha) <= '" . $params['fechaFinal'] . "' ";
+		}
+
+		// Filtro por Cliente
+		if (isset($params['clienteId']) && $params['clienteId'] !== "" && is_numeric($params['clienteId'])) {
+			$where .= " AND v.id_cliente = " . $params['clienteId'];
+		}
+
+		// Filtro por Vendedor
+		if (isset($params['usuarioId']) && $params['usuarioId'] !== "" && is_numeric($params['usuarioId'])) {
+			$where .= " AND v.id_vendedor = " . $params['usuarioId'];
+		}
+
+		// Búsqueda global (DataTables)
+		if (!empty($params['search']['value'])) {
+			$searchValue = $params['search']['value'];
+			$where .= " AND (v.codigo LIKE '%$searchValue%' OR c.nombre LIKE '%$searchValue%' OR u.nombre LIKE '%$searchValue%' OR v.notas LIKE '%$searchValue%' OR v.observacion LIKE '%$searchValue%') ";
+		}
+
+		// Orden
+		$order = "";
+		if (isset($params['order'][0]['column'])) {
+			$colIdx = $params['order'][0]['column'];
+			$colName = isset($columnsMap[$colIdx]) ? $columnsMap[$colIdx] : 'v.id';
+			$order = " ORDER BY " . $colName . " " . $params['order'][0]['dir'];
+		} else {
+			$order = " ORDER BY v.id DESC";
+		}
+
+		// Paginación
+		$limit = "";
+		if ($params['length'] != -1) {
+			$limit = " LIMIT " . $params['start'] . ", " . $params['length'];
+		}
+
+		// Obtener datos
+		$ventas = ModeloVentas::mdlMostrarVentasServerSide($tabla, $where, $order, $limit);
+		$totalData = ModeloVentas::mdlGetTotalVentas($tabla, " WHERE v.estado = 'venta' AND (v.numero_factura IS NULL OR v.numero_factura = '') AND (v.resolucion_id IS NULL OR v.resolucion_id = 0) ");
+		$totalFiltered = ModeloVentas::mdlGetTotalVentas($tabla, $where);
+
+		$data = array();
+
+		foreach ($ventas as $key => $value) {
+			
+			$nestedData = array();
+
+			// 0: Código
+			$codigoHtml = "";
+			if (!empty($value["numero_factura"])) {
+				$codigoHtml = '<span style="font-weight:bold; font-size:1.1em; color:#605ca8;">' . $value["numero_factura"] . '</span>';
+				$codigoHtml .= '<br><span style="font-size:0.85em; color:#999;">Ref: ' . $formatoCodigoVenta . $value["codigo"] . '</span>';
+			} else {
+				$codigoHtml = $formatoCodigoVenta . $value["codigo"];
+			}
+			$nestedData[] = $codigoHtml;
+
+			// 1: Cliente
+			$nestedData[] = '<span class="btnVerClienteDesdeVenta" data-toggle="modal" data-target="#modalEditarCliente" idCliente="' . $value["id_cliente"] . '" style="cursor: pointer; color: #337ab7; text-decoration: underline;">' . e($value["nombre_cliente"]) . '</span>';
+
+			// 2: Vendedor
+			$nestedData[] = e($value["nombre_vendedor"]);
+
+			// 3: Forma de pago
+			$nestedData[] = $moneda . ' ' . $value["metodo_pago"];
+
+			// 4: Imagen
+			$imgSrc = $value["imagen"] != "" ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
+			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idventa="' . $value["id"] . '">';
+
+			// 5: Total
+			$nestedData[] = $moneda . ' ' . number_format($value["total"], 2);
+
+			// 6: Notas
+			$nestedData[] = $value['notas'];
+
+			// 7: Observación (Editable)
+			$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . $value['id'] . '">' . $value['observacion'] . '</div>';
+
+			// 8: Fecha
+			$nestedData[] = $value["fecha"];
+
+			// 9: Acciones
+			$botonesAcciones = '<div class="btn-group col-acciones">';
+			if (puedeAccion('ventas', 'editar')) {
+				$botonesAcciones .= '<button class="btn btn-warning btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver detalle" style="width: auto !important;"><i class="fa fa-eye"></i></button>';
+			}
+			if (puedeAccion('ventas', 'eliminar')) {
+				$botonesAcciones .= '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar venta"><i class="fa fa-times"></i></button>';
+			}
+			$botonesAcciones .= '</div>';
+			$nestedData[] = $botonesAcciones;
+
+			// Metadatos para JS
+			$nestedData['DT_RowAttr'] = array(
+				'data-venta-id' => $value['id']
+			);
+
+			$data[] = $nestedData;
+		}
+
+		return array(
+			"draw"            => intval($params['draw']),
+			"recordsTotal"    => intval($totalData),
+			"recordsFiltered" => intval($totalFiltered),
+			"data"            => $data
+		);
+	}
+
+	/*=============================================
+	MOSTRAR ÓRDENES SERVER-SIDE
+	=============================================*/
+	static public function ctrMostrarOrdenesServerSide($params)
+	{
+		$tabla = "ventas";
+
+		// Mapeo de columnas para ordenamiento:
+		// 0=Código, 1=Cliente, 2=Vendedor, 3=Forma de pago, 4=Imagen, 5=Total, 6=Notas, 7=Observación, 8=Fecha, 9=Seguimiento, 10=Acciones
+		$columnsMap = array(
+			0 => 'v.codigo',
+			1 => 'c.nombre',
+			2 => 'u.nombre',
+			3 => 'v.metodo_pago',
+			4 => 'v.id', // Imagen
+			5 => 'v.total',
+			6 => 'v.notas',
+			7 => 'v.observacion',
+			8 => 'v.fecha'
+		);
+
+		// Obtener configuración para moneda y formato
+		$configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
+		$moneda = !empty($configuracion["moneda"]) ? $configuracion["moneda"] : "$";
+		$formatoCodigoVenta = !empty($configuracion["formato_codigo_venta"]) ? $configuracion["formato_codigo_venta"] : "";
+		$mensajeRecibido = !empty($configuracion["mensaje_recibido"]) ? $configuracion["mensaje_recibido"] : "Su pedido ha sido recibido";
+		$mensajeProcesado = !empty($configuracion["mensaje_procesado"]) ? $configuracion["mensaje_procesado"] : "Su pedido ha sido procesado";
+
+		// Filtros base para órdenes
+		$where = " WHERE v.estado = 'orden' ";
+
+		// Filtro por Fechas
+		if (!empty($params['fechaInicial']) && !empty($params['fechaFinal'])) {
+			$where .= " AND DATE(v.fecha) >= '" . $params['fechaInicial'] . "' AND DATE(v.fecha) <= '" . $params['fechaFinal'] . "' ";
+		}
+
+		// Filtro por Cliente
+		if (!empty($params['clienteId']) && is_numeric($params['clienteId'])) {
+			$where .= " AND v.id_cliente = " . $params['clienteId'];
+		}
+
+		// Filtro por Vendedor
+		if (!empty($params['usuarioId']) && is_numeric($params['usuarioId'])) {
+			$where .= " AND v.id_vendedor = " . $params['usuarioId'];
+		}
+
+		// Búsqueda global (DataTables)
+		if (!empty($params['search']['value'])) {
+			$searchValue = $params['search']['value'];
+			$where .= " AND (v.codigo LIKE '%$searchValue%' OR c.nombre LIKE '%$searchValue%' OR u.nombre LIKE '%$searchValue%' OR v.notas LIKE '%$searchValue%' OR v.observacion LIKE '%$searchValue%') ";
+		}
+
+		// Orden
+		$order = "";
+		if (isset($params['order'][0]['column'])) {
+			$colIdx = $params['order'][0]['column'];
+			$colName = isset($columnsMap[$colIdx]) ? $columnsMap[$colIdx] : 'v.id';
+			$order = " ORDER BY " . $colName . " " . $params['order'][0]['dir'];
+		} else {
+			$order = " ORDER BY v.id DESC";
+		}
+
+		// Paginación
+		$limit = "";
+		if (isset($params['length']) && $params['length'] != -1) {
+			$limit = " LIMIT " . intval($params['start']) . ", " . intval($params['length']);
+		}
+
+		// Obtener datos
+		$ordenes = ModeloVentas::mdlMostrarVentasServerSide($tabla, $where, $order, $limit);
+		$totalData = ModeloVentas::mdlGetTotalVentas($tabla, " WHERE v.estado = 'orden' ");
+		$totalFiltered = ModeloVentas::mdlGetTotalVentas($tabla, $where);
+
+		$data = array();
+
+		foreach ($ordenes as $key => $value) {
+			
+			$nestedData = array();
+
+			// 0: Código
+			$nestedData[] = e($formatoCodigoVenta) . e($value["codigo"]);
+
+			// 1: Cliente
+			$telefonoCli = isset($value["telefono_cliente"]) ? $value["telefono_cliente"] : "";
+			// Si no viene en el query (v.* no lo trae si no se especifica), lo buscamos una vez si es necesario
+			// Pero mejor optimizar el query si es posible. Por ahora, si no existe, lo buscamos.
+			if ($telefonoCli == "" && !empty($value["id_cliente"])) {
+				$clienteInfo = ControladorClientes::ctrMostrarClientes("id", $value["id_cliente"]);
+				$telefonoCli = $clienteInfo ? $clienteInfo["telefono"] : "";
+			}
+
+			$nestedData[] = '<span class="btnVerClienteDesdeVenta" data-toggle="modal" data-target="#modalEditarCliente" idCliente="' . e($value["id_cliente"]) . '" style="cursor: pointer; color: #337ab7; text-decoration: underline;">' . e($value["nombre_cliente"]) . '</span>';
+
+			// 2: Vendedor
+			$nestedData[] = e($value["nombre_vendedor"]);
+
+			// 3: Forma de pago
+			$nestedData[] = e($moneda) . ' ' . e($value["metodo_pago"]);
+
+			// 4: Imagen
+			$imgSrc = ($value["imagen"] != "" && $value["imagen"] != null) ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
+			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-ampliar-orden" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idventa="' . $value["id"] . '">';
+
+			// 5: Total
+			$nestedData[] = e($moneda) . ' ' . e(number_format($value["total"], 2));
+
+			// 6: Notas (Editable)
+			$nestedData[] = '<div contenteditable="true" class="celda-nota" data-id="' . e($value['id']) . '">' . e($value['notas']) . '</div>';
+
+			// 7: Observación (Editable)
+			$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . e($value['id']) . '">' . e($value['observacion']) . '</div>';
+
+			// 8: Fecha
+			$nestedData[] = e($value["fecha"]);
+
+			// 9: Seguimiento
+			$htmlSeguimiento = '<div style="white-space:nowrap; text-align:center;">';
+
+			// Botón 1: Recibido
+			$recibido = isset($value["seguimiento_recibido"]) ? $value["seguimiento_recibido"] : 0;
+			if ($recibido == 1) {
+				$htmlSeguimiento .= '<span class="label label-success" style="margin-right:5px;">Enviado (R)</span>';
+			} else {
+				if (puedeAccion('ordenes', 'editar')) {
+					$htmlSeguimiento .= '<button class="btn btn-default btn-xs btnSeguimientoRecibido" 
+								idOrden="' . e($value["id"]) . '" 
+								codigoOrden="' . e($value["codigo"]) . '"
+								cliente="' . e($value["nombre_cliente"]) . '"
+								telefono="' . e($telefonoCli) . '"
+								data-mensaje-recibido="' . e(htmlspecialchars($mensajeRecibido)) . '"
+								style="margin-right:5px; border: 1px solid #ccc; color: green; width: auto !important;" 
+								title="Enviar mensaje: Pedido Recibido">
+								1er mensaje
+							</button>';
+				}
+			}
+
+			// Botón 2: Procesado
+			$procesado = isset($value["seguimiento_procesado"]) ? $value["seguimiento_procesado"] : 0;
+			if ($procesado == 1) {
+				$htmlSeguimiento .= '<span class="label label-success" style="margin-right:5px;">Enviado (P)</span>';
+			} else {
+				if (puedeAccion('ordenes', 'editar')) {
+					$htmlSeguimiento .= '<button class="btn btn-default btn-xs btnSeguimientoProcesado" 
+								  idOrden="' . e($value["id"]) . '" 
+								  codigoOrden="' . e($value["codigo"]) . '"
+								  cliente="' . e($value["nombre_cliente"]) . '"
+								  telefono="' . e($telefonoCli) . '"
+								  data-mensaje-procesado="' . e(htmlspecialchars($mensajeProcesado)) . '"
+								  style="margin-right:5px; border: 1px solid #ccc; color: blue; width: auto !important;" 
+								  title="Enviar mensaje: Pedido Procesado">
+								  2do mensaje
+							   </button>';
+				}
+			}
+
+			// Botón 3: Alistado / Enviar a Ventas
+			$alistado = isset($value["seguimiento_alistado"]) ? $value["seguimiento_alistado"] : 0;
+			if (puedeAccion('ordenes', 'editar')) {
+				if ($alistado == 1) {
+					$htmlSeguimiento .= '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-success" title="Pedido Alistado / Editado" style="width: auto !important;">Enviado (A) <i class="fa fa-line-chart"></i></a>';
+				} else {
+					$htmlSeguimiento .= '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-warning" title="Editar Orden" style="width: auto !important;">Enviar a Ventas</a>';
+				}
+			}
+
+			// Botón 4: Convertir a Factura Electrónica
+			if (puedeAccion('ordenes', 'editar')) {
+				$htmlSeguimiento .= ' <a href="index.php?ruta=orden-a-factura-electronica&idVenta=' . $value["id"] . '" 
+							class="btn btn-xs btn-primary" 
+							title="Convertir a Factura Electrónica" 
+							style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;">
+							<i class="fa fa-file-text-o"></i> Enviar a FE
+						</a>';
+			}
+
+			$htmlSeguimiento .= '</div>';
+			$nestedData[] = $htmlSeguimiento;
+
+			// 10: Acciones
+			$botonesAcciones = '<div class="btn-group">';
+			$botonesAcciones .= '<a class="btn btn-warning" href="index.php?ruta=ver-detalle-orden&idVenta=' . $value["id"] . '" title="Ver Detalle" style="width: auto !important;"><i class="fa fa-eye"></i></a>';
+			
+			if (puedeAccion('ordenes', 'eliminar')) {
+				$botonesAcciones .= '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar Orden" style="width: auto !important;"><i class="fa fa-times"></i></button>';
+			}
+			$botonesAcciones .= '</div>';
+			$nestedData[] = $botonesAcciones;
+
+			// Metadatos para JS
+			$nestedData['DT_RowAttr'] = array(
+				'data-orden-id' => $value['id']
+			);
+
+			$data[] = $nestedData;
+		}
+
+		return array(
+			"draw"            => intval($params['draw']),
+			"recordsTotal"    => intval($totalData),
+			"recordsFiltered" => intval($totalFiltered),
+			"data"            => $data
+		);
+	}
+
+	/*=============================================
+	MOSTRAR FACTURAS ELECTRÓNICAS SERVER-SIDE
+	=============================================*/
+	static public function ctrMostrarFacturasElectronicasServerSide($params)
+	{
+		$tabla = "ventas";
+
+		// Mapeo de columnas para ordenamiento:
+		// 0=Código, 1=Cliente, 2=Vendedor, 3=Forma de pago, 4=Imagen, 5=Total, 6=Estado DIAN, 7=Notas, 8=Observación, 9=Fecha, 10=Acciones
+		$columnsMap = array(
+			0 => 'v.numero_factura',
+			1 => 'c.nombre',
+			2 => 'u.nombre',
+			3 => 'v.metodo_pago',
+			4 => 'v.id', // Imagen
+			5 => 'v.total',
+			6 => 'v.estado_dian',
+			7 => 'v.notas',
+			8 => 'v.observacion',
+			9 => 'v.fecha'
+		);
+
+		// Obtener configuración
+		$configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
+		$moneda = !empty($configuracion["moneda"]) ? $configuracion["moneda"] : "$";
+		$prefijoDian = !empty($configuracion["prefijo_dian"]) ? $configuracion["prefijo_dian"] : "FE";
+
+		// Filtros base para Facturas Electrónicas
+		$where = " WHERE v.estado = 'venta' AND (v.numero_factura != '' OR v.resolucion_id IS NOT NULL) ";
+
+		// Filtro por Fechas
+		if (!empty($params['fechaInicial']) && !empty($params['fechaFinal'])) {
+			$where .= " AND v.fecha BETWEEN '" . $params['fechaInicial'] . " 00:00:00' AND '" . $params['fechaFinal'] . " 23:59:59' ";
+		}
+
+		// Filtro por Cliente
+		if (!empty($params['clienteId']) && is_numeric($params['clienteId'])) {
+			$where .= " AND v.id_cliente = " . $params['clienteId'];
+		}
+
+		// Filtro por Vendedor
+		if (!empty($params['usuarioId']) && is_numeric($params['usuarioId'])) {
+			$where .= " AND v.id_vendedor = " . $params['usuarioId'];
+		}
+
+		// Búsqueda global
+		if (!empty($params['search']['value'])) {
+			$searchValue = $params['search']['value'];
+			$where .= " AND (v.numero_factura LIKE '%$searchValue%' OR v.codigo LIKE '%$searchValue%' OR c.nombre LIKE '%$searchValue%' OR u.nombre LIKE '%$searchValue%' OR v.notas LIKE '%$searchValue%' OR v.observacion LIKE '%$searchValue%') ";
+		}
+
+		// Orden
+		$order = "";
+		if (isset($params['order'][0]['column'])) {
+			$colIdx = $params['order'][0]['column'];
+			$colName = isset($columnsMap[$colIdx]) ? $columnsMap[$colIdx] : 'v.id';
+			$order = " ORDER BY " . $colName . " " . $params['order'][0]['dir'];
+		} else {
+			$order = " ORDER BY v.fecha DESC";
+		}
+
+		// Paginación
+		$limit = "";
+		if (isset($params['length']) && $params['length'] != -1) {
+			$limit = " LIMIT " . intval($params['start']) . ", " . intval($params['length']);
+		}
+
+		// Obtener datos
+		$facturas = ModeloVentas::mdlMostrarVentasServerSide($tabla, $where, $order, $limit);
+		$totalData = ModeloVentas::mdlGetTotalVentas($tabla, " WHERE v.estado = 'venta' AND (v.numero_factura != '' OR v.resolucion_id IS NOT NULL) ");
+		$totalFiltered = ModeloVentas::mdlGetTotalVentas($tabla, $where);
+
+		$data = array();
+
+		foreach ($facturas as $key => $value) {
+			
+			$nestedData = array();
+
+			// 0: Código / Número Factura
+			$esBorrador = false;
+			if (!empty($value["numero_factura"])) {
+				$numeroMostrar = $value["numero_factura"];
+			} else {
+				// Es borrador o pendiente de número
+				if (in_array(($value["estado_dian"] ?? 'pendiente'), ['pendiente', 'creada', 'borrador'])) {
+					$numeroMostrar = "Borrador (" . $value["codigo"] . ")";
+					$esBorrador = true;
+				} else {
+					$numeroMostrar = $prefijoDian . $value["codigo"];
+				}
+			}
+			$nestedData[] = '<span' . ($esBorrador ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . e($numeroMostrar) . '</span>';
+
+			// 1: Cliente
+			$nestedData[] = '<span class="btnVerClienteDesdeVenta" data-toggle="modal" data-target="#modalEditarCliente" idCliente="' . e($value["id_cliente"]) . '" style="cursor: pointer; color: #337ab7; text-decoration: underline;">' . e($value["nombre_cliente"]) . '</span>';
+
+			// 2: Vendedor
+			$nestedData[] = e($value["nombre_vendedor"]);
+
+			// 3: Forma de pago
+			$nestedData[] = e($moneda) . ' ' . e($value["metodo_pago"]);
+
+			// 4: Imagen
+			$imgSrc = ($value["imagen"] != "" && $value["imagen"] != null) ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
+			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idventa="' . $value["id"] . '">';
+
+			// 5: Total
+			$nestedData[] = e($moneda) . ' ' . e(number_format($value["total"], 2));
+
+			// 6: Estado DIAN
+			$estadoDian = isset($value["estado_dian"]) ? $value["estado_dian"] : 'pendiente';
+			$badgeDian = '';
+			if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
+				$badgeDian = '<button class="btn btn-success btn-xs">Exitosa</button>';
+			} elseif ($estadoDian == 'borrador' || $estadoDian == 'creada' || $estadoDian == 'pendiente') {
+				$badgeDian = '<button class="btn btn-warning btn-xs">Borrador</button>';
+			} elseif ($estadoDian == 'rechazada') {
+				$badgeDian = '<button class="btn btn-danger btn-xs">Rechazada</button>';
+			} else {
+				$badgeDian = '<button class="btn btn-danger btn-xs">Pendiente</button>';
+			}
+			$nestedData[] = $badgeDian;
+
+			// 7: Notas
+			$nestedData[] = e($value['notas']);
+
+			// 8: Observación (Editable si no está enviada/aceptada)
+			$esEditable = ($estadoDian != "enviada" && $estadoDian != "aceptada");
+			$contentEditableAttr = $esEditable ? 'contenteditable="true"' : '';
+			$claseEditable = $esEditable ? 'celda-observacion' : '';
+			$nestedData[] = '<div ' . $contentEditableAttr . ' class="' . $claseEditable . '" data-id="' . e($value["id"]) . '">' . e($value["observacion"]) . '</div>';
+
+			// 9: Fecha
+			$nestedData[] = e($value["fecha"]);
+
+			// 10: Acciones
+			$botonesAcciones = '<div class="btn-group col-acciones" style="display:flex; gap:2px;">';
+			
+			// Ver Detalle Venta
+			$botonesAcciones .= '<button class="btn btn-info btnVerDetalleVenta" idVenta="' . $value["id"] . '" data-toggle="modal" data-target="#modalVerFactura" title="Ver Detalle" style="width: auto !important;"><i class="fa fa-eye"></i></button>';
+			
+			// Ver en DIAN
+			if (!empty($value["qr_data"])) {
+				$botonesAcciones .= '<a class="btn btn-success" href="' . $value["qr_data"] . '" target="_blank" data-toggle="tooltip" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>';
+			}
+
+			if (puedeAccion('factura_electronica', 'editar')) {
+				// Firmar (para borradores)
+				if (isset($value["estado_dian"]) && $value["estado_dian"] == "creada") {
+					$botonesAcciones .= '<button class="btn btnFirmarFactura" style="background-color: black; color: white; width: auto !important;" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
+										<i class="fa fa-paper-plane"></i>
+									</button>';
+				}
+
+				// Editar Borrador
+				if (isset($value["estado_dian"]) && in_array($value["estado_dian"], ['creada', 'pendiente'])) {
+					$botonesAcciones .= '<a class="btn btn-warning" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador" style="width: auto !important;">
+										<i class="fa fa-pencil"></i>
+									</a>';
+				}
+
+				// Enviar por Correo
+				if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
+					$botonesAcciones .= ' <button class="btn btn-primary btnEnviarEmail" idVenta="' . $value["id"] . '" nombreCliente="' . e($value["nombre_cliente"]) . '" emailCliente="' . e($value["email_cliente"]) . '" title="Enviar por Correo" style="width: auto !important;">
+								<i class="fa fa-envelope"></i>
+							</button>';
+				}
+			}
+
+			if (puedeAccion('factura_electronica', 'eliminar')) {
+				// Solo mostrar botón eliminar si la factura NO ha sido firmada/aceptada
+				$estadosNoEliminables = ['enviada', 'aceptada'];
+				if (!in_array($value["estado_dian"], $estadosNoEliminables)) {
+					$botonesAcciones .= ' <button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar Borrador" style="width: auto !important;">
+										<i class="fa fa-trash"></i>
+									</button>';
+				}
+			}
+
+			$botonesAcciones .= '</div>';
+			$nestedData[] = $botonesAcciones;
+
+			// Metadatos para JS
+			$nestedData['DT_RowAttr'] = array(
+				'data-fe-id' => $value['id']
+			);
+
+			$data[] = $nestedData;
+		}
+
+		return array(
+			"draw"            => intval($params['draw']),
+			"recordsTotal"    => intval($totalData),
+			"recordsFiltered" => intval($totalFiltered),
+			"data"            => $data
+		);
+	}
+
+
+	/*=============================================
 	 CONTAR VENTAS
 	 =============================================*/
 	static public function ctrContarVentas()

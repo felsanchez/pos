@@ -1,4 +1,3 @@
-
 <!-- Estilos para campo observación -->
 <style>
   .celda-observacion {
@@ -21,6 +20,11 @@
   .celda-observacion:focus {
     outline: 2px solid #f39c12;
     background: #fffef5;
+  }
+
+  /* Prevenir layout-shift al cargar la página */
+  .fe-ui-hidden {
+    display: none;
   }
 </style>
 
@@ -89,17 +93,9 @@ if ($xml) {
         <?php endif; ?>
 
 
-        <div class="pull-right contenedor-filtros">
+        <div class="pull-right contenedor-filtros fe-ui-hidden" id="contenedorFiltrosFacturas">
 
-          <form method="GET" action="index.php" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-
-            <input type="hidden" name="ruta" value="facturas-electronicas">
-            <input type="hidden" name="fechaInicial" id="fechaInicial"
-              value="<?php echo isset($_GET["fechaInicial"]) ? $_GET["fechaInicial"] : null; ?>">
-            <input type="hidden" name="fechaFinal" id="fechaFinal"
-              value="<?php echo isset($_GET["fechaFinal"]) ? $_GET["fechaFinal"] : null; ?>">
-
-            <?php CSRF::insertToken(); ?>
+          <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
 
             <!-- Filtro por cliente -->
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -108,16 +104,14 @@ if ($xml) {
                 <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
                   <i class="fa fa-search text-primary"></i>
                 </span>
-                <select name="cliente" class="form-control select2 select-cliente" style="width: 100%;">
+                <select id="filtroClienteFacturas" class="form-control select2 select-cliente" style="width: 100%;">
                   <option value="">Seleccionar cliente...</option>
                   <?php
                   $item = null;
                   $valor = null;
                   $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
-
                   foreach ($clientes as $key => $valueCliente) {
-                    $selected = (isset($_GET['cliente']) && $_GET['cliente'] == $valueCliente["id"]) ? 'selected' : '';
-                    echo '<option value="' . e($valueCliente["id"]) . '" ' . $selected . '>' . e($valueCliente["nombre"]) . '</option>';
+                    echo '<option value="' . e($valueCliente["id"]) . '">' . e($valueCliente["nombre"]) . '</option>';
                   }
                   ?>
                 </select>
@@ -131,42 +125,37 @@ if ($xml) {
                 <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
                   <i class="fa fa-search text-primary"></i>
                 </span>
-                <select name="usuario" class="form-control select2 select-usuario" style="width: 100%;">
+                <select id="filtroUsuarioFacturas" class="form-control select2 select-usuario" style="width: 100%;">
                   <option value="">Seleccionar usuario...</option>
                   <?php
                   $item = null;
                   $valor = null;
                   $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
-
                   foreach ($usuarios as $key => $valueUsuario) {
-                    $selected = (isset($_GET['usuario']) && $_GET['usuario'] == $valueUsuario["id"]) ? 'selected' : '';
-                    echo '<option value="' . e($valueUsuario["id"]) . '" ' . $selected . '>' . e($valueUsuario["nombre"]) . '</option>';
+                    echo '<option value="' . e($valueUsuario["id"]) . '">' . e($valueUsuario["nombre"]) . '</option>';
                   }
                   ?>
                 </select>
               </div>
             </div>
 
-
             <!-- Botón Rango de Fecha -->
-            <button type="button" class="btn btn-default" id="daterange-btn-factus">
-              <span>
-                <i class="fa fa-calendar"></i> Rango de fecha
-              </span>
-              <i class="fa fa-caret-down"></i>
-            </button>
-
-            <!-- Botón Buscar -->
-            <button type="submit" class="btn btn-primary" title="Filtrar">
-              <i class="fa fa-search"></i>
-            </button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="hidden-xs"><b>Filtrar por Fecha:</b></span>
+              <button type="button" class="btn btn-default" id="daterange-btn-factus">
+                <span>
+                  <i class="fa fa-calendar"></i> Rango de fecha
+                </span>
+                <i class="fa fa-caret-down"></i>
+              </button>
+            </div>
 
             <!-- Botón Limpiar -->
-            <a href="index.php?ruta=facturas-electronicas" class="btn btn-default" title="Limpiar">
+            <button type="button" class="btn btn-default" id="btnLimpiarFacturas" title="Limpiar filtros">
               <i class="fa fa-refresh"></i>
-            </a>
+            </button>
 
-          </form>
+          </div>
 
         </div>
 
@@ -184,301 +173,76 @@ if ($xml) {
             <span>Cargando Facturas Electrónicas...</span>
           </div>
 
-          <div class="tabla-facturas table-responsive">
-            <table id="tablaFacturasElectronicas" class="table table-bordered table-striped tablaFacturasListado display nowrap" width="100%">
+          <div class="tabla-facturas table-responsive" id="wrapperTablaFacturas" style="display:none;">
+            <table id="tablaFacturasElectronicas"
+              class="table table-bordered table-striped tablaFacturasListado display nowrap" width="100%">
 
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Cliente</th>
-                <th>Vendedor</th>
-                <th>Forma de pago</th>
-                <th>Imagen</th>
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Cliente</th>
+                  <th>Vendedor</th>
+                  <th>Forma de pago</th>
+                  <th>Imagen</th>
 
-                <th>Total</th>
-                <th>Estado DIAN</th>
-                <th><i class="fa fa-magic"></i> Notas</th>
-                <th><i class="fa fa-pencil-square"></i> Observación</th>
-                <th>Fecha</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
+                  <th>Total</th>
+                  <th>Estado DIAN</th>
+                  <th><i class="fa fa-magic"></i> Notas</th>
+                  <th>Observación</th>
+                  <th>Fecha</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
 
-            <tbody>
+              <tbody>
+              </tbody>
 
-              <?php
-
-              // Determinar filtros activos
-              $fechaInicial = null;
-              $fechaFinal = null;
-              $clienteId = null;
-              $usuarioId = null;
-              $mensajeFiltro = "";
-
-              // Filtro por fechas
-              if (isset($_GET["fechaInicial"]) && isset($_GET["fechaFinal"])) {
-                $fechaInicial = $_GET["fechaInicial"];
-                $fechaFinal = $_GET["fechaFinal"];
-                $mensajeFiltro .= "Filtrando desde $fechaInicial hasta $fechaFinal";
-              }
-
-              // Filtro por cliente
-              if (isset($_GET["cliente"]) && !empty($_GET["cliente"])) {
-                $clienteId = $_GET["cliente"];
-
-                // Obtener nombre del cliente para mostrar
-                $clienteInfo = ControladorClientes::ctrMostrarClientes("id", $clienteId);
-                $nombreClienteFiltro = $clienteInfo["nombre"];
-
-                if ($mensajeFiltro != "") {
-                  $mensajeFiltro .= " | ";
-                }
-                $mensajeFiltro .= "Cliente: $nombreClienteFiltro";
-              }
-
-              // Filtro por usuario
-              if (isset($_GET["usuario"]) && !empty($_GET["usuario"])) {
-                $usuarioId = $_GET["usuario"];
-
-                // Obtener nombre del usuario para mostrar
-                $usuarioInfo = ControladorUsuarios::ctrMostrarUsuarios("id", $usuarioId);
-                $nombreUsuarioFiltro = $usuarioInfo["nombre"];
-
-                if ($mensajeFiltro != "") {
-                  $mensajeFiltro .= " | ";
-                }
-                $mensajeFiltro .= "Usuario: $nombreUsuarioFiltro";
-              }
-
-              // Mostrar mensaje de filtros activos
-              if ($mensajeFiltro != "") {
-                echo "<p style='background: #d9edf7; padding: 10px; border-left: 4px solid #31708f; color: #31708f;'><i class='fa fa-filter'></i> $mensajeFiltro</p>";
-              } else {
-                echo "<p style='background: #d4edda; padding: 10px; border-left: 4px solid #28a745; color: #155724;'><i class='fa fa-file-text'></i> Mostrando solo ventas con factura electrónica generada</p>";
-              }
-
-              // Obtener facturas electrónicas según filtros (Directo desde SQL acelerado)
-              $respuesta = ControladorVentas::ctrRangoFechasFacturasElectronicas($fechaInicial, $fechaFinal, "venta");
-
-              // Si hay filtro por cliente, filtrar el resultado
-              if ($clienteId !== null) {
-                $respuesta = array_filter($respuesta, function ($venta) use ($clienteId) {
-                  return $venta["id_cliente"] == $clienteId;
-                });
-              }
-
-              // Si hay filtro por usuario, filtrar el resultado
-              if ($usuarioId !== null) {
-                $respuesta = array_filter($respuesta, function ($venta) use ($usuarioId) {
-                  return $venta["id_vendedor"] == $usuarioId;
-                });
-              }
-
-
-              // Pre-procesar borradores para numeración predictiva
-              $borradoresTotal = 0;
-              foreach ($respuesta as $v) {
-                if (empty($v["numero_factura"]) && in_array(($v["estado_dian"] ?? 'pendiente'), ['pendiente', 'creada', 'borrador'])) {
-                  $borradoresTotal++;
-                }
-              }
-
-              $siguienteConsecutivoBase = ModeloFactus::mdlObtenerSiguienteConsecutivoFactus(true); // Pasar 'true' para omitir la lenta llamada al API
-              $borradoresEncontrados = 0;
-
-              // Obtener pre-cargado las IDs de ventas que tienen nota crédito para evitar N+1
-              $idsVentas = array_column($respuesta, 'id');
-              $ventasConNC = ModeloFactus::mdlObtenerVentasConNotaCredito($idsVentas);
-
-              $contador = 1;
-              foreach ($respuesta as $key => $value) {
-
-                // Lógica de numeración predictiva para borradores
-                if (!empty($value["numero_factura"])) {
-                  $numeroMostrar = $value["numero_factura"];
-                  $esBorrador = false;
-                } else {
-                  // Es borrador: Calculamos número predicho si es un estado de borrador real
-                  if (in_array(($value["estado_dian"] ?? 'pendiente'), ['pendiente', 'creada', 'borrador'])) {
-                    $numeroMostrar = $prefijoDian . ($siguienteConsecutivoBase - 1 - $borradoresEncontrados);
-                    $esBorrador = true;
-                    $borradoresEncontrados++;
-                  } else {
-                    // Otros casos (ej. rechazada sin numero): Mostramos codigo local o marcador
-                    $numeroMostrar = $prefijoDian . $value["codigo"];
-                    $esBorrador = false;
-                  }
-                }
-
-                echo '<tr data-fe-id="' . e($value['id']) . '">';
-                echo '<td' . ($esBorrador ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . e($numeroMostrar) . '</td>';
-
-                // Usar nombres que ya vienen del JOIN en la consulta SQL
-                $nombreCliente = !empty($value["nombre_cliente"]) ? $value["nombre_cliente"] : "Cliente no encontrado";
-                $nombreVendedor = !empty($value["nombre_vendedor"]) ? $value["nombre_vendedor"] : "Vendedor no encontrado";
-
-                echo '<td>
-
-                                  <span class="btnVerClienteDesdeVenta"
-                                        data-toggle="modal"
-                                        data-target="#modalEditarCliente"
-                                        idCliente="' . e($value["id_cliente"]) . '"
-                                        style="cursor: pointer; color: #337ab7; text-decoration: underline;">
-                                      ' . e($nombreCliente) . '
-                                  </span>
-                              </td>';
-
-                echo '<td>' . e($nombreVendedor) . '</td> 
-
-                        <td>' . e($moneda) . ' ' . e($value["metodo_pago"]) . '</td>';
-
-                // Validación de la foto
-                if ($value["imagen"] != "") {
-                  echo '<td><img src="' . $value["imagen"] . '" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="' . $value["imagen"] . '" data-idventa="' . $value["id"] . '"></td>';
-                } else {
-                  echo '<td><img src="vistas/img/ventas/default/sinventa.png" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="vistas/img/ventas/default/sinventa.png" data-idventa="' . $value["id"] . '"></td>';
-                }
-
-                echo '<td>' . e($moneda) . ' ' . e(number_format($value["total"], 2)) . '</td>';
-
-                // Estado DIAN
-                $estadoDian = isset($value["estado_dian"]) ? $value["estado_dian"] : 'pendiente';
-                $badgeDian = '';
-                if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
-                  $badgeDian = '<button class="btn btn-success btn-xs">Exitosa</button>';
-                } elseif ($estadoDian == 'borrador' || $estadoDian == 'creada' || $estadoDian == 'pendiente') {
-                  $badgeDian = '<button class="btn btn-warning btn-xs">Borrador</button>';
-                } elseif ($estadoDian == 'rechazada') {
-                  $badgeDian = '<button class="btn btn-danger btn-xs">Rechazada</button>';
-                } else {
-                  $badgeDian = '<button class="btn btn-danger btn-xs">Pendiente</button>';
-                }
-                echo '<td>' . $badgeDian . '</td>';
-
-                echo '<td>' . e($value['notas']) . '</td>';
-
-                $estadoDian = isset($value["estado_dian"]) ? $value["estado_dian"] : "";
-                $esEditable = ($estadoDian != "enviada" && $estadoDian != "aceptada");
-
-                $contentEditableAttr = $esEditable ? 'contenteditable="true"' : '';
-                $claseEditable = $esEditable ? 'celda-observacion' : '';
-
-                echo '<td ' . $contentEditableAttr . ' class="' . $claseEditable . '" data-id="' . e($value["id"]) . '">' . e($value["observacion"]) . '</td>
-
-                        
-                       <td>' . e($value["fecha"]) . '</td>
-
-                        <td>
-                          <div class="btn-group col-acciones">
-
-                               <button class="btn btn-info btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver Detalles">
-                                <i class="fa fa-eye"></i>
-                               </button>
-
-                             ';
-
-                // Ver en DIAN (Disponible con el permiso "Ver")
-                if (!empty($value["qr_data"])) {
-                  echo '<a class="btn btn-success" href="' . $value["qr_data"] . '" target="_blank" data-toggle="tooltip" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>';
-                }
-
-                if (puedeAccion('factura_electronica', 'editar')) {
-
-                  // Firmar (para borradores)
-                  if (isset($value["estado_dian"]) && $value["estado_dian"] == "creada") {
-                    echo '<button class="btn btnFirmarFactura" style="background-color: black; color: white;" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
-                                        <i class="fa fa-paper-plane"></i>
-                                    </button>';
-                  }
-
-                  // Editar Borrador
-                  if (isset($value["estado_dian"]) && in_array($value["estado_dian"], ['creada', 'pendiente'])) {
-                    echo '<a class="btn btn-warning" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador">
-                                        <i class="fa fa-pencil"></i>
-                                    </a>';
-                  }
-
-                  // Enviar por Correo
-                  if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
-                    echo ' <button class="btn btn-primary btnEnviarEmail" idVenta="' . $value["id"] . '" nombreCliente="' . $nombreCliente . '" emailCliente="' . $value["email_cliente"] . '" title="Enviar por Correo">
-                                  <i class="fa fa-envelope"></i>
-                                </button>';
-                  }
-
-                  // Botón de las Notas Crédito (solo si la factura tiene NC)
-                  if (in_array($value["id"], $ventasConNC)) {
-                    echo ' <button class="btn btn-warning btnVerNotasCredito" idVenta="' . $value["id"] . '" data-toggle="modal" data-target="#modalNotasCredito" title="Ver Notas Crédito">
-                                         <i class="fa fa-list"></i>
-                                       </button>';
-                  }
-                }
-
-                if (puedeAccion('factura_electronica', 'eliminar')) {
-                  // Solo mostrar botón eliminar si la factura NO ha sido firmada/aceptada
-                  $estadosNoEliminables = ['enviada', 'aceptada'];
-                  if (!in_array($value["estado_dian"], $estadosNoEliminables)) {
-                    echo ' <button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar Borrador">
-                                        <i class="fa fa-trash"></i>
-                                      </button>';
-                  }
-                }
-
-                echo '</div>
-                        </td>
-
-
-                      </tr>';
-              }
-              ?>
-
-            </tbody>
-
-          </table>
-        </div>
-        <?php
-        $eliminarVenta = new ControladorVentas();
-        $eliminarVenta->ctrEliminarVenta();
-        ?>
+            </table>
+          </div>
+          <?php
+          $eliminarVenta = new ControladorVentas();
+          $eliminarVenta->ctrEliminarVenta();
+          ?>
 
 
 
-        <!-- Modal para ampliar/editar imagen de venta -->
-        <div class="modal fade" id="modalAmpliarImagenVenta" tabindex="-1" role="dialog">
-          <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Imagen de la Venta</h4>
-              </div>
-              <div class="modal-body text-center">
-                <img id="imagenVentaAmpliada" src="" class="img-responsive"
-                  style="max-width: 100%; margin: 0 auto; margin-bottom: 20px;">
-
-                <hr>
-
-                <div class="form-group">
-                  <label>Cambiar Imagen de la Venta</label>
-                  <input type="file" class="form-control nuevaImagenVenta" accept="image/*">
-                  <p class="help-block">Peso máximo de la imagen 2MB</p>
+          <!-- Modal para ampliar/editar imagen de venta -->
+          <div class="modal fade" id="modalAmpliarImagenVenta" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                  <h4 class="modal-title">Imagen de la Venta</h4>
                 </div>
+                <div class="modal-body text-center">
+                  <img id="imagenVentaAmpliada" src="" class="img-responsive"
+                    style="max-width: 100%; margin: 0 auto; margin-bottom: 20px;">
 
-                <input type="hidden" id="idVentaImagen">
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary btnGuardarImagenVenta">Guardar Imagen</button>
+                  <hr>
+
+                  <div class="form-group">
+                    <label>Cambiar Imagen de la Venta</label>
+                    <input type="file" class="form-control nuevaImagenVenta" accept="image/*">
+                    <p class="help-block">Peso máximo de la imagen 2MB</p>
+                  </div>
+
+                  <input type="hidden" id="idVentaImagen">
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                  <button type="button" class="btn btn-primary btnGuardarImagenVenta">Guardar Imagen</button>
+                </div>
               </div>
             </div>
           </div>
+
+
+
+
         </div>
-
-
-
-
       </div>
-    </div>
   </section>
 </div>
 
@@ -708,23 +472,7 @@ MODAL EDITAR CLIENTE
   $(function () {
     // 1. Inicializar fechas
     var start = moment();
-    var end = moment();
     var textoBoton = '<i class="fa fa-calendar"></i> Rango de fecha';
-
-    // Verificar si hay fechas en los inputs ocultos (URL)
-    if ($('#fechaInicial').val() && $('#fechaFinal').val()) {
-      start = moment($('#fechaInicial').val());
-      end = moment($('#fechaFinal').val());
-      textoBoton = start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY');
-      // Actualizar localStorage para mantener sincronía
-      localStorage.setItem("capturarRangoFactus", textoBoton);
-    }
-    // Fallback a localStorage si existe
-    else if (localStorage.getItem("capturarRangoFactus") != null) {
-      textoBoton = localStorage.getItem("capturarRangoFactus");
-      // Intentar parsear las fechas del texto si es posible, o dejar hoy por defecto en el picker
-      // (Sería complejo parsear el texto "Month D, YYYY - ...", así que dejamos moment() por defecto en el picker visual, pero el texto correcto)
-    }
 
     $("#daterange-btn-factus span").html(textoBoton);
 
@@ -739,28 +487,29 @@ MODAL EDITAR CLIENTE
           'Este mes': [moment().startOf('month'), moment().endOf('month')],
           'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
         },
-        startDate: start,
-        endDate: end
+        startDate: moment(),
+        endDate: moment()
       },
       function (start, end) {
         // Actualizar texto del botón visualmente
         var textoRango = start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY');
         $('#daterange-btn-factus span').html(textoRango);
 
-        // Actualizar inputs ocultos que se enviarán con el form
-        var fechaInicialFormato = start.startOf('day').format('YYYY-MM-DD HH:mm:ss');
-        var fechaFinalFormato = end.endOf('day').format('YYYY-MM-DD HH:mm:ss');
+        // Actualizar variables globales de filtro
+        feFilterFechaInicial = start.startOf('day').format('YYYY-MM-DD');
+        feFilterFechaFinal = end.endOf('day').format('YYYY-MM-DD');
 
-        $('#fechaInicial').val(fechaInicialFormato);
-        $('#fechaFinal').val(fechaFinalFormato);
+        // Recargar tabla con el nuevo filtro de fecha
+        reloadFETable();
       }
     );
 
     // 3. Manejar Cancelar/Limpiar Rango
     $('#daterange-btn-factus').on('cancel.daterangepicker', function (ev, picker) {
       $('#daterange-btn-factus span').html('<i class="fa fa-calendar"></i> Rango de fecha');
-      $('#fechaInicial').val('');
-      $('#fechaFinal').val('');
+      feFilterFechaInicial = '';
+      feFilterFechaFinal = '';
+      reloadFETable();
     });
   });
 </script>
@@ -1079,114 +828,92 @@ MODAL ENVIAR EMAIL
 </div>
 <!-- DataTables Personalizado para Facturas -->
 <script>
-$(document).ready(function () {
-  setTimeout(function () {
-    if ($("#tablaFacturasElectronicas").length > 0) {
-      if ($.fn.DataTable.isDataTable('#tablaFacturasElectronicas')) {
-        $('#tablaFacturasElectronicas').DataTable().destroy();
-      }
+  // Variables globales para los filtros de Facturas Electrónicas
+  var feFilterFechaInicial = '';
+  var feFilterFechaFinal = '';
 
-      $("#tablaFacturasElectronicas").DataTable({
-        "autoWidth": false,
-        "initComplete": function(settings, json) {
-           $(this.api().table().node()).addClass('datatable-ready');
-           if (typeof quitarLoaderGlobal === 'function') {
-              quitarLoaderGlobal();
-           }
-        },
-        "order": [[9, "desc"]], // Fecha
-        "responsive": {
-          "details": {
-            "type": "inline",
-            "renderer": function (api, rowIdx, columns) {
-              var finalHtml = '';
-              var hasHidden = false;
+  // Función para recargar la tabla de Facturas Electrónicas con los filtros activos
+  function reloadFETable() {
+    if (window.tablaFE) {
+      window.tablaFE.ajax.reload(null, false);
+    }
+  }
 
-              $.each(columns, function (i, col) {
-                if (!col.hidden) return;
-                hasHidden = true;
-
-                var label = col.title || ('Columna ' + col.columnIndex);
-                
-                // Excepciones para no romper layout (Notas y Observacion)
-                if(col.columnIndex === 7 || col.columnIndex === 8) {
-                    finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
-                    finalHtml += '<span class="text-bold" style="display:block; color:#555; margin-bottom:5px;">' + label + ':</span>';
-                } else {
-                    finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
-                    finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
-                }
-
-                if (col.columnIndex === 8) {
-                    // Celda de observación editable
-                    var rowNode = api.row(rowIdx).node();
-                    var idFactura = $(rowNode).attr('data-fe-id') || "";
-                    var observacionText = $(rowNode).find('.celda-observacion').text().trim();
-                    var placeholderAttr = (observacionText === "") ? ' data-placeholder="true"' : "";
-                    
-                    finalHtml += '<div contenteditable="true" class="celda-observacion" data-id="' + idFactura + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + observacionText + '</div>';
-                } else {
-                    // El resto pasa su HTML o texto tal cual
-                    finalHtml += '<span style="color:#333;">' + col.data + '</span>';
-                }
-                
-                finalHtml += '</div>';
-              });
-
-              if (!hasHidden) return false;
-              return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
-            }
-          }
-        },
-        "columnDefs": [
-            { "targets": 0, "responsivePriority": 1 }, // Código
-            { "targets": 10, "responsivePriority": 2, "orderable": false }, // Acciones
-            { "targets": 1, "responsivePriority": 3 }, // Cliente
-            { "targets": 2, "responsivePriority": 4 }, // Vendedor
-            { "targets": 3, "responsivePriority": 5 }, // Forma de pago
-            { "targets": 4, "responsivePriority": 6 }, // Imagen
-            { "targets": 5, "responsivePriority": 7 }, // Total
-            { "targets": 6, "responsivePriority": 8 }, // Estado Dian
-            { "targets": 7, "responsivePriority": 9 }, // Notas
-            { "targets": 8, "responsivePriority": 10 }, // Observación
-            { "targets": 9, "responsivePriority": 11 } // Fecha
-        ],
-        "language": {
-          "sProcessing": "Procesando...",
-          "sLengthMenu": "Mostrar _MENU_ registros",
-          "sZeroRecords": "No se encontraron resultados",
-          "sEmptyTable": "Ningún dato disponible en esta tabla",
-          "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-          "sSearch": "Buscar:",
-          "oPaginate": { "sFirst": "Primero", "sLast": "Último", "sNext": "Siguiente", "sPrevious": "Anterior" }
+  $(document).ready(function () {
+    setTimeout(function () {
+      if ($("#tablaFacturasElectronicas").length > 0) {
+        if ($.fn.DataTable.isDataTable('#tablaFacturasElectronicas')) {
+          $('#tablaFacturasElectronicas').DataTable().destroy();
         }
-      });
-    }
-  }, 200);
-});
-</script>
 
-<script>
-  /*=============================================
-  RANGO DE FECHAS FACTUS
-  =============================================*/
-  $('#daterange-btn-factus').daterangepicker(
-    {
-      ranges: {
-        'Hoy': [moment(), moment()],
-        'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-        'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
-        'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
-        'Este mes': [moment().startOf('month'), moment().endOf('month')],
-        'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-      },
-      startDate: moment(),
-      endDate: moment()
-    },
-    function (start, end) {
-      $('#fechaInicial').val(start.format('YYYY-MM-DD'));
-      $('#fechaFinal').val(end.format('YYYY-MM-DD'));
-      $('#daterange-btn-factus span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-    }
-  );
-</script>
+        window.tablaFE = $("#tablaFacturasElectronicas").DataTable({
+          "processing": true,
+          "serverSide": true,
+          "autoWidth": false,
+          "ajax": {
+            "url": "ajax/ventas.ajax.php",
+            "type": "POST",
+            "data": function (d) {
+              d.drawFacturasElectronicas = 1;
+              d.fechaInicial = feFilterFechaInicial;
+              d.fechaFinal   = feFilterFechaFinal;
+              d.clienteId    = $('#filtroClienteFacturas').val() || '';
+              d.usuarioId    = $('#filtroUsuarioFacturas').val() || '';
+            }
+          },
+          "initComplete": function (settings, json) {
+            $(this.api().table().node()).addClass('datatable-ready');
+            if (typeof quitarLoaderGlobal === 'function') {
+              quitarLoaderGlobal();
+            }
+            // Mostrar tabla y filtros solo cuando DataTables terminó de inicializar
+            // (esto elimina el layout-shift / parpadeo al cargar)
+            $('#wrapperTablaFacturas').fadeIn(200);
+            $('#contenedorFiltrosFacturas').removeClass('fe-ui-hidden').css('display', '');
+          },
+          "order": [[9, "desc"]], // Fecha
+          "columnDefs": [
+            { "targets": 0, "responsivePriority": 1 },
+            { "targets": 10, "responsivePriority": 2, "orderable": false },
+            { "targets": 1, "responsivePriority": 3 },
+            { "targets": 2, "responsivePriority": 4 },
+            { "targets": 3, "responsivePriority": 5 },
+            { "targets": 4, "responsivePriority": 6, "orderable": false },
+            { "targets": 5, "responsivePriority": 7 },
+            { "targets": 6, "responsivePriority": 8, "orderable": false },
+            { "targets": 7, "responsivePriority": 9 },
+            { "targets": 8, "responsivePriority": 10, "orderable": false },
+            { "targets": 9, "responsivePriority": 11 }
+          ],
+          "language": {
+            "sProcessing": "Procesando...",
+            "sLengthMenu": "Mostrar _MENU_ registros",
+            "sZeroRecords": "No se encontraron resultados",
+            "sEmptyTable": "Ningún dato disponible en esta tabla",
+            "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+            "sSearch": "Buscar:",
+            "oPaginate": { "sFirst": "Primero", "sLast": "Último", "sNext": "Siguiente", "sPrevious": "Anterior" }
+          }
+        });
+
+        // Inicializar Select2
+        $('#filtroClienteFacturas, #filtroUsuarioFacturas').select2({ allowClear: false, width: '100%' });
+
+        // Filtrar automáticamente al cambiar cliente o usuario
+        $('#filtroClienteFacturas, #filtroUsuarioFacturas').on('change', function () {
+          reloadFETable();
+        });
+
+        // Botón limpiar
+        $('#btnLimpiarFacturas').on('click', function () {
+          $('#filtroClienteFacturas').val('').trigger('change');
+          $('#filtroUsuarioFacturas').val('').trigger('change');
+          feFilterFechaInicial = '';
+          feFilterFechaFinal = '';
+          $('#daterange-btn-factus span').html('<i class="fa fa-calendar"></i> Rango de fecha');
+          reloadFETable();
+        });
+      }
+    }, 200);
+  });
+</script>

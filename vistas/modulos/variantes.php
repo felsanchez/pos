@@ -62,55 +62,7 @@ if (!puedeVer('variantes')) {
             </thead>
 
             <tbody>
-
-              <?php
-
-              $item = null;
-              $valor = null;
-
-              $tiposVariantes = ControladorVariantes::ctrMostrarTiposVariantes($item, $valor);
-
-              foreach ($tiposVariantes as $key => $value) {
-
-                echo '<tr>
-
-                    <td>' . $value["nombre"] . '</td>
-
-                    <td>' . $value["orden"] . '</td>';
-
-                if (puedeAccion('variantes', 'editar')) {
-                  if ($value["estado"] != 0) {
-                    echo '<td><button class="btn btn-success btn-xs btnActivarTipo" idTipo="' . $value["id"] . '" estadoTipo="0">Activado</button></td>';
-                  } else {
-                    echo '<td><button class="btn btn-danger btn-xs btnActivarTipo" idTipo="' . $value["id"] . '" estadoTipo="1">Desactivado</button></td>';
-                  }
-                } else {
-                  if ($value["estado"] != 0) {
-                    echo '<td><button class="btn btn-success btn-xs">Activado</button></td>';
-                  } else {
-                    echo '<td><button class="btn btn-danger btn-xs">Desactivado</button></td>';
-                  }
-                }
-
-                echo '<td><div class="btn-group">';
-
-                if (puedeAccion('variantes', 'editar')) {
-                  echo '<button class="btn btn-warning btnEditarTipoVariante" idTipo="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarTipoVariante" title="Editar tipo"><i class="fa fa-pencil"></i></button>';
-                }
-
-                echo '<button class="btn btn-info btnVerOpciones" idTipo="' . $value["id"] . '" nombreTipo="' . $value["nombre"] . '" title="Ver opciones"><i class="fa fa-list"></i> Opciones</button>';
-
-                if (puedeAccion('variantes', 'eliminar')) {
-                  echo '<button class="btn btn-danger btnEliminarTipo" idTipo="' . $value["id"] . '" nombreTipo="' . $value["nombre"] . '" title="Eliminar tipo"><i class="fa fa-times"></i></button>';
-                }
-
-                echo '</div></td>
-
-                  </tr>';
-              }
-
-              ?>
-
+              <!-- DataTables Server-Side -->
             </tbody>
 
           </table>

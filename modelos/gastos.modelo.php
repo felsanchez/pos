@@ -58,6 +58,40 @@ class ModeloGastos
 	}
 
 	/*=============================================
+	MOSTRAR GASTOS SERVER-SIDE
+	=============================================*/
+	static public function mdlMostrarGastosServerSide($tabla, $where, $order, $limit)
+	{
+		$stmt = Conexion::conectar()->prepare("SELECT g.*, 
+													c.nombre as categoria_nombre, 
+													c.color as categoria_color, 
+													u.nombre as usuario_nombre, 
+													p.nombre as proveedor_nombre 
+													FROM $tabla g 
+													LEFT JOIN categorias_gastos c ON g.id_categoria_gasto = c.id 
+													LEFT JOIN usuarios u ON g.id_usuario = u.id 
+													LEFT JOIN proveedores p ON g.id_proveedor = p.id 
+													$where $order $limit");
+		$stmt->execute();
+		return $stmt->fetchAll();
+	}
+
+	/*=============================================
+	OBTENER TOTAL GASTOS (PARA SERVER-SIDE)
+	=============================================*/
+	static public function mdlGetTotalGastos($tabla, $where)
+	{
+		$stmt = Conexion::conectar()->prepare(
+			"SELECT COUNT(*) FROM $tabla g
+			 LEFT JOIN categorias_gastos c ON g.id_categoria_gasto = c.id
+			 LEFT JOIN proveedores p ON g.id_proveedor = p.id
+			 $where"
+		);
+		$stmt->execute();
+		return $stmt->fetchColumn();
+	}
+
+	/*=============================================
 	MOSTRAR GASTOS CON FILTROS
 	=============================================*/
 

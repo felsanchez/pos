@@ -89,6 +89,40 @@ class ModeloActividades{
 		$stmt = null;
 	}
 
+	/*=============================================
+	MOSTRAR ACTIVIDADES SERVER-SIDE
+	=============================================*/
+	static public function mdlMostrarActividadesServerSide($tabla, $where, $order, $limit)
+	{
+		$stmt = Conexion::conectar()->prepare("
+			SELECT a.*, 
+				c.nombre as nombre_cliente,
+				u.nombre as nombre_usuario
+			FROM $tabla a
+			LEFT JOIN clientes c ON a.id_cliente = c.id
+			LEFT JOIN usuarios u ON a.id_user = u.id
+			$where $order $limit
+		");
+		$stmt->execute();
+		return $stmt->fetchAll();
+	}
+
+	/*=============================================
+	OBTENER TOTAL ACTIVIDADES (PARA SERVER-SIDE)
+	=============================================*/
+	static public function mdlGetTotalActividades($tabla, $where)
+	{
+		$stmt = Conexion::conectar()->prepare("
+			SELECT COUNT(*) 
+			FROM $tabla a
+			LEFT JOIN clientes c ON a.id_cliente = c.id
+			LEFT JOIN usuarios u ON a.id_user = u.id
+			$where
+		");
+		$stmt->execute();
+		return $stmt->fetchColumn();
+	}
+
 
 	/*=============================================
 	EDITAR actividades

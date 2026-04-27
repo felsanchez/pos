@@ -39,6 +39,27 @@ class ModeloSeguimiento
     }
 
     /*=============================================
+    MOSTRAR SEGUIMIENTOS SERVER-SIDE
+    =============================================*/
+    static public function mdlMostrarSeguimientosServerSide($tabla, $where, $order, $limit)
+    {
+        $stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla $where $order $limit");
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /*=============================================
+    OBTENER TOTAL SEGUIMIENTOS (PARA SERVER-SIDE)
+    =============================================*/
+    static public function mdlGetTotalSeguimientos($tabla, $where)
+    {
+        $stmt = Conexion::conectar()->prepare("SELECT COUNT(*) FROM $tabla $where");
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
+
+
+    /*=============================================
     ELIMINAR SEGUIMIENTO
     =============================================*/
     static public function mdlEliminarSeguimiento($tabla, $datos)

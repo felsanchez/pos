@@ -109,72 +109,7 @@ if ($_SESSION["perfil"] == "Especial") {
                         </tr>
                     </thead>
                     <tbody>
-
-                        <?php
-
-                        $notas = ControladorFactus::ctrMostrarNotasCredito(null, null);
-
-                        foreach ($notas as $key => $value) {
-
-                            $cliente = ControladorClientes::ctrMostrarClientes("id", $value["id_cliente"]);
-
-                            echo '<tr>
-                                    <td' . ($value["estado_dian"] == "borrador" ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . e($value["numero_nota_credito"]) . '</td>
-                                    <td>' . e($value["numero_factura_original"]) . '</td>
-                                    <td>' . e(($cliente["nombre"] ?? "N/A")) . '</td>
-                                    <td>$ ' . e(number_format((float) ($value["monto_total"] ?? 0), 2)) . '</td>
-                                    <td>' . e($value["fecha_creacion"]) . '</td>';
-
-                            if ($value["estado_dian"] == "aceptada" || $value["estado_dian"] == "enviada") {
-                                echo '<td><button class="btn btn-success btn-xs">Exitosa</button></td>';
-                            } else if ($value["estado_dian"] == "borrador") {
-                                echo '<td><button class="btn btn-warning btn-xs">Borrador</button></td>';
-                            } else if ($value["estado_dian"] == "rechazada") {
-                                echo '<td><button class="btn btn-danger btn-xs">Rechazada</button></td>';
-                            } else {
-                                echo '<td><button class="btn btn-danger btn-xs">Pendiente</button></td>';
-                            }
-                            
-                            echo '<td>
-                                        <div class="btn-group">
-                                            <a href="index.php?ruta=ver-nota-credito&idNota=' . e($value["id"]) . '" class="btn btn-info" title="Ver detalle"><i class="fa fa-eye"></i></a>';
-
-                            // Botón para ver en la DIAN (Disponible con el permiso "Ver")
-                            if (!empty($value["cufe_nc"])) {
-                                echo '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . e($value["cufe_nc"]) . '" target="_blank" class="btn btn-success" title="Ver en la DIAN"><i class="fa fa-external-link"></i></a>';
-                            }
-
-                            if (puedeAccion('notas_credito', 'editar')) {
-                                // Botón Firmar
-                                if ($value["estado_dian"] == "borrador") {
-                                    echo '<button class="btn btnFirmarNotaCredito" style="background-color: black; color: white;" idNota="' . e($value["id"]) . '" title="Firmar y Enviar a DIAN"><i class="fa fa-paper-plane"></i></button>';
-                                }
-
-                                // Botón XML
-                                if (!empty($value["xml_dian_nc"])) {
-                                    echo '<a href="' . e($value["xml_dian_nc"]) . '" target="_blank" class="btn btn-primary" title="Ver XML Factus"><i class="fa fa-file-code-o"></i></a>';
-                                }
-
-                                // Botón para enviar por correo
-                                if ($value["estado_dian"] == "aceptada" || $value["estado_dian"] == "enviada") {
-                                    echo '<button class="btn btn-primary btnEnviarEmailNC" idNota="' . e($value["id"]) . '" nombreCliente="' . e(($cliente["nombre"] ?? "N/A")) . '" emailCliente="' . e(($cliente["email"] ?? "")) . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
-                                }
-                            }
-
-                            // Botón Eliminar (Permiso Eliminar)
-                            if (puedeAccion('notas_credito', 'eliminar')) {
-                                if ($value["estado_dian"] == "borrador") {
-                                    echo '<button class="btn btn-danger btnEliminarNotaCredito" idNota="' . e($value["id"]) . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
-                                }
-                            }
-
-                            echo '</div>
-                                    </td>
-                                </tr>';
-                        }
-
-                        ?>
-
+                        <!-- Los datos se cargarán vía DataTables Server-Side -->
                     </tbody>
                 </table>
             </div>
@@ -184,69 +119,6 @@ if ($_SESSION["perfil"] == "Especial") {
 
 <script src="vistas/js/notas-credito.js?v=<?php echo time(); ?>"></script>
 
-<!-- DataTables Personalizado para Notas Crédito -->
-<script>
-    $(document).ready(function () {
-        setTimeout(function () {
-            if ($("#tablaListadoNotasCredito").length > 0) {
-                if ($.fn.DataTable.isDataTable('#tablaListadoNotasCredito')) {
-                    $('#tablaListadoNotasCredito').DataTable().destroy();
-                }
-
-                $("#tablaListadoNotasCredito").DataTable({
-                    "autoWidth": false,
-                    "initComplete": function (settings, json) {
-                        $(this.api().table().node()).addClass('datatable-ready');
-                        $("#loader-table").fadeOut(200);
-                    },
-                    "order": [[4, "desc"]], // Fecha (ahora índice 4)
-                    "responsive": {
-                        "details": {
-                            "type": "inline",
-                            "renderer": function (api, rowIdx, columns) {
-                                var finalHtml = '';
-                                var hasHidden = false;
-
-                                $.each(columns, function (i, col) {
-                                    if (!col.hidden) return;
-                                    hasHidden = true;
-
-                                    var label = col.title || ('Columna ' + col.columnIndex);
-
-                                    finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
-                                    finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
-                                    finalHtml += '<span style="color:#333;">' + col.data + '</span>';
-                                    finalHtml += '</div>';
-                                });
-
-                                if (!hasHidden) return false;
-                                return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
-                            }
-                        }
-                    },
-                    "columnDefs": [
-                        { "targets": 0, "responsivePriority": 1 }, // Código
-                        { "targets": 6, "responsivePriority": 2, "orderable": false }, // Acciones
-                        { "targets": 1, "responsivePriority": 3 }, // Factura Original
-                        { "targets": 2, "responsivePriority": 4 }, // Cliente
-                        { "targets": 3, "responsivePriority": 5 }, // Total
-                        { "targets": 4, "responsivePriority": 6 }, // Fecha
-                        { "targets": 5, "responsivePriority": 7 }  // Estado DIAN
-                    ],
-                    "language": {
-                        "sProcessing": "Procesando...",
-                        "sLengthMenu": "Mostrar _MENU_ registros",
-                        "sZeroRecords": "No se encontraron resultados",
-                        "sEmptyTable": "Ningún dato disponible en esta tabla",
-                        "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-                        "sSearch": "Buscar:",
-                        "oPaginate": { "sFirst": "Primero", "sLast": "Último", "sNext": "Siguiente", "sPrevious": "Anterior" }
-                    }
-                });
-            }
-        }, 200);
-    });
-</script>
 
 <!--=====================================
 MODAL ENVIAR EMAIL NC

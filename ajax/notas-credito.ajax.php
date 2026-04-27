@@ -1,6 +1,5 @@
 <?php
-
-// Activar reporte de errores pero no mostrar en salida directa (para no romper JSON)
+ob_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
@@ -12,18 +11,26 @@ require_once "../controladores/factus.controlador.php";
 require_once "../modelos/factus.modelo.php";
 require_once "../modelos/conexion.php";
 require_once "../modelos/csrf.php";
+require_once "../modelos/helpers.php";
+require_once "../modelos/sanitizer.php";
 
-// VALIDAR CSRF para todas las peticiones POST
+/*=============================================
+TABLA NOTAS CRÉDITO SERVER-SIDE (solo lectura, no requiere CSRF)
+=============================================*/
+if (isset($_POST["draw"])) {
+    if (ob_get_length()) ob_clean();
+    $respuesta = ControladorFactus::ctrMostrarNotasCreditoServerSide($_POST);
+    echo json_encode($respuesta);
+    exit;
+}
+
+// VALIDAR CSRF para operaciones de escritura
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!CSRF::validateToken()) {
         http_response_code(403);
         die(json_encode(['error' => 'Token CSRF inválido', 'success' => false]));
     }
 }
-
-// Registro de depuración inicial
-file_put_contents("debug_nc_init.txt", "Petición recibida: " . date("Y-m-d H:i:s") . "\n", FILE_APPEND);
-file_put_contents("debug_nc_init.txt", "POST: " . print_r($_POST, true) . "\n", FILE_APPEND);
 
 class AjaxNotasCredito
 {

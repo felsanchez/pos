@@ -130,6 +130,47 @@ class ModeloClientes
 
 	}
 
+	/*=============================================
+	MOSTRAR CLIENTES SERVER-SIDE
+	=============================================*/
+	static public function mdlMostrarClientesServerSide($tabla, $where, $order, $limit)
+	{
+		$sql = "SELECT c.*, 
+				COALESCE(NULLIF(c.ciudad, ''), m.nombre) as ciudad_real,
+				m.nombre as nombre_municipio,
+				m.departamento as nombre_departamento
+				FROM $tabla c 
+				LEFT JOIN factus_municipios m ON (c.municipio_id = m.codigo OR c.municipio_id = m.id_factus)
+				$where $order $limit";
+
+		$stmt = Conexion::conectar()->prepare($sql);
+		$stmt->execute();
+		$resultados = $stmt->fetchAll();
+
+		foreach ($resultados as &$res) {
+			if (!empty($res['nombre_municipio'])) {
+				$res['ciudad'] = $res['nombre_municipio'];
+			}
+		}
+
+		return $resultados;
+	}
+
+	/*=============================================
+	OBTENER TOTAL CLIENTES (PARA SERVER-SIDE)
+	=============================================*/
+	static public function mdlGetTotalClientes($tabla, $where)
+	{
+		$sql = "SELECT COUNT(*) 
+				FROM $tabla c 
+				LEFT JOIN factus_municipios m ON (c.municipio_id = m.codigo OR c.municipio_id = m.id_factus) 
+				$where";
+				
+		$stmt = Conexion::conectar()->prepare($sql);
+		$stmt->execute();
+		return $stmt->fetchColumn();
+	}
+
 
 	/*=============================================
 	EDITAR CLIENTE

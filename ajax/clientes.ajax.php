@@ -17,6 +17,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+/*=============================================
+TABLA CLIENTES SERVER-SIDE
+=============================================*/
+if (isset($_POST["draw"])) {
+    require_once "../modelos/sanitizer.php";
+    require_once "../modelos/helpers.php";
+    $respuesta = ControladorClientes::ctrMostrarClientesServerSide($_POST);
+    echo json_encode($respuesta);
+    exit;
+}
+
 // Clase que contiene los métodos para manejar el AJAX
 class AjaxClientes
 {

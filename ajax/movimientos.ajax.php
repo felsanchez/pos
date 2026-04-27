@@ -8,6 +8,8 @@ error_reporting(E_ALL);
 require_once "../controladores/movimientos.controlador.php";
 require_once "../modelos/movimientos.modelo.php";
 require_once "../modelos/csrf.php";
+require_once "../modelos/helpers.php";
+require_once "../modelos/sanitizer.php";
 
 // VALIDAR CSRF para todas las peticiones POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -19,6 +21,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 class AjaxMovimientos
 {
+
+	/*=============================================
+	MOSTRAR MOVIMIENTOS SERVER-SIDE
+	=============================================*/
+	public function ajaxMostrarMovimientosServerSide()
+	{
+		$respuesta = ControladorMovimientos::ctrMostrarMovimientosServerSide($_POST);
+		echo json_encode($respuesta);
+	}
 
 	/*=============================================
 	OBTENER MOVIMIENTOS CON FILTROS
@@ -118,6 +129,15 @@ class AjaxMovimientos
 		}
 	}
 
+}
+
+/*=============================================
+MOSTRAR MOVIMIENTOS SERVER-SIDE
+=============================================*/
+if (isset($_POST["draw"])) {
+	$mostrar = new AjaxMovimientos();
+	$mostrar->ajaxMostrarMovimientosServerSide();
+	exit;
 }
 
 /*=============================================

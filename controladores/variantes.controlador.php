@@ -17,6 +17,104 @@ class ControladorVariantes{
 	}
 
 	/*=============================================
+	MOSTRAR TIPOS DE VARIANTES SERVER-SIDE
+	=============================================*/
+	static public function ctrMostrarTiposVariantesServerSide($params)
+	{
+		$tabla = "tipos_variantes";
+
+		// Columnas para ordenar
+		$columnsMap = array(
+			0 => 'nombre',
+			1 => 'orden',
+			2 => 'estado',
+			3 => 'id' // Acciones
+		);
+
+		$where = " WHERE 1=1 ";
+
+		// Búsqueda global (DataTables)
+		if (!empty($params['search']['value'])) {
+			$searchValue = $params['search']['value'];
+			$where .= " AND nombre LIKE '%$searchValue%' ";
+		}
+
+		// Ordenar
+		$order = "";
+		if (isset($params['order'][0]['column'])) {
+			$colIdx = $params['order'][0]['column'];
+			$colName = isset($columnsMap[$colIdx]) ? $columnsMap[$colIdx] : 'orden';
+			$order = " ORDER BY " . $colName . " " . $params['order'][0]['dir'];
+		} else {
+			$order = " ORDER BY orden ASC";
+		}
+
+		// Paginación
+		$limit = "";
+		if ($params['length'] != -1) {
+			$limit = " LIMIT " . $params['start'] . ", " . $params['length'];
+		}
+
+		// Obtener datos
+		$variantes = ModeloVariantes::mdlMostrarTiposVariantesServerSide($tabla, $where, $order, $limit);
+		$totalData = ModeloVariantes::mdlGetTotalTiposVariantes($tabla, " WHERE 1=1 ");
+		$totalFiltered = ModeloVariantes::mdlGetTotalTiposVariantes($tabla, $where);
+
+		$data = array();
+
+		foreach ($variantes as $key => $value) {
+			
+			$nestedData = array();
+
+			// 0: Nombre
+			$nestedData[] = e($value["nombre"]);
+
+			// 1: Orden
+			$nestedData[] = e($value["orden"]);
+
+			// 2: Estado
+			$estadoHtml = "";
+			if (puedeAccion('variantes', 'editar')) {
+				if ($value["estado"] != 0) {
+					$estadoHtml = '<button class="btn btn-success btn-xs btnActivarTipo" idTipo="' . $value["id"] . '" estadoTipo="0">Activado</button>';
+				} else {
+					$estadoHtml = '<button class="btn btn-danger btn-xs btnActivarTipo" idTipo="' . $value["id"] . '" estadoTipo="1">Desactivado</button>';
+				}
+			} else {
+				if ($value["estado"] != 0) {
+					$estadoHtml = '<button class="btn btn-success btn-xs">Activado</button>';
+				} else {
+					$estadoHtml = '<button class="btn btn-danger btn-xs">Desactivado</button>';
+				}
+			}
+			$nestedData[] = $estadoHtml;
+
+			// 3: Acciones
+			$botonesAcciones = '<div class="btn-group">';
+			if (puedeAccion('variantes', 'editar')) {
+				$botonesAcciones .= '<button class="btn btn-warning btnEditarTipoVariante" idTipo="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarTipoVariante" title="Editar tipo"><i class="fa fa-pencil"></i></button>';
+			}
+			$botonesAcciones .= '<button class="btn btn-info btnVerOpciones" idTipo="' . $value["id"] . '" nombreTipo="' . e($value["nombre"]) . '" title="Ver opciones"><i class="fa fa-list"></i> Opciones</button>';
+			if (puedeAccion('variantes', 'eliminar')) {
+				$botonesAcciones .= '<button class="btn btn-danger btnEliminarTipo" idTipo="' . $value["id"] . '" nombreTipo="' . e($value["nombre"]) . '" title="Eliminar tipo"><i class="fa fa-times"></i></button>';
+			}
+			$botonesAcciones .= '</div>';
+			$nestedData[] = $botonesAcciones;
+
+			$data[] = $nestedData;
+		}
+
+		$json_data = array(
+			"draw"            => intval($params['draw']),
+			"recordsTotal"    => intval($totalData),
+			"recordsFiltered" => intval($totalFiltered),
+			"data"            => $data
+		);
+
+		return $json_data;
+	}
+
+	/*=============================================
 	CREAR TIPO DE VARIANTE
 	=============================================*/
 

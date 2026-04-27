@@ -1,29 +1,77 @@
 $(document).ready(function () {
     console.log("Notas Crédito JS cargado");
 
-    // Función para quitar el loader
-    function quitarLoader() {
-        if ($("#loader-table").length > 0) {
-            $("#loader-table").fadeOut(400, function () {
-                $(this).remove();
-            });
+    /*=============================================
+    INICIALIZAR DATATABLES SERVER-SIDE - NOTAS CRÉDITO
+    =============================================*/
+    if ($("#tablaListadoNotasCredito").length > 0) {
+        if ($.fn.DataTable.isDataTable('#tablaListadoNotasCredito')) {
+            $('#tablaListadoNotasCredito').DataTable().destroy();
         }
+
+        $("#tablaListadoNotasCredito").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": {
+                "url": "ajax/notas-credito.ajax.php",
+                "type": "POST",
+                "data": function (d) {
+                    d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+                }
+            },
+            "autoWidth": false,
+            "order": [[4, "desc"]],
+            "columnDefs": [
+                { "targets": 0, "responsivePriority": 1 },
+                { "targets": 6, "responsivePriority": 2, "orderable": false },
+                { "targets": 1, "responsivePriority": 3 },
+                { "targets": 2, "responsivePriority": 4 },
+                { "targets": 3, "responsivePriority": 5 },
+                { "targets": 4, "responsivePriority": 6 },
+                { "targets": 5, "responsivePriority": 7 }
+            ],
+            "responsive": {
+                "details": {
+                    "type": "inline",
+                    "renderer": function (api, rowIdx, columns) {
+                        var finalHtml = '';
+                        var hasHidden = false;
+                        $.each(columns, function (i, col) {
+                            if (!col.hidden) return;
+                            hasHidden = true;
+                            var label = col.title || ('Columna ' + col.columnIndex);
+                            finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+                            finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
+                            finalHtml += '<span style="color:#333;">' + col.data + '</span>';
+                            finalHtml += '</div>';
+                        });
+                        if (!hasHidden) return false;
+                        return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
+                    }
+                }
+            },
+            "language": {
+                "sProcessing":   "Procesando...",
+                "sLengthMenu":   "Mostrar _MENU_ registros",
+                "sZeroRecords":  "No se encontraron resultados",
+                "sEmptyTable":   "Ningún dato disponible",
+                "sInfo":         "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+                "sInfoEmpty":    "Mostrando registros del 0 al 0 de un total de 0",
+                "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+                "sSearch":       "Buscar:",
+                "sLoadingRecords": "Cargando...",
+                "oPaginate": {
+                    "sFirst": "Primero", "sLast": "Último",
+                    "sNext": "Siguiente", "sPrevious": "Anterior"
+                }
+            },
+            "dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
+            "initComplete": function () {
+                $(this.api().table().node()).addClass('datatable-ready');
+                $("#loader-table").fadeOut(300);
+            }
+        });
     }
-
-    // 1. Escuchar el evento de inicialización de DataTables (delegado para mayor fiabilidad)
-    $(document).on('init.dt', '.tablas', function () {
-        console.log("DataTables inicializado (evento delegado)");
-        quitarLoader();
-    });
-
-    // 2. Respaldo: Si la tabla ya tiene la clase 'datatable-ready', quitar loader
-    if ($('.tablas').hasClass('datatable-ready')) {
-        console.log("DataTables ya estaba listo");
-        quitarLoader();
-    }
-
-    // 3. Respaldo adicional: Si por alguna razón pasan 4 segundos y sigue el spinner, quitarlo
-    setTimeout(quitarLoader, 4000);
 
     // 1. Inicializar - Calcular total al cargar
     if ($("#tablaProductosNC").length > 0) {

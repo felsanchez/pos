@@ -65,9 +65,26 @@ class ModeloProveedores
 
 		$stmt->close();
 
-		$stmt = null;
+	}
 
+	/*=============================================
+	MOSTRAR PROVEEDORES SERVER-SIDE
+	=============================================*/
+	static public function mdlMostrarProveedoresServerSide($tabla, $where, $order, $limit)
+	{
+		$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla $where $order $limit");
+		$stmt->execute();
+		return $stmt->fetchAll();
+	}
 
+	/*=============================================
+	OBTENER TOTAL PROVEEDORES (PARA SERVER-SIDE)
+	=============================================*/
+	static public function mdlGetTotalProveedores($tabla, $where)
+	{
+		$stmt = Conexion::conectar()->prepare("SELECT COUNT(*) FROM $tabla $where");
+		$stmt->execute();
+		return $stmt->fetchColumn();
 	}
 
 

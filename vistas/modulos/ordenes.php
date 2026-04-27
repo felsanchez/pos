@@ -8,6 +8,13 @@
     margin-bottom: 20px;
   }
 
+  /* Estilos para unificar Select2 con Ventas - Sin exceso de negrita */
+  .select2-container--default .select2-selection--single .select2-selection__rendered,
+  .select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #444 !important;
+    font-weight: normal !important;
+  }
+
   .formulario-fechas label {
     font-weight: 600;
     margin-top: 10px;
@@ -147,49 +154,60 @@ if ($xml) {
             <?php CSRF::insertToken(); ?>
 
             <!-- Filtro por cliente -->
-            <?php
-            $clientesData = ControladorClientes::ctrMostrarClientes(null, null);
-            $totalClientes = is_array($clientesData) ? count($clientesData) : 0;
-            ?>
-            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar Cliente:</label>
-              <div class="input-group">
-                <span class="input-group-addon" style="background-color: #f9f9f9;"><i
-                    class="fa fa-user text-primary"></i></span>
-                <select name="cliente" id="filtroClienteOrdenes"
-                  style="width: 200px; border: 1px solid #ccc; height: 34px; padding: 6px 12px;"></select>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="hidden-xs"><b>Filtrar por Cliente:</b></span>
+              <div class="input-group" style="width: 200px;">
+                <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+                  <i class="fa fa-search text-primary"></i>
+                </span>
+                <select name="cliente" id="filtroClienteOrdenes" class="form-control select2 select-cliente" style="width: 100%;">
+                  <option value="">Seleccionar cliente...</option>
+                  <?php
+                  $clientes = ControladorClientes::ctrMostrarClientes(null, null);
+                  foreach ($clientes as $key => $valueCliente) {
+                    $selected = (isset($_GET['cliente']) && $_GET['cliente'] == $valueCliente["id"]) ? 'selected' : '';
+                    echo '<option value="' . e($valueCliente["id"]) . '" ' . $selected . '>' . e($valueCliente["nombre"]) . '</option>';
+                  }
+                  ?>
+                </select>
               </div>
             </div>
 
             <!-- Filtro por usuario -->
-            <?php
-            $usuariosData = ControladorUsuarios::ctrMostrarUsuarios(null, null);
-            $totalUsuarios = is_array($usuariosData) ? count($usuariosData) : 0;
-            ?>
-            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Vendedor:</label>
-              <div class="input-group">
-                <span class="input-group-addon" style="background-color: #f9f9f9;"><i
-                    class="fa fa-search text-primary"></i></span>
-                <select name="usuario" id="filtroUsuarioOrdenes"
-                  style="width: 180px; border: 1px solid #ccc; height: 34px; padding: 6px 12px;"></select>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="hidden-xs"><b>Filtrar por Vendedor:</b></span>
+              <div class="input-group" style="width: 200px;">
+                <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+                  <i class="fa fa-search text-primary"></i>
+                </span>
+                <select name="usuario" id="filtroUsuarioOrdenes" class="form-control select2 select-usuario" style="width: 100%;">
+                  <option value="">Seleccionar usuario...</option>
+                  <?php
+                  $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
+                  foreach ($usuarios as $key => $valueUsuario) {
+                    $selected = (isset($_GET['usuario']) && $_GET['usuario'] == $valueUsuario["id"]) ? 'selected' : '';
+                    echo '<option value="' . e($valueUsuario["id"]) . '" ' . $selected . '>' . e($valueUsuario["nombre"]) . '</option>';
+                  }
+                  ?>
+                </select>
               </div>
             </div>
 
             <!-- Botón Rango de Fecha -->
-            <div class="form-group" style="margin-bottom: 0;">
-              <button type="button" class="btn btn-default" id="daterange-btn">
-                <span>
-                  <i class="fa fa-calendar"></i> Rango
-                </span>
-                <i class="fa fa-caret-down"></i>
-              </button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="hidden-xs"><b>Filtrar por Fecha:</b></span>
+              <div class="form-group" style="margin-bottom: 0;">
+                <button type="button" class="btn btn-default" id="daterange-btn">
+                  <span>
+                    <i class="fa fa-calendar"></i> Rango de fecha
+                  </span>
+                  <i class="fa fa-caret-down"></i>
+                </button>
+              </div>
             </div>
 
             <!-- Botones de Acción (Separados para mantener gap consistente con Ventas) -->
-            <button type="submit" class="btn btn-primary" title="Filtrar">
-              <i class="fa fa-search"></i>
-            </button>
+
 
             <a href="index.php?ruta=ordenes" class="btn btn-default" title="Limpiar">
               <i class="fa fa-refresh"></i>
@@ -217,7 +235,7 @@ if ($xml) {
                 <th>Imagen</th>
                 <th>Total</th>
                 <th><i class="fa fa-magic"></i> Notas</th>
-                <th><i class="fa fa-pencil-square"></i> Observación</th>
+                <th>Observación</th>
                 <th>Fecha</th>
                 <th>Seguimiento</th>
                 <th>Acciones</th>
@@ -277,172 +295,7 @@ if ($xml) {
                 echo "<p>Mostrando todas las órdenes</p>";
               }
 
-              //$respuesta = ControladorVentas::ctrRangoFechasVentas($fechaInicial, $fechaFinal);
-              $respuesta = ControladorVentas::ctrRangoFechasVentasPorEstado($fechaInicial, $fechaFinal, "orden");
-
-              // Si hay filtro por cliente, filtrar el resultado
-              if ($clienteId !== null) {
-                $respuesta = array_filter($respuesta, function ($venta) use ($clienteId) {
-                  return $venta["id_cliente"] == $clienteId;
-                });
-              }
-
-              // Si hay filtro por usuario, filtrar el resultado
-              if ($usuarioId !== null) {
-                $respuesta = array_filter($respuesta, function ($venta) use ($usuarioId) {
-                  return $venta["id_vendedor"] == $usuarioId;
-                });
-              }
-
-
-              foreach ($respuesta as $key => $value) {
-
-                echo '<tr data-orden-id="' . e($value['id']) . '">
-                        <td>' . e($formatoCodigoVenta) . e($value["codigo"]) . '</td>';
-
-                /*
-                 $itemCliente = "id";
-                 $valorCliente = $value["id_cliente"];
-                 $respuestaCliente = ControladorClientes::ctrMostrarClientes($itemCliente, $valorCliente);
-                 echo'<td>'.$respuestaCliente["nombre"].'</td>';
-                 */
-
-                $itemCliente = "id";
-                $valorCliente = $value["id_cliente"];
-                $respuestaCliente = ControladorClientes::ctrMostrarClientes($itemCliente, $valorCliente);
-
-                echo '<td>
-
-                                  <span class="btnVerClienteDesdeVenta"
-                                        data-toggle="modal"
-                                        data-target="#modalEditarCliente"
-                                        idCliente="' . e($value["id_cliente"]) . '"
-                                        style="cursor: pointer; color: #337ab7; text-decoration: underline;">
-                                      ' . e($respuestaCliente["nombre"]) . '
-                                  </span>
-                              </td>';
-
-                $itemUsuario = "id";
-                $valorUsuario = $value["id_vendedor"];
-                $respuestaUsuario = ControladorUsuarios::ctrMostrarUsuarios($itemUsuario, $valorUsuario);
-                echo '<td>' . e($respuestaUsuario["nombre"]) . '</td>';
-
-                echo '<td>' . e($moneda) . ' ' . e($value["metodo_pago"]) . '</td>';
-
-                // Validación de la foto
-                if ($value["imagen"] != "") {
-                  echo '<td><img src="' . $value["imagen"] . '" class="img-thumbnail img-ampliar-orden" width="40px" style="cursor: pointer;" data-imagen="' . $value["imagen"] . '" data-idventa="' . $value["id"] . '"></td>';
-                } else {
-                  echo '<td><img src="vistas/img/ventas/default/sinventa.png" class="img-thumbnail img-ampliar-orden" width="40px" style="cursor: pointer;" data-imagen="vistas/img/ventas/default/sinventa.png" data-idventa="' . $value["id"] . '"></td>';
-                }
-
-                echo '<td>' . e($moneda) . ' ' . e(number_format($value["total"], 2)) . '</td>
-
-                        <td class="celda-nota" data-id="' . e($value['id']) . '">' . e($value['notas']) . '</td>
-
-                        <td contenteditable="true" class="celda-observacion" data-id="' . e($value['id']) . '">' . e($value['observacion']) . '</td>
-
-                         <td>' . e($value["fecha"]) . '</td>';
-
-                // Columna SEGUIMIENTO
-                echo '<td style="white-space:nowrap; text-align:center;">';
-
-                // Botón 1: Recibido
-                if (isset($value["seguimiento_recibido"]) && $value["seguimiento_recibido"] == 1) {
-                  echo '<span class="label label-success" style="margin-right:5px;">Enviado (R)</span>';
-                } else {
-                  // Check if keys exist to avoid warnings if columns missing
-                  $recibido = isset($value["seguimiento_recibido"]) ? $value["seguimiento_recibido"] : 0;
-                  if ($recibido == 1) {
-                    echo '<span class="label label-success" style="margin-right:5px;">Enviado (R)</span>';
-                  } else {
-                    if (puedeAccion('ordenes', 'editar')) {
-                      echo '<button class="btn btn-default btn-xs btnSeguimientoRecibido" 
-                                  idOrden="' . e($value["id"]) . '" 
-                                  codigoOrden="' . e($value["codigo"]) . '"
-                                  cliente="' . e($respuestaCliente["nombre"]) . '"
-                                  telefono="' . e($respuestaCliente["telefono"]) . '"
-                                  data-mensaje-recibido="' . e(htmlspecialchars($mensajeRecibido)) . '"
-                                  style="margin-right:5px; border: 1px solid #ccc; color: green; width: auto !important;" 
-                                  title="Enviar mensaje: Pedido Recibido">
-                                  1er mensaje
-                              </button>';
-                    }
-                  }
-                }
-
-                // Botón 2: Procesado
-                if (isset($value["seguimiento_procesado"]) && $value["seguimiento_procesado"] == 1) {
-                  echo '<span class="label label-success" style="margin-right:5px;">Enviado (P)</span>';
-                } else {
-                  // Check if keys exist
-                  $procesado = isset($value["seguimiento_procesado"]) ? $value["seguimiento_procesado"] : 0;
-                  if ($procesado == 1) {
-                    echo '<span class="label label-success" style="margin-right:5px;">Enviado (P)</span>';
-                  } else {
-                    if (puedeAccion('ordenes', 'editar')) {
-                      echo '<button class="btn btn-default btn-xs btnSeguimientoProcesado" 
-                                    idOrden="' . e($value["id"]) . '" 
-                                    codigoOrden="' . e($value["codigo"]) . '"
-                                    cliente="' . e($respuestaCliente["nombre"]) . '"
-                                    telefono="' . e($respuestaCliente["telefono"]) . '"
-                                    data-mensaje-procesado="' . e(htmlspecialchars($mensajeProcesado)) . '"
-                                    style="margin-right:5px; border: 1px solid #ccc; color: blue; width: auto !important;" 
-                                    title="Enviar mensaje: Pedido Procesado">
-                                    2do mensaje
-                                 </button>';
-                    }
-                  }
-                }
-
-                $alistado = isset($value["seguimiento_alistado"]) ? $value["seguimiento_alistado"] : 0;
-
-                if (puedeAccion('ordenes', 'editar')) {
-                  if ($alistado == 1) {
-                    echo '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-success" title="Pedido Alistado / Editado" style="width: auto !important;">
-                                Enviado (A) <i class="fa fa-line-chart"></i>
-                              </a>';
-                  } else {
-                    echo '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-warning" title="Editar Orden" style="width: auto !important;">
-                                Enviar a Ventas
-                              </a>';
-                  }
-                }
-
-                // Botón 4: Convertir a Factura Electrónica
-                if (puedeAccion('ordenes', 'editar')) {
-                  echo ' <a href="index.php?ruta=orden-a-factura-electronica&idVenta=' . $value["id"] . '" 
-                              class="btn btn-xs btn-primary" 
-                              title="Convertir a Factura Electrónica" 
-                              style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;">
-                              <i class="fa fa-file-text-o"></i> Enviar a FE
-                          </a>';
-                }
-
-                echo '</td>';
-
-                echo '<td> 
-                          <div class="btn-group">
-
-                            <a class="btn btn-warning" href="index.php?ruta=ver-detalle-orden&idVenta=' . $value["id"] . '" title="Ver Detalle" style="width: auto !important;">
-                              <i class="fa fa-eye"></i>
-                            </a>';
-
-                // Mostrar el botón solo si el usuario tiene permiso
-                if (puedeAccion('ordenes', 'eliminar')) {
-                  echo '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar Orden" style="width: auto !important;">
-                                      <i class="fa fa-times"></i>
-                                    </button>';
-                }
-
-                echo '</div>
-                        </td>
-
-                      </tr>';
-              }
-
               ?>
-
 
             </tbody>
 
@@ -1063,40 +916,27 @@ MODAL EDITAR CLIENTE
     setTimeout(function () {
       if (typeof $.fn.select2 !== 'undefined') {
 
-        const listaClientes = <?php
-        $clientesJS = [['id' => '', 'text' => 'Todos los clientes']];
-        foreach ($clientesData as $c) {
-          $clientesJS[] = ['id' => $c['id'], 'text' => $c['nombre']];
-        }
-        echo json_encode($clientesJS);
-        ?>;
-
-        const listaUsuarios = <?php
-        $usuariosJS = [['id' => '', 'text' => 'Todos los usuarios']];
-        foreach ($usuariosData as $u) {
-          $usuariosJS[] = ['id' => $u['id'], 'text' => $u['nombre']];
-        }
-        echo json_encode($usuariosJS);
-        ?>;
-
         $('#filtroClienteOrdenes').select2({
-          data: listaClientes,
-          placeholder: "Seleccionar cliente...",
-          allowClear: true,
-          width: '200px'
-        }).addClass('form-control'); // Añadir clase después de la carga
+          allowClear: false,
+          width: '100%'
+        });
 
         $('#filtroUsuarioOrdenes').select2({
-          data: listaUsuarios,
-          placeholder: "Seleccionar vendedor...",
-          allowClear: true,
-          width: '180px'
-        }).addClass('form-control');
+          allowClear: false,
+          width: '100%'
+        });
 
         // Restaurar valores si existen en la URL
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('cliente')) $('#filtroClienteOrdenes').val(urlParams.get('cliente')).trigger('change.select2');
         if (urlParams.get('usuario')) $('#filtroUsuarioOrdenes').val(urlParams.get('usuario')).trigger('change.select2');
+
+        // EVENTOS AUTOMÁTICOS PARA FILTROS
+        $('#filtroClienteOrdenes, #filtroUsuarioOrdenes').on('change', function () {
+          if (typeof window.recargarTablaOrdenes === 'function') {
+            window.recargarTablaOrdenes();
+          }
+        });
       }
 
       // INICIALIZACIÓN DEL RANGO DE FECHAS
@@ -1119,11 +959,16 @@ MODAL EDITAR CLIENTE
             var fechaInicial = start.format('YYYY-MM-DD');
             var fechaFinal = end.format('YYYY-MM-DD');
 
-            // Asignar a campos ocultos para el GET
+            // Asignar a campos ocultos para el GET y para el recargo Ajax
             $('#fechaInicial').val(fechaInicial);
             $('#fechaFinal').val(fechaFinal);
 
             localStorage.setItem("capturarRangoOrdenes", start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+
+            // RECARGA AUTOMÁTICA
+            if (typeof window.recargarTablaOrdenes === 'function') {
+              window.recargarTablaOrdenes();
+            }
           }
         );
 
@@ -1132,6 +977,9 @@ MODAL EDITAR CLIENTE
           localStorage.removeItem("capturarRangoOrdenes");
           $('#fechaInicial').val("");
           $('#fechaFinal').val("");
+          if (typeof window.recargarTablaOrdenes === 'function') {
+            window.recargarTablaOrdenes();
+          }
         });
       }
     }, 200); // 200ms es suficiente para que la mayoría de scripts globales terminen
@@ -1142,7 +990,30 @@ MODAL EDITAR CLIENTE
         $('.tablaOrdenes').DataTable().destroy();
       }
 
-      $(".tablaOrdenes").DataTable({
+      const tableOrdenes = $(".tablaOrdenes").DataTable({
+        "serverSide": true,
+        "processing": true,
+        "ajax": {
+          "url": "ajax/ventas.ajax.php",
+          "type": "POST",
+          "data": function (d) {
+            d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+            d.drawOrdenes = 1;
+            
+            // PRIORIDAD 1: Valores actuales de los inputs (para recarga automática)
+            d.fechaInicial = $('#fechaInicial').val();
+            d.fechaFinal = $('#fechaFinal').val();
+            d.clienteId = $('#filtroClienteOrdenes').val();
+            d.usuarioId = $('#filtroUsuarioOrdenes').val();
+
+            // PRIORIDAD 2: Si los anteriores están vacíos, intentar con URLParams (carga inicial)
+            var urlParams = new URLSearchParams(window.location.search);
+            if (!d.fechaInicial) d.fechaInicial = urlParams.get('fechaInicial');
+            if (!d.fechaFinal) d.fechaFinal = urlParams.get('fechaFinal');
+            if (!d.clienteId) d.clienteId = urlParams.get('cliente');
+            if (!d.usuarioId) d.usuarioId = urlParams.get('usuario');
+          }
+        },
         "order": [[8, "desc"]], // Ahora fecha es la columna 8
         "responsive": {
           "details": {
@@ -1217,6 +1088,11 @@ MODAL EDITAR CLIENTE
           }
         }
       });
+
+      // FUNCIÓN GLOBAL DE RECARGA
+      window.recargarTablaOrdenes = function () {
+        tableOrdenes.ajax.reload();
+      };
     }
   });
 </script>
