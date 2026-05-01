@@ -2038,3 +2038,242 @@ $("#formEnviarEmail").submit(function (e) {
 		}
 	});
 });
+
+/*=============================================
+ADMINISTRAR VENTAS - LISTADO SERVER-SIDE
+=============================================*/
+$(document).ready(function () {
+	if ($("#tablaListaVentas").length > 0) {
+		
+		if ($.fn.DataTable.isDataTable('#tablaListaVentas')) {
+			$('#tablaListaVentas').DataTable().destroy();
+		}
+
+		var table = $("#tablaListaVentas").DataTable({
+			"processing": true,
+			"serverSide": true,
+			"ajax": {
+				"url": "ajax/ventas-listado.ajax.php",
+				"type": "POST",
+				"data": function (d) {
+					d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+					d.fechaInicial = $("#fechaInicial").val();
+					d.fechaFinal = $("#fechaFinal").val();
+					d.clienteId = $("select[name='cliente']").val();
+					d.usuarioId = $("select[name='usuario']").val();
+				}
+			},
+			"createdRow": function (row, data, dataIndex) {
+				if (data.DT_RowAttr && data.DT_RowAttr['data-venta-id']) {
+					$(row).attr('data-venta-id', data.DT_RowAttr['data-venta-id']);
+				}
+			},
+			"initComplete": function (settings, json) {
+				$(this.api().table().node()).addClass('datatable-ready');
+				if (typeof quitarLoaderGlobal === 'function') {
+					quitarLoaderGlobal();
+				}
+
+				window.recargarTablaVentas = function() {
+					table.ajax.reload();
+				};
+
+				$("select[name='cliente'], select[name='usuario']").on("change", function () {
+					window.recargarTablaVentas();
+				});
+
+				$("#fechaInicial, #fechaFinal").on("change", function () {
+					window.recargarTablaVentas();
+				});
+
+				$(".btnBuscarFiltros").on("click", function () {
+					window.recargarTablaVentas();
+				});
+
+				if ($('#daterange-btn').length > 0 && typeof $.fn.daterangepicker !== 'undefined') {
+					var urlParams = new URLSearchParams(window.location.search);
+					var fechaInicialUrl = urlParams.get('fechaInicial');
+					var fechaFinalUrl = urlParams.get('fechaFinal');
+
+					$('#daterange-btn').daterangepicker({
+						ranges: {
+							'Todos los documentos': [moment('2000-01-01'), moment()],
+							'Hoy': [moment(), moment()],
+							'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+							'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+							'Este mes': [moment().startOf('month'), moment().endOf('month')],
+							'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+						},
+						startDate: fechaInicialUrl ? moment(fechaInicialUrl) : moment(),
+						endDate: fechaFinalUrl ? moment(fechaFinalUrl) : moment()
+					}, function (start, end) {
+						$('#daterange-btn span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+						$('#fechaInicial').val(start.format('YYYY-MM-DD'));
+						$('#fechaFinal').val(end.format('YYYY-MM-DD'));
+						window.recargarTablaVentas();
+					});
+				}
+			},
+			"order": [[8, "desc"]],
+			"responsive": {
+				"details": {
+					"type": "inline",
+					"renderer": function (api, rowIdx, columns) {
+						var labels = {
+							2: 'Vendedor', 3: 'Forma de Pago', 4: 'Imagen', 
+							5: 'Total', 6: 'Notas', 7: 'Observación', 8: 'Fecha'
+						};
+						var idVenta = $(api.row(rowIdx).node()).attr('data-venta-id') || '';
+						var finalHtml = '';
+						var hasHidden = false;
+
+						$.each(columns, function (i, col) {
+							if (!col.hidden) return;
+							hasHidden = true;
+							var colIdx = col.columnIndex;
+							var label = labels[colIdx] || col.title || ('Columna ' + colIdx);
+							var data = col.data || '';
+
+							if (colIdx === 7) {
+								var obsTexto = $('<div>').html(data).text().trim();
+								finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
+								finalHtml += '<span class="text-bold" style="block;color:#555;margin-bottom:4px;"> ' + label + ':</span>';
+								finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:24px;">' + obsTexto + '</div>';
+								finalHtml += '</div>';
+								return;
+							}
+
+							if (colIdx === 6) {
+								var notasTexto = $('<div>').html(data).text().trim();
+								finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
+								finalHtml += '<span class="text-bold" style="color:#555;"><i class="fa fa-magic"></i> ' + label + ': </span>';
+								finalHtml += '<span style="color:#333;">' + (notasTexto || '<em style="color:#999;">Sin notas</em>') + '</span>';
+								finalHtml += '</div>';
+								return;
+							}
+
+							finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+							finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
+							finalHtml += '<span style="color:#333;">' + data + '</span>';
+							finalHtml += '</div>';
+						});
+
+						if (!hasHidden) return false;
+						return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
+					}
+				}
+			},
+			"columnDefs": [
+				{ "targets": 0, "responsivePriority": 1 },
+				{ "targets": 9, "responsivePriority": 2, "orderable": false },
+				{ "targets": 1, "responsivePriority": 3 },
+				{ "targets": 2, "responsivePriority": 4 },
+				{ "targets": 3, "responsivePriority": 5 },
+				{ "targets": 4, "responsivePriority": 6 },
+				{ "targets": 5, "responsivePriority": 7 },
+				{ "targets": 6, "responsivePriority": 8 },
+				{ "targets": 7, "responsivePriority": 9 },
+				{ "targets": 8, "responsivePriority": 10 }
+			],
+			"language": {
+				"sProcessing": "Procesando...",
+				"sLengthMenu": "Mostrar _MENU_ registros",
+				"sZeroRecords": "No se encontraron resultados",
+				"sEmptyTable": "Ningún dato disponible en esta tabla",
+				"sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+				"sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
+				"sSearch": "Buscar:",
+				"oPaginate": { "sFirst": "Primero", "sLast": "Último", "sNext": "Siguiente", "sPrevious": "Anterior" }
+			}
+		});
+	}
+});
+
+/*=============================================
+GUARDAR OBSERVACIONES (VENTAS)
+=============================================*/
+$(document).on('blur', '.celda-observacion', function () {
+	const idVenta = $(this).attr('data-id');
+	const nuevaObservacion = $(this).text().trim();
+	
+	$.ajax({
+		url: "ajax/datatable-ventas.ajax.php",
+		method: "POST",
+		data: {
+			csrf_token: $('meta[name="csrf-token"]').attr('content'),
+			idVentaObservacion: idVenta,
+			nuevaObservacion: nuevaObservacion
+		},
+		success: function (respuesta) {
+			console.log("Observación guardada:", respuesta);
+		}
+	});
+});
+
+/*=============================================
+GESTIÓN DE IMÁGENES DE VENTA
+=============================================*/
+$(document).on("click", ".img-ampliar-venta, .btnVerFotoVenta", function () {
+	var rutaImagen = $(this).attr("data-imagen");
+	var idVenta = $(this).attr("data-idventa");
+
+	$("#imagenVentaAmpliada").attr("src", rutaImagen);
+	$("#idVentaImagen").val(idVenta);
+	$(".nuevaImagenVenta").val("");
+	$("#modalAmpliarImagenVenta").modal("show");
+});
+
+$(".nuevaImagenVenta").change(function () {
+	var imagen = this.files[0];
+	if (imagen) {
+		if (imagen["type"] != "image/jpeg" && imagen["type"] != "image/png") {
+			$(".nuevaImagenVenta").val("");
+			swal({ title: "Error", text: "¡La imagen debe ser JPG o PNG!", type: "error" });
+		} else if (imagen["size"] > 2000000) {
+			$(".nuevaImagenVenta").val("");
+			swal({ title: "Error", text: "¡La imagen no debe pesar más de 2MB!", type: "error" });
+		} else {
+			var datosImagen = new FileReader;
+			datosImagen.readAsDataURL(imagen);
+			$(datosImagen).on("load", function (event) {
+				$("#imagenVentaAmpliada").attr("src", event.target.result);
+			});
+		}
+	}
+});
+
+$(document).on("click", ".btnGuardarImagenVenta", function () {
+	var idVenta = $("#idVentaImagen").val();
+	var imagen = $(".nuevaImagenVenta")[0].files[0];
+
+	if (!imagen) {
+		swal({ title: "Advertencia", text: "Seleccione una imagen", type: "warning" });
+		return;
+	}
+
+	var datos = new FormData();
+	datos.append("idVentaImagen", idVenta);
+	datos.append("nuevaImagenVenta", imagen);
+	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+
+	swal({ title: 'Cargando...', allowOutsideClick: false, onBeforeOpen: () => { swal.showLoading() } });
+
+	$.ajax({
+		url: "ajax/ventas.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			if (respuesta == "ok") {
+				swal({ type: "success", title: "¡Actualizada!", showConfirmButton: true }).then(() => {
+					$("#modalAmpliarImagenVenta").modal("hide");
+					if(window.recargarTablaVentas) window.recargarTablaVentas();
+					else window.location.reload();
+				});
+			}
+		}
+	});
+});

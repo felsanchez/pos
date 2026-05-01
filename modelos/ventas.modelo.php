@@ -42,7 +42,8 @@ class ModeloVentas
 	{
 		$stmt = Conexion::conectar()->prepare("SELECT v.*, 
 													c.nombre AS nombre_cliente, 
-													u.nombre AS nombre_vendedor 
+													u.nombre AS nombre_vendedor,
+													(SELECT 1 FROM notas_credito WHERE id_venta_original = v.id LIMIT 1) as tiene_nc
 													FROM $tabla v 
 													LEFT JOIN clientes c ON v.id_cliente = c.id 
 													LEFT JOIN usuarios u ON v.id_vendedor = u.id 

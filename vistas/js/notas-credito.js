@@ -22,53 +22,53 @@ $(document).ready(function () {
             "autoWidth": false,
             "order": [[4, "desc"]],
             "columnDefs": [
-                { "targets": 0, "responsivePriority": 1 },
-                { "targets": 6, "responsivePriority": 2, "orderable": false },
-                { "targets": 1, "responsivePriority": 3 },
-                { "targets": 2, "responsivePriority": 4 },
-                { "targets": 3, "responsivePriority": 5 },
-                { "targets": 4, "responsivePriority": 6 },
-                { "targets": 5, "responsivePriority": 7 }
+                { "targets": 0, "responsivePriority": 1, "className": "vertical-middle" }, // Código
+                { "targets": 1, "responsivePriority": 2, "className": "vertical-middle" }, // Factura Original
+                { "targets": 6, "responsivePriority": 3, "className": "text-center vertical-middle", "orderable": false }, // Acciones
+                { "targets": 2, "responsivePriority": 4, "className": "vertical-middle" }, // Cliente
+                { "targets": 3, "responsivePriority": 5, "className": "vertical-middle" }, // Total
+                { "targets": 4, "responsivePriority": 6, "className": "vertical-middle" }, // Fecha
+                { "targets": 5, "responsivePriority": 7, "className": "vertical-middle text-center" } // Estado DIAN
             ],
             "responsive": {
                 "details": {
                     "type": "inline",
                     "renderer": function (api, rowIdx, columns) {
-                        var finalHtml = '';
-                        var hasHidden = false;
-                        $.each(columns, function (i, col) {
-                            if (!col.hidden) return;
-                            hasHidden = true;
-                            var label = col.title || ('Columna ' + col.columnIndex);
-                            finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
-                            finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
-                            finalHtml += '<span style="color:#333;">' + col.data + '</span>';
-                            finalHtml += '</div>';
-                        });
-                        if (!hasHidden) return false;
-                        return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
+                        var data = $.map(columns, function (col, i) {
+                            return col.hidden ?
+                                '<div style="padding:8px 12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">' +
+                                '<span style="font-weight:bold; color:#555;">' + col.title + ':</span> ' +
+                                '<span style="color:#333;">' + col.data + '</span>' +
+                                '</div>' :
+                                '';
+                        }).join('');
+
+                        return data ?
+                            $('<div style="background:#f9f9f9; border:1px solid #eee; margin:10px 0; border-radius:4px;"/>').append(data) :
+                            false;
                     }
                 }
             },
             "language": {
-                "sProcessing":   "Procesando...",
-                "sLengthMenu":   "Mostrar _MENU_ registros",
-                "sZeroRecords":  "No se encontraron resultados",
-                "sEmptyTable":   "Ningún dato disponible",
-                "sInfo":         "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-                "sInfoEmpty":    "Mostrando registros del 0 al 0 de un total de 0",
+                "sProcessing": "Procesando...",
+                "sLengthMenu": "Mostrar _MENU_ registros",
+                "sZeroRecords": "No se encontraron resultados",
+                "sEmptyTable": "Ningún dato disponible en esta tabla",
+                "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+                "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
                 "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-                "sSearch":       "Buscar:",
+                "sSearch": "Buscar:",
                 "sLoadingRecords": "Cargando...",
                 "oPaginate": {
-                    "sFirst": "Primero", "sLast": "Último",
-                    "sNext": "Siguiente", "sPrevious": "Anterior"
+                    "sFirst": "Primero",
+                    "sLast": "Último",
+                    "sNext": "Siguiente",
+                    "sPrevious": "Anterior"
                 }
             },
             "dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
-            "initComplete": function () {
-                $(this.api().table().node()).addClass('datatable-ready');
-                $("#loader-table").fadeOut(300);
+            "drawCallback": function() {
+                 $(".btn-group.col-acciones").parent().addClass("text-center").css("vertical-align", "middle");
             }
         });
     }

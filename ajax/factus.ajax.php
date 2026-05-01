@@ -4,6 +4,7 @@ error_reporting(E_ALL);
 require_once __DIR__ . "/../modelos/session-manager.php";
 SessionManager::startSecure();
 
+require_once __DIR__ . "/../modelos/sanitizer.php";
 require_once __DIR__ . "/../controladores/factus.controlador.php";
 require_once __DIR__ . "/../modelos/factus.modelo.php";
 require_once __DIR__ . "/../controladores/clientes.controlador.php";
@@ -453,6 +454,12 @@ class AjaxFactus
 		}
 	}
 
+	public function ajaxMostrarNotasAjusteDSServerSide()
+	{
+		$respuesta = ControladorFactus::ctrMostrarNotasAjusteDSServerSide($_POST);
+		echo json_encode($respuesta);
+	}
+
 	public function ajaxCrearDocumentoSoporte()
 	{
 		$resultado = ControladorFactus::ctrCrearDocumentoSoporte();
@@ -511,6 +518,9 @@ if (isset($_POST["accion"])) {
 			break;
 		case "obtenerNotasAjusteDS":
 			$factus->ajaxObtenerNotasAjusteDS();
+			break;
+		case "mostrarNotasAjusteDSServerSide":
+			$factus->ajaxMostrarNotasAjusteDSServerSide();
 			break;
 		case "eliminarNotaCredito":
 			$factusEliminar = new ControladorFactus();

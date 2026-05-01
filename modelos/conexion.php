@@ -6,7 +6,13 @@ require_once __DIR__ . '/../config.php';
 
 class Conexion{ 
 
+	static private $conexion = null;
+
 	static public function conectar(){ 
+
+		if (self::$conexion !== null) {
+			return self::$conexion;
+		}
 
 		try {
 			// Obtener credenciales desde variables de entorno
@@ -41,7 +47,8 @@ class Conexion{
 			 //	'database' => $dbname
 			 // ]);
 
- 			return $link;
+			self::$conexion = $link;
+ 			return self::$conexion;
  
 		} catch (PDOException $e) {
 			Logger::error('Error al conectar a la base de datos', [

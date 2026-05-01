@@ -2419,13 +2419,16 @@ class ControladorFactus
 		$data = [];
 		foreach ($notas as $value) {
 			$row = [];
+			$idNota = $value['id'];
+			$estadoDian = $value['estado_dian'] ?? 'borrador';
 
 			// Col 0: Código Nota
-			$estiloBorrador = ($value['estado_dian'] == 'borrador') ? ' style="color:#f39c12; font-weight:bold;"' : '';
-			$row[] = '<span' . $estiloBorrador . '>' . e($value['numero_nota_credito'] ?: 'Borrador') . '</span>';
+			$estiloBorrador = ($estadoDian == 'borrador') ? ' style="color:#f39c12; font-weight:bold;"' : '';
+			$numeroNota = !empty($value['numero_nota_credito']) ? $value['numero_nota_credito'] : (!empty($value['codigo_nota_credito']) ? $value['codigo_nota_credito'] : 'Borrador');
+			$row[] = '<span' . $estiloBorrador . '>' . e($numeroNota) . '</span>';
 
 			// Col 1: Factura Original
-			$row[] = e($value['numero_factura_original']);
+			$row[] = e($value['numero_factura_original'] ?? '');
 
 			// Col 2: Cliente
 			$row[] = e($value['cliente_nombre'] ?? 'N/A');
@@ -2434,42 +2437,192 @@ class ControladorFactus
 			$row[] = '$ ' . number_format((float)($value['monto_total'] ?? 0), 2);
 
 			// Col 4: Fecha
-			$row[] = e(substr($value['fecha_creacion'], 0, 10));
+			$row[] = e(substr($value['fecha_creacion'] ?? '', 0, 10));
 
-			// Col 5: Estado DIAN
-			$estado = $value['estado_dian'];
-			if ($estado == 'aceptada' || $estado == 'enviada') {
-				$row[] = '<button class="btn btn-success btn-xs">Exitosa</button>';
-			} elseif ($estado == 'borrador') {
-				$row[] = '<button class="btn btn-warning btn-xs">Borrador</button>';
-			} elseif ($estado == 'rechazada') {
-				$row[] = '<button class="btn btn-danger btn-xs">Rechazada</button>';
-			} else {
-				$row[] = '<button class="btn btn-danger btn-xs">Pendiente</button>';
-			}
+			// Col 5: Estado DIAN (Badge)
+			$badgeClass = ($estadoDian == 'borrador') ? 'label-warning' : (($estadoDian == 'rechazada') ? 'label-danger' : 'label-success');
+			$row[] = '<span class="label ' . $badgeClass . '">' . ucfirst(e($estadoDian)) . '</span>';
 
 			// Col 6: Acciones
-			$btns = '<div class="btn-group">';
-			$btns .= '<a href="index.php?ruta=ver-nota-credito&idNota=' . $value['id'] . '" class="btn btn-info" title="Ver detalle"><i class="fa fa-eye"></i></a>';
-
+			$btns = '<div class="btn-group col-acciones" style="display:flex; gap:2px;">';
+			
+			// Ver Detalle
+			$btns .= '<a href="index.php?ruta=ver-nota-credito&idNota=' . $idNota . '" class="btn btn-info" title="Ver detalle" style="width: auto !important;"><i class="fa fa-eye"></i></a>';
+			
+			// Ver en la DIAN
 			if (!empty($value['cufe_nc'])) {
-				$btns .= '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . e($value['cufe_nc']) . '" target="_blank" class="btn btn-success" title="Ver en la DIAN"><i class="fa fa-external-link"></i></a>';
+				$btns .= '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . e($value['cufe_nc']) . '" target="_blank" class="btn btn-success" title="Ver en la DIAN" style="width: auto !important;"><i class="fa fa-external-link"></i></a>';
 			}
 
-			if (puedeAccion('notas_credito', 'editar')) {
-				if ($estado == 'borrador') {
-					$btns .= '<button class="btn btnFirmarNotaCredito" style="background-color:black;color:white;" idNota="' . $value['id'] . '" title="Firmar y Enviar a DIAN"><i class="fa fa-paper-plane"></i></button>';
+			// Permisos
+			$puedoEditar = function_exists('puedeAccion') ? puedeAccion('notas_credito', 'editar') : true;
+			$puedoEliminar = function_exists('puedeAccion') ? puedeAccion('notas_credito', 'eliminar') : true;
+
+			if ($puedoEditar) {
+				// Firmar (solo si es borrador)
+				if ($estadoDian == 'borrador') {
+					$btns .= '<button class="btn btnFirmarNotaCredito" style="background-color:black; color:white; width: auto !important;" idNota="' . $idNota . '" title="Firmar y Enviar a DIAN"><i class="fa fa-paper-plane"></i></button>';
 				}
+				
+				// Ver XML
 				if (!empty($value['xml_dian_nc'])) {
-					$btns .= '<a href="' . e($value['xml_dian_nc']) . '" target="_blank" class="btn btn-primary" title="Ver XML"><i class="fa fa-file-code-o"></i></a>';
+					$btns .= '<a href="' . e($value['xml_dian_nc']) . '" target="_blank" class="btn btn-primary" title="Ver XML" style="width: auto !important;"><i class="fa fa-file-code-o"></i></a>';
 				}
-				if ($estado == 'aceptada' || $estado == 'enviada') {
-					$btns .= '<button class="btn btn-primary btnEnviarEmailNC" idNota="' . $value['id'] . '" nombreCliente="' . e($value['cliente_nombre'] ?? 'N/A') . '" emailCliente="' . e($value['cliente_email'] ?? '') . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
+				
+				// Enviar por Correo (solo si está aceptada/enviada)
+				if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
+					$btns .= '<button class="btn btn-primary btnEnviarEmailNC" idNota="' . $idNota . '" nombreCliente="' . e($value['cliente_nombre'] ?? 'N/A') . '" emailCliente="' . e($value['cliente_email'] ?? '') . '" title="Enviar por Correo" style="width: auto !important;"><i class="fa fa-envelope"></i></button>';
 				}
 			}
-			if (puedeAccion('notas_credito', 'eliminar') && $estado == 'borrador') {
-				$btns .= '<button class="btn btn-danger btnEliminarNotaCredito" idNota="' . $value['id'] . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
+
+			// Eliminar (solo borradores)
+			if ($puedoEliminar && $estadoDian == 'borrador') {
+				$btns .= '<button class="btn btn-danger btnEliminarNotaCredito" idNota="' . $idNota . '" title="Eliminar Borrador" style="width: auto !important;"><i class="fa fa-trash"></i></button>';
 			}
+			
+			$btns .= '</div>';
+			$row[] = $btns;
+
+			$data[] = $row;
+		}
+
+		return [
+			'draw'            => intval($params['draw']),
+			'recordsTotal'    => intval($total),
+			'recordsFiltered' => intval($filtradas),
+			'data'            => $data,
+		];
+	}
+
+	/*=============================================
+	MOSTRAR NOTAS DE AJUSTE DS SERVER-SIDE
+	=============================================*/
+	static public function ctrMostrarNotasAjusteDSServerSide($params)
+	{
+		$columns = [
+			0 => 'na.numero_nota_ajuste',
+			1 => 'na.numero_ds_original',
+			2 => 'p.nombre',
+			3 => 'na.monto_total',
+			4 => 'na.fecha_envio_dian',
+			5 => 'na.estado_dian',
+			6 => 'na.id'
+		];
+
+		// Datos para lógica de borradores
+		$proximoBase = ModeloFactus::mdlObtenerSiguienteConsecutivoNotaAjusteDS(false);
+		$rangoAjuste = ModeloFactus::mdlObtenerRangoAjusteDS();
+		$prefijoAjuste = $rangoAjuste ? $rangoAjuste["prefijo"] : "NA";
+
+		$where = " WHERE 1=1 ";
+		if (!empty($params['search']['value'])) {
+			$s = $params['search']['value'];
+			
+			$rankMatch = "";
+			if(is_numeric($s)){
+				$rankMatch = " OR (SELECT (COUNT(*) + $proximoBase) FROM notas_ajuste_ds na_n WHERE na_n.id < na.id AND (na_n.numero_nota_ajuste IS NULL OR na_n.numero_nota_ajuste = '')) = $s ";
+			}
+
+			$where .= " AND (na.numero_nota_ajuste LIKE '%$s%'
+						OR na.numero_ds_original LIKE '%$s%'
+						OR p.nombre LIKE '%$s%'
+						OR na.estado_dian LIKE '%$s%'
+						OR ( (na.numero_nota_ajuste IS NULL OR na.numero_nota_ajuste = '') AND 
+						     ( CONCAT('$prefijoAjuste', (SELECT (COUNT(*) + $proximoBase) FROM notas_ajuste_ds na_b WHERE na_b.id < na.id AND (na_b.numero_nota_ajuste IS NULL OR na_b.numero_nota_ajuste = ''))) LIKE '%$s%' $rankMatch )
+						   )
+						) ";
+		}
+
+		$order = " ORDER BY " . $columns[$params['order'][0]['column']] . " " . $params['order'][0]['dir'];
+		$limit = " LIMIT " . $params['start'] . ", " . $params['length'];
+
+		$notas = ModeloFactus::mdlMostrarNotasAjusteDSServerSide($where, $order, $limit);
+		$filtradas = ModeloFactus::mdlGetTotalNotasAjusteDS($where);
+		$total = ModeloFactus::mdlGetTotalNotasAjusteDS(" WHERE 1=1 ");
+
+		$data = [];
+
+		foreach ($notas as $key => $value) {
+			$row = [];
+			$idNota = $value["id"];
+			$estadoDian = $value["estado_dian"];
+			
+			// 1. Código Nota
+			$numeroMostrar = $value["numero_nota_ajuste"];
+			$claseCodigo = "";
+			if ($estadoDian == "borrador") {
+				$numSugerido = $proximoBase + intval($value["rank_borrador"]);
+				$numeroMostrar = $prefijoAjuste . $numSugerido;
+				$claseCodigo = 'text-yellow" style="font-weight:bold';
+			}
+			$row[] = '<span class="' . $claseCodigo . '">' . e($numeroMostrar) . '</span>';
+
+			// 2. Doc. Original
+			$row[] = e($value["numero_ds_original"]);
+
+			// 3. Proveedor
+			$row[] = e($value["nombre_proveedor"] ?? "N/A");
+
+			// 4. Total
+			$row[] = '$ ' . number_format((float) ($value["monto_total"] ?? 0), 2);
+
+			// 5. Fecha
+			$row[] = e($value["fecha_envio_dian"] ?? $value["fecha_registro"]);
+
+			// 6. Estado DIAN
+			$badge = '';
+			if ($estadoDian == "aceptada" || $estadoDian == "enviada") {
+				$badge = '<button class="btn btn-success btn-xs">Exitosa</button>';
+			} else if ($estadoDian == "borrador") {
+				$badge = '<button class="btn btn-warning btn-xs">Borrador</button>';
+			} else if ($estadoDian == "rechazada") {
+				$badge = '<button class="btn btn-danger btn-xs">Rechazada</button>';
+			} else {
+				$badge = '<button class="btn btn-danger btn-xs">Pendiente</button>';
+			}
+			$row[] = $badge;
+
+			// 7. Acciones
+			$btns = '<div class="btn-group" style="display: flex; gap: 2px;">';
+			
+			// Ver detalle
+			$btns .= '<a href="index.php?ruta=ver-nota-ajuste-ds&idNota=' . $idNota . '" class="btn btn-info" title="Ver detalle"><i class="fa fa-eye"></i></a>';
+
+			// Ver en la DIAN
+			if (!empty($value["cuds_ajuste"])) {
+				$btns .= '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . e($value["cuds_ajuste"]) . '" target="_blank" class="btn btn-success" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>';
+			}
+
+			$puedoEditar = function_exists('puedeAccion') ? puedeAccion('notas_ajuste', 'editar') : true;
+			$puedoEliminar = function_exists('puedeAccion') ? puedeAccion('notas_ajuste', 'eliminar') : true;
+
+			if ($puedoEditar) {
+				// Firmar
+				if ($estadoDian == "borrador") {
+					$btns .= '<button class="btn btnFirmarNotaAjusteDS" style="background-color: black; color: white;" idNota="' . $idNota . '" title="Firmar y Enviar a DIAN"><i class="fa fa-paper-plane"></i></button>';
+				}
+
+				// PDF
+				if (!empty($value["pdf_dian"])) {
+					$btns .= '<a href="' . e($value["pdf_dian"]) . '" target="_blank" class="btn btn-danger" title="Ver PDF Factus"><i class="fa fa-file-pdf-o"></i></a>';
+				}
+
+				// XML
+				if (!empty($value["xml_dian"])) {
+					$btns .= '<a href="' . e($value["xml_dian"]) . '" target="_blank" class="btn btn-primary" title="Ver XML Factus"><i class="fa fa-file-code-o"></i></a>';
+				}
+
+				// Enviar por correo
+				if ($estadoDian == "aceptada" || $estadoDian == "enviada") {
+					$btns .= '<button class="btn btn-primary btnEnviarEmailNA" idNA="' . $idNota . '" nombreProveedor="' . e(($value["nombre_proveedor"] ?? "N/A")) . '" emailProveedor="' . e(($value["correo_proveedor"] ?? '')) . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
+				}
+			}
+
+			// Eliminar
+			if ($puedoEliminar && $estadoDian == "borrador") {
+				$btns .= '<button class="btn btn-danger btnEliminarNotaAjusteDS" idNota="' . $idNota . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
+			}
+
 			$btns .= '</div>';
 			$row[] = $btns;
 
@@ -2656,5 +2809,127 @@ class ControladorFactus
 				ModeloMovimientos::mdlRegistrarMovimiento($datosMov);
 			}
 		}
+	}
+	/*=============================================
+	MOSTRAR DOCUMENTOS SOPORTE SERVER-SIDE
+	=============================================*/
+	static public function ctrMostrarDocumentosSoporteServerSide($params)
+	{
+		$columns = [
+			0 => 'ds.numero_ds',
+			1 => 'p.nombre',
+			2 => 'ds.monto_total',
+			3 => 'ds.fecha_emision',
+			4 => 'ds.estado_dian',
+			5 => 'ds.id'
+		];
+
+		// Datos para lógica de borradores (necesarios para el buscador)
+		$proximoBase = ModeloFactus::mdlObtenerSiguienteConsecutivoDS();
+		$rangoActivoDS = ModeloFactus::mdlObtenerRangoDS();
+		$prefijoDS = $rangoActivoDS ? $rangoActivoDS["prefijo"] : "";
+
+		$where = " WHERE 1=1 ";
+		if (!empty($params['search']['value'])) {
+			$s = $params['search']['value'];
+			
+			// Si el término es numérico, permitimos coincidencia exacta con el consecutivo calculado
+			$rankMatch = "";
+			if(is_numeric($s)){
+				$rankMatch = " OR (SELECT (COUNT(*) + $proximoBase) FROM documentos_soporte ds_n WHERE ds_n.id < ds.id AND (ds_n.numero_ds IS NULL OR ds_n.numero_ds = '')) = $s ";
+			}
+
+			$where .= " AND (ds.numero_ds LIKE '%$s%'
+						OR p.nombre LIKE '%$s%'
+						OR ds.estado_dian LIKE '%$s%'
+						OR ( (ds.numero_ds IS NULL OR ds.numero_ds = '') AND 
+						     ( CONCAT('$prefijoDS', (SELECT (COUNT(*) + $proximoBase) FROM documentos_soporte ds_b WHERE ds_b.id < ds.id AND (ds_b.numero_ds IS NULL OR ds_b.numero_ds = ''))) LIKE '%$s%' $rankMatch )
+						   )
+						) ";
+		}
+
+		$order = " ORDER BY " . $columns[$params['order'][0]['column']] . " " . $params['order'][0]['dir'];
+		$limit = " LIMIT " . $params['start'] . ", " . $params['length'];
+
+		$data = ModeloFactus::mdlMostrarDocumentosSoporteServerSide($where, $order, $limit);
+		$total = ModeloFactus::mdlGetTotalDocumentosSoporte();
+		$filtradas = ModeloFactus::mdlGetTotalDocumentosSoporte($where);
+
+		// Datos para lógica de borradores
+		$proximoBase = ModeloFactus::mdlObtenerSiguienteConsecutivoDS();
+		$rangoActivoDS = ModeloFactus::mdlObtenerRangoDS();
+		$prefijoDS = $rangoActivoDS ? $rangoActivoDS["prefijo"] : "";
+
+		$resData = [];
+		foreach ($data as $value) {
+			
+			// 1. CODIGO / BORRADOR
+			$codigo = "";
+			if (!empty($value["numero_ds"])) {
+				$codigo = e($value["numero_ds"]);
+			} else {
+				// Usamos el rank calculado en SQL para mayor velocidad
+				$numSugerido = $proximoBase + intval($value["rank_borrador"]);
+				$codigo = '<span class="text-yellow" style="font-weight:bold">' . e($prefijoDS) . e($numSugerido) . '</span>';
+			}
+
+			// 2. ESTADO DIAN BADGE
+			$estado = "";
+			$eDian = $value["estado_dian"];
+			if ($eDian == "aceptada" || $eDian == "enviada") {
+				$estado = '<button class="btn btn-success btn-xs">Exitosa</button>';
+			} else if ($eDian == "borrador") {
+				$estado = '<button class="btn btn-warning btn-xs">Borrador</button>';
+			} else if ($eDian == "rechazada") {
+				$estado = '<button class="btn btn-danger btn-xs">Rechazada</button>';
+			} else {
+				$estado = '<button class="btn btn-danger btn-xs">Pendiente</button>';
+			}
+
+			// 3. ACCIONES
+			$puedoEditar = function_exists('puedeAccion') ? puedeAccion('documento_soporte', 'editar') : true;
+			$puedoEliminar = function_exists('puedeAccion') ? puedeAccion('documento_soporte', 'eliminar') : true;
+
+			$acciones = '<div class="btn-group">';
+			$acciones .= '<a href="index.php?ruta=ver-documento-soporte&idDS=' . e($value["id"]) . '" class="btn btn-info" title="Ver Detalle"><i class="fa fa-eye"></i></a>';
+
+			if (!empty($value["cuds"])) {
+				$acciones .= '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . e($value["cuds"]) . '" target="_blank" class="btn btn-success" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>';
+			}
+
+			if ($puedoEditar) {
+				if ($eDian == "borrador") {
+					$acciones .= '<button class="btn btnFirmarDS" style="background-color: black; color: white;" idDS="' . e($value["id"]) . '" title="Firmar y Enviar a Factus"><i class="fa fa-paper-plane"></i></button>';
+				}
+				if ($eDian == "aceptada" || $eDian == "enviada") {
+					$acciones .= '<button class="btn btn-primary btnEnviarEmailDS" idDS="' . e($value["id"]) . '" nombreProveedor="' . e(($value["nombre_proveedor"] ?? "N/A")) . '" emailProveedor="' . e(($value["correo"] ?? "")) . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
+				}
+				// Usamos el campo optimizado en SQL
+				if ($value["tiene_nota"]) {
+					$acciones .= ' <button class="btn btn-warning btnVerNotasAjusteDS" idDS="' . e($value["id"]) . '" data-toggle="modal" data-target="#modalNotasAjusteDS" title="Ver Notas de Ajuste"><i class="fa fa-list"></i></button>';
+				}
+			}
+
+			if ($puedoEliminar && $eDian == "borrador") {
+				$acciones .= '<button class="btn btn-danger btnEliminarDS" idDS="' . e($value["id"]) . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
+			}
+			$acciones .= '</div>';
+
+			$resData[] = [
+				$codigo,
+				e($value["nombre_proveedor"]),
+				'$ ' . e(number_format($value["monto_total"], 0)),
+				e($value["fecha_emision"]),
+				$estado,
+				$acciones
+			];
+		}
+
+		return [
+			"draw" => intval($params['draw']),
+			"recordsTotal" => intval($total),
+			"recordsFiltered" => intval($filtradas),
+			"data" => $resData
+		];
 	}
 }

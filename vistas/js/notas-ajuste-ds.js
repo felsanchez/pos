@@ -1,26 +1,4 @@
 $(document).ready(function () {
-    // Función para quitar el loader
-    function quitarLoaderNA() {
-        if ($("#loader-table-na").length > 0) {
-            $("#loader-table-na").fadeOut(400, function () {
-                $(this).remove();
-            });
-        }
-    }
-
-    // 1. Escuchar el evento de inicialización de DataTables (delegado para mayor fiabilidad)
-    $(document).on('init.dt', '.tablas', function () {
-        console.log("DataTables inicializado (evento delegado) para Nota Ajuste DS");
-        quitarLoaderNA();
-    });
-
-    // 2. Respaldo: Si la tabla ya tiene la clase 'datatable-ready', quitar loader
-    if ($('.tablas').hasClass('datatable-ready')) {
-        quitarLoaderNA();
-    }
-
-    // 3. Respaldo adicional: Si por alguna razón pasan 4 segundos y sigue el spinner, quitarlo
-    setTimeout(quitarLoaderNA, 4000);
     /*=============================================
     CALCULAR TOTALES DE LA NOTA DE AJUSTE
     =============================================*/

@@ -334,6 +334,67 @@ if (!empty($venta["numero_factura"])) {
           </p>
         <?php endif; ?>
 
+        <!-- QR Column (Factura Electrónica) -->
+        <?php if (!empty($venta["qr_data"])): ?>
+          <div style="margin-top: 20px;">
+            <p class="lead">Código QR DIAN:</p>
+            <?php
+            $qrData = trim($venta["qr_data"]);
+            $qrBase64 = "";
+            $tcpdfPath = __DIR__ . "/../../extensiones/tcpdf/tcpdf_barcodes_2d.php";
+
+            if (file_exists($tcpdfPath)) {
+              require_once($tcpdfPath);
+              if (class_exists('TCPDF2DBarcode')) {
+                try {
+                  $barcodeobj = new TCPDF2DBarcode($qrData, 'QRCODE,H');
+                  $svgCode = $barcodeobj->getBarcodeSVGcode(5, 5, 'black');
+                  if (!empty($svgCode)) {
+                    $qrBase64 = base64_encode($svgCode);
+                  }
+                } catch (Exception $e) {
+                }
+              }
+            }
+            ?>
+
+            <?php if (!empty($qrBase64)): ?>
+              <img src="data:image/svg+xml;base64,<?php echo $qrBase64; ?>" width="150" height="150" title="QR Factura"
+                alt="QR Factura" style="display:block; margin-bottom:10px; border:1px solid #ddd;" />
+            <?php else: ?>
+              <img src="https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=<?php echo rawurlencode($qrData); ?>"
+                width="150" height="150" title="QR Factura (Fallback)" alt="QR Factura"
+                style="display:block; margin-bottom:10px;" />
+            <?php endif; ?>
+
+            <small style="color: #666; font-size: 14px; word-break: break-all;">
+              <a href="<?php echo $venta["qr_data"]; ?>" target="_blank">Ver validación DIAN</a>
+            </small>
+
+            <?php
+            $cufeMostrar = !empty($venta["cufe"]) ? $venta["cufe"] : "";
+
+            // Si el CUFE está vacío pero tenemos qr_data, intentamos extraerlo de la URL
+            if (empty($cufeMostrar) && !empty($venta["qr_data"])) {
+              parse_str(parse_url($venta["qr_data"], PHP_URL_QUERY), $query);
+              if (isset($query['documentkey'])) {
+                $cufeMostrar = $query['documentkey'];
+              }
+            }
+            ?>
+
+            <?php if (!empty($cufeMostrar)): ?>
+              <div
+                style="margin-top: 10px; border: 1px solid #d2d6de; padding: 10px; border-radius: 5px; background-color: #f9fafc;">
+                <b style="color: #555;">CUFE:</b><br>
+                <span style="font-size: 11px; word-break: break-all; display: block; line-height: 1.2; color: #333;">
+                  <?php echo $cufeMostrar; ?>
+                </span>
+              </div>
+            <?php endif; ?>
+          </div>
+        <?php endif; ?>
+
       </div>
       <!-- /.col -->
       <div class="col-xs-6">
@@ -431,10 +492,18 @@ if (!empty($venta["numero_factura"])) {
     <!-- this row will not appear when printing -->
     <div class="row no-print">
       <div class="col-xs-12">
+        <!-- Boton XML (Solo para Facturas) -->
+        <?php if ($etiquetaDocumento == "Factura" && !empty($venta["numero_factura"])): ?>
+          <a class="btn pull-right" style="margin-right: 5px; background-color: #00c0ef; color: white; border-color: #00acd6;"
+            href="descargar-xml.php?xml=<?php echo urlencode($venta["numero_factura"]); ?>" target="_blank">
+            <i class="fa fa-file-code-o"></i> Descargar XML
+          </a>
+        <?php endif; ?>
+
         <!-- Boton PDF -->
         <a class="btn btn-danger pull-right" style="margin-right: 5px;"
           href="extensiones/tcpdf/pdf/descargar-pdf-orden.php?idVenta=<?php echo $venta["id"]; ?>" target="_blank">
-          <i class="fa fa-file-pdf-o"></i> Descargar PDF de <?php echo $etiquetaDocumento; ?>
+          <i class="fa fa-file-pdf-o"></i> Descargar PDF
         </a>
 
         <button type="button" class="btn btn-default pull-right" onclick="history.back()" style="margin-right: 5px;">

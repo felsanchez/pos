@@ -296,18 +296,62 @@ $(document).ready(function () {
     }
 
     /*=============================================
-    TABLA DOCUMENTOS SOPORTE (ADMINISTRACIÓN)
+    TABLA DOCUMENTOS SOPORTE (ADMINISTRACIÓN) - SERVER SIDE
     =============================================*/
-    if ($(".tablaDocumentosSoporte").length > 0) {
-        $(".tablaDocumentosSoporte").DataTable({
-            "dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
+    if ($("#tablaListadoDocumentoSoporte").length > 0) {
+        if ($.fn.DataTable.isDataTable('#tablaListadoDocumentoSoporte')) {
+            $('#tablaListadoDocumentoSoporte').DataTable().destroy();
+        }
+
+        $("#tablaListadoDocumentoSoporte").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": {
+                "url": "ajax/documentos-soporte.ajax.php",
+                "type": "POST",
+                "data": function (d) {
+                    d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+                }
+            },
+            "autoWidth": false,
+            "order": [[3, "desc"]], // Ordenar por Fecha por defecto
+            "columnDefs": [
+                { "targets": 0, "responsivePriority": 1, "className": "vertical-middle" }, // Código
+                { "targets": 5, "responsivePriority": 2, "className": "text-left vertical-middle", "orderable": false }, // Acciones
+                { "targets": 1, "responsivePriority": 3, "className": "vertical-middle" }, // Proveedor
+                { "targets": 2, "responsivePriority": 4, "className": "vertical-middle" }, // Total
+                { "targets": 3, "responsivePriority": 5, "className": "vertical-middle" }, // Fecha
+                { "targets": 4, "responsivePriority": 6, "className": "text-center vertical-middle" } // Estado DIAN
+            ],
+            "responsive": {
+                "details": {
+                    "type": "inline",
+                    "renderer": function (api, rowIdx, columns) {
+                        var data = $.map(columns, function (col, i) {
+                            return col.hidden ?
+                                '<div style="padding:8px 12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">' +
+                                '<span style="font-weight:bold; color:#555;">' + col.title + ':</span> ' +
+                                '<span style="color:#333;">' + col.data + '</span>' +
+                                '</div>' :
+                                '';
+                        }).join('');
+
+                        return data ?
+                            $('<div style="background:#f9f9f9; border:1px solid #eee; margin:10px 0; border-radius:4px;"/>').append(data) :
+                            false;
+                    }
+                }
+            },
             "language": {
                 "sProcessing": "Procesando...",
                 "sLengthMenu": "Mostrar _MENU_ registros",
                 "sZeroRecords": "No se encontraron resultados",
                 "sEmptyTable": "Ningún dato disponible en esta tabla",
                 "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-                "sSearch": "Buscar",
+                "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
+                "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+                "sSearch": "Buscar:",
+                "sLoadingRecords": "Cargando...",
                 "oPaginate": {
                     "sFirst": "Primero",
                     "sLast": "Último",
@@ -315,21 +359,10 @@ $(document).ready(function () {
                     "sPrevious": "Anterior"
                 }
             },
-            "preDrawCallback": function () {
-                // Ocultar tabla antes de dibujarla por primera vez
-                if (!$(this).hasClass('datatable-ready')) {
-                    $(this).css('visibility', 'hidden');
-                }
-            },
-            "initComplete": function () {
-                // Mostrar tabla solo cuando esté completamente inicializada
-                $(this).addClass('datatable-ready').css('visibility', 'visible');
-                quitarLoaderDS();
+            "drawCallback": function() {
+                 $(".btn-group").addClass("vertical-middle");
             }
         });
-
-        // Respaldo adicional: Si por alguna razón pasan 4 segundos y sigue el spinner, quitarlo
-        setTimeout(quitarLoaderDS, 4000);
     }
 
     /*=============================================

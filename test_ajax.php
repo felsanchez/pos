@@ -1,9 +1,14 @@
 <?php
-$_SERVER['REQUEST_METHOD'] = 'POST';
-$_POST['draw'] = 1;
-$_POST['start'] = 0;
-$_POST['length'] = 10;
-// Ignoramos CSRF para esta prueba comentando temporalmente o simulando un token válido
-$_SESSION['csrf_token'] = 'test';
-$_POST['csrf_token'] = 'test';
-require 'ajax/datatable-ventas.ajax.php';
+// Test AJAX response
+$_POST["accion"] = "mostrarNotasAjusteDSServerSide";
+$_POST["draw"] = 1;
+$_POST["start"] = 0;
+$_POST["length"] = 10;
+$_POST["search"] = array("value" => "");
+$_POST["order"] = array(array("column" => 4, "dir" => "desc"));
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+require_once "ajax/factus.ajax.php";
+?>

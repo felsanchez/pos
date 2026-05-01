@@ -34,44 +34,6 @@ if ($_SESSION["perfil"] == "Especial") {
             </div>
 
             <style>
-                .loader-container {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 60px;
-                    background: #fff;
-                    margin-bottom: 20px;
-                    transition: opacity 0.3s ease;
-                }
-
-                .loader-container i {
-                    font-size: 45px;
-                    color: #3c8dbc;
-                    margin-bottom: 15px;
-                }
-
-                .loader-container span {
-                    font-size: 16px;
-                    color: #666;
-                    font-weight: 500;
-                }
-
-
-
-                /* Hide table while loading to prevent layout jump */
-                .tablaNotasCredito:not(.datatable-ready) {
-                    visibility: hidden;
-                    height: 0;
-                    overflow: hidden;
-                    opacity: 0;
-                }
-
-                .tablaNotasCredito.datatable-ready {
-                    transition: opacity 0.5s ease;
-                    opacity: 1;
-                }
-
                 /* Botones de acción compactos en móvil */
                 @media (max-width: 767px) {
                     .tablaNotasCredito td:last-child .btn {
@@ -89,10 +51,6 @@ if ($_SESSION["perfil"] == "Especial") {
 
             <div class="box-body">
 
-                <div id="loader-table" class="loader-container">
-                    <i class="fa fa-refresh fa-spin"></i>
-                    <span>Cargando Notas Crédito...</span>
-                </div>
 
                 <table id="tablaListadoNotasCredito"
                     class="table table-bordered table-striped dt-responsive tablaNotasCredito display nowrap"

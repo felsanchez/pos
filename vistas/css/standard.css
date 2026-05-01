@@ -123,3 +123,180 @@ SISTEMA DE DISEÑO ESTÁNDAR - POS PREMIUM
 .modal.fade.in {
     opacity: 1 !important;
 }
+
+/* 7. FILTROS Y CABECERAS RESPONSIVAS */
+@media (max-width: 767px) {
+    .box-header .btn-primary:not([type="submit"]),
+    .box-header .btn-success:not([type="submit"]),
+    .box-header .btn-info:not([type="submit"]) {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .pull-right.contenedor-filtros {
+        float: none !important;
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .pull-right.contenedor-filtros form {
+        flex-direction: column;
+        align-items: stretch !important;
+        width: 100%;
+        gap: 10px !important;
+        display: flex;
+    }
+
+    .pull-right.contenedor-filtros form .input-group,
+    .pull-right.contenedor-filtros form div {
+        width: 100% !important;
+    }
+
+    #daterange-btn,
+    .pull-right.contenedor-filtros form [type="submit"],
+    .pull-right.contenedor-filtros form .btn-default {
+        width: 100% !important;
+        margin-bottom: 5px;
+    }
+}
+
+/* 8. CELDA DE OBSERVACIÓN EDITABLE */
+.celda-observacion {
+    background: #fff9e6;
+    padding: 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #666;
+    border-left: 2px solid #f39c12;
+    cursor: text;
+    min-height: 30px;
+    transition: all 0.3s ease;
+}
+
+.celda-observacion:empty:before {
+    content: attr(data-placeholder);
+    color: #999;
+    font-style: italic;
+}
+
+/* Fallback si no tiene data-placeholder */
+.celda-observacion:empty:not([data-placeholder]):before {
+    content: "Escribe una observación...";
+}
+
+.celda-observacion:focus {
+    outline: 2px solid #f39c12;
+    background: #fffef5;
+    box-shadow: 0 0 5px rgba(243, 156, 18, 0.3);
+}
+
+/* 9. AYUDAS DE VISUALIZACIÓN MÓVIL */
+.solo-movil {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .solo-movil {
+        display: inline-block !important;
+        margin-left: 3px !important;
+    }
+}
+
+/* 10. UNIFICACIÓN DE SELECT2 Y FORMULARIOS */
+.select2-container--default .select2-selection--single .select2-selection__rendered,
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #444 !important;
+    font-weight: normal !important;
+}
+
+/* 11. MODALES PERSONALIZADOS (CUSTOM MODALS) */
+.modal-custom {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10050;
+}
+
+.modal-custom-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-custom-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 10051;
+}
+
+.modal-custom-header {
+    background: #3c8dbc;
+    color: white;
+    padding: 15px 20px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-custom-header h4 {
+    margin: 0;
+    font-weight: 400;
+}
+
+.modal-custom-body {
+    padding: 20px;
+    text-align: center;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-custom-footer {
+    background: #f4f4f4;
+    padding: 12px 20px;
+    text-align: right;
+    border-top: 1px solid #ddd;
+    flex-shrink: 0;
+}
+
+/* 12. MEJORAS DE CONTENEDOR DE FILTROS */
+.contenedor-filtros {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 767px) {
+    .contenedor-filtros {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+
+    .contenedor-filtros > div,
+    .contenedor-filtros > form {
+        width: 100% !important;
+    }
+
+    .contenedor-filtros .input-group {
+        width: 100% !important;
+    }
+}

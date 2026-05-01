@@ -52,6 +52,18 @@ class imprimirDetalleOrden
             $numeroDocumento = $venta["codigo"] ?? '';
         }
 
+        // Extraer CUFE de la URL si está vacío en la base de datos
+        $cufeExtraido = $venta["cufe"] ?? '';
+        if (empty($cufeExtraido) && !empty($venta["qr_data"])) {
+            $parts = parse_url($venta["qr_data"], PHP_URL_QUERY);
+            if ($parts) {
+                parse_str($parts, $query);
+                if (isset($query['documentkey'])) {
+                    $cufeExtraido = $query['documentkey'];
+                }
+            }
+        }
+
         // REQUERIMOS LA CLASE TCPDF
         require_once('tcpdf_include.php');
 
@@ -215,7 +227,7 @@ class imprimirDetalleOrden
 
             // Título QR
             if (!empty($venta["qr_data"])) {
-                $pdf->Cell(110, 6, ' Código QR DIAN:', 'L', 1, 'L', true);
+                $pdf->Cell(110, 6, ' Código de Validación DIAN (QR):', 'L', 1, 'L', true);
                 $yQR = $pdf->GetY() + 2;
                 $styleQR = array(
                     'border' => 0,
@@ -227,16 +239,27 @@ class imprimirDetalleOrden
                     'module_height' => 1
                 );
                 $pdf->write2DBarcode(trim($venta["qr_data"]), 'QRCODE,H', 15, $yQR, 35, 35, $styleQR, 'N');
+                
+                // Enlace debajo del QR
                 $pdf->SetY($yQR + 36);
-            }
+                $pdf->SetFont('helvetica', '', 6.5);
+                $pdf->SetTextColor(0, 0, 255); // Azul para el link
+                
+                $urlDian = trim($venta["qr_data"]);
+                $htmlLink = '<a href="'.$urlDian.'" style="text-decoration:none; color:blue;">'.$urlDian.'</a>';
+                
+                // Usamos writeHTMLCell para que maneje mejor el wrap de texto largo
+                $pdf->writeHTMLCell(110, 0, 10, '', $htmlLink, 0, 1, false, true, 'L', true);
+                $pdf->SetTextColor(68, 68, 68); // Volver al gris oscuro
 
-            // CUFE
-            if (!empty($venta["cufe"])) {
-                $pdf->Ln(2);
-                $pdf->SetFont('helvetica', 'B', 9);
-                $pdf->Cell(110, 5, ' CUFE:', 'L', 1, 'L', true);
-                $pdf->SetFont('helvetica', '', 8);
-                $pdf->MultiCell(110, 0, $venta["cufe"], 1, 'L', true, 1, 10, '', true);
+                // CUFE (Diseño igual a Nota de Crédito)
+                if (!empty($cufeExtraido)) {
+                    $pdf->Ln(4);
+                    $pdf->SetFont('helvetica', 'B', 9);
+                    $pdf->Cell(110, 5, ' CUFE:', 'L', 1, 'L', true);
+                    $pdf->SetFont('helvetica', '', 7);
+                    $pdf->MultiCell(110, 0, $cufeExtraido, 1, 'L', true, 1, 10, '', true);
+                }
             }
         }
 

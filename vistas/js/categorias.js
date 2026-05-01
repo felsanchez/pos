@@ -136,26 +136,71 @@ $("#nuevaCategoria").change(function(){
 })
 
 /*=============================================
-TABLA CATEGORIAS - SIN RESPONSIVE
+TABLA CATEGORIAS - SERVER-SIDE
 =============================================*/
-$(".tablaCategorias").DataTable({
-	"autoWidth": false,
-	"responsive": false,
-	"order": [[0, "asc"]],
-	"language": {
-		"sProcessing": "Procesando...",
-		"sLengthMenu": "Mostrar _MENU_ registros",
-		"sZeroRecords": "No se encontraron resultados",
-		"sEmptyTable": "Ningún dato disponible en esta tabla",
-		"sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-		"sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
-		"sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-		"sSearch": "Buscar:",
-		"oPaginate": {
-			"sFirst": "Primero",
-			"sLast": "Último",
-			"sNext": "Siguiente",
-			"sPrevious": "Anterior"
+$(document).ready(function () {
+	if ($(".tablaCategorias").length > 0) {
+		if ($.fn.DataTable.isDataTable('.tablaCategorias')) {
+			$('.tablaCategorias').DataTable().destroy();
 		}
+
+		$(".tablaCategorias").DataTable({
+			"processing": true,
+			"serverSide": true,
+			"ajax": {
+				"url": "ajax/categorias.ajax.php",
+				"type": "POST",
+				"data": function (d) {
+					d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+				}
+			},
+			"autoWidth": false,
+			"responsive": {
+				"details": {
+					"type": "inline",
+					"renderer": function (api, rowIdx, columns) {
+						var finalHtml = '';
+						var hasHidden = false;
+
+						$.each(columns, function (i, col) {
+							if (!col.hidden) return;
+
+							hasHidden = true;
+							var label = col.title || ('Columna ' + col.columnIndex);
+							var data = col.data || '';
+
+							finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
+							finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
+							finalHtml += '<span style="color:#333;">' + data + '</span>';
+							finalHtml += '</div>';
+						});
+
+						if (!hasHidden) return false;
+						return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
+					}
+				}
+			},
+			"columnDefs": [
+				{ "targets": 0, "responsivePriority": 1 }, // Categoría
+				{ "targets": 2, "responsivePriority": 2, "orderable": false }, // Acciones
+				{ "targets": 1, "responsivePriority": 3 } // Productos
+			],
+			"language": {
+				"sProcessing": "Procesando...",
+				"sLengthMenu": "Mostrar _MENU_ registros",
+				"sZeroRecords": "No se encontraron resultados",
+				"sEmptyTable": "Ningún dato disponible en esta tabla",
+				"sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+				"sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
+				"sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+				"sSearch": "Buscar:",
+				"oPaginate": {
+					"sFirst": "Primero",
+					"sLast": "Último",
+					"sNext": "Siguiente",
+					"sPrevious": "Anterior"
+				}
+			}
+		});
 	}
 });

@@ -175,7 +175,7 @@ if ($xml) {
 
           <div class="tabla-facturas table-responsive" id="wrapperTablaFacturas" style="display:none;">
             <table id="tablaFacturasElectronicas"
-              class="table table-bordered table-striped tablaFacturasListado display nowrap" width="100%">
+              class="table table-bordered table-striped dt-responsive tablaFacturasListado display nowrap" width="100%">
 
               <thead>
                 <tr>
@@ -849,6 +849,7 @@ MODAL ENVIAR EMAIL
         window.tablaFE = $("#tablaFacturasElectronicas").DataTable({
           "processing": true,
           "serverSide": true,
+          "responsive": true,
           "autoWidth": false,
           "ajax": {
             "url": "ajax/ventas.ajax.php",

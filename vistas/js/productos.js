@@ -43,6 +43,28 @@ var table = $("table.tablaProductos").DataTable({
 			}
 		}
 	},
+	"drawCallback": function (settings) {
+		// La generación de botones de stock (success, warning, danger) ya viene procesada 
+		// correctamente desde el servidor (ControladorProductos::ctrMostrarProductosServerSide).
+		// No es necesario iterar y modificar el DOM manualmente aquí.
+
+		// Asignar eventos a las nuevas imágenes renderizadas para el modal personalizado
+		$('.img-ampliar-producto').off('click').on('click', function () {
+			var imagen = $(this).attr('data-imagen');
+			var idProducto = $(this).attr('data-idproducto');
+
+			$('#imagenProductoAmpliada').attr('src', imagen);
+			$('#idProductoImagen').val(idProducto);
+			
+			// Si hay un atributo data-codigo, podríamos usarlo, pero si no, omitirlo o buscarlo en la fila
+			var rowData = table.row($(this).closest('tr')).data();
+			if(rowData) {
+			    $('#codigoProductoImagen').val(rowData[2]); // Asumiendo que el índice 2 es el código
+			}
+
+			$('#modalAmpliarImagenProducto').fadeIn();
+		});
+	},
 	"columnDefs": [
 		{
 			"targets": 0,  // Imagen
@@ -175,108 +197,20 @@ $(this).attr("imagen", data[1])
 
 
 /*=============================================
-FUNCION PARA CARGAR IMAGENES
+EVENTOS DEL MODAL PERSONALIZADO DE IMAGEN
 =============================================*/
-
-function cargarImagenes() {
-
-	var imgTabla = $(".imgTabla");
-
-	//	for(var i = 0; i < imgTabla.length; i ++){
-	//		var data = table.row( $(imgTabla[i]).parents("tr")).data();
-	//		$(imgTabla[i]).attr("src", data[1]);
-	//	}
-
-	//hecho por mi -colocar colores dependiendo de la cantidad del stock
-	var limiteStock2 = $(".limiteStock2");
-
-	for (var i = 0; i < imgTabla.length; i++) {
-
-		var data = table.row($(imgTabla[i]).parents("tr")).data();
-
-		$(imgTabla[i]).attr("src", data[1]);
-
-		if (data[5] <= 10) {
-			$(limiteStock2[i]).addClass("btn-danger");
-			$(limiteStock2[i]).html(data[5]);
-		}
-
-		else if (data[5] >= 11 && data[5] <= 15) {
-			$(limiteStock2[i]).addClass("btn-warning");
-			$(limiteStock2[i]).html(data[5]);
-		}
-
-		else {
-			$(limiteStock2[i]).addClass("btn-success");
-			$(limiteStock2[i]).html(data[5]);
-		}
+$(document).ready(function() {
+	function cerrarModalImagen() {
+		$('#modalAmpliarImagenProducto').fadeOut();
+		$('.nuevaImagenProducto').val("");
 	}
 
+	$('#btnCerrarModalProducto, #btnCancelarModalProducto, #modalProductoBackdrop').on('click', function() {
+		cerrarModalImagen();
+	});
 
-}
-
-//CARGAMOS LAS IMAGENES CUANDO ENTRAMOS A LA PAGINA POR PRIMERA VEZ
-setTimeout(function () {
-
-	cargarImagenes();
-
-	/*if($(".perfilUsuario").val() != "Administrador"){
-		$('.btnEliminarProducto').remove();
-	}*/
-
-}, 300)
-
-
-//CARGAMOS LAS IMAGENES CUANDO INTERACTUAMOS CON  EL FILTRO DE CANTIDAD
-$("select[name='DataTables_Table_0_length']").change(function () {
-
-	cargarImagenes();
-
-	/*if($(".perfilUsuario").val() != "Administrador"){
-		$('.btnEliminarProducto').remove();
-	}*/
-})
-
-
-//CARGAMOS LAS IMAGENES CUANDO INTERACTUAMOS CON  EL PAGINADOR 
-$(".dataTables_paginate").click(function () {
-
-	cargarImagenes();
-
-	/*if($(".perfilUsuario").val() != "Administrador"){
-		$('.btnEliminarProducto').remove();
-	}*/
-
-})
-
-
-//CARGAMOS LAS IMAGENES CUANDO INTERACTUAMOS CON  EL BUSCADOR
-$("input[aria-controls='DataTables_Table_0']").focus(function () {
-
-	$(document).keyup(function (event) {
-
-		event.preventDefault();
-
-		cargarImagenes();
-
-		/*if($(".perfilUsuario").val() != "Administrador"){
-		$('.btnEliminarProducto').remove();
-		}*/
-
-	})
-
-})
-
-
-//CARGAMOS LAS IMAGENES CUANDO INTERACTUAMOS CON  EL FILTRO DE ORDENADOR 
-$(".sorting").click(function () {
-
-	cargarImagenes();
-
-	/*if($(".perfilUsuario").val() != "Administrador"){
-		$('.btnEliminarProducto').remove();
-	}*/
-})
+	// La lógica para btnGuardarImagenProducto puede estar en el archivo, o se agregará si falta.
+});
 
 
 /*=============================================

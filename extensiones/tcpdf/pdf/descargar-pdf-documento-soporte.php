@@ -198,15 +198,22 @@ class imprimirDocumentoSoporte
         $pdf->SetFillColor(233, 236, 239);
 
         if (!empty($documentoSoporte["qr_data"])) {
-            $pdf->Cell(110, 6, ' Código QR DIAN:', 'L', 1, 'L', true);
+            $pdf->Cell(110, 6, ' Código de Validación DIAN (QR):', 'L', 1, 'L', true);
             $yQR = $pdf->GetY() + 2;
             $styleQR = array('border' => 0, 'vpadding' => 'auto', 'hpadding' => 'auto', 'fgcolor' => array(0, 0, 0), 'bgcolor' => false, 'module_width' => 1, 'module_height' => 1);
             $pdf->write2DBarcode(trim($documentoSoporte["qr_data"]), 'QRCODE,H', 15, $yQR, 35, 35, $styleQR, 'N');
 
+            // Enlace debajo del QR
             $pdf->SetY($yQR + 36);
-            $pdf->SetFont('helvetica', '', 8);
-            $pdf->SetTextColor(119, 119, 119);
-            $pdf->MultiCell(105, 0, trim($documentoSoporte["qr_data"]), 0, 'L', false, 1, 12, '', true);
+            $pdf->SetFont('helvetica', '', 6.5);
+            $pdf->SetTextColor(0, 0, 255); // Azul para el link
+            
+            $urlDian = trim($documentoSoporte["qr_data"]);
+            $htmlLink = '<a href="'.$urlDian.'" style="text-decoration:none; color:blue;">'.$urlDian.'</a>';
+            
+            // Usamos writeHTMLCell para que maneje mejor el wrap de texto largo
+            $pdf->writeHTMLCell(110, 0, 10, '', $htmlLink, 0, 1, false, true, 'L', true);
+            $pdf->SetTextColor(68, 68, 68); // Volver al gris oscuro
 
             // CUDS
             $pdf->Ln(5);

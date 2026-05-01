@@ -33,11 +33,6 @@
 
             <div class="box-body">
 
-                <div id="loader-table-ds" class="loader-container">
-                    <i class="fa fa-refresh fa-spin"></i>
-                    <span>Cargando Documentos Soporte...</span>
-                </div>
-
                 <table id="tablaListadoDocumentoSoporte" class="table table-bordered table-striped dt-responsive tablaDocumentosSoporte display nowrap" width="100%">
 
                     <thead>
@@ -52,101 +47,6 @@
                     </thead>
 
                     <tbody>
-                        <?php
-                        // Obtener el siguiente consecutivo base y prefijo
-                        $proximoBase = ModeloFactus::mdlObtenerSiguienteConsecutivoDS();
-                        $rangoActivoDS = ModeloFactus::mdlObtenerRangoDS();
-                        $prefijoDS = $rangoActivoDS ? $rangoActivoDS["prefijo"] : "";
-
-                        $documentos = ControladorFactus::ctrMostrarDocumentosSoporte(null, null);
-
-                        // Contar cuántos borradores hay para asignarles un número secuencial en la vista
-                        $totalBorradores = 0;
-                        if ($documentos) {
-                            foreach ($documentos as $d) {
-                                if (empty($d["numero_ds"]))
-                                    $totalBorradores++;
-                            }
-                        }
-
-                        $borradorCount = 0;
-
-                        if ($documentos) {
-                            foreach ($documentos as $key => $value) {
-                                $proveedor = ControladorProveedores::ctrMostrarProveedores("id", $value["id_proveedor"]);
-
-                                echo '<tr>
-                                    <td' . (empty($value["numero_ds"]) ? ' class="text-yellow" style="font-weight:bold"' : '') . '>';
-
-                                if (!empty($value["numero_ds"])) {
-
-                                    echo e($value["numero_ds"]);
-
-                                } else {
-                                    // Es un borrador. Calculamos su número sugerido.
-                                    // Si hay 3 borradores, el más antiguo (abajo en la tabla ya que ordenamos DESC) es el $proximoBase,
-                                    // el siguiente es $proximoBase + 1, etc.
-                                    // Pero como la tabla ordena DESC, el primero que vemos es el más reciente.
-                                    $numSugerido = $proximoBase + ($totalBorradores - 1 - $borradorCount);
-                                    echo e($prefijoDS) . e($numSugerido);
-                                    $borradorCount++;
-                                }
-                                echo '</td>
-                                    <td>' . e($proveedor["nombre"]) . '</td>
-                                    <td>$ ' . e(number_format($value["monto_total"], 0)) . '</td>
-                                    <td>' . e($value["fecha_emision"]) . '</td>
-                                    <td>';
-                                if ($value["estado_dian"] == "aceptada" || $value["estado_dian"] == "enviada") {
-                                    echo '<button class="btn btn-success btn-xs">Exitosa</button>';
-                                } else if ($value["estado_dian"] == "borrador") {
-                                    echo '<button class="btn btn-warning btn-xs">Borrador</button>';
-                                } else if ($value["estado_dian"] == "rechazada") {
-                                    echo '<button class="btn btn-danger btn-xs">Rechazada</button>';
-                                } else {
-                                    echo '<button class="btn btn-danger btn-xs">Pendiente</button>';
-                                }
-                                echo '</td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <a href="index.php?ruta=ver-documento-soporte&idDS=' . e($value["id"]) . '" class="btn btn-info" title="Ver Detalle"><i class="fa fa-eye"></i></a>';
-
-                                // Botón para ver en DIAN (Disponible con el permiso "Ver")
-                                if (!empty($value["cuds"])) {
-                                    echo '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . e($value["cuds"]) . '" target="_blank" class="btn btn-success" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>';
-                                }
-
-                                if (puedeAccion('documento_soporte', 'editar')) {
-                                    // Botón Firmar
-                                    if ($value["estado_dian"] == "borrador") {
-                                        echo '<button class="btn btnFirmarDS" style="background-color: black; color: white;" idDS="' . e($value["id"]) . '" title="Firmar y Enviar a Factus"><i class="fa fa-paper-plane"></i></button>';
-                                    }
-
-                                    // Botón para enviar por correo
-                                    if ($value["estado_dian"] == "aceptada" || $value["estado_dian"] == "enviada") {
-                                        echo '<button class="btn btn-primary btnEnviarEmailDS" idDS="' . e($value["id"]) . '" nombreProveedor="' . e(($proveedor["nombre"] ?? "N/A")) . '" emailProveedor="' . e(($proveedor["correo"] ?? "")) . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
-                                    }
-
-                                    // Ver Notas de Ajuste
-                                    if (ModeloFactus::mdlTieneNotaAjusteDS($value["id"])) {
-                                        echo ' <button class="btn btn-warning btnVerNotasAjusteDS" idDS="' . e($value["id"]) . '" data-toggle="modal" data-target="#modalNotasAjusteDS" title="Ver Notas de Ajuste">
-                                                <i class="fa fa-list"></i>
-                                              </button>';
-                                    }
-                                }
-
-                                // Botón Eliminar (Permiso Eliminar)
-                                if (puedeAccion('documento_soporte', 'eliminar')) {
-                                    if ($value["estado_dian"] == "borrador") {
-                                        echo '<button class="btn btn-danger btnEliminarDS" idDS="' . e($value["id"]) . '" title="Eliminar Borrador"><i class="fa fa-trash"></i></button>';
-                                    }
-                                }
-
-                                echo '</div>
-                                    </td>
-                                </tr>';
-                            }
-                        }
-                        ?>
                     </tbody>
 
                 </table>
@@ -155,68 +55,9 @@
 
         </div>
 
-    </section><!-- DataTables Personalizado para Documento Soporte -->
-<script>
-$(document).ready(function () {
-  setTimeout(function () {
-    if ($("#tablaListadoDocumentoSoporte").length > 0) {
-      if ($.fn.DataTable.isDataTable('#tablaListadoDocumentoSoporte')) {
-        $('#tablaListadoDocumentoSoporte').DataTable().destroy();
-      }
+    </section>
 
-      $("#tablaListadoDocumentoSoporte").DataTable({
-        "autoWidth": false,
-        "initComplete": function(settings, json) {
-           $(this.api().table().node()).addClass('datatable-ready');
-           $("#loader-table-ds").fadeOut(200);
-        },
-        "order": [[3, "desc"]], // Fecha (nuevo índice 3)
-        "responsive": {
-          "details": {
-            "type": "inline",
-            "renderer": function (api, rowIdx, columns) {
-              var finalHtml = '';
-              var hasHidden = false;
 
-              $.each(columns, function (i, col) {
-                if (!col.hidden) return;
-                hasHidden = true;
-
-                var label = col.title || ('Columna ' + col.columnIndex);
-                
-                finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
-                finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
-                finalHtml += '<span style="color:#333;">' + col.data + '</span>';
-                finalHtml += '</div>';
-              });
-
-              if (!hasHidden) return false;
-              return $('<div style="padding:8px 12px; background:#fcfcfc;">').append(finalHtml);
-            }
-          }
-        },
-        "columnDefs": [
-            { "targets": 0, "responsivePriority": 1 }, // Código
-            { "targets": 5, "responsivePriority": 2, "orderable": false }, // Acciones
-            { "targets": 1, "responsivePriority": 3 }, // Proveedor
-            { "targets": 2, "responsivePriority": 4 }, // Total (nuevo índice 2)
-            { "targets": 3, "responsivePriority": 5 }, // Fecha (nuevo índice 3)
-            { "targets": 4, "responsivePriority": 6 }  // Estado Dian (nuevo índice 4)
-        ],
-        "language": {
-          "sProcessing": "Procesando...",
-          "sLengthMenu": "Mostrar _MENU_ registros",
-          "sZeroRecords": "No se encontraron resultados",
-          "sEmptyTable": "Ningún dato disponible en esta tabla",
-          "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-          "sSearch": "Buscar:",
-          "oPaginate": { "sFirst": "Primero", "sLast": "Último", "sNext": "Siguiente", "sPrevious": "Anterior" }
-        }
-      });
-    }
-  }, 200);
-});
-</script>
 
 <!--=====================================
 MODAL ENVIAR EMAIL DS

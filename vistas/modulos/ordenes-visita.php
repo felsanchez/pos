@@ -503,124 +503,24 @@ $("#example").on("click", ".btnVerClienteDesdeVenta", function(){
 
 
 
-<!-- Codigo para el buscador para que busque solo por código exacto -->
-<script>
-$(document).ready(function() {
-    
-    // PASO 1: Limpiar completamente la tabla antes de inicializar
-    $('#example tbody').empty();
-    
-    var tabla = $('#example').DataTable({
-        "retrieve": true,
-        "destroy": true,
-        "processing": true,
-        "serverSide": false,
-        "ajax": null,
-        "data": [],
-        "columns": [
-            { "data": 0 },
-            { "data": 1 },
-            { "data": 2 },
-            { "data": 3 },
-            { "data": 4 },
-            { "data": 5 }
-        ],
-        "language": {
-            "sProcessing":     "Procesando...",
-            "sLengthMenu":     "Mostrar _MENU_ registros",
-            "sZeroRecords":    "❌ No se encontró el pedido",
-            "sEmptyTable":     "👆 Escribe el código para buscar",
-            "sInfo":           "Mostrando _START_ a _END_ de _TOTAL_",
-            "sInfoEmpty":      "0 pedidos",
-            "sInfoFiltered":   "(de _MAX_ totales)",
-            "sSearch":         "🔍 Código:",
-            "oPaginate": {
-                "sFirst":    "Primero",
-                "sLast":     "Último",
-                "sNext":     "Siguiente",
-                "sPrevious": "Anterior"
-            }
-        }
-    });
-    
-    // Obtener el input del buscador
-    var inputBuscador = $('#example_filter input');
-    
-    // Desactivar búsqueda automática de DataTable
-    inputBuscador.off('keyup.DT input.DT search.DT');
-    
-    // PASO 3: Control manual del buscador
-    inputBuscador.on('keyup', function(e) {
-        console.log('Tecla presionada, código: ' + e.keyCode);
-        
-        var busqueda = $(this).val().trim();
-        console.log('Valor actual: ' + busqueda);
-        
-        // Si está vacío, limpiar tabla
-        if(busqueda.length === 0) {
-            tabla.clear().draw();
-            return;
-        }
-        
-        // Solo buscar al presionar Enter (keyCode 13)
-        if(e.keyCode === 13) {
-            console.log('ENTER presionado, buscando: ' + busqueda);
-            
-            $.ajax({
-                url: "ajax/datatable-ventas-visita.ajax.php",
-                type: "POST",
-                dataType: "json",
-                data: {
-                    draw: 1,
-                    search: { value: busqueda }
-                },
-                success: function(response) {
-                    console.log('✓ Respuesta recibida:', response);
-                    
-                    tabla.clear();
-                    if(response.data && response.data.length > 0) {
-                        console.log('✓ Agregando ' + response.data.length + ' filas');
-                        tabla.rows.add(response.data).draw();
-                    } else {
-                        console.log('✗ Sin datos en respuesta');
-                        tabla.draw();
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('✗ Error AJAX:', status, error);
-                    console.error('Respuesta:', xhr.responseText);
-                    tabla.clear().draw();
-                }
-            });
-        }
-    });
-    
-    setTimeout(function() {
-        inputBuscador.attr('placeholder', 'Código para venta (Enter para buscar)');
-    }, 100);
-});
-</script>
-
-
-
 <!-- Estilos personalizados para el buscador -->
 <style>
 /* Contenedor del buscador de DataTable */
 .dataTables_filter {
     text-align: center !important;
-    margin: 30px 0 !important;
-    padding: 20px;
+    margin: 20px 0 !important;
+    padding: 15px;
     background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%);
-    border-radius: 15px;
-    box-shadow: 0 15px 40px rgba(59, 130, 246, 0.4);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
 }
 
 /* Label del buscador */
 .dataTables_filter label {
     display: inline-flex;
     align-items: center;
-    gap: 15px;
-    font-size: 18px;
+    gap: 12px;
+    font-size: 16px;
     font-weight: 600;
     color: white !important;
     text-transform: uppercase;
@@ -629,61 +529,85 @@ $(document).ready(function() {
 
 /* Input del buscador */
 .dataTables_filter input {
-    width: 500px !important;
-    padding: 18px 30px !important;
-    font-size: 18px !important;
+    width: 400px !important;
+    padding: 12px 20px !important;
+    font-size: 16px !important;
     border: none !important;
-    border-radius: 50px !important;
+    border-radius: 30px !important;
     background: white !important;
     color: #1e3a8a !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
     transition: all 0.3s ease !important;
     outline: none !important;
-}
-
-/* Placeholder del input */
-.dataTables_filter input::placeholder {
-    color: #64748b !important;
-    font-style: italic;
-}
-
-/* Efecto hover en el input */
-.dataTables_filter input:hover {
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3) !important;
-    transform: translateY(-2px) !important;
 }
 
 /* Efecto focus en el input */
 .dataTables_filter input:focus {
     background: #f0f9ff !important;
-    box-shadow: 0 15px 50px rgba(59, 130, 246, 0.5) !important;
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4) !important;
     transform: scale(1.02) !important;
 }
 
-/* Animación al escribir */
-@keyframes pulse {
-    0%, 100% {
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    }
-    50% {
-        box-shadow: 0 15px 50px rgba(59, 130, 246, 0.5);
-    }
-}
-
-.dataTables_filter input:not(:placeholder-shown) {
-    animation: pulse 2s infinite;
-}
-
-/* Responsive */
 @media (max-width: 768px) {
     .dataTables_filter input {
         width: 100% !important;
-        max-width: 350px !important;
-    }
-    
-    .dataTables_filter label {
-        flex-direction: column;
-        gap: 10px;
+        max-width: 300px !important;
     }
 }
 </style>
+
+<script>
+$(document).ready(function() {
+    
+    // Obtener fechas de la URL si existen
+    var urlParams = new URLSearchParams(window.location.search);
+    var fechaInicial = urlParams.get('fechaInicial') || '';
+    var fechaFinal = urlParams.get('fechaFinal') || '';
+
+    if ($("#example").length > 0) {
+        if ($.fn.DataTable.isDataTable('#example')) {
+            $('#example').DataTable().destroy();
+        }
+
+        $("#example").DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": {
+                "url": "ajax/datatable-ventas-visita.ajax.php",
+                "type": "POST",
+                "data": function (d) {
+                    d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+                    d.fechaInicial = fechaInicial;
+                    d.fechaFinal = fechaFinal;
+                }
+            },
+            "autoWidth": false,
+            "order": [[4, "desc"]], // Fecha por defecto
+            "responsive": true,
+            "columnDefs": [
+                { "targets": 0, "responsivePriority": 1 }, // Código
+                { "targets": 5, "responsivePriority": 2, "orderable": false }, // Acciones
+                { "targets": 1, "responsivePriority": 3 }, // Cliente
+                { "targets": 3, "responsivePriority": 4 }, // Total
+                { "targets": 4, "responsivePriority": 5 }  // Fecha
+            ],
+            "language": {
+                "sProcessing":     "Procesando...",
+                "sLengthMenu":     "Mostrar _MENU_ registros",
+                "sZeroRecords":    "No se encontraron resultados",
+                "sEmptyTable":     "Ningún dato disponible en esta tabla",
+                "sInfo":           "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+                "sInfoEmpty":      "Mostrando registros del 0 al 0 de un total de 0",
+                "sInfoFiltered":   "(filtrado de un total de _MAX_ registros)",
+                "sSearch":         "Buscar:",
+                "oPaginate": {
+                    "sFirst":    "Primero",
+                    "sLast":     "Último",
+                    "sNext":     "Siguiente",
+                    "sPrevious": "Anterior"
+                }
+            }
+        });
+    }
+});
+</script>

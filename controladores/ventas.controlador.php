@@ -92,7 +92,7 @@ class ControladorVentas
 		$data = array();
 
 		foreach ($ventas as $key => $value) {
-			
+
 			$nestedData = array();
 
 			// 0: Código
@@ -150,10 +150,10 @@ class ControladorVentas
 		}
 
 		return array(
-			"draw"            => intval($params['draw']),
-			"recordsTotal"    => intval($totalData),
+			"draw" => intval($params['draw']),
+			"recordsTotal" => intval($totalData),
 			"recordsFiltered" => intval($totalFiltered),
-			"data"            => $data
+			"data" => $data
 		);
 	}
 
@@ -233,7 +233,7 @@ class ControladorVentas
 		$data = array();
 
 		foreach ($ordenes as $key => $value) {
-			
+
 			$nestedData = array();
 
 			// 0: Código
@@ -339,7 +339,7 @@ class ControladorVentas
 			// 10: Acciones
 			$botonesAcciones = '<div class="btn-group">';
 			$botonesAcciones .= '<a class="btn btn-warning" href="index.php?ruta=ver-detalle-orden&idVenta=' . $value["id"] . '" title="Ver Detalle" style="width: auto !important;"><i class="fa fa-eye"></i></a>';
-			
+
 			if (puedeAccion('ordenes', 'eliminar')) {
 				$botonesAcciones .= '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar Orden" style="width: auto !important;"><i class="fa fa-times"></i></button>';
 			}
@@ -355,12 +355,116 @@ class ControladorVentas
 		}
 
 		return array(
-			"draw"            => intval($params['draw']),
-			"recordsTotal"    => intval($totalData),
+			"draw" => intval($params['draw']),
+			"recordsTotal" => intval($totalData),
 			"recordsFiltered" => intval($totalFiltered),
-			"data"            => $data
+			"data" => $data
 		);
 	}
+
+	/*=============================================
+	MOSTRAR CONSULTA DE VENTAS (VISITA) SERVER-SIDE
+	=============================================*/
+	static public function ctrMostrarConsultaVentasServerSide($params)
+	{
+		$tabla = "ventas";
+
+		// Mapeo de columnas para ordenamiento:
+		// 0=Código, 1=Cliente, 2=Forma de pago, 3=Total, 4=Fecha, 5=Acciones
+		$columnsMap = array(
+			0 => 'v.codigo',
+			1 => 'c.nombre',
+			2 => 'v.metodo_pago',
+			3 => 'v.total',
+			4 => 'v.fecha'
+		);
+
+		// Obtener configuración
+		$configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
+		$moneda = !empty($configuracion["moneda"]) ? $configuracion["moneda"] : "$";
+
+		$where = " WHERE 1=1 ";
+
+		// Filtro por Fechas
+		if (!empty($params['fechaInicial']) && !empty($params['fechaFinal'])) {
+			$where .= " AND v.fecha BETWEEN '" . $params['fechaInicial'] . " 00:00:00' AND '" . $params['fechaFinal'] . " 23:59:59' ";
+		}
+
+		// Búsqueda global
+		if (!empty($params['search']['value'])) {
+			$searchValue = $params['search']['value'];
+			$where .= " AND (v.codigo LIKE '%$searchValue%' OR c.nombre LIKE '%$searchValue%' OR v.metodo_pago LIKE '%$searchValue%') ";
+		}
+
+		// Orden
+		$order = "";
+		if (isset($params['order'][0]['column'])) {
+			$colIdx = $params['order'][0]['column'];
+			$colName = isset($columnsMap[$colIdx]) ? $columnsMap[$colIdx] : 'v.id';
+			$order = " ORDER BY " . $colName . " " . $params['order'][0]['dir'];
+		} else {
+			$order = " ORDER BY v.fecha DESC";
+		}
+
+		// Paginación
+		$limit = "";
+		if (isset($params['length']) && $params['length'] != -1) {
+			$limit = " LIMIT " . intval($params['start']) . ", " . intval($params['length']);
+		}
+
+		// Obtener datos
+		$ventas = ModeloVentas::mdlMostrarVentasServerSide($tabla, $where, $order, $limit);
+		$totalData = ModeloVentas::mdlGetTotalVentas($tabla, " WHERE 1=1 ");
+		$totalFiltered = ModeloVentas::mdlGetTotalVentas($tabla, $where);
+
+		$data = array();
+
+		foreach ($ventas as $key => $value) {
+
+			$nestedData = array();
+
+			// 0: Código
+			$nestedData[] = e($value["codigo"]);
+
+			// 1: Cliente
+			$nestedData[] = '<span class="btnVerClienteDesdeVenta" data-toggle="modal" data-target="#modalEditarCliente" idCliente="' . e($value["id_cliente"]) . '" style="cursor: pointer; color: #337ab7; text-decoration: underline;">' . e($value["nombre_cliente"]) . '</span>';
+
+			// 2: Forma de pago
+			$nestedData[] = e($value["metodo_pago"]);
+
+			// 3: Total
+			$nestedData[] = e($moneda) . ' ' . e(number_format($value["total"], 2));
+
+			// 4: Fecha
+			$nestedData[] = e($value["fecha"]);
+
+			// 5: Acciones
+			$botones = '<div class="btn-group">';
+
+			// Botón Ver Detalle
+			$botones .= '<a href="index.php?ruta=ver-detalle-orden&idVenta=' . $value["id"] . '" class="btn btn-warning" title="Ver Detalle" style="margin-right: 3px;">';
+			$botones .= '<i class="fa fa-eye"></i>';
+			$botones .= '</a>';
+
+			// Botón Descargar PDF
+			$botones .= '<a href="extensiones/tcpdf/pdf/descargar-pdf-orden.php?idVenta=' . $value["id"] . '" target="_blank" class="btn btn-danger" title="Descargar PDF" style="margin-right: 3px;">';
+			$botones .= '<i class="fa fa-file-pdf-o"></i>';
+			$botones .= '</a>';
+
+			$botones .= '</div>';
+			$nestedData[] = $botones;
+
+			$data[] = $nestedData;
+		}
+
+		return array(
+			"draw" => intval($params['draw']),
+			"recordsTotal" => intval($totalData),
+			"recordsFiltered" => intval($totalFiltered),
+			"data" => $data
+		);
+	}
+
 
 	/*=============================================
 	MOSTRAR FACTURAS ELECTRÓNICAS SERVER-SIDE
@@ -437,7 +541,7 @@ class ControladorVentas
 		$data = array();
 
 		foreach ($facturas as $key => $value) {
-			
+
 			$nestedData = array();
 
 			// 0: Código / Número Factura
@@ -499,29 +603,31 @@ class ControladorVentas
 
 			// 10: Acciones
 			$botonesAcciones = '<div class="btn-group col-acciones" style="display:flex; gap:2px;">';
-			
+
 			// Ver Detalle Venta
-			$botonesAcciones .= '<button class="btn btn-info btnVerDetalleVenta" idVenta="' . $value["id"] . '" data-toggle="modal" data-target="#modalVerFactura" title="Ver Detalle" style="width: auto !important;"><i class="fa fa-eye"></i></button>';
-			
+			$botonesAcciones .= '<a class="btn btn-info" href="index.php?ruta=ver-detalle-orden&idVenta=' . $value["id"] . '" title="Ver Detalle" style="width: auto !important;"><i class="fa fa-eye"></i></a>';
+
 			// Ver en DIAN
 			if (!empty($value["qr_data"])) {
 				$botonesAcciones .= '<a class="btn btn-success" href="' . $value["qr_data"] . '" target="_blank" data-toggle="tooltip" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>';
 			}
 
-			if (puedeAccion('factura_electronica', 'editar')) {
-				// Firmar (para borradores)
-				if (isset($value["estado_dian"]) && $value["estado_dian"] == "creada") {
-					$botonesAcciones .= '<button class="btn btnFirmarFactura" style="background-color: black; color: white; width: auto !important;" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
-										<i class="fa fa-paper-plane"></i>
-									</button>';
-				}
+			// Firmar (para borradores)
+			$estadoLimpio = strtolower(trim($estadoDian));
+			if (in_array($estadoLimpio, ["creada", "borrador", "pendiente"])) {
+				$botonesAcciones .= '<button class="btn btnFirmarFactura" style="background-color: black; color: white; width: auto !important;" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
+									<i class="fa fa-paper-plane"></i>
+								</button>';
+			}
 
-				// Editar Borrador
-				if (isset($value["estado_dian"]) && in_array($value["estado_dian"], ['creada', 'pendiente'])) {
-					$botonesAcciones .= '<a class="btn btn-warning" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador" style="width: auto !important;">
-										<i class="fa fa-pencil"></i>
-									</a>';
-				}
+			// Editar Borrador
+			if (in_array($estadoDian, ['creada', 'pendiente', 'borrador'])) {
+				$botonesAcciones .= '<a class="btn btn-warning" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador" style="width: auto !important;">
+									<i class="fa fa-pencil"></i>
+								</a>';
+			}
+
+			if (puedeAccion('factura_electronica', 'editar')) {
 
 				// Enviar por Correo
 				if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
@@ -541,6 +647,13 @@ class ControladorVentas
 				}
 			}
 
+			// Ver Notas Crédito (Si tiene)
+			if ($value["tiene_nc"] == 1) {
+				$botonesAcciones .= ' <button class="btn btn-default btnVerNotasCredito" idVenta="' . $value["id"] . '" data-toggle="modal" data-target="#modalNotasCredito" title="Ver Notas Crédito" style="width: auto !important; background-color: #f39c12; color: white; border: none;">
+									<i class="fa fa-list"></i>
+								</button>';
+			}
+
 			$botonesAcciones .= '</div>';
 			$nestedData[] = $botonesAcciones;
 
@@ -553,10 +666,10 @@ class ControladorVentas
 		}
 
 		return array(
-			"draw"            => intval($params['draw']),
-			"recordsTotal"    => intval($totalData),
+			"draw" => intval($params['draw']),
+			"recordsTotal" => intval($totalData),
 			"recordsFiltered" => intval($totalFiltered),
-			"data"            => $data
+			"data" => $data
 		);
 	}
 
@@ -709,8 +822,7 @@ class ControladorVentas
 						window.location = "facturas-electronicas";
 					});
 				</script>';
-			}
-			else {
+			} else {
 				echo '<script>
 					swal({
 						type: "error",
@@ -874,8 +986,7 @@ class ControladorVentas
 						$nuevasVentas = $value["cantidad"] + $traerProducto["ventas"];
 						ModeloProductos::mdlActualizarProducto($tablaProductos, "ventas", $nuevasVentas, $value["id"]);
 
-					}
-					else {
+					} else {
 						// Es un producto normal - restar stock de productos
 						$tablaProductos = "productos";
 						$item = "id";
@@ -1072,7 +1183,8 @@ class ControladorVentas
 							$mensajeError = "La factura electrónica falló y la venta NO se guardó. <br>Error: " . $resultadoFactura['mensaje'];
 
 							if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-								if (ob_get_length()) ob_clean();
+								if (ob_get_length())
+									ob_clean();
 								echo json_encode([
 									"status" => "error",
 									"titulo" => "Error en Facturación",
@@ -1100,7 +1212,8 @@ class ControladorVentas
 
 				if ($_POST["estado"] == "orden") {
 					if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-						if (ob_get_length()) ob_clean();
+						if (ob_get_length())
+							ob_clean();
 						echo json_encode([
 							"status" => "success",
 							"titulo" => "¡Orden Guardada!",
@@ -1121,40 +1234,40 @@ class ControladorVentas
 								window.location = "ordenes";
 						});
 					</script>';
-				}
-				else {
+				} else {
 
 					// MENSAJE PERSONALIZADO SI ES FACTURA ELECTRÓNICA
 					$tituloMensaje = "¡Venta guardada correctamente!";
 					$textoMensaje = "El documento ha sido registrado exitosamente en el sistema.";
-					
+
 					if ((isset($_POST["activarFacturaElectronica"]) && $_POST["activarFacturaElectronica"] == "1") || isset($_POST["guardarVentaFactus"])) {
 
 						$tituloMensaje = "¡Factura Electrónica guardada correctamente!";
 						$textoMensaje = "El documento ha sido registrado exitosamente en el sistema.";
 
-							if (isset($resultadoFactura) && $resultadoFactura['error']) {
-								// Construir mensaje de error con lista de errores
-								$mensajeError = $resultadoFactura['mensaje'];
-								if (isset($resultadoFactura['errores']) && !empty($resultadoFactura['errores'])) {
-									$mensajeError .= "<ul style='text-align:left; margin-top:10px;'>";
-									foreach ($resultadoFactura['errores'] as $error) {
-										$mensajeError .= "<li>" . htmlspecialchars($error) . "</li>";
-									}
-									$mensajeError .= "</ul>";
+						if (isset($resultadoFactura) && $resultadoFactura['error']) {
+							// Construir mensaje de error con lista de errores
+							$mensajeError = $resultadoFactura['mensaje'];
+							if (isset($resultadoFactura['errores']) && !empty($resultadoFactura['errores'])) {
+								$mensajeError .= "<ul style='text-align:left; margin-top:10px;'>";
+								foreach ($resultadoFactura['errores'] as $error) {
+									$mensajeError .= "<li>" . htmlspecialchars($error) . "</li>";
 								}
+								$mensajeError .= "</ul>";
+							}
 
-								if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-									if (ob_get_length()) ob_clean();
-									echo json_encode([
-										"status" => "error",
-										"titulo" => "Error de Validación",
-										"mensaje" => $mensajeError
-									]);
-									return;
-								}
+							if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+								if (ob_get_length())
+									ob_clean();
+								echo json_encode([
+									"status" => "error",
+									"titulo" => "Error de Validación",
+									"mensaje" => $mensajeError
+								]);
+								return;
+							}
 
-								echo '<script>
+							echo '<script>
 									swal({
 										type: "error",
 										title: "Error de Validación",
@@ -1163,8 +1276,8 @@ class ControladorVentas
 										confirmButtonText: "Cerrar"
 									});
 								</script>';
-								return; // Detener ejecución para no mostrar mensaje de éxito
-							}
+							return; // Detener ejecución para no mostrar mensaje de éxito
+						}
 					}
 
 					// Determinar ruta de redirección
@@ -1174,7 +1287,8 @@ class ControladorVentas
 					}
 
 					if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-						if (ob_get_length()) ob_clean();
+						if (ob_get_length())
+							ob_clean();
 						echo json_encode([
 							"status" => "success",
 							"titulo" => $tituloMensaje,
@@ -1239,8 +1353,7 @@ class ControladorVentas
 				ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $nuevoStockBase, $value["id"]);
 				ModeloProductos::mdlActualizarProducto($tablaProductos, "ventas", $value["cantidad"] + $traerProducto["ventas"], $value["id"]);
 
-			}
-			else {
+			} else {
 				// Producto normal
 				$tablaProductos = "productos";
 				$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, "id", $value["id"], "id");
@@ -1271,8 +1384,7 @@ class ControladorVentas
 		if ($respuesta == "ok") {
 			ModeloVentas::mdlActualizarConsecutivo($tabla, $datos["codigo"]);
 			return ["status" => "success", "codigo" => $datos["codigo"]];
-		}
-		else {
+		} else {
 			return ["status" => "error", "message" => "Error al guardar en base de datos"];
 		}
 	}
@@ -1292,7 +1404,8 @@ class ControladorVentas
 			if ($_POST["listaProductos"] == "") {
 
 				if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-					if (ob_get_length()) ob_clean();
+					if (ob_get_length())
+						ob_clean();
 					echo json_encode([
 						"status" => "error",
 						"titulo" => "Error de Validación",
@@ -1427,8 +1540,7 @@ class ControladorVentas
 						ModeloProductos::mdlActualizarProducto($tablaProductos, "ventas", $nuevasVentas, $value["id"]);
 
 
-					}
-					else {
+					} else {
 						// Es un producto normal - descontar stock de productos
 						$tablaProductos = "productos";
 						$itemProd = "id";
@@ -1527,8 +1639,7 @@ class ControladorVentas
 						$nuevasVentas = $traerProducto["ventas"] - $value["cantidad"];
 						ModeloProductos::mdlActualizarProducto($tablaProductos, "ventas", $nuevasVentas, $value["id"]);
 
-					}
-					else {
+					} else {
 						// Es un producto normal - devolver stock al producto
 						$tablaProductos = "productos";
 						$item = "id";
@@ -1616,8 +1727,7 @@ class ControladorVentas
 						$nuevasVentas = $value["cantidad"] + $traerProducto["ventas"];
 						ModeloProductos::mdlActualizarProducto($tablaProductos, "ventas", $nuevasVentas, $value["id"]);
 
-					}
-					else {
+					} else {
 						// Es un producto normal - descontar stock del producto
 						$tablaProductos_2 = "productos";
 						$item_2 = "id";
@@ -1684,8 +1794,7 @@ class ControladorVentas
 				if (!empty($traerVenta["notas"]) && strpos($traerVenta["notas"], 'Creado por Agente IA') !== false) {
 					// Preservar el texto original "Creado por Agente IA"
 					$origenTexto = "Creado por Agente IA";
-				}
-				else {
+				} else {
 					// Determinar si es orden de Agente IA o manual
 					$origenTexto = "Desde orden";
 					if (!empty($traerVenta["extra"]) && strpos($traerVenta["extra"], 'n8n') !== false) {
@@ -1696,8 +1805,7 @@ class ControladorVentas
 				if (!empty($notasFinales)) {
 					$notasFinales = $notasFinales . " | " . $origenTexto;
 
-				}
-				else {
+				} else {
 					$notasFinales = $origenTexto;
 				}
 			}
@@ -1707,8 +1815,7 @@ class ControladorVentas
 				$textoRecibe = "Recibe: " . $_POST["recibe"];
 				if (!empty($notasFinales)) {
 					$notasFinales = $notasFinales . " - " . $textoRecibe;
-				}
-				else {
+				} else {
 					$notasFinales = $textoRecibe;
 				}
 			}
@@ -1824,25 +1931,25 @@ class ControladorVentas
 				// Log del resultado (opcional)
 				if ($httpCode != 200) {
 					error_log("Error al enviar webhook: HTTP " . $httpCode . " - " . $resultado);
-				}
-				else {
+				} else {
 					error_log("Webhook enviado exitosamente para venta: " . $_POST["editarVenta"]);
 				}
 
 
 
-					if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-						if (ob_get_length()) ob_clean();
-						echo json_encode([
-							"status" => "success",
-							"titulo" => "¡Venta guardada correctamente!",
-							"mensaje" => "El documento ha sido registrado exitosamente en el sistema.",
-							"ruta" => "ordenes"
-						]);
-						return;
-					}
+				if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+					if (ob_get_length())
+						ob_clean();
+					echo json_encode([
+						"status" => "success",
+						"titulo" => "¡Venta guardada correctamente!",
+						"mensaje" => "El documento ha sido registrado exitosamente en el sistema.",
+						"ruta" => "ordenes"
+					]);
+					return;
+				}
 
-					echo '<script>
+				echo '<script>
 					localStorage.removeItem("rango");
 					swal({
 						type: "success",
@@ -1919,8 +2026,7 @@ class ControladorVentas
 					$valorIdCliente = $traerVenta["id_cliente"];
 
 					$comprasCliente = ModeloClientes::mdlActualizarCliente($tablaClientes, $item, $valor, $valorIdCliente);
-				}
-				else {
+				} else {
 					$item = "ultima_compra";
 					$valor = $guardarFechas[count($guardarFechas) - 1];
 					$valorIdCliente = $traerVenta["id_cliente"];
@@ -1928,8 +2034,7 @@ class ControladorVentas
 					$comprasCliente = ModeloClientes::mdlActualizarCliente($tablaClientes, $item, $valor, $valorIdCliente);
 				}
 
-			}
-			else {
+			} else {
 
 				$item = "ultima_compra";
 				$valor = "0000-00-00 00:00:00";
@@ -2021,8 +2126,7 @@ class ControladorVentas
 					$valor1a = $traerProducto["ventas"] - $value["cantidad"];
 					$nuevasVentas = ModeloProductos::mdlActualizarProducto($tablaProductos, $item1a, $valor1a, $valor);
 
-				}
-				else {
+				} else {
 
 					// Es un producto normal - devolver stock normal
 					$tablaProductos = "productos";
@@ -2087,7 +2191,8 @@ class ControladorVentas
 
 				if (isset($_GET["estado"]) && $_GET["estado"] == "orden") {
 					if (isset($_POST["idVentaEliminar"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-						if (ob_get_length()) ob_clean();
+						if (ob_get_length())
+							ob_clean();
 						echo "ok";
 						return;
 					}
@@ -2103,13 +2208,13 @@ class ControladorVentas
 								window.location = "ordenes";
 						});
 					</script>';
-				}
-				else {
+				} else {
 
 					$rutaRedireccion = (isset($_GET["ruta"]) && !empty($_GET["ruta"])) ? $_GET["ruta"] : "ventas";
 
 					if (isset($_POST["idVentaEliminar"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-						if (ob_get_length()) ob_clean();
+						if (ob_get_length())
+							ob_clean();
 						echo "ok";
 						return;
 					}
@@ -2136,7 +2241,8 @@ class ControladorVentas
 
 			} else {
 				if (isset($_POST["idVentaEliminar"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-					if (ob_get_length()) ob_clean();
+					if (ob_get_length())
+						ob_clean();
 					echo $respuesta; // Reportar error real: no_affected_rows o error_db
 					return;
 				}
@@ -2176,8 +2282,7 @@ class ControladorVentas
 
 				$ventas = ModeloVentas::mdlRangoFechasVentas($tabla, $_GET["fechaInicial"], $_GET["fechaFinal"]);
 
-			}
-			else {
+			} else {
 
 				$item = null;
 				$valor = null;
@@ -2226,12 +2331,12 @@ class ControladorVentas
 				}
 
 				// Filtrar por usuario si existe el parámetro
-				if (isset($_GET["usuario"]) && $_GET["usuario"] != "" && (string)$item["id_vendedor"] != (string)$_GET["usuario"]) {
+				if (isset($_GET["usuario"]) && $_GET["usuario"] != "" && (string) $item["id_vendedor"] != (string) $_GET["usuario"]) {
 					continue;
 				}
 
 				// Filtrar por cliente si existe el parámetro
-				if (isset($_GET["cliente"]) && $_GET["cliente"] != "" && $_GET["cliente"] != "todos" && (string)$item["id_cliente"] != (string)$_GET["cliente"]) {
+				if (isset($_GET["cliente"]) && $_GET["cliente"] != "" && $_GET["cliente"] != "todos" && (string) $item["id_cliente"] != (string) $_GET["cliente"]) {
 					continue;
 				}
 
@@ -2381,7 +2486,7 @@ class ControladorVentas
 
 		return $respuesta;
 	}
-	
+
 	//Rango fechas específico para Facturas Electrónicas (Optimizado)
 	static public function ctrRangoFechasFacturasElectronicas($fechaInicial, $fechaFinal, $estado)
 	{
@@ -2471,7 +2576,8 @@ class ControladorVentas
 			// 1. Validar productos
 			if ($_POST["listaProductos"] == "") {
 				if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-					if (ob_get_length()) ob_clean();
+					if (ob_get_length())
+						ob_clean();
 					echo json_encode([
 						"status" => "error",
 						"titulo" => "Error de Validación",
@@ -2527,8 +2633,7 @@ class ControladorVentas
 						$nuevasVentas = $value["cantidad"] + $traerProducto["ventas"];
 						ModeloProductos::mdlActualizarProducto($tablaProductos, "ventas", $nuevasVentas, $value["id"]);
 
-					}
-					else {
+					} else {
 						$tablaProductos = "productos";
 						$item = "id";
 						$valor = $value["id"];
@@ -2635,7 +2740,8 @@ class ControladorVentas
 				if (!$resultadoFactura["error"]) {
 					// EXITO
 					if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-						if (ob_get_length()) ob_clean();
+						if (ob_get_length())
+							ob_clean();
 						echo json_encode([
 							"status" => "success",
 							"titulo" => "Factura Electrónica GUARDADA",
@@ -2656,8 +2762,7 @@ class ControladorVentas
 									window.location = "facturas-electronicas";
 								})
 						</script>';
-				}
-				else {
+				} else {
 					// ERROR
 					$errorMsg = $resultadoFactura["mensaje"];
 					if (isset($resultadoFactura["errores"]) && !empty($resultadoFactura["errores"])) {
@@ -2665,7 +2770,8 @@ class ControladorVentas
 					}
 
 					if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-						if (ob_get_length()) ob_clean();
+						if (ob_get_length())
+							ob_clean();
 						echo json_encode([
 							"status" => "success", // Se considera éxito porque la venta se guardó localmente
 							"titulo" => "Venta guardada pero Factura RECHAZADA",
@@ -2688,10 +2794,10 @@ class ControladorVentas
 						</script>';
 				}
 
-			}
-			else {
+			} else {
 				if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-					if (ob_get_length()) ob_clean();
+					if (ob_get_length())
+						ob_clean();
 					echo json_encode([
 						"status" => "error",
 						"titulo" => "Error al guardar la venta localmente",

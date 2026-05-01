@@ -45,7 +45,7 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
         <?php endif; ?>
 
         <!-- Filtros Estandarizados en el Header (Alineados a la derecha) -->
-        <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+        <div class="pull-right contenedor-filtros">
 
           <!-- Filtro Proveedor -->
           <div style="display: flex; align-items: center; gap: 8px;">
@@ -140,29 +140,19 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
 
 
 <!-- Modal CUSTOM para ampliar/editar imagen de producto -->
-<div id="modalAmpliarImagenProducto" style="display: none;">
-  <!-- Backdrop -->
-  <div id="modalProductoBackdrop"
-    style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1040;">
-  </div>
+<div id="modalAmpliarImagenProducto" class="modal-custom">
+  <div id="modalProductoBackdrop" class="modal-custom-backdrop"></div>
 
-  <!-- Contenedor del Modal -->
-  <div
-    style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; width: 90%; max-width: 800px; max-height: 90vh; background: white; border-radius: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column;">
-
-    <!-- Header -->
-    <div style="background: #3c8dbc; color: white; padding: 15px; border-radius: 5px 5px 0 0; flex-shrink: 0;">
-      <button type="button" class="close" id="btnCerrarModalProducto"
-        style="color: white; opacity: 1; font-size: 28px; font-weight: 300; float: right; background: none; border: none; cursor: pointer;">
+  <div class="modal-custom-container">
+    <div class="modal-custom-header">
+      <h4><i class="fa fa-camera"></i> Imagen del Producto</h4>
+      <button type="button" class="close" id="btnCerrarModalProducto">
         <span>&times;</span>
       </button>
-      <h4 style="margin: 0; padding-right: 30px;"><i class="fa fa-camera"></i> Imagen del Producto</h4>
     </div>
 
-    <!-- Body con scroll -->
-    <div style="padding: 20px; text-align: center; overflow-y: auto; flex: 1 1 auto; min-height: 0;">
-      <img id="imagenProductoAmpliada" src="" class="img-responsive"
-        style="max-width: 100%; margin: 0 auto 20px auto; border-radius: 5px;">
+    <div class="modal-custom-body">
+      <img id="imagenProductoAmpliada" src="" class="img-responsive" style="max-width: 100%; margin: 0 auto 20px auto; border-radius: 5px;">
       <hr>
       <div class="form-group">
         <label><i class="fa fa-upload"></i> Cambiar Imagen del Producto</label>
@@ -173,9 +163,7 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
       <input type="hidden" id="codigoProductoImagen">
     </div>
 
-    <!-- Footer sticky -->
-    <div
-      style="background: #f4f4f4; padding: 15px; border-radius: 0 0 5px 5px; text-align: right; border-top: 1px solid #ddd; flex-shrink: 0;">
+    <div class="modal-custom-footer">
       <button type="button" class="btn btn-default" id="btnCancelarModalProducto">
         <i class="fa fa-times"></i> Cancelar
       </button>
@@ -183,7 +171,6 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
         <i class="fa fa-save"></i> Guardar Imagen
       </button>
     </div>
-
   </div>
 </div>
 

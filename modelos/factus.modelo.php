@@ -1287,6 +1287,8 @@ class ModeloFactus
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
             curl_setopt($ch, CURLOPT_HTTPHEADER, array(
                 'Authorization: Bearer ' . $token,
                 'Accept: application/json'
@@ -2438,7 +2440,71 @@ class ModeloFactus
 
         $stmt->execute();
         return $stmt->fetchAll();
-	}
+    }
+    /*=============================================
+    MOSTRAR DOCUMENTOS SOPORTE SERVER-SIDE
+    =============================================*/
+    static public function mdlMostrarDocumentosSoporteServerSide($where, $order, $limit)
+    {
+        $sql = "SELECT ds.*, p.nombre as nombre_proveedor,
+                (SELECT 1 FROM notas_ajuste_ds WHERE id_ds_original = ds.id LIMIT 1) as tiene_nota,
+                (SELECT COUNT(*) FROM documentos_soporte WHERE id < ds.id AND (numero_ds IS NULL OR numero_ds = '')) as rank_borrador
+                FROM documentos_soporte ds
+                LEFT JOIN proveedores p ON ds.id_proveedor = p.id
+                $where $order $limit";
+        
+        $stmt = Conexion::conectar()->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /*=============================================
+    OBTENER TOTAL DOCUMENTOS SOPORTE
+    =============================================*/
+    static public function mdlGetTotalDocumentosSoporte($where = "")
+    {
+        $sql = "SELECT COUNT(*) as total 
+                FROM documentos_soporte ds
+                LEFT JOIN proveedores p ON ds.id_proveedor = p.id
+                $where";
+        
+        $stmt = Conexion::conectar()->prepare($sql);
+        $stmt->execute();
+        $res = $stmt->fetch();
+        return $res ? $res["total"] : 0;
+    }
+
+    /*=============================================
+    MOSTRAR NOTAS DE AJUSTE DS SERVER-SIDE
+    =============================================*/
+    static public function mdlMostrarNotasAjusteDSServerSide($where, $order, $limit)
+    {
+        $sql = "SELECT na.*, p.nombre as nombre_proveedor, p.correo as correo_proveedor,
+                (SELECT COUNT(*) FROM notas_ajuste_ds WHERE id < na.id AND (numero_nota_ajuste IS NULL OR numero_nota_ajuste = '')) as rank_borrador
+                FROM notas_ajuste_ds na
+                LEFT JOIN proveedores p ON na.id_proveedor = p.id
+                $where $order $limit";
+        
+        $stmt = Conexion::conectar()->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /*=============================================
+    OBTENER TOTAL NOTAS DE AJUSTE DS
+    =============================================*/
+    static public function mdlGetTotalNotasAjusteDS($where = "")
+    {
+        $sql = "SELECT COUNT(*) as total 
+                FROM notas_ajuste_ds na
+                LEFT JOIN proveedores p ON na.id_proveedor = p.id
+                $where";
+        
+        $stmt = Conexion::conectar()->prepare($sql);
+        $stmt->execute();
+        $res = $stmt->fetch();
+        return $res ? $res["total"] : 0;
+    }
 
 }
 
