@@ -1008,7 +1008,7 @@ MODAL IMPORTAR PRODUCTOS DESDE CSV
                 <li>El campo <strong>proveedor es opcional</strong>, los demas campos son obligatorios</li>
                 <li>Asegúrate de que las categorías existan en el sistema</li>
                 <li>Puedes editar productos existentes, ingresando su código en el campo código</li>
-                <li>Sube el archivo CSV completado</li>
+                <li>Sube el archivo CSV completado.</li>
               </ol>
 
             </div>
