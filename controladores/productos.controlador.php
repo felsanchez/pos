@@ -1227,6 +1227,7 @@ class ControladorProductos
 			$archivo = $_FILES["archivoCSV"]["tmp_name"];
 			$errores = array();
 			$productosImportar = array();
+			$productosActualizar = array();
 
 			// Abrir archivo CSV
 			if (($handle = fopen($archivo, "r")) !== FALSE) {
@@ -1368,24 +1369,36 @@ class ControladorProductos
 					$productoExiste = ModeloProductos::mdlMostrarProductos("productos", $item, $valor, null);
 
 					if ($productoExiste) {
-						$errores[] = "Fila $numeroFila: El código '$codigo' ya existe en el sistema";
-						continue;
+						// Agregar a la lista de actualización masiva
+						$productosActualizar[] = array(
+							"id" => $productoExiste["id"],
+							"id_categoria" => $categoriaEncontrada["id"],
+							"id_proveedor" => $idProveedor,
+							"codigo" => $codigo,
+							"descripcion" => $descripcion,
+							"stock" => $stock,
+							"stock_anterior" => $productoExiste["stock"],
+							"precio_compra" => $precioCompra,
+							"precio_venta" => $precioVenta,
+							"unidad_medida_id" => $idUnidadMedida,
+							"tributo_id" => $idTributo
+						);
+					} else {
+						// Agregar producto a la lista de importación
+						$productosImportar[] = array(
+							"id_categoria" => $categoriaEncontrada["id"],
+							"id_proveedor" => $idProveedor,
+							"codigo" => $codigo,
+							"descripcion" => $descripcion,
+							"imagen" => "vistas/img/productos/default/anonymous.png",
+							"stock" => $stock,
+							"precio_compra" => $precioCompra,
+							"precio_venta" => $precioVenta,
+							"unidad_medida_id" => $idUnidadMedida,
+							"tributo_id" => $idTributo,
+							"ventas" => 0
+						);
 					}
-
-					// Agregar producto a la lista de importación
-					$productosImportar[] = array(
-						"id_categoria" => $categoriaEncontrada["id"],
-						"id_proveedor" => $idProveedor,
-						"codigo" => $codigo,
-						"descripcion" => $descripcion,
-						"imagen" => "vistas/img/productos/default/anonymous.png",
-						"stock" => $stock,
-						"precio_compra" => $precioCompra,
-						"precio_venta" => $precioVenta,
-						"unidad_medida_id" => $idUnidadMedida,
-						"tributo_id" => $idTributo,
-						"ventas" => 0
-					);
 				}
 
 				fclose($handle);
@@ -1415,21 +1428,22 @@ class ControladorProductos
 				}
 
 
-				// Si no hay errores, importar todos los productos
-				if (count($productosImportar) > 0) {
+				// Si no hay errores, importar y/o actualizar
+				if (count($productosImportar) > 0 || count($productosActualizar) > 0) {
 
 					$tabla = "productos";
-					$respuesta = ModeloProductos::mdlImportarProductosMasivos($tabla, $productosImportar);
+					$respuesta = ModeloProductos::mdlImportarProductosMasivos($tabla, $productosImportar, $productosActualizar);
 
 					if ($respuesta == "ok") {
 
 						$totalImportados = count($productosImportar);
+						$totalActualizados = count($productosActualizar);
 
 						echo '<script>
 							swal({
 								type: "success",
-								title: "¡Importación exitosa!",
-								text: "Se importaron ' . $totalImportados . ' productos correctamente.",
+								title: "¡Proceso exitoso!",
+								text: "Se importaron ' . $totalImportados . ' productos nuevos y se actualizaron ' . $totalActualizados . ' existentes.",
 								showConfirmButton: true,
 								confirmButtonText: "Cerrar"
 							}).then(() => {
@@ -1441,8 +1455,8 @@ class ControladorProductos
 						echo '<script>
 							swal({
 								type: "error",
-								title: "Error al importar",
-								text: "Hubo un error al guardar los productos en la base de datos.",
+								title: "Error en el proceso",
+								text: "Hubo un error al guardar o actualizar los productos en la base de datos.",
 								showConfirmButton: true,
 								confirmButtonText: "Cerrar"
 							}).then(() => {
@@ -1456,7 +1470,7 @@ class ControladorProductos
 						swal({
 							type: "warning",
 							title: "Sin productos válidos",
-							text: "No hay productos válidos para importar en el archivo CSV.",
+							text: "No hay productos válidos para procesar en el archivo CSV.",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
 						}).then(() => {

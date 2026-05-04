@@ -1,4 +1,3 @@
-
 <?php
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -110,22 +109,22 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
         <div class="tabla-productos table-responsive">
           <table class="table table-bordered table-striped tablaProductos display nowrap" style="width: 100%">
 
-          <thead>
-            <tr>
-              <th>Imagen</th>
-              <th>Código</th>
-              <th>Descripción</th>
-              <th>Categoría</th>
-              <th>Stock</th>
-              <th>Impuesto</th>
-              <th>Precio de Venta</th>
-              <th>Proveedor</th>
-              <th>Agregado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
+            <thead>
+              <tr>
+                <th>Imagen</th>
+                <th>Código</th>
+                <th>Descripción</th>
+                <th>Categoría</th>
+                <th>Stock</th>
+                <th>Impuesto</th>
+                <th>Precio de Venta</th>
+                <th>Proveedor</th>
+                <th>Agregado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
 
-        </table>
+          </table>
         </div> <!-- /.tabla-productos -->
 
         <input type="hidden" value="<?php echo $_SESSION['perfil']; ?>" class="perfilUsuario" id="perfilOculto">
@@ -152,7 +151,8 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
     </div>
 
     <div class="modal-custom-body">
-      <img id="imagenProductoAmpliada" src="" class="img-responsive" style="max-width: 100%; margin: 0 auto 20px auto; border-radius: 5px;">
+      <img id="imagenProductoAmpliada" src="" class="img-responsive"
+        style="max-width: 100%; margin: 0 auto 20px auto; border-radius: 5px;">
       <hr>
       <div class="form-group">
         <label><i class="fa fa-upload"></i> Cambiar Imagen del Producto</label>
@@ -1004,9 +1004,10 @@ MODAL IMPORTAR PRODUCTOS DESDE CSV
 
               <ol>
                 <li>Descarga la plantilla CSV haciendo clic en el botón de abajo</li>
-                <li>Completa los datos de los productos (Todos los campos son obligatorios)</li>
-                <li>El campo <strong>proveedor es opcional</strong></li>
+                <li>Completa los datos de los productos</li>
+                <li>El campo <strong>proveedor es opcional</strong>, los demas campos son obligatorios</li>
                 <li>Asegúrate de que las categorías existan en el sistema</li>
+                <li>Puedes editar productos existentes, ingresando su código en el campo código</li>
                 <li>Sube el archivo CSV completado</li>
               </ol>
 

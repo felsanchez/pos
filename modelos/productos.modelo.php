@@ -578,10 +578,10 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 
 
 	/*=============================================
-	IMPORTAR PRODUCTOS MASIVOS
+	IMPORTAR Y ACTUALIZAR PRODUCTOS MASIVOS
 	=============================================*/
 
-	static public function mdlImportarProductosMasivos($tabla, $productos)
+	static public function mdlImportarProductosMasivos($tabla, $productosInsertar, $productosActualizar = array())
 	{
 
 		$conexion = Conexion::conectar();
@@ -590,44 +590,129 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 			// Iniciar transacción
 			$conexion->beginTransaction();
 
-			$stmt = $conexion->prepare("INSERT INTO $tabla(id_categoria, id_proveedor, codigo, descripcion, imagen, stock, precio_compra, precio_venta, ventas, unidad_medida_id, codigo_estandar_id, es_excluido, tributo_id, tasa_impuesto, notas_facturacion, scheme_id) VALUES (:id_categoria, :id_proveedor, :codigo, :descripcion, :imagen, :stock, :precio_compra, :precio_venta, :ventas, :unidad_medida_id, :codigo_estandar_id, :es_excluido, :tributo_id, :tasa_impuesto, :notas_facturacion, :scheme_id)");
+			$id_usuario_sesion = isset($_SESSION["id"]) ? $_SESSION["id"] : 1; // Fallback al admin
+			$nombre_usuario_sesion = isset($_SESSION["nombre"]) ? $_SESSION["nombre"] : "Sistema";
 
-			foreach ($productos as $producto) {
+			$stmtHistorial = $conexion->prepare("INSERT INTO movimientos_stock (tipo_producto, id_producto, id_variante, nombre_producto, tipo_movimiento, cantidad, stock_anterior, stock_nuevo, id_usuario, nombre_usuario, referencia, notas) VALUES (:tipo_producto, :id_producto, :id_variante, :nombre_producto, :tipo_movimiento, :cantidad, :stock_anterior, :stock_nuevo, :id_usuario, :nombre_usuario, :referencia, :notas)");
 
-				$stmt->bindParam(":id_categoria", $producto["id_categoria"], PDO::PARAM_INT);
-				$stmt->bindParam(":id_proveedor", $producto["id_proveedor"], PDO::PARAM_INT);
-				$stmt->bindParam(":codigo", $producto["codigo"], PDO::PARAM_STR);
-				$stmt->bindParam(":descripcion", $producto["descripcion"], PDO::PARAM_STR);
-				$stmt->bindParam(":imagen", $producto["imagen"], PDO::PARAM_STR);
-				$stmt->bindParam(":stock", $producto["stock"], PDO::PARAM_INT);
-				$stmt->bindParam(":precio_compra", $producto["precio_compra"], PDO::PARAM_STR);
-				$stmt->bindParam(":precio_venta", $producto["precio_venta"], PDO::PARAM_STR);
-				$stmt->bindParam(":ventas", $producto["ventas"], PDO::PARAM_INT);
-				
-				// Nuevos campos de facturación
-				$unidad_medida_id = isset($producto["unidad_medida_id"]) ? $producto["unidad_medida_id"] : 70; // 70 = Unidad
-				$tributo_id = isset($producto["tributo_id"]) ? $producto["tributo_id"] : 1; // 1 = IVA
-				$codigo_estandar_id = 999;
-				$es_excluido = 0;
-				$tasa_impuesto = "0.00";
-				$notas_facturacion = "";
-				$scheme_id = "999";
+			// 1. INSERCIONES DE PRODUCTOS NUEVOS
+			if (count($productosInsertar) > 0) {
+				$stmtInsert = $conexion->prepare("INSERT INTO $tabla(id_categoria, id_proveedor, codigo, descripcion, imagen, stock, precio_compra, precio_venta, ventas, unidad_medida_id, codigo_estandar_id, es_excluido, tributo_id, tasa_impuesto, notas_facturacion, scheme_id) VALUES (:id_categoria, :id_proveedor, :codigo, :descripcion, :imagen, :stock, :precio_compra, :precio_venta, :ventas, :unidad_medida_id, :codigo_estandar_id, :es_excluido, :tributo_id, :tasa_impuesto, :notas_facturacion, :scheme_id)");
 
-				$stmt->bindParam(":unidad_medida_id", $unidad_medida_id, PDO::PARAM_INT);
-				$stmt->bindParam(":codigo_estandar_id", $codigo_estandar_id, PDO::PARAM_INT);
-				$stmt->bindParam(":es_excluido", $es_excluido, PDO::PARAM_INT);
-				$stmt->bindParam(":tributo_id", $tributo_id, PDO::PARAM_INT);
-				$stmt->bindParam(":tasa_impuesto", $tasa_impuesto, PDO::PARAM_STR);
-				$stmt->bindParam(":notas_facturacion", $notas_facturacion, PDO::PARAM_STR);
-				$stmt->bindParam(":scheme_id", $scheme_id, PDO::PARAM_STR);
+				foreach ($productosInsertar as $producto) {
 
-				$stmt->execute();
+					$stmtInsert->bindParam(":id_categoria", $producto["id_categoria"], PDO::PARAM_INT);
+					$stmtInsert->bindParam(":id_proveedor", $producto["id_proveedor"], PDO::PARAM_INT);
+					$stmtInsert->bindParam(":codigo", $producto["codigo"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":descripcion", $producto["descripcion"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":imagen", $producto["imagen"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":stock", $producto["stock"], PDO::PARAM_INT);
+					$stmtInsert->bindParam(":precio_compra", $producto["precio_compra"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":precio_venta", $producto["precio_venta"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":ventas", $producto["ventas"], PDO::PARAM_INT);
+					
+					// Nuevos campos de facturación
+					$unidad_medida_id = isset($producto["unidad_medida_id"]) ? $producto["unidad_medida_id"] : 70; // 70 = Unidad
+					$tributo_id = isset($producto["tributo_id"]) ? $producto["tributo_id"] : 1; // 1 = IVA
+					$codigo_estandar_id = 999;
+					$es_excluido = 0;
+					$tasa_impuesto = "0.00";
+					$notas_facturacion = "";
+					$scheme_id = "999";
+
+					$stmtInsert->bindParam(":unidad_medida_id", $unidad_medida_id, PDO::PARAM_INT);
+					$stmtInsert->bindParam(":codigo_estandar_id", $codigo_estandar_id, PDO::PARAM_INT);
+					$stmtInsert->bindParam(":es_excluido", $es_excluido, PDO::PARAM_INT);
+					$stmtInsert->bindParam(":tributo_id", $tributo_id, PDO::PARAM_INT);
+					$stmtInsert->bindParam(":tasa_impuesto", $tasa_impuesto, PDO::PARAM_STR);
+					$stmtInsert->bindParam(":notas_facturacion", $notas_facturacion, PDO::PARAM_STR);
+					$stmtInsert->bindParam(":scheme_id", $scheme_id, PDO::PARAM_STR);
+
+					$stmtInsert->execute();
+
+					$idNuevoProducto = $conexion->lastInsertId();
+
+					// Registrar historial si tiene stock inicial
+					if ($producto["stock"] > 0) {
+						$tipo_movimiento = "creacion_producto";
+						$tipo_producto = "producto";
+						$id_variante = 0;
+						$referencia = "Importación Excel/CSV";
+						$notas = "Carga inicial masiva. (Código: " . $producto["codigo"] . ")";
+						$stock_anterior = 0;
+
+						$stmtHistorial->bindParam(":tipo_producto", $tipo_producto, PDO::PARAM_STR);
+						$stmtHistorial->bindParam(":id_producto", $idNuevoProducto, PDO::PARAM_INT);
+						$stmtHistorial->bindParam(":id_variante", $id_variante, PDO::PARAM_INT);
+						$stmtHistorial->bindParam(":nombre_producto", $producto["descripcion"], PDO::PARAM_STR);
+						$stmtHistorial->bindParam(":tipo_movimiento", $tipo_movimiento, PDO::PARAM_STR);
+						$stmtHistorial->bindParam(":cantidad", $producto["stock"], PDO::PARAM_INT);
+						$stmtHistorial->bindParam(":stock_anterior", $stock_anterior, PDO::PARAM_INT);
+						$stmtHistorial->bindParam(":stock_nuevo", $producto["stock"], PDO::PARAM_INT);
+						$stmtHistorial->bindParam(":id_usuario", $id_usuario_sesion, PDO::PARAM_INT);
+						$stmtHistorial->bindParam(":nombre_usuario", $nombre_usuario_sesion, PDO::PARAM_STR);
+						$stmtHistorial->bindParam(":referencia", $referencia, PDO::PARAM_STR);
+						$stmtHistorial->bindParam(":notas", $notas, PDO::PARAM_STR);
+
+						$stmtHistorial->execute();
+					}
+				}
+			}
+
+			// 2. ACTUALIZACIONES DE PRODUCTOS EXISTENTES
+			if (count($productosActualizar) > 0) {
+				$stmtUpdate = $conexion->prepare("UPDATE $tabla SET id_categoria = :id_categoria, id_proveedor = :id_proveedor, descripcion = :descripcion, stock = :stock, precio_compra = :precio_compra, precio_venta = :precio_venta, unidad_medida_id = :unidad_medida_id, tributo_id = :tributo_id WHERE id = :id");
+
+				foreach ($productosActualizar as $producto) {
+					$stmtUpdate->bindParam(":id_categoria", $producto["id_categoria"], PDO::PARAM_INT);
+					$stmtUpdate->bindParam(":id_proveedor", $producto["id_proveedor"], PDO::PARAM_INT);
+					$stmtUpdate->bindParam(":descripcion", $producto["descripcion"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":stock", $producto["stock"], PDO::PARAM_INT);
+					$stmtUpdate->bindParam(":precio_compra", $producto["precio_compra"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":precio_venta", $producto["precio_venta"], PDO::PARAM_STR);
+					
+					$unidad_medida_id = isset($producto["unidad_medida_id"]) ? $producto["unidad_medida_id"] : 70;
+					$tributo_id = isset($producto["tributo_id"]) ? $producto["tributo_id"] : 1;
+					
+					$stmtUpdate->bindParam(":unidad_medida_id", $unidad_medida_id, PDO::PARAM_INT);
+					$stmtUpdate->bindParam(":tributo_id", $tributo_id, PDO::PARAM_INT);
+					$stmtUpdate->bindParam(":id", $producto["id"], PDO::PARAM_INT);
+
+					$stmtUpdate->execute();
+
+					// Registrar historial solo si el stock cambió
+					if ($producto["stock"] != $producto["stock_anterior"]) {
+						$diferencia = $producto["stock"] - $producto["stock_anterior"];
+						$tipo_movimiento = "edicion_stock";
+						$tipo_producto = "producto";
+						$id_variante = 0;
+						$referencia = "Importación Excel/CSV";
+						$notas = "Actualización de stock por carga masiva. (Código: " . $producto["codigo"] . ")";
+
+						$stmtHistorial->bindParam(":tipo_producto", $tipo_producto, PDO::PARAM_STR);
+						$stmtHistorial->bindParam(":id_producto", $producto["id"], PDO::PARAM_INT);
+						$stmtHistorial->bindParam(":id_variante", $id_variante, PDO::PARAM_INT);
+						$stmtHistorial->bindParam(":nombre_producto", $producto["descripcion"], PDO::PARAM_STR);
+						$stmtHistorial->bindParam(":tipo_movimiento", $tipo_movimiento, PDO::PARAM_STR);
+						$stmtHistorial->bindParam(":cantidad", $diferencia, PDO::PARAM_INT);
+						$stmtHistorial->bindParam(":stock_anterior", $producto["stock_anterior"], PDO::PARAM_INT);
+						$stmtHistorial->bindParam(":stock_nuevo", $producto["stock"], PDO::PARAM_INT);
+						$stmtHistorial->bindParam(":id_usuario", $id_usuario_sesion, PDO::PARAM_INT);
+						$stmtHistorial->bindParam(":nombre_usuario", $nombre_usuario_sesion, PDO::PARAM_STR);
+						$stmtHistorial->bindParam(":referencia", $referencia, PDO::PARAM_STR);
+						$stmtHistorial->bindParam(":notas", $notas, PDO::PARAM_STR);
+
+						$stmtHistorial->execute();
+					}
+				}
 			}
 
 			// Confirmar transacción
 			$conexion->commit();
 
-			$stmt = null;
+			$stmtInsert = null;
+			$stmtUpdate = null;
+			$stmtHistorial = null;
 			return "ok";
 
 		} catch (Exception $e) {
@@ -635,7 +720,9 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 			// Revertir transacción en caso de error
 			$conexion->rollBack();
 
-			$stmt = null;
+			$stmtInsert = null;
+			$stmtUpdate = null;
+			$stmtHistorial = null;
 			return "error";
 		}
 	}
