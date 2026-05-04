@@ -1,0 +1,8 @@
+<?php
+$lines = file("c:\\xampp\\htdocs\\pos\\vistas\\modulos\\orden-a-factura-electronica.php");
+foreach($lines as $i => $line) {
+    if (strpos($line, 'ctrCrearVentaFactus') !== false || strpos($line, 'editarVenta') !== false || strpos($line, 'ControladorVentas') !== false) {
+        echo "Line " . ($i + 1) . ": " . trim($line) . "\n";
+    }
+}
+?>

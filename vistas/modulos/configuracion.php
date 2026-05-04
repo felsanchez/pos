@@ -39,6 +39,8 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
 
 
 
+        <div class="box-body">
+
           <!--=====================================
           SECCIÓN 2: CONFIGURACIÓN DE VENTAS
           ======================================-->
@@ -682,17 +684,6 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
             </div>
           </div>
 
-        </div> <!-- /.box-body -->
-
-        <div class="box-footer">
-          <button type="submit" class="btn btn-primary pull-right" style="margin-right: 20px;">
-            <i class="fa fa-save"></i> Guardar configuración
-          </button>
-        </div>
-
-      </form>
-
-    </div> <!-- /.box -->
 
           <!--=====================================
           SECCIÓN 5: GESTIÓN DE PERFILES
@@ -770,7 +761,7 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
             </div>
           </div>
 
-        </div>
+        </div> <!-- /.box-body -->
 
         <!-- ===============================================
         MODAL: CREAR / EDITAR PERFIL
@@ -794,11 +785,10 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
 
         ?>
 
+
       </form>
 
     </div>
-
-  </section>
 
 </div>
 

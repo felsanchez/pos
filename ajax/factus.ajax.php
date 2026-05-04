@@ -15,6 +15,11 @@ require_once __DIR__ . "/../controladores/configuracion.controlador.php";
 require_once __DIR__ . "/../modelos/configuracion.modelo.php";
 require_once __DIR__ . "/../modelos/conexion.php";
 require_once __DIR__ . "/../modelos/csrf.php";
+require_once __DIR__ . "/../controladores/ventas.controlador.php";
+require_once __DIR__ . "/../modelos/ventas.modelo.php";
+require_once __DIR__ . "/../controladores/movimientos.controlador.php";
+require_once __DIR__ . "/../modelos/movimientos.modelo.php";
+require_once __DIR__ . "/../controladores/notificaciones.controlador.php";
 
 /*
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -465,6 +470,24 @@ class AjaxFactus
 		$resultado = ControladorFactus::ctrCrearDocumentoSoporte();
 		echo json_encode($resultado);
 	}
+
+	/*=============================================
+	CREAR FACTURA ELECTRÓNICA (Desde formulario de creación)
+	=============================================*/
+	public function ajaxCrearFacturaElectronica()
+	{
+		if (!isset($_POST["accion"]) || $_POST["accion"] != "crearFacturaElectronica") {
+			echo json_encode(["status" => "error", "titulo" => "Acción inválida", "mensaje" => "Acción no reconocida"]);
+			return;
+		}
+
+		// Delegar al controlador de ventas (que ya tiene la lógica completa)
+		// Forzamos el flag de ajax para que retorne JSON
+		$_POST["guardarVentaFactus"] = "1";
+		$_POST["ajax"] = "true";
+
+		ControladorVentas::ctrCrearVentaFactus();
+	}
 }
 
 /*=============================================
@@ -521,6 +544,9 @@ if (isset($_POST["accion"])) {
 			break;
 		case "mostrarNotasAjusteDSServerSide":
 			$factus->ajaxMostrarNotasAjusteDSServerSide();
+			break;
+		case "crearFacturaElectronica":
+			$factus->ajaxCrearFacturaElectronica();
 			break;
 		case "eliminarNotaCredito":
 			$factusEliminar = new ControladorFactus();

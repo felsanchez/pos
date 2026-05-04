@@ -1066,7 +1066,7 @@ class AjaxFacturacion
             $botones = "<div class='btn-group'>";
 
             if ($valor["tipo"] == "Factura") {
-                $rutaDocs = "index.php?ruta=editar-venta&idVenta=" . $valor["id_doc"];
+                $rutaDocs = "index.php?ruta=detalle-factura&idVenta=" . $valor["id_doc"];
                 $btnClass = "btn-info";
             } else if ($valor["tipo"] == "Nota Crédito") {
                 $rutaDocs = "index.php?ruta=ver-nota-credito&idNota=" . $valor["id_doc"];

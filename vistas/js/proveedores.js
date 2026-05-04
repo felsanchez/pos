@@ -37,7 +37,7 @@ $(document).ready(function () {
 								var rowNode = api.row(rowIdx).node();
 								var providerId = $(rowNode).find('.btnEditarProveedor').attr('idProveedor');
 								var notasText = $(rowNode).find('.celda-notas-proveedor').text().trim();
-								var placeholderAttr = (notasText === "") ? ' data-placeholder="true"' : "";
+								var placeholderAttr = (notasText === "") ? ' data-placeholder="Escribe una nota..."' : "";
 								
 								finalHtml += '<div contenteditable="true" class="celda-notas-proveedor" data-id="' + providerId + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + (notasText || "") + '</div>';
 							} else {
@@ -110,7 +110,7 @@ $(document).ready(function () {
 function inicializarPlaceholdersProveedores() {
 	$('.celda-notas-proveedor').each(function () {
 		if ($(this).text().trim() === '') {
-			$(this).attr('data-placeholder', 'true');
+			$(this).attr('data-placeholder', 'Escribe una nota...');
 		} else {
 			$(this).removeAttr('data-placeholder');
 		}

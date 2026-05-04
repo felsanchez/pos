@@ -1,10 +1,10 @@
 {
     "numbering_range_id": 1190,
-    "reference_code": "910",
-    "observation": "",
+    "reference_code": "995",
+    "observation": "notica9 - Recibe: jose",
     "payment_form": "1",
-    "payment_due_date": "0000-00-00",
-    "payment_method_code": "42",
+    "payment_due_date": "2026-06-02",
+    "payment_method_code": "71",
     "operation_type": 10,
     "send_email": true,
     "establishment": {

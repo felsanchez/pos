@@ -1,119 +1,3 @@
-<style>
-  /* Mejoras Visuales Factura */
-  .invoice {
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 30px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
-    background: white;
-  }
-
-  .invoice-info {
-    background-color: #f8f9fa;
-    padding: 20px;
-    margin-bottom: 30px;
-    border-radius: 4px;
-    border-left: 4px solid #3c8dbc;
-  }
-
-  .invoice-col address {
-    margin-bottom: 0;
-    color: #555;
-  }
-
-  .invoice-col strong {
-    color: #333;
-    font-size: 1.1em;
-  }
-
-  .page-header {
-    border-bottom: 2px solid #3c8dbc;
-    color: #444;
-    padding-bottom: 15px;
-  }
-
-  .table thead th {
-    background-color: #3c8dbc;
-    color: white;
-    text-transform: uppercase;
-    font-size: 12px;
-    letter-spacing: 0.5px;
-    border: none;
-  }
-
-  .table-striped>tbody>tr:nth-of-type(odd) {
-    background-color: #f4f6f9;
-  }
-
-  .lead {
-    font-size: 16px;
-    font-weight: bold;
-    color: #444;
-    background: #e9ecef;
-    padding: 8px 15px;
-    border-radius: 3px;
-    margin-bottom: 15px;
-    border-left: 4px solid #d2d6de;
-  }
-
-  /* Responsive para móvil */
-  @media (max-width: 767px) {
-
-    /* Campos de ancho completo */
-    .formularioVenta .form-group .input-group.col-xs-12,
-    .formularioVenta .form-group .col-xs-6 {
-      width: 100% !important;
-      max-width: 100%;
-      padding: 0 !important;
-    }
-
-    /* Productos - diseño vertical en móvil */
-    .nuevoProducto .row.col-xs-10 {
-      width: 100% !important;
-      margin: 0;
-      padding: 5px 15px;
-    }
-
-    .nuevoProducto .row .col-xs-7,
-    .nuevoProducto .row .col-xs-2,
-    .nuevoProducto .row .col-xs-3 {
-      width: 100% !important;
-      padding: 0;
-      margin-bottom: 10px;
-    }
-
-    .nuevoProducto .row .col-xs-7 {
-      margin-bottom: 5px;
-    }
-
-    /* Tabla de impuesto y total - diseño vertical */
-    .table-responsive {
-      overflow-x: auto;
-    }
-
-    table thead th,
-    table tbody td {
-      font-size: 12px;
-      padding: 5px !important;
-    }
-
-    table tbody td .input-group {
-      min-width: 120px;
-    }
-
-    /* Descuento - ancho completo */
-    .col-xs-10 {
-      width: 100% !important;
-    }
-
-    /* Input-group en móvil */
-    .input-group-addon {
-      padding: 6px 8px;
-      font-size: 12px;
-    }
-  }
-</style>
-
 <?php
 $item = "id";
 $valor = $_GET["idVenta"];
@@ -306,11 +190,13 @@ $configFactus = ControladorFactus::ctrObtenerConfiguracion();
           <br>
         <?php endif; ?>
 
-        <!-- Notas (Despues) -->
-        <p class="lead">Notas:</p>
-        <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
-          <?php echo $venta["notas"]; ?>
-        </p>
+        <!-- Notas del Cliente (solo si tiene contenido) -->
+        <?php if (!empty($venta["notas"])): ?>
+          <p class="lead">Notas del Cliente:</p>
+          <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
+            <?php echo $venta["notas"]; ?>
+          </p>
+        <?php endif; ?>
 
         <!-- Observaciones (Factura) -->
         <?php if (!empty($venta["observacion"])): ?>
@@ -328,7 +214,7 @@ $configFactus = ControladorFactus::ctrObtenerConfiguracion();
           $qrBase64 = "";
 
           // Attempt to generate QR locally
-          // Path relative to vistas/modulos/editar-venta.php -> pos root
+          // Path relative to vistas/modulos/detalle-venta.php -> pos root
           $tcpdfPath = __DIR__ . "/../../extensiones/tcpdf/tcpdf_barcodes_2d.php";
 
           if (file_exists($tcpdfPath)) {

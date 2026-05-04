@@ -79,29 +79,30 @@ CARGAR TABLA DINAMICA
 =============================================*/
 
 var table2 = $("table.tablaVentas").DataTable({
+	"responsive": true,
 	"processing": true,
 	"serverSide": true,
 	"ajax": {
 		"url": "ajax/datatable-ventas.ajax.php",
 		"type": "POST",
-		"data": function(d) {
+		"data": function (d) {
 			d.csrf_token = $('meta[name="csrf-token"]').attr('content');
 		}
 	},
 	"columnDefs": [
 		{
 			"targets": 1, // Imagen
-			"render": function(data, type, row) {
-				return '<img class="img-thumbnail imgTablaVenta" src="'+row[1]+'" width="40px">';
+			"render": function (data, type, row) {
+				return '<img class="img-thumbnail imgTablaVenta" src="' + row[1] + '" width="40px">';
 			}
 		},
 		{
 			"targets": 4, // Stock
-			"render": function(data, type, row) {
+			"render": function (data, type, row) {
 				var stock = row[4];
 				var btnClass = "btn-success";
-				if(stock <= 10) btnClass = "btn-danger";
-				else if(stock >= 11 && stock <= 15) btnClass = "btn-warning";
+				if (stock <= 10) btnClass = "btn-danger";
+				else if (stock >= 11 && stock <= 15) btnClass = "btn-warning";
 				return '<div class="btn-group"><button class="btn ' + btnClass + ' limiteStock">' + stock + '</button></div>';
 			}
 		},
@@ -1120,50 +1121,8 @@ $("#nuevoMetodoPago").change(function () {
 
 	var metodo = $(this).val();
 
-	if (metodo == "Efectivo") {
-
-		$(this).parent().parent().removeClass("col-xs-6");
-
-		$(this).parent().parent().addClass("col-xs-4");
-
-		$(this).parent().parent().parent().children(".cajasMetodoPago").html(
-
-			'<div class="col-xs-4">' +
-
-			'<div class="input-group">' +
-
-
-
-			'<input type="text" class="form-control" id="nuevoValorEfectivo" placeholder="00000" required>' +
-
-			'</div>' +
-
-			'</div>' +
-
-			'<div class="col-xs-4" id="capturarCambioEfectivo" style="padding-left:0px">' +
-
-			'<div class="input-group">' +
-
-
-
-			'<input type="text" class="form-control" id="nuevoCambioEfectivo" name="nuevoCambioEfectivo" placeholder="00000" readonly required>' +
-
-			'</div>' +
-
-			'</div>'
-		)
-
-		//Agregar formato number al precio 
-		$("#nuevoValorEfectivo").number(true, 0);
-		$("#nuevoCambioEfectivo").number(true, 0);
-
-		//Listar metodo en la entrada
-		listarMetodos()
-	}
-
-
 	//Hecho por mi else if
-	else if (metodo == "") {
+	if (metodo == "") {
 
 		$(this).parent().parent().removeClass("col-xs-4");
 
@@ -1296,8 +1255,9 @@ $(".formularioVenta").submit(function (e) {
 
 	e.preventDefault();
 
-	// Primero listamos productos para asegurar que el campo oculto esté listo
+	// Primero listamos productos y métodos para asegurar que los campos ocultos estén listos
 	listarProductos();
+	listarMetodos();
 
 	swal({
 		title: '¿Está seguro de guardar este documento?',
@@ -1318,7 +1278,7 @@ $(".formularioVenta").submit(function (e) {
 				type: 'info',
 				allowOutsideClick: false,
 				showConfirmButton: false,
-				didOpen: () => {
+				onBeforeOpen: () => {
 					swal.showLoading()
 				}
 			});
@@ -1385,32 +1345,27 @@ LISTAR METODO DE PAGO
 
 function listarMetodos() {
 
-	var listarMetodos = "";
 	var metodo = $("#nuevoMetodoPago").val();
 
-	if (metodo == "Efectivo") {
-		$("#listaMetodoPago").val("Efectivo");
+	var transaccion = $("#nuevoCodigoTransaccion").val();
+	if (transaccion && transaccion.trim() !== "") {
+		$("#listaMetodoPago").val(metodo + "-" + transaccion);
 	} else {
-		var transaccion = $("#nuevoCodigoTransaccion").val();
-		if (transaccion && transaccion.trim() !== "") {
-			$("#listaMetodoPago").val(metodo + "-" + transaccion);
-		} else {
-			$("#listaMetodoPago").val(metodo);
-		}
+		$("#listaMetodoPago").val(metodo);
 	}
 
 }
 
 
 /*=============================================
-BOTON EDITAR VENTA
+BOTON DETALLE VENTA
 =============================================*/
 
-$(document).on("click", ".btnEditarVenta", function () {
+$(document).on("click", ".btnDetalleVenta", function () {
 
 	var idVenta = $(this).attr("idVenta");
 
-	window.location = "index.php?ruta=editar-venta&idVenta=" + idVenta;
+	window.location = "index.php?ruta=detalle-venta&idVenta=" + idVenta;
 })
 
 
@@ -1659,12 +1614,12 @@ $(document).on("click", ".btnFirmarFactura", function () {
 			boton.html('<i class="fa fa-spinner fa-spin"></i>');
 
 			swal({
-				title: 'Guardando Factura Electrónica',
+				title: 'Firmando Factura Electrónica',
 				text: 'Por favor espere mientras se procesa la información...',
 				type: 'info',
 				allowOutsideClick: false,
 				showConfirmButton: false,
-				didOpen: () => {
+				onBeforeOpen: () => {
 					swal.showLoading()
 				}
 			});
@@ -1969,7 +1924,7 @@ $(document).on("click", ".btnEnviarEmail", function () {
 	$("#emailNombreCliente").val(nombreCliente);
 	$("#emailDestino").val(emailCliente);
 
-	$("#modalEnviarEmail").modal("show");
+	$("#modalEnviarEmail").fadeIn();
 });
 
 /*=============================================
@@ -1985,7 +1940,7 @@ $("#formEnviarEmail").submit(function (e) {
 		title: "Enviando Correo...",
 		text: "Por favor espere mientras se genera el PDF y se envía el correo.",
 		allowOutsideClick: false,
-		didOpen: () => {
+		onBeforeOpen: () => {
 			swal.showLoading();
 		}
 	});
@@ -2013,7 +1968,7 @@ $("#formEnviarEmail").submit(function (e) {
 					confirmButtonText: "Cerrar"
 				}).then(function (result) {
 					if (result.value) {
-						$("#modalEnviarEmail").modal("hide");
+						$("#modalEnviarEmail").fadeOut();
 					}
 				});
 			} else {
@@ -2044,7 +1999,7 @@ ADMINISTRAR VENTAS - LISTADO SERVER-SIDE
 =============================================*/
 $(document).ready(function () {
 	if ($("#tablaListaVentas").length > 0) {
-		
+
 		if ($.fn.DataTable.isDataTable('#tablaListaVentas')) {
 			$('#tablaListaVentas').DataTable().destroy();
 		}
@@ -2074,7 +2029,7 @@ $(document).ready(function () {
 					quitarLoaderGlobal();
 				}
 
-				window.recargarTablaVentas = function() {
+				window.recargarTablaVentas = function () {
 					table.ajax.reload();
 				};
 
@@ -2120,8 +2075,8 @@ $(document).ready(function () {
 					"type": "inline",
 					"renderer": function (api, rowIdx, columns) {
 						var labels = {
-							2: 'Vendedor', 3: 'Forma de Pago', 4: 'Imagen', 
-							5: 'Total', 6: 'Notas', 7: 'Observación', 8: 'Fecha'
+							2: 'Vendedor', 3: 'Forma de Pago', 4: 'Imagen',
+							5: 'Total', 6: 'Notas del cliente', 7: 'Observación', 8: 'Fecha'
 						};
 						var idVenta = $(api.row(rowIdx).node()).attr('data-venta-id') || '';
 						var finalHtml = '';
@@ -2195,7 +2150,7 @@ GUARDAR OBSERVACIONES (VENTAS)
 $(document).on('blur', '.celda-observacion', function () {
 	const idVenta = $(this).attr('data-id');
 	const nuevaObservacion = $(this).text().trim();
-	
+
 	$.ajax({
 		url: "ajax/datatable-ventas.ajax.php",
 		method: "POST",
@@ -2220,7 +2175,7 @@ $(document).on("click", ".img-ampliar-venta, .btnVerFotoVenta", function () {
 	$("#imagenVentaAmpliada").attr("src", rutaImagen);
 	$("#idVentaImagen").val(idVenta);
 	$(".nuevaImagenVenta").val("");
-	$("#modalAmpliarImagenVenta").modal("show");
+	$("#modalAmpliarImagenVenta").fadeIn();
 });
 
 $(".nuevaImagenVenta").change(function () {
@@ -2269,8 +2224,8 @@ $(document).on("click", ".btnGuardarImagenVenta", function () {
 		success: function (respuesta) {
 			if (respuesta == "ok") {
 				swal({ type: "success", title: "¡Actualizada!", showConfirmButton: true }).then(() => {
-					$("#modalAmpliarImagenVenta").modal("hide");
-					if(window.recargarTablaVentas) window.recargarTablaVentas();
+					$("#modalAmpliarImagenVenta").fadeOut();
+					if (window.recargarTablaVentas) window.recargarTablaVentas();
 					else window.location.reload();
 				});
 			}

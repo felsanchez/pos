@@ -122,7 +122,7 @@ $(document).ready(function () {
 								var rowNode = api.row(rowIdx).node();
 								var idOrden = $(rowNode).attr('data-orden-id') || "";
 								var observacionText = $(rowNode).find('.celda-observacion').text().trim();
-								var placeholderAttr = (observacionText === "") ? ' data-placeholder="true"' : "";
+								var placeholderAttr = ' data-placeholder="Escribe una observación..."';
 
 								finalHtml += '<div contenteditable="true" class="celda-observacion" data-id="' + idOrden + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + observacionText + '</div>';
 							} else {
@@ -139,8 +139,8 @@ $(document).ready(function () {
 			},
 			"columnDefs": [
 				{ "targets": 0, "responsivePriority": 1 },
-				{ "targets": 10, "responsivePriority": 2, "orderable": false },
-				{ "targets": 1, "responsivePriority": 3 },
+				{ "targets": 1, "responsivePriority": 2 },
+				{ "targets": 11, "responsivePriority": 3, "orderable": false },
 				{ "targets": 2, "responsivePriority": 4 },
 				{ "targets": 3, "responsivePriority": 5 },
 				{ "targets": 4, "responsivePriority": 6 },
@@ -148,7 +148,8 @@ $(document).ready(function () {
 				{ "targets": 6, "responsivePriority": 8 },
 				{ "targets": 7, "responsivePriority": 9 },
 				{ "targets": 8, "responsivePriority": 10 },
-				{ "targets": 9, "responsivePriority": 11 }
+				{ "targets": 9, "responsivePriority": 11, "orderable": false },
+				{ "targets": 10, "responsivePriority": 12, "orderable": false }
 			],
 			"language": {
 				"sProcessing": "Procesando...",
@@ -319,7 +320,12 @@ function enviarSeguimiento(btn, urlWebhook, tipo) {
 				body: datosWebhook
 			})
 			.then(response => {
-				var columna = (tipo === 'recibido') ? "seguimiento_recibido" : "seguimiento_procesado";
+				const mapping = {
+					'recibido': { col: 'seguimiento_recibido', lbl: 'Enviado (R)' },
+					'procesado': { col: 'seguimiento_procesado', lbl: 'Enviado (P)' },
+					'alistado': { col: 'seguimiento_alistado', lbl: 'Enviado (A)' }
+				};
+				var columna = mapping[tipo] ? mapping[tipo].col : "seguimiento_recibido";
 				var datos = new FormData();
 				datos.append("idVentaSeguimiento", idOrden);
 				datos.append("columna", columna);
@@ -336,7 +342,7 @@ function enviarSeguimiento(btn, urlWebhook, tipo) {
 					dataType: "json",
 					success: function (res) {
 						if (res == "ok") {
-							var label = (tipo === 'recibido') ? 'Enviado (R)' : 'Enviado (P)';
+							var label = mapping[tipo] ? mapping[tipo].lbl : 'Enviado';
 							btn.replaceWith('<span class="label label-success" style="margin-right:5px;">' + label + '</span>');
 							swal({ type: "success", title: "Enviado", showConfirmButton: false, timer: 1500 });
 						}
@@ -356,6 +362,10 @@ $(".tablaOrdenes").on("click", ".btnSeguimientoRecibido", function () {
 
 $(".tablaOrdenes").on("click", ".btnSeguimientoProcesado", function () {
 	enviarSeguimiento($(this), "https://demo-ppal-n8n.lhs6l6.easypanel.host/webhook/b9ebbdab-45f9-46ac-957e-30e080f773aa", 'procesado');
+});
+
+$(".tablaOrdenes").on("click", ".btnSeguimientoAlistado", function () {
+	enviarSeguimiento($(this), "https://demo-ppal-n8n.lhs6l6.easypanel.host/webhook/b6aad80c-aedf-4339-a701-89d040f44f47", 'alistado');
 });
 
 /*=============================================

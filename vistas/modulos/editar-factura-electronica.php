@@ -43,13 +43,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 $productosVenta = json_decode($venta["productos"], true);
 ?>
 
-<style>
-  @media (min-width: 769px) {
-    .solo-movil {
-      display: none !important;
-    }
-  }
-</style>
+
 
 
 <div class="content-wrapper">
@@ -159,9 +153,40 @@ $productosVenta = json_decode($venta["productos"], true);
                           ?>
                         </select>
                         <span class="input-group-addon">
-                          <button type="button" class="btn btn-default btn-xs" data-toggle="modal"
-                            data-target="#modalAgregarCliente" data-dismiss="modal">Agregar cliente</button>
+                          <button type="button" class="btn btn-default btn-xs" onclick="$('#modalAgregarCliente').fadeIn();">Agregar cliente</button>
                         </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!--=====================================
+                NOTAS DEL CLIENTE
+                ======================================-->
+                <div class="row">
+                  <div class="col-xs-12">
+                    <div class="form-group">
+                      <label>Notas del cliente</label>
+                      <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-sticky-note"></i></span>
+                        <textarea class="form-control" id="notas" name="notas" rows="3"
+                          placeholder="Notas del cliente"><?php echo isset($venta["notas"]) ? $venta["notas"] : ''; ?></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!--=====================================
+                OBSERVACIÓN INTERNA
+                ======================================-->
+                <div class="row">
+                  <div class="col-xs-12">
+                    <div class="form-group">
+                      <label>Observación Interna</label>
+                      <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-commenting-o"></i></span>
+                        <textarea class="form-control" id="observacion" name="observacion" rows="3"
+                          placeholder="Observaciones internas"><?php echo isset($venta["observacion"]) ? $venta["observacion"] : ''; ?></textarea>
                       </div>
                     </div>
                   </div>
@@ -322,8 +347,7 @@ $productosVenta = json_decode($venta["productos"], true);
 
                 <div class="row">
                   <div class="col-xs-12">
-                    <button type="button" class="btn btn-default" data-toggle="modal"
-                      data-target="#modalAgregarRetencionNuevo">Retenciones</button>
+                    <button type="button" class="btn btn-default" onclick="$('#modalAgregarRetencionNuevo').fadeIn();">Retenciones</button>
                   </div>
                 </div>
 
@@ -382,9 +406,11 @@ $productosVenta = json_decode($venta["productos"], true);
 
             <div class="box-footer">
               <input type="hidden" name="editarVenta" value="<?php echo $venta["codigo"]; ?>">
+              <input type="hidden" name="idVenta" value="<?php echo $venta["id"]; ?>">
               <input type="hidden" name="activarFacturaElectronica" value="1">
-              <button type="submit" name="editarVentaFactus" class="btn btn-primary pull-right">Actualizar
-                Borrador</button>
+              <!-- Campo hidden garantiza que editarVentaFactus llega al servidor vía AJAX FormData -->
+              <input type="hidden" name="editarVentaFactus" value="1">
+              <button type="submit" class="btn btn-primary pull-right">Actualizar Borrador</button>
             </div>
 
           </form>
@@ -445,177 +471,139 @@ MODAL AGREGAR CLIENTE
 ======================================-->
 
 <!-- Modal -->
-<div id="modalAgregarCliente" class="modal fade" role="dialog">
+<div id="modalAgregarCliente" class="modal-custom">
+  <div class="modal-custom-backdrop" data-dismiss="modal"></div>
+  <div class="modal-custom-container">
+    <form role="form" method="post" style="display: flex; flex-direction: column; height: 100%;">
 
-  <div class="modal-dialog">
+      <!-- CABEZA DEL MODAL -->
+      <div class="modal-custom-header">
+        <h4 class="modal-title">Agregar cliente</h4>
+        <button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 0.8; margin-top: -2px;">&times;</button>
+      </div>
 
-    <div class="modal-content">
+      <!-- CUERPO DEL MODAL -->
+      <div class="modal-custom-body" style="text-align: left;">
+        <div class="box-body">
 
-      <form role="form" method="post">
-
-        <!--=====================================
-      CABEZA DEL MODAL
-      ======================================-->
-
-        <div class="modal-header" style="background:#3c8dbc; color: white">
-
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title">Agregar cliente</h4>
-
-        </div>
-
-        <!--=====================================
-      CUERPO DEL MODAL
-      ======================================-->
-
-        <div class="modal-body">
-
-          <div class="box-body">
-
-            <!-- Fila 1: Nombre y Documento -->
-            <div class="row">
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label>Nombre Completo *</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-user"></i></span>
-                    <input type="text" class="form-control" name="nuevoCliente" placeholder="Nombre del cliente"
-                      required>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label>Documento *</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-key"></i></span>
-                    <input type="number" min="0" class="form-control" name="nuevoDocumentoId"
-                      placeholder="Número de documento" required>
-                  </div>
+          <!-- Fila 1: Nombre y Documento -->
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Nombre Completo *</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                  <input type="text" class="form-control" name="nuevoCliente" placeholder="Nombre del cliente" required>
                 </div>
               </div>
             </div>
 
-            <!-- Fila 2: Teléfono y Email -->
-            <div class="row">
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label>Teléfono *</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-phone"></i></span>
-                    <input type="text" class="form-control" name="nuevoTelefono" placeholder="(300) 123-4567"
-                      data-inputmask="'mask':'(999) 999-9999'" data-mask required>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label>Email</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
-                    <input type="email" class="form-control" name="nuevoEmail" placeholder="correo@ejemplo.com">
-                  </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Documento *</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-key"></i></span>
+                  <input type="number" min="0" class="form-control" name="nuevoDocumentoId" placeholder="Número de documento" required>
                 </div>
               </div>
             </div>
-
-            <!-- Fila 3: Municipio -->
-            <div class="row">
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label>Municipio *</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
-                    <select class="form-control" name="nuevoMunicipio" required>
-                      <option value="">-- Seleccionar Municipio --</option>
-                      <?php
-                      require_once "modelos/factus.modelo.php";
-                      $municipios = ModeloFactus::mdlObtenerMunicipios();
-                      foreach ($municipios as $municipio) {
-                        $textoMunicipio = $municipio['nombre'] . ' - ' . $municipio['departamento'];
-                        echo "<option value='{$municipio['id_factus']}'>{$textoMunicipio}</option>";
-                      }
-                      ?>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Fila 4: Dirección -->
-            <div class="row">
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label>Dirección *</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-home"></i></span>
-                    <input type="text" class="form-control" name="nuevaDireccion"
-                      placeholder="Calle, carrera, número, etc." required>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Fila 5: Notas -->
-            <div class="row">
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label>Notas</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
-                    <input type="text" class="form-control" name="nuevaNota"
-                      placeholder="Información adicional (opcional)">
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Campos ocultos -->
-            <input type="hidden" name="activarFacturaElectronica" value="1">
-            <input type="hidden" name="nuevoEstatus" value="nuevo">
-            <input type="hidden" name="origen" value="crear-venta">
-            <input type="hidden" name="vistaOrigen" value="crear-venta">
-
-
-            <!-- entrada para la fecha naciminiento -->
-            <!--
-           <div class="form-group">         
-            <div class="input-group">              
-              <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-              <input type="text" class="form-control input-lg" name="nuevaFechaNacimiento" placeholder="Ingresar fecha de nacimiento" data-inputmask="'alias': 'yyyy/mm/dd'" data-mask required>
-             </div>
-           </div>
-          -->
-
-
           </div>
 
+          <!-- Fila 2: Teléfono y Email -->
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Teléfono *</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-phone"></i></span>
+                  <input type="text" class="form-control" name="nuevoTelefono" placeholder="(300) 123-4567" data-inputmask="'mask':'(999) 999-9999'" data-mask required>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Email</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                  <input type="email" class="form-control" name="nuevoEmail" placeholder="correo@ejemplo.com">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fila 3: Municipio -->
+          <div class="row">
+            <div class="col-md-12">
+              <div class="form-group">
+                <label>Municipio *</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
+                  <select class="form-control" name="nuevoMunicipio" required>
+                    <option value="">-- Seleccionar Municipio --</option>
+                    <?php
+                    require_once "modelos/factus.modelo.php";
+                    $municipios = ModeloFactus::mdlObtenerMunicipios();
+                    foreach ($municipios as $municipio) {
+                      $textoMunicipio = $municipio['nombre'] . ' - ' . $municipio['departamento'];
+                      echo "<option value='{$municipio['id_factus']}'>{$textoMunicipio}</option>";
+                    }
+                    ?>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fila 4: Dirección -->
+          <div class="row">
+            <div class="col-md-12">
+              <div class="form-group">
+                <label>Dirección *</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-home"></i></span>
+                  <input type="text" class="form-control" name="nuevaDireccion" placeholder="Calle, carrera, número, etc." required>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fila 5: Notas -->
+          <div class="row">
+            <div class="col-md-12">
+              <div class="form-group">
+                <label>Notas</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
+                  <input type="text" class="form-control" name="nuevaNota" placeholder="Información adicional (opcional)">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Campos ocultos -->
+          <input type="hidden" name="activarFacturaElectronica" value="1">
+          <input type="hidden" name="nuevoEstatus" value="nuevo">
+          <input type="hidden" name="origen" value="crear-venta">
+          <input type="hidden" name="vistaOrigen" value="crear-venta">
+
         </div>
+      </div>
 
-        <!--=====================================
-        PIE DEL MODAL
-        ======================================-->
+      <!-- PIE DEL MODAL -->
+      <div class="modal-custom-footer">
+        <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
+        <button type="submit" class="btn btn-primary">Guardar cliente</button>
+      </div>
 
-        <div class="modal-footer">
+    </form>
 
-          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
-          <button type="submit" class="btn btn-primary">Guardar cliente</button>
+    <?php
+    $crearCliente = new ControladorClientes();
+    $crearCliente->ctrCrearCliente();
+    ?>
 
-        </div>
-
-      </form>
-
-
-      <?php
-
-      $crearCliente = new ControladorClientes();
-      $crearCliente->ctrCrearCliente();
-
-      ?>
-
-    </div>
+  </div>
 
     <!--Verificar que tenga productos , antes de guardar la venta-->
 
@@ -761,56 +749,45 @@ MODAL AGREGAR CLIENTE
   <!--=====================================
   MODAL AGREGAR RETENCION
   ======================================-->
-  <div id="modalAgregarRetencion" class="modal fade" role="dialog">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <form role="form" method="post" id="formularioRetencion">
-
-          <!-- CABEZA DEL MODAL -->
-          <div class="modal-header" style="background:#3c8dbc; color: white">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title">Agregar Retención</h4>
-          </div>
-
-          <!-- CUERPO DEL MODAL -->
-          <div class="modal-body">
-            <div class="box-body">
-
-              <!-- Tipo de retencion -->
-              <div class="form-group">
-                <label>Tipo Retención</label>
-                <div class="input-group">
-                  <span class="input-group-addon"><i class="fa fa-th"></i></span>
-                  <select class="form-control input-lg" id="nuevoTipoRetencion" name="nuevoTipoRetencion">
-                    <option value="">Seleccionar tipo</option>
-                    <option value="ReteIVA">ReteIVA</option>
-                    <option value="ReteRenta">ReteRenta</option>
-                  </select>
-                </div>
+  <div id="modalAgregarRetencion" class="modal-custom">
+    <div class="modal-custom-backdrop" data-dismiss="modal"></div>
+    <div class="modal-custom-container" style="max-width: 500px;">
+      <form role="form" method="post" id="formularioRetencion" style="display: flex; flex-direction: column; height: 100%;">
+        <div class="modal-custom-header">
+          <h4 class="modal-title">Agregar Retención</h4>
+          <button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 0.8; margin-top: -2px;">&times;</button>
+        </div>
+        <div class="modal-custom-body" style="text-align: left;">
+          <div class="box-body">
+            <!-- Tipo de retencion -->
+            <div class="form-group">
+              <label>Tipo Retención</label>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-th"></i></span>
+                <select class="form-control input-lg" id="nuevoTipoRetencion" name="nuevoTipoRetencion">
+                  <option value="">Seleccionar tipo</option>
+                  <option value="ReteIVA">ReteIVA</option>
+                  <option value="ReteRenta">ReteRenta</option>
+                </select>
               </div>
-
-              <!-- Porcentaje -->
-              <div class="form-group">
-                <label>Porcentaje</label>
-                <div class="input-group">
-                  <span class="input-group-addon"><i class="fa fa-percent"></i></span>
-                  <select class="form-control input-lg" id="nuevoPorcentajeRetencion" name="nuevoPorcentajeRetencion">
-                    <option value="">Seleccionar porcentaje</option>
-                  </select>
-                </div>
+            </div>
+            <!-- Porcentaje -->
+            <div class="form-group">
+              <label>Porcentaje</label>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-percent"></i></span>
+                <select class="form-control input-lg" id="nuevoPorcentajeRetencion" name="nuevoPorcentajeRetencion">
+                  <option value="">Seleccionar porcentaje</option>
+                </select>
               </div>
-
             </div>
           </div>
-
-          <!-- PIE DEL MODAL -->
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
-            <button type="button" class="btn btn-primary" id="guardarRetencion" data-dismiss="modal">Guardar</button>
-          </div>
-
-        </form>
-      </div>
+        </div>
+        <div class="modal-custom-footer">
+          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
+          <button type="button" class="btn btn-primary" id="guardarRetencion" data-dismiss="modal">Guardar</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -819,57 +796,45 @@ MODAL AGREGAR CLIENTE
 <!--=====================================
 MODAL AGREGAR RETENCION
 ======================================-->
-<div id="modalAgregarRetencionNuevo" class="modal fade" role="dialog">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form role="form" method="post" id="formularioRetencionNuevo">
-
-        <!-- CABEZA DEL MODAL -->
-        <div class="modal-header" style="background:#3c8dbc; color: white">
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title">Agregar Retención</h4>
-        </div>
-
-        <!-- CUERPO DEL MODAL -->
-        <div class="modal-body">
-          <div class="box-body">
-
-            <!-- Tipo de retencion -->
-            <div class="form-group">
-              <label>Tipo Retención</label>
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-th"></i></span>
-                <select class="form-control input-lg" id="nuevoTipoRetencionNuevo" name="nuevoTipoRetencion">
-                  <option value="">Seleccionar tipo</option>
-                  <option value="ReteIVA">ReteIVA</option>
-                  <option value="ReteRenta">ReteRenta</option>
-                </select>
-              </div>
+<div id="modalAgregarRetencionNuevo" class="modal-custom">
+  <div class="modal-custom-backdrop" data-dismiss="modal"></div>
+  <div class="modal-custom-container" style="max-width: 500px;">
+    <form role="form" method="post" id="formularioRetencionNuevo" style="display: flex; flex-direction: column; height: 100%;">
+      <div class="modal-custom-header">
+        <h4 class="modal-title">Agregar Retención</h4>
+        <button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 0.8; margin-top: -2px;">&times;</button>
+      </div>
+      <div class="modal-custom-body" style="text-align: left;">
+        <div class="box-body">
+          <!-- Tipo de retencion -->
+          <div class="form-group">
+            <label>Tipo Retención</label>
+            <div class="input-group">
+              <span class="input-group-addon"><i class="fa fa-th"></i></span>
+              <select class="form-control input-lg" id="nuevoTipoRetencionNuevo" name="nuevoTipoRetencion">
+                <option value="">Seleccionar tipo</option>
+                <option value="ReteIVA">ReteIVA</option>
+                <option value="ReteRenta">ReteRenta</option>
+              </select>
             </div>
-
-            <!-- Porcentaje -->
-            <div class="form-group">
-              <label>Porcentaje</label>
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-percent"></i></span>
-                <select class="form-control input-lg" id="nuevoPorcentajeRetencionNuevo"
-                  name="nuevoPorcentajeRetencion">
-                  <option value="">Seleccionar porcentaje</option>
-                </select>
-              </div>
+          </div>
+          <!-- Porcentaje -->
+          <div class="form-group">
+            <label>Porcentaje</label>
+            <div class="input-group">
+              <span class="input-group-addon"><i class="fa fa-percent"></i></span>
+              <select class="form-control input-lg" id="nuevoPorcentajeRetencionNuevo" name="nuevoPorcentajeRetencion">
+                <option value="">Seleccionar porcentaje</option>
+              </select>
             </div>
-
           </div>
         </div>
-
-        <!-- PIE DEL MODAL -->
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
-          <button type="button" class="btn btn-primary" id="guardarRetencionNuevo" data-dismiss="modal">Guardar</button>
-        </div>
-
-      </form>
-    </div>
+      </div>
+      <div class="modal-custom-footer">
+        <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
+        <button type="button" class="btn btn-primary" id="guardarRetencionNuevo" data-dismiss="modal">Guardar</button>
+      </div>
+    </form>
   </div>
 </div>
 </div>
@@ -1088,6 +1053,6 @@ MODAL AGREGAR RETENCION
 <?php
 
 $crearFactura = new ControladorVentas();
-$crearFactura->ctrEditarVenta();
+$crearFactura->ctrCrearVenta();
 
 ?>

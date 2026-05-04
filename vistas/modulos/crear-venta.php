@@ -7,13 +7,7 @@ $formatoCodigoVenta = !empty($configuracion["formato_codigo_venta"]) ? $configur
 $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracion["medios_pago"]) : array("Efectivo", "Tarjeta Débito", "Tarjeta Crédito", "Nequi", "Bancolombia", "Cheque");
 ?>
 
-<style>
-  @media (min-width: 769px) {
-    .solo-movil {
-      display: none !important;
-    }
-  }
-</style>
+
 
 
 <div class="content-wrapper">
@@ -56,12 +50,11 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                       ======================================-->
 
                 <!--=====================================
-                      ENCABEZADO DE VENTA (VENDEDOR, CÓDIGO, CLIENTE)
+                      ENCABEZADO DE VENTA: VENDEDOR (fila propia)
                       ======================================-->
 
                 <div class="row">
-                  <!-- Vendedor -->
-                  <div class="col-xs-12 col-md-4">
+                  <div class="col-xs-12">
                     <div class="form-group">
                       <label>Vendedor</label>
                       <div class="input-group">
@@ -73,9 +66,14 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <!-- Formato Código -->
-                  <div class="col-xs-12 col-md-4">
+                <!--=====================================
+                      FORMATO Y CÓDIGO VENTA (misma fila)
+                      ======================================-->
+
+                <div class="row">
+                  <div class="col-xs-6">
                     <div class="form-group">
                       <label>Formato</label>
                       <div class="input-group">
@@ -86,8 +84,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                     </div>
                   </div>
 
-                  <!-- Código Venta -->
-                  <div class="col-xs-12 col-md-4">
+                  <div class="col-xs-6">
                     <div class="form-group">
                       <label>Código Venta</label>
                       <div class="input-group">

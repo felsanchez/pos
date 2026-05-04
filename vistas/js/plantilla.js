@@ -67,4 +67,23 @@ $(document).ready(function () {
 	if (typeof $.fn.inputmask === 'function') {
 		$('[data-mask]').inputmask();
 	}
+
+	/*=============================================
+	MODALES CUSTOM - MANEJADOR GLOBAL
+	=============================================*/
+	// Abrir modales custom mediante atributos data
+	$(document).on('click', '[data-toggle="modal"]', function (e) {
+		var targetId = $(this).attr('data-target');
+		if (targetId && $(targetId).hasClass('modal-custom')) {
+			e.preventDefault();
+			e.stopPropagation();
+			$(targetId).fadeIn(200);
+		}
+	});
+
+	// Cerrar modales custom
+	$(document).on('click', '.modal-custom [data-dismiss="modal"], .modal-custom-backdrop', function (e) {
+		e.preventDefault();
+		$(this).closest('.modal-custom').fadeOut(200);
+	});
 });

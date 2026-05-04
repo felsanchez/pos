@@ -403,6 +403,114 @@ class ControladorNotificaciones
 			}
 
 		}
+	}
+
+	/*=============================================
+	VERIFICAR SI ORDEN CONTIENE 'n8n' EN EL CAMPO EXTRA
+	=============================================*/
+
+	static public function ctrVerificarOrdenn8n($codigoVenta = null)
+	{
+
+		$tabla = "ventas";
+
+		// Si se proporciona un código específico, verificar solo esa orden
+		if ($codigoVenta !== null) {
+
+			$item = "codigo";
+			$venta = ModeloVentas::mdlMostrarVentas($tabla, $item, $codigoVenta);
+
+			if (!$venta) {
+				return;
+			}
+
+			// Verificar si el campo 'extra' contiene 'n8n' (case-insensitive)
+			if (isset($venta["extra"]) && !empty($venta["extra"]) && stripos($venta["extra"], "n8n") !== false) {
+
+				// Verificar si YA fue notificado previamente (persistencia)
+				if (!isset($venta["notas"]) || stripos($venta["notas"], "[Notificado_n8n]") === false) {
+
+					// Verificar si ya existe una notificación
+					$existe = ModeloNotificaciones::mdlExisteNotificacion("orden_creada", $venta["id"], "venta");
+
+					if (!$existe) {
+						// Obtener nombre del cliente
+						$cliente = ControladorClientes::ctrMostrarClientes("id", $venta["id_cliente"]);
+						$nombreCliente = ($cliente && isset($cliente["nombre"])) ? $cliente["nombre"] : "Cliente Desconocido";
+
+						// Crear notificación
+						ControladorNotificaciones::ctrCrearNotificacion(
+							"orden_creada",
+							"Orden generada automáticamente",
+							"Código: " . $venta["codigo"] . " - Cliente: " . $nombreCliente . " - Total: $" . number_format($venta["total"], 2),
+							"venta",
+							$venta["id"]
+						);
+					}
+
+					// MARCAR como notificado en la venta para evitar que vuelva a aparecer si se borra la notificación
+					$nuevasNotas = (isset($venta["notas"]) ? $venta["notas"] : "") . " [Notificado_n8n]";
+					$datosActualizacion = array(
+						"id" => $venta["id"],
+						"notas" => trim($nuevasNotas)
+					);
+					ModeloVentas::mdlActualizarNotaVenta("ventas", $datosActualizacion);
+				}
+			}
+
+		} else {
+			// Si no se proporciona código, verificar todas las órdenes
+			$ordenes = ModeloVentas::mdlMostrarVentas($tabla, null, null);
+
+			if (!$ordenes) {
+				return;
+			}
+
+			foreach ($ordenes as $venta) {
+
+				// Solo verificar órdenes (no ventas)
+				if ($venta["estado"] != "orden") {
+					continue;
+				}
+
+				// Verificar si el campo 'extra' contiene 'n8n' (case-insensitive)
+				if (isset($venta["extra"]) && !empty($venta["extra"]) && stripos($venta["extra"], "n8n") !== false) {
+
+					// Verificar si YA fue notificado previamente (persistencia)
+					if (!isset($venta["notas"]) || stripos($venta["notas"], "[Notificado_n8n]") === false) {
+
+						// Verificar si ya existe una notificación (para evitar doble insert en la misma ejecución)
+						$existe = ModeloNotificaciones::mdlExisteNotificacion("orden_creada", $venta["id"], "venta");
+
+						if (!$existe) {
+
+							// Obtener nombre del cliente
+							$cliente = ControladorClientes::ctrMostrarClientes("id", $venta["id_cliente"]);
+							$nombreCliente = ($cliente && isset($cliente["nombre"])) ? $cliente["nombre"] : "Cliente Desconocido";
+
+							// Crear notificación
+							ControladorNotificaciones::ctrCrearNotificacion(
+								"orden_creada",
+								"Orden generada automáticamente",
+								"Código: " . $venta["codigo"] . " - Cliente: " . $nombreCliente . " - Total: $" . number_format($venta["total"], 2),
+								"venta",
+								$venta["id"]
+							);
+						}
+
+						// MARCAR como notificado en la venta para evitar que vuelva a aparecer si se borra la notificación
+						$nuevasNotas = (isset($venta["notas"]) ? $venta["notas"] : "") . " [Notificado_n8n]";
+						$datosActualizacion = array(
+							"id" => $venta["id"],
+							"notas" => trim($nuevasNotas)
+						);
+						ModeloVentas::mdlActualizarNotaVenta("ventas", $datosActualizacion);
+					}
+				}
+
+			}
+
+		}
 
 	}
 

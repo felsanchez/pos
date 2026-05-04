@@ -134,10 +134,7 @@ $configFactus = ControladorFactus::ctrObtenerConfiguracion();
 $tipoDocumento = "Orden de Venta";
 $etiquetaDocumento = "Orden";
 
-if (!empty($venta["numero_factura"])) {
-  $tipoDocumento = "Factura Electrónica";
-  $etiquetaDocumento = "Factura";
-} else if ($venta["estado"] == "venta") {
+if ($venta["estado"] == "venta") {
   $tipoDocumento = "Detalle de Venta";
   $etiquetaDocumento = "Venta";
 }
@@ -320,11 +317,13 @@ if (!empty($venta["numero_factura"])) {
           <br>
         <?php endif; ?>
 
-        <!-- Notas (Despues) -->
-        <p class="lead">Notas:</p>
-        <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
-          <?php echo $venta["notas"]; ?>
-        </p>
+        <!-- Notas del Cliente (solo si tiene contenido) -->
+        <?php if (!empty($venta["notas"])): ?>
+          <p class="lead">Notas del Cliente:</p>
+          <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
+            <?php echo $venta["notas"]; ?>
+          </p>
+        <?php endif; ?>
 
         <!-- Observaciones (Factura) -->
         <?php if (!empty($venta["observacion"])): ?>
@@ -494,7 +493,8 @@ if (!empty($venta["numero_factura"])) {
       <div class="col-xs-12">
         <!-- Boton XML (Solo para Facturas) -->
         <?php if ($etiquetaDocumento == "Factura" && !empty($venta["numero_factura"])): ?>
-          <a class="btn pull-right" style="margin-right: 5px; background-color: #00c0ef; color: white; border-color: #00acd6;"
+          <a class="btn pull-right"
+            style="margin-right: 5px; background-color: #00c0ef; color: white; border-color: #00acd6;"
             href="descargar-xml.php?xml=<?php echo urlencode($venta["numero_factura"]); ?>" target="_blank">
             <i class="fa fa-file-code-o"></i> Descargar XML
           </a>

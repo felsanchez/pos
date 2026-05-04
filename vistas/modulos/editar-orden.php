@@ -2,6 +2,7 @@
 // Obtener configuración del sistema
 $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
 $impuestoDefecto = !empty($configuracion["impuesto_defecto"]) ? $configuracion["impuesto_defecto"] : 0;
+$formatoCodigoVenta = !empty($configuracion["formato_codigo_venta"]) ? $configuracion["formato_codigo_venta"] : "";
 $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracion["medios_pago"]) : array("Efectivo", "Tarjeta Débito", "Tarjeta Crédito", "Nequi", "Bancolombia", "Cheque");
 $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuracion["mensaje_confirmado"] : "Su pedido ha sido confirmado";
 ?>
@@ -90,6 +91,8 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
 
                 <div class="form-group">
 
+                  <label>Vendedor</label>
+
                   <div class="input-group">
 
                     <span class="input-group-addon"><i class="fa fa-user"></i></span>
@@ -104,18 +107,43 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
                 </div>
 
                 <!--=====================================
-                      ENTRADA DEL CODIGO
+                      FORMATO Y CÓDIGO VENTA (misma fila)
                       ======================================-->
 
-                <div class="form-group">
+                <div class="row">
 
-                  <div class="input-group">
+                  <div class="col-xs-6">
+                    <div class="form-group">
 
-                    <span class="input-group-addon"><i class="fa fa-key"></i></span>
+                      <label>Formato</label>
 
-                    <input type="text" class="form-control" id="nuevaVenta" name="editarVenta"
-                      value="<?php echo $venta["codigo"]; ?>" readonly>
+                      <div class="input-group">
 
+                        <span class="input-group-addon"><i class="fa fa-barcode"></i></span>
+
+                        <input type="text" class="form-control" id="formatoCodigoVenta" name="formatoCodigoVenta"
+                          value="<?php echo $formatoCodigoVenta; ?>" readonly placeholder="Formato de código">
+
+                      </div>
+
+                    </div>
+                  </div>
+
+                  <div class="col-xs-6">
+                    <div class="form-group">
+
+                      <label>Código Venta</label>
+
+                      <div class="input-group">
+
+                        <span class="input-group-addon"><i class="fa fa-key"></i></span>
+
+                        <input type="text" class="form-control" id="nuevaVenta" name="editarVenta"
+                          value="<?php echo $venta["codigo"]; ?>" readonly>
+
+                      </div>
+
+                    </div>
                   </div>
 
                 </div>
@@ -154,6 +182,8 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
                       ======================================-->
 
                 <div class="form-group">
+
+                  <label>Cliente</label>
 
                   <div class="input-group">
 
@@ -199,6 +229,8 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
                       ======================================-->
 
                 <div class="form-group">
+
+                  <label>Nombre de quien recibe</label>
 
                   <div class="input-group">
 
@@ -299,7 +331,7 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
                        ======================================-->
 
                 <!--<button type="button" class="btn btn-default btnAgregarProducto solo-movil">Agregar producto</button>-->
-                <button type="button" class="btn btn-default btnAgregarProducto">Agregar producto</button>
+                <button type="button" class="btn btn-default btnAgregarProducto solo-movil">Agregar producto</button>
 
                 <hr>
 
@@ -456,6 +488,16 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
                 <!--=====================================
                          ENTRADA METODO DE PAGO
                          ======================================-->
+                <?php
+                    $metodoPagoActual = $venta["metodo_pago"];
+                    $codigoTransaccionActual = "";
+                    
+                    if(strpos($metodoPagoActual, "-") !== false){
+                        $partesMetodo = explode("-", $metodoPagoActual);
+                        $metodoPagoActual = $partesMetodo[0];
+                        $codigoTransaccionActual = $partesMetodo[1];
+                    }
+                ?>
 
                 <div class="form-group row">
                   <div class="col-xs-6" style="padding-right:0px">
@@ -465,7 +507,7 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
                         <?php
                         foreach ($mediosPago as $medio) {
                           $medio = trim($medio); // Eliminar espacios en blanco
-                          $sel = ($medio == $venta["metodo_pago"]) ? 'selected' : '';
+                          $sel = ($medio == $metodoPagoActual) ? 'selected' : '';
                           echo '<option value="' . $medio . '" ' . $sel . '>' . $medio . '</option>';
                         }
                         ?>
@@ -868,66 +910,16 @@ MODAL AGREGAR RETENCION
       aplicarDescuento();
     });
 
-  });
-</script>
+    // Disparar el cambio de método de pago para que se muestren los campos adicionales si ya hay uno seleccionado
+    if ($("#nuevoMetodoPago").val() != "") {
+        $("#nuevoMetodoPago").trigger("change");
 
-<!-- Webhook para Guardar Cambios en Editar Orden -->
-<script>
-  $(document).ready(function () {
-    $("#formularioVenta").on("submit", function (e) {
+        // Si hay un código de transacción previo, rellenarlo
+        var codigoPrevio = "<?php echo $codigoTransaccionActual; ?>";
+        if(codigoPrevio != ""){
+            $("#nuevoCodigoTransaccion").val(codigoPrevio);
+        }
+    }
 
-      var formulario = this;
-      var btnGuardar = $(this).find("button[type='submit']");
-
-      // Si el formulario ya tiene el flag de 'enviando', dejar pasar el submit real
-      if (btnGuardar.data("enviando")) {
-        return true;
-      }
-
-      e.preventDefault(); // Detener el primer envío
-
-      // Evitar múltiples clics
-      if (btnGuardar.attr("disabled")) return;
-      btnGuardar.attr("disabled", true);
-      btnGuardar.data("enviando", true); // Marcar para permitir el siguiente submit
-
-      // Obtener datos del cliente seleccionado
-      var opcionCliente = $("#seleccionarCliente option:selected");
-      var nombreCliente = opcionCliente.text().trim();
-      var telefonoCliente = opcionCliente.attr("data-telefono");
-      var codigoVenta = $("#nuevaVenta").val();
-
-      // URL del Webhook
-      var urlWebhook = "https://demo-ppal-n8n.lhs6l6.easypanel.host/webhook/b6aad80c-aedf-4339-a701-89d040f44f47";
-
-      console.log("Enviando webhook:", nombreCliente, telefonoCliente);
-
-      // Preparar datos
-      const datosWebhook = new URLSearchParams();
-      datosWebhook.append('nombre', nombreCliente);
-      datosWebhook.append('celular', telefonoCliente);
-      datosWebhook.append('codigo', codigoVenta);
-      datosWebhook.append('mensaje', '<?php echo addslashes($mensajeConfirmado); ?>');
-
-      // Enviar fetch sin esperar respuesta (no bloquear UI mucho tiempo)
-      fetch(urlWebhook, {
-        method: 'POST',
-        mode: 'no-cors',
-        cache: 'no-cache',
-        credentials: 'omit',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: datosWebhook
-      }).then(() => {
-        console.log("Webhook enviado");
-      }).catch(err => {
-        console.error("Error webhook", err);
-      }).finally(() => {
-        // Liberar botón y reenviar formulario
-        // btnGuardar.removeAttr("disabled"); // No liberar para evitar doble clic del usuario
-        formulario.submit();
-      });
-    });
   });
 </script>

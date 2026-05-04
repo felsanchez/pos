@@ -4,181 +4,262 @@ require_once "../../../modelos/conexion.php";
 header('Content-Type: application/json');
 
 try {
-  $conn = Conexion::conectar();
-  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $conn = Conexion::conectar();
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-  // Obtener valores del formulario
-  $tipo = $_POST['tipo'] ?? 'mes';
-  $fecha_inicio = $_POST['fecha_inicio'] ?? null;
-  $fecha_fin = $_POST['fecha_fin'] ?? null;
+    // Obtener valores del formulario
+    $tipo = $_POST['tipo'] ?? 'mes';
+    $fecha_inicio = $_POST['fecha_inicio'] ?? null;
+    $fecha_fin = $_POST['fecha_fin'] ?? null;
 
-  // Construir la condición de fecha
-  $condicionFecha = "";
-  $usaParametrosFecha = false;
+    // =============================================
+    // CONDICIÓN DE FECHA PARA REGISTROS ACTUALES
+    // (aplica a la fecha del registro en sí)
+    // =============================================
+    $condicionFecha = "";
+    $usaParametrosFecha = false;
 
-  switch ($tipo) {
-    case 'todo':
-      $condicionFecha = "1=1";
-      break;
-    case 'hoy':
-      $condicionFecha = "DATE(fecha) = CURDATE()";
-      break;
-    case 'ayer':
-      $condicionFecha = "DATE(fecha) = CURDATE() - INTERVAL 1 DAY";
-      break;
-    case 'mes':
-      $condicionFecha = "MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())";
-      break;
-    case 'personalizado':
-      if (!$fecha_inicio || !$fecha_fin) {
-        http_response_code(400);
-        echo json_encode(["error" => "Fechas personalizadas incompletas"]);
-        exit;
-      }
-      $condicionFecha = "DATE(fecha) BETWEEN :fecha_inicio AND :fecha_fin";
-      $usaParametrosFecha = true;
-      break;
-    default:
-      $condicionFecha = "MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())";
-  }
+    switch ($tipo) {
+        case 'todo':
+            $condicionFecha = "1=1";
+            break;
+        case 'hoy':
+            $condicionFecha = "DATE(fecha) = CURDATE()";
+            break;
+        case 'ayer':
+            $condicionFecha = "DATE(fecha) = CURDATE() - INTERVAL 1 DAY";
+            break;
+        case 'mes':
+            $condicionFecha = "MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())";
+            break;
+        case 'personalizado':
+            if (!$fecha_inicio || !$fecha_fin) {
+                http_response_code(400);
+                echo json_encode(["error" => "Fechas personalizadas incompletas"]);
+                exit;
+            }
+            $condicionFecha = "DATE(fecha) BETWEEN :fecha_inicio AND :fecha_fin";
+            $usaParametrosFecha = true;
+            break;
+        default:
+            $condicionFecha = "MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())";
+    }
 
-  // =============================================
-  // ÓRDENES PENDIENTES (estado = 'orden')
-  // =============================================
+    // =============================================
+    // CONDICIÓN DE FECHA PARA LA ORDEN ORIGINAL
+    // (aplica a la fecha de la orden referenciada
+    //  mediante orden_compra → se busca en la misma tabla)
+    // =============================================
+    $condicionFechaOrden = str_replace("fecha", "orig.fecha", $condicionFecha);
 
-  // Total pendientes
-  $sql = "SELECT COUNT(*) as total FROM ventas WHERE estado = 'orden' AND $condicionFecha";
-  $stmt = $conn->prepare($sql);
-  if ($usaParametrosFecha) {
-    $stmt->bindValue(':fecha_inicio', $fecha_inicio);
-    $stmt->bindValue(':fecha_fin', $fecha_fin);
-  }
-  $stmt->execute();
-  $pendientesTotal = (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    // =============================================
+    // MODELO DE DATOS:
+    //
+    // Una orden puede convertirse de dos formas:
+    //
+    // A) En-sitio (editar-orden → guardar como venta):
+    //    - La MISMA fila cambia estado='orden' → estado='venta'
+    //    - Se asigna orden_compra = codigo (fix del controlador)
+    //    - La fecha del registro se actualiza a la fecha de conversión
+    //    → Filtrar por fecha del registro (fecha de conversión ≈ fecha creación, mismo día normalmente)
+    //
+    // B) Vía Factura Electrónica (orden-a-factura-electronica):
+    //    - La orden original SE ELIMINA
+    //    - Se crea una NUEVA fila con:
+    //        código nuevo (de Factus), fecha = hoy, orden_compra = código_orden_original
+    //    - La fecha del nuevo registro es HOY, no la de la orden original
+    //    → Para filtrar correctamente, necesitamos filtrar por fecha de la ORDEN ORIGINAL
+    //      Pero como la orden fue eliminada, NO podemos hacer JOIN.
+    //      La solución: filtrar las convertidas FE por la fecha de la NUEVA venta (fecha actual),
+    //      y compensar en la lógica de "Total Creadas":
+    //      Total Creadas = Pendientes_en_período + Convertidas_en_período (misma lógica de fechas)
+    //
+    // En ambos casos, "Total Creadas" = pendientes + convertidas dentro del período.
+    // Esto es consistente: si conviertes una orden de este mes, sigue contando en "este mes".
+    // =============================================
 
-  // Pendientes manuales (no tienen n8n en extra)
-  $sql = "SELECT COUNT(*) as total FROM ventas WHERE estado = 'orden' AND $condicionFecha AND (extra NOT LIKE '%n8n%' OR extra IS NULL OR extra = '')";
-  $stmt = $conn->prepare($sql);
-  if ($usaParametrosFecha) {
-    $stmt->bindValue(':fecha_inicio', $fecha_inicio);
-    $stmt->bindValue(':fecha_fin', $fecha_fin);
-  }
-  $stmt->execute();
-  $pendientesManuales = (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    // Helper para ejecutar consultas
+    function ejecutarConteo($conn, $sql, $usaParametrosFecha, $fecha_inicio, $fecha_fin) {
+        $stmt = $conn->prepare($sql);
+        if ($usaParametrosFecha) {
+            $stmt->bindValue(':fecha_inicio', $fecha_inicio);
+            $stmt->bindValue(':fecha_fin', $fecha_fin);
+        }
+        $stmt->execute();
+        return (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    }
 
-  // Pendientes IA (tienen n8n en extra)
-  $sql = "SELECT COUNT(*) as total FROM ventas WHERE estado = 'orden' AND $condicionFecha AND extra LIKE '%n8n%'";
-  $stmt = $conn->prepare($sql);
-  if ($usaParametrosFecha) {
-    $stmt->bindValue(':fecha_inicio', $fecha_inicio);
-    $stmt->bindValue(':fecha_fin', $fecha_fin);
-  }
-  $stmt->execute();
-  $pendientesIA = (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    // =============================================
+    // BLOQUE 1: ÓRDENES PENDIENTES (estado = 'orden')
+    // =============================================
 
-  // =============================================
-  // ÓRDENES CONVERTIDAS
-  // Busca: "Desde orden", "Desde Agente IA", "Origen = orden" (formato antiguo)
-  // =============================================
+    $pendientesTotal = ejecutarConteo(
+        $conn,
+        "SELECT COUNT(*) as total FROM ventas WHERE estado = 'orden' AND $condicionFecha",
+        $usaParametrosFecha, $fecha_inicio, $fecha_fin
+    );
 
-  // Convertidas manuales (tienen "orden" en notas pero NO tienen n8n en extra)
-  $sql = "SELECT COUNT(*) as total FROM ventas WHERE estado = 'venta' AND (notas LIKE '%Desde orden%' OR notas LIKE '%Origen = orden%') AND $condicionFecha AND (extra NOT LIKE '%n8n%' OR extra IS NULL OR extra = '')";
-  $stmt = $conn->prepare($sql);
-  if ($usaParametrosFecha) {
-    $stmt->bindValue(':fecha_inicio', $fecha_inicio);
-    $stmt->bindValue(':fecha_fin', $fecha_fin);
-  }
-  $stmt->execute();
-  $convertidasManuales = (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    $pendientesManuales = ejecutarConteo(
+        $conn,
+        "SELECT COUNT(*) as total FROM ventas
+         WHERE estado = 'orden' AND $condicionFecha
+         AND (extra NOT LIKE '%n8n%' OR extra IS NULL OR extra = '')",
+        $usaParametrosFecha, $fecha_inicio, $fecha_fin
+    );
 
-  // Convertidas IA (tienen "Agente IA" en notas O tienen n8n en extra)
-  $sql = "SELECT COUNT(*) as total FROM ventas WHERE estado = 'venta' AND (notas LIKE '%Desde Agente IA%' OR (notas LIKE '%orden%' AND extra LIKE '%n8n%')) AND $condicionFecha";
-  $stmt = $conn->prepare($sql);
-  if ($usaParametrosFecha) {
-    $stmt->bindValue(':fecha_inicio', $fecha_inicio);
-    $stmt->bindValue(':fecha_fin', $fecha_fin);
-  }
-  $stmt->execute();
-  $convertidasIA = (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    $pendientesIA = ejecutarConteo(
+        $conn,
+        "SELECT COUNT(*) as total FROM ventas
+         WHERE estado = 'orden' AND $condicionFecha
+         AND extra LIKE '%n8n%'",
+        $usaParametrosFecha, $fecha_inicio, $fecha_fin
+    );
 
-  // =============================================
-  // CALCULAR TOTALES Y TASAS
-  // =============================================
+    // =============================================
+    // BLOQUE 2: ÓRDENES CONVERTIDAS
+    //
+    // CASO A - Conversión en-sitio (orden→venta, misma fila):
+    //   orden_compra = codigo (mismo valor en la misma fila)
+    //   Filtro: fecha del registro actual (es la misma fila)
+    //
+    // CASO B - Conversión a FE (nueva fila, orden original eliminada):
+    //   orden_compra = <código_orden_original> (valor diferente al código actual)
+    //   Filtro: fecha del NUEVO registro (ya que la orden fue borrada)
+    //   Para distinguir CASO A de CASO B: verificar si orden_compra != codigo
+    //
+    // FALLBACK HISTÓRICO - IA sin orden_compra (pre-fix):
+    //   extra='n8n', orden_compra vacío
+    //   Filtro: fecha del registro actual
+    // =============================================
 
-  // Total de órdenes creadas por tipo (pendientes + convertidas)
-  $totalManuales = $pendientesManuales + $convertidasManuales;
-  $totalIA = $pendientesIA + $convertidasIA;
-  $totalGeneral = $totalManuales + $totalIA;
-  $totalConvertidas = $convertidasManuales + $convertidasIA;
+    // CASO A: En-sitio - orden_compra == codigo (misma fila convertida)
+    // Manuales en-sitio
+    $convertidasManualesEnSitio = ejecutarConteo(
+        $conn,
+        "SELECT COUNT(*) as total FROM ventas
+         WHERE estado = 'venta'
+         AND orden_compra IS NOT NULL AND orden_compra != ''
+         AND orden_compra = codigo
+         AND (extra NOT LIKE '%n8n%' OR extra IS NULL OR extra = '')
+         AND $condicionFecha",
+        $usaParametrosFecha, $fecha_inicio, $fecha_fin
+    );
 
-  // Tasa de conversión general
-  $tasaConversionGeneral = $totalGeneral > 0
-    ? round(($totalConvertidas / $totalGeneral) * 100, 1)
-    : 0;
+    // IA en-sitio (post-fix)
+    $convertidasIAEnSitio = ejecutarConteo(
+        $conn,
+        "SELECT COUNT(*) as total FROM ventas
+         WHERE estado = 'venta'
+         AND orden_compra IS NOT NULL AND orden_compra != ''
+         AND orden_compra = codigo
+         AND extra LIKE '%n8n%'
+         AND $condicionFecha",
+        $usaParametrosFecha, $fecha_inicio, $fecha_fin
+    );
 
-  // =============================================
-  // RESPUESTA JSON
-  // =============================================
+    // CASO B: FE - orden_compra != codigo (nueva fila, la orden fue eliminada)
+    // Filtro por fecha del NUEVO registro (hoy/período actual)
+    // Manuales FE
+    $convertidasManualesFE = ejecutarConteo(
+        $conn,
+        "SELECT COUNT(*) as total FROM ventas
+         WHERE estado = 'venta'
+         AND orden_compra IS NOT NULL AND orden_compra != ''
+         AND orden_compra != codigo
+         AND (extra NOT LIKE '%n8n%' OR extra IS NULL OR extra = '')
+         AND $condicionFecha",
+        $usaParametrosFecha, $fecha_inicio, $fecha_fin
+    );
 
-  // Debug: contar todas las ventas que vinieron de órdenes
-  $sqlDebug = "SELECT COUNT(*) as total FROM ventas WHERE estado = 'venta' AND (notas LIKE '%orden%' OR notas LIKE '%Agente IA%')";
-  $stmtDebug = $conn->prepare($sqlDebug);
-  $stmtDebug->execute();
-  $debugTotalConvertidas = (int) $stmtDebug->fetch(PDO::FETCH_ASSOC)['total'];
+    // IA FE (orden IA convertida a FE)
+    $convertidasIAFE = ejecutarConteo(
+        $conn,
+        "SELECT COUNT(*) as total FROM ventas
+         WHERE estado = 'venta'
+         AND orden_compra IS NOT NULL AND orden_compra != ''
+         AND orden_compra != codigo
+         AND extra LIKE '%n8n%'
+         AND $condicionFecha",
+        $usaParametrosFecha, $fecha_inicio, $fecha_fin
+    );
 
-  // Debug: ver cuántas tienen extra con n8n
-  $sqlDebug2 = "SELECT COUNT(*) as total FROM ventas WHERE estado = 'venta' AND (notas LIKE '%orden%' OR notas LIKE '%Agente IA%') AND extra LIKE '%n8n%'";
-  $stmtDebug2 = $conn->prepare($sqlDebug2);
-  $stmtDebug2->execute();
-  $debugConExtraN8n = (int) $stmtDebug2->fetch(PDO::FETCH_ASSOC)['total'];
+    // FALLBACK HISTÓRICO: IA sin orden_compra (anteriores al fix del controlador)
+    $convertidasIAFallback = ejecutarConteo(
+        $conn,
+        "SELECT COUNT(*) as total FROM ventas
+         WHERE estado = 'venta'
+         AND extra LIKE '%n8n%'
+         AND (orden_compra IS NULL OR orden_compra = '')
+         AND $condicionFecha",
+        $usaParametrosFecha, $fecha_inicio, $fecha_fin
+    );
 
-  // Debug: ver cuántas tienen extra NULL o vacío
-  $sqlDebug3 = "SELECT COUNT(*) as total FROM ventas WHERE estado = 'venta' AND (notas LIKE '%orden%' OR notas LIKE '%Agente IA%') AND (extra IS NULL OR extra = '')";
-  $stmtDebug3 = $conn->prepare($sqlDebug3);
-  $stmtDebug3->execute();
-  $debugConExtraNull = (int) $stmtDebug3->fetch(PDO::FETCH_ASSOC)['total'];
+    // Totales por origen
+    $convertidasManuales = $convertidasManualesEnSitio + $convertidasManualesFE;
+    $convertidasIA       = $convertidasIAEnSitio + $convertidasIAFE + $convertidasIAFallback;
 
-  echo json_encode([
-    'totales' => [
-      'pendientes_total' => $pendientesTotal,
-      'pendientes_manuales' => $pendientesManuales,
-      'pendientes_ia' => $pendientesIA,
-      'tasa_conversion' => $tasaConversionGeneral
-    ],
-    'origen' => [
-      'manuales' => $totalManuales,
-      'ia' => $totalIA
-    ],
-    'conversion' => [
-      'manuales' => [
-        'total' => $totalManuales,
-        'convertidas' => $convertidasManuales,
-        'pendientes' => $pendientesManuales
-      ],
-      'ia' => [
-        'total' => $totalIA,
-        'convertidas' => $convertidasIA,
-        'pendientes' => $pendientesIA
-      ],
-      'tasa_general' => $tasaConversionGeneral
-    ],
-    'debug' => [
-      'total_convertidas_historico' => $debugTotalConvertidas,
-      'con_extra_n8n' => $debugConExtraN8n,
-      'con_extra_null' => $debugConExtraNull
-    ]
-  ]);
+    // =============================================
+    // BLOQUE 3: CALCULAR TOTALES
+    // Total creadas = Pendientes + Convertidas (mismo período)
+    // =============================================
+
+    $totalManuales    = $pendientesManuales + $convertidasManuales;
+    $totalIA          = $pendientesIA + $convertidasIA;
+    $totalGeneral     = $totalManuales + $totalIA;
+    $totalConvertidas = $convertidasManuales + $convertidasIA;
+
+    $tasaConversionGeneral = $totalGeneral > 0
+        ? round(($totalConvertidas / $totalGeneral) * 100, 1)
+        : 0;
+
+    // =============================================
+    // RESPUESTA JSON
+    // =============================================
+
+    echo json_encode([
+        'totales' => [
+            'pendientes_total'    => $pendientesTotal,
+            'pendientes_manuales' => $pendientesManuales,
+            'pendientes_ia'       => $pendientesIA,
+            'tasa_conversion'     => $tasaConversionGeneral
+        ],
+        'origen' => [
+            'manuales' => $totalManuales,
+            'ia'       => $totalIA
+        ],
+        'conversion' => [
+            'manuales' => [
+                'total'      => $totalManuales,
+                'convertidas'=> $convertidasManuales,
+                'pendientes' => $pendientesManuales
+            ],
+            'ia' => [
+                'total'      => $totalIA,
+                'convertidas'=> $convertidasIA,
+                'pendientes' => $pendientesIA
+            ],
+            'tasa_general' => $tasaConversionGeneral
+        ],
+        'debug' => [
+            'convertidas_manuales_en_sitio' => $convertidasManualesEnSitio,
+            'convertidas_manuales_fe'       => $convertidasManualesFE,
+            'convertidas_ia_en_sitio'       => $convertidasIAEnSitio,
+            'convertidas_ia_fe'             => $convertidasIAFE,
+            'convertidas_ia_fallback'       => $convertidasIAFallback,
+            'pendientes_total'              => $pendientesTotal
+        ]
+    ]);
 
 } catch (PDOException $e) {
-  http_response_code(500);
-  echo json_encode([
-    "error" => "Error de base de datos",
-    "message" => $e->getMessage()
-  ]);
+    http_response_code(500);
+    echo json_encode([
+        "error"   => "Error de base de datos",
+        "message" => $e->getMessage()
+    ]);
 } catch (Exception $e) {
-  http_response_code(500);
-  echo json_encode([
-    "error" => "Error del servidor",
-    "message" => $e->getMessage()
-  ]);
+    http_response_code(500);
+    echo json_encode([
+        "error"   => "Error del servidor",
+        "message" => $e->getMessage()
+    ]);
 }

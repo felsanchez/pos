@@ -96,12 +96,18 @@ class ControladorVentas
 			$nestedData = array();
 
 			// 0: Código
-			$codigoHtml = "";
+			$etiquetaN8N = "";
+			if (isset($value["extra"]) && strpos($value["extra"], "n8n") !== false) {
+				$etiquetaN8N = ' <span class="badge" style="background-color: #ff6d5a; color:white; font-size: 10px; padding: 2px 5px; border-radius: 4px;" title="Creada vía IA">
+									<i class="fa fa-robot"></i> IA
+								</span>';
+			}
+
 			if (!empty($value["numero_factura"])) {
-				$codigoHtml = '<span style="font-weight:bold; font-size:1.1em; color:#605ca8;">' . $value["numero_factura"] . '</span>';
+				$codigoHtml = '<span style="font-weight:bold; font-size:1.1em; color:#605ca8;">' . $value["numero_factura"] . '</span>' . $etiquetaN8N;
 				$codigoHtml .= '<br><span style="font-size:0.85em; color:#999;">Ref: ' . $formatoCodigoVenta . $value["codigo"] . '</span>';
 			} else {
-				$codigoHtml = $formatoCodigoVenta . $value["codigo"];
+				$codigoHtml = $formatoCodigoVenta . $value["codigo"] . $etiquetaN8N;
 			}
 			$nestedData[] = $codigoHtml;
 
@@ -133,7 +139,7 @@ class ControladorVentas
 			// 9: Acciones
 			$botonesAcciones = '<div class="btn-group col-acciones">';
 			if (puedeAccion('ventas', 'editar')) {
-				$botonesAcciones .= '<button class="btn btn-warning btnEditarVenta" idVenta="' . $value["id"] . '" title="Ver detalle" style="width: auto !important;"><i class="fa fa-eye"></i></button>';
+				$botonesAcciones .= '<button class="btn btn-warning btnDetalleVenta" idVenta="' . $value["id"] . '" title="Ver detalle" style="width: auto !important;"><i class="fa fa-eye"></i></button>';
 			}
 			if (puedeAccion('ventas', 'eliminar')) {
 				$botonesAcciones .= '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar venta"><i class="fa fa-times"></i></button>';
@@ -165,7 +171,7 @@ class ControladorVentas
 		$tabla = "ventas";
 
 		// Mapeo de columnas para ordenamiento:
-		// 0=Código, 1=Cliente, 2=Vendedor, 3=Forma de pago, 4=Imagen, 5=Total, 6=Notas, 7=Observación, 8=Fecha, 9=Seguimiento, 10=Acciones
+		// 0=Código, 1=Cliente, 2=Vendedor, 3=Forma de pago, 4=Imagen, 5=Total, 6=Notas, 7=Observación, 8=Fecha, 9=Seguimiento, 10=Convertir, 11=Acciones
 		$columnsMap = array(
 			0 => 'v.codigo',
 			1 => 'c.nombre',
@@ -184,6 +190,7 @@ class ControladorVentas
 		$formatoCodigoVenta = !empty($configuracion["formato_codigo_venta"]) ? $configuracion["formato_codigo_venta"] : "";
 		$mensajeRecibido = !empty($configuracion["mensaje_recibido"]) ? $configuracion["mensaje_recibido"] : "Su pedido ha sido recibido";
 		$mensajeProcesado = !empty($configuracion["mensaje_procesado"]) ? $configuracion["mensaje_procesado"] : "Su pedido ha sido procesado";
+		$mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuracion["mensaje_confirmado"] : "Su pedido ha sido confirmado";
 
 		// Filtros base para órdenes
 		$where = " WHERE v.estado = 'orden' ";
@@ -237,7 +244,16 @@ class ControladorVentas
 			$nestedData = array();
 
 			// 0: Código
-			$nestedData[] = e($formatoCodigoVenta) . e($value["codigo"]);
+			$etiquetaN8N = "";
+
+			if (isset($value["extra"]) && strpos($value["extra"], "n8n") !== false) {
+
+				$etiquetaN8N = ' <span class="badge" style="background-color: #ff6d5a; color:white; font-size: 10px; padding: 2px 5px; border-radius: 4px;" title="Creada vía IA">
+									<i class="fa fa-robot"></i> IA
+								</span>';
+			}
+
+			$nestedData[] = e($formatoCodigoVenta) . e($value["codigo"]) . $etiquetaN8N;
 
 			// 1: Cliente
 			$telefonoCli = isset($value["telefono_cliente"]) ? $value["telefono_cliente"] : "";
@@ -264,7 +280,7 @@ class ControladorVentas
 			$nestedData[] = e($moneda) . ' ' . e(number_format($value["total"], 2));
 
 			// 6: Notas (Editable)
-			$nestedData[] = '<div contenteditable="true" class="celda-nota" data-id="' . e($value['id']) . '">' . e($value['notas']) . '</div>';
+			$nestedData[] = '<div contenteditable="false" class="celda-nota" data-id="' . e($value['id']) . '">' . e($value['notas']) . '</div>';
 
 			// 7: Observación (Editable)
 			$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . e($value['id']) . '">' . e($value['observacion']) . '</div>';
@@ -288,8 +304,8 @@ class ControladorVentas
 								telefono="' . e($telefonoCli) . '"
 								data-mensaje-recibido="' . e(htmlspecialchars($mensajeRecibido)) . '"
 								style="margin-right:5px; border: 1px solid #ccc; color: green; width: auto !important;" 
-								title="Enviar mensaje: Pedido Recibido">
-								1er mensaje
+								title="Enviar msg: Pedido Recibido">
+								1 msg
 							</button>';
 				}
 			}
@@ -307,36 +323,49 @@ class ControladorVentas
 								  telefono="' . e($telefonoCli) . '"
 								  data-mensaje-procesado="' . e(htmlspecialchars($mensajeProcesado)) . '"
 								  style="margin-right:5px; border: 1px solid #ccc; color: blue; width: auto !important;" 
-								  title="Enviar mensaje: Pedido Procesado">
-								  2do mensaje
+								  title="Enviar msg: Pedido Procesado">
+								  2 msg
 							   </button>';
 				}
 			}
 
-			// Botón 3: Alistado / Enviar a Ventas
+			// Botón 3: Confirmado (3er mensaje)
 			$alistado = isset($value["seguimiento_alistado"]) ? $value["seguimiento_alistado"] : 0;
-			if (puedeAccion('ordenes', 'editar')) {
-				if ($alistado == 1) {
-					$htmlSeguimiento .= '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-success" title="Pedido Alistado / Editado" style="width: auto !important;">Enviado (A) <i class="fa fa-line-chart"></i></a>';
-				} else {
-					$htmlSeguimiento .= '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-warning" title="Editar Orden" style="width: auto !important;">Enviar a Ventas</a>';
+			if ($alistado == 1) {
+				$htmlSeguimiento .= '<span class="label label-success" style="margin-right:5px;">Enviado (A)</span>';
+			} else {
+				if (puedeAccion('ordenes', 'editar')) {
+					$htmlSeguimiento .= '<button class="btn btn-default btn-xs btnSeguimientoAlistado" 
+								idOrden="' . e($value["id"]) . '" 
+								codigoOrden="' . e($value["codigo"]) . '"
+								cliente="' . e($value["nombre_cliente"]) . '"
+								telefono="' . e($telefonoCli) . '"
+								data-mensaje-alistado="' . e(htmlspecialchars($mensajeConfirmado)) . '"
+								style="margin-right:5px; border: 1px solid #ccc; color: purple; width: auto !important;" 
+								title="Enviar msg: Pedido Confirmado">
+								3 msg
+							</button>';
 				}
-			}
-
-			// Botón 4: Convertir a Factura Electrónica
-			if (puedeAccion('ordenes', 'editar')) {
-				$htmlSeguimiento .= ' <a href="index.php?ruta=orden-a-factura-electronica&idVenta=' . $value["id"] . '" 
-							class="btn btn-xs btn-primary" 
-							title="Convertir a Factura Electrónica" 
-							style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;">
-							<i class="fa fa-file-text-o"></i> Enviar a FE
-						</a>';
 			}
 
 			$htmlSeguimiento .= '</div>';
 			$nestedData[] = $htmlSeguimiento;
 
-			// 10: Acciones
+			// 10: Convertir
+			$htmlConvertir = '<div style="white-space:nowrap; text-align:center;">';
+			if (puedeAccion('ordenes', 'editar')) {
+				$htmlConvertir .= '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-warning" title="Convertir a Venta" style="width: auto !important;">Convertir a Venta</a>';
+				$htmlConvertir .= ' <a href="index.php?ruta=orden-a-factura-electronica&idVenta=' . $value["id"] . '" 
+							class="btn btn-xs btn-primary" 
+							title="Convertir a Factura Electrónica" 
+							style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;">
+							<i class="fa fa-file-text-o"></i> Convertir a FE
+						</a>';
+			}
+			$htmlConvertir .= '</div>';
+			$nestedData[] = $htmlConvertir;
+
+			// 11: Acciones
 			$botonesAcciones = '<div class="btn-group">';
 			$botonesAcciones .= '<a class="btn btn-warning" href="index.php?ruta=ver-detalle-orden&idVenta=' . $value["id"] . '" title="Ver Detalle" style="width: auto !important;"><i class="fa fa-eye"></i></a>';
 
@@ -514,7 +543,7 @@ class ControladorVentas
 		// Búsqueda global
 		if (!empty($params['search']['value'])) {
 			$searchValue = $params['search']['value'];
-			$where .= " AND (v.numero_factura LIKE '%$searchValue%' OR v.codigo LIKE '%$searchValue%' OR c.nombre LIKE '%$searchValue%' OR u.nombre LIKE '%$searchValue%' OR v.notas LIKE '%$searchValue%' OR v.observacion LIKE '%$searchValue%') ";
+			$where .= " AND (v.numero_factura LIKE '%$searchValue%' OR v.codigo LIKE '%$searchValue%' OR c.nombre LIKE '%$searchValue%' OR u.nombre LIKE '%$searchValue%' OR v.notas LIKE '%$searchValue%' OR v.observacion LIKE '%$searchValue%' OR v.metodo_pago LIKE '%$searchValue%') ";
 		}
 
 		// Orden
@@ -546,18 +575,36 @@ class ControladorVentas
 
 			// 0: Código / Número Factura
 			$esBorrador = false;
+			$prefijoReal = !empty($value["prefijo_rango"]) ? $value["prefijo_rango"] : $prefijoDian;
+			$codigoBase = $prefijoReal . $value["codigo"];
+
+			$etiquetaN8N = "";
+			if (isset($value["extra"]) && strpos($value["extra"], "n8n") !== false) {
+				$etiquetaN8N = ' <span class="badge" style="background-color: #ff6d5a; color:white; font-size: 10px; padding: 2px 5px; border-radius: 4px;" title="Creada vía IA">
+									<i class="fa fa-robot"></i> IA
+								</span>';
+			}
+			
 			if (!empty($value["numero_factura"])) {
 				$numeroMostrar = $value["numero_factura"];
 			} else {
-				// Es borrador o pendiente de número
+				// Es borrador o pendiente de enviar a la DIAN
 				if (in_array(($value["estado_dian"] ?? 'pendiente'), ['pendiente', 'creada', 'borrador'])) {
-					$numeroMostrar = "Borrador (" . $value["codigo"] . ")";
+					
+					if (!empty($value["orden_compra"])) {
+						// Viene de una orden
+						$numeroMostrar = "Orden: " . $value["orden_compra"] . " / " . $codigoBase;
+					} else {
+						// Factura directa sin orden
+						$numeroMostrar = "Borrador (" . $codigoBase . ")";
+					}
 					$esBorrador = true;
+
 				} else {
-					$numeroMostrar = $prefijoDian . $value["codigo"];
+					$numeroMostrar = $codigoBase;
 				}
 			}
-			$nestedData[] = '<span' . ($esBorrador ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . e($numeroMostrar) . '</span>';
+			$nestedData[] = '<span' . ($esBorrador ? ' class="text-yellow" style="font-weight:bold"' : '') . '>' . e($numeroMostrar) . '</span>' . $etiquetaN8N;
 
 			// 1: Cliente
 			$nestedData[] = '<span class="btnVerClienteDesdeVenta" data-toggle="modal" data-target="#modalEditarCliente" idCliente="' . e($value["id_cliente"]) . '" style="cursor: pointer; color: #337ab7; text-decoration: underline;">' . e($value["nombre_cliente"]) . '</span>';
@@ -592,11 +639,8 @@ class ControladorVentas
 			// 7: Notas
 			$nestedData[] = e($value['notas']);
 
-			// 8: Observación (Editable si no está enviada/aceptada)
-			$esEditable = ($estadoDian != "enviada" && $estadoDian != "aceptada");
-			$contentEditableAttr = $esEditable ? 'contenteditable="true"' : '';
-			$claseEditable = $esEditable ? 'celda-observacion' : '';
-			$nestedData[] = '<div ' . $contentEditableAttr . ' class="' . $claseEditable . '" data-id="' . e($value["id"]) . '">' . e($value["observacion"]) . '</div>';
+			// 8: Observación (Editable)
+			$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . e($value["id"]) . '" data-placeholder="Escribe una observación...">' . e($value["observacion"]) . '</div>';
 
 			// 9: Fecha
 			$nestedData[] = e($value["fecha"]);
@@ -605,7 +649,7 @@ class ControladorVentas
 			$botonesAcciones = '<div class="btn-group col-acciones" style="display:flex; gap:2px;">';
 
 			// Ver Detalle Venta
-			$botonesAcciones .= '<a class="btn btn-info" href="index.php?ruta=ver-detalle-orden&idVenta=' . $value["id"] . '" title="Ver Detalle" style="width: auto !important;"><i class="fa fa-eye"></i></a>';
+			$botonesAcciones .= '<a class="btn btn-info" href="index.php?ruta=detalle-factura&idVenta=' . $value["id"] . '" title="Ver Detalle" style="width: auto !important;"><i class="fa fa-eye"></i></a>';
 
 			// Ver en DIAN
 			if (!empty($value["qr_data"])) {
@@ -713,32 +757,17 @@ class ControladorVentas
 			$venta = ModeloVentas::mdlMostrarVentas("ventas", "id", $idVenta);
 
 			if (!$venta || !in_array($venta["estado_dian"], ['creada', 'pendiente', null])) {
-				echo '<script>
-					swal({
-						type: "error",
-						title: "Error",
-						text: "Esta factura no puede ser editada",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					}).then(() => {
-						window.location = "facturas-electronicas";
-					});
-				</script>';
+				if (ob_get_length())
+					ob_clean();
+				echo json_encode(["status" => "error", "titulo" => "Error", "mensaje" => "Esta factura no puede ser editada", "ruta" => "facturas-electronicas"]);
 				return;
 			}
 
 			// Validar que haya productos
 			if (empty($_POST["listaProductos"]) || $_POST["listaProductos"] == "") {
-				echo '<script>
-					swal({
-						type: "error",
-						title: "La factura no se puede actualizar sin productos",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					}).then(() => {
-						window.location = "editar-factura-electronica&idVenta=' . $idVenta . '";
-					});
-				</script>';
+				if (ob_get_length())
+					ob_clean();
+				echo json_encode(["status" => "error", "titulo" => "Sin productos", "mensaje" => "La factura no se puede actualizar sin productos", "ruta" => "editar-factura-electronica&idVenta=" . $idVenta]);
 				return;
 			}
 
@@ -785,7 +814,7 @@ class ControladorVentas
 				"impuesto" => $_POST["nuevoPrecioImpuesto"],
 				"neto" => $_POST["nuevoPrecioNeto"],
 				"total" => $_POST["totalVenta"],
-				"metodo_pago" => $_POST["nuevoMetodoPago"],
+				"metodo_pago" => isset($_POST["listaMetodoPago"]) && !empty($_POST["listaMetodoPago"]) ? $_POST["listaMetodoPago"] : (isset($_POST["nuevoMetodoPago"]) ? $_POST["nuevoMetodoPago"] : ""),
 				"notas" => isset($_POST["notas"]) ? $_POST["notas"] : "",
 				"estado" => $venta["estado"], // Mantener el mismo
 				"fecha" => $venta["fecha"], // Mantener la misma
@@ -811,26 +840,12 @@ class ControladorVentas
 
 			$respuesta = ModeloVentas::mdlEditarVenta("ventas", $datos);
 
+			if (ob_get_length())
+				ob_clean();
 			if ($respuesta == "ok") {
-				echo '<script>
-					swal({
-						type: "success",
-						title: "Factura actualizada correctamente",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					}).then(() => {
-						window.location = "facturas-electronicas";
-					});
-				</script>';
+				echo json_encode(["status" => "success", "titulo" => "Factura actualizada correctamente", "mensaje" => "El borrador ha sido guardado exitosamente.", "ruta" => "facturas-electronicas"]);
 			} else {
-				echo '<script>
-					swal({
-						type: "error",
-						title: "Error al actualizar la factura",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					});
-				</script>';
+				echo json_encode(["status" => "error", "titulo" => "Error al actualizar la factura", "mensaje" => "No se pudo guardar el borrador. Por favor intente nuevamente.", "ruta" => "facturas-electronicas"]);
 			}
 
 			return;
@@ -1081,6 +1096,7 @@ class ControladorVentas
 				"neto" => $_POST["nuevoPrecioNeto"],
 				"total" => $_POST["totalVenta"],
 				"notas" => $_POST["notas"],
+				"observacion" => isset($_POST["observacion"]) ? $_POST["observacion"] : "",
 				"estado" => $_POST["estado"],
 				"imagen" => $_POST["nuevaimagen"],
 				"fecha" => $fechaHoraActual,
@@ -1421,7 +1437,7 @@ class ControladorVentas
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"
 					  }).then(() => {
-									window.location = "ordenes";
+									window.location = "' . (isset($_POST["origen"]) ? $_POST["origen"] : "ordenes") . '";
 					  })
 				</script>';
 				return;
@@ -1786,29 +1802,9 @@ class ControladorVentas
 			date_default_timezone_set('America/Bogota');
 			$fechaHoraActual = date('Y-m-d H:i:s');
 
-			// Si era orden y pasa a venta, agregar origen a las notas
-			$notasFinales = $_POST["notas"];
-			if ($traerVenta["estado"] == "orden" && $_POST["estado"] == "venta") {
+			$notasFinales = isset($_POST["notas"]) ? $_POST["notas"] : $traerVenta["notas"];
+			$observacionFinal = isset($_POST["observacion"]) ? $_POST["observacion"] : (isset($traerVenta["observacion"]) ? $traerVenta["observacion"] : "");
 
-				// Verificar si las notas originales contienen "Creado por Agente IA"
-				if (!empty($traerVenta["notas"]) && strpos($traerVenta["notas"], 'Creado por Agente IA') !== false) {
-					// Preservar el texto original "Creado por Agente IA"
-					$origenTexto = "Creado por Agente IA";
-				} else {
-					// Determinar si es orden de Agente IA o manual
-					$origenTexto = "Desde orden";
-					if (!empty($traerVenta["extra"]) && strpos($traerVenta["extra"], 'n8n') !== false) {
-						$origenTexto = "Desde Agente IA";
-					}
-				}
-
-				if (!empty($notasFinales)) {
-					$notasFinales = $notasFinales . " | " . $origenTexto;
-
-				} else {
-					$notasFinales = $origenTexto;
-				}
-			}
 
 			// Agregar campo "recibe" a las notas si tiene contenido
 			if (!empty($_POST["recibe"])) {
@@ -1831,6 +1827,7 @@ class ControladorVentas
 				"neto" => $_POST["nuevoPrecioNeto"],
 				"total" => $_POST["totalVenta"],
 				"notas" => $notasFinales,
+				"observacion" => $observacionFinal,
 				"imagen" => $_POST["nuevaimagen"],
 				"estado" => $_POST["estado"],
 				"fecha" => $fechaHoraActual,
@@ -1844,7 +1841,15 @@ class ControladorVentas
 				// Campos Facturación Electrónica (Valores por defecto o mantenidos)
 				"resolucion_id" => isset($_POST["resolucion_id"]) ? $_POST["resolucion_id"] : $traerVenta["resolucion_id"],
 				"fecha_vencimiento" => isset($_POST["fecha_vencimiento"]) ? $_POST["fecha_vencimiento"] : $traerVenta["fecha_vencimiento"],
-				"orden_compra" => isset($_POST["orden_compra"]) ? $_POST["orden_compra"] : $traerVenta["orden_compra"],
+				// Si es conversión en-sitio (orden→venta en la misma fila),
+				// marcar orden_compra con el código de la orden original para
+				// que el reporte pueda identificar esta venta como proveniente
+				// de una orden (no como una venta directa).
+				"orden_compra" => (
+					$traerVenta["estado"] == "orden" && $_POST["estado"] == "venta"
+						? $traerVenta["codigo"]          // Marca: esta venta provino de esta orden
+						: (isset($_POST["orden_compra"]) ? $_POST["orden_compra"] : $traerVenta["orden_compra"])
+				),
 				"forma_pago_dian" => isset($_POST["forma_pago_dian"]) ? $_POST["forma_pago_dian"] : $traerVenta["forma_pago_dian"],
 				"metodo_pago_dian_id" => isset($_POST["metodo_pago_dian_id"]) ? $_POST["metodo_pago_dian_id"] : $traerVenta["metodo_pago_dian_id"],
 				"estado_dian" => isset($_POST["estado_dian"]) ? $_POST["estado_dian"] : $traerVenta["estado_dian"],
@@ -1944,7 +1949,7 @@ class ControladorVentas
 						"status" => "success",
 						"titulo" => "¡Venta guardada correctamente!",
 						"mensaje" => "El documento ha sido registrado exitosamente en el sistema.",
-						"ruta" => "ordenes"
+						"ruta" => (isset($_POST["origen"]) ? $_POST["origen"] : "ordenes")
 					]);
 					return;
 				}
@@ -1958,7 +1963,7 @@ class ControladorVentas
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar",
 						}).then(() => {
-								window.location = "ordenes";
+								window.location = "' . (isset($_POST["origen"]) ? $_POST["origen"] : "ordenes") . '";
 						})
 				</script>';
 			}
@@ -2671,6 +2676,34 @@ class ControladorVentas
 			date_default_timezone_set('America/Bogota');
 			$fechaHoraActual = date('Y-m-d H:i:s');
 
+			// Determinar la venta original si es una conversión
+			$ventaOriginal = null;
+			if (isset($_POST["editarVenta"]) && !empty($_POST["editarVenta"])) {
+				$ventaOriginal = ModeloVentas::mdlMostrarVentas($tabla, "codigo", $_POST["editarVenta"]);
+			}
+
+			// Determinar las notas finales (Prioridad: Formulario > Orden Original)
+			$notasFinales = isset($_POST["notas"]) ? $_POST["notas"] : "";
+			if (empty($notasFinales) && $ventaOriginal) {
+				$notasFinales = $ventaOriginal["notas"];
+			}
+
+			// Agregar campo "recibe" a las notas si tiene contenido (igual que en ctrEditarVenta)
+			if (!empty($_POST["recibe"])) {
+				$textoRecibe = "Recibe: " . $_POST["recibe"];
+				if (!empty($notasFinales)) {
+					$notasFinales = $notasFinales . " - " . $textoRecibe;
+				} else {
+					$notasFinales = $textoRecibe;
+				}
+			}
+
+			// Determinar la observación final (Prioridad: Formulario > Orden Original)
+			$observacionFinal = isset($_POST["observacion"]) ? $_POST["observacion"] : "";
+			if (empty($observacionFinal) && $ventaOriginal) {
+				$observacionFinal = $ventaOriginal["observacion"];
+			}
+
 			$datos = array(
 				"id_vendedor" => $_POST["idVendedor"],
 				"id_cliente" => $_POST["seleccionarCliente"],
@@ -2679,7 +2712,8 @@ class ControladorVentas
 				"impuesto" => $_POST["nuevoPrecioImpuesto"],
 				"neto" => $_POST["nuevoPrecioNeto"],
 				"total" => $_POST["totalVenta"],
-				"notas" => $_POST["notas"],
+				"notas" => $notasFinales,
+				"observacion" => $observacionFinal,
 				"estado" => $_POST["estado"],
 				"imagen" => "",
 				"fecha" => $fechaHoraActual,
@@ -2688,12 +2722,12 @@ class ControladorVentas
 				"valor_descuento" => isset($_POST["valorDescuento"]) ? $_POST["valorDescuento"] : 0,
 				"monto_descuento" => isset($_POST["montoDescuento"]) ? $_POST["montoDescuento"] : 0,
 				"recibe" => isset($_POST["recibe"]) ? $_POST["recibe"] : null,
-				"extra" => null,
+				"extra" => (isset($ventaOriginal) && $ventaOriginal) ? $ventaOriginal["extra"] : null,
 				"retenciones" => isset($_POST["datosRetenciones"]) ? $_POST["datosRetenciones"] : null,
 				"resolucion_id" => isset($_POST["resolucion_id"]) ? $_POST["resolucion_id"] : null,
 				"forma_pago_dian" => isset($_POST["forma_pago_dian"]) ? $_POST["forma_pago_dian"] : "1",
 				"fecha_vencimiento" => isset($_POST["fecha_vencimiento"]) && !empty($_POST["fecha_vencimiento"]) ? $_POST["fecha_vencimiento"] : null,
-				"orden_compra" => null,
+				"orden_compra" => (isset($_POST["editarVenta"]) && !empty($_POST["editarVenta"])) ? $_POST["editarVenta"] : null,
 				"metodo_pago_dian_id" => null,
 				"estado_dian" => 'pendiente',
 				"cufe" => null,
@@ -2714,6 +2748,7 @@ class ControladorVentas
 			}
 
 			// INSERTAR COMO UNA NUEVA VENTA (TIPO FE)
+			file_put_contents(__DIR__ . "/../scratch/debug_datos_insert.txt", date("Y-m-d H:i:s") . " - DATOS: " . json_encode($datos) . "\n", FILE_APPEND);
 			$respuesta = ModeloVentas::mdlIngresarVenta($tabla, $datos);
 
 			if (is_numeric($respuesta)) {
@@ -2739,29 +2774,29 @@ class ControladorVentas
 
 				if (!$resultadoFactura["error"]) {
 					// EXITO
-					if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-						if (ob_get_length())
-							ob_clean();
+					if (isset($_POST["ajax"])) {
+						if (ob_get_length()) ob_clean();
 						echo json_encode([
 							"status" => "success",
-							"titulo" => "Factura Electrónica GUARDADA",
-							"mensaje" => "La factura ha sido guardada correctamente como borrador",
+							"titulo" => "Factura Guardada",
+							"mensaje" => "La factura electrónica ha sido guardada correctamente en borrador. Aún no ha sido enviada a Factus.",
 							"ruta" => "facturas-electronicas"
 						]);
 						return;
 					}
 
 					echo '<script>
-						swal({
+					swal({
 						  type: "success",
-						  title: "Factura Electrónica GUARDADA",
-						  text: "La factura ha sido guardada correctamente como borrador",
+						  title: "La factura electrónica ha sido guardada correctamente en borrador. Aún no ha sido enviada a Factus.",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
-						  }).then(() => {
+						  }).then((result) => {
+									if (result.value) {
 									window.location = "facturas-electronicas";
+									}
 								})
-						</script>';
+					</script>';
 				} else {
 					// ERROR
 					$errorMsg = $resultadoFactura["mensaje"];

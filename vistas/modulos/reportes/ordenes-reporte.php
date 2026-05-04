@@ -30,8 +30,30 @@
   <div class="col-lg-3 col-xs-6">
     <div class="small-box bg-blue">
       <div class="inner">
+        <h3 id="totalOrdenesCreadas">0</h3>
+        <p>Total Órdenes Creadas</p>
+      </div>
+      <div class="icon">
+        <i class="fa fa-list-alt"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-xs-6">
+    <div class="small-box bg-green">
+      <div class="inner">
+        <h3 id="totalOrdenesConvertidas">0</h3>
+        <p>Total Convertidas</p>
+      </div>
+      <div class="icon">
+        <i class="fa fa-check-circle"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-xs-6">
+    <div class="small-box bg-orange">
+      <div class="inner">
         <h3 id="totalOrdenesPendientes">0</h3>
-        <p>Órdenes Pendientes</p>
+        <p>Pendientes (Sin convertir)</p>
       </div>
       <div class="icon">
         <i class="fa fa-clock-o"></i>
@@ -41,33 +63,11 @@
   <div class="col-lg-3 col-xs-6">
     <div class="small-box bg-purple">
       <div class="inner">
-        <h3 id="ordenesManuales">0</h3>
-        <p>Órdenes Manuales</p>
-      </div>
-      <div class="icon">
-        <i class="fa fa-user"></i>
-      </div>
-    </div>
-  </div>
-  <div class="col-lg-3 col-xs-6">
-    <div class="small-box bg-teal">
-      <div class="inner">
-        <h3 id="ordenesIA">0</h3>
-        <p>Órdenes IA</p>
-      </div>
-      <div class="icon">
-        <i class="fa fa-robot"></i>
-      </div>
-    </div>
-  </div>
-  <div class="col-lg-3 col-xs-6">
-    <div class="small-box bg-green">
-      <div class="inner">
         <h3 id="tasaConversionGeneral">0%</h3>
         <p>Tasa de Conversión</p>
       </div>
       <div class="icon">
-        <i class="fa fa-check-circle"></i>
+        <i class="fa fa-percent"></i>
       </div>
     </div>
   </div>
@@ -82,7 +82,8 @@
         <h3 class="box-title"><i class="fa fa-pie-chart"></i> Origen de Órdenes</h3>
       </div>
       <div class="box-body">
-        <canvas id="graficoOrigenOrdenes" style="height: 300px;"></canvas>
+        <canvas id="graficoOrigenOrdenes" width="400" height="300" style="max-height: 300px;"></canvas>
+        <div id="leyendaOrigenOrdenes" style="text-align:center; margin-top: 10px;"></div>
       </div>
     </div>
   </div>
@@ -94,7 +95,8 @@
         <h3 class="box-title"><i class="fa fa-bar-chart"></i> Conversión por Origen</h3>
       </div>
       <div class="box-body">
-        <div id="graficoConversion" style="height: 300px;"></div>
+        <canvas id="graficoConversion" style="height: 300px;"></canvas>
+        <div id="leyendaConversion" style="text-align:center; margin-top: 10px;"></div>
       </div>
     </div>
   </div>
@@ -134,6 +136,13 @@
 let pieChartOrdenes = null;
 let barChartConversion = null;
 
+// Destruir instancia Chart.js si ya existe
+function destruirChart(chart) {
+  if (chart && typeof chart.destroy === 'function') {
+    chart.destroy();
+  }
+}
+
 // Colores para las gráficas
 const coloresPie = ['#605ca8', '#39cccc'];
 const coloresBar = {
@@ -169,17 +178,25 @@ function cargarDatosOrdenes() {
 
     // Debug info
     console.log('=== DEBUG ÓRDENES ===');
-    console.log('Total convertidas histórico:', data.debug?.total_convertidas_historico);
-    console.log('Con extra n8n:', data.debug?.con_extra_n8n);
-    console.log('Con extra NULL/vacío:', data.debug?.con_extra_null);
-    console.log('Convertidas Manuales:', data.conversion.manuales.convertidas);
-    console.log('Convertidas IA:', data.conversion.ia.convertidas);
+    console.log('Manuales en-sitio:', data.debug?.convertidas_manuales_en_sitio);
+    console.log('Manuales FE:', data.debug?.convertidas_manuales_fe);
+    console.log('IA en-sitio:', data.debug?.convertidas_ia_en_sitio);
+    console.log('IA FE:', data.debug?.convertidas_ia_fe);
+    console.log('IA fallback (histórico):', data.debug?.convertidas_ia_fallback);
+    console.log('Pendientes:', data.debug?.pendientes_total);
+    console.log('Total manuales:', data.conversion.manuales.total, '| Convertidas:', data.conversion.manuales.convertidas);
+    console.log('Total IA:', data.conversion.ia.total, '| Convertidas:', data.conversion.ia.convertidas);
     console.log('=====================');
 
+    // Calcular totales del JSON
+    const totalCreadas = data.conversion.manuales.total + data.conversion.ia.total;
+    const totalConvertidas = data.conversion.manuales.convertidas + data.conversion.ia.convertidas;
+    const totalPendientes = data.totales.pendientes_total;
+
     // Actualizar cajas de resumen
-    document.getElementById('totalOrdenesPendientes').textContent = data.totales.pendientes_total;
-    document.getElementById('ordenesManuales').textContent = data.totales.pendientes_manuales;
-    document.getElementById('ordenesIA').textContent = data.totales.pendientes_ia;
+    document.getElementById('totalOrdenesCreadas').textContent = totalCreadas;
+    document.getElementById('totalOrdenesConvertidas').textContent = totalConvertidas;
+    document.getElementById('totalOrdenesPendientes').textContent = totalPendientes;
     document.getElementById('tasaConversionGeneral').textContent = data.totales.tasa_conversion + '%';
 
     // Actualizar gráfica de origen (dona)
@@ -201,7 +218,8 @@ function actualizarGraficoOrigen(datos) {
   const canvas = document.getElementById('graficoOrigenOrdenes');
   const ctx = canvas.getContext('2d');
 
-  // Limpiar canvas
+  // Destruir instancia anterior si existe
+  destruirChart(pieChartOrdenes);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const pieData = [
@@ -234,28 +252,76 @@ function actualizarGraficoOrigen(datos) {
   };
 
   pieChartOrdenes = new Chart(ctx).Doughnut(pieData, pieOptions);
+
+  // Inyectar leyenda manual bajo el canvas
+  var leyendaHtml = '<ul style="list-style:none; padding:0; margin:0; display:inline-flex; gap:20px;">';
+  pieData.forEach(function(seg) {
+    leyendaHtml += '<li style="display:flex; align-items:center; gap:6px; font-size:13px;">' +
+      '<span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:' + seg.color + ';"></span>' +
+      seg.label +
+      '</li>';
+  });
+  leyendaHtml += '</ul>';
+  document.getElementById('leyendaOrigenOrdenes').innerHTML = leyendaHtml;
 }
 
-// Actualizar gráfica de conversión (barras) - Morris.js
+// Actualizar gráfica de conversión (barras) - Chart.js 1.x
 function actualizarGraficoConversion(datos) {
-  // Limpiar contenedor
-  document.getElementById('graficoConversion').innerHTML = '';
+  const canvas = document.getElementById('graficoConversion');
+  const ctx = canvas.getContext('2d');
 
-  barChartConversion = new Morris.Bar({
-    element: 'graficoConversion',
-    resize: true,
-    data: [
-      { origen: 'Manuales', creadas: datos.manuales.total, convertidas: datos.manuales.convertidas },
-      { origen: 'IA (n8n)', creadas: datos.ia.total, convertidas: datos.ia.convertidas }
-    ],
-    xkey: 'origen',
-    ykeys: ['creadas', 'convertidas'],
-    labels: ['Total Creadas', 'Convertidas'],
-    barColors: ['#605ca8', '#00a65a'],
-    hideHover: 'auto',
-    gridLineColor: '#eef0f2',
-    xLabelAngle: 0
+  // Destruir instancia anterior si existe
+  destruirChart(barChartConversion);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const barData = {
+    labels: ['Manuales', 'IA (n8n)'],
+    datasets: [
+      {
+        label: 'Total Creadas',
+        fillColor: 'rgba(96, 92, 168, 0.8)',
+        strokeColor: 'rgba(96, 92, 168, 1)',
+        highlightFill: 'rgba(96, 92, 168, 1)',
+        highlightStroke: 'rgba(96, 92, 168, 1)',
+        data: [datos.manuales.total, datos.ia.total]
+      },
+      {
+        label: 'Convertidas',
+        fillColor: 'rgba(0, 166, 90, 0.8)',
+        strokeColor: 'rgba(0, 166, 90, 1)',
+        highlightFill: 'rgba(0, 166, 90, 1)',
+        highlightStroke: 'rgba(0, 166, 90, 1)',
+        data: [datos.manuales.convertidas, datos.ia.convertidas]
+      }
+    ]
+  };
+
+  const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scaleBeginAtZero: true,
+    scaleShowGridLines: true,
+    scaleGridLineColor: 'rgba(0,0,0,.05)',
+    scaleGridLineWidth: 1,
+    barShowStroke: true,
+    barStrokeWidth: 2,
+    barValueSpacing: 5,
+    barDatasetSpacing: 1,
+    legendTemplate: '<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].fillColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'
+  };
+
+  barChartConversion = new Chart(ctx).Bar(barData, barOptions);
+
+  // Inyectar leyenda manual bajo el canvas
+  var leyendaHtml = '<ul style="list-style:none; padding:0; margin:0; display:inline-flex; gap:20px;">';
+  barData.datasets.forEach(function(ds) {
+    leyendaHtml += '<li style="display:flex; align-items:center; gap:6px; font-size:13px;">' +
+      '<span style="display:inline-block; width:14px; height:14px; border-radius:3px; background:' + ds.fillColor + ';"></span>' +
+      ds.label +
+      '</li>';
   });
+  leyendaHtml += '</ul>';
+  document.getElementById('leyendaConversion').innerHTML = leyendaHtml;
 }
 
 // Actualizar tabla de resumen
@@ -312,8 +378,25 @@ document.getElementById('filtroOrdenesForm').addEventListener('submit', function
   cargarDatosOrdenes();
 });
 
-// Cargar datos al iniciar
+// Cargar datos cuando la sección se expande (AdminLTE collapsed-box)
+// Esto evita renderizar en un canvas con dimensiones 0 (sección colapsada)
+let ordenesYaCargadas = false;
+$('#seccion-analisis-ordenes').on('expanded.boxwidget', function() {
+  if (!ordenesYaCargadas) {
+    ordenesYaCargadas = true;
+    cargarDatosOrdenes();
+  } else {
+    // Ya cargadas: solo redibujar para que Chart.js ajuste el tamaño
+    cargarDatosOrdenes();
+  }
+});
+
+// Fallback: si la sección ya estuviera expandida al cargar (ej: móvil o cambio de config)
 document.addEventListener('DOMContentLoaded', function() {
-  cargarDatosOrdenes();
+  var seccion = document.getElementById('seccion-analisis-ordenes');
+  if (seccion && !seccion.classList.contains('collapsed-box')) {
+    cargarDatosOrdenes();
+    ordenesYaCargadas = true;
+  }
 });
 </script>

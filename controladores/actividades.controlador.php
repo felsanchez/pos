@@ -262,7 +262,7 @@ class ControladorActividades{
 
 			// 6: Notas (Editable)
 			$observacion = trim($value["observacion"] ?? "");
-			$nestedData[] = '<div contenteditable="true" class="celda-observacion" tabindex="0" data-id="' . $value['id'] . '">' . e($observacion) . '</div>';
+			$nestedData[] = '<div contenteditable="true" class="celda-observacion" tabindex="0" data-id="' . $value['id'] . '" data-placeholder="Escribe una nota..">' . e($observacion) . '</div>';
 
 			// 7: Acciones
 			$botonesAcciones = '<div class="btn-group">';

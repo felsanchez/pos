@@ -234,6 +234,10 @@
               $icono = "fa-trash";
               $color = "text-red";
               $tipoTexto = $notif["tipo"];
+            } else if ($notif["tipo"] == "orden_creada") {
+              $icono = "fa-android";
+              $color = "text-green";
+              $tipoTexto = "Orden creada";
             } else if ($notif["tipo"] == "Transaccion de BOLD") {
               $icono = "fa-credit-card";
               $color = "text-purple";
@@ -314,6 +318,10 @@
               $icono = "fa-trash";
               $color = "text-red";
               $tipoTexto = $notif["tipo"];
+            } else if ($notif["tipo"] == "orden_creada") {
+              $icono = "fa-android";
+              $color = "text-green";
+              $tipoTexto = "Orden creada";
             } else if ($notif["tipo"] == "Transaccion de BOLD") {
               $icono = "fa-credit-card";
               $color = "text-purple";

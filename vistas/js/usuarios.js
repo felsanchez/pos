@@ -63,7 +63,7 @@ $(document).ready(function () {
 					}
 				}
 			},
-			"order": [[0, 'asc']],
+			"order": [[8, 'desc']],
 			"columnDefs": [
 				{
 					"targets": 0,
@@ -80,7 +80,8 @@ $(document).ready(function () {
 					"responsivePriority": 6,
 					"visible": $("#puedeEditarUsuarios").val() == "1"
 				},
-				{ "targets": 6, "responsivePriority": 7 }
+				{ "targets": 6, "responsivePriority": 7 },
+				{ "targets": 8, "visible": false, "orderable": true }
 			],
 			"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
 			"language": {

@@ -159,6 +159,24 @@ try {
         exit;
     }
 
+    // ✅ PRIORIDAD: editarVentaFactus debe procesarse ANTES que editarVenta
+    // porque el formulario de edición de factura electrónica envía ambos campos.
+    // ✅ PRIORIDAD: guardarVentaFactus debe procesarse ANTES que editarVenta
+    // porque al convertir una orden a factura electrónica, se envían ambos.
+    if (isset($_POST["guardarVentaFactus"])) {
+        if (ob_get_length()) ob_clean();
+        $crearFactura = new ControladorVentas();
+        $crearFactura->ctrCrearVentaFactus();
+        exit;
+    }
+
+    if (isset($_POST["editarVentaFactus"]) && isset($_POST["idVenta"])) {
+        if (ob_get_length()) ob_clean();
+        $crearVenta = new ControladorVentas();
+        $crearVenta->ctrCrearVenta();
+        exit;
+    }
+
     if (isset($_POST["editarVenta"])) {
         if (ob_get_length()) ob_clean();
         $editarVenta = new ControladorVentas();

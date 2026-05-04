@@ -1,5 +1,3 @@
-
-
 <!-- DateRangePicker -->
 <link rel="stylesheet" href="vistas/bower_components/bootstrap-daterangepicker/daterangepicker.css">
 
@@ -71,7 +69,8 @@ if ($xml) {
                 <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
                   <i class="fa fa-search text-primary"></i>
                 </span>
-                <select name="cliente" id="filtroClienteOrdenes" class="form-control select2 select-cliente" style="width: 100%;">
+                <select name="cliente" id="filtroClienteOrdenes" class="form-control select2 select-cliente"
+                  style="width: 100%;">
                   <option value="">Seleccionar cliente...</option>
                   <?php
                   $clientes = ControladorClientes::ctrMostrarClientes(null, null);
@@ -91,7 +90,8 @@ if ($xml) {
                 <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
                   <i class="fa fa-search text-primary"></i>
                 </span>
-                <select name="usuario" id="filtroUsuarioOrdenes" class="form-control select2 select-usuario" style="width: 100%;">
+                <select name="usuario" id="filtroUsuarioOrdenes" class="form-control select2 select-usuario"
+                  style="width: 100%;">
                   <option value="">Seleccionar usuario...</option>
                   <?php
                   $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
@@ -145,10 +145,11 @@ if ($xml) {
                 <th>Forma de pago</th>
                 <th>Imagen</th>
                 <th>Total</th>
-                <th><i class="fa fa-magic"></i> Notas</th>
+                <th><i class="fa fa-magic"></i> Notas del Cliente</th>
                 <th>Observación</th>
                 <th>Fecha</th>
                 <th>Seguimiento</th>
+                <th>Convertir</th>
                 <th>Acciones</th>
               </tr>
             </thead>

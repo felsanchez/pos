@@ -1,41 +1,3 @@
-<!-- Estilos para campo observación -->
-<style>
-  .celda-observacion {
-    background: #fff9e6;
-    padding: 8px;
-    border-radius: 3px;
-    font-size: 12px;
-    color: #666;
-    border-left: 2px solid #f39c12;
-    cursor: text;
-    min-height: 30px;
-  }
-
-  .celda-observacion:empty:before {
-    content: "Escribe una observación...";
-    color: #999;
-    font-style: italic;
-  }
-
-  .celda-observacion:focus {
-    outline: 2px solid #f39c12;
-    background: #fffef5;
-  }
-
-  /* Prevenir layout-shift al cargar la página */
-  .fe-ui-hidden {
-    display: none;
-  }
-</style>
-
-
-
-
-
-
-
-
-
 <!-- DateRangePicker -->
 <link rel="stylesheet" href="vistas/bower_components/bootstrap-daterangepicker/daterangepicker.css">
 
@@ -187,7 +149,7 @@ if ($xml) {
 
                   <th>Total</th>
                   <th>Estado DIAN</th>
-                  <th><i class="fa fa-magic"></i> Notas</th>
+                  <th><i class="fa fa-magic"></i> Notas del Cliente</th>
                   <th>Observación</th>
                   <th>Fecha</th>
                   <th>Acciones</th>
@@ -207,33 +169,33 @@ if ($xml) {
 
 
           <!-- Modal para ampliar/editar imagen de venta -->
-          <div class="modal fade" id="modalAmpliarImagenVenta" tabindex="-1" role="dialog">
-            <div class="modal-dialog modal-lg" role="document">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                  <h4 class="modal-title">Imagen de la Venta</h4>
-                </div>
-                <div class="modal-body text-center">
-                  <img id="imagenVentaAmpliada" src="" class="img-responsive"
-                    style="max-width: 100%; margin: 0 auto; margin-bottom: 20px;">
+          <div class="modal-custom" id="modalAmpliarImagenVenta">
+            <div class="modal-custom-backdrop" data-dismiss="modal"></div>
+            <div class="modal-custom-container">
+              <div class="modal-custom-header">
+                <h4 class="modal-title">Imagen de la Venta</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                  style="color: white; opacity: 0.8; margin-top: -2px;">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-custom-body text-center">
+                <img id="imagenVentaAmpliada" src="" class="img-responsive"
+                  style="max-width: 100%; margin: 0 auto; margin-bottom: 20px;">
 
-                  <hr>
+                <hr>
 
-                  <div class="form-group">
-                    <label>Cambiar Imagen de la Venta</label>
-                    <input type="file" class="form-control nuevaImagenVenta" accept="image/*">
-                    <p class="help-block">Peso máximo de la imagen 2MB</p>
-                  </div>
+                <div class="form-group text-left">
+                  <label>Cambiar Imagen de la Venta</label>
+                  <input type="file" class="form-control nuevaImagenVenta" accept="image/*">
+                  <p class="help-block">Peso máximo de la imagen 2MB</p>
+                </div>
 
-                  <input type="hidden" id="idVentaImagen">
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-                  <button type="button" class="btn btn-primary btnGuardarImagenVenta">Guardar Imagen</button>
-                </div>
+                <input type="hidden" id="idVentaImagen">
+              </div>
+              <div class="modal-custom-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary btnGuardarImagenVenta">Guardar Imagen</button>
               </div>
             </div>
           </div>
@@ -251,51 +213,51 @@ if ($xml) {
 <!--==========================================================================
 MODAL GENERAR NOTA CRÉDITO
 ===========================================================================-->
-<div class="modal fade" id="modalNotaCredito" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-danger">
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title"><i class="fa fa-undo"></i> Generar Nota Crédito</h4>
+<div class="modal-custom" id="modalNotaCredito">
+  <div class="modal-custom-backdrop" data-dismiss="modal"></div>
+  <div class="modal-custom-container">
+    <div class="modal-custom-header" style="background:#dd4b39;">
+      <h4 class="modal-title"><i class="fa fa-undo"></i> Generar Nota Crédito</h4>
+      <button type="button" class="close" data-dismiss="modal"
+        style="color: white; opacity: 0.8; margin-top: -2px;">&times;</button>
+    </div>
+    <div class="modal-custom-body" style="text-align: left;">
+      <input type="hidden" id="ncIdVenta">
+
+      <div class="alert alert-info">
+        <p><strong>Factura:</strong> <span id="ncNumeroFactura"></span></p>
+        <p><strong>Cliente:</strong> <span id="ncCliente"></span></p>
+        <p><strong>Total:</strong> $<span id="ncTotal"></span></p>
       </div>
-      <div class="modal-body">
-        <input type="hidden" id="ncIdVenta">
 
-        <div class="alert alert-info">
-          <p><strong>Factura:</strong> <span id="ncNumeroFactura"></span></p>
-          <p><strong>Cliente:</strong> <span id="ncCliente"></span></p>
-          <p><strong>Total:</strong> $<span id="ncTotal"></span></p>
-        </div>
-
-        <div class="form-group">
-          <label>Tipo de Nota Crédito:</label>
-          <select class="form-control" id="ncTipo">
-            <option value="anulacion_total">Anulación Total</option>
-            <option value="devolucion_parcial">Devolución Parcial</option>
-            <option value="ajuste_precio">Ajuste de Precio</option>
-            <option value="descuento_posterior">Descuento Posterior</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Motivo <span class="text-danger">*</span>:</label>
-          <textarea class="form-control" id="ncMotivo" rows="3"
-            placeholder="Ej: Error en digitación de precio, producto defectuoso, etc."></textarea>
-        </div>
-
-        <div class="alert alert-warning">
-          <i class="fa fa-warning"></i> Esta acción generará una Nota Crédito oficial ante la DIAN y <strong>no puede
-            revertirse</strong>.
-        </div>
+      <div class="form-group">
+        <label>Tipo de Nota Crédito:</label>
+        <select class="form-control" id="ncTipo">
+          <option value="anulacion_total">Anulación Total</option>
+          <option value="devolucion_parcial">Devolución Parcial</option>
+          <option value="ajuste_precio">Ajuste de Precio</option>
+          <option value="descuento_posterior">Descuento Posterior</option>
+        </select>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-        <?php if (puedeAccion('factura_electronica', 'crear')): ?>
-          <button type="button" class="btn btn-danger" id="btnConfirmarNC">
-            <i class="fa fa-check"></i> Generar Nota Crédito
-          </button>
-        <?php endif; ?>
+
+      <div class="form-group">
+        <label>Motivo <span class="text-danger">*</span>:</label>
+        <textarea class="form-control" id="ncMotivo" rows="3"
+          placeholder="Ej: Error en digitación de precio, producto defectuoso, etc."></textarea>
       </div>
+
+      <div class="alert alert-warning">
+        <i class="fa fa-warning"></i> Esta acción generará una Nota Crédito oficial ante la DIAN y <strong>no puede
+          revertirse</strong>.
+      </div>
+    </div>
+    <div class="modal-custom-footer">
+      <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancelar</button>
+      <?php if (puedeAccion('factura_electronica', 'crear')): ?>
+        <button type="button" class="btn btn-danger" id="btnConfirmarNC">
+          <i class="fa fa-check"></i> Generar Nota Crédito
+        </button>
+      <?php endif; ?>
     </div>
   </div>
 </div>
@@ -305,155 +267,152 @@ MODAL EDITAR CLIENTE
 ===========================================================================-->
 
 <!-- Modal -->
-<div id="modalEditarCliente" class="modal fade" role="dialog">
+<div id="modalEditarCliente" class="modal-custom">
+  <div class="modal-custom-backdrop" data-dismiss="modal"></div>
+  <div class="modal-custom-container">
 
-  <div class="modal-dialog">
+    <form role="form" method="post" style="display: flex; flex-direction: column; height: 100%;">
 
-    <div class="modal-content">
+      <?php CSRF::insertToken(); ?>
 
-      <form role="form" method="post">
-
-        <!--=====================================
+      <!--=====================================
       CABEZA DEL MODAL
       ======================================-->
 
-        <div class="modal-header" style="background:#3c8dbc; color: white">
+      <div class="modal-custom-header">
+        <h4 class="modal-title">Ver cliente</h4>
+        <button type="button" class="close" data-dismiss="modal"
+          style="color: white; opacity: 0.8; margin-top: -2px;">&times;</button>
+      </div>
 
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title">Ver cliente</h4>
-
-        </div>
-
-        <!--=====================================
+      <!--=====================================
       CUERPO DEL MODAL
       ======================================-->
 
-        <div class="modal-body">
-          <div class="box-body">
+      <div class="modal-custom-body" style="text-align: left;">
+        <div class="box-body">
 
-            <!-- FILA 1: DATOS PERSONALES -->
-            <div class="row">
-              <div class="col-xs-12 col-md-6">
-                <!-- entrada para nombre -->
-                <div class="form-group">
-                  <label>Nombre:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-user"></i></span>
-                    <input type="text" class="form-control input-lg" name="editarCliente" id="editarCliente" readonly>
-                    <input type="hidden" id="idCliente" name="idCliente">
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-xs-12 col-md-6">
-                <!-- entrada para documento ID -->
-                <div class="form-group">
-                  <label>Documento:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-key"></i></span>
-                    <input type="number" min="0" class="form-control input-lg" name="editarDocumentoId"
-                      id="editarDocumentoId" placeholder="Documento" readonly>
-                  </div>
+          <!-- FILA 1: DATOS PERSONALES -->
+          <div class="row">
+            <div class="col-xs-12 col-md-6">
+              <!-- entrada para nombre -->
+              <div class="form-group">
+                <label>Nombre:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                  <input type="text" class="form-control input-lg" name="editarCliente" id="editarCliente" readonly>
+                  <input type="hidden" id="idCliente" name="idCliente">
                 </div>
               </div>
             </div>
 
-            <!-- FILA 2: CONTACTO -->
-            <div class="row">
-              <div class="col-xs-12 col-md-6">
-                <!-- entrada para Email -->
-                <div class="form-group">
-                  <label>Email:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
-                    <input type="email" class="form-control input-lg" name="editarEmail" id="editarEmail"
-                      placeholder="Correo Electrónico" readonly>
-                  </div>
+            <div class="col-xs-12 col-md-6">
+              <!-- entrada para documento ID -->
+              <div class="form-group">
+                <label>Documento:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-key"></i></span>
+                  <input type="number" min="0" class="form-control input-lg" name="editarDocumentoId"
+                    id="editarDocumentoId" placeholder="Documento" readonly>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div class="col-xs-12 col-md-6">
-                <!-- entrada para telefono -->
-                <div class="form-group">
-                  <label>Teléfono:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-phone"></i></span>
-                    <input type="text" class="form-control input-lg" name="editarTelefono" id="editarTelefono"
-                      data-inputmask="'mask':'(999) 999-9999'" data-mask placeholder="Celular" readonly>
-                  </div>
+          <!-- FILA 2: CONTACTO -->
+          <div class="row">
+            <div class="col-xs-12 col-md-6">
+              <!-- entrada para Email -->
+              <div class="form-group">
+                <label>Email:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                  <input type="email" class="form-control input-lg" name="editarEmail" id="editarEmail"
+                    placeholder="Correo Electrónico" readonly>
                 </div>
               </div>
             </div>
 
-            <hr style="margin-top: 5px; margin-bottom: 15px;">
-
-            <!-- FILA 3: UBICACIÓN Y ESTADO -->
-            <div class="row">
-              <div class="col-xs-12 col-md-6">
-                <!-- entrada para la direccion -->
-                <div class="form-group">
-                  <label>Dirección:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-home"></i></span>
-                    <input type="text" class="form-control input-lg" name="editarDireccion" id="editarDireccion"
-                      placeholder="Dirección" required readonly>
-                  </div>
+            <div class="col-xs-12 col-md-6">
+              <!-- entrada para telefono -->
+              <div class="form-group">
+                <label>Teléfono:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-phone"></i></span>
+                  <input type="text" class="form-control input-lg" name="editarTelefono" id="editarTelefono"
+                    data-inputmask="'mask':'(999) 999-9999'" data-mask placeholder="Celular" readonly>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div class="col-xs-12 col-md-6">
-                <!-- entrada para la ciudad (Municipio) -->
-                <div class="form-group">
-                  <label>Municipio:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
-                    <input type="text" class="form-control input-lg" name="editarCiudad" id="editarCiudad"
-                      placeholder="Municipio" readonly>
-                  </div>
+          <hr style="margin-top: 5px; margin-bottom: 15px;">
+
+          <!-- FILA 3: UBICACIÓN Y ESTADO -->
+          <div class="row">
+            <div class="col-xs-12 col-md-6">
+              <!-- entrada para la direccion -->
+              <div class="form-group">
+                <label>Dirección:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-home"></i></span>
+                  <input type="text" class="form-control input-lg" name="editarDireccion" id="editarDireccion"
+                    placeholder="Dirección" required readonly>
                 </div>
               </div>
             </div>
 
-            <!-- FILA 4: ESTADO Y NOTAS -->
-            <div class="row">
-              <div class="col-xs-12 col-md-6">
-                <!-- entrada para estado -->
-                <div class="form-group">
-                  <label>Estado:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-flag"></i></span>
-                    <input type="text" class="form-control input-lg" id="editarEstado" name="editarEstado" readonly
-                      style="background-color: #f4f4f4; cursor: not-allowed;">
-                  </div>
+            <div class="col-xs-12 col-md-6">
+              <!-- entrada para la ciudad (Municipio) -->
+              <div class="form-group">
+                <label>Municipio:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
+                  <input type="text" class="form-control input-lg" name="editarCiudad" id="editarCiudad"
+                    placeholder="Municipio" readonly>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div class="col-xs-12 col-md-12">
-                <!-- entrada para nota -->
-                <div class="form-group">
-                  <label>Notas:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-sticky-note"></i></span>
-                    <textarea class="form-control input-lg" name="editarNota" id="editarNota" placeholder="Notas"
-                      readonly style="height: 80px; resize: none;"></textarea>
-                  </div>
+          <!-- FILA 4: ESTADO Y NOTAS -->
+          <div class="row">
+            <div class="col-xs-12 col-md-6">
+              <!-- entrada para estado -->
+              <div class="form-group">
+                <label>Estado:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-flag"></i></span>
+                  <input type="text" class="form-control input-lg" id="editarEstado" name="editarEstado" readonly
+                    style="background-color: #f4f4f4; cursor: not-allowed;">
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xs-12 col-md-12">
+              <!-- entrada para nota -->
+              <div class="form-group">
+                <label>Notas:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-sticky-note"></i></span>
+                  <textarea class="form-control input-lg" name="editarNota" id="editarNota" placeholder="Notas" readonly
+                    style="height: 80px; resize: none;"></textarea>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!--=====================================
-        PIE DEL MODAL
-        ======================================-->
+      <!--=====================================
+      PIE DEL MODAL
+      ======================================-->
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
-          <!--<button type="submit" class="btn btn-primary">Guardar cambios</button>-->
-        </div>
+      <div class="modal-custom-footer">
+        <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
+      </div>
 
-      </form>
-    </div>
+    </form>
   </div>
 </div>
 
@@ -729,45 +688,35 @@ MODAL EDITAR CLIENTE
 <!--=====================================
 MODAL VER NOTAS DE CRÉDITO
 ======================================-->
-<div id="modalNotasCredito" class="modal fade" role="dialog">
-  <div class="modal-dialog">
-    <div class="modal-content">
-
-      <!-- CABEZA DEL MODAL -->
-      <div class="modal-header" style="background:#f39c12; color:white">
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title"><i class="fa fa-list"></i> Notas Crédito Asociadas</h4>
+<div id="modalNotasCredito" class="modal-custom">
+  <div class="modal-custom-backdrop" data-dismiss="modal"></div>
+  <div class="modal-custom-container">
+    <div class="modal-custom-header" style="background:#f39c12;">
+      <h4 class="modal-title"><i class="fa fa-list"></i> Notas Crédito Asociadas</h4>
+      <button type="button" class="close" data-dismiss="modal"
+        style="color: white; opacity: 0.8; margin-top: -2px;">&times;</button>
+    </div>
+    <div class="modal-custom-body" style="text-align: left;">
+      <div class="box-body">
+        <table class="table table-bordered table-striped dt-responsive" width="100%">
+          <thead>
+            <tr>
+              <th style="width:10px">#</th>
+              <th>Código</th>
+              <th>Fecha</th>
+              <th>Monto</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyNotasCredito">
+            <!-- Filas inyectadas por AJAX -->
+          </tbody>
+        </table>
       </div>
-
-      <!-- CUERPO DEL MODAL -->
-      <div class="modal-body">
-        <div class="box-body">
-
-          <!-- TABLA NOTAS CRÉDITO -->
-          <table class="table table-bordered table-striped dt-responsive" width="100%">
-            <thead>
-              <tr>
-                <th style="width:10px">#</th>
-                <th>Código</th>
-                <th>Fecha</th>
-                <th>Monto</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="tbodyNotasCredito">
-              <!-- Filas inyectadas por AJAX -->
-            </tbody>
-          </table>
-
-        </div>
-      </div>
-
-      <!-- PIE DEL MODAL -->
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default pull-right" data-dismiss="modal">Cerrar</button>
-      </div>
-
+    </div>
+    <div class="modal-custom-footer">
+      <button type="button" class="btn btn-default pull-right" data-dismiss="modal">Cerrar</button>
     </div>
   </div>
 </div>
@@ -776,52 +725,40 @@ MODAL VER NOTAS DE CRÉDITO
 MODAL ENVIAR EMAIL
 ======================================-->
 
-<div id="modalEnviarEmail" class="modal fade" role="dialog">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form role="form" method="post" id="formEnviarEmail">
-
-        <!-- CABEZA DEL MODAL -->
-        <div class="modal-header" style="background:#3c8dbc; color:white">
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title">Enviar Factura por Correo</h4>
-        </div>
-
-        <!-- CUERPO DEL MODAL -->
-        <div class="modal-body">
-          <div class="box-body">
-
-            <!-- ENTRADA PARA EL NOMBRE DEL CLIENTE -->
-            <div class="form-group">
-              <label>Cliente</label>
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-user"></i></span>
-                <input type="text" class="form-control input-lg" id="emailNombreCliente" readonly>
-                <input type="hidden" id="emailIdVenta">
-              </div>
+<div id="modalEnviarEmail" class="modal-custom">
+  <div class="modal-custom-backdrop" data-dismiss="modal"></div>
+  <div class="modal-custom-container" style="max-width: 500px;">
+    <form role="form" method="post" id="formEnviarEmail" style="display: flex; flex-direction: column; height: 100%;">
+      <div class="modal-custom-header">
+        <h4 class="modal-title">Enviar Factura por Correo</h4>
+        <button type="button" class="close" data-dismiss="modal"
+          style="color: white; opacity: 0.8; margin-top: -2px;">&times;</button>
+      </div>
+      <div class="modal-custom-body" style="text-align: left;">
+        <div class="box-body">
+          <div class="form-group">
+            <label>Cliente</label>
+            <div class="input-group">
+              <span class="input-group-addon"><i class="fa fa-user"></i></span>
+              <input type="text" class="form-control input-lg" id="emailNombreCliente" readonly>
+              <input type="hidden" id="emailIdVenta">
             </div>
-
-            <!-- ENTRADA PARA EL EMAIL -->
-            <div class="form-group">
-              <label>Correo Electrónico</label>
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
-                <input type="email" class="form-control input-lg" id="emailDestino" placeholder="Ingresar correo"
-                  required>
-              </div>
+          </div>
+          <div class="form-group">
+            <label>Correo Electrónico</label>
+            <div class="input-group">
+              <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+              <input type="email" class="form-control input-lg" id="emailDestino" placeholder="Ingresar correo"
+                required>
             </div>
-
           </div>
         </div>
-
-        <!-- PIE DEL MODAL -->
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
-          <button type="submit" class="btn btn-primary">Enviar PDF</button>
-        </div>
-
-      </form>
-    </div>
+      </div>
+      <div class="modal-custom-footer">
+        <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
+        <button type="submit" class="btn btn-primary">Enviar PDF</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -849,7 +786,44 @@ MODAL ENVIAR EMAIL
         window.tablaFE = $("#tablaFacturasElectronicas").DataTable({
           "processing": true,
           "serverSide": true,
-          "responsive": true,
+          "responsive": {
+            "details": {
+              "type": "inline",
+              "renderer": function (api, rowIdx, columns) {
+                var labels = {
+                  2: 'Vendedor', 3: 'Forma de Pago', 4: 'Imagen',
+                  5: 'Total', 6: 'Estado DIAN', 7: 'Notas del cliente', 8: 'Observación', 9: 'Fecha'
+                };
+                var idVenta = $(api.row(rowIdx).node()).find('.celda-observacion').attr('data-id') || '';
+                var finalHtml = '';
+                var hasHidden = false;
+
+                $.each(columns, function (i, col) {
+                  if (!col.hidden) return;
+                  hasHidden = true;
+                  var colIdx = col.columnIndex;
+                  var label = labels[colIdx] || col.title || ('Columna ' + colIdx);
+                  var data = col.data || '';
+
+                  if (colIdx === 8) { // Observación
+                    var obsTexto = $('<div>').html(data).text().trim();
+                    finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
+                    finalHtml += '<span class="text-bold" style="display:block;color:#555;margin-bottom:4px;"> ' + label + ':</span>';
+                    finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:24px;">' + obsTexto + '</div>';
+                    finalHtml += '</div>';
+                    return;
+                  }
+
+                  finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
+                  finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span> ';
+                  finalHtml += '<span>' + data + '</span>';
+                  finalHtml += '</div>';
+                });
+
+                return hasHidden ? $('<div/>').append(finalHtml) : false;
+              }
+            }
+          },
           "autoWidth": false,
           "ajax": {
             "url": "ajax/ventas.ajax.php",
@@ -857,9 +831,9 @@ MODAL ENVIAR EMAIL
             "data": function (d) {
               d.drawFacturasElectronicas = 1;
               d.fechaInicial = feFilterFechaInicial;
-              d.fechaFinal   = feFilterFechaFinal;
-              d.clienteId    = $('#filtroClienteFacturas').val() || '';
-              d.usuarioId    = $('#filtroUsuarioFacturas').val() || '';
+              d.fechaFinal = feFilterFechaFinal;
+              d.clienteId = $('#filtroClienteFacturas').val() || '';
+              d.usuarioId = $('#filtroUsuarioFacturas').val() || '';
             }
           },
           "initComplete": function (settings, json) {
@@ -917,4 +891,4 @@ MODAL ENVIAR EMAIL
       }
     }, 200);
   });
-</script>
+</script>

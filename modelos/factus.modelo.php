@@ -976,7 +976,6 @@ class ModeloFactus
 			SELECT numero_factura, codigo, resolucion_id
 			FROM ventas 
 			WHERE (numero_factura IS NOT NULL AND numero_factura != '' AND numero_factura LIKE :prefijo)
-            OR (resolucion_id IS NOT NULL AND resolucion_id != 0)
 			ORDER BY id DESC
 		");
 
@@ -987,14 +986,11 @@ class ModeloFactus
         // Extraer el número máximo en PHP
         $ultimoLocal = 0;
         foreach ($facturas as $factura) {
-            $numeroFactura = !empty($factura["numero_factura"]) ? $factura["numero_factura"] : $factura["codigo"];
+            $numeroFactura = $factura["numero_factura"];
 
             if (empty($numeroFactura))
                 continue;
 
-            // 1. Quitar el prefijo para dejar solo la parte numérica (o con guiones)
-            // Si el número empieza con el prefijo, lo quitamos. 
-            // Si es un borrador (codigo), probablemente ya sea solo el número.
             if (strpos($numeroFactura, $prefijo) === 0) {
                 $soloParteNumerica = substr($numeroFactura, strlen($prefijo));
             } else {

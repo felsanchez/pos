@@ -415,6 +415,17 @@ EOF;
 		$footer .= '</tr>';
 		$footer .= '</table>';
 		$pdf->writeHTML($footer, false, false, false, false, '');
+		
+		//---------------------------------------------------------
+		// BLOQUE 7 - OBSERVACIONES
+		//---------------------------------------------------------
+		if (!empty($respuestaVenta["observacion"])) {
+			$pdf->Ln(2);
+			$pdf->SetFont('helvetica', 'B', 10);
+			$pdf->Cell(0, 10, 'Observaciones:', 0, 1);
+			$pdf->SetFont('helvetica', '', 9);
+			$pdf->MultiCell(0, 5, $respuestaVenta["observacion"], 0, 'L');
+		}
 
 		// ---------------------------------------------------------
 //SALIDA DEL ARCHIVO 

@@ -59,6 +59,8 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
                 <div class="form-group">
 
+                  <label>Vendedor</label>
+
                   <div class="input-group">
 
                     <span class="input-group-addon"><i class="fa fa-user"></i></span>
@@ -74,64 +76,70 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
 
                 <!--=====================================
-                      ENTRADA DEL FORMATO DE CÓDIGO
+                      FORMATO Y CÓDIGO VENTA (misma fila)
                       ======================================-->
 
-                <div class="form-group">
+                <div class="row">
 
-                  <div class="input-group">
+                  <div class="col-xs-6">
+                    <div class="form-group">
 
-                    <span class="input-group-addon"><i class="fa fa-barcode"></i></span>
+                      <label>Formato</label>
 
-                    <input type="text" class="form-control" id="formatoCodigoVenta" name="formatoCodigoVenta"
-                      value="<?php echo $formatoCodigoVenta; ?>" readonly placeholder="Formato de código">
+                      <div class="input-group">
 
+                        <span class="input-group-addon"><i class="fa fa-barcode"></i></span>
+
+                        <input type="text" class="form-control" id="formatoCodigoVenta" name="formatoCodigoVenta"
+                          value="<?php echo $formatoCodigoVenta; ?>" readonly placeholder="Formato de código">
+
+                      </div>
+
+                    </div>
                   </div>
 
-                </div>
+                  <div class="col-xs-6">
+                    <div class="form-group">
 
-                <!--=====================================
-                      ENTRADA DE LA VENTA
-                      ======================================-->
+                      <label>Código Venta</label>
 
-                <div class="form-group">
+                      <div class="input-group">
 
-                  <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-key"></i></span>
 
-                    <span class="input-group-addon"><i class="fa fa-key"></i></span>
+                        <?php
 
-                    <?php
+                        $item = null;
+                        $valor = null;
 
-                    $item = null;
-                    $valor = null;
+                        $ventas = ControladorVentas::ctrMostrarVentas($item, $valor);
 
-                    $ventas = ControladorVentas::ctrMostrarVentas($item, $valor);
+                        /*
+                        if(!$ventas){
+                          echo '<input type="text" class="form-control" id="nuevaVenta" name="nuevaVenta" value="10001" readonly>';
+                        }
+                        else {
+                           foreach ($ventas as $key => $value) {
+                          } 
+                          $codigo = $value["codigo"] +1;
+                           echo '<input type="text" class="form-control" id="nuevaVenta" name="nuevaVenta" value="'.$key.'" readonly>';
+                           $fecha = $value["fecha"] +1;
+                          echo '<input type="date" class="form-control" id="nuevaVenta" name="nuevaVenta" value="'.$fecha.'">';
+                        }
+                        */
 
-                    /*
-                    if(!$ventas){
-                      echo '<input type="text" class="form-control" id="nuevaVenta" name="nuevaVenta" value="10001" readonly>';
-                    }
-                    else {
-                       foreach ($ventas as $key => $value) {
-                      } 
-                      $codigo = $value["codigo"] +1;
-                       echo '<input type="text" class="form-control" id="nuevaVenta" name="nuevaVenta" value="'.$key.'" readonly>';
-                       $fecha = $value["fecha"] +1;
-                      echo '<input type="date" class="form-control" id="nuevaVenta" name="nuevaVenta" value="'.$fecha.'">';
-                    }
-                    */
+                        // Obtener el siguiente consecutivo
+                        $siguienteNumero = ModeloVentas::mdlObtenerSiguienteConsecutivo("ventas");
 
-                    // Obtener el siguiente consecutivo
-                    
-                    $siguienteNumero = ModeloVentas::mdlObtenerSiguienteConsecutivo("ventas");
+                        ?>
 
+                        <!-- Mostrar el codigo en el campo de texto -->
+                        <input type="text" class="form-control" id="nuevaVenta" name="nuevaVenta"
+                          value="<?php echo $siguienteNumero; ?>" readonly>
 
-                    ?>
+                      </div>
 
-                    <!-- Mostrar el codigo en el campo de texto -->
-                    <input type="text" class="form-control" id="nuevaVenta" name="nuevaVenta"
-                      value="<?php echo $siguienteNumero; ?>" readonly>
-
+                    </div>
                   </div>
 
                 </div>
@@ -141,6 +149,8 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                       ======================================-->
 
                 <div class="form-group">
+
+                  <label>Cliente</label>
 
                   <div class="input-group">
 
@@ -179,6 +189,8 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                       ======================================-->
 
                 <div class="form-group">
+
+                  <label>Nombre de quien recibe</label>
 
                   <div class="input-group">
 
@@ -403,27 +415,17 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
 
 
-<!--Verificar que tenga productos , antes de guardar la venta-->
+<!--Verificar que tenga productos, antes de guardar la orden-->
 <script>
-  document.querySelector('form').addEventListener('submit', function (e) {
-    // Llamar a listarProductos() primero para generar el JSON con todos los campos
-    listarProductos();
-    const listaProductos = document.getElementById('listaProductos').value;
-
-
-    // DEBUG: Ver qué JSON se generó
-    console.log('=== DEBUG CREAR ORDEN ===');
-    console.log('JSON listaProductos:', listaProductos);
-    console.log('Parsed:', JSON.parse(listaProductos || '[]'));
-
-
-    if (!listaProductos || listaProductos === '[]') {
-      e.preventDefault(); // Detiene el envío del formulario
-      Swal.fire({
-        type: 'warning',
-        title: 'Sin productos',
-        text: 'Debe agregar al menos un producto para guardar la venta',
-        confirmButtonText: 'OK'
+  $(document).on("submit", ".formularioVenta", function (e) {
+    var listaProductos = $("#listaProductos").val();
+    if (listaProductos == "" || listaProductos == "[]") {
+      e.preventDefault();
+      swal({
+        type: "error",
+        title: "La orden no se puede guardar porque no tiene productos",
+        showConfirmButton: true,
+        confirmButtonText: "Cerrar"
       });
       return false;
     }

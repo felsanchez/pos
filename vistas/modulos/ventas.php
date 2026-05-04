@@ -153,7 +153,7 @@ if ($xml) {
                 <th>Forma de pago</th>
                 <th>Imagen</th>
                 <th>Total</th>
-                <th><i class="fa fa-magic"></i> Notas</th>
+                <th><i class="fa fa-magic"></i> Notas del Cliente</th>
                 <th>Observación</th>
                 <th>Fecha</th>
                 <th>Acciones</th>
@@ -171,33 +171,33 @@ if ($xml) {
 
 
         <!-- Modal para ampliar/editar imagen de venta -->
-        <div class="modal fade" id="modalAmpliarImagenVenta" tabindex="-1" role="dialog">
-          <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Imagen de la Venta</h4>
-              </div>
-              <div class="modal-body text-center">
-                <img id="imagenVentaAmpliada" src="" class="img-responsive"
-                  style="max-width: 100%; margin: 0 auto; margin-bottom: 20px;">
+        <div class="modal-custom" id="modalAmpliarImagenVenta">
+          <div class="modal-custom-backdrop" data-dismiss="modal"></div>
+          <div class="modal-custom-container">
+            <div class="modal-custom-header">
+              <h4 class="modal-title">Imagen de la Venta</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                style="color: white; opacity: 0.8; margin-top: -2px;">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-custom-body text-center">
+              <img id="imagenVentaAmpliada" src="" class="img-responsive"
+                style="max-width: 100%; margin: 0 auto; margin-bottom: 20px;">
 
-                <hr>
+              <hr>
 
-                <div class="form-group">
-                  <label>Cambiar Imagen de la Venta</label>
-                  <input type="file" class="form-control nuevaImagenVenta" accept="image/*">
-                  <p class="help-block">Peso máximo de la imagen 2MB</p>
-                </div>
+              <div class="form-group text-left">
+                <label>Cambiar Imagen de la Venta</label>
+                <input type="file" class="form-control nuevaImagenVenta" accept="image/*">
+                <p class="help-block">Peso máximo de la imagen 2MB</p>
+              </div>
 
-                <input type="hidden" id="idVentaImagen">
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary btnGuardarImagenVenta">Guardar Imagen</button>
-              </div>
+              <input type="hidden" id="idVentaImagen">
+            </div>
+            <div class="modal-custom-footer">
+              <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancelar</button>
+              <button type="button" class="btn btn-primary btnGuardarImagenVenta">Guardar Imagen</button>
             </div>
           </div>
         </div>
@@ -220,157 +220,152 @@ MODAL EDITAR CLIENTE
 ===========================================================================-->
 
 <!-- Modal -->
-<div id="modalEditarCliente" class="modal fade" role="dialog">
+<div id="modalEditarCliente" class="modal-custom">
+  <div class="modal-custom-backdrop" data-dismiss="modal"></div>
+  <div class="modal-custom-container">
 
-  <div class="modal-dialog">
+    <form role="form" method="post" style="display: flex; flex-direction: column; height: 100%;">
 
-    <div class="modal-content">
+      <?php CSRF::insertToken(); ?>
 
-      <form role="form" method="post">
-
-        <?php CSRF::insertToken(); ?>
-
-        <!--=====================================
+      <!--=====================================
       CABEZA DEL MODAL
       ======================================-->
 
-        <div class="modal-header" style="background:#3c8dbc; color: white">
+      <div class="modal-custom-header">
+        <h4 class="modal-title">Ver cliente</h4>
+        <button type="button" class="close" data-dismiss="modal"
+          style="color: white; opacity: 0.8; margin-top: -2px;">&times;</button>
+      </div>
 
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title">Ver cliente</h4>
-
-        </div>
-
-        <!--=====================================
+      <!--=====================================
       CUERPO DEL MODAL
       ======================================-->
 
-        <div class="modal-body">
-          <div class="box-body">
+      <div class="modal-custom-body" style="text-align: left;">
+        <div class="box-body">
 
-            <!-- FILA 1: DATOS PERSONALES -->
-            <div class="row">
-              <div class="col-xs-12 col-md-6">
-                <!-- entrada para nombre -->
-                <div class="form-group">
-                  <label>Nombre:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-user"></i></span>
-                    <input type="text" class="form-control input-lg" name="editarCliente" id="editarCliente" readonly>
-                    <input type="hidden" id="idCliente" name="idCliente">
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-xs-12 col-md-6">
-                <!-- entrada para documento ID -->
-                <div class="form-group">
-                  <label>Documento:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-key"></i></span>
-                    <input type="number" min="0" class="form-control input-lg" name="editarDocumentoId"
-                      id="editarDocumentoId" placeholder="Documento" readonly>
-                  </div>
+          <!-- FILA 1: DATOS PERSONALES -->
+          <div class="row">
+            <div class="col-xs-12 col-md-6">
+              <!-- entrada para nombre -->
+              <div class="form-group">
+                <label>Nombre:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                  <input type="text" class="form-control input-lg" name="editarCliente" id="editarCliente" readonly>
+                  <input type="hidden" id="idCliente" name="idCliente">
                 </div>
               </div>
             </div>
 
-            <!-- FILA 2: CONTACTO -->
-            <div class="row">
-              <div class="col-xs-12 col-md-6">
-                <!-- entrada para Email -->
-                <div class="form-group">
-                  <label>Email:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
-                    <input type="email" class="form-control input-lg" name="editarEmail" id="editarEmail"
-                      placeholder="Correo Electrónico" readonly>
-                  </div>
+            <div class="col-xs-12 col-md-6">
+              <!-- entrada para documento ID -->
+              <div class="form-group">
+                <label>Documento:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-key"></i></span>
+                  <input type="number" min="0" class="form-control input-lg" name="editarDocumentoId"
+                    id="editarDocumentoId" placeholder="Documento" readonly>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div class="col-xs-12 col-md-6">
-                <!-- entrada para telefono -->
-                <div class="form-group">
-                  <label>Teléfono:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-phone"></i></span>
-                    <input type="text" class="form-control input-lg" name="editarTelefono" id="editarTelefono"
-                      data-inputmask="'mask':'(999) 999-9999'" data-mask placeholder="Celular" readonly>
-                  </div>
+          <!-- FILA 2: CONTACTO -->
+          <div class="row">
+            <div class="col-xs-12 col-md-6">
+              <!-- entrada para Email -->
+              <div class="form-group">
+                <label>Email:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                  <input type="email" class="form-control input-lg" name="editarEmail" id="editarEmail"
+                    placeholder="Correo Electrónico" readonly>
                 </div>
               </div>
             </div>
 
-            <hr style="margin-top: 5px; margin-bottom: 15px;">
-
-            <!-- FILA 3: UBICACIÓN Y ESTADO -->
-            <div class="row">
-              <div class="col-xs-12 col-md-6">
-                <!-- entrada para la direccion -->
-                <div class="form-group">
-                  <label>Dirección:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-home"></i></span>
-                    <input type="text" class="form-control input-lg" name="editarDireccion" id="editarDireccion"
-                      placeholder="Dirección" required readonly>
-                  </div>
+            <div class="col-xs-12 col-md-6">
+              <!-- entrada para telefono -->
+              <div class="form-group">
+                <label>Teléfono:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-phone"></i></span>
+                  <input type="text" class="form-control input-lg" name="editarTelefono" id="editarTelefono"
+                    data-inputmask="'mask':'(999) 999-9999'" data-mask placeholder="Celular" readonly>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div class="col-xs-12 col-md-6">
-                <!-- entrada para la ciudad (Municipio) -->
-                <div class="form-group">
-                  <label>Municipio:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
-                    <input type="text" class="form-control input-lg" name="editarCiudad" id="editarCiudad"
-                      placeholder="Municipio" readonly>
-                  </div>
+          <hr style="margin-top: 5px; margin-bottom: 15px;">
+
+          <!-- FILA 3: UBICACIÓN Y ESTADO -->
+          <div class="row">
+            <div class="col-xs-12 col-md-6">
+              <!-- entrada para la direccion -->
+              <div class="form-group">
+                <label>Dirección:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-home"></i></span>
+                  <input type="text" class="form-control input-lg" name="editarDireccion" id="editarDireccion"
+                    placeholder="Dirección" required readonly>
                 </div>
               </div>
             </div>
 
-            <!-- FILA 4: ESTADO Y NOTAS -->
-            <div class="row">
-              <div class="col-xs-12 col-md-6">
-                <!-- entrada para estado -->
-                <div class="form-group">
-                  <label>Estado:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-flag"></i></span>
-                    <input type="text" class="form-control input-lg" id="editarEstado" name="editarEstado" readonly
-                      style="background-color: #f4f4f4; cursor: not-allowed;">
-                  </div>
+            <div class="col-xs-12 col-md-6">
+              <!-- entrada para la ciudad (Municipio) -->
+              <div class="form-group">
+                <label>Municipio:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
+                  <input type="text" class="form-control input-lg" name="editarCiudad" id="editarCiudad"
+                    placeholder="Municipio" readonly>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div class="col-xs-12 col-md-12">
-                <!-- entrada para nota -->
-                <div class="form-group">
-                  <label>Notas:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-sticky-note"></i></span>
-                    <textarea class="form-control input-lg" name="editarNota" id="editarNota" placeholder="Notas"
-                      readonly style="height: 80px; resize: none;"></textarea>
-                  </div>
+          <!-- FILA 4: ESTADO Y NOTAS -->
+          <div class="row">
+            <div class="col-xs-12 col-md-6">
+              <!-- entrada para estado -->
+              <div class="form-group">
+                <label>Estado:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-flag"></i></span>
+                  <input type="text" class="form-control input-lg" id="editarEstado" name="editarEstado" readonly
+                    style="background-color: #f4f4f4; cursor: not-allowed;">
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xs-12 col-md-12">
+              <!-- entrada para nota -->
+              <div class="form-group">
+                <label>Notas:</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-sticky-note"></i></span>
+                  <textarea class="form-control input-lg" name="editarNota" id="editarNota" placeholder="Notas" readonly
+                    style="height: 80px; resize: none;"></textarea>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!--=====================================
-        PIE DEL MODAL
-        ======================================-->
+      <!--=====================================
+      PIE DEL MODAL
+      ======================================-->
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
-          <!--<button type="submit" class="btn btn-primary">Guardar cambios</button>-->
-        </div>
+      <div class="modal-custom-footer">
+        <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
+      </div>
 
-      </form>
-    </div>
+    </form>
   </div>
 </div>
 

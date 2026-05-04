@@ -319,7 +319,8 @@ class ControladorUsuarios
 			3 => 'foto',
 			4 => 'perfil',
 			5 => 'estado',
-			6 => 'ultimo_login'
+			6 => 'ultimo_login',
+			8 => 'id'
 		);
 
 		$where = " WHERE 1=1 ";
@@ -408,8 +409,10 @@ class ControladorUsuarios
 				$accionesHtml .= '<button class="btn btn-danger btnEliminarUsuario" idUsuario="' . $value["id"] . '" fotoUsuario="' . $value["foto"] . '" usuario="' . $value["usuario"] . '" title="Eliminar usuario"><i class="fa fa-times"></i></button>';
 			}
 			$accionesHtml .= '</div>';
-			$nestedData[] = $accionesHtml;
 
+			$nestedData[] = $accionesHtml;
+			$nestedData[] = $value["id"];
+			
 			$data[] = $nestedData;
 		}
 

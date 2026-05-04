@@ -65,6 +65,7 @@
                 <th>Estado</th>
                 <th>Ultimo login</th>
                 <th>Acciones</th>
+                <th>ID</th>
               </tr>
             </thead>
 

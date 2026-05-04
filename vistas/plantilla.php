@@ -189,7 +189,7 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "crear-factura-electronica" ||
         $_GET["ruta"] == "editar-factura-electronica" ||
         $_GET["ruta"] == "facturas-electronicas" ||
-        $_GET["ruta"] == "editar-venta" ||
+        $_GET["ruta"] == "detalle-venta" ||
         $_GET["ruta"] == "reportes" ||
         $_GET["ruta"] == "actividades" ||
         $_GET["ruta"] == "clientes" ||
@@ -226,6 +226,7 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "notas-ajuste-ds" ||
         $_GET["ruta"] == "reportes-facturacion" ||
         $_GET["ruta"] == "ver-detalle-orden" ||
+        $_GET["ruta"] == "detalle-factura" ||
         $_GET["ruta"] == "salir"
       ) {
 

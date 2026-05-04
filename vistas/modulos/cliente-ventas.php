@@ -212,7 +212,7 @@ if($xml){
                       
                       <td>' . $value["fecha"] . '
                         <!-- **********BTN VERSION MOVIL******** -->
-                        <button class="btn btn-warning btn-xs solo-movil btnEditarVenta" idVenta="' . $value["id"] . '">
+                        <button class="btn btn-warning btn-xs solo-movil btnDetalleVenta" idVenta="' . $value["id"] . '">
                             <i class="fa fa-eye"></i>
                           </button>
                       </td>
@@ -226,7 +226,7 @@ if($xml){
                                 </button>';
                         }
 
-                        echo '<button class="btn btn-warning btnEditarVenta" idVenta="' . $value["id"] . '">
+                        echo '<button class="btn btn-warning btnDetalleVenta" idVenta="' . $value["id"] . '">
                                 <i class="fa fa-eye"></i>
                               </button>';
 

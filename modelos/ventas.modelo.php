@@ -42,11 +42,14 @@ class ModeloVentas
 	{
 		$stmt = Conexion::conectar()->prepare("SELECT v.*, 
 													c.nombre AS nombre_cliente, 
+													c.email AS email_cliente,
 													u.nombre AS nombre_vendedor,
+													fr.prefijo AS prefijo_rango,
 													(SELECT 1 FROM notas_credito WHERE id_venta_original = v.id LIMIT 1) as tiene_nc
 													FROM $tabla v 
 													LEFT JOIN clientes c ON v.id_cliente = c.id 
 													LEFT JOIN usuarios u ON v.id_vendedor = u.id 
+													LEFT JOIN factus_rangos fr ON v.resolucion_id = fr.id
 													$where $order $limit");
 		$stmt->execute();
 		return $stmt->fetchAll();
@@ -72,7 +75,7 @@ class ModeloVentas
 	static public function mdlIngresarVenta($tabla, $datos)
 	{
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(codigo, numero_factura, id_cliente, id_vendedor, productos, impuesto, neto, total, metodo_pago, notas, estado, imagen, fecha, tipo_descuento, valor_descuento, monto_descuento, recibe, extra, retenciones, resolucion_id, fecha_vencimiento, orden_compra, forma_pago_dian, metodo_pago_dian_id, estado_dian, cufe, qr_data, xml_dian, pdf_dian, mensaje_dian, fecha_envio_dian) VALUES (:codigo, :numero_factura, :id_cliente, :id_vendedor, :productos, :impuesto, :neto, :total, :metodo_pago, :notas, :estado, :imagen, :fecha, :tipo_descuento, :valor_descuento, :monto_descuento, :recibe, :extra, :retenciones, :resolucion_id, :fecha_vencimiento, :orden_compra, :forma_pago_dian, :metodo_pago_dian_id, :estado_dian, :cufe, :qr_data, :xml_dian, :pdf_dian, :mensaje_dian, :fecha_envio_dian)");
+		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(codigo, numero_factura, id_cliente, id_vendedor, productos, impuesto, neto, total, metodo_pago, notas, observacion, estado, imagen, fecha, tipo_descuento, valor_descuento, monto_descuento, recibe, extra, retenciones, resolucion_id, fecha_vencimiento, orden_compra, forma_pago_dian, metodo_pago_dian_id, estado_dian, cufe, qr_data, xml_dian, pdf_dian, mensaje_dian, fecha_envio_dian) VALUES (:codigo, :numero_factura, :id_cliente, :id_vendedor, :productos, :impuesto, :neto, :total, :metodo_pago, :notas, :observacion, :estado, :imagen, :fecha, :tipo_descuento, :valor_descuento, :monto_descuento, :recibe, :extra, :retenciones, :resolucion_id, :fecha_vencimiento, :orden_compra, :forma_pago_dian, :metodo_pago_dian_id, :estado_dian, :cufe, :qr_data, :xml_dian, :pdf_dian, :mensaje_dian, :fecha_envio_dian)");
 
 		$stmt->bindParam(":codigo", $datos["codigo"], PDO::PARAM_INT);
 		$stmt->bindParam(":numero_factura", $datos["numero_factura"], PDO::PARAM_STR); // Se inicia como NULL
@@ -84,6 +87,7 @@ class ModeloVentas
 		$stmt->bindParam(":total", $datos["total"], PDO::PARAM_STR);
 		$stmt->bindParam(":metodo_pago", $datos["metodo_pago"], PDO::PARAM_STR);
 		$stmt->bindParam(":notas", $datos["notas"], PDO::PARAM_STR);
+		$stmt->bindParam(":observacion", $datos["observacion"], PDO::PARAM_STR);
 		$stmt->bindParam(":estado", $datos["estado"], PDO::PARAM_STR);
 		$stmt->bindParam(":imagen", $datos["imagen"], PDO::PARAM_STR);
 		$stmt->bindParam(":fecha", $datos["fecha"], PDO::PARAM_STR);
@@ -126,7 +130,7 @@ class ModeloVentas
 	static public function mdlEditarVenta($tabla, $datos)
 	{
 
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET id_cliente = :id_cliente, numero_factura = :numero_factura, id_vendedor = :id_vendedor, productos = :productos, impuesto = :impuesto, neto = :neto, total = :total, metodo_pago = :metodo_pago, notas = :notas, estado = :estado, fecha = :fecha, tipo_descuento = :tipo_descuento, valor_descuento = :valor_descuento, monto_descuento = :monto_descuento, recibe = :recibe, extra = :extra, retenciones = :retenciones, resolucion_id = :resolucion_id, fecha_vencimiento = :fecha_vencimiento, orden_compra = :orden_compra, forma_pago_dian = :forma_pago_dian, metodo_pago_dian_id = :metodo_pago_dian_id, estado_dian = :estado_dian, cufe = :cufe, qr_data = :qr_data, xml_dian = :xml_dian, pdf_dian = :pdf_dian, mensaje_dian = :mensaje_dian, fecha_envio_dian = :fecha_envio_dian WHERE codigo = :codigo");
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET id_cliente = :id_cliente, numero_factura = :numero_factura, id_vendedor = :id_vendedor, productos = :productos, impuesto = :impuesto, neto = :neto, total = :total, metodo_pago = :metodo_pago, notas = :notas, observacion = :observacion, estado = :estado, fecha = :fecha, tipo_descuento = :tipo_descuento, valor_descuento = :valor_descuento, monto_descuento = :monto_descuento, recibe = :recibe, extra = :extra, retenciones = :retenciones, resolucion_id = :resolucion_id, fecha_vencimiento = :fecha_vencimiento, orden_compra = :orden_compra, forma_pago_dian = :forma_pago_dian, metodo_pago_dian_id = :metodo_pago_dian_id, estado_dian = :estado_dian, cufe = :cufe, qr_data = :qr_data, xml_dian = :xml_dian, pdf_dian = :pdf_dian, mensaje_dian = :mensaje_dian, fecha_envio_dian = :fecha_envio_dian WHERE codigo = :codigo");
 
 		$stmt->bindParam(":codigo", $datos["codigo"], PDO::PARAM_INT);
 		$stmt->bindParam(":numero_factura", $datos["numero_factura"], PDO::PARAM_STR);
@@ -138,6 +142,7 @@ class ModeloVentas
 		$stmt->bindParam(":total", $datos["total"], PDO::PARAM_STR);
 		$stmt->bindParam(":metodo_pago", $datos["metodo_pago"], PDO::PARAM_STR);
 		$stmt->bindParam(":notas", $datos["notas"], PDO::PARAM_STR);
+		$stmt->bindParam(":observacion", $datos["observacion"], PDO::PARAM_STR);
 		$stmt->bindParam(":estado", $datos["estado"], PDO::PARAM_STR);
 		$stmt->bindParam(":fecha", $datos["fecha"], PDO::PARAM_STR);
 		$stmt->bindParam(":tipo_descuento", $datos["tipo_descuento"], PDO::PARAM_STR);
@@ -296,7 +301,7 @@ class ModeloVentas
 	}
 
 
-	//Obtener el siguiente código de venta real desde la tabla de consecutivos
+	//Obtener el siguiente cÃ³digo de venta real desde la tabla de consecutivos
 	static public function mdlObtenerSiguienteConsecutivo($tabla)
 	{
 		$stmt = Conexion::conectar()->prepare("SELECT ultimo_numero FROM consecutivos WHERE tabla = :tabla");
@@ -320,10 +325,10 @@ class ModeloVentas
 		}
 	}
 
-	//Actualizar el consecutivo después de guardar la venta/orden
+	//Actualizar el consecutivo despuÃ©s de guardar la venta/orden
 	static public function mdlActualizarConsecutivo($tabla, $codigo)
 	{
-		// Incrementar el último número en la tabla de consecutivos
+		// Incrementar el Ãºltimo nÃºmero en la tabla de consecutivos
 		$stmt = Conexion::conectar()->prepare("UPDATE consecutivos SET ultimo_numero = ultimo_numero + 1 WHERE tabla = 'ventas'");
 
 		if ($stmt->execute()) {
@@ -381,7 +386,7 @@ class ModeloVentas
 			$fechaFinal2->add(new DateInterval("P1D"));
 			$fechaFinalMasUno = $fechaFinal2->format("Y-m-d");
 
-			// Usamos un solo BETWEEN que cubre todo el rango incluyendo el fin del día final
+			// Usamos un solo BETWEEN que cubre todo el rango incluyendo el fin del dÃ­a final
 			$stmt = Conexion::conectar()->prepare("SELECT v.*,
 													c.nombre AS nombre_cliente,
 													c.email AS email_cliente,
@@ -525,7 +530,7 @@ class ModeloVentas
 	}
 
 	/*=============================================
-	CONTAR FACTURAS ELECTRÓNICAS POR CLIENTE
+	CONTAR FACTURAS ELECTRÃ“NICAS POR CLIENTE
 	=============================================*/
 	static public function mdlContarFacturasElectronicasPorCliente($tabla)
 	{
@@ -549,11 +554,11 @@ class ModeloVentas
 	}
 
 	/*=============================================
-	MOSTRAR ULTIMA FACTURA ELECTRÓNICA
+	MOSTRAR ULTIMA FACTURA ELECTRÃ“NICA
 	=============================================*/
 	static public function mdlMostrarUltimaFacturaElectronica($tabla)
 	{
-		// Buscamos la última venta que tenga una resolución ID (lo que la identifica como FE)
+		// Buscamos la Ãºltima venta que tenga una resoluciÃ³n ID (lo que la identifica como FE)
 		$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE estado = 'venta' AND resolucion_id IS NOT NULL AND resolucion_id != 0 ORDER BY id DESC LIMIT 1");
 		$stmt->execute();
 		return $stmt->fetch();
@@ -656,3 +661,4 @@ class ModeloVentas
 }
 
 }
+

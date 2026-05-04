@@ -209,9 +209,11 @@ class imprimirDetalleOrden
             $htmlLeft .= '<tr><td><strong>Total Retenido:</strong></td><td style="text-align:right; font-weight:bold;">$' . number_format($totalRetencionesVenta, 2) . '</td></tr></table><br>';
         }
 
-        $htmlLeft .= '<div class="lead">Notas:</div><div class="well">' . ($venta["notas"] ?: 'Sin notas') . '</div>';
+        if (!empty($venta["notas"])) {
+            $htmlLeft .= '<div class="lead">Notas del cliente:</div><div class="well">' . $venta["notas"] . '</div>';
+        }
         if (!empty($venta["observacion"])) {
-            $htmlLeft .= '<br><div class="lead">Observaciones:</div><div class="well">' . $venta["observacion"] . '</div>';
+            $htmlLeft .= '<br><div class="lead">Observación:</div><div class="well">' . $venta["observacion"] . '</div>';
         }
         $htmlLeft .= '</div>';
 
@@ -239,15 +241,15 @@ class imprimirDetalleOrden
                     'module_height' => 1
                 );
                 $pdf->write2DBarcode(trim($venta["qr_data"]), 'QRCODE,H', 15, $yQR, 35, 35, $styleQR, 'N');
-                
+
                 // Enlace debajo del QR
                 $pdf->SetY($yQR + 36);
                 $pdf->SetFont('helvetica', '', 6.5);
                 $pdf->SetTextColor(0, 0, 255); // Azul para el link
-                
+
                 $urlDian = trim($venta["qr_data"]);
-                $htmlLink = '<a href="'.$urlDian.'" style="text-decoration:none; color:blue;">'.$urlDian.'</a>';
-                
+                $htmlLink = '<a href="' . $urlDian . '" style="text-decoration:none; color:blue;">' . $urlDian . '</a>';
+
                 // Usamos writeHTMLCell para que maneje mejor el wrap de texto largo
                 $pdf->writeHTMLCell(110, 0, 10, '', $htmlLink, 0, 1, false, true, 'L', true);
                 $pdf->SetTextColor(68, 68, 68); // Volver al gris oscuro

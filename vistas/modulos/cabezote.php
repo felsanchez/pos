@@ -23,6 +23,9 @@ ControladorNotificaciones::ctrVerificarGastosProximos();
 // Verificar órdenes desde Agente IA (campo extra contiene 'n8n')
 ControladorNotificaciones::ctrVerificarOrdenAgenteIA();
 
+// Verificar órdenes automáticas de n8n
+ControladorNotificaciones::ctrVerificarOrdenn8n();
+
 // Verificar solicitudes de edición/eliminación Agente IA
 ControladorNotificaciones::ctrVerificarSolicitudesAgenteIA();
 
@@ -236,6 +239,9 @@ BARRA DE NAVEGACION
 											$color = "text-orange";
 										} else if ($notif["tipo"] == "orden_agente_ia") {
 											$icono = "fa-magic";
+											$color = "text-green";
+										} else if ($notif["tipo"] == "orden_creada") {
+											$icono = "fa-shopping-cart";
 											$color = "text-green";
 										} else if (strpos($notif["tipo"], "Edicion de pedido") !== false) {
 											$icono = "fa-pencil-square-o";

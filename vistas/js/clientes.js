@@ -90,7 +90,7 @@ $(document).ready(function () {
                 var rowNode = api.row(rowIdx).node();
                 var idCliente = $(rowNode).attr('data-cliente-id') || "";
                 var notasText = $(rowNode).find('.celda-notas').text().trim();
-                var placeholderAttr = (notasText === "") ? ' data-placeholder="true"' : "";
+                var placeholderAttr = (notasText === "") ? ' data-placeholder="Escribe una nota..."' : "";
                 
                 finalHtml += '<div contenteditable="true" class="celda-notas" data-id="' + idCliente + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + notasText + '</div>';
             } else {
@@ -150,7 +150,7 @@ $(document).ready(function () {
 EDITAR NOTAS (inline, contenteditable)
 =============================================*/
 $(document).on('focus', '.celda-notas', function () {
-  $(this).removeAttr('data-placeholder');
+  // Ya no eliminamos el placeholder al enfocar
 });
 
 $(document).on('blur', '.celda-notas', function () {
@@ -160,7 +160,7 @@ $(document).on('blur', '.celda-notas', function () {
   var nuevaNota = elemento.text().trim();
 
   if (nuevaNota === '') {
-    elemento.attr('data-placeholder', 'true');
+    elemento.attr('data-placeholder', 'Escribe una nota...');
   }
 
   if (!id) {
@@ -201,7 +201,7 @@ $(document).on('blur', '.celda-notas', function () {
 function inicializarPlaceholdersClientes() {
   $('.celda-notas').each(function () {
     if ($(this).text().trim() === '') {
-      $(this).attr('data-placeholder', 'true');
+      $(this).attr('data-placeholder', 'Escribe una nota...');
     } else {
       $(this).removeAttr('data-placeholder');
     }

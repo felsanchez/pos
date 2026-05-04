@@ -173,21 +173,37 @@ SISTEMA DE DISEÑO ESTÁNDAR - POS PREMIUM
     transition: all 0.3s ease;
 }
 
-.celda-observacion:empty:before {
+.celda-observacion:empty:not(:focus):before {
     content: attr(data-placeholder);
     color: #999;
     font-style: italic;
 }
 
-/* Fallback si no tiene data-placeholder */
-.celda-observacion:empty:not([data-placeholder]):before {
+/* Fallback si no tiene data-placeholder o si es "true" */
+.celda-observacion:empty:not(:focus):not([data-placeholder]):before,
+.celda-observacion:empty:not(:focus)[data-placeholder="true"]:before {
     content: "Escribe una observación...";
+}
+
+.celda-notas:empty:not(:focus):not([data-placeholder]):before,
+.celda-notas:empty:not(:focus)[data-placeholder="true"]:before,
+.celda-notas-proveedor:empty:not(:focus):not([data-placeholder]):before,
+.celda-notas-proveedor:empty:not(:focus)[data-placeholder="true"]:before {
+    content: "Escribe una nota...";
 }
 
 .celda-observacion:focus {
     outline: 2px solid #f39c12;
     background: #fffef5;
     box-shadow: 0 0 5px rgba(243, 156, 18, 0.3);
+}
+
+/* Estado solo lectura (factura enviada/aceptada DIAN) */
+.celda-observacion.no-editable {
+    cursor: default;
+    opacity: 0.75;
+    border-left-color: #bdc3c7;
+    background: #f9f9f9;
 }
 
 /* 9. AYUDAS DE VISUALIZACIÓN MÓVIL */
@@ -300,3 +316,90 @@ SISTEMA DE DISEÑO ESTÁNDAR - POS PREMIUM
         width: 100% !important;
     }
 }
+
+/* 13. FACTURAS Y VENTAS */
+.invoice {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 30px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+    background: white;
+}
+
+.invoice-info {
+    background-color: #f8f9fa;
+    padding: 20px;
+    margin-bottom: 30px;
+    border-radius: 4px;
+    border-left: 4px solid #3c8dbc;
+}
+
+.invoice-col address {
+    margin-bottom: 0;
+    color: #555;
+}
+
+.invoice-col strong {
+    color: #333;
+    font-size: 1.1em;
+}
+
+.page-header {
+    border-bottom: 2px solid #3c8dbc;
+    color: #444;
+    padding-bottom: 15px;
+}
+
+.lead {
+    font-size: 16px;
+    font-weight: bold;
+    color: #444;
+    background: #e9ecef;
+    padding: 8px 15px;
+    border-radius: 3px;
+    margin-bottom: 15px;
+    border-left: 4px solid #d2d6de;
+}
+
+@media (max-width: 767px) {
+    /* Campos de ancho completo */
+    .formularioVenta .form-group .input-group.col-xs-12,
+    .formularioVenta .form-group .col-xs-6 {
+        width: 100% !important;
+        max-width: 100%;
+        padding: 0 !important;
+    }
+
+    /* Productos - diseño vertical en móvil */
+    .nuevoProducto .row.col-xs-10 {
+        width: 100% !important;
+        margin: 0;
+        padding: 5px 15px;
+    }
+
+    .nuevoProducto .row .col-xs-7,
+    .nuevoProducto .row .col-xs-2,
+    .nuevoProducto .row .col-xs-3 {
+        width: 100% !important;
+        padding: 0;
+        margin-bottom: 10px;
+    }
+
+    .nuevoProducto .row .col-xs-7 {
+        margin-bottom: 5px;
+    }
+
+    /* Descuento - ancho completo */
+    .col-xs-10 {
+        width: 100% !important;
+    }
+}
+
+/*=============================================
+14. FACTURACIÓN ELECTRÓNICA Y UTILIDADES
+=============================================*/
+/* Prevenir layout-shift al cargar la página */
+.fe-ui-hidden {
+    display: none;
+}
+

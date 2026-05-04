@@ -481,7 +481,7 @@ $(document).ready(function () {
 								var rowNode = api.row(rowIdx).node();
 								var idActividad = $(rowNode).attr('data-actividad-id') || "";
 								var observacionText = $(rowNode).find('.celda-observacion').text().trim();
-								var placeholderAttr = (observacionText === "") ? ' data-placeholder="true"' : "";
+								var placeholderAttr = (observacionText === "") ? ' data-placeholder="Escribe una nota.."' : "";
 								
 								finalHtml += '<div contenteditable="true" class="celda-observacion" data-id="' + idActividad + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + observacionText + '</div>';
 							} else {
@@ -570,10 +570,10 @@ AUTOGUARDADO DE OBSERVACIONES (DELEGADO)
 // Función para inicializar placeholders en celdas vacías
 function inicializarPlaceholders() {
 	$('.celda-observacion').each(function () {
-		if ($(this).text().trim() === '') {
-			$(this).attr('data-placeholder', 'true');
-		} else {
-			$(this).removeAttr('data-placeholder');
+		// Solo establecer si no tiene ya uno definido
+		if (!$(this).attr('data-placeholder')) {
+			var texto = (window.location.search.includes('ruta=actividades')) ? 'Escribe una nota..' : 'Escribe una observación...';
+			$(this).attr('data-placeholder', texto);
 		}
 	});
 }
@@ -584,7 +584,7 @@ $(document).ready(function () {
 });
 
 $(document).on('focus', '.celda-observacion', function () {
-	$(this).removeAttr('data-placeholder');
+	// Ya no eliminamos el placeholder al enfocar para evitar saltos de texto o cambios de fallback
 });
 
 $(document).on('blur', '.celda-observacion', function () {
@@ -592,12 +592,8 @@ $(document).on('blur', '.celda-observacion', function () {
 	var id = elemento.attr('data-id'); // Usamos .attr() para mayor compatibilidad con elementos dinámicos
 	var nuevaObservacion = elemento.text().trim();
 
-	// Manejar placeholder visual
-	if (nuevaObservacion === '') {
-		elemento.attr('data-placeholder', 'true');
-	} else {
-		elemento.removeAttr('data-placeholder');
-	}
+	// Ya no es necesario manipular el atributo data-placeholder en JS
+	// El CSS (:empty:not(:focus)) se encarga de mostrarlo/ocultarlo correctamente
 
 	// Obtener token CSRF del meta tag (doble chequeo)
 	var csrfToken = $('meta[name="csrf-token"]').attr('content');

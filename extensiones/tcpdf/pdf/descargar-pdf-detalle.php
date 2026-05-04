@@ -44,7 +44,7 @@ class imprimirDetalleVenta
 
         // --- EXTRACCION CUFE (Lógica mejorada) ---
         $cufeDisplay = $venta["cufe"] ?? '';
-        
+
         if (empty($cufeDisplay) && !empty($venta["qr_data"])) {
             $parts = parse_url($venta["qr_data"], PHP_URL_QUERY);
             if ($parts) {
@@ -196,7 +196,9 @@ class imprimirDetalleVenta
             $htmlLeft .= '<tr><td><strong>Total Retenido:</strong></td><td style="text-align:right; font-weight:bold;">$' . number_format($totalRetencionesVenta, 2) . '</td></tr></table><br>';
         }
 
-        $htmlLeft .= '<div class="lead">Notas:</div><div class="well">' . ($venta["notas"] ?: 'Sin notas') . '</div>';
+        if (!empty($venta["notas"])) {
+            $htmlLeft .= '<div class="lead">Notas del cliente:</div><div class="well">' . $venta["notas"] . '</div>';
+        }
         if (!empty($venta["observacion"])) {
             $htmlLeft .= '<br><div class="lead">Observaciones:</div><div class="well">' . $venta["observacion"] . '</div>';
         }
@@ -226,12 +228,12 @@ class imprimirDetalleVenta
                     'module_height' => 1
                 );
                 $pdf->write2DBarcode(trim($venta["qr_data"]), 'QRCODE,H', 15, $yQR, 35, 35, $styleQR, 'N');
-                
+
                 $pdf->SetY($yQR + 36);
                 $pdf->SetFont('helvetica', '', 8);
                 $pdf->SetTextColor(119, 119, 119);
                 $pdf->MultiCell(105, 0, trim($venta["qr_data"]), 0, 'L', false, 1, 12, '', true);
-                
+
                 $pdf->SetTextColor(68, 68, 68); // Restaurar color texto
             }
 

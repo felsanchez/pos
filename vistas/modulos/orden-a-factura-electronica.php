@@ -103,12 +103,11 @@ $totalProductos = 0;
                             <div class="box">
 
                                 <!--=====================================
-                      ENCABEZADO: VENDEDOR, CÓDIGO DIAN, RESOLUCIÓN
+                      ENCABEZADO FE: VENDEDOR (fila propia)
                       ======================================-->
 
                                 <div class="row">
-                                    <!-- Vendedor -->
-                                    <div class="col-xs-12 col-md-4">
+                                    <div class="col-xs-12">
                                         <div class="form-group">
                                             <label>Vendedor</label>
                                             <div class="input-group">
@@ -122,9 +121,14 @@ $totalProductos = 0;
                                             </div>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <!-- Prefijo DIAN -->
-                                    <div class="col-xs-12 col-md-4">
+                                <!--=====================================
+                      PREFIJO DIAN Y CÓDIGO FE (misma fila)
+                      ======================================-->
+
+                                <div class="row">
+                                    <div class="col-xs-6">
                                         <div class="form-group">
                                             <label>Prefijo DIAN</label>
                                             <div class="input-group">
@@ -139,8 +143,7 @@ $totalProductos = 0;
                                         </div>
                                     </div>
 
-                                    <!-- Código FE -->
-                                    <div class="col-xs-12 col-md-4">
+                                    <div class="col-xs-6">
                                         <div class="form-group">
                                             <label>Código FE</label>
                                             <div class="input-group">
@@ -212,10 +215,28 @@ $totalProductos = 0;
                                 </div>
 
                                 <!--=====================================
+                      ENTRADA PARA QUIEN RECIBE
+                      ======================================-->
+                                <div class="row">
+                                    <div class="col-xs-12">
+                                        <div class="form-group">
+                                            <label>Nombre de quien recibe</label>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i class="fa fa-user-circle"></i></span>
+                                                <input type="text" class="form-control" id="recibe" name="recibe"
+                                                    placeholder="Nombre de quien recibe (opcional)"
+                                                    value="<?php echo isset($venta['recibe']) ? htmlspecialchars($venta['recibe']) : ''; ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!--=====================================
                       PRODUCTOS PRE-CARGADOS DE LA ORDEN
                       ======================================-->
 
-                                <div class="form-group row nuevoProducto">
+                                <div class="form-group nuevoProducto">
+
                                     <?php
                                     foreach ($listaProducto as $key => $val) {
                                         $totalProductos += $val["total"];
@@ -249,6 +270,7 @@ $totalProductos = 0;
                                             <!-- Descripción -->
                                             <div class="col-xs-5" style="padding-right:0px">
                                                 <div class="input-group">
+
                                                     <span class="input-group-addon"><button type="button" class="btn btn-danger btn-xs quitarProducto" idProducto="' . $val["id"] . '"><i class="fa fa-times"></i></button></span>
                                                     <input type="text" class="form-control nuevaDescripcionProducto" idProducto="' . $val["id"] . '" name="agregarProducto" value="' . $val["descripcion"] . '" readonly required>
                                                     ' . $camposVariante . '
@@ -278,8 +300,8 @@ $totalProductos = 0;
 
                                 <input type="hidden" id="listaProductos" name="listaProductos">
 
-                                <button type="button" class="btn btn-default btnAgregarProducto">Agregar
-                                    producto</button>
+                                <button type="button" class="btn btn-default btnAgregarProducto solo-movil">Agregar producto</button>
+
 
                                 <hr>
 
@@ -437,6 +459,16 @@ $totalProductos = 0;
                                 <!--=====================================
                       MÉTODO DE PAGO
                       ======================================-->
+                                 <?php
+                                    $metodoPagoActual = $venta["metodo_pago"];
+                                    $codigoTransaccionActual = "";
+                                    
+                                    if(strpos($metodoPagoActual, "-") !== false){
+                                        $partesMetodo = explode("-", $metodoPagoActual);
+                                        $metodoPagoActual = $partesMetodo[0];
+                                        $codigoTransaccionActual = $partesMetodo[1];
+                                    }
+                                 ?>
 
                                 <div class="form-group row">
                                     <div class="col-xs-6" style="padding-right:0px">
@@ -447,7 +479,7 @@ $totalProductos = 0;
                                                 <?php
                                                 foreach ($mediosPago as $medio) {
                                                     $medio = trim($medio);
-                                                    $sel = ($medio == $venta["metodo_pago"]) ? 'selected' : '';
+                                                    $sel = ($medio == $metodoPagoActual) ? 'selected' : '';
                                                     echo '<option value="' . $medio . '" ' . $sel . '>' . $medio . '</option>';
                                                 }
                                                 ?>
@@ -480,7 +512,7 @@ $totalProductos = 0;
 
                         <div class="box-footer">
                             <button type="submit" class="btn btn-primary pull-right"
-                                style="background:#605ca8; border-color:#605ca8;">
+                            >
                                 <i class="fa fa-file-text-o"></i> Crear Factura Electrónica
                             </button>
                         </div>
@@ -503,7 +535,7 @@ $totalProductos = 0;
                 <div class="box box-warning">
                     <div class="box-header with-border"></div>
                     <div class="box-body">
-                        <table class="table table-bordered table-striped tablaVentas">
+                        <table class="table table-bordered table-striped dt-responsive tablaVentas" width="100%">
                             <thead>
                                 <tr>
                                     <th style="width:10px">#</th>
@@ -873,6 +905,17 @@ MODAL AGREGAR RETENCION
                 return false;
             }
         });
+
+        // Disparar el cambio de método de pago para que se muestren los campos adicionales si ya hay uno seleccionado
+        if ($("#nuevoMetodoPago").val() != "") {
+            $("#nuevoMetodoPago").trigger("change");
+
+            // Si hay un código de transacción previo, rellenarlo
+            var codigoPrevio = "<?php echo $codigoTransaccionActual; ?>";
+            if(codigoPrevio != ""){
+                $("#nuevoCodigoTransaccion").val(codigoPrevio);
+            }
+        }
 
     });
 </script>
