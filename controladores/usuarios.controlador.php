@@ -81,6 +81,7 @@ class ControladorUsuarios
 							$_SESSION["foto"] = $respuesta["foto"];
 							$_SESSION["perfil"] = $respuesta["perfil"];
 							$_SESSION["email"] = $respuesta["email"];
+							$_SESSION["id_bodega"] = $respuesta["id_bodega"];
 
 							// Cargar permisos del perfil en sesión (una sola consulta al login)
 							$_SESSION["permisos"] = ModeloPerfiles::mdlCargarPermisosEnSesion($respuesta["perfil"]);
@@ -252,7 +253,8 @@ class ControladorUsuarios
 					"password" => $encriptar,
 					"perfil" => $_POST["nuevoPerfil"],
 					"foto" => $ruta,
-					"email" => $_POST["nuevoEmail"]
+					"email" => $_POST["nuevoEmail"],
+					"id_bodega" => $_POST["nuevoIdBodega"]
 				);
 
 				$respuesta = ModeloUsuarios::mdlIngresarUsuario($tabla, $datos);
@@ -313,33 +315,34 @@ class ControladorUsuarios
 
 		// Columnas para ordenar
 		$columns = array(
-			0 => 'usuario',
-			1 => 'nombre',
-			2 => 'email',
-			3 => 'foto',
-			4 => 'perfil',
-			5 => 'estado',
-			6 => 'ultimo_login',
-			8 => 'id'
+			0 => 'u.usuario',
+			1 => 'u.nombre',
+			2 => 'u.email',
+			3 => 'u.foto',
+			4 => 'u.perfil',
+			5 => 'b.nombre',
+			6 => 'u.estado',
+			7 => 'u.ultimo_login',
+			9 => 'u.id'
 		);
 
 		$where = " WHERE 1=1 ";
 		
 		// Omitir el usuario logueado actualmente
 		if(isset($_SESSION["usuario"])){
-			$where .= " AND usuario != '".$_SESSION["usuario"]."' ";
+			$where .= " AND u.usuario != '".$_SESSION["usuario"]."' ";
 		}
 
 		// Filtro de búsqueda (DataTables)
 		if (!empty($params['search']['value'])) {
 			$searchValue = $params['search']['value'];
-			$where .= " AND (usuario LIKE '%$searchValue%' OR nombre LIKE '%$searchValue%' OR email LIKE '%$searchValue%' OR perfil LIKE '%$searchValue%') ";
+			$where .= " AND (u.usuario LIKE '%$searchValue%' OR u.nombre LIKE '%$searchValue%' OR u.email LIKE '%$searchValue%' OR u.perfil LIKE '%$searchValue%' OR b.nombre LIKE '%$searchValue%') ";
 		}
 
 		// Filtro por Perfil (Personalizado)
 		if (!empty($params['perfilFiltro'])) {
 			$perfilFiltro = $params['perfilFiltro'];
-			$where .= " AND perfil = '$perfilFiltro' ";
+			$where .= " AND u.perfil = '$perfilFiltro' ";
 		}
 
 		// Ordenar
@@ -358,7 +361,7 @@ class ControladorUsuarios
 
 		// Obtener datos
 		$usuarios = ModeloUsuarios::mdlMostrarUsuariosServerSide($tabla, $where, $order, $limit);
-		$totalData = ModeloUsuarios::mdlGetTotalUsuarios($tabla, " WHERE 1=1 " . (isset($_SESSION["usuario"]) ? " AND usuario != '".$_SESSION["usuario"]."' " : ""));
+		$totalData = ModeloUsuarios::mdlGetTotalUsuarios($tabla, " WHERE 1=1 " . (isset($_SESSION["usuario"]) ? " AND u.usuario != '".$_SESSION["usuario"]."' " : ""));
 		$totalFiltered = ModeloUsuarios::mdlGetTotalUsuarios($tabla, $where);
 
 		$data = array();
@@ -380,6 +383,9 @@ class ControladorUsuarios
 			$nestedData[] = $fotoHtml;
 
 			$nestedData[] = e($value["perfil"]);
+
+			// Sucursal
+			$nestedData[] = $value["sucursal"] != "" ? e($value["sucursal"]) : '<span class="label label-default">Sin asignar</span>';
 
 			// Estado
 			$estadoHtml = "";
@@ -561,7 +567,8 @@ class ControladorUsuarios
 					"password" => $encriptar,
 					"perfil" => $_POST["editarPerfil"],
 					"foto" => $ruta,
-					"email" => $_POST["editarEmail"]
+					"email" => $_POST["editarEmail"],
+					"id_bodega" => $_POST["editarIdBodega"]
 				);
 
 				$respuesta = ModeloUsuarios::mdlEditarUsuario($tabla, $datos);

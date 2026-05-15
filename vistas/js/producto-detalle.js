@@ -4,6 +4,7 @@ VARIABLES GLOBALES PARA VARIANTES
 var tiposVariantesSeleccionados = [];
 var opcionesVariantesSeleccionadas = {};
 var datosVariantes = {};
+var variantesExistentesData = {}; // Guardar IDs de variantes existentes
 
 $(document).ready(function () {
 
@@ -34,18 +35,19 @@ $(document).ready(function () {
     });
 
     // Verificar al cargar la página
-    if ($('#checkTieneVariantes').is(':checked') && !$('#checkTieneVariantes').prop('disabled')) {
+    if ($('#checkTieneVariantes').is(':checked')) {
         $('#seccionVariantes').show();
         $('#seccionVariantes').removeClass('collapsed-box');
 
-        // Solo cargar tipos de variantes si NO estamos en modo edición
-        if ($('input[name="idProducto"]').length === 0) {
-            cargarTiposVariantes();
-        }
+        // Cargar tipos de variantes siempre que esté chequeado
+        cargarTiposVariantes();
 
         // Deshabilitar stock global
         $("#stock").prop("readonly", true);
         $("#stock").css("background-color", "#e9ecef");
+
+        // Cargar datos de variantes si ya existen y luego generar la tabla
+        cargarConfiguracionVariantesExistentes();
     }
 
     /*=============================================
@@ -320,6 +322,58 @@ function cargarTiposVariantes() {
     });
 }
 
+function cargarConfiguracionVariantesExistentes() {
+    return new Promise(function(resolve, reject) {
+        var idProducto = $('input[name="idProducto"]').val();
+        if (!idProducto) return resolve();
+
+        var datos = new FormData();
+        datos.append("obtenerVariantesParaEditar", idProducto);
+
+        $.ajax({
+            url: "ajax/productos.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function (respuesta) {
+                if (respuesta && respuesta.length > 0) {
+                    respuesta.forEach(function(varExistente) {
+                        variantesExistentesData[varExistente.opciones] = {
+                            id: varExistente.id,
+                            precio_adicional: varExistente.precio_adicional,
+                            stock: varExistente.stock,
+                            tipos: varExistente.tipos // [1, 2] por ejemplo
+                        };
+                    });
+                    
+                    // Disparar la selección automática de tipos involucrados
+                    var todosLosTipos = [];
+                    $.each(variantesExistentesData, function(key, val) {
+                        val.tipos.forEach(function(tid) {
+                            if(todosLosTipos.indexOf(tid) === -1) todosLosTipos.push(tid);
+                        });
+                    });
+                    
+                    if(todosLosTipos.length > 0) {
+                        setTimeout(function() {
+                            todosLosTipos.forEach(function(tid) {
+                                $('.checkTipoVariante[value="' + tid + '"]').iCheck('check');
+                            });
+                        }, 500);
+                    }
+                }
+                resolve();
+            },
+            error: function() {
+                resolve();
+            }
+        });
+    });
+}
+
 function agregarTipoVariante(idTipo, nombreTipo) {
     if (tiposVariantesSeleccionados.indexOf(idTipo) === -1) {
         tiposVariantesSeleccionados.push(idTipo);
@@ -378,9 +432,19 @@ function cargarOpcionesVariante(idTipo, nombreTipo) {
             if (respuesta && respuesta.length > 0) {
                 respuesta.forEach(function (opcion) {
                     if (opcion.estado == 1) {
+                        // Verificar si esta opción debe estar chequeada (existe en alguna variante cargada)
+                        var isChecked = "";
+                        $.each(variantesExistentesData, function(key, val) {
+                            var idsOpciones = key.split("_");
+                            if(idsOpciones.indexOf(opcion.id.toString()) !== -1) {
+                                isChecked = "checked";
+                                return false;
+                            }
+                        });
+
                         html += '<div class="checkbox" style="display:inline-block; margin-right: 15px;">';
                         html += '<label>';
-                        html += '<input type="checkbox" class="minimal checkOpcionVariante" data-idtipo="' + idTipo + '" data-idopcion="' + opcion.id + '" data-nombreopcion="' + opcion.nombre + '">';
+                        html += '<input type="checkbox" class="minimal checkOpcionVariante" data-idtipo="' + idTipo + '" data-idopcion="' + opcion.id + '" data-nombreopcion="' + opcion.nombre + '" ' + isChecked + '>';
                         html += opcion.nombre;
                         html += '</label>';
                         html += '</div>';
@@ -450,19 +514,12 @@ function removerOpcionVariante(idTipo, idOpcion) {
 
 function generarCombinaciones() {
     var tiposConOpciones = Object.keys(opcionesVariantesSeleccionadas);
+    var modoEdicion = $('input[name="idProducto"]').length > 0 && $('input[name="idProducto"]').val() !== "";
 
     if (tiposConOpciones.length === 0) {
         $("#combinacionesContainer").hide();
         return;
     }
-
-    // Verificar que todos los tipos seleccionados tengan al menos una opción
-    // Si no, no generamos combinaciones parciales para evitar confusión
-    /*
-    if (tiposConOpciones.length < tiposVariantesSeleccionados.length) {
-        return;
-    }
-    */
 
     var combinaciones = generarProductoCartesiano(opcionesVariantesSeleccionadas);
 
@@ -472,6 +529,12 @@ function generarCombinaciones() {
     }
 
     $("#combinacionesContainer").show();
+
+    // Nombres de campos dinámicos según modo
+    var prefixPrecio = modoEdicion ? "precioAdicionalEditar_" : "precioAdicional_";
+    var prefixStock = modoEdicion ? "stockVarianteEditar_" : "stockVariante_";
+    var prefixCombinacionIds = modoEdicion ? "combinacionEditar_" : "combinacion_";
+    var nameTotal = modoEdicion ? "totalCombinacionesEditar" : "totalCombinaciones";
 
     var html = '<table class="table table-bordered table-striped table-condensed">';
     html += '<thead>';
@@ -486,41 +549,79 @@ function generarCombinaciones() {
 
     for (var i = 0; i < combinaciones.length; i++) {
         var nombreCombinacion = combinaciones[i].map(function (opt) { return opt.nombre; }).join(' - ');
-        var idsCombinacion = combinaciones[i].map(function (opt) { return opt.id; }).join('_');
 
-        html += '<tr class="filaCombinacion">';
+        // 🛡️ CRITICAL FIX: Siempre ordenar los IDs numéricamente para que el SKU y los nombres de campos 
+        // sean consistentes con la base de datos, sin importar el orden de selección.
+        var arrayIds = combinaciones[i].map(function (opt) { return parseInt(opt.id, 10); });
+        arrayIds.sort(function(a, b){ return a - b; });
+        
+        var idsCombinacion = arrayIds.join('_');
+        var strBusqueda = idsCombinacion; // Ahora son lo mismo y siempre están ordenados
+
+        // 🛡️ BÚSQUEDA ULTRA-ROBUSTA: Iterar sobre las keys para evitar fallos de tipos o espacios
+        var idExistente = null;
+        var datosExistentes = null;
+        var busquedaLimpia = strBusqueda.toString().trim();
+
+        if (variantesExistentesData) {
+            Object.keys(variantesExistentesData).forEach(function(key) {
+                if (key.toString().trim() === busquedaLimpia) {
+                    datosExistentes = variantesExistentesData[key];
+                    idExistente = datosExistentes.id;
+                }
+            });
+        }
+
+        if (idExistente) {
+            console.log("✅ MATCH DETECTADO: " + busquedaLimpia + " -> ID " + idExistente);
+        }
+
+        var valorPrecio = datosExistentes ? datosExistentes.precio_adicional : 0;
+        var valorStock = datosExistentes ? datosExistentes.stock : 0;
+
+        // 🔓 REVERTIDO: Permitir edición de nuevo según solicitud del usuario
+        // Pero mantenemos una marca visual sutil para saber que ya existe
+        var estiloExistente = idExistente ? 'style="border-left: 3px solid #00a65a;"' : '';
+
+        html += '<tr class="filaCombinacion" ' + estiloExistente + '>';
         html += '<td><input type="checkbox" class="checkCombinacion" data-index="' + i + '" checked></td>';
-        html += '<td>' + nombreCombinacion + '</td>';
+        html += '<td>' + nombreCombinacion + (idExistente ? ' <br><span class="label label-success">EXISTENTE</span>' : '') + '</td>';
         html += '<td>';
         html += '<div class="input-group input-group-sm">';
         html += '<span class="input-group-addon">$</span>';
-        html += '<input type="number" class="form-control" name="precioVariante_' + idsCombinacion + '" placeholder="0" step="0.01" value="0">';
+        html += '<input type="number" class="form-control" name="' + prefixPrecio + idsCombinacion + '" placeholder="0" step="0.01" value="' + valorPrecio + '">';
         html += '</div>';
         html += '</td>';
         html += '<td>';
-        html += '<input type="number" class="form-control input-sm" name="stockVariante_' + idsCombinacion + '" placeholder="0" min="0" value="0">';
+        html += '<input type="number" class="form-control input-sm" name="' + prefixStock + idsCombinacion + '" placeholder="0" min="0" value="' + valorStock + '">';
         html += '</td>';
 
         // Inputs hidden para enviar datos
-        html += '<input type="hidden" name="combinacion_' + i + '_ids" value="' + idsCombinacion + '" class="hiddenCombinacion" data-index="' + i + '">';
-        html += '<input type="hidden" name="combinacion_' + i + '_nombre" value="' + nombreCombinacion + '" class="hiddenCombinacion" data-index="' + i + '">';
+        html += '<input type="hidden" name="' + prefixCombinacionIds + i + '_ids" value="' + idsCombinacion + '" class="hiddenCombinacion" data-index="' + i + '">';
+        html += '<input type="hidden" name="' + prefixCombinacionIds + i + '_nombre" value="' + nombreCombinacion + '" class="hiddenCombinacion" data-index="' + i + '">';
+        
+        if (idExistente) {
+            html += '<input type="hidden" name="idVarianteExistente_' + idsCombinacion + '" value="' + idExistente + '">';
+        }
 
         html += '</tr>';
     }
 
     html += '</tbody>';
     html += '</table>';
-    html += '<input type="hidden" name="totalCombinaciones" value="' + combinaciones.length + '">';
+    html += '<input type="hidden" name="' + nameTotal + '" value="' + combinaciones.length + '">';
 
     $("#listaCombinaciones").html(html);
 
     // Eventos de la tabla
     $("#checkTodasCombinaciones").on('change', function () {
         var checked = $(this).prop('checked');
-        $(".checkCombinacion").prop('checked', checked).trigger('change');
+        $(".checkCombinacion:not([disabled])").prop('checked', checked).trigger('change');
     });
 
     $(".checkCombinacion").on('change', function () {
+        if ($(this).is(':disabled')) return; // 🛡️ NO HACER NADA SI ESTÁ BLOQUEADA (Variante existente)
+
         var index = $(this).attr('data-index');
         var checked = $(this).prop('checked');
         var row = $(this).closest('tr');
@@ -534,7 +635,30 @@ function generarCombinaciones() {
             $('.hiddenCombinacion[data-index="' + index + '"]').prop('disabled', true);
             row.addClass('text-muted');
         }
+        
+        recalcularStockTotal();
     });
+
+    // Recalcular stock al cambiar el stock de una variante
+    $(document).on("input", ".stockVariante", function() {
+        recalcularStockTotal();
+    });
+}
+
+function recalcularStockTotal() {
+    var total = 0;
+    $(".stockVariante").each(function() {
+        // Solo sumar si la fila está habilitada (checkbox marcado)
+        var row = $(this).closest('tr');
+        var checkbox = row.find(".checkCombinacion");
+        
+        if (checkbox.length === 0 || checkbox.is(":checked")) {
+            var val = parseFloat($(this).val()) || 0;
+            total += val;
+        }
+    });
+    
+    $("#stock").val(total);
 }
 
 function generarProductoCartesiano(opciones) {
@@ -567,11 +691,21 @@ function limpiarVariantes() {
     $("#combinacionesContainer").hide();
 }
 
-function cargarVariantesExistentes() {
-    // Esta función requeriría una llamada AJAX adicional para obtener 
-    // la configuración guardada de variantes del producto y pre-llenar el formulario.
-    // Por ahora, cargamos los tipos básicos.
-    cargarTiposVariantes();
-    console.log("TODO: Implementar carga de variantes existentes para edición");
+// Controlar si el stock base debe ser editable o no
+function actualizarEstadoStockBase() {
+    if ($("#checkTieneVariantes").is(":checked")) {
+        $("#stock").prop("readonly", true).css("background-color", "#eee");
+    } else {
+        $("#stock").prop("readonly", false).css("background-color", "#fff");
+    }
 }
+
+$(document).on("change", "#checkTieneVariantes", function() {
+    actualizarEstadoStockBase();
+});
+
+// Ejecutar al inicio (con pequeño delay para que iCheck procese)
+setTimeout(actualizarEstadoStockBase, 500);
+
+// Eliminar la función duplicada cargarVariantesExistentes que estaba aquí
 

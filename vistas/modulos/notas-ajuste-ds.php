@@ -31,6 +31,29 @@ if ($_SESSION["perfil"] == "Especial") {
                         </button>
                     </a>
                 <?php endif; ?>
+
+                <!-- Filtro por Sucursal (Administradores) -->
+                <?php if (stripos($_SESSION["perfil"], "Admin") !== false): ?>
+                    <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 5px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="hidden-xs"><b>Sucursal:</b></span>
+                            <div class="input-group" style="width: 200px;">
+                                <span class="input-group-addon"><i class="fa fa-building text-primary"></i></span>
+                                <select class="form-control select2" id="sucursal_na" name="sucursal_na">
+                                    <option value="">Todas las Sucursales</option>
+                                    <?php
+                                    $item = null;
+                                    $valor = null;
+                                    $bodegas = ControladorBodegas::ctrMostrarBodegas($item, $valor);
+                                    foreach ($bodegas as $key => $value) {
+                                        echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <style>
@@ -57,25 +80,26 @@ if ($_SESSION["perfil"] == "Especial") {
             </style>
 
             <div class="box-body">
-
-                <table id="tablaListadoNotasAjusteDS"
-                    class="table table-bordered table-striped dt-responsive tablas tablaNotasAjusteDS display nowrap"
-                    width="100%">
-                    <thead>
-                        <tr>
-                            <th>Código Nota</th>
-                            <th>Doc. Original</th>
-                            <th>Proveedor</th>
-                            <th>Total</th>
-                            <th>Fecha</th>
-                            <th>Estado DIAN</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Los datos se cargarán mediante Server-Side DataTables -->
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table id="tablaListadoNotasAjusteDS"
+                        class="table table-bordered table-striped dt-responsive tablas tablaNotasAjusteDS display nowrap"
+                        width="100%">
+                        <thead>
+                            <tr>
+                                <th>Código Nota</th>
+                                <th>Doc. Original</th>
+                                <th>Proveedor</th>
+                                <th>Total</th>
+                                <th>Fecha</th>
+                                <th>Estado DIAN</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Los datos se cargarán mediante Server-Side DataTables -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </section>
@@ -123,20 +147,28 @@ MODAL ENVIAR EMAIL NOTA AJUSTE
 <!-- DataTables Personalizado para Notas de Ajuste DS -->
 <script>
     $(document).ready(function () {
-        setTimeout(function () {
+        // Inicializar Select2 para el filtro de sucursal
+        if($(".select2").length > 0){
+            $(".select2").select2();
+        }
+
+        var tablaListadoNotasAjusteDS = null;
+
+        function cargarTablaNotasAjusteDS() {
             if ($("#tablaListadoNotasAjusteDS").length > 0) {
                 if ($.fn.DataTable.isDataTable('#tablaListadoNotasAjusteDS')) {
                     $('#tablaListadoNotasAjusteDS').DataTable().destroy();
                 }
 
-                $("#tablaListadoNotasAjusteDS").DataTable({
+                tablaListadoNotasAjusteDS = $("#tablaListadoNotasAjusteDS").DataTable({
                     "processing": true,
                     "serverSide": true,
                     "ajax": {
                         "url": "ajax/factus.ajax.php",
                         "type": "POST",
-                        "data": {
-                            "accion": "mostrarNotasAjusteDSServerSide"
+                        "data": function(d) {
+                            d.accion = "mostrarNotasAjusteDSServerSide";
+                            d.idBodega = $("#sucursal_na").val();
                         }
                     },
                     "autoWidth": false,
@@ -185,7 +217,19 @@ MODAL ENVIAR EMAIL NOTA AJUSTE
                     }
                 });
             }
-        }, 200);
+        }
+
+        // Cargar tabla inicial
+        setTimeout(cargarTablaNotasAjusteDS, 200);
+
+        // Recargar tabla al cambiar sucursal
+        $("#sucursal_na").on("change", function() {
+            if (tablaListadoNotasAjusteDS) {
+                tablaListadoNotasAjusteDS.ajax.reload();
+            } else {
+                cargarTablaNotasAjusteDS();
+            }
+        });
     });
 </script>
 

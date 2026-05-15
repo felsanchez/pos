@@ -169,24 +169,137 @@ class imprimirDetalleOrden
             </thead>
             <tbody>';
 
+        // --- PRE-CALCULO DE TOTALES (Sincronizado con detalle-venta.php) ---
         $listaProducto = json_decode($venta["productos"], true);
-        foreach ($listaProducto as $value) {
-            $respuestaProd = ControladorProductos::ctrMostrarProductos("id", $value["id"], "id");
-            $nombreCorto = "Exento";
-            $impRate = 0;
-            if (isset($respuestaProd["tributo_id"]) && $respuestaProd["tributo_id"] != 0) {
-                $tributo = ModeloFactus::mdlMostrarTributo($respuestaProd["tributo_id"]);
-                if ($tributo) {
-                    $impRate = $tributo["porcentaje_defecto"];
-                    $nombreCorto = trim(preg_split('/[0-9]/', $tributo["nombre"])[0]);
-                }
+        $bruto = 0;
+        $neta = 0;
+        $imp = 0;
+        $totalRetencionesVenta = 0;
+
+        // Retenciones
+        $retencionesArr = !empty($venta["retenciones"]) ? json_decode($venta["retenciones"], true) : [];
+        if (is_array($retencionesArr)) {
+            foreach ($retencionesArr as $ret) {
+                $totalRetencionesVenta += floatval($ret['monto']);
             }
+        }
+
+        $tipoDesc = $venta["tipo_descuento"] ?? "";
+        $descGlob = $venta["valor_descuento"] ?? 0;
+        $montoDescTotal = $venta["monto_descuento"] ?? 0;
+        $totalVentaOriginal = floatval($venta["total"]);
+        $totalOriginalEstimado = $totalVentaOriginal + $montoDescTotal;
+
+        $itemsPDF = [];
+
+        if (is_array($listaProducto)) {
+            foreach ($listaProducto as $p) {
+                $respuestaProd = ControladorProductos::ctrMostrarProductos("id", $p["id"], "id");
+                
+                $precioUnitario = isset($p["precio"]) ? floatval($p["precio"]) : floatval($respuestaProd["precio_venta"] ?? 0);
+                $cantidad = floatval($p["cantidad"] ?? 1);
+                $totalProductoConImpuesto = isset($p["total"]) ? floatval($p["total"]) : ($precioUnitario * $cantidad);
+
+                if ($totalProductoConImpuesto <= 0 && $precioUnitario > 0) {
+                    $totalProductoConImpuesto = $precioUnitario * $cantidad;
+                }
+
+                $ip = 19;
+                if (isset($p["impuesto"]) && $p["impuesto"] !== "" && $p["impuesto"] > 0) {
+                    $ip = floatval($p["impuesto"]);
+                } else if (isset($respuestaProd["tasa_impuesto"])) {
+                    $ip = floatval($respuestaProd["tasa_impuesto"]);
+                }
+
+                $bb = $totalProductoConImpuesto / (1 + ($ip / 100));
+                $bruto += $bb;
+
+                $di = 0;
+                if ($tipoDesc == "porcentaje") {
+                    $di = $totalProductoConImpuesto * ($descGlob / 100);
+                } else if ($tipoDesc == "fijo" && $totalOriginalEstimado > 0) {
+                    $di = $descGlob * ($totalProductoConImpuesto / $totalOriginalEstimado);
+                }
+
+                $pd = $totalProductoConImpuesto - $di;
+                $bn = $pd / (1 + ($ip / 100));
+                $imp += ($pd - $bn);
+                $neta += $bn;
+
+                $itemsPDF[] = [
+                    "descripcion" => $p["descripcion"],
+                    "cantidad" => $cantidad,
+                    "precio" => $precioUnitario,
+                    "total" => $totalProductoConImpuesto,
+                    "impuesto_porc" => $ip
+                ];
+            }
+        }
+
+        $totalVentaFinal = $neta + $imp;
+        $vNeto = $totalVentaFinal - $totalRetencionesVenta;
+
+        // --- PARTE 1: HEADER Y TABLA DE PRODUCTOS ---
+        $htmlHeader = $style . '<div class="invoice">';
+        $htmlHeader .= '<table style="width:100%; border-bottom: 2px solid #3c8dbc; padding-bottom:10px;">
+            <tr>
+                <td style="width:50%; vertical-align:middle;">
+                    <span style="font-size:18px; font-weight:bold; color:#444;">' . $htmlLogo . $nombreEmpresa . '</span>
+                </td>
+                <td style="width:50%; text-align:right; vertical-align:middle;">
+                    <span style="font-size:16px; font-weight:bold; color:#3c8dbc;">' . $tipoDocumento . '</span><br>
+                    <span style="font-size:10px; color:#666;">Fecha: ' . $venta["fecha"] . '</span>
+                </td>
+            </tr>
+        </table><br>';
+
+        $htmlHeader .= '<table class="table" cellpadding="6">
+            <tr>
+                <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
+                    <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Empresa</span><br><br>
+                    <strong>' . $labelNombreEmisor . ':</strong> ' . $nombreEmpresa . '<br>
+                    <strong>NIT:</strong> ' . $nitEmisor . '<br>
+                    <strong>Dirección:</strong> ' . $direccionEmisor . '<br>
+                    <strong>Teléfono:</strong> ' . $telefonoEmisor . '<br>
+                    <strong>Email:</strong> ' . $emailEmisor . '
+                </td>
+                <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
+                    <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Cliente</span><br><br>
+                    <strong>Cliente:</strong> ' . ($cliente["nombre"] ?? '') . '<br>
+                    <strong>Documento:</strong> ' . ($cliente["documento"] ?? '') . '<br>
+                    <strong>Dirección:</strong> ' . ($cliente["direccion"] ?? '') . '<br>
+                    <strong>Ciudad:</strong> ' . ($cliente["ciudad"] ?? '') . '<br>
+                    <strong>Teléfono:</strong> ' . ($cliente["telefono"] ?? '') . '<br>
+                    <strong>Email:</strong> ' . ($cliente["email"] ?? '') . '
+                </td>
+                <td style="width:34%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
+                    <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Detalles</span><br><br>
+                    <strong>' . $etiquetaDocumento . ' #' . $numeroDocumento . '</strong><br><br>
+                    <strong>Vendedor:</strong> ' . ($vendedor["nombre"] ?? '') . '<br>
+                    <strong>Método de Pago:</strong> ' . ($venta["metodo_pago"] ?? '') . '
+                </td>
+            </tr>
+        </table><br><br>';
+
+        $htmlHeader .= '<table class="table" cellpadding="5">
+            <thead>
+                <tr class="table-header">
+                    <th style="width:40%;">Producto</th>
+                    <th style="width:10%; text-align:center;">Cant</th>
+                    <th style="width:20%; text-align:right;">Precio Unit.</th>
+                    <th style="width:15%; text-align:center;">Impuesto</th>
+                    <th style="width:15%; text-align:right;">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>';
+
+        foreach ($itemsPDF as $item) {
             $htmlHeader .= '<tr>
-                <td>' . $value["descripcion"] . '</td>
-                <td style="text-align:center;">' . $value["cantidad"] . '</td>
-                <td style="text-align:right;">$' . number_format($respuestaProd["precio_venta"], 2) . '</td>
-                <td style="text-align:center;">' . $nombreCorto . ' ' . $impRate . '%</td>
-                <td style="text-align:right;">$' . number_format($value["total"], 2) . '</td>
+                <td>' . $item["descripcion"] . '</td>
+                <td style="text-align:center;">' . $item["cantidad"] . '</td>
+                <td style="text-align:right;">$' . number_format((float)$item["precio"], 2) . '</td>
+                <td style="text-align:center;">' . $item["impuesto_porc"] . '%</td>
+                <td style="text-align:right;">$' . number_format((float)$item["total"], 2) . '</td>
             </tr>';
         }
         $htmlHeader .= '</tbody></table><br><br>';
@@ -197,16 +310,13 @@ class imprimirDetalleOrden
         // --- PARTE 2: COLUMNA IZQUIERDA (Notas, Observaciones) ---
         $htmlLeft = $style . '<div class="invoice">';
 
-        // Retenciones
-        $retencionesArr = !empty($venta["retenciones"]) ? json_decode($venta["retenciones"], true) : [];
-        $totalRetencionesVenta = 0;
+        // Retenciones (Si existen)
         if (!empty($retencionesArr)) {
             $htmlLeft .= '<div class="lead">Retenciones:</div><table class="table" cellpadding="3">';
             foreach ($retencionesArr as $ret) {
-                $totalRetencionesVenta += $ret['monto'];
-                $htmlLeft .= '<tr><td style="width:60%;"><strong>' . $ret['tipo'] . ' (' . $ret['porcentaje'] . '%):</strong></td><td style="text-align:right;">$' . number_format($ret['monto'], 2) . '</td></tr>';
+                $htmlLeft .= '<tr><td style="width:60%;"><strong>' . $ret['tipo'] . ' (' . $ret['porcentaje'] . '%):</strong></td><td style="text-align:right;">$' . number_format((float)$ret['monto'], 2) . '</td></tr>';
             }
-            $htmlLeft .= '<tr><td><strong>Total Retenido:</strong></td><td style="text-align:right; font-weight:bold;">$' . number_format($totalRetencionesVenta, 2) . '</td></tr></table><br>';
+            $htmlLeft .= '<tr><td><strong>Total Retenido:</strong></td><td style="text-align:right; font-weight:bold;">$' . number_format((float)$totalRetencionesVenta, 2) . '</td></tr></table><br>';
         }
 
         if (!empty($venta["notas"])) {
@@ -250,11 +360,10 @@ class imprimirDetalleOrden
                 $urlDian = trim($venta["qr_data"]);
                 $htmlLink = '<a href="' . $urlDian . '" style="text-decoration:none; color:blue;">' . $urlDian . '</a>';
 
-                // Usamos writeHTMLCell para que maneje mejor el wrap de texto largo
                 $pdf->writeHTMLCell(110, 0, 10, '', $htmlLink, 0, 1, false, true, 'L', true);
-                $pdf->SetTextColor(68, 68, 68); // Volver al gris oscuro
+                $pdf->SetTextColor(68, 68, 68);
 
-                // CUFE (Diseño igual a Nota de Crédito)
+                // CUFE
                 if (!empty($cufeExtraido)) {
                     $pdf->Ln(4);
                     $pdf->SetFont('helvetica', 'B', 9);
@@ -266,37 +375,17 @@ class imprimirDetalleOrden
         }
 
         // --- PARTE 3: COLUMNA DERECHA (Totales) ---
-        // Totales recalculation
-        $bruto = 0;
-        $neta = 0;
-        $imp = 0;
-        $descGlob = $venta["valor_descuento"] ?? 0;
-        $totalOrig = $venta["total"] + ($venta["monto_descuento"] ?? 0);
-        foreach ($listaProducto as $p) {
-            $tp = floatval($p["total"]);
-            $ip = isset($p["impuesto"]) ? floatval($p["impuesto"]) : 19;
-            $bb = $tp / (1 + ($ip / 100));
-            $bruto += $bb;
-            $di = ($venta["tipo_descuento"] == "porcentaje") ? ($tp * ($descGlob / 100)) : (($venta["tipo_descuento"] == "fijo" && $totalOrig > 0) ? ($descGlob * ($tp / $totalOrig)) : 0);
-            $pd = $tp - $di;
-            $bn = $pd / (1 + ($ip / 100));
-            $neta += $bn;
-            $imp += ($pd - $bn);
-        }
-        $totalVentaFinal = $neta + $imp;
-        $vNeto = $totalVentaFinal - $totalRetencionesVenta;
-
         $htmlRight = $style . '<div class="invoice">';
         $htmlRight .= '<div class="lead">Totales</div>
                     <table class="total-table" cellpadding="6">
-                        <tr><th>Subtotal:</th><td>$' . number_format($bruto, 2) . '</td></tr>';
-        if (($venta["monto_descuento"] ?? 0) > 0) {
-            $htmlRight .= '<tr><th>Descuento:</th><td>$' . number_format($bruto - $neta, 2) . '</td></tr>';
+                        <tr><th>Subtotal:</th><td>$' . number_format((float)$bruto, 2) . '</td></tr>';
+        if ($montoDescTotal > 0) {
+            $htmlRight .= '<tr><th>Descuento:</th><td>$' . number_format((float)($bruto - $neta), 2) . '</td></tr>';
         }
-        $htmlRight .= '<tr><th>Valor Bruto:</th><td>$' . number_format($neta, 2) . '</td></tr>
-                        <tr><th>Impuesto:</th><td>$' . number_format($imp, 2) . '</td></tr>
-                        <tr style="background-color:#eee;"><th>Total:</th><td style="font-weight:bold;">$' . number_format($totalVentaFinal, 2) . '</td></tr>
-                        <tr style="background-color:#3c8dbc; color:white;"><th style="font-size:12px;">VALOR NETO:</th><td style="font-size:12px; font-weight:bold;">$' . number_format($vNeto, 2) . '</td></tr>
+        $htmlRight .= '<tr><th>Valor Bruto:</th><td>$' . number_format((float)$neta, 2) . '</td></tr>
+                        <tr><th>Impuesto:</th><td>$' . number_format((float)$imp, 2) . '</td></tr>
+                        <tr style="background-color:#eee;"><th>Total:</th><td style="font-weight:bold;">$' . number_format((float)$totalVentaFinal, 2) . '</td></tr>
+                        <tr style="background-color:#3c8dbc; color:white;"><th style="font-size:12px;">VALOR NETO:</th><td style="font-size:12px; font-weight:bold;">$' . number_format((float)$vNeto, 2) . '</td></tr>
                     </table></div>';
 
         $pdf->writeHTMLCell(75, 0, 125, $startY, $htmlRight, 0, 1, false, true, 'R', true);

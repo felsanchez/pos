@@ -38,7 +38,7 @@
                   <span class="input-group-addon" style="background-color: #f4f4f4;"><i class="fa fa-filter"></i>
                     Categoría</span>
                   <select class="form-control" id="seleccionarCategoriaReporte">
-                    <option value="todos">Todos los documentos</option>
+                    <option value="todos">Mostrar Todas</option>
                     <option value="facturas">Facturas Electrónicas</option>
                     <option value="nc">Notas Crédito</option>
                     <option value="ds">Documentos Soporte</option>
@@ -51,7 +51,7 @@
                   <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
                       class="fa fa-users"></i></span>
                   <select class="form-control" id="seleccionarClienteReporte" style="display:block; width: 100%;">
-                    <option value="todos">Todos los clientes</option>
+                    <option value="todos">Mostrar Todos</option>
                     <?php
 $clientes = ControladorClientes::ctrMostrarClientes(null, null);
 foreach ($clientes as $key => $value) {
@@ -60,7 +60,7 @@ foreach ($clientes as $key => $value) {
 ?>
                   </select>
                   <select class="form-control" id="seleccionarProveedorReporte" style="display:none; width: 100%;">
-                    <option value="todos">Todos los proveedores</option>
+                    <option value="todos">Mostrar Todos</option>
                     <?php
 $proveedores = ControladorProveedores::ctrMostrarProveedores(null, null);
 foreach ($proveedores as $key => $value) {
@@ -75,7 +75,7 @@ foreach ($proveedores as $key => $value) {
                   <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
                       class="fa fa-user"></i></span>
                   <select class="form-control" id="seleccionarUsuarioReporte" style="width: 100%;">
-                    <option value="todos">Todos los usuarios</option>
+                    <option value="todos">Mostrar Todos</option>
                     <?php
 $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
 foreach ($usuarios as $key => $value) {

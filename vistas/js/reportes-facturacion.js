@@ -78,6 +78,10 @@ $(document).ready(function () {
         var categoria = $("#seleccionarCategoriaReporte").val();
         var tercero = "todos";
         var idUsuario = $("#seleccionarUsuarioReporte").val() || "todos";
+        
+        // Obtener sucursal del filtro maestro
+        var sucursalMaestra = document.getElementById('sucursalReporteMaestro');
+        var idBodega = sucursalMaestra ? sucursalMaestra.value : 'todos';
 
         if (categoria == "ds" || categoria == "na") {
             tercero = $("#seleccionarProveedorReporte").val();
@@ -85,7 +89,7 @@ $(document).ready(function () {
             tercero = $("#seleccionarClienteReporte").val();
         }
 
-        cargarDashboard(fechaInicial, fechaFinal, categoria, tercero, idUsuario);
+        cargarDashboard(fechaInicial, fechaFinal, categoria, tercero, idUsuario, idBodega);
     });
 
     $("#btnLimpiarFiltrosReportes").click(function () {
@@ -104,25 +108,32 @@ $(document).ready(function () {
         } else {
             $("#seleccionarUsuarioReporte").val("todos");
         }
+        
+        // Obtener sucursal del filtro maestro
+        var sucursalMaestra = document.getElementById('sucursalReporteMaestro');
+        var idBodega = sucursalMaestra ? sucursalMaestra.value : 'todos';
 
         // Recargar datos sin filtros
-        cargarDashboard(fechaInicial, fechaFinal, "todos", "todos", "todos");
+        cargarDashboard(fechaInicial, fechaFinal, "todos", "todos", "todos", idBodega);
     });
 
-    function cargarDashboard(fi, ff, cat, tercero, idUsuario) {
+    function cargarDashboard(fi, ff, cat, tercero, idUsuario, idBodega) {
         idUsuario = idUsuario || "todos";
-        cargarKPIs(fi, ff, cat, tercero, idUsuario);
-        cargarGrafico(fi, ff, cat, tercero, idUsuario);
-        initializeTable(fi, ff, cat, tercero, idUsuario);
+        idBodega = idBodega || "todos";
+        cargarKPIs(fi, ff, cat, tercero, idUsuario, idBodega);
+        cargarGrafico(fi, ff, cat, tercero, idUsuario, idBodega);
+        initializeTable(fi, ff, cat, tercero, idUsuario, idBodega);
     }
 
     /*=============================================
     CARGAR DATOS INICIALES
     =============================================*/
     var categoriaInicial = $("#seleccionarCategoriaReporte").val();
-    cargarDashboard(fechaInicial, fechaFinal, categoriaInicial, "todos", "todos");
+    var sucursalMaestra = document.getElementById('sucursalReporteMaestro');
+    var idBodegaInicial = sucursalMaestra ? sucursalMaestra.value : 'todos';
+    cargarDashboard(fechaInicial, fechaFinal, categoriaInicial, "todos", "todos", idBodegaInicial);
 
-    function cargarKPIs(fechaInicial, fechaFinal, categoria, tercero, idUsuario) {
+    function cargarKPIs(fechaInicial, fechaFinal, categoria, tercero, idUsuario, idBodega) {
         $.ajax({
             url: "ajax/facturacion.ajax.php",
             method: "POST",
@@ -133,21 +144,27 @@ $(document).ready(function () {
                 categoria: categoria,
                 tercero: tercero,
                 idUsuario: idUsuario || "todos",
+                idBodega: idBodega || "todos",
                 csrf_token: $('meta[name="csrf-token"]').attr('content')
             },
             dataType: "json",
             success: function (respuesta) {
-                $("#widget-total-ventas").html("$" + Number(respuesta.totalVentas).toLocaleString());
-                $("#widget-total-iva").html("$" + Number(respuesta.totalIva).toLocaleString());
-                $("#widget-total-ds").html("$" + Number(respuesta.totalDS).toLocaleString());
-                $("#widget-total-docs").html(respuesta.totalDocs);
+                var totalVentas = respuesta.totalVentas || 0;
+                var totalIva = respuesta.totalIva || 0;
+                var totalDS = respuesta.totalDS || 0;
+                var totalDocs = respuesta.totalDocs || 0;
+
+                $("#widget-total-ventas").html("$" + Number(totalVentas).toLocaleString());
+                $("#widget-total-iva").html("$" + Number(totalIva).toLocaleString());
+                $("#widget-total-ds").html("$" + Number(totalDS).toLocaleString());
+                $("#widget-total-docs").html(totalDocs);
             }
         });
     }
 
     var lineChart = null;
 
-    function cargarGrafico(fechaInicial, fechaFinal, categoria, tercero, idUsuario) {
+    function cargarGrafico(fechaInicial, fechaFinal, categoria, tercero, idUsuario, idBodega) {
         $.ajax({
             url: "ajax/facturacion.ajax.php",
             method: "POST",
@@ -158,6 +175,7 @@ $(document).ready(function () {
                 categoria: categoria,
                 tercero: tercero,
                 idUsuario: idUsuario || "todos",
+                idBodega: idBodega || "todos",
                 csrf_token: $('meta[name="csrf-token"]').attr('content')
             },
             dataType: "json",
@@ -243,7 +261,7 @@ $(document).ready(function () {
 
     var table = null;
 
-    function initializeTable(fi, ff, cat, tercero, idUsuario) {
+    function initializeTable(fi, ff, cat, tercero, idUsuario, idBodega) {
 
         if ($.fn.DataTable.isDataTable(".tablaReporteFacturacion")) {
             $(".tablaReporteFacturacion").DataTable().clear().destroy();
@@ -261,8 +279,9 @@ $(document).ready(function () {
                     "fechaFinal": ff,
                     "categoria": cat,
                     "tercero": tercero,
-                    "idUsuario": idUsuario || "todos"
-                    // csrf_token removido - manejado por csrf-helper.js
+                    "idUsuario": idUsuario || "todos",
+                    "idBodega": idBodega || "todos",
+                    "csrf_token": $('meta[name="csrf-token"]').attr('content')
                 }
             },
             "deferRender": true,
@@ -320,6 +339,10 @@ $(document).ready(function () {
         var cat = $("#seleccionarCategoriaReporte").val();
         var tercero = "todos";
         var idUsuario = $("#seleccionarUsuarioReporte").val() || "todos";
+        
+        // Obtener sucursal del filtro maestro
+        var sucursalMaestra = document.getElementById('sucursalReporteMaestro');
+        var idBodega = sucursalMaestra ? sucursalMaestra.value : 'todos';
 
         if (cat == "ds" || cat == "na") {
             tercero = $("#seleccionarProveedorReporte").val();
@@ -329,7 +352,7 @@ $(document).ready(function () {
 
         var url = "vistas/modulos/descargar-reporte-facturacion.php?reporte=reporte_facturacion";
         url += "&fechaInicial=" + fi + "&fechaFinal=" + ff;
-        url += "&categoria=" + cat + "&tercero=" + tercero + "&idUsuario=" + idUsuario;
+        url += "&categoria=" + cat + "&tercero=" + tercero + "&idUsuario=" + idUsuario + "&idBodega=" + idBodega;
 
         window.open(url, '_blank');
     });

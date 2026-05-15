@@ -20,6 +20,12 @@ $(document).ready(function () {
                     d.fecha_hasta = $("#ff_s").val() || "";
                     d.usuario = $("#user_s").val() || "";
                     d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+                    
+                    // Extraer id_bodega del filtro maestro
+                    var idBodega = $('#sucursalReporteMaestro').val();
+                    if(idBodega && idBodega !== 'todos'){
+                        d.id_bodega = idBodega;
+                    }
                 }
             },
             "columns": [
@@ -85,6 +91,13 @@ $(document).ready(function () {
     // 2. Inicialización de Select2
     if (typeof $.fn.select2 !== 'undefined') {
         $('.select2').select2({ width: '100%' });
+        
+        // Forzar reset de sucursal al cargar para que siempre inicie en "Vista Global" (Solo administradores)
+        if($("#sucursalReporteMaestro").is("select")){
+            $("#sucursalReporteMaestro").val("todos").trigger("change.select2");
+            // Limpiar cualquier rastro previo en localStorage
+            localStorage.removeItem("sucursalReporteMaestro");
+        }
     }
 
     // 3. Función de Recarga
@@ -96,7 +109,7 @@ $(document).ready(function () {
     }
 
     // 4. Listeners de Filtros
-    $(document).on("change", "#cat_s, #tipo_s, #user_s, #fi_s, #ff_s", function () {
+    $(document).on("change", "#cat_s, #tipo_s, #user_s, #fi_s, #ff_s, #sucursalReporteMaestro", function () {
         reloadStockTable();
     });
 
@@ -104,6 +117,11 @@ $(document).ready(function () {
     $("#btnLimpiar").on("click", function () {
         $("#cat_s, #tipo_s, #user_s, #fi_s, #ff_s").val("").trigger("change");
         $("#span-rango-stock").html('<i class="fa fa-calendar"></i> Rango de fecha');
+        
+        if($("#sucursalReporteMaestro").is("select")){
+            $("#sucursalReporteMaestro").val("todos").trigger("change.select2");
+        }
+        
         reloadStockTable();
     });
 
@@ -134,6 +152,13 @@ $(document).ready(function () {
             fecha_hasta: $("#ff_s").val(),
             csrf_token: $('meta[name="csrf-token"]').attr('content')
         };
+        
+        // Extraer id_bodega del filtro maestro
+        var idBodega = $('#sucursalReporteMaestro').val();
+        if(idBodega && idBodega !== 'todos'){
+            filtros.id_bodega = idBodega;
+        }
+
         $.ajax({
             url: "ajax/movimientos.ajax.php",
             method: "POST",

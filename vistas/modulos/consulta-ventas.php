@@ -59,7 +59,7 @@
 
               <!-- Botón Rango de Fecha -->
               <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="hidden-xs"><b>Filtrar por Fecha:</b></span>
+                <span class="hidden-xs"><b>Fecha:</b></span>
                 <button type="button" class="btn btn-default" id="daterange-btn">
                   <span>
                     <i class="fa fa-calendar"></i> Rango de fecha

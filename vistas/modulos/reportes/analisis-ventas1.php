@@ -92,9 +92,9 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
 
                     <!-- Filtro de fecha -->
                     <div class="filtro-grupo">
-                      <label for="tipo-fecha">Filtrar por fecha</label>
+                      <label for="tipo-fecha">Fecha:</label>
                       <select id="tipo-fecha" name="tipo" class="form-control">
-                        <option value="todo">Todas las ventas</option>
+                        <option value="todo">Mostrar Todas</option>
                         <option value="hoy">Hoy</option>
                         <option value="ayer">Ayer</option>
                         <option value="mes" selected>Mes actual</option>
@@ -116,7 +116,7 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
                     <div class="filtro-grupo">
                       <label for="filtro-vendedor">Vendedor</label>
                       <select id="filtro-vendedor" name="id_vendedor" class="form-control">
-                        <option value="">Todos los vendedores</option>
+                        <option value="">Mostrar Todos</option>
                         <?php foreach($usuarios as $usuario): ?>
                           <option value="<?php echo $usuario['id']; ?>"><?php echo htmlspecialchars($usuario['nombre']); ?></option>
                         <?php endforeach; ?>
@@ -127,7 +127,7 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
                     <div class="filtro-grupo">
                       <label for="filtro-cliente">Cliente</label>
                       <select id="filtro-cliente" name="id_cliente" class="form-control">
-                        <option value="">Todos los clientes</option>
+                        <option value="">Mostrar Todos</option>
                         <?php foreach($clientes as $cliente): ?>
                           <option value="<?php echo $cliente['id']; ?>"><?php echo htmlspecialchars($cliente['nombre']); ?></option>
                         <?php endforeach; ?>
@@ -138,7 +138,7 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
                     <div class="filtro-grupo">
                       <label for="filtro-producto">Producto</label>
                       <select id="filtro-producto" name="id_producto" class="form-control">
-                        <option value="">Todos los productos</option>
+                        <option value="">Mostrar Todos</option>
                         <?php foreach($productos as $producto): ?>
                           <option value="<?php echo $producto['id']; ?>"><?php echo htmlspecialchars($producto['descripcion']); ?></option>
                         <?php endforeach; ?>
@@ -149,7 +149,7 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
                     <div class="filtro-grupo">
                       <label for="filtro-metodo-pago">Método de pago</label>
                       <select id="filtro-metodo-pago" name="metodo_pago" class="form-control">
-                        <option value="">Todos los métodos</option>
+                        <option value="">Mostrar Todos</option>
                         <?php foreach($metodosPago as $metodo): ?>
                           <option value="<?php echo htmlspecialchars($metodo); ?>"><?php echo htmlspecialchars($metodo); ?></option>
                         <?php endforeach; ?>
@@ -259,6 +259,10 @@ window.addEventListener('DOMContentLoaded', function () {
     if (idProducto) formData.append('id_producto', idProducto);
     if (metodoPago) formData.append('metodo_pago', metodoPago);
 
+    // Agregar id_bodega del filtro maestro si existe
+    const sucursalMaestra = document.getElementById('sucursalReporteMaestro');
+    const idBodega = sucursalMaestra ? sucursalMaestra.value : '';
+    if (idBodega && idBodega !== 'todos') formData.append('id_bodega', idBodega);
 
     //fetch('/pos/vistas/modulos/reportes/filtro_ventas.php', {
     let rutaBase = window.location.hostname.includes("localhost")

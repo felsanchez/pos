@@ -101,6 +101,38 @@
 
   <section class="content">
 
+    <!-- FILTRO MAESTRO DE SUCURSAL -->
+    <?php if (stripos($_SESSION["perfil"], "Admin") !== false): ?>
+      <div class="box box-default">
+        <div class="box-body" style="padding: 15px 25px;">
+          <div class="row" style="display: flex; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div class="col-md-4 col-sm-6 col-xs-12">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-size: 14px; color: #555;"><i class="fa fa-building text-primary"></i> Filtrar por Sucursal (Vista Global):</label>
+                <select class="form-control select2" id="sucursalReporteMaestro" style="width: 100%;" autocomplete="off">
+                  <option value="todos">Filtrar por Sucursal (Vista Global):</option>
+                  <?php
+                  $bodegas = ControladorBodegas::ctrMostrarBodegas(null, null);
+                  foreach ($bodegas as $key => $value) {
+                    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                  }
+                  ?>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-8 col-sm-6 hidden-xs">
+              <p class="text-muted" style="margin-top: 22px; font-style: italic;">
+                <i class="fa fa-info-circle"></i> Seleccione una sucursal para actualizar automáticamente todos los análisis y gráficos de esta página.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    <?php else: ?>
+      <input type="hidden" id="sucursalReporteMaestro" value="<?php echo $_SESSION['id_bodega']; ?>">
+    <?php endif; ?>
+
+
     <!-- SECCIÓN 1: ANÁLISIS DE VENTAS -->
     <div class="box box-info" id="seccion-analisis-ventas">
       <div class="box-header with-border">
@@ -140,37 +172,28 @@
       </div>
 
       <div class="box-body">
+        <div id="contenedor-graficos-rendimiento">
+          <?php 
+            // Definir idBodega para la carga inicial de los gráficos
+            $idBodega = (stripos($_SESSION["perfil"], "Admin") !== false) ? "todos" : $_SESSION["id_bodega"]; 
+          ?>
+          <div class="row">
+            <div class="col-md-6 col-xs-12">
+              <?php include "reportes/metodos-pago-mas-usados.php"; ?>
+            </div>
 
-        <div class="row">
-
-          <div class="col-md-6 col-xs-12">
-            <?php
-            include "reportes/metodos-pago-mas-usados.php";
-            ?>
+            <div class="col-md-6 col-xs-12">
+              <?php include "reportes/productos-mas-vendidos.php"; ?>
+            </div>
+            <div class="col-md-6 col-xs-12">
+              <?php include "reportes/vendedores.php"; ?>
+            </div>
+            <div class="col-md-6 col-xs-12">
+              <?php include "reportes/compradores.php"; ?>
+            </div>
           </div>
-
-          <div class="col-md-6 col-xs-12">
-            <?php
-            include "reportes/productos-mas-vendidos.php";
-            ?>
-          </div>
-
-          <div class="col-md-6 col-xs-12">
-            <?php
-            include "reportes/vendedores.php";
-            ?>
-          </div>
-
-          <div class="col-md-6 col-xs-12">
-            <?php
-            include "reportes/compradores.php";
-            ?>
-          </div>
-
         </div>
-
       </div>
-
     </div>
 
     <!-- SECCIÓN 3: REPORTE FINANCIERO -->
@@ -235,74 +258,86 @@
         <div class="row" style="display: flex; align-items: center; flex-wrap: wrap;">
           <!-- 1. Categoría -->
           <div class="col-md-2" style="margin-bottom: 10px;">
-            <div class="input-group">
-              <span class="input-group-addon" style="background-color: #f4f4f4;"><i class="fa fa-filter"></i></span>
-              <select class="form-control" id="seleccionarCategoriaReporte">
-                <option value="todos">Categoría...</option>
-                <option value="facturas">Facturas Electrónicas</option>
-                <option value="nc">Notas Crédito</option>
-                <option value="ds">Documentos Soporte</option>
-                <option value="na">Notas de Ajuste DS</option>
-              </select>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="hidden-xs"><b>Categoría:</b></span>
+              <div class="input-group">
+                <span class="input-group-addon" style="background-color: #f4f4f4;"><i class="fa fa-filter"></i></span>
+                <select class="form-control" id="seleccionarCategoriaReporte">
+                  <option value="todos">Mostrar Todas</option>
+                  <option value="facturas">Facturas Electrónicas</option>
+                  <option value="nc">Notas Crédito</option>
+                  <option value="ds">Documentos Soporte</option>
+                  <option value="na">Notas de Ajuste DS</option>
+                </select>
+              </div>
             </div>
           </div>
 
           <!-- 2. Tercero (Cliente/Proveedor) -->
           <div class="col-md-3" style="margin-bottom: 10px;">
-            <div class="input-group" style="width: 100%;">
-              <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
-                  class="fa fa-users"></i></span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="hidden-xs"><b>Tercero:</b></span>
+              <div class="input-group" style="width: 100%;">
+                <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
+                    class="fa fa-users"></i></span>
 
-              <div id="divClienteReporte" style="display: block; width: 100%;">
-                <select class="form-control select2" id="seleccionarClienteReporte" style="width: 100%;">
-                  <option value="todos">Todos los clientes</option>
-                  <?php
-                  $clientes = ControladorClientes::ctrMostrarClientes(null, null);
-                  foreach ($clientes as $key => $value) {
-                    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                  }
-                  ?>
-                </select>
-              </div>
+                <div id="divClienteReporte" style="display: block; width: 100%;">
+                  <select class="form-control select2" id="seleccionarClienteReporte" style="width: 100%;">
+                    <option value="todos">Mostrar Todos</option>
+                    <?php
+                    $clientes = ControladorClientes::ctrMostrarClientes(null, null);
+                    foreach ($clientes as $key => $value) {
+                      echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                    }
+                    ?>
+                  </select>
+                </div>
 
-              <div id="divProveedorReporte" style="display: none; width: 100%;">
-                <select class="form-control select2" id="seleccionarProveedorReporte" style="width: 100%;">
-                  <option value="todos">Todos los proveedores</option>
-                  <?php
-                  $proveedores = ControladorProveedores::ctrMostrarProveedores(null, null);
-                  foreach ($proveedores as $key => $value) {
-                    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                  }
-                  ?>
-                </select>
+                <div id="divProveedorReporte" style="display: none; width: 100%;">
+                  <select class="form-control select2" id="seleccionarProveedorReporte" style="width: 100%;">
+                    <option value="todos">Mostrar Todos</option>
+                    <?php
+                    $proveedores = ControladorProveedores::ctrMostrarProveedores(null, null);
+                    foreach ($proveedores as $key => $value) {
+                      echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                    }
+                    ?>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- 3. Usuario -->
           <div class="col-md-2" style="margin-bottom: 10px;">
-            <div class="input-group" style="width: 100%;">
-              <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
-                  class="fa fa-user"></i></span>
-              <select class="form-control select2" id="seleccionarUsuarioReporte" style="width: 100%;">
-                <option value="todos">Todos los usuarios</option>
-                <?php
-                $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
-                foreach ($usuarios as $key => $value) {
-                  echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                }
-                ?>
-              </select>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="hidden-xs"><b>Usuario:</b></span>
+              <div class="input-group" style="width: 100%;">
+                <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
+                    class="fa fa-user"></i></span>
+                <select class="form-control select2" id="seleccionarUsuarioReporte" style="width: 100%;">
+                  <option value="todos">Mostrar Todos</option>
+                  <?php
+                  $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
+                  foreach ($usuarios as $key => $value) {
+                    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                  }
+                  ?>
+                </select>
+              </div>
             </div>
           </div>
 
           <!-- 4. Rango de fecha -->
           <div class="col-md-3" style="margin-bottom: 10px;">
-            <div class="input-group" style="width: 100%;">
-              <button type="button" class="btn btn-default" id="daterange-btn-reportes" style="width: 100%;">
-                <span><i class="fa fa-calendar"></i> Rango de fecha</span>
-                <i class="fa fa-caret-down"></i>
-              </button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="hidden-xs"><b>Fecha:</b></span>
+              <div class="input-group" style="width: 100%;">
+                <button type="button" class="btn btn-default" id="daterange-btn-reportes" style="width: 100%;">
+                  <span><i class="fa fa-calendar"></i> Rango de fecha</span>
+                  <i class="fa fa-caret-down"></i>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -324,40 +359,32 @@
         <!-- WIDGETS DE RESUMEN (KPIs) -->
         <div class="row" id="kpi-reports" style="margin-top: 20px;">
           <div class="col-lg-3 col-xs-6">
-            <div class="small-box bg-aqua">
-              <div class="inner">
-                <h3 id="widget-total-ventas">$0</h3>
-                <p>Venta Neta (Facturado - NC)</p>
-              </div>
-              <div class="icon"><i class="ion ion-social-usd"></i></div>
+            <div class="inner">
+              <h3 id="widget-total-ventas">$0</h3>
+              <p>Venta Neta (Facturado - NC)</p>
             </div>
+            <div class="icon"><i class="ion ion-social-usd"></i></div>
           </div>
           <div class="col-lg-3 col-xs-6">
-            <div class="small-box bg-green">
-              <div class="inner">
-                <h3 id="widget-total-iva">$0</h3>
-                <p>Total IVA Recaudado</p>
-              </div>
-              <div class="icon"><i class="ion ion-pie-graph"></i></div>
+            <div class="inner">
+              <h3 id="widget-total-iva">$0</h3>
+              <p>Total IVA Recaudado</p>
             </div>
+            <div class="icon"><i class="ion ion-pie-graph"></i></div>
           </div>
           <div class="col-lg-3 col-xs-6">
-            <div class="small-box bg-yellow">
-              <div class="inner">
-                <h3 id="widget-total-ds">$0</h3>
-                <p>Documentos Soporte</p>
-              </div>
-              <div class="icon"><i class="ion ion-ios-paper"></i></div>
+            <div class="inner">
+              <h3 id="widget-total-ds">$0</h3>
+              <p>Documentos Soporte</p>
             </div>
+            <div class="icon"><i class="ion ion-ios-paper"></i></div>
           </div>
           <div class="col-lg-3 col-xs-6">
-            <div class="small-box bg-red">
-              <div class="inner">
-                <h3 id="widget-total-docs">0</h3>
-                <p>Docs. Electrónicos Totales</p>
-              </div>
-              <div class="icon"><i class="ion ion-ios-albums"></i></div>
+            <div class="inner">
+              <h3 id="widget-total-docs">0</h3>
+              <p>Docs. Electrónicos Totales</p>
             </div>
+            <div class="icon"><i class="ion ion-ios-albums"></i></div>
           </div>
         </div>
 
@@ -373,21 +400,23 @@
                 </button>
               </div>
               <div class="box-body" style="padding-left: 0; padding-right: 0;">
-                <table class="table table-bordered table-striped dt-responsive tablaReporteFacturacion" width="100%">
-                  <thead>
-                    <tr>
-                      <th style="width:10px">#</th>
-                      <th>Tipo</th>
-                      <th>Número</th>
-                      <th>Cliente/Proveedor</th>
-                      <th>Vendedor</th>
-                      <th>Fecha</th>
-                      <th>Monto Total</th>
-                      <th>Estado</th>
-                      <th>Ver</th>
-                    </tr>
-                  </thead>
-                </table>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-striped dt-responsive tablaReporteFacturacion" width="100%">
+                    <thead>
+                      <tr>
+                        <th style="width:10px">#</th>
+                        <th>Tipo</th>
+                        <th>Número</th>
+                        <th>Cliente/Proveedor</th>
+                        <th>Vendedor</th>
+                        <th>Fecha</th>
+                        <th>Monto Total</th>
+                        <th>Estado</th>
+                        <th>Ver</th>
+                      </tr>
+                    </thead>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -412,9 +441,9 @@
       <div class="modal-body">
         <div class="filtro-excel-container">
           <div class="form-group">
-            <label for="filtro-usuario-excel">Filtrar por usuario</label>
+            <label for="filtro-usuario-excel">Usuario:</label>
             <select id="filtro-usuario-excel" class="form-control">
-              <option value="">Todos los usuarios</option>
+              <option value="">Mostrar Todos</option>
               <?php
               $item = null;
               $valor = null;
@@ -427,9 +456,9 @@
           </div>
 
           <div class="form-group">
-            <label for="filtro-cliente-excel">Filtrar por cliente</label>
+            <label for="filtro-cliente-excel">Cliente:</label>
             <select id="filtro-cliente-excel" class="form-control select2" style="width: 100%;">
-              <option value="todos">Todos los clientes</option>
+              <option value="todos">Mostrar Todos</option>
               <?php
               $clientesA = ControladorClientes::ctrMostrarClientes(null, null);
               foreach ($clientesA as $key => $value) {
@@ -440,9 +469,9 @@
           </div>
 
           <div class="form-group">
-            <label for="tipo-fecha-excel">Filtrar por fecha</label>
+            <label for="tipo-fecha-excel">Fecha:</label>
             <select id="tipo-fecha-excel" class="form-control">
-              <option value="todo">Todas las ventas</option>
+              <option value="todo">Mostrar Todas</option>
               <option value="hoy">Hoy</option>
               <option value="ayer">Ayer</option>
               <option value="mes">Mes actual</option>
@@ -487,9 +516,9 @@
       <div class="modal-body">
         <div class="filtro-excel-container">
           <div class="form-group">
-            <label for="filtro-usuario-excel-fact">Filtrar por usuario</label>
+            <label for="filtro-usuario-excel-fact">Usuario:</label>
             <select id="filtro-usuario-excel-fact" class="form-control">
-              <option value="todos">Todos los usuarios</option>
+              <option value="todos">Mostrar Todos</option>
               <?php
               foreach ($usuarios as $key => $value) {
                 echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
@@ -501,7 +530,7 @@
           <div class="form-group">
             <label for="filtro-categoria-excel-fact">Tipo de Documento</label>
             <select id="filtro-categoria-excel-fact" class="form-control">
-              <option value="todos">Todas las categorías</option>
+              <option value="todos">Mostrar Todas</option>
               <option value="facturas">Facturas Electrónicas</option>
               <option value="nc">Notas Crédito</option>
               <option value="ds">Documentos Soporte</option>
@@ -510,9 +539,9 @@
           </div>
 
           <div class="form-group" id="divFiltroClienteModal">
-            <label for="filtro-cliente-excel-fact">Filtrar por Cliente</label>
+            <label for="filtro-cliente-excel-fact">Cliente:</label>
             <select id="filtro-cliente-excel-fact" class="form-control select2" style="width: 100%;">
-              <option value="todos">Todos los clientes</option>
+              <option value="todos">Mostrar Todos</option>
               <?php
               foreach ($clientes as $key => $value) {
                 echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
@@ -522,9 +551,9 @@
           </div>
 
           <div class="form-group" id="divFiltroProveedorModal" style="display: none;">
-            <label for="filtro-proveedor-excel-fact">Filtrar por Proveedor</label>
+            <label for="filtro-proveedor-excel-fact">Proveedor:</label>
             <select id="filtro-proveedor-excel-fact" class="form-control select2" style="width: 100%;">
-              <option value="todos">Todos los proveedores</option>
+              <option value="todos">Mostrar Todos</option>
               <?php
               foreach ($proveedores as $key => $value) {
                 echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
@@ -534,9 +563,9 @@
           </div>
 
           <div class="form-group">
-            <label for="tipo-fecha-excel-fact">Filtrar por fecha</label>
+            <label for="tipo-fecha-excel-fact">Fecha:</label>
             <select id="tipo-fecha-excel-fact" class="form-control">
-              <option value="todo">Todos los documentos</option>
+              <option value="todo">Mostrar Todos</option>
               <option value="hoy">Hoy</option>
               <option value="ayer">Ayer</option>
               <option value="mes">Mes actual</option>
@@ -736,6 +765,11 @@
       url += `&idUsuario=${usuario}`;
     }
 
+    // Incluir sucursal (idBodega)
+    const sucursalMaestra = document.getElementById('sucursalReporteMaestro');
+    const idBodega = sucursalMaestra ? sucursalMaestra.value : 'todos';
+    url += `&idBodega=${idBodega}`;
+
     if (btnDescargar) {
       btnDescargar.href = url;
     }
@@ -787,6 +821,74 @@
 
   // Colapsar secciones al cargar la página
   $(document).ready(function () {
+    if ($.fn.select2) {
+        $(".select2").select2({
+            width: '100%'
+        });
+        $("#seleccionarUsuarioReporte").select2({ 
+            width: '100%' 
+        });
+
+        // Forzar reset de sucursal al cargar para que siempre inicie en "Vista Global" (Solo para administradores)
+        if($("#sucursalReporteMaestro").is("select")){
+            $("#sucursalReporteMaestro").val("todos").trigger("change.select2");
+            // Limpiar cualquier rastro previo en localStorage
+            localStorage.removeItem("sucursalReporteMaestro");
+        }
+    }
+
+    // Al cambiar la sucursal maestra, disparar todos los formularios de filtros
+    $('#sucursalReporteMaestro').on('change', function() {
+        var idBodega = $(this).val();
+
+        // Disparar los formularios de forma que sea capturado por sus respectivos listeners
+        // Usamos dispatchEvent para asegurar que los listeners nativos (addEventListener) funcionen
+        
+        // 1. Análisis de Ventas (Sección 1)
+        var formVentas = document.getElementById('filtro-fechas');
+        if(formVentas) formVentas.dispatchEvent(new Event('submit', { cancelable: true }));
+
+        // 2. Estado de Resultados (Sección 3)
+        var formFinan = document.getElementById('filtro-financiero');
+        if(formFinan) formFinan.dispatchEvent(new Event('submit', { cancelable: true }));
+
+        // 3. Análisis de Órdenes (Sección 4)
+        var formOrden = document.getElementById('filtroOrdenesForm');
+        if(formOrden) formOrden.dispatchEvent(new Event('submit', { cancelable: true }));
+
+        // 4. Estado de Resultados FE (Sección 5)
+        var formFinanFact = document.getElementById('filtro-financiero-fact');
+        if(formFinanFact) formFinanFact.dispatchEvent(new Event('submit', { cancelable: true }));
+
+        // 5. Reporte Facturación Electrónica (Sección 6)
+        if($('#btnFiltrarReportes').length) $('#btnFiltrarReportes').click();
+
+        // 6. Gráficos de Rendimiento (Sección 2)
+        cargarGraficosRendimiento(idBodega);
+    });
+
+    function cargarGraficosRendimiento(idBodega) {
+        // Obtener fechas actuales si existen en la URL o scope
+        const urlParams = new URLSearchParams(window.location.search);
+        const fechaInicial = urlParams.get('fechaInicial') || "";
+        const fechaFinal = urlParams.get('fechaFinal') || "";
+
+        $("#contenedor-graficos-rendimiento").html('<div class="text-center" style="padding:50px;"><i class="fa fa-refresh fa-spin fa-3x"></i><br>Actualizando gráficos...</div>');
+
+        $.ajax({
+            url: "vistas/modulos/reportes/obtener-graficos-rendimiento.php",
+            method: "POST",
+            data: { 
+                idBodega: idBodega,
+                fechaInicial: fechaInicial,
+                fechaFinal: fechaFinal
+            },
+            success: function(respuesta) {
+                $("#contenedor-graficos-rendimiento").html(respuesta);
+            }
+        });
+    }
+
     // En móvil: colapsar todas las secciones
     if ($(window).width() < 768) {
       $('.box').addClass('collapsed-box-mobile');

@@ -179,6 +179,13 @@ SISTEMA DE DISEÑO ESTÁNDAR - POS PREMIUM
     font-style: italic;
 }
 
+/* Evitar que el placeholder se encime con el texto */
+.celda-observacion:not(:empty):before,
+.celda-observacion:focus:before {
+    content: "" !important;
+    display: none !important;
+}
+
 /* Fallback si no tiene data-placeholder o si es "true" */
 .celda-observacion:empty:not(:focus):not([data-placeholder]):before,
 .celda-observacion:empty:not(:focus)[data-placeholder="true"]:before {
@@ -211,10 +218,25 @@ SISTEMA DE DISEÑO ESTÁNDAR - POS PREMIUM
     display: none;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1250px) {
     .solo-movil {
         display: inline-block !important;
-        margin-left: 3px !important;
+        margin-bottom: 10px !important;
+    }
+
+    .btnAgregarProducto.solo-movil {
+        background-color: #f39c12 !important;
+        color: white !important;
+        border: none !important;
+        padding: 10px 20px !important;
+        font-weight: bold !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .btnAgregarProducto.solo-movil:hover {
+        background-color: #e67e22 !important;
+        transform: translateY(-2px) !important;
     }
 }
 
@@ -395,11 +417,29 @@ SISTEMA DE DISEÑO ESTÁNDAR - POS PREMIUM
     }
 }
 
+/*=====================================
+ESTILOS PARA TABLAS CON SCROLL HORIZONTAL
+======================================*/
+.dataTables_wrapper {
+    width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+table.tablaVentas {
+    width: 100% !important;
+}
+
+/*=====================================
+ESTILOS GENERALES
+======================================*/
+
 /*=============================================
 14. FACTURACIÓN ELECTRÓNICA Y UTILIDADES
 =============================================*/
 /* Prevenir layout-shift al cargar la página */
 .fe-ui-hidden {
     display: none;
-}
+
 

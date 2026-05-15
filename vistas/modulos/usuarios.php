@@ -27,13 +27,13 @@
 
         <!-- Filtro por Perfil Estandarizado -->
         <div class="pull-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <span class="hidden-xs"><b>Filtrar por Perfil:</b></span>
+          <span class="hidden-xs"><b>Perfil:</b></span>
           <div class="input-group" style="width: 200px;">
             <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
               <i class="fa fa-search text-primary"></i>
             </span>
             <select class="form-control select2" id="seleccionarPerfilFiltro" style="width: 100%;">
-              <option value="">Seleccionar perfil...</option>
+              <option value="">Mostrar Todos</option>
               <?php foreach (ModeloPerfiles::mdlObtenerPerfiles() as $p): ?>
                 <option value="<?php echo htmlspecialchars($p['nombre']); ?>">
                   <?php echo htmlspecialchars($p['nombre']); ?>
@@ -62,6 +62,7 @@
                 <th>Email</th>
                 <th>Foto</th>
                 <th>Perfil</th>
+                <th>Sucursal</th>
                 <th>Estado</th>
                 <th>Ultimo login</th>
                 <th>Acciones</th>
@@ -209,15 +210,33 @@ MODAL AGREGAR USUARIO
               </div>
             </div>
 
-            <!-- Fila 3: Contraseña -->
+            <!-- Fila 3: Contraseña y Sucursal -->
             <div class="row">
-              <div class="col-md-12">
+              <div class="col-md-6">
                 <div class="form-group">
                   <label>Contraseña:</label>
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-lock"></i></span>
                     <input type="password" class="form-control input-lg" name="nuevoPassword"
-                      placeholder="Ingresar contraseña segura" required>
+                      placeholder="Ingresar contraseña" required>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Sucursal / Bodega:</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-building"></i></span>
+                    <select class="form-control input-lg" name="nuevoIdBodega">
+                      <option value="">Seleccionar sucursal</option>
+                      <?php 
+                        $bodegas = ControladorBodegas::ctrMostrarBodegas(null, null);
+                        foreach ($bodegas as $key => $value) {
+                          echo '<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
+                        }
+                      ?>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -359,10 +378,26 @@ MODAL EDITAR USUARIO
                 </div>
               </div>
             </div>
-
-
-
-            <!-- Fila 4: Foto -->
+            <!-- Fila 3: Sucursal -->
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label>Sucursal / Bodega:</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-building"></i></span>
+                    <select class="form-control input-lg" name="editarIdBodega" id="editarIdBodega">
+                      <option value="">Seleccionar sucursal</option>
+                      <?php 
+                        $bodegas = ControladorBodegas::ctrMostrarBodegas(null, null);
+                        foreach ($bodegas as $key => $value) {
+                          echo '<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
+                        }
+                      ?>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div class="row">
               <div class="col-md-12">
                 <div class="form-group">

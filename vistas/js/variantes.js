@@ -24,12 +24,11 @@ var dtVariantesOptions = {
             }
         }
     },
-    // Priority: 1:Nombre, 2:Acciones, 3:Estado, 4:Orden
+    // Priority: 1:Nombre, 2:Acciones, 3:Estado
     "columnDefs": [
         { "targets": 0, "responsivePriority": 1 },
-        { "targets": 3, "responsivePriority": 2, "orderable": false },
-        { "targets": 2, "responsivePriority": 3 },
-        { "targets": 1, "responsivePriority": 4 }
+        { "targets": 2, "responsivePriority": 2, "orderable": false },
+        { "targets": 1, "responsivePriority": 3 }
     ],
     "language": {
         "sProcessing": "Procesando...",
@@ -78,11 +77,6 @@ $(document).on("click", ".btnAbrirModalTipo", function () {
         success: function (respuesta) {
             console.log("Siguiente orden tipo:", respuesta);
             $("#nuevoOrdenTipo").val(respuesta);
-
-            // Mensaje informativo
-            if (respuesta > 1) {
-                $(".help-block").html("El orden se agregará al final de la lista. Puedes cambiarlo manualmente para insertarlo en otra posición.");
-            }
         },
         error: function () {
             $("#nuevoOrdenTipo").val(1);
@@ -130,87 +124,97 @@ $(document).on("click", ".btnVerOpciones", function () {
 
     var idTipo = $(this).attr("idTipo");
     var nombreTipo = $(this).attr("nombreTipo");
+    var tablaId = "tablaOpciones_" + idTipo;
+    var bodyId = "bodyOpciones_" + idTipo;
+
+    console.log("Iniciando carga de opciones para:", nombreTipo, "(ID: " + idTipo + ")");
 
     $("#nombreTipoVariante").text(nombreTipo);
     $("#idTipoVarianteActual").val(idTipo);
     $("#idTipoVarianteOpcion").val(idTipo);
 
+    // 1. Limpieza total y creación de tabla con ID ÚNICO
+    $(".tabla-opciones").html(
+        '<table id="' + tablaId + '" class="table table-bordered table-striped display nowrap" style="width: 100%;">' +
+            '<thead>' +
+                '<tr>' +
+                    '<th>Nombre</th>' +
+                    '<th>Estado</th>' +
+                    '<th>Acciones</th>' +
+                '</tr>' +
+            '</thead>' +
+            '<tbody id="' + bodyId + '">' +
+                '<tr><td colspan="3" class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando...</td></tr>' +
+            '</tbody>' +
+        '</table>'
+    );
+
     // Mostrar el box de opciones
     $("#boxOpciones").show();
 
-    // Cargar opciones con AJAX
-    var datos = new FormData();
-    datos.append("idTipoVariante", idTipo);
-    // csrf_token removido - manejado por csrf-helper.js
-
+    // 2. Cargar opciones con AJAX
     $.ajax({
         url: "ajax/variantes.ajax.php",
         method: "POST",
-        data: datos,
-        cache: false,
-        contentType: false,
-        processData: false,
+        data: {
+            "idTipoVariante": idTipo,
+            "csrf_token": $('meta[name="csrf-token"]').attr('content')
+        },
         dataType: "json",
         success: function (respuesta) {
 
-            console.log("Opciones cargadas:", respuesta);
+            console.log("Datos recibidos para " + idTipo + ":", respuesta);
 
             var html = "";
 
-            if (respuesta.length > 0) {
+            if (respuesta && Array.isArray(respuesta) && respuesta.length > 0) {
 
                 var puedeEditar = $("#puedeEditarVariante").val() == "1";
                 var puedeEliminar = $("#puedeEliminarVariante").val() == "1";
 
                 for (var i = 0; i < respuesta.length; i++) {
 
-                    // Estado
                     var estadoHTML = "";
                     if (puedeEditar) {
-                        if (respuesta[i].estado == 1) {
-                            estadoHTML = '<button class="btn btn-success btn-xs btnActivarOpcion" idOpcion="' + respuesta[i].id + '" estadoOpcion="0">Activado</button>';
-                        } else {
-                            estadoHTML = '<button class="btn btn-danger btn-xs btnActivarOpcion" idOpcion="' + respuesta[i].id + '" estadoOpcion="1">Desactivado</button>';
-                        }
+                        estadoHTML = (respuesta[i].estado == 1) 
+                            ? '<button class="btn btn-success btn-xs btnActivarOpcion" idOpcion="' + respuesta[i].id + '" estadoOpcion="0">Activado</button>'
+                            : '<button class="btn btn-danger btn-xs btnActivarOpcion" idOpcion="' + respuesta[i].id + '" estadoOpcion="1">Desactivado</button>';
                     } else {
-                        if (respuesta[i].estado == 1) {
-                            estadoHTML = '<button class="btn btn-success btn-xs">Activado</button>';
-                        } else {
-                            estadoHTML = '<button class="btn btn-danger btn-xs">Desactivado</button>';
-                        }
+                        estadoHTML = (respuesta[i].estado == 1) 
+                            ? '<button class="btn btn-success btn-xs">Activado</button>'
+                            : '<button class="btn btn-danger btn-xs">Desactivado</button>';
                     }
 
-                    html += '<tr>';
-                    html += '<td>' + respuesta[i].nombre + '</td>';
-                    html += '<td>' + respuesta[i].orden + '</td>';
-                    html += '<td>' + estadoHTML + '</td>';
-                    html += '<td>';
-                    html += '<div class="btn-group">';
+                    html += '<tr>' +
+                            '<td>' + respuesta[i].nombre + '</td>' +
+                            '<td>' + estadoHTML + '</td>' +
+                            '<td>' +
+                                '<div class="btn-group">';
+                    
                     if (puedeEditar) {
                         html += '<button class="btn btn-warning btnEditarOpcion" idOpcion="' + respuesta[i].id + '" data-toggle="modal" data-target="#modalEditarOpcion" title="Editar opción"><i class="fa fa-pencil"></i></button>';
                     }
                     if (puedeEliminar) {
                         html += '<button class="btn btn-danger btnEliminarOpcion" idOpcion="' + respuesta[i].id + '" nombreOpcion="' + respuesta[i].nombre + '" title="Eliminar opción"><i class="fa fa-times"></i></button>';
                     }
-                    html += '</div>';
-                    html += '</td>';
-                    html += '</tr>';
+                    
+                    html += '</div>' +
+                            '</td>' +
+                            '</tr>';
                 }
 
             } else {
-                html = '<tr><td colspan="5" class="text-center">No hay opciones registradas</td></tr>';
+                html = '<tr><td colspan="3" class="text-center">No hay opciones registradas</td></tr>';
             }
 
-            if ($.fn.DataTable.isDataTable('#tablaOpciones')) {
-                $('#tablaOpciones').DataTable().destroy();
-            }
-
-            $("#bodyOpciones").html(html);
-
-            $("#tablaOpciones").DataTable(dtVariantesOptions);
+            // 3. Inyectar en el body específico y reinicializar tabla específica
+            $("#" + bodyId).html(html);
+            
+            var localOptions = $.extend(true, {}, dtVariantesOptions);
+            $("#" + tablaId).DataTable(localOptions);
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            console.log("Error al cargar opciones:", textStatus, errorThrown);
+            $("#" + bodyId).html('<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>');
         }
     });
 

@@ -41,14 +41,34 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
           <div id="formFiltrosGastos" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
 
+            <!-- Filtro por Sucursal (Solo Admin) -->
+            <?php if ($_SESSION["perfil"] == "Administrador"): ?>
+              <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
+                <label class="hidden-xs" style="margin-bottom: 0;">Sucursal:</label>
+                <div class="input-group">
+                  <span class="input-group-addon" style="background-color: #f9f9f9;"><i
+                      class="fa fa-building text-primary"></i></span>
+                  <select class="form-control select2" id="sucursal_g" style="width: 150px; border-left: 0;">
+                    <option value="">Mostrar Todas</option>
+                    <?php
+                    $sucursales = ControladorBodegas::ctrMostrarBodegas(null, null);
+                    foreach ($sucursales as $key => $value) {
+                      echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                    }
+                    ?>
+                  </select>
+                </div>
+              </div>
+            <?php endif; ?>
+
             <!-- Filtro por Categoría -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Categoría:</label>
+              <label class="hidden-xs" style="margin-bottom: 0;">Categoría:</label>
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                     class="fa fa-search text-primary"></i></span>
                 <select class="form-control select2" id="cat_g" style="width: 150px; border-left: 0;">
-                  <option value="">Seleccionar Categoría</option>
+                  <option value="">Mostrar Todas</option>
                   <?php
                   $categorias = ControladorCategoriasGastos::ctrMostrarCategoriasGastos(null, null);
                   foreach ($categorias as $key => $value) {
@@ -61,12 +81,12 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
             <!-- Filtro por Proveedor -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Proveedor:</label>
+              <label class="hidden-xs" style="margin-bottom: 0;">Proveedor:</label>
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                     class="fa fa-search text-primary"></i></span>
                 <select class="form-control select2" id="prov_g" style="width: 150px; border-left: 0;">
-                  <option value="">Seleccionar Proveedor</option>
+                  <option value="">Mostrar Todos</option>
                   <?php
                   $proveedores = ControladorProveedores::ctrMostrarProveedores(null, null);
                   foreach ($proveedores as $key => $value) {
@@ -79,7 +99,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
             <!-- Filtro por Fecha -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Fecha:</label>
+              <label class="hidden-xs" style="margin-bottom: 0;">Fecha:</label>
               <button type="button" class="btn btn-default" id="daterange-btn">
                 <span>
                   <i class="fa fa-calendar"></i> Rango de fecha
@@ -104,7 +124,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
       <div class="box-body">
 
-        <div class="tabla-gastos">
+        <div class="tabla-gastos table-responsive">
           <table id="tablaGastos" class="table table-bordered table-striped display nowrap" width="100%">
 
             <thead>
@@ -114,6 +134,9 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                 <th>Categoría</th>
                 <th>Estado</th>
                 <th>Proveedor</th>
+                <?php if ($_SESSION["perfil"] == "Administrador"): ?>
+                  <th>Sucursal</th>
+                <?php endif; ?>
                 <th>Imagen</th>
                 <th>Fecha</th>
                 <th>Notas</th>

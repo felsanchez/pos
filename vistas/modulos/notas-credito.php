@@ -31,6 +31,47 @@ if ($_SESSION["perfil"] == "Especial") {
                         </button>
                     </a>
                 <?php endif; ?>
+
+                <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    
+                    <input type="hidden" id="fechaInicialNC" value="">
+                    <input type="hidden" id="fechaFinalNC" value="">
+
+                    <!-- Filtro por Bodega (Administradores) -->
+                    <?php if (stripos($_SESSION["perfil"], "Admin") !== false): ?>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="hidden-xs"><b>Sucursal:</b></span>
+                            <div class="input-group" style="width: 180px;">
+                                <span class="input-group-addon"><i class="fa fa-building text-primary"></i></span>
+                                <select id="selectBodegaNC" class="form-control select2">
+                                    <option value="">Mostrar Todas</option>
+                                    <?php
+                                    $bodegas = ControladorBodegas::ctrMostrarBodegas(null, null);
+                                    foreach ($bodegas as $key => $valueBodega) {
+                                        echo '<option value="' . e($valueBodega["id"]) . '">' . e($valueBodega["nombre"]) . '</option>';
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Botón Rango de Fecha -->
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="hidden-xs"><b>Fecha:</b></span>
+                        <button type="button" class="btn btn-default" id="daterange-btn-nc">
+                            <span>
+                                <i class="fa fa-calendar"></i> Rango de fecha
+                            </span>
+                            <i class="fa fa-caret-down"></i>
+                        </button>
+                    </div>
+
+                    <!-- Botón Limpiar -->
+                    <button class="btn btn-default" id="btnLimpiarFiltrosNC" title="Limpiar filtros">
+                        <i class="fa fa-refresh"></i>
+                    </button>
+                </div>
             </div>
 
             <style>
@@ -50,26 +91,26 @@ if ($_SESSION["perfil"] == "Especial") {
             </style>
 
             <div class="box-body">
-
-
-                <table id="tablaListadoNotasCredito"
-                    class="table table-bordered table-striped dt-responsive tablaNotasCredito display nowrap"
-                    width="100%">
-                    <thead>
-                        <tr>
-                            <th>Código Nota</th>
-                            <th>Factura Original</th>
-                            <th>Cliente</th>
-                            <th>Total</th>
-                            <th>Fecha</th>
-                            <th>Estado DIAN</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Los datos se cargarán vía DataTables Server-Side -->
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table id="tablaListadoNotasCredito"
+                        class="table table-bordered table-striped dt-responsive tablaNotasCredito display nowrap"
+                        width="100%">
+                        <thead>
+                            <tr>
+                                <th>Código Nota</th>
+                                <th>Factura Original</th>
+                                <th>Cliente</th>
+                                <th>Total</th>
+                                <th>Fecha</th>
+                                <th>Estado DIAN</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Los datos se cargarán vía DataTables Server-Side -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </section>

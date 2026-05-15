@@ -36,9 +36,10 @@ $(document).ready(function () {
 							2: 'Email',
 							3: 'Imagen',
 							4: 'Perfil',
-							5: 'Estado',
-							6: 'Último login',
-							7: 'Acciones'
+							5: 'Sucursal',
+							6: 'Estado',
+							7: 'Último login',
+							8: 'Acciones'
 						};
 
 						var finalHtml = '';
@@ -63,25 +64,26 @@ $(document).ready(function () {
 					}
 				}
 			},
-			"order": [[8, 'desc']],
+			"order": [[9, 'desc']],
 			"columnDefs": [
 				{
 					"targets": 0,
 					"responsivePriority": 1,
 					"orderable": true
 				},
-				{ "targets": 7, "responsivePriority": 1, "orderable": false },
+				{ "targets": 8, "responsivePriority": 1, "orderable": false },
 				{ "targets": 1, "responsivePriority": 2 },
 				{ "targets": 3, "responsivePriority": 3, "orderable": false },
 				{ "targets": 4, "responsivePriority": 4 },
-				{ "targets": 2, "responsivePriority": 5 },
+				{ "targets": 5, "responsivePriority": 5 },
+				{ "targets": 2, "responsivePriority": 6 },
 				{
-					"targets": 5,
-					"responsivePriority": 6,
+					"targets": 6,
+					"responsivePriority": 7,
 					"visible": $("#puedeEditarUsuarios").val() == "1"
 				},
-				{ "targets": 6, "responsivePriority": 7 },
-				{ "targets": 8, "visible": false, "orderable": true }
+				{ "targets": 7, "responsivePriority": 8 },
+				{ "targets": 9, "visible": false, "orderable": true }
 			],
 			"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
 			"language": {
@@ -223,6 +225,7 @@ $(".tablaUsuarios").on("click", ".btnEditarUsuario", function () {
 			$("#editarPerfil").html(respuesta["perfil"]);
 
 			$("#editarPerfil").val(respuesta["perfil"]);
+			$("#editarIdBodega").val(respuesta["id_bodega"]);
 			$("#fotoActual").val(respuesta["foto"]);
 			$("#passwordActual").val(respuesta["password"]);
 			$("#editarEmail").val(respuesta["email"]);

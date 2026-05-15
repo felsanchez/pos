@@ -353,6 +353,19 @@ if (isset($_POST["obtenerVariantesProducto"])) {
     // Obtener producto base para calcular precio final
     $productoBase = ModeloProductos::mdlMostrarProductos("productos", "id", $idProducto, "id");
 
+    // Obtener información del impuesto del producto base para heredar a las variantes
+    $impuestoPorcentaje = 0;
+    $impuestoNombre = "Exento";
+
+    if ($productoBase && isset($productoBase["tributo_id"]) && $productoBase["tributo_id"] != 0) {
+        require_once "../modelos/factus.modelo.php";
+        $tributo = ModeloFactus::mdlMostrarTributo($productoBase["tributo_id"]);
+        if ($tributo) {
+            $impuestoPorcentaje = isset($tributo["porcentaje_defecto"]) ? $tributo["porcentaje_defecto"] : (isset($tributo["porcentaje"]) ? $tributo["porcentaje"] : 0);
+            $impuestoNombre = $tributo["nombre"];
+        }
+    }
+
     $resultado = array();
 
     foreach ($variantes as $variante) {
@@ -380,7 +393,9 @@ if (isset($_POST["obtenerVariantesProducto"])) {
             "precio_final" => $precioFinal,
             "stock" => $variante["stock"],
             "estado" => $variante["estado"],
-            "imagen" => $variante["imagen"]
+            "imagen" => $variante["imagen"],
+            "impuesto_porcentaje" => $impuestoPorcentaje,
+            "impuesto_nombre" => $impuestoNombre
         );
     }
 
@@ -462,6 +477,60 @@ if (isset($_POST["editarVariante"])) {
 
     $respuesta = ModeloProductos::mdlEditarVariante($tabla, $datos);
 
+    if ($respuesta == "ok") {
+        // 📦 ACTUALIZAR STOCK EN BODEGA ACTIVA
+        $idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+        
+        // Obtener stock actual de la variante en ESTA bodega
+        $stmtBodega = Conexion::conectar()->prepare("SELECT stock FROM productos_variantes_bodegas WHERE id_variante = :id_variante AND id_bodega = :id_bodega");
+        $stmtBodega->bindParam(":id_variante", $_POST["editarVariante"], PDO::PARAM_INT);
+        $stmtBodega->bindParam(":id_bodega", $idBodegaActiva, PDO::PARAM_INT);
+        $stmtBodega->execute();
+        $resBodega = $stmtBodega->fetch();
+        $stmtBodega = null;
+
+        $stockBodegaAnterior = $resBodega ? $resBodega["stock"] : 0;
+        $diferenciaStock = $nuevoStock - $stockAnterior; // Diferencia global que queremos aplicar a esta bodega
+        $nuevoStockBodega = $stockBodegaAnterior + $diferenciaStock;
+        if($nuevoStockBodega < 0) $nuevoStockBodega = 0;
+
+        ModeloProductos::mdlActualizarStockVarianteBodega($_POST["editarVariante"], $idBodegaActiva, $nuevoStockBodega);
+
+        // 🔹 RECALCULAR STOCK TOTAL DE LA VARIANTE (Suma de todas las bodegas)
+        $stmtTotalVar = Conexion::conectar()->prepare("SELECT SUM(stock) as total FROM productos_variantes_bodegas WHERE id_variante = :id");
+        $stmtTotalVar->bindParam(":id", $_POST["editarVariante"], PDO::PARAM_INT);
+        $stmtTotalVar->execute();
+        $resTotalVar = $stmtTotalVar->fetch();
+        $stockTotalVariante = $resTotalVar["total"] ? $resTotalVar["total"] : 0;
+        $stmtTotalVar = null;
+
+        ModeloProductos::mdlActualizarProducto("productos_variantes", "stock", $stockTotalVariante, $_POST["editarVariante"]);
+
+        // 🔹 RECALCULAR STOCK TOTAL DEL PRODUCTO BASE
+        $idProductoBase = $varianteAnterior["id_producto"];
+        $stmtTotalProd = Conexion::conectar()->prepare("SELECT SUM(stock) as total FROM productos_variantes WHERE id_producto = :id AND estado = 1");
+        $stmtTotalProd->bindParam(":id", $idProductoBase, PDO::PARAM_INT);
+        $stmtTotalProd->execute();
+        $resTotalProd = $stmtTotalProd->fetch();
+        $stockTotalProducto = $resTotalProd["total"] ? $resTotalProd["total"] : 0;
+        $stmtTotalProd = null;
+
+        ModeloProductos::mdlActualizarProducto("productos", "stock", $stockTotalProducto, $idProductoBase);
+        
+        // Sincronizar también el stock base en la bodega activa
+        $stmtBodegaProd = Conexion::conectar()->prepare("SELECT SUM(pvb.stock) as total FROM productos_variantes_bodegas pvb 
+                                                       INNER JOIN productos_variantes pv ON pvb.id_variante = pv.id
+                                                       WHERE pv.id_producto = :id AND pvb.id_bodega = :id_bodega AND pv.estado = 1");
+        $stmtBodegaProd->bindParam(":id", $idProductoBase, PDO::PARAM_INT);
+        $stmtBodegaProd->bindParam(":id_bodega", $idBodegaActiva, PDO::PARAM_INT);
+        $stmtBodegaProd->execute();
+        $resBodegaProd = $stmtBodegaProd->fetch();
+        $stockBodegaProducto = $resBodegaProd["total"] ? $resBodegaProd["total"] : 0;
+        $stmtBodegaProd = null;
+
+        ModeloProductos::mdlActualizarStockBodega($idProductoBase, $idBodegaActiva, $stockBodegaProducto);
+    }
+
     // 🟢 REGISTRAR MOVIMIENTO DE STOCK - EDICIÓN DE VARIANTE
     if ($respuesta == "ok" && $stockAnterior != $nuevoStock) {
 
@@ -511,33 +580,57 @@ OBTENER VARIANTES EXISTENTES PARA EDITAR PRODUCTO
 if (isset($_POST["obtenerVariantesParaEditar"])) {
 
     $idProducto = $_POST["obtenerVariantesParaEditar"];
-    // Obtener variantes del producto
-    $stmt = Conexion::conectar()->prepare("SELECT id, precio_adicional, stock, sku FROM productos_variantes WHERE id_producto = :id_producto AND estado = 1");
+
+    // Obtener bodega activa
+    $idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+
+    // Obtener variantes del producto con stock de la bodega activa
+    $stmt = Conexion::conectar()->prepare("SELECT pv.id, pv.precio_adicional, COALESCE(pvb.stock, 0) as stock, pv.sku 
+                                         FROM productos_variantes pv 
+                                         LEFT JOIN productos_variantes_bodegas pvb ON pv.id = pvb.id_variante AND pvb.id_bodega = :id_bodega
+                                         WHERE pv.id_producto = :id_producto AND pv.estado = 1");
     $stmt->bindParam(":id_producto", $idProducto, PDO::PARAM_INT);
+    $stmt->bindParam(":id_bodega", $idBodegaActiva, PDO::PARAM_INT);
     $stmt->execute();
 
     $variantes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $stmt = null;
 
-    // Para cada variante, obtener sus opciones
     $resultado = array();
 
     foreach ($variantes as $variante) {
-        // Obtener las opciones de esta variante
-        $stmtOpciones = Conexion::conectar()->prepare("SELECT id_opcion_variante FROM productos_variantes_opciones WHERE id_producto_variante = :id_variante ORDER BY id_opcion_variante ASC");
+        // Obtener las opciones de esta variante con su ID de TIPO
+        $stmtOpciones = Conexion::conectar()->prepare("SELECT ov.id, ov.id_tipo_variante 
+                                                     FROM productos_variantes_opciones pvo
+                                                     INNER JOIN opciones_variantes ov ON pvo.id_opcion_variante = ov.id
+                                                     WHERE pvo.id_producto_variante = :id_variante 
+                                                     ORDER BY ov.id ASC");
         $stmtOpciones->bindParam(":id_variante", $variante["id"], PDO::PARAM_INT);
         $stmtOpciones->execute();
 
-        $opciones = $stmtOpciones->fetchAll(PDO::FETCH_COLUMN);
-
+        $opcionesData = $stmtOpciones->fetchAll(PDO::FETCH_ASSOC);
         $stmtOpciones = null;
 
+        $idsOpciones = array();
+        $tiposInvolucrados = array();
+
+        foreach($opcionesData as $opt) {
+            $idsOpciones[] = $opt["id"];
+            if(!in_array($opt["id_tipo_variante"], $tiposInvolucrados)) {
+                $tiposInvolucrados[] = $opt["id_tipo_variante"];
+            }
+        }
+
+        // Asegurar orden numérico para que coincida con el JS
+        sort($idsOpciones, SORT_NUMERIC);
+
         // Crear string de opciones separadas por _
-        $opcionesStr = implode("_", $opciones);
+        $opcionesStr = implode("_", $idsOpciones);
 
         $resultado[] = array(
             "id" => $variante["id"],
             "opciones" => $opcionesStr,
+            "tipos" => $tiposInvolucrados, // Tipos que deben marcarse
             "precio_adicional" => $variante["precio_adicional"],
             "stock" => $variante["stock"],
             "sku" => $variante["sku"]

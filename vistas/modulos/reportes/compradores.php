@@ -1,34 +1,46 @@
 <?php
 
-$item = null;
-$valor = null;
+// Obtener parámetros de filtro
+$idBodega = isset($idBodega) ? $idBodega : (isset($_POST["idBodega"]) ? $_POST["idBodega"] : "todos");
+$fechaInicial = isset($fechaInicial) ? $fechaInicial : (isset($_POST["fechaInicial"]) ? $_POST["fechaInicial"] : null);
+$fechaFinal = isset($fechaFinal) ? $fechaFinal : (isset($_POST["fechaFinal"]) ? $_POST["fechaFinal"] : null);
 
-$ventas = ControladorVentas::ctrMostrarVentas($item, $valor);
-$clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+if($fechaInicial == null || $fechaInicial == ""){
+    $fechaInicial = "2000-01-01";
+    $fechaFinal = "2100-12-31";
+}
 
-$arrayClientes = array();
+$inicio = $fechaInicial . " 00:00:00";
+$fin = $fechaFinal . " 23:59:59";
+
+// Traer ventas filtradas por fecha y bodega
+$db = Conexion::conectar();
+$filtroBodega = ($idBodega != "" && $idBodega != "todos") ? " AND v.id_bodega = :idBodega " : "";
+
+$sql = "SELECT c.nombre as nombre_cliente, v.total, v.estado 
+        FROM ventas v 
+        LEFT JOIN clientes c ON v.id_cliente = c.id 
+        WHERE v.fecha BETWEEN :inicio AND :fin" . $filtroBodega;
+$stmt = $db->prepare($sql);
+$stmt->bindParam(":inicio", $inicio, PDO::PARAM_STR);
+$stmt->bindParam(":fin", $fin, PDO::PARAM_STR);
+if($filtroBodega != "") $stmt->bindParam(":idBodega", $idBodega, PDO::PARAM_INT);
+$stmt->execute();
+$ventas = $stmt->fetchAll();
+
 $sumaTotalClientes = array();
+$arrayClientes = array();
 
 foreach ($ventas as $valueVentas) {
+    if (!isset($valueVentas["estado"]) || $valueVentas["estado"] !== "venta") continue;
 
-  // ✅ Filtrar solo las ventas que tengan estado "venta"
-  if (!isset($valueVentas["estado"]) || $valueVentas["estado"] !== "venta") continue;
+    $nombreCliente = !empty($valueVentas["nombre_cliente"]) ? $valueVentas["nombre_cliente"] : "Venta General";
+    $arrayClientes[] = $nombreCliente;
 
-  foreach ($clientes as $valueClientes) {
-
-    if ($valueClientes["id"] == $valueVentas["id_cliente"]) {
-
-      $nombreCliente = $valueClientes["nombre"];
-
-      $arrayClientes[] = $nombreCliente;
-
-      if (!isset($sumaTotalClientes[$nombreCliente])) {
+    if (!isset($sumaTotalClientes[$nombreCliente])) {
         $sumaTotalClientes[$nombreCliente] = 0;
-      }
-
-      $sumaTotalClientes[$nombreCliente] += floatval($valueVentas["total"]);
     }
-  }
+    $sumaTotalClientes[$nombreCliente] += floatval($valueVentas["total"]);
 }
 
 $noRepetirNombres = array_unique($arrayClientes);

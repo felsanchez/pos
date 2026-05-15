@@ -9,9 +9,9 @@
 
       <!-- Filtro de fecha -->
       <div class="filtro-grupo-fin">
-        <label for="tipo-fecha-fin-fact">Filtrar por fecha</label>
+        <label for="tipo-fecha-fin-fact">Fecha:</label>
         <select id="tipo-fecha-fin-fact" name="tipo" class="form-control">
-          <option value="todo" selected>Todas las fechas</option>
+          <option value="todo" selected>Mostrar Todas</option>
           <option value="hoy">Hoy</option>
           <option value="ayer">Ayer</option>
           <option value="mes">Mes actual</option>
@@ -31,16 +31,16 @@
 
       <!-- Filtro por categoría de gasto -->
       <div class="filtro-grupo-fin">
-        <label for="filtro-categoria-gasto-fact">Categoría de gasto</label>
+        <label for="filtro-categoria-gasto-fact">Categoría de Gasto:</label>
         <select id="filtro-categoria-gasto-fact" name="id_categoria" class="form-control">
-          <option value="">Todas las categorías</option>
+          <option value="">Mostrar Todas</option>
           <?php
-            $categoriasF = ControladorCategoriasGastos::ctrMostrarCategoriasGastos(null, null);
-            if ($categoriasF) {
-              foreach ($categoriasF as $catF) {
-                echo '<option value="'.$catF['id'].'">'.htmlspecialchars($catF['nombre']).'</option>';
-              }
+          $categoriasF = ControladorCategoriasGastos::ctrMostrarCategoriasGastos(null, null);
+          if ($categoriasF) {
+            foreach ($categoriasF as $catF) {
+              echo '<option value="' . $catF['id'] . '">' . htmlspecialchars($catF['nombre']) . '</option>';
             }
+          }
           ?>
         </select>
       </div>
@@ -171,166 +171,171 @@
 </div>
 
 <script>
-(function() {
-  // Variables privadas al scope para no contaminar el reporte anterior
-  const coloresFactCategoria = ['#dd4b39', '#f39c12', '#00c0ef', '#00a65a', '#605ca8', '#d2d6de', '#3c8dbc', '#ff851b', '#39cccc', '#f56954'];
-  let pieChartGastosFact = null;
+  (function () {
+    // Variables privadas al scope para no contaminar el reporte anterior
+    const coloresFactCategoria = ['#dd4b39', '#f39c12', '#00c0ef', '#00a65a', '#605ca8', '#d2d6de', '#3c8dbc', '#ff851b', '#39cccc', '#f56954'];
+    let pieChartGastosFact = null;
 
-  const chartEvolucionFact = new ApexCharts(document.querySelector('#chart-evolucion-fact'), {
-    series: [
-      { name: 'Ingresos (Fact. Electrónica)', data: [] },
-      { name: 'Gastos', data: [] }
-    ],
-    chart: {
-      height: 300,
-      type: 'area',
-      toolbar: { show: false }
-    },
-    colors: ['#3c8dbc', '#dd4b39'],
-    dataLabels: { enabled: false },
-    stroke: { curve: 'smooth', width: 2 },
-    xaxis: { type: 'datetime', categories: [] },
-    yaxis: {
-      labels: {
-        formatter: function(val) {
-          return '$' + val.toLocaleString('es-CO');
+    const chartEvolucionFact = new ApexCharts(document.querySelector('#chart-evolucion-fact'), {
+      series: [
+        { name: 'Ingresos (Fact. Electrónica)', data: [] },
+        { name: 'Gastos', data: [] }
+      ],
+      chart: {
+        height: 300,
+        type: 'area',
+        toolbar: { show: false }
+      },
+      colors: ['#3c8dbc', '#dd4b39'],
+      dataLabels: { enabled: false },
+      stroke: { curve: 'smooth', width: 2 },
+      xaxis: { type: 'datetime', categories: [] },
+      yaxis: {
+        labels: {
+          formatter: function (val) {
+            return '$' + val.toLocaleString('es-CO');
+          }
+        }
+      },
+      tooltip: {
+        x: { format: 'dd MMM yyyy' },
+        y: {
+          formatter: function (val) {
+            return '$' + val.toLocaleString('es-CO');
+          }
+        }
+      },
+      fill: {
+        type: 'gradient',
+        gradient: {
+          shadeIntensity: 1,
+          opacityFrom: 0.7,
+          opacityTo: 0.3
         }
       }
-    },
-    tooltip: {
-      x: { format: 'dd MMM yyyy' },
-      y: {
-        formatter: function(val) {
-          return '$' + val.toLocaleString('es-CO');
+    });
+    chartEvolucionFact.render();
+
+    // Mostrar campos personalizados
+    document.getElementById('tipo-fecha-fin-fact').addEventListener('change', function () {
+      const tipo = this.value;
+      document.getElementById('campo-desde-fin-fact').style.display = tipo === 'personalizado' ? 'block' : 'none';
+      document.getElementById('campo-hasta-fin-fact').style.display = tipo === 'personalizado' ? 'block' : 'none';
+    });
+
+    // Enviar formulario
+    document.getElementById('filtro-financiero-fact').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const tipo = document.getElementById('tipo-fecha-fin-fact').value;
+      const fechaInicio = document.getElementById('fecha-desde-fin-fact').value;
+      const fechaFin = document.getElementById('fecha-hasta-fin-fact').value;
+      const idCategoria = document.getElementById('filtro-categoria-gasto-fact').value;
+
+      const formData = new FormData();
+      formData.append('tipo', tipo);
+
+      if (tipo === 'personalizado') {
+        if (!fechaInicio || !fechaFin) {
+          alert("Selecciona ambas fechas para el filtro personalizado.");
+          return;
         }
+        formData.append('fecha_inicio', fechaInicio);
+        formData.append('fecha_fin', fechaFin);
       }
-    },
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.7,
-        opacityTo: 0.3
+
+      if (idCategoria) formData.append('id_categoria', idCategoria);
+
+      // Agregar id_bodega del filtro maestro si existe
+      const sucursalMaestra = document.getElementById('sucursalReporteMaestro');
+      const idBodega = sucursalMaestra ? sucursalMaestra.value : '';
+      if (idBodega && idBodega !== 'todos') formData.append('id_bodega', idBodega);
+
+      let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";
+
+      fetch(`${rutaBase}/vistas/modulos/reportes/filtro_financiero_facturacion.php`, {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          actualizarDashboardFact(data);
+        })
+        .catch(error => {
+          console.error("Error al cargar datos (Fact. Electrónica):", error);
+        });
+    });
+
+    function actualizarDashboardFact(data) {
+      const formatCurrency = (val) => parseFloat(val || 0).toLocaleString('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0
+      });
+
+      // Actualizar cajas superiores
+      document.getElementById('total-ingresos-fact').textContent = formatCurrency(data.totales.ingresos);
+      document.getElementById('total-gastos-fact').textContent = formatCurrency(data.totales.gastos);
+      document.getElementById('total-utilidad-fact').textContent = formatCurrency(data.totales.utilidad);
+
+      // Cambiar color de utilidad según sea positiva o negativa
+      const boxUtilidad = document.getElementById('box-utilidad-fact');
+      if (data.totales.utilidad >= 0) {
+        boxUtilidad.className = 'info-box bg-green';
+      } else {
+        boxUtilidad.className = 'info-box bg-red';
       }
+
+      // Actualizar resumen
+      document.getElementById('resumen-ingresos-fact').textContent = formatCurrency(data.totales.ingresos);
+      document.getElementById('resumen-gastos-fact').textContent = formatCurrency(data.totales.gastos);
+      document.getElementById('resumen-utilidad-fact').textContent = formatCurrency(data.totales.utilidad);
+
+      const margen = data.totales.ingresos > 0
+        ? ((data.totales.utilidad / data.totales.ingresos) * 100).toFixed(1)
+        : 0;
+      document.getElementById('resumen-margen-fact').textContent = margen + '%';
+      document.getElementById('resumen-margen-fact').className = margen >= 0 ? 'text-right text-green' : 'text-right text-red';
+
+      // Actualizar gráfica de evolución
+      const fechas = data.evolucion.map(item => item.fecha);
+      const ingresos = data.evolucion.map(item => item.ingresos);
+      const gastos = data.evolucion.map(item => item.gastos);
+
+      chartEvolucionFact.updateOptions({
+        xaxis: { categories: fechas },
+        series: [
+          { name: 'Ingresos (Fact. Electrónica)', data: ingresos },
+          { name: 'Gastos', data: gastos }
+        ]
+      });
+
+      // Actualizar gráfica de dona de gastos por categoría
+      actualizarDonaGastosFact(data.gastos_categoria);
     }
-  });
-  chartEvolucionFact.render();
 
-  // Mostrar campos personalizados
-  document.getElementById('tipo-fecha-fin-fact').addEventListener('change', function() {
-    const tipo = this.value;
-    document.getElementById('campo-desde-fin-fact').style.display = tipo === 'personalizado' ? 'block' : 'none';
-    document.getElementById('campo-hasta-fin-fact').style.display = tipo === 'personalizado' ? 'block' : 'none';
-  });
+    function actualizarDonaGastosFact(gastosPorCategoria) {
+      const leyenda = document.getElementById('leyenda-gastos-fact');
+      const lista = document.getElementById('lista-gastos-categoria-fact');
 
-  // Enviar formulario
-  document.getElementById('filtro-financiero-fact').addEventListener('submit', function(e) {
-    e.preventDefault();
+      leyenda.innerHTML = '';
+      lista.innerHTML = '';
 
-    const tipo = document.getElementById('tipo-fecha-fin-fact').value;
-    const fechaInicio = document.getElementById('fecha-desde-fin-fact').value;
-    const fechaFin = document.getElementById('fecha-hasta-fin-fact').value;
-    const idCategoria = document.getElementById('filtro-categoria-gasto-fact').value;
-
-    const formData = new FormData();
-    formData.append('tipo', tipo);
-
-    if (tipo === 'personalizado') {
-      if (!fechaInicio || !fechaFin) {
-        alert("Selecciona ambas fechas para el filtro personalizado.");
+      if (!gastosPorCategoria || gastosPorCategoria.length === 0) {
+        leyenda.innerHTML = '<li>Sin gastos registrados</li>';
         return;
       }
-      formData.append('fecha_inicio', fechaInicio);
-      formData.append('fecha_fin', fechaFin);
-    }
 
-    if (idCategoria) formData.append('id_categoria', idCategoria);
+      const totalGastos = gastosPorCategoria.reduce((sum, cat) => sum + parseFloat(cat.total), 0);
 
-    let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";
+      gastosPorCategoria.slice(0, 10).forEach((cat, i) => {
+        const color = cat.color || coloresFactCategoria[i % coloresFactCategoria.length];
+        const porcentaje = totalGastos > 0 ? Math.round((cat.total / totalGastos) * 100) : 0;
 
-    fetch(`${rutaBase}/vistas/modulos/reportes/filtro_financiero_facturacion.php`, {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      actualizarDashboardFact(data);
-    })
-    .catch(error => {
-      console.error("Error al cargar datos (Fact. Electrónica):", error);
-    });
-  });
+        leyenda.innerHTML += `<li><i class="fa fa-circle-o" style="color:${color}"></i> ${cat.nombre}</li>`;
 
-  function actualizarDashboardFact(data) {
-    const formatCurrency = (val) => parseFloat(val || 0).toLocaleString('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0
-    });
-
-    // Actualizar cajas superiores
-    document.getElementById('total-ingresos-fact').textContent = formatCurrency(data.totales.ingresos);
-    document.getElementById('total-gastos-fact').textContent = formatCurrency(data.totales.gastos);
-    document.getElementById('total-utilidad-fact').textContent = formatCurrency(data.totales.utilidad);
-
-    // Cambiar color de utilidad según sea positiva o negativa
-    const boxUtilidad = document.getElementById('box-utilidad-fact');
-    if (data.totales.utilidad >= 0) {
-      boxUtilidad.className = 'info-box bg-green';
-    } else {
-      boxUtilidad.className = 'info-box bg-red';
-    }
-
-    // Actualizar resumen
-    document.getElementById('resumen-ingresos-fact').textContent = formatCurrency(data.totales.ingresos);
-    document.getElementById('resumen-gastos-fact').textContent = formatCurrency(data.totales.gastos);
-    document.getElementById('resumen-utilidad-fact').textContent = formatCurrency(data.totales.utilidad);
-
-    const margen = data.totales.ingresos > 0
-      ? ((data.totales.utilidad / data.totales.ingresos) * 100).toFixed(1)
-      : 0;
-    document.getElementById('resumen-margen-fact').textContent = margen + '%';
-    document.getElementById('resumen-margen-fact').className = margen >= 0 ? 'text-right text-green' : 'text-right text-red';
-
-    // Actualizar gráfica de evolución
-    const fechas = data.evolucion.map(item => item.fecha);
-    const ingresos = data.evolucion.map(item => item.ingresos);
-    const gastos = data.evolucion.map(item => item.gastos);
-
-    chartEvolucionFact.updateOptions({
-      xaxis: { categories: fechas },
-      series: [
-        { name: 'Ingresos (Fact. Electrónica)', data: ingresos },
-        { name: 'Gastos', data: gastos }
-      ]
-    });
-
-    // Actualizar gráfica de dona de gastos por categoría
-    actualizarDonaGastosFact(data.gastos_categoria);
-  }
-
-  function actualizarDonaGastosFact(gastosPorCategoria) {
-    const leyenda = document.getElementById('leyenda-gastos-fact');
-    const lista = document.getElementById('lista-gastos-categoria-fact');
-
-    leyenda.innerHTML = '';
-    lista.innerHTML = '';
-
-    if (!gastosPorCategoria || gastosPorCategoria.length === 0) {
-      leyenda.innerHTML = '<li>Sin gastos registrados</li>';
-      return;
-    }
-
-    const totalGastos = gastosPorCategoria.reduce((sum, cat) => sum + parseFloat(cat.total), 0);
-
-    gastosPorCategoria.slice(0, 10).forEach((cat, i) => {
-      const color = cat.color || coloresFactCategoria[i % coloresFactCategoria.length];
-      const porcentaje = totalGastos > 0 ? Math.round((cat.total / totalGastos) * 100) : 0;
-
-      leyenda.innerHTML += `<li><i class="fa fa-circle-o" style="color:${color}"></i> ${cat.nombre}</li>`;
-
-      if (i < 5) {
-        lista.innerHTML += `
+        if (i < 5) {
+          lista.innerHTML += `
           <li>
             <a>
               <i class="fa fa-tag" style="color:${color}; margin-right:10px;"></i>
@@ -342,41 +347,41 @@
             </a>
           </li>
         `;
+        }
+      });
+
+      // Actualizar gráfica de dona
+      const ctx = document.getElementById('pieChartGastosFact').getContext('2d');
+
+      if (pieChartGastosFact) {
+        pieChartGastosFact.destroy();
       }
-    });
 
-    // Actualizar gráfica de dona
-    const ctx = document.getElementById('pieChartGastosFact').getContext('2d');
+      const pieData = gastosPorCategoria.slice(0, 10).map((cat, i) => ({
+        value: parseFloat(cat.total),
+        color: cat.color || coloresFactCategoria[i % coloresFactCategoria.length],
+        highlight: cat.color || coloresFactCategoria[i % coloresFactCategoria.length],
+        label: cat.nombre
+      }));
 
-    if (pieChartGastosFact) {
-      pieChartGastosFact.destroy();
+      pieChartGastosFact = new Chart(ctx).Doughnut(pieData, {
+        segmentShowStroke: true,
+        segmentStrokeColor: '#fff',
+        segmentStrokeWidth: 1,
+        percentageInnerCutout: 50,
+        animationSteps: 100,
+        animationEasing: 'easeOutBounce',
+        animateRotate: true,
+        animateScale: false,
+        responsive: true,
+        maintainAspectRatio: false
+      });
     }
 
-    const pieData = gastosPorCategoria.slice(0, 10).map((cat, i) => ({
-      value: parseFloat(cat.total),
-      color: cat.color || coloresFactCategoria[i % coloresFactCategoria.length],
-      highlight: cat.color || coloresFactCategoria[i % coloresFactCategoria.length],
-      label: cat.nombre
-    }));
-
-    pieChartGastosFact = new Chart(ctx).Doughnut(pieData, {
-      segmentShowStroke: true,
-      segmentStrokeColor: '#fff',
-      segmentStrokeWidth: 1,
-      percentageInnerCutout: 50,
-      animationSteps: 100,
-      animationEasing: 'easeOutBounce',
-      animateRotate: true,
-      animateScale: false,
-      responsive: true,
-      maintainAspectRatio: false
-    });
-  }
-
-  // Disparar el formulario para la carga inicial (funciona si DOM ya está listo)
-  setTimeout(function() {
-    var form = document.getElementById('filtro-financiero-fact');
-    if (form) form.dispatchEvent(new Event('submit'));
-  }, 100);
-})();
+    // Disparar el formulario para la carga inicial (funciona si DOM ya está listo)
+    setTimeout(function () {
+      var form = document.getElementById('filtro-financiero-fact');
+      if (form) form.dispatchEvent(new Event('submit'));
+    }, 100);
+  })();
 </script>

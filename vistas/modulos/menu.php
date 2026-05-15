@@ -56,6 +56,39 @@
           </li>';
       }
 
+      if (puedeVer('bodegas') || puedeVer('traslados') || $_SESSION["perfil"] == "Administrador") {
+        echo '<li class="treeview">
+                <a href="#">
+                  <i class="fa fa-building"></i>
+                  <span>Sucursales</span>
+                  <span class="pull-right-container">
+                    <i class="fa fa-angle-left pull-right"></i>
+                  </span>
+                </a>
+                <ul class="treeview-menu">';
+
+        if (puedeVer('bodegas') || $_SESSION["perfil"] == "Administrador") {
+          echo '<li>
+                  <a href="bodegas">
+                    <i class="fa fa-circle-o"></i>
+                    <span>Administrar Sucursales</span>
+                  </a>
+                </li>';
+        }
+
+        if ($_SESSION["perfil"] == "Administrador" || puedeVer('traslados')) {
+          echo '<li>
+                  <a href="traslados">
+                    <i class="fa fa-circle-o"></i>
+                    <span>Traslados</span>
+                  </a>
+                </li>';
+        }
+
+        echo '</ul>
+              </li>';
+      }
+
       if (puedeVer('productos') || puedeVer('categorias') || puedeVer('variantes') || puedeVer('proveedores')) {
         echo '<li class="treeview">
                 <a href="">

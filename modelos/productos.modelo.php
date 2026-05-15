@@ -9,12 +9,23 @@ class ModeloProductos
 	MOSTRAR PRODUCTOS
 	=============================================*/
 
-	static public function mdlMostrarProductos($tabla, $item, $valor, $orden)
+	static public function mdlMostrarProductos($tabla, $item, $valor, $orden, $idBodega = null)
 	{
+		$select = "p.*";
+		$join = "";
+
+		if ($idBodega != null) {
+			$select = "p.id, p.id_categoria, p.codigo, p.descripcion, p.imagen, COALESCE(pb.stock, 0) as stock, p.precio_compra, p.precio_venta, p.ventas, p.fecha, p.id_proveedor, p.tiene_variantes, p.unidad_medida_id, p.codigo_estandar_id, p.es_excluido, p.tributo_id, p.tasa_impuesto, p.notas_facturacion, p.scheme_id";
+			$join = "LEFT JOIN productos_bodegas pb ON p.id = pb.id_producto AND pb.id_bodega = :id_bodega";
+		}
 
 		if ($item != null) {
 
-			$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE $item = :$item ORDER BY id DESC");
+			$stmt = Conexion::conectar()->prepare("SELECT $select FROM $tabla p $join WHERE p.$item = :$item ORDER BY p.id DESC");
+
+			if ($idBodega != null) {
+				$stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
+			}
 
 			$stmt->bindParam(":" . $item, $valor, PDO::PARAM_STR);
 
@@ -23,7 +34,11 @@ class ModeloProductos
 			return $stmt->fetch();
 		} else {
 
-			$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla ORDER BY $orden DESC");
+			$stmt = Conexion::conectar()->prepare("SELECT $select FROM $tabla p $join ORDER BY $orden DESC");
+
+			if ($idBodega != null) {
+				$stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
+			}
 
 			$stmt->execute();
 
@@ -31,26 +46,29 @@ class ModeloProductos
 
 		}
 
-
 		$stmt->close();
-
 		$stmt = null;
-
 	}
 
 	/*=============================================
 	MOSTRAR PRODUCTOS SERVER-SIDE
 	=============================================*/
-	static public function mdlMostrarProductosServerSide($tabla, $where, $order, $limit)
+	static public function mdlMostrarProductosServerSide($tabla, $where, $order, $limit, $idBodega)
 	{
 		$stmt = Conexion::conectar()->prepare("
-			SELECT p.*, c.categoria AS nombre_categoria, prov.nombre AS nombre_proveedor, t.nombre AS nombre_tributo
+			SELECT p.id, p.codigo, p.descripcion, p.imagen, p.id_categoria, p.id_proveedor, 
+				   COALESCE(pb.stock, 0) as stock, p.precio_compra, p.precio_venta, p.ventas, 
+				   p.fecha, p.tiene_variantes, p.tributo_id,
+				   c.categoria AS nombre_categoria, prov.nombre AS nombre_proveedor, t.nombre AS nombre_tributo
 			FROM $tabla p
+			LEFT JOIN productos_bodegas pb ON p.id = pb.id_producto AND pb.id_bodega = :id_bodega
 			LEFT JOIN categorias c ON p.id_categoria = c.id
 			LEFT JOIN proveedores prov ON p.id_proveedor = prov.id
 			LEFT JOIN factus_tributos t ON p.tributo_id = t.id
 			$where $order $limit
 		");
+
+		$stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
 		$stmt->execute();
 		return $stmt->fetchAll();
 	}
@@ -58,11 +76,17 @@ class ModeloProductos
 	/*=============================================
 	OBTENER TOTAL PRODUCTOS (PARA SERVER-SIDE)
 	=============================================*/
-	static public function mdlGetTotalProductos($tabla, $where)
+	static public function mdlGetTotalProductos($tabla, $where, $idBodega = null)
 	{
+		$joinBodega = "";
+		if($idBodega != null){
+			$joinBodega = "LEFT JOIN productos_bodegas pb ON p.id = pb.id_producto AND pb.id_bodega = $idBodega";
+		}
+
 		$stmt = Conexion::conectar()->prepare("
 			SELECT COUNT(*) 
 			FROM $tabla p
+			$joinBodega
 			LEFT JOIN categorias c ON p.id_categoria = c.id
 			LEFT JOIN proveedores prov ON p.id_proveedor = prov.id
 			LEFT JOIN factus_tributos t ON p.tributo_id = t.id
@@ -131,7 +155,7 @@ class ModeloProductos
 			$whereClause = "WHERE codigo = :codigo";
 		}
 
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET id_categoria = :id_categoria, codigo = :codigo, descripcion = :descripcion, imagen = :imagen, stock = :stock, precio_compra = :precio_compra, precio_venta = :precio_venta, id_proveedor = :id_proveedor, unidad_medida_id = :unidad_medida_id, codigo_estandar_id = :codigo_estandar_id, es_excluido = :es_excluido, tributo_id = :tributo_id, tasa_impuesto = :tasa_impuesto, notas_facturacion = :notas_facturacion, scheme_id = :scheme_id $whereClause");
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET id_categoria = :id_categoria, codigo = :codigo, descripcion = :descripcion, imagen = :imagen, stock = :stock, precio_compra = :precio_compra, precio_venta = :precio_venta, id_proveedor = :id_proveedor, tiene_variantes = :tiene_variantes, unidad_medida_id = :unidad_medida_id, codigo_estandar_id = :codigo_estandar_id, es_excluido = :es_excluido, tributo_id = :tributo_id, tasa_impuesto = :tasa_impuesto, notas_facturacion = :notas_facturacion, scheme_id = :scheme_id $whereClause");
 
 		$stmt->bindParam(":id_categoria", $datos["id_categoria"], PDO::PARAM_INT);
 		$stmt->bindParam(":codigo", $datos["codigo"], PDO::PARAM_STR);
@@ -140,6 +164,7 @@ class ModeloProductos
 		$stmt->bindParam(":stock", $datos["stock"], PDO::PARAM_STR);
 		$stmt->bindParam(":precio_compra", $datos["precio_compra"], PDO::PARAM_STR);
 		$stmt->bindParam(":precio_venta", $datos["precio_venta"], PDO::PARAM_STR);
+		$stmt->bindParam(":tiene_variantes", $datos["tiene_variantes"], PDO::PARAM_INT);
 
 		// Campos de facturación
 		$stmt->bindParam(":unidad_medida_id", $datos["unidad_medida_id"], PDO::PARAM_INT);
@@ -538,19 +563,69 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 	}
 
 
-	/*============================================
-	OBTENER VARIANTE POR ID
+	/*=============================================
+	ACTUALIZAR STOCK POR BODEGA (PRODUCTO SIMPLE)
 	=============================================*/
-
-	static public function mdlObtenerVariantePorId($idVariante)
+	static public function mdlActualizarStockBodega($idProducto, $idBodega, $cantidad)
 	{
+		$stmt = Conexion::conectar()->prepare("INSERT INTO productos_bodegas (id_producto, id_bodega, stock) 
+											   VALUES (:id_producto, :id_bodega, :stock)
+											   ON DUPLICATE KEY UPDATE stock = :stock");
 
-		$stmt = Conexion::conectar()->prepare("SELECT * FROM productos_variantes WHERE id = :id");
-		$stmt->bindParam(":id", $idVariante, PDO::PARAM_INT);
+		$stmt->bindParam(":id_producto", $idProducto, PDO::PARAM_INT);
+		$stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
+		$stmt->bindParam(":stock", $cantidad, PDO::PARAM_INT);
+
+		if ($stmt->execute()) {
+			return "ok";
+		} else {
+			return "error";
+		}
+	}
+
+	/*=============================================
+	ACTUALIZAR STOCK POR BODEGA (VARIANTE)
+	=============================================*/
+	static public function mdlActualizarStockVarianteBodega($idVariante, $idBodega, $cantidad)
+	{
+		$stmt = Conexion::conectar()->prepare("INSERT INTO productos_variantes_bodegas (id_variante, id_bodega, stock) 
+											   VALUES (:id_variante, :id_bodega, :stock)
+											   ON DUPLICATE KEY UPDATE stock = :stock");
+
+		$stmt->bindParam(":id_variante", $idVariante, PDO::PARAM_INT);
+		$stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
+		$stmt->bindParam(":stock", $cantidad, PDO::PARAM_INT);
+
+		if ($stmt->execute()) {
+			return "ok";
+		} else {
+			return "error";
+		}
+	}
+
+	/*=============================================
+	OBTENER VARIANTE POR ID (CON STOCK POR BODEGA)
+	=============================================*/
+	static public function mdlObtenerVariantePorId($id, $idBodega = null)
+	{
+		$select = "pv.*";
+		$join = "";
+
+		if ($idBodega != null) {
+			$select = "pv.id, pv.id_producto, pv.sku, pv.precio_adicional, COALESCE(pvb.stock, 0) as stock, pv.imagen, pv.estado, pv.ventas, pv.fecha";
+			$join = "LEFT JOIN productos_variantes_bodegas pvb ON pv.id = pvb.id_variante AND pvb.id_bodega = :id_bodega";
+		}
+
+		$stmt = Conexion::conectar()->prepare("SELECT $select FROM productos_variantes pv $join WHERE pv.id = :id");
+
+		if ($idBodega != null) {
+			$stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
+		}
+
+		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
 		$stmt->execute();
-		$resultado = $stmt->fetch();
-		$stmt = null;
-		return $resultado;
+
+		return $stmt->fetch();
 	}
 
 	/*=============================================

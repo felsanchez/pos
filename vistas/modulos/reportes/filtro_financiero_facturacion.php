@@ -12,6 +12,7 @@ try {
   $fecha_inicio = $_POST['fecha_inicio'] ?? null;
   $fecha_fin = $_POST['fecha_fin'] ?? null;
   $id_categoria = isset($_POST['id_categoria']) && $_POST['id_categoria'] !== '' ? (int)$_POST['id_categoria'] : null;
+  $id_bodega = $_POST['id_bodega'] ?? null;
 
   // Validación básica
   if (!$tipo) {
@@ -21,7 +22,6 @@ try {
   }
 
   // Construir la condición de fecha para ventas y gastos
-  // Nota: ventas usa DATE(fecha) porque almacena datetime, gastos usa fecha directamente
   $condicionFechaVentas = "";
   $condicionFechaGastos = "";
   $condicionFechaGastosAlias = ""; // Para consultas con alias g.
@@ -65,14 +65,27 @@ try {
       exit;
   }
 
+  // Filtro de sucursal
+  $whereBodegaVentas = "";
+  $whereBodegaGastos = "";
+  $whereBodegaGastosAlias = "";
+  if (!empty($id_bodega) && $id_bodega !== 'todos') {
+    $whereBodegaVentas = " AND id_bodega = :id_bodega";
+    $whereBodegaGastos = " AND id_bodega = :id_bodega";
+    $whereBodegaGastosAlias = " AND g.id_bodega = :id_bodega";
+  }
+
   // =============================================
   // TOTAL DE INGRESOS (FACTURAS ELECTRÓNICAS)
   // =============================================
-  $sqlIngresos = "SELECT COALESCE(SUM(total), 0) as total FROM ventas WHERE estado_dian IN ('aceptada', 'enviada') AND $condicionFechaVentas";
+  $sqlIngresos = "SELECT COALESCE(SUM(total), 0) as total FROM ventas WHERE estado_dian IN ('aceptada', 'enviada') AND $condicionFechaVentas $whereBodegaVentas";
   $stmtIngresos = $conn->prepare($sqlIngresos);
   if ($usaParametrosFecha) {
     $stmtIngresos->bindValue(':fecha_inicio', $fecha_inicio);
     $stmtIngresos->bindValue(':fecha_fin', $fecha_fin);
+  }
+  if (!empty($id_bodega) && $id_bodega !== 'todos') {
+    $stmtIngresos->bindValue(':id_bodega', $id_bodega, PDO::PARAM_INT);
   }
   $stmtIngresos->execute();
   $totalIngresos = (float) $stmtIngresos->fetch(PDO::FETCH_ASSOC)['total'];
@@ -80,7 +93,7 @@ try {
   // =============================================
   // TOTAL DE GASTOS (con filtro de categoría)
   // =============================================
-  $whereGastos = "estado = 'aprobado' AND $condicionFechaGastos";
+  $whereGastos = "estado = 'aprobado' AND $condicionFechaGastos $whereBodegaGastos";
 
   // Filtro por categoría para el total
   if ($id_categoria !== null) {
@@ -92,6 +105,9 @@ try {
   if ($usaParametrosFecha) {
     $stmtGastos->bindValue(':fecha_inicio', $fecha_inicio);
     $stmtGastos->bindValue(':fecha_fin', $fecha_fin);
+  }
+  if (!empty($id_bodega) && $id_bodega !== 'todos') {
+    $stmtGastos->bindValue(':id_bodega', $id_bodega, PDO::PARAM_INT);
   }
   if ($id_categoria !== null) {
     $stmtGastos->bindValue(':id_categoria', $id_categoria, PDO::PARAM_INT);
@@ -111,7 +127,7 @@ try {
   $sqlEvolucionIngresos = "
     SELECT DATE(IFNULL(fecha_envio_dian, fecha)) as fecha, COALESCE(SUM(total), 0) as total
     FROM ventas
-    WHERE estado_dian IN ('aceptada', 'enviada') AND $condicionFechaVentas
+    WHERE estado_dian IN ('aceptada', 'enviada') AND $condicionFechaVentas $whereBodegaVentas
     GROUP BY DATE(IFNULL(fecha_envio_dian, fecha))
     ORDER BY fecha ASC
   ";
@@ -120,6 +136,9 @@ try {
     $stmtEvolucionIngresos->bindValue(':fecha_inicio', $fecha_inicio);
     $stmtEvolucionIngresos->bindValue(':fecha_fin', $fecha_fin);
   }
+  if (!empty($id_bodega) && $id_bodega !== 'todos') {
+    $stmtEvolucionIngresos->bindValue(':id_bodega', $id_bodega, PDO::PARAM_INT);
+  }
   $stmtEvolucionIngresos->execute();
   $ingresosEvolucion = [];
   while ($row = $stmtEvolucionIngresos->fetch(PDO::FETCH_ASSOC)) {
@@ -127,7 +146,7 @@ try {
   }
 
   // Obtener gastos por día (con filtro de categoría si se especifica)
-  $whereEvolucionGastos = "estado = 'aprobado' AND $condicionFechaGastos";
+  $whereEvolucionGastos = "estado = 'aprobado' AND $condicionFechaGastos $whereBodegaGastos";
   if ($id_categoria !== null) {
     $whereEvolucionGastos .= " AND id_categoria_gasto = :id_categoria";
   }
@@ -143,6 +162,9 @@ try {
   if ($usaParametrosFecha) {
     $stmtEvolucionGastos->bindValue(':fecha_inicio', $fecha_inicio);
     $stmtEvolucionGastos->bindValue(':fecha_fin', $fecha_fin);
+  }
+  if (!empty($id_bodega) && $id_bodega !== 'todos') {
+    $stmtEvolucionGastos->bindValue(':id_bodega', $id_bodega, PDO::PARAM_INT);
   }
   if ($id_categoria !== null) {
     $stmtEvolucionGastos->bindValue(':id_categoria', $id_categoria, PDO::PARAM_INT);
@@ -168,13 +190,11 @@ try {
   // =============================================
   // GASTOS POR CATEGORÍA
   // =============================================
-  // La gráfica de dona siempre muestra todas las categorías para el período seleccionado
-  // (sin filtro de categoría específica, para mostrar la distribución completa)
   $sqlGastosCategoria = "
     SELECT c.nombre, c.color, COALESCE(SUM(g.monto), 0) as total
     FROM gastos g
     INNER JOIN categorias_gastos c ON g.id_categoria_gasto = c.id
-    WHERE g.estado = 'aprobado' AND $condicionFechaGastosAlias
+    WHERE g.estado = 'aprobado' AND $condicionFechaGastosAlias $whereBodegaGastosAlias
     GROUP BY g.id_categoria_gasto, c.nombre, c.color
     ORDER BY total DESC
   ";
@@ -183,6 +203,9 @@ try {
   if ($usaParametrosFecha) {
     $stmtGastosCategoria->bindValue(':fecha_inicio', $fecha_inicio);
     $stmtGastosCategoria->bindValue(':fecha_fin', $fecha_fin);
+  }
+  if (!empty($id_bodega) && $id_bodega !== 'todos') {
+    $stmtGastosCategoria->bindValue(':id_bodega', $id_bodega, PDO::PARAM_INT);
   }
   $stmtGastosCategoria->execute();
   $gastosCategoria = $stmtGastosCategoria->fetchAll(PDO::FETCH_ASSOC);

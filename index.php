@@ -1,4 +1,5 @@
 <?php
+file_put_contents("debug_global.txt", date("Y-m-d H:i:s") . " - RUTA: " . (isset($_GET['ruta']) ? $_GET['ruta'] : 'inicio') . " - METHOD: " . $_SERVER['REQUEST_METHOD'] . "\n", FILE_APPEND);
 
 // Mostrar errores en pantalla (solo para desarrollo)
 ini_set('display_errors', 1);
@@ -30,6 +31,8 @@ require_once "controladores/factus.controlador.php";
 require_once "controladores/logs.controlador.php";
 require_once "controladores/seguimiento.controlador.php";
 require_once "controladores/perfiles.controlador.php";
+require_once "controladores/bodegas.controlador.php";
+require_once "controladores/traslados.controlador.php";
 
 require_once "modelos/usuarios.modelo.php";
 require_once "modelos/categorias.modelo.php";
@@ -50,6 +53,8 @@ require_once "modelos/configuracion.modelo.php";
 require_once "modelos/factus.modelo.php";
 require_once "modelos/seguimiento.modelo.php";
 require_once "modelos/perfiles.modelo.php";
+require_once "modelos/bodegas.modelo.php";
+require_once "modelos/traslados.modelo.php";
 require_once "modelos/helpers.php";
 
 // Exportar Excel de Historial de Stock

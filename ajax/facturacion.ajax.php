@@ -10,7 +10,10 @@ require_once __DIR__ . "/../controladores/productos.controlador.php";
 require_once __DIR__ . "/../modelos/productos.modelo.php";
 require_once __DIR__ . "/../controladores/configuracion.controlador.php";
 require_once __DIR__ . "/../modelos/configuracion.modelo.php";
+require_once __DIR__ . "/../controladores/notificaciones.controlador.php";
+require_once __DIR__ . "/../modelos/notificaciones.modelo.php";
 require_once "../modelos/session-manager.php";
+
 SessionManager::startSecure();
 
 require_once "../controladores/factus.controlador.php";
@@ -1033,11 +1036,13 @@ class AjaxFacturacion
     =============================================*/
     public $tercero;
     public $idUsuario;
+    public $idBodega;
 
     public function ajaxObtenerKPIsReporte()
     {
-        $respuesta = ControladorFactus::ctrObtenerKPIsReporte($this->fechaInicial, $this->fechaFinal, $this->categoria, $this->tercero, $this->idUsuario);
-        echo json_encode($respuesta);
+        $respuesta = ControladorFactus::ctrObtenerKPIsReporte($this->fechaInicial, $this->fechaFinal, $this->categoria, $this->tercero, $this->idUsuario, $this->idBodega);
+        header('Content-Type: application/json');
+        echo json_encode($respuesta, JSON_UNESCAPED_UNICODE);
     }
 
     /*=============================================
@@ -1045,7 +1050,7 @@ class AjaxFacturacion
     =============================================*/
     public function ajaxObtenerVentasGrafico()
     {
-        $respuesta = ControladorFactus::ctrObtenerVentasGrafico($this->fechaInicial, $this->fechaFinal, $this->categoria, $this->tercero, $this->idUsuario);
+        $respuesta = ControladorFactus::ctrObtenerVentasGrafico($this->fechaInicial, $this->fechaFinal, $this->categoria, $this->tercero, $this->idUsuario, $this->idBodega);
         echo json_encode($respuesta);
     }
 
@@ -1054,7 +1059,7 @@ class AjaxFacturacion
     =============================================*/
     public function ajaxMostrarReporteDetallado()
     {
-        $respuesta = ControladorFactus::ctrMostrarReporteDetallado($this->fechaInicial, $this->fechaFinal, $this->categoria, $this->tercero, $this->idUsuario);
+        $respuesta = ControladorFactus::ctrMostrarReporteDetallado($this->fechaInicial, $this->fechaFinal, $this->categoria, $this->tercero, $this->idUsuario, $this->idBodega);
 
         $datos = [];
 
@@ -1142,6 +1147,7 @@ if (isset($_POST["accion"]) && $_POST["accion"] == "obtenerKPIsReporte") {
     $reporte->categoria = $_POST["categoria"] ?? "todos";
     $reporte->tercero = $_POST["tercero"] ?? "todos";
     $reporte->idUsuario = $_POST["idUsuario"] ?? "todos";
+    $reporte->idBodega = $_POST["idBodega"] ?? "";
     $reporte->ajaxObtenerKPIsReporte();
 }
 
@@ -1152,6 +1158,7 @@ if (isset($_POST["accion"]) && $_POST["accion"] == "obtenerVentasGrafico") {
     $reporte->categoria = $_POST["categoria"] ?? "todos";
     $reporte->tercero = $_POST["tercero"] ?? "todos";
     $reporte->idUsuario = $_POST["idUsuario"] ?? "todos";
+    $reporte->idBodega = $_POST["idBodega"] ?? "";
     $reporte->ajaxObtenerVentasGrafico();
 }
 
@@ -1162,5 +1169,6 @@ if (isset($_POST["accion"]) && $_POST["accion"] == "mostrarReporteDetallado") {
     $reporte->categoria = $_POST["categoria"] ?? "todos";
     $reporte->tercero = $_POST["tercero"] ?? "todos";
     $reporte->idUsuario = $_POST["idUsuario"] ?? "todos";
+    $reporte->idBodega = $_POST["idBodega"] ?? "";
     $reporte->ajaxMostrarReporteDetallado();
 }

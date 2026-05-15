@@ -234,6 +234,85 @@ if ($venta["estado"] == "venta") {
     <!-- Table row -->
     <div class="row">
       <div class="col-xs-12 table-responsive">
+        <?php
+        // PRE-CALCULO DE TOTALES PARA EVITAR ERRORES DE RENDERIZADO (Sincronizado con detalle-venta.php)
+        $listaProducto = json_decode($venta["productos"], true);
+        $valorBrutoRecalculado = 0;
+        $subtotalRecalculado = 0;
+        $impuestoGeneral = 0;
+        $totalRetenciones = 0;
+
+        // Calcular retenciones primero para tener el valor disponible
+        $retenciones = !empty($venta["retenciones"]) ? json_decode($venta["retenciones"], true) : [];
+        if (is_array($retenciones)) {
+          foreach ($retenciones as $ret) {
+            $totalRetenciones += floatval($ret['monto']);
+          }
+        }
+
+        $tipoDescuento = $venta["tipo_descuento"] ?? "";
+        $valorDescuentoGlobal = $venta["valor_descuento"] ?? 0;
+        $montoDescuentoTotal = $venta["monto_descuento"] ?? 0;
+        $totalVentaOriginal = floatval($venta["total"]);
+        $totalOriginalEstimado = $totalVentaOriginal + $montoDescuentoTotal;
+
+        $itemsTabla = [];
+
+        if (is_array($listaProducto)) {
+          foreach ($listaProducto as $prod) {
+            // Obtener info básica de la BD
+            $infoP = ModeloProductos::mdlMostrarProductos("productos", "id", $prod["id"], "id");
+            
+            // Determinar Precio y Total con fallbacks
+            $precioUnitario = isset($prod["precio"]) ? floatval($prod["precio"]) : floatval($infoP["precio_venta"] ?? 0);
+            $cantidad = floatval($prod["cantidad"] ?? 1);
+            $totalProductoConImpuesto = isset($prod["total"]) ? floatval($prod["total"]) : ($precioUnitario * $cantidad);
+
+            if ($totalProductoConImpuesto <= 0 && $precioUnitario > 0) {
+              $totalProductoConImpuesto = $precioUnitario * $cantidad;
+            }
+
+            // Impuesto
+            $impuestoPorcentaje = 19; // Default
+            if (isset($prod["impuesto"]) && $prod["impuesto"] !== "" && $prod["impuesto"] > 0) {
+              $impuestoPorcentaje = floatval($prod["impuesto"]);
+            } else if (isset($infoP["tasa_impuesto"])) {
+              $impuestoPorcentaje = floatval($infoP["tasa_impuesto"]);
+            }
+
+            // Cálculos
+            $baseItemBruta = $totalProductoConImpuesto / (1 + ($impuestoPorcentaje / 100));
+            $valorBrutoRecalculado += $baseItemBruta;
+
+            $descuentoItem = 0;
+            if ($tipoDescuento == "porcentaje") {
+              $descuentoItem = $totalProductoConImpuesto * ($valorDescuentoGlobal / 100);
+            } else if ($tipoDescuento == "fijo" && $totalOriginalEstimado > 0) {
+              $descuentoItem = $valorDescuentoGlobal * ($totalProductoConImpuesto / $totalOriginalEstimado);
+            }
+
+            $precioConDescuento = $totalProductoConImpuesto - $descuentoItem;
+            $baseItemNeta = $precioConDescuento / (1 + ($impuestoPorcentaje / 100));
+            $impuestoItem = $precioConDescuento - $baseItemNeta;
+
+            $subtotalRecalculado += $baseItemNeta;
+            $impuestoGeneral += $impuestoItem;
+
+            // Guardar para la tabla
+            $itemsTabla[] = [
+              "descripcion" => $prod["descripcion"],
+              "cantidad" => $cantidad,
+              "precio" => $precioUnitario,
+              "total" => $totalProductoConImpuesto,
+              "impuesto_porc" => $impuestoPorcentaje
+            ];
+          }
+        }
+
+        $totalVentaCalculado = $subtotalRecalculado + $impuestoGeneral;
+        $valorNetoPagar = $totalVentaCalculado - $totalRetenciones;
+        $descuentoBase = $valorBrutoRecalculado - $subtotalRecalculado;
+        ?>
         <table class="table table-striped">
           <thead>
             <tr>
@@ -245,37 +324,15 @@ if ($venta["estado"] == "venta") {
             </tr>
           </thead>
           <tbody>
-            <?php
-            $listaProducto = json_decode($venta["productos"], true);
-            foreach ($listaProducto as $key => $value) {
-
-              $item = "id";
-              $valor = $value["id"];
-              $orden = "id";
-              $respuesta = ControladorProductos::ctrMostrarProductos($item, $valor, $orden);
-
-              $nombreCorto = "Exento";
-              $impuestoPorcentaje = 0;
-
-              if (isset($respuesta["tributo_id"]) && $respuesta["tributo_id"] != 0) {
-                require_once "modelos/factus.modelo.php";
-                $tributo = ModeloFactus::mdlMostrarTributo($respuesta["tributo_id"]);
-                if ($tributo) {
-                  $impuestoPorcentaje = $tributo["porcentaje_defecto"];
-                  $impuestoNombre = $tributo["nombre"];
-                  $nombreCorto = trim(preg_split('/[0-9]/', $impuestoNombre)[0]);
-                }
-              }
-
-              echo '<tr>
-                        <td>' . $value["descripcion"] . '</td>
-                        <td>' . $value["cantidad"] . '</td>
-                        <td>$' . number_format($respuesta["precio_venta"], 2) . '</td>
-                        <td>' . $nombreCorto . ' ' . $impuestoPorcentaje . '%</td>
-                        <td>$' . number_format($value["total"], 2) . '</td>
-                      </tr>';
-            }
-            ?>
+            <?php foreach ($itemsTabla as $item): ?>
+              <tr>
+                <td><?php echo $item["descripcion"]; ?></td>
+                <td><?php echo $item["cantidad"]; ?></td>
+                <td>$<?php echo number_format($item["precio"], 2); ?></td>
+                <td><?php echo $item["impuesto_porc"]; ?>%</td>
+                <td>$<?php echo number_format($item["total"], 2); ?></td>
+              </tr>
+            <?php endforeach; ?>
           </tbody>
         </table>
       </div>
@@ -401,58 +458,6 @@ if ($venta["estado"] == "venta") {
 
         <div class="table-responsive">
           <table class="table">
-            <?php
-            // RECALCULO EXACTO DE TOTALES (Igual que en JS de crear venta)
-            
-            $listaProducto = json_decode($venta["productos"], true);
-            $valorBrutoRecalculado = 0; // Base Imponible Bruta (Antes de descuentos)
-            $subtotalRecalculado = 0;   // Base Imponible Neta (Despues de descuentos)
-            $impuestoGeneral = 0;
-            $impuestoINC = 0;
-
-            // Datos de descuentos
-            $tipoDescuento = $venta["tipo_descuento"] ?? ""; // porcentaje o fijo
-            $valorDescuentoGlobal = $venta["valor_descuento"] ?? 0;
-            $montoDescuentoTotal = $venta["monto_descuento"] ?? 0;
-            $totalVentaOriginal = $venta["total"];
-
-            // Si hay descuento fijo, necesitamos el total original para prorratear
-            // ESTIMACION: TotalOrig = TotalFinal + MontoDescuento
-            $totalOriginalEstimado = $totalVentaOriginal + $montoDescuentoTotal;
-
-            foreach ($listaProducto as $prod) {
-              $totalProductoConImpuesto = floatval($prod["total"]);
-              $impuestoPorcentaje = 0;
-
-              if (isset($prod["impuesto"])) {
-                $impuestoPorcentaje = floatval($prod["impuesto"]);
-              } else {
-                $infoP = ModeloProductos::mdlMostrarProductos("productos", "id", $prod["id"], "id");
-                $impuestoPorcentaje = isset($infoP["impuesto_porcentaje"]) ? floatval($infoP["impuesto_porcentaje"]) : 19;
-              }
-
-              $baseItemBruta = $totalProductoConImpuesto / (1 + ($impuestoPorcentaje / 100));
-              $valorBrutoRecalculado += $baseItemBruta;
-
-              $descuentoItem = 0;
-              if ($tipoDescuento == "porcentaje") {
-                $descuentoItem = $totalProductoConImpuesto * ($valorDescuentoGlobal / 100);
-              } else if ($tipoDescuento == "fijo" && $totalOriginalEstimado > 0) {
-                $descuentoItem = $valorDescuentoGlobal * ($totalProductoConImpuesto / $totalOriginalEstimado);
-              }
-
-              $precioConDescuento = $totalProductoConImpuesto - $descuentoItem;
-              $baseItemNeta = $precioConDescuento / (1 + ($impuestoPorcentaje / 100));
-              $impuestoItem = $precioConDescuento - $baseItemNeta;
-
-              $subtotalRecalculado += $baseItemNeta;
-              $impuestoGeneral += $impuestoItem;
-            }
-
-            $totalVentaCalculado = $subtotalRecalculado + $impuestoGeneral;
-            $valorNetoPagar = $totalVentaCalculado - $totalRetenciones;
-            $descuentoBase = $valorBrutoRecalculado - $subtotalRecalculado;
-            ?>
             <tr>
               <th style="width:50%">Subtotal:</th>
               <td>$<?php echo number_format($valorBrutoRecalculado, 2); ?></td>

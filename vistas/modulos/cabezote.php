@@ -197,6 +197,27 @@ BARRA DE NAVEGACION
 			<span class="sr-only">Toggle navigation</span>
 		</a>
 
+		<!-- Sucursal Activa -->
+		<div class="navbar-custom-menu pull-left" style="margin-left: 10px; margin-top: 10px; color: white;">
+			<span class="label label-primary" style="font-size: 13px; padding: 5px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+				<i class="fa fa-building"></i> 
+				<span class="hidden-xs">Sucursal:</span> 
+				<?php 
+					// Resolver nombre de sucursal: siempre desde la sesión (cacheado al cargar)
+					if(empty($_SESSION["nombre_bodega"])){
+						$idBodegaActiva = !empty($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+						$bodegaActiva = ControladorBodegas::ctrMostrarBodegas("id", $idBodegaActiva);
+						if(empty($bodegaActiva) && $idBodegaActiva != 1){
+							// Fallback a bodega principal si la asignada no existe
+							$bodegaActiva = ControladorBodegas::ctrMostrarBodegas("id", 1);
+						}
+						$_SESSION["nombre_bodega"] = !empty($bodegaActiva["nombre"]) ? $bodegaActiva["nombre"] : "Principal";
+					}
+					echo e($_SESSION["nombre_bodega"]);
+				?>
+			</span>
+		</div>
+
 
 		<!-- perfi de usuario -->
 		<div class="navbar-custom-menu">

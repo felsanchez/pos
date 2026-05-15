@@ -65,12 +65,14 @@ class ModeloGastos
 		$stmt = Conexion::conectar()->prepare("SELECT g.*, 
 													c.nombre as categoria_nombre, 
 													c.color as categoria_color, 
-													u.nombre as usuario_nombre, 
-													p.nombre as proveedor_nombre 
+													u.nombre as usuario_nombre,
+													p.nombre as proveedor_nombre,
+													b.nombre as bodega_nombre
 													FROM $tabla g 
 													LEFT JOIN categorias_gastos c ON g.id_categoria_gasto = c.id 
 													LEFT JOIN usuarios u ON g.id_usuario = u.id 
 													LEFT JOIN proveedores p ON g.id_proveedor = p.id 
+													LEFT JOIN bodegas b ON g.id_bodega = b.id
 													$where $order $limit");
 		$stmt->execute();
 		return $stmt->fetchAll();
@@ -155,7 +157,7 @@ class ModeloGastos
 	static public function mdlIngresarGasto($tabla, $datos)
 	{
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(codigo, concepto, monto, fecha, id_categoria_gasto, id_usuario, id_proveedor, metodo_pago, numero_comprobante, imagen_comprobante, estado, notas) VALUES (:codigo, :concepto, :monto, :fecha, :id_categoria_gasto, :id_usuario, :id_proveedor, :metodo_pago, :numero_comprobante, :imagen_comprobante, :estado, :notas)");
+		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(codigo, concepto, monto, fecha, id_categoria_gasto, id_usuario, id_bodega, id_proveedor, metodo_pago, numero_comprobante, imagen_comprobante, estado, notas) VALUES (:codigo, :concepto, :monto, :fecha, :id_categoria_gasto, :id_usuario, :id_bodega, :id_proveedor, :metodo_pago, :numero_comprobante, :imagen_comprobante, :estado, :notas)");
 
 		$stmt->bindParam(":codigo", $datos["codigo"], PDO::PARAM_STR);
 		$stmt->bindParam(":concepto", $datos["concepto"], PDO::PARAM_STR);
@@ -163,6 +165,7 @@ class ModeloGastos
 		$stmt->bindParam(":fecha", $datos["fecha"], PDO::PARAM_STR);
 		$stmt->bindParam(":id_categoria_gasto", $datos["id_categoria_gasto"], PDO::PARAM_INT);
 		$stmt->bindParam(":id_usuario", $datos["id_usuario"], PDO::PARAM_INT);
+		$stmt->bindParam(":id_bodega", $datos["id_bodega"], PDO::PARAM_INT);
 		$stmt->bindParam(":id_proveedor", $datos["id_proveedor"], PDO::PARAM_INT);
 		$stmt->bindParam(":metodo_pago", $datos["metodo_pago"], PDO::PARAM_STR);
 		$stmt->bindParam(":numero_comprobante", $datos["numero_comprobante"], PDO::PARAM_STR);
@@ -279,10 +282,14 @@ class ModeloGastos
 	SUMA TOTAL DE GASTOS
 	=============================================*/
 
-	static public function mdlSumarTotalGastos()
+	static public function mdlSumarTotalGastos($idBodega = null)
 	{
+		$condicion = "";
+		if($idBodega != null){
+			$condicion = " AND id_bodega = $idBodega";
+		}
 
-		$stmt = Conexion::conectar()->prepare("SELECT SUM(monto) as total FROM gastos WHERE estado = 'aprobado'");
+		$stmt = Conexion::conectar()->prepare("SELECT SUM(monto) as total FROM gastos WHERE estado = 'aprobado' $condicion");
 
 		$stmt->execute();
 
@@ -300,10 +307,14 @@ class ModeloGastos
 	SUMA TOTAL DE GASTOS POR RANGO DE FECHAS
 	=============================================*/
 
-	static public function mdlSumarGastosPorFecha($fechaInicio, $fechaFin)
+	static public function mdlSumarGastosPorFecha($fechaInicio, $fechaFin, $idBodega = null)
 	{
+		$condicion = "";
+		if($idBodega != null){
+			$condicion = " AND id_bodega = $idBodega";
+		}
 
-		$stmt = Conexion::conectar()->prepare("SELECT SUM(monto) as total FROM gastos WHERE fecha BETWEEN :fechaInicio AND :fechaFin AND estado = 'aprobado'");
+		$stmt = Conexion::conectar()->prepare("SELECT SUM(monto) as total FROM gastos WHERE fecha BETWEEN :fechaInicio AND :fechaFin AND estado = 'aprobado' $condicion");
 
 		$stmt->bindParam(":fechaInicio", $fechaInicio, PDO::PARAM_STR);
 		$stmt->bindParam(":fechaFin", $fechaFin, PDO::PARAM_STR);
@@ -324,13 +335,17 @@ class ModeloGastos
 	GASTOS POR CATEGORÍA
 	=============================================*/
 
-	static public function mdlGastosPorCategoria()
+	static public function mdlGastosPorCategoria($idBodega = null)
 	{
+		$condicion = "";
+		if($idBodega != null){
+			$condicion = " AND g.id_bodega = $idBodega";
+		}
 
 		$stmt = Conexion::conectar()->prepare("SELECT c.nombre, c.color, SUM(g.monto) as total
 												FROM gastos g
 												INNER JOIN categorias_gastos c ON g.id_categoria_gasto = c.id
-												WHERE g.estado = 'aprobado'
+												WHERE g.estado = 'aprobado' $condicion
 												GROUP BY g.id_categoria_gasto
 												ORDER BY total DESC");
 

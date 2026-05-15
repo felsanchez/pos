@@ -25,6 +25,7 @@ if ($xml) {
 <div class="content-wrapper">
   <section class="content-header">
 
+
     <h1>
       Administrar orden de venta
     </h1>
@@ -42,19 +43,36 @@ if ($xml) {
 
       <div class="box-header with-border">
 
-
         <?php if (puedeAccion('ordenes', 'crear')): ?>
           <a href="crear-orden" class="btn btn-primary" title="Agregar orden">
             <i class="fa fa-plus"></i> <span class="hidden-xs">Agregar orden</span>
           </a>
         <?php endif; ?>
 
-
-        <div class="pull-right contenedor-filtros">
-
-          <form method="GET" action="index.php" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-
+        <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+          
+          <form method="GET" action="index.php" style="display: flex; align-items: center; gap: 10px;">
             <input type="hidden" name="ruta" value="ordenes">
+
+            <!-- Filtro por Bodega (Administradores) -->
+            <?php if (stripos($_SESSION["perfil"], "Admin") !== false): ?>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="hidden-xs"><b>Sucursal:</b></span>
+                <div class="input-group" style="width: 180px;">
+                  <span class="input-group-addon"><i class="fa fa-building text-primary"></i></span>
+                  <select name="bodega" class="form-control select2 select-bodega">
+                    <option value="">Mostrar Todas</option>
+                    <?php
+                    $bodegas = ControladorBodegas::ctrMostrarBodegas(null, null);
+                    foreach ($bodegas as $key => $valueBodega) {
+                      $selected = (isset($_GET['bodega']) && $_GET['bodega'] == $valueBodega["id"]) ? 'selected' : '';
+                      echo '<option value="' . e($valueBodega["id"]) . '" ' . $selected . '>' . e($valueBodega["nombre"]) . '</option>';
+                    }
+                    ?>
+                  </select>
+                </div>
+              </div>
+            <?php endif; ?>
             <input type="hidden" name="fechaInicial" id="fechaInicial"
               value="<?php echo isset($_GET["fechaInicial"]) ? $_GET["fechaInicial"] : null; ?>">
             <input type="hidden" name="fechaFinal" id="fechaFinal"
@@ -64,14 +82,14 @@ if ($xml) {
 
             <!-- Filtro por cliente -->
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Filtrar por Cliente:</b></span>
+              <span class="hidden-xs"><b>Cliente:</b></span>
               <div class="input-group" style="width: 200px;">
                 <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
                   <i class="fa fa-search text-primary"></i>
                 </span>
                 <select name="cliente" id="filtroClienteOrdenes" class="form-control select2 select-cliente"
                   style="width: 100%;">
-                  <option value="">Seleccionar cliente...</option>
+                  <option value="">Mostrar Todos</option>
                   <?php
                   $clientes = ControladorClientes::ctrMostrarClientes(null, null);
                   foreach ($clientes as $key => $valueCliente) {
@@ -85,14 +103,14 @@ if ($xml) {
 
             <!-- Filtro por usuario -->
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Filtrar por Vendedor:</b></span>
+              <span class="hidden-xs"><b>Vendedor:</b></span>
               <div class="input-group" style="width: 200px;">
                 <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
                   <i class="fa fa-search text-primary"></i>
                 </span>
                 <select name="usuario" id="filtroUsuarioOrdenes" class="form-control select2 select-usuario"
                   style="width: 100%;">
-                  <option value="">Seleccionar usuario...</option>
+                  <option value="">Mostrar Todos</option>
                   <?php
                   $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
                   foreach ($usuarios as $key => $valueUsuario) {
@@ -106,7 +124,7 @@ if ($xml) {
 
             <!-- Botón Rango de Fecha -->
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Filtrar por Fecha:</b></span>
+              <span class="hidden-xs"><b>Fecha:</b></span>
               <div class="form-group" style="margin-bottom: 0;">
                 <button type="button" class="btn btn-default" id="daterange-btn">
                   <span>
@@ -117,17 +135,11 @@ if ($xml) {
               </div>
             </div>
 
-            <!-- Botones de Acción (Separados para mantener gap consistente con Ventas) -->
-
-
             <a href="index.php?ruta=ordenes" class="btn btn-default" title="Limpiar">
               <i class="fa fa-refresh"></i>
             </a>
 
-
-
           </form>
-
         </div>
 
       </div>

@@ -21,11 +21,18 @@ $(document).ready(function () {
 			if (urlParams.get('usuario')) $('#filtroUsuarioOrdenes').val(urlParams.get('usuario')).trigger('change.select2');
 
 			// EVENTOS AUTOMÁTICOS PARA FILTROS
-			$('#filtroClienteOrdenes, #filtroUsuarioOrdenes').on('change', function () {
+			$('#filtroClienteOrdenes, #filtroUsuarioOrdenes, .select-bodega').on('change', function () {
 				if (typeof window.recargarTablaOrdenes === 'function') {
 					window.recargarTablaOrdenes();
 				}
 			});
+
+			if($('.select-bodega').length > 0){
+				$('.select-bodega').select2({
+					allowClear: false,
+					width: '100%'
+				});
+			}
 		}
 
 		// INICIALIZACIÓN DEL RANGO DE FECHAS
@@ -88,6 +95,7 @@ $(document).ready(function () {
 					d.fechaFinal = $('#fechaFinal').val();
 					d.clienteId = $('#filtroClienteOrdenes').val();
 					d.usuarioId = $('#filtroUsuarioOrdenes').val();
+					d.bodegaId = $('.select-bodega').val();
 
 					var urlParams = new URLSearchParams(window.location.search);
 					if (!d.fechaInicial) d.fechaInicial = urlParams.get('fechaInicial');

@@ -82,9 +82,10 @@ class ControladorProductos
 		}
 
 		// Obtener datos
-		$productos = ModeloProductos::mdlMostrarProductosServerSide($tabla, $where, $order, $limit);
-		$totalData = ModeloProductos::mdlGetTotalProductos($tabla, " WHERE 1=1 ");
-		$totalFiltered = ModeloProductos::mdlGetTotalProductos($tabla, $where);
+		$idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+		$productos = ModeloProductos::mdlMostrarProductosServerSide($tabla, $where, $order, $limit, $idBodegaActiva);
+		$totalData = ModeloProductos::mdlGetTotalProductos($tabla, " WHERE 1=1 ", $idBodegaActiva);
+		$totalFiltered = ModeloProductos::mdlGetTotalProductos($tabla, $where, $idBodegaActiva);
 
 		// Obtener tributos para mapeo rápido de porcentajes (aunque ya tenemos el nombre por el JOIN)
 		if (file_exists("modelos/factus.modelo.php")) {
@@ -451,6 +452,10 @@ class ControladorProductos
 						$productoCreado = ModeloProductos::mdlMostrarProductos($tabla, "codigo", $_POST["nuevoCodigo"], "id");
 						$idProducto = $productoCreado["id"];
 
+						// 📦 ASIGNAR STOCK INICIAL A BODEGA ACTIVA
+						$idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+						ModeloProductos::mdlActualizarStockBodega($idProducto, $idBodegaActiva, $stock);
+
 						// 🟢 REGISTRAR MOVIMIENTO DE STOCK - CREACIÓN DE PRODUCTO
 						if ($stock > 0) {
 							ControladorMovimientos::ctrRegistrarMovimiento(
@@ -583,6 +588,10 @@ class ControladorProductos
 
 								if ($idVariante) {
 
+									// 📦 ASIGNAR STOCK INICIAL A BODEGA ACTIVA
+									$idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+									ModeloProductos::mdlActualizarStockVarianteBodega($idVarianteNueva, $idBodegaActiva, $stockVariante);
+
 									// 🟢 REGISTRAR MOVIMIENTO DE STOCK - CREACIÓN DE VARIANTE
 
 									if ($stockVariante > 0) {
@@ -670,7 +679,7 @@ class ControladorProductos
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
 						}).then(() => {
-							window.location = "productos";
+							// window.location = "productos";
 						})
 
 						</script>';
@@ -691,7 +700,7 @@ class ControladorProductos
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 					}).then(() => {
-						window.location = "productos";
+						// window.location = "productos";
 					})
 
 
@@ -850,6 +859,7 @@ class ControladorProductos
 				$datos = array(
 					"id" => isset($_POST["idProducto"]) ? $_POST["idProducto"] : null,
 					"id_categoria" => $_POST["editarCategoria"],
+					"tiene_variantes" => (isset($_POST["totalCombinacionesEditar"]) && $_POST["totalCombinacionesEditar"] > 0) ? 1 : $productoAnterior["tiene_variantes"],
 					"codigo" => $_POST["editarCodigo"],
 					"descripcion" => $_POST["editarDescripcion"],
 					"stock" => $nuevoStock,
@@ -870,6 +880,24 @@ class ControladorProductos
 				$respuesta = ModeloProductos::mdlEditarProducto($tabla, $datos);
 
 				if ($respuesta == "ok") {
+					// 📦 ACTUALIZAR STOCK EN BODEGA ACTIVA (Para productos simples)
+					$idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+					$idProductoReal = isset($_POST["idProducto"]) ? $_POST["idProducto"] : $productoAnterior["id"];
+					$tieneVariantes = $productoAnterior["tiene_variantes"];
+					if(isset($_POST["form_detalle_producto"])){
+						$tieneVariantes = isset($_POST["tieneVariantes"]) ? 1 : 0;
+					}
+					if ($tieneVariantes == 0) {
+						ModeloProductos::mdlActualizarStockBodega($idProductoReal, $idBodegaActiva, $nuevoStock);
+						// Recalcular stock global
+						$stmtSumBodegas = Conexion::conectar()->prepare("SELECT SUM(pb.stock) as total FROM productos_bodegas pb WHERE pb.id_producto = :id_producto");
+						$stmtSumBodegas->bindParam(":id_producto", $idProductoReal, PDO::PARAM_INT);
+						$stmtSumBodegas->execute();
+						$resSum = $stmtSumBodegas->fetch();
+						$stockGlobal = ($resSum && $resSum["total"]) ? $resSum["total"] : $nuevoStock;
+						$stmtSumBodegas = null;
+						ModeloProductos::mdlActualizarProducto("productos", "stock", $stockGlobal, $idProductoReal);
+					}
 					// 🟢 REGISTRAR MOVIMIENTO DE STOCK - EDICIÓN DE PRODUCTO
 					if ($stockAnterior != $nuevoStock && $productoAnterior && isset($productoAnterior["id"])) {
 						$diferencia = $nuevoStock - $stockAnterior;
@@ -897,11 +925,13 @@ class ControladorProductos
 						file_put_contents("debug_editar_variantes.txt", "=== EDITAR PRODUCTO CON VARIANTES ===\n", FILE_APPEND);
 						file_put_contents("debug_editar_variantes.txt", "Total combinaciones: " . $_POST["totalCombinacionesEditar"] . "\n", FILE_APPEND);
 
-						$idProducto = $_POST["editarCodigo"]; // Usamos el código como ID del producto 
-
-						// Obtener el ID real del producto
-						$productoBase = ModeloProductos::mdlMostrarProductos("productos", "codigo", $idProducto, "id");
-						$idProductoReal = $productoBase["id"];
+						// Obtener el ID real del producto de forma directa y segura
+						$idProductoReal = isset($_POST["idProducto"]) && !empty($_POST["idProducto"]) ? $_POST["idProducto"] : null;
+						if(!$idProductoReal) {
+							$idProducto = $_POST["editarCodigo"];
+							$productoBase = ModeloProductos::mdlMostrarProductos("productos", "codigo", $idProducto, "id");
+							$idProductoReal = $productoBase["id"];
+						}
 
 						file_put_contents("debug_editar_variantes.txt", "ID Producto: " . $idProductoReal . "\n", FILE_APPEND);
 						$totalCombinaciones = $_POST["totalCombinacionesEditar"];
@@ -927,7 +957,7 @@ class ControladorProductos
 
 								$stockVariante = isset($_POST["stockVarianteEditar_" . $idsCombinacion]) && $_POST["stockVarianteEditar_" . $idsCombinacion] !== ""
 									? $_POST["stockVarianteEditar_" . $idsCombinacion]
-									: $_POST["editarStock"]; // Si no se especifica, usar el stock base del producto 
+									: 0; // Si no se especifica, usar el stock base del producto 
 
 								file_put_contents("debug_editar_variantes.txt", "Precio Adicional: $precioAdicional\n", FILE_APPEND);
 								file_put_contents("debug_editar_variantes.txt", "Stock: $stockVariante\n", FILE_APPEND);
@@ -1011,7 +1041,11 @@ class ControladorProductos
 									file_put_contents("debug_editar_variantes.txt", "Resultado INSERT: ID = $idVarianteNueva\n", FILE_APPEND);
 
 									if ($idVarianteNueva) {
-										// 🟢 REGISTRAR MOVIMIENTO DE STOCK - CREACIÓN DE VARIANTE
+										// 📦 ASIGNAR STOCK INICIAL A BODEGA ACTIVA
+									$idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+									ModeloProductos::mdlActualizarStockVarianteBodega($idVarianteNueva, $idBodegaActiva, $stockVariante);
+
+									// 🟢 REGISTRAR MOVIMIENTO DE STOCK - CREACIÓN DE VARIANTE
 										if ($stockVariante > 0) {
 											ControladorMovimientos::ctrRegistrarMovimiento(
 												"variante",
@@ -1097,7 +1131,7 @@ class ControladorProductos
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 						}).then(() => {
-							window.location = "productos";
+							// window.location = "productos";
 						})
 				</script>';
 			}

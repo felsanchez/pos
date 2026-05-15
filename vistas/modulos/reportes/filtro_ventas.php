@@ -12,6 +12,7 @@ $id_vendedor = $_POST['id_vendedor'] ?? null;
 $id_cliente = $_POST['id_cliente'] ?? null;
 $id_producto = $_POST['id_producto'] ?? null;
 $metodo_pago = $_POST['metodo_pago'] ?? null;
+$id_bodega = $_POST['id_bodega'] ?? null;
 
 // Validación básica
 if (!$tipo) {
@@ -66,6 +67,11 @@ if (!empty($id_vendedor)) {
 if (!empty($id_cliente)) {
   $where .= " AND id_cliente = ?";
   $params[$paramIndex++] = $id_cliente;
+}
+
+if (!empty($id_bodega) && $id_bodega !== 'todos') {
+  $where .= " AND id_bodega = ?";
+  $params[$paramIndex++] = $id_bodega;
 }
 
 if (!empty($metodo_pago)) {

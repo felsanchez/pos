@@ -152,13 +152,13 @@ $editarCliente->ctrEditarCliente();
 
         <!-- Filtro por Estado Estandarizado en el Header -->
         <div class="pull-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <span class="hidden-xs"><b>Filtrar por Estado:</b></span>
+          <span class="hidden-xs"><b>Estado:</b></span>
           <div class="input-group" style="width: 220px;">
             <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
               <i class="fa fa-search text-primary"></i>
             </span>
             <select class="form-control select2" id="filtroEstatus1" style="width: 100%;">
-              <option value="">Seleccionar estado...</option>
+              <option value="">Mostrar Todos</option>
               <?php
               $estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
               foreach ($estadosDisponibles as $estado) {

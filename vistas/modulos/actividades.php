@@ -12,11 +12,11 @@
 
 <!-- Estilos para filtros estandarizados -->
 
-  .card-actividad.actividad-hoy {
-    border-left: 5px solid #28a745 !important;
-    background-color: #f0f9f4;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
-  }
+.card-actividad.actividad-hoy {
+border-left: 5px solid #28a745 !important;
+background-color: #f0f9f4;
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+}
 </style>
 
 <?php
@@ -66,12 +66,12 @@ if (!empty($params)) {
 
         <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="hidden-xs"><b>Filtrar por Tipo:</b></span>
+            <span class="hidden-xs"><b>Tipo:</b></span>
             <div class="input-group" style="width: 200px;">
               <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;"><i
                   class="fa fa-search text-primary"></i></span>
               <select class="form-control select2" id="filtroTipo" style="width: 100%;">
-                <option value="">Seleccionar tipo...</option>
+                <option value="">Mostrar Todos</option>
                 <?php
                 $tiposFiltro = ControladorTiposActividades::ctrMostrarTiposActividades(null, null);
                 $filtroTipoHeader = isset($_GET['filtroTipo']) ? $_GET['filtroTipo'] : '';
@@ -84,12 +84,12 @@ if (!empty($params)) {
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="hidden-xs"><b>Filtrar por Estado:</b></span>
+            <span class="hidden-xs"><b>Estado:</b></span>
             <div class="input-group" style="width: 200px;">
               <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;"><i
                   class="fa fa-search text-primary"></i></span>
               <select class="form-control select2" id="filtroEstado" style="width: 100%;">
-                <option value="">Seleccionar estado...</option>
+                <option value="">Mostrar Todos</option>
                 <?php
                 $filtroEstadoHeader = isset($_GET['filtroEstado']) ? $_GET['filtroEstado'] : '';
                 $estadosFiltro = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);

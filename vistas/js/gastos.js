@@ -14,6 +14,7 @@ $(document).ready(function () {
                     d.fechaFin = $("#filtroFechaFin").val();
                     d.categoriaId = $("#cat_g").val();
                     d.proveedorId = $("#prov_g").val();
+                    d.bodegaId = $("#sucursal_g").val();
                 }
             },
             "createdRow": function(row, data, dataIndex) {
@@ -21,13 +22,13 @@ $(document).ready(function () {
                     $(row).attr('style', data.DT_RowAttr.style);
                 }
             },
-            "order": [[6, "desc"]],
+            "order": [[ $('#tablaGastos thead th:contains("Fecha")').index() != -1 ? $('#tablaGastos thead th:contains("Fecha")').index() : 6, "desc"]],
             "columnDefs": [
                 { "targets": 0, "className": "dtr-control", "responsivePriority": 1 },
-                { "targets": 8, "responsivePriority": 2, "orderable": false },
-                { "targets": 1, "responsivePriority": 3 },
-                { "targets": 6, "responsivePriority": 4 },
-                { "targets": 7, "responsivePriority": 5 }
+                { "targets": -1, "responsivePriority": 2, "orderable": false }, // Acciones
+                { "targets": 1, "responsivePriority": 3 }, // Monto
+                { "targets": -3, "responsivePriority": 4 }, // Fecha (3rd from last)
+                { "targets": -2, "responsivePriority": 5 }  // Notas (2nd from last)
             ],
             "responsive": {
                 "details": {
@@ -42,7 +43,7 @@ $(document).ready(function () {
                             var label = col.title || ('Columna ' + col.columnIndex);
                             finalHtml += '<div style="padding:8px 10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px; text-align:left;">';
                             finalHtml += '<span class="text-bold" style="color:#555; min-width:100px;">' + label + ':</span>';
-                            if (col.columnIndex === 7) {
+                            if (label === 'Notas') {
                                 var rowNode = api.row(rowIdx).node();
                                 var idGasto = $(rowNode).find('.celda-notas-gasto').data('id') || "";
                                 var notasText = $(rowNode).find('.celda-notas-gasto').text().trim();
@@ -82,13 +83,13 @@ $(document).ready(function () {
     }
 
     // 4. Listeners de Filtros (Nuevos IDs fijos)
-    $(document).on("change", "#cat_g, #prov_g, #filtroFechaInicio, #filtroFechaFin", function () {
+    $(document).on("change", "#cat_g, #prov_g, #sucursal_g, #filtroFechaInicio, #filtroFechaFin", function () {
         reloadTable();
     });
 
     // 5. Botón Limpiar
     $("#btnLimpiarGastos").on("click", function () {
-        $("#filtroFechaInicio, #filtroFechaFin, #cat_g, #prov_g").val("").trigger('change');
+        $("#filtroFechaInicio, #filtroFechaFin, #cat_g, #prov_g, #sucursal_g").val("").trigger('change');
         $("#daterange-btn span").html('<i class="fa fa-calendar"></i> Rango de fecha');
         reloadTable();
     });

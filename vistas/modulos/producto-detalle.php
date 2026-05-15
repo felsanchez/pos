@@ -12,11 +12,35 @@ if (!isset($_SESSION["iniciarSesion"]) || $_SESSION["iniciarSesion"] != "ok") {
 $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
 $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configuracion["tipo_codigo_producto"] : "automatico";
 
-// Función helper para obtener valor del producto (soporta snake_case y camelCase)
+// Función helper para obtener valor del producto (soporta snake_case, camelCase y $_POST)
 function obtenerValorProducto($producto, $campo) {
+    // 1. Intentar obtener de $_POST primero (para persistencia en caso de error)
+    // Mapeo manual de campos comunes de POST a nombres de BD si es necesario
+    $postMap = [
+        'descripcion' => 'editarDescripcion',
+        'codigo' => 'editarCodigo',
+        'id_categoria' => 'editarCategoria',
+        'precio_compra' => 'editarPrecioCompra',
+        'precio_venta' => 'editarPrecioVenta',
+        'id_proveedor' => 'editarProveedor',
+        'stock' => 'editarStock'
+    ];
+    
+    $postName = isset($postMap[$campo]) ? $postMap[$campo] : $campo;
+    
+    // Probar también con prefijos "nuevo"
+    $postNameNuevo = str_replace('editar', 'nuevo', $postName);
+    
+    if (isset($_POST[$postName])) {
+        return $_POST[$postName];
+    }
+    if (isset($_POST[$postNameNuevo])) {
+        return $_POST[$postNameNuevo];
+    }
+
     if (!$producto) return '';
 
-    // Intentar snake_case primero
+    // Intentar snake_case
     if (isset($producto[$campo])) {
         return $producto[$campo];
     }
@@ -38,7 +62,8 @@ $producto = null;
 if ($modoEdicion) {
     $item = "id";
     $valor = $_GET['id'];
-    $producto = ControladorProductos::ctrMostrarProductos($item, $valor, null);
+    $idBodega = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+    $producto = ControladorProductos::ctrMostrarProductos($item, $valor, null, $idBodega);
 
     // DEBUG: Ver qué campos tiene el producto
     // echo '<pre>'; print_r($producto); echo '</pre>'; die();
@@ -68,6 +93,8 @@ if ($modoEdicion) {
                 <form role="form" method="post" enctype="multipart/form-data" id="formProducto">
 
         <?php CSRF::insertToken(); ?>
+                    <input type="hidden" name="form_detalle_producto" value="1">
+                    <input type="hidden" name="idProducto" value="<?php echo $modoEdicion ? $producto['id'] : ''; ?>">
 
                     <!-- ============================================= -->
                     <!-- SECCIÓN 1: INFORMACIÓN BÁSICA -->
@@ -252,14 +279,13 @@ if ($modoEdicion) {
                             <div class="form-group">
                                 <label class="checkbox-inline" style="font-size: 16px;">
                                     <input type="checkbox" id="checkTieneVariantes" name="tieneVariantes"
-                                        <?php echo ($modoEdicion && $producto['tiene_variantes'] == 1) ? 'checked disabled' : ''; ?>
-                                        <?php echo $modoEdicion ? 'disabled' : ''; ?>>
+                                        <?php echo ($modoEdicion && $producto['tiene_variantes'] == 1) ? 'checked' : ''; ?>>
                                     <strong>Este producto tiene variantes</strong> (Ej: Colores, Tallas, etc.)
                                 </label>
                                 <?php if ($modoEdicion && $producto['tiene_variantes'] == 1): ?>
-                                    <p class="help-block"><i class="fa fa-info-circle"></i> Las variantes de este producto se editan desde la tabla de productos (botón editar en cada variante).</p>
+                                    <p class="help-block text-primary"><i class="fa fa-info-circle"></i> Este producto ya utiliza variantes. Puedes agregar más combinaciones si lo deseas.</p>
                                 <?php elseif ($modoEdicion): ?>
-                                    <p class="help-block"><i class="fa fa-info-circle"></i> No se pueden agregar variantes a un producto existente. Crea un nuevo producto si necesitas variantes.</p>
+                                    <p class="help-block text-warning"><i class="fa fa-warning"></i> Al activar variantes en un producto existente, el stock global se sustituirá por el stock de las nuevas combinaciones que generes.</p>
                                 <?php endif; ?>
                             </div>
                         </div>

@@ -18,11 +18,12 @@ class ModeloMovimientos
 			return "error";
 		}
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO movimientos_stock (tipo_producto, id_producto, id_variante, nombre_producto, tipo_movimiento, cantidad, stock_anterior, stock_nuevo, id_usuario, nombre_usuario, referencia, notas) VALUES (:tipo_producto, :id_producto, :id_variante, :nombre_producto, :tipo_movimiento, :cantidad, :stock_anterior, :stock_nuevo, :id_usuario, :nombre_usuario, :referencia, :notas)");
+		$stmt = Conexion::conectar()->prepare("INSERT INTO movimientos_stock (tipo_producto, id_producto, id_variante, id_bodega, nombre_producto, tipo_movimiento, cantidad, stock_anterior, stock_nuevo, id_usuario, nombre_usuario, referencia, notas) VALUES (:tipo_producto, :id_producto, :id_variante, :id_bodega, :nombre_producto, :tipo_movimiento, :cantidad, :stock_anterior, :stock_nuevo, :id_usuario, :nombre_usuario, :referencia, :notas)");
 
 		$stmt->bindParam(":tipo_producto", $datos["tipo_producto"], PDO::PARAM_STR);
 		$stmt->bindParam(":id_producto", $datos["id_producto"], PDO::PARAM_INT);
 		$stmt->bindParam(":id_variante", $datos["id_variante"], PDO::PARAM_INT);
+		$stmt->bindParam(":id_bodega", $datos["id_bodega"], PDO::PARAM_INT);
 		$stmt->bindParam(":nombre_producto", $datos["nombre_producto"], PDO::PARAM_STR);
 		$stmt->bindParam(":tipo_movimiento", $datos["tipo_movimiento"], PDO::PARAM_STR);
 		$stmt->bindParam(":cantidad", $datos["cantidad"], PDO::PARAM_INT);
@@ -78,6 +79,10 @@ class ModeloMovimientos
 			$sql .= " AND m.id_usuario = :usuario";
 		}
 
+		if (!empty($filtros["id_bodega"])) {
+			$sql .= " AND m.id_bodega = :id_bodega";
+		}
+
 		$sql .= " ORDER BY m.fecha DESC, m.id DESC";
 
 		$stmt = Conexion::conectar()->prepare($sql);
@@ -101,6 +106,10 @@ class ModeloMovimientos
 
 		if (!empty($filtros["usuario"])) {
 			$stmt->bindParam(":usuario", $filtros["usuario"], PDO::PARAM_INT);
+		}
+
+		if (!empty($filtros["id_bodega"])) {
+			$stmt->bindParam(":id_bodega", $filtros["id_bodega"], PDO::PARAM_INT);
 		}
 
 		$stmt->execute();
@@ -135,6 +144,10 @@ class ModeloMovimientos
 			$sql .= " AND DATE(fecha) <= :fecha_hasta";
 		}
 
+		if (!empty($filtros["id_bodega"])) {
+			$sql .= " AND id_bodega = :id_bodega";
+		}
+
 		$sql .= " GROUP BY tipo_movimiento";
 
 		$stmt = Conexion::conectar()->prepare($sql);
@@ -145,6 +158,10 @@ class ModeloMovimientos
 
 		if (!empty($filtros["fecha_hasta"])) {
 			$stmt->bindParam(":fecha_hasta", $filtros["fecha_hasta"], PDO::PARAM_STR);
+		}
+
+		if (!empty($filtros["id_bodega"])) {
+			$stmt->bindParam(":id_bodega", $filtros["id_bodega"], PDO::PARAM_INT);
 		}
 
 		$stmt->execute();
@@ -251,7 +268,10 @@ class ModeloMovimientos
 	=============================================*/
 	static public function mdlMostrarMovimientosServerSide($tabla, $where, $order, $limit)
 	{
-		$sql = "SELECT * FROM $tabla $where $order $limit";
+		$sql = "SELECT m.*, b.nombre as nombre_bodega 
+		        FROM $tabla m
+		        LEFT JOIN bodegas b ON m.id_bodega = b.id
+		        $where $order $limit";
 		
 		$stmt = Conexion::conectar()->prepare($sql);
 		$stmt->execute();

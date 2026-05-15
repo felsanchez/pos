@@ -22,6 +22,12 @@ function puedeVer(string $modulo): bool
     if (!isset($_SESSION['permisos'])) {
         return true;
     }
+
+    // Unificar Categorías y Variantes con Productos
+    if ($modulo === 'categorias' || $modulo === 'variantes') {
+        $modulo = 'productos';
+    }
+
     return !empty($_SESSION['permisos'][$modulo]['ver']);
 }
 
@@ -38,5 +44,11 @@ function puedeAccion(string $modulo, string $accion): bool
     if (!isset($_SESSION['permisos'])) {
         return true;
     }
+
+    // Unificar Categorías y Variantes con Productos
+    if ($modulo === 'categorias' || $modulo === 'variantes') {
+        $modulo = 'productos';
+    }
+
     return !empty($_SESSION['permisos'][$modulo][$accion]);
 }

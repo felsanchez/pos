@@ -52,6 +52,15 @@ class ControladorGastos{
 			$where .= " AND g.id_proveedor = " . $params['proveedorId'];
 		}
 
+		// Filtro por Sucursal (Seguridad Multi-sucursal y Filtro Admin)
+		if ($_SESSION["perfil"] == "Administrador") {
+			if (!empty($params['bodegaId'])) {
+				$where .= " AND g.id_bodega = " . $params['bodegaId'];
+			}
+		} else {
+			$where .= " AND g.id_bodega = " . $_SESSION["id_bodega"];
+		}
+
 		// Búsqueda global
 		if (!empty($params['search']['value'])) {
 			$searchValue = $params['search']['value'];
@@ -76,7 +85,13 @@ class ControladorGastos{
 
 		// Obtener datos
 		$gastos = ModeloGastos::mdlMostrarGastosServerSide($tabla, $where, $order, $limit);
-		$totalData = ModeloGastos::mdlGetTotalGastos($tabla, " WHERE 1=1 ");
+		
+		$whereTotal = " WHERE 1=1 ";
+		if ($_SESSION["perfil"] != "Administrador") {
+			$whereTotal .= " AND g.id_bodega = " . $_SESSION["id_bodega"];
+		}
+		
+		$totalData = ModeloGastos::mdlGetTotalGastos($tabla, $whereTotal);
 		$totalFiltered = ModeloGastos::mdlGetTotalGastos($tabla, $where);
 
 		$data = array();
@@ -112,6 +127,11 @@ class ControladorGastos{
 
 			// Columna 5: Proveedor
 			$nestedData[] = e(!empty($value["proveedor_nombre"]) ? $value["proveedor_nombre"] : '-');
+
+			// Columna Sucursal (Solo para Administrador)
+			if ($_SESSION["perfil"] == "Administrador") {
+				$nestedData[] = e($value["bodega_nombre"]);
+			}
 
 			// Columna 6: Imagen
 			$imgSrc = !empty($value["imagen_comprobante"]) ? $value["imagen_comprobante"] : "vistas/img/gastos/default/sin-imagen.png";
@@ -277,6 +297,7 @@ class ControladorGastos{
 							   "fecha" => $_POST["nuevaFechaGasto"],
 							   "id_categoria_gasto" => $_POST["nuevaCategoriaGasto"],
 							   "id_usuario" => $_SESSION["id"],
+							   "id_bodega" => $_SESSION["id_bodega"],
 							   "id_proveedor" => !empty($_POST["nuevoProveedorGasto"]) ? $_POST["nuevoProveedorGasto"] : null,
 							   "metodo_pago" => $_POST["nuevoMetodoPagoGasto"],
 							   "numero_comprobante" => $_POST["nuevoNumeroComprobante"],
@@ -575,7 +596,8 @@ class ControladorGastos{
 
 	static public function ctrSumarTotalGastos(){
 
-		$respuesta = ModeloGastos::mdlSumarTotalGastos();
+		$idBodega = ($_SESSION["perfil"] != "Administrador") ? $_SESSION["id_bodega"] : null;
+		$respuesta = ModeloGastos::mdlSumarTotalGastos($idBodega);
 
 		return $respuesta;
 
@@ -587,7 +609,8 @@ class ControladorGastos{
 
 	static public function ctrSumarGastosPorFecha($fechaInicio, $fechaFin){
 
-		$respuesta = ModeloGastos::mdlSumarGastosPorFecha($fechaInicio, $fechaFin);
+		$idBodega = ($_SESSION["perfil"] != "Administrador") ? $_SESSION["id_bodega"] : null;
+		$respuesta = ModeloGastos::mdlSumarGastosPorFecha($fechaInicio, $fechaFin, $idBodega);
 
 		return $respuesta;
 
@@ -599,7 +622,8 @@ class ControladorGastos{
 
 	static public function ctrGastosPorCategoria(){
 
-		$respuesta = ModeloGastos::mdlGastosPorCategoria();
+		$idBodega = ($_SESSION["perfil"] != "Administrador") ? $_SESSION["id_bodega"] : null;
+		$respuesta = ModeloGastos::mdlGastosPorCategoria($idBodega);
 
 		return $respuesta;
 

@@ -74,13 +74,18 @@ class ModeloVentas
 
 	static public function mdlIngresarVenta($tabla, $datos)
 	{
+		// ÚLTIMA LÍNEA DE DEFENSA: No permitir guardar si productos está vacío o es []
+		if (empty($datos["productos"]) || $datos["productos"] == "[]") {
+			throw new Exception("Error Crítico: Intento de guardar venta sin productos en el Modelo.");
+		}
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(codigo, numero_factura, id_cliente, id_vendedor, productos, impuesto, neto, total, metodo_pago, notas, observacion, estado, imagen, fecha, tipo_descuento, valor_descuento, monto_descuento, recibe, extra, retenciones, resolucion_id, fecha_vencimiento, orden_compra, forma_pago_dian, metodo_pago_dian_id, estado_dian, cufe, qr_data, xml_dian, pdf_dian, mensaje_dian, fecha_envio_dian) VALUES (:codigo, :numero_factura, :id_cliente, :id_vendedor, :productos, :impuesto, :neto, :total, :metodo_pago, :notas, :observacion, :estado, :imagen, :fecha, :tipo_descuento, :valor_descuento, :monto_descuento, :recibe, :extra, :retenciones, :resolucion_id, :fecha_vencimiento, :orden_compra, :forma_pago_dian, :metodo_pago_dian_id, :estado_dian, :cufe, :qr_data, :xml_dian, :pdf_dian, :mensaje_dian, :fecha_envio_dian)");
+		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(codigo, numero_factura, id_cliente, id_vendedor, id_bodega, productos, impuesto, neto, total, metodo_pago, notas, observacion, estado, imagen, fecha, tipo_descuento, valor_descuento, monto_descuento, recibe, extra, retenciones, resolucion_id, fecha_vencimiento, orden_compra, forma_pago_dian, metodo_pago_dian_id, estado_dian, cufe, qr_data, xml_dian, pdf_dian, mensaje_dian, fecha_envio_dian) VALUES (:codigo, :numero_factura, :id_cliente, :id_vendedor, :id_bodega, :productos, :impuesto, :neto, :total, :metodo_pago, :notas, :observacion, :estado, :imagen, :fecha, :tipo_descuento, :valor_descuento, :monto_descuento, :recibe, :extra, :retenciones, :resolucion_id, :fecha_vencimiento, :orden_compra, :forma_pago_dian, :metodo_pago_dian_id, :estado_dian, :cufe, :qr_data, :xml_dian, :pdf_dian, :mensaje_dian, :fecha_envio_dian)");
 
 		$stmt->bindParam(":codigo", $datos["codigo"], PDO::PARAM_INT);
 		$stmt->bindParam(":numero_factura", $datos["numero_factura"], PDO::PARAM_STR); // Se inicia como NULL
 		$stmt->bindParam(":id_cliente", $datos["id_cliente"], PDO::PARAM_INT);
 		$stmt->bindParam(":id_vendedor", $datos["id_vendedor"], PDO::PARAM_INT);
+		$stmt->bindParam(":id_bodega", $datos["id_bodega"], PDO::PARAM_INT);
 		$stmt->bindParam(":productos", $datos["productos"], PDO::PARAM_STR);
 		$stmt->bindParam(":impuesto", $datos["impuesto"], PDO::PARAM_STR);
 		$stmt->bindParam(":neto", $datos["neto"], PDO::PARAM_STR);
@@ -129,13 +134,18 @@ class ModeloVentas
 
 	static public function mdlEditarVenta($tabla, $datos)
 	{
+		// ÚLTIMA LÍNEA DE DEFENSA: No permitir guardar si productos está vacío o es []
+		if (empty($datos["productos"]) || $datos["productos"] == "[]") {
+			throw new Exception("Error Crítico: Intento de editar venta sin productos en el Modelo.");
+		}
 
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET id_cliente = :id_cliente, numero_factura = :numero_factura, id_vendedor = :id_vendedor, productos = :productos, impuesto = :impuesto, neto = :neto, total = :total, metodo_pago = :metodo_pago, notas = :notas, observacion = :observacion, estado = :estado, fecha = :fecha, tipo_descuento = :tipo_descuento, valor_descuento = :valor_descuento, monto_descuento = :monto_descuento, recibe = :recibe, extra = :extra, retenciones = :retenciones, resolucion_id = :resolucion_id, fecha_vencimiento = :fecha_vencimiento, orden_compra = :orden_compra, forma_pago_dian = :forma_pago_dian, metodo_pago_dian_id = :metodo_pago_dian_id, estado_dian = :estado_dian, cufe = :cufe, qr_data = :qr_data, xml_dian = :xml_dian, pdf_dian = :pdf_dian, mensaje_dian = :mensaje_dian, fecha_envio_dian = :fecha_envio_dian WHERE codigo = :codigo");
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET id_cliente = :id_cliente, numero_factura = :numero_factura, id_vendedor = :id_vendedor, id_bodega = :id_bodega, productos = :productos, impuesto = :impuesto, neto = :neto, total = :total, metodo_pago = :metodo_pago, notas = :notas, observacion = :observacion, estado = :estado, fecha = :fecha, tipo_descuento = :tipo_descuento, valor_descuento = :valor_descuento, monto_descuento = :monto_descuento, recibe = :recibe, extra = :extra, retenciones = :retenciones, resolucion_id = :resolucion_id, fecha_vencimiento = :fecha_vencimiento, orden_compra = :orden_compra, forma_pago_dian = :forma_pago_dian, metodo_pago_dian_id = :metodo_pago_dian_id, estado_dian = :estado_dian, cufe = :cufe, qr_data = :qr_data, xml_dian = :xml_dian, pdf_dian = :pdf_dian, mensaje_dian = :mensaje_dian, fecha_envio_dian = :fecha_envio_dian WHERE codigo = :codigo");
 
 		$stmt->bindParam(":codigo", $datos["codigo"], PDO::PARAM_INT);
 		$stmt->bindParam(":numero_factura", $datos["numero_factura"], PDO::PARAM_STR);
 		$stmt->bindParam(":id_cliente", $datos["id_cliente"], PDO::PARAM_STR);
 		$stmt->bindParam(":id_vendedor", $datos["id_vendedor"], PDO::PARAM_STR);
+		$stmt->bindParam(":id_bodega", $datos["id_bodega"], PDO::PARAM_INT);
 		$stmt->bindParam(":productos", $datos["productos"], PDO::PARAM_STR);
 		$stmt->bindParam(":impuesto", $datos["impuesto"], PDO::PARAM_STR);
 		$stmt->bindParam(":neto", $datos["neto"], PDO::PARAM_STR);

@@ -1,5 +1,10 @@
 $(document).ready(function () {
     /*=============================================
+    INICIALIZAR SELECT2 PARA SUCURSAL
+    =============================================*/
+    $('.select2').select2();
+
+    /*=============================================
     CARGAR TABLA DINAMICA DE PRODUCTOS
     =============================================*/
     var tablaProductosDS = $(".tablaProductosDS").DataTable({
@@ -311,6 +316,7 @@ $(document).ready(function () {
                 "type": "POST",
                 "data": function (d) {
                     d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+                    d.idBodega = $("#sucursal_ds").val();
                 }
             },
             "autoWidth": false,
@@ -735,5 +741,14 @@ $(document).ready(function () {
                 });
             }
         });
+    });
+
+    /*=============================================
+    FILTRO POR SUCURSAL
+    =============================================*/
+    $("#sucursal_ds").change(function () {
+        if ($.fn.DataTable.isDataTable('#tablaListadoDocumentoSoporte')) {
+            $('#tablaListadoDocumentoSoporte').DataTable().ajax.reload();
+        }
     });
 });

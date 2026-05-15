@@ -452,7 +452,10 @@ class ControladorFactus
 	static private function validarProductos($productosJson)
 	{
 		$errores = [];
+		$logPath = "C:/xampp/htdocs/pos/debug_price_validation.txt";
+
 		require_once __DIR__ . "/../modelos/productos.modelo.php";
+		file_put_contents($logPath, "JSON RECIBIDO: " . $productosJson . "\n", FILE_APPEND);
 		$productos = json_decode($productosJson, true);
 
 		if (empty($productos) || !is_array($productos)) {
@@ -496,11 +499,26 @@ class ControladorFactus
 			}
 
 			// Validar precio y cantidad
-			if (floatval($productoVenta['precio']) <= 0) {
+			$precioRecibido = $productoVenta['precio'] ?? 0;
+			
+			// Saneamiento de precio: quitar comas y espacios
+			$precioLimpio = str_replace([',', ' '], '', $precioRecibido);
+			$precioFloat = floatval($precioLimpio);
+
+			file_put_contents($logPath, "Validando producto: " . $nombre . " | Recibido: " . $precioRecibido . " | Limpio: " . $precioLimpio . " | floatval: " . $precioFloat . "\n", FILE_APPEND);
+			
+			if ($precioFloat <= 0) {
+				// 🛡️ FALLBACK: Si el precio es inválido en el JSON, intentar usar el de la base de datos
+				$precioFloat = floatval($productoBD['precio_venta'] ?? 0);
+				file_put_contents($logPath, "  -> [FALLBACK] Usando precio BD: " . $precioFloat . "\n", FILE_APPEND);
+			}
+
+			if ($precioFloat <= 0) {
 				$errores[] = "El producto '$nombre' tiene precio inválido (debe ser mayor a 0)";
 			}
 
-			if (intval($productoVenta['cantidad']) <= 0) {
+			$cantidad = intval($productoVenta['cantidad'] ?? 0);
+			if ($cantidad <= 0) {
 				$errores[] = "El producto '$nombre' tiene cantidad inválida (debe ser mayor a 0)";
 			}
 		}
@@ -832,7 +850,12 @@ class ControladorFactus
 			}
 			$unidadMedida = isset($productoBD['unidad_medida_id']) && !empty($productoBD['unidad_medida_id']) ? intval($productoBD['unidad_medida_id']) : 70;
 
-			$precioBruto = floatval($productoVenta['precio']);
+			$precioLimpio = str_replace([',', ' '], '', $productoVenta['precio'] ?? '0');
+			$precioBruto = floatval($precioLimpio);
+
+			if ($precioBruto <= 0) {
+				$precioBruto = floatval($productoBD['precio_venta'] ?? 0);
+			}
 
 			// 🔹 CORRECCIÓN FAX07: Calcular el Precio Neto (Base) dado que POS usa precio con impuestos
 			if ($tasaImpuesto > 0) {
@@ -1702,6 +1725,7 @@ class ControladorFactus
 				"mensaje_dian" => "Documento guardado localmente (Borrador). Pendiente de firma.",
 				"factus_id" => null,
 				"id_usuario" => $_POST["idUsuario"],
+				"id_bodega" => (!empty($_SESSION["id_bodega"])) ? $_SESSION["id_bodega"] : 1,
 				"tipo_descuento" => $_POST["tipoDescuentoDS"] ?? null,
 				"valor_descuento" => $_POST["valorDescuentoDS"] ?? 0,
 				"monto_descuento" => $_POST["montoDescuentoDS"] ?? 0,
@@ -2388,6 +2412,27 @@ class ControladorFactus
 
 		$where = " WHERE 1=1 ";
 
+		// Restricción por Perfil: Si no es Admin, solo ve su sucursal
+		$isAdmin = (stripos($_SESSION["perfil"], "Admin") !== false);
+		$idBodegaSession = $_SESSION["id_bodega"];
+
+		if (!$isAdmin) {
+			$where .= " AND v.id_bodega = $idBodegaSession ";
+		} else {
+			// Filtro por Bodega (solo para Admins)
+			if (!empty($params['idBodega'])) {
+				$idBodega = intval($params['idBodega']);
+				$where .= " AND v.id_bodega = $idBodega ";
+			}
+		}
+
+		// Filtro por Rango de Fechas
+		if (!empty($params['fechaInicial']) && !empty($params['fechaFinal'])) {
+			$fechaInicial = $params['fechaInicial'];
+			$fechaFinal = $params['fechaFinal'];
+			$where .= " AND nc.fecha_creacion BETWEEN '$fechaInicial 00:00:00' AND '$fechaFinal 23:59:59' ";
+		}
+
 		// Búsqueda global
 		if (!empty($params['search']['value'])) {
 			$s = $params['search']['value'];
@@ -2412,8 +2457,13 @@ class ControladorFactus
 			$limit = " LIMIT " . intval($params['start']) . ", " . intval($params['length']);
 		}
 
+		$whereBase = " WHERE 1=1 ";
+		if (!$isAdmin) {
+			$whereBase .= " AND v.id_bodega = $idBodegaSession ";
+		}
+
 		$notas     = ModeloFactus::mdlMostrarNotasCreditoServerSide($where, $order, $limit);
-		$total     = ModeloFactus::mdlGetTotalNotasCredito(" WHERE 1=1 ");
+		$total     = ModeloFactus::mdlGetTotalNotasCredito($whereBase);
 		$filtradas = ModeloFactus::mdlGetTotalNotasCredito($where);
 
 		$data = [];
@@ -2515,6 +2565,19 @@ class ControladorFactus
 		$prefijoAjuste = $rangoAjuste ? $rangoAjuste["prefijo"] : "NA";
 
 		$where = " WHERE 1=1 ";
+
+		// Filtro por Bodega (Sucursal)
+		if (!empty($params['idBodega']) && is_numeric($params['idBodega'])) {
+			$where .= " AND ds.id_bodega = " . $params['idBodega'];
+		} else {
+			// Si no hay filtro explícito, aplicar restricción de sesión (excepto si es Admin en Bodega Principal viendo "Todo")
+			if (!empty($_SESSION["id_bodega"])) {
+				if ($_SESSION["perfil"] != "Administrador" || $_SESSION["id_bodega"] != 1) {
+					$where .= " AND ds.id_bodega = " . $_SESSION["id_bodega"];
+				}
+			}
+		}
+
 		if (!empty($params['search']['value'])) {
 			$s = $params['search']['value'];
 			
@@ -2671,27 +2734,27 @@ class ControladorFactus
 	/*=============================================
 	OBTENER KPIs PARA REPORTES
 	=============================================*/
-	static public function ctrObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos")
+	static public function ctrObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos", $idBodega = "")
 	{
-		$respuesta = ModeloFactus::mdlObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero, $idUsuario);
+		$respuesta = ModeloFactus::mdlObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero, $idUsuario, $idBodega);
 		return $respuesta;
 	}
 
 	/*=============================================
 	OBTENER DATOS PARA GRÁFICO DE VENTAS
 	=============================================*/
-	static public function ctrObtenerVentasGrafico($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos")
+	static public function ctrObtenerVentasGrafico($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos", $idBodega = "")
 	{
-		$respuesta = ModeloFactus::mdlObtenerVentasGrafico($fechaInicial, $fechaFinal, $categoria, $tercero, $idUsuario);
+		$respuesta = ModeloFactus::mdlObtenerVentasGrafico($fechaInicial, $fechaFinal, $categoria, $tercero, $idUsuario, $idBodega);
 		return $respuesta;
 	}
 
 	/*=============================================
 	MOSTRAR REPORTE DETALLADO
 	=============================================*/
-	static public function ctrMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos")
+	static public function ctrMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos", $idBodega = "")
 	{
-		$respuesta = ModeloFactus::mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero, $idUsuario);
+		$respuesta = ModeloFactus::mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero, $idUsuario, $idBodega);
 		return $respuesta;
 	}
 
@@ -2707,9 +2770,10 @@ class ControladorFactus
 			$categoria = $_GET["categoria"] ?? "todos";
 			$tercero = $_GET["tercero"] ?? "todos";
 			$idUsuario = $_GET["idUsuario"] ?? "todos";
+			$idBodega = $_GET["idBodega"] ?? "";
 
 			// Obtener datos
-			$reporte = ModeloFactus::mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero, $idUsuario);
+			$reporte = ModeloFactus::mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero, $idUsuario, $idBodega);
 
 			/*=============================================
 			CREAMOS EL ARCHIVO DE EXCEL
@@ -2829,7 +2893,20 @@ class ControladorFactus
 		$rangoActivoDS = ModeloFactus::mdlObtenerRangoDS();
 		$prefijoDS = $rangoActivoDS ? $rangoActivoDS["prefijo"] : "";
 
-		$where = " WHERE 1=1 ";
+		$where     = " WHERE 1=1 ";
+		$whereBase = " WHERE 1=1 "; // Para recordsTotal (sin filtros de búsqueda)
+
+		$isAdmin = (stripos($_SESSION["perfil"], "Admin") !== false);
+		if (!$isAdmin) {
+			$idBodegaSession = intval($_SESSION["id_bodega"]);
+			$where     .= " AND ds.id_bodega = $idBodegaSession ";
+			$whereBase .= " AND ds.id_bodega = $idBodegaSession ";
+		} else {
+			if (isset($_POST["idBodega"]) && !empty($_POST["idBodega"])) {
+				$where     .= " AND ds.id_bodega = " . intval($_POST["idBodega"]);
+				$whereBase .= " AND ds.id_bodega = " . intval($_POST["idBodega"]);
+			}
+		}
 		if (!empty($params['search']['value'])) {
 			$s = $params['search']['value'];
 			
@@ -2851,8 +2928,8 @@ class ControladorFactus
 		$order = " ORDER BY " . $columns[$params['order'][0]['column']] . " " . $params['order'][0]['dir'];
 		$limit = " LIMIT " . $params['start'] . ", " . $params['length'];
 
-		$data = ModeloFactus::mdlMostrarDocumentosSoporteServerSide($where, $order, $limit);
-		$total = ModeloFactus::mdlGetTotalDocumentosSoporte();
+		$data      = ModeloFactus::mdlMostrarDocumentosSoporteServerSide($where, $order, $limit);
+		$total     = ModeloFactus::mdlGetTotalDocumentosSoporte($whereBase);
 		$filtradas = ModeloFactus::mdlGetTotalDocumentosSoporte($where);
 
 		// Datos para lógica de borradores

@@ -60,6 +60,10 @@ class AjaxMovimientos
 				$filtros["usuario"] = $_POST["usuario"];
 			}
 
+			if (isset($_POST["id_bodega"]) && $_POST["id_bodega"] != "" && $_POST["id_bodega"] != "todos") {
+				$filtros["id_bodega"] = $_POST["id_bodega"];
+			}
+
 			// Limpieza automática de registros más antiguos de 3 meses
 			ModeloMovimientos::mdlLimpiarHistorialAntiguo("movimientos_stock");
 
@@ -94,6 +98,10 @@ class AjaxMovimientos
 
 			if (isset($_POST["fecha_hasta"]) && $_POST["fecha_hasta"] != "") {
 				$filtros["fecha_hasta"] = $_POST["fecha_hasta"];
+			}
+
+			if (isset($_POST["id_bodega"]) && $_POST["id_bodega"] != "" && $_POST["id_bodega"] != "todos") {
+				$filtros["id_bodega"] = $_POST["id_bodega"];
 			}
 
 			// Limpieza automática de registros más antiguos de 3 meses

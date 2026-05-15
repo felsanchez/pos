@@ -1780,13 +1780,13 @@ class ModeloFactus
         $db = Conexion::conectar();
         $stmt = $db->prepare(
             "INSERT INTO documentos_soporte (
-				numero_ds, id_proveedor, fecha_emision, metodo_pago,
+				numero_ds, id_proveedor, id_bodega, fecha_emision, metodo_pago,
 				productos, monto_total, estado_dian, cuds,
 				qr_data, pdf_dian, xml_dian, mensaje_dian,
 				factus_id, id_usuario, tipo_descuento, valor_descuento,
 				monto_descuento, retenciones
 			) VALUES (
-				:numero, :proveedor, :fecha, :metodo,
+				:numero, :proveedor, :id_bodega, :fecha, :metodo,
 				:productos, :monto, :estado, :cuds,
 				:qr, :pdf, :xml, :mensaje,
 				:factus_id, :usuario, :tipo_desc, :valor_desc,
@@ -1796,6 +1796,7 @@ class ModeloFactus
 
         $stmt->bindParam(":numero", $datos["numero_ds"], PDO::PARAM_STR);
         $stmt->bindParam(":proveedor", $datos["id_proveedor"], PDO::PARAM_INT);
+        $stmt->bindParam(":id_bodega", $datos["id_bodega"], PDO::PARAM_INT);
         $stmt->bindParam(":fecha", $datos["fecha_emision"], PDO::PARAM_STR);
         $stmt->bindParam(":metodo", $datos["metodo_pago"], PDO::PARAM_STR);
         $stmt->bindParam(":productos", $datos["productos"], PDO::PARAM_STR);
@@ -2033,6 +2034,7 @@ class ModeloFactus
                     c.email  AS cliente_email
              FROM notas_credito nc
              LEFT JOIN clientes c ON nc.id_cliente = c.id
+             LEFT JOIN ventas v ON nc.id_venta_original = v.id
              $where $order $limit"
         );
         $stmt->execute();
@@ -2047,6 +2049,7 @@ class ModeloFactus
         $stmt = Conexion::conectar()->prepare(
             "SELECT COUNT(*) FROM notas_credito nc
              LEFT JOIN clientes c ON nc.id_cliente = c.id
+             LEFT JOIN ventas v ON nc.id_venta_original = v.id
              $where"
         );
         $stmt->execute();
@@ -2139,7 +2142,7 @@ class ModeloFactus
     /*=============================================
     OBTENER KPIs PARA REPORTES
     =============================================*/
-    static public function mdlObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos")
+    static public function mdlObtenerKPIsReporte($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos", $idBodega = "")
     {
         $db = Conexion::conectar();
         
@@ -2147,116 +2150,98 @@ class ModeloFactus
             $fechaInicial = "2000-01-01";
             $fechaFinal = "2100-12-31";
         }
-
-        // Ajustar fechas para incluir todo el día
+        
         $inicio = $fechaInicial . " 00:00:00";
         $fin = $fechaFinal . " 23:59:59";
 
-        $filtroCliente = ($tercero != "todos" && ($categoria == "todos" || $categoria == "facturas" || $categoria == "nc")) ? " AND id_cliente = :tc " : "";
-        $filtroProveedor = ($tercero != "todos" && ($categoria == "ds" || $categoria == "na")) ? " AND id_proveedor = :tp " : "";
-        $filtroVendedor = ($idUsuario != "todos") ? " AND id_vendedor = :uidv " : "";
-        $filtroUsuario  = ($idUsuario != "todos") ? " AND id_usuario = :uidu " : "";
+        $filtroVentasCliente = ($tercero != "todos" && ($categoria == "todos" || $categoria == "facturas")) ? " AND v.id_cliente = :tc1 " : "";
+        $filtroNCCliente     = ($tercero != "todos" && ($categoria == "todos" || $categoria == "nc")) ? " AND nc.id_cliente = :tc2 " : "";
+        $filtroDSProveedor   = ($tercero != "todos" && ($categoria == "todos" || $categoria == "ds")) ? " AND ds.id_proveedor = :tp1 " : "";
+        $filtroNAProveedor   = ($tercero != "todos" && ($categoria == "todos" || $categoria == "na")) ? " AND na.id_proveedor = :tp2 " : "";
 
-        // 1. VENTAS (Facturadas y aceptadas)
-        $stmtVentas = $db->prepare("SELECT SUM(total) as t, SUM(impuesto) as i, COUNT(*) as c 
-                                    FROM ventas 
-                                    WHERE estado_dian IN ('aceptada', 'enviada') 
-                                    AND (fecha BETWEEN :s1 AND :e1 OR fecha_envio_dian BETWEEN :s2 AND :e2)" . $filtroCliente . $filtroVendedor);
-        $stmtVentas->bindParam(":s1", $inicio, PDO::PARAM_STR);
-        $stmtVentas->bindParam(":e1", $fin, PDO::PARAM_STR);
-        $stmtVentas->bindParam(":s2", $inicio, PDO::PARAM_STR);
-        $stmtVentas->bindParam(":e2", $fin, PDO::PARAM_STR);
-        if ($filtroCliente != "")
-            $stmtVentas->bindParam(":tc", $tercero, PDO::PARAM_INT);
-        if ($filtroVendedor != "")
-            $stmtVentas->bindParam(":uidv", $idUsuario, PDO::PARAM_INT);
-        $stmtVentas->execute();
-        $resVentas = $stmtVentas->fetch();
+        $filtroVendedor = ($idUsuario != "todos") ? " AND v.id_vendedor = :uidv " : "";
+        $filtroNCUsuario = ($idUsuario != "todos") ? " AND nc.id_usuario = :uidu1 " : "";
+        $filtroDSUsuario = ($idUsuario != "todos") ? " AND ds.id_usuario = :uidu2 " : "";
+        $filtroNAUsuario = ($idUsuario != "todos") ? " AND na.id_usuario = :uidu3 " : "";
 
-        // 2. NOTAS CRÉDITO (Reducciones de venta)
-        $stmtNC = $db->prepare("SELECT SUM(monto_total) as t, COUNT(*) as c 
-                                FROM notas_credito 
-                                WHERE estado_dian IN ('aceptada', 'enviada') 
-                                AND IFNULL(fecha_envio_dian, fecha_creacion) BETWEEN :s3 AND :e3" . $filtroCliente . $filtroUsuario);
-        $stmtNC->bindParam(":s3", $inicio, PDO::PARAM_STR);
-        $stmtNC->bindParam(":e3", $fin, PDO::PARAM_STR);
-        if ($filtroCliente != "")
-            $stmtNC->bindParam(":tc", $tercero, PDO::PARAM_INT);
-        if ($filtroUsuario != "")
-            $stmtNC->bindParam(":uidu", $idUsuario, PDO::PARAM_INT);
-        $stmtNC->execute();
-        $resNC = $stmtNC->fetch();
-
-        // 3. DOCUMENTOS SOPORTE (Gastos/Compras)
-        $stmtDS = $db->prepare("SELECT SUM(monto_total) as t, COUNT(*) as c 
-                                FROM documentos_soporte 
-                                WHERE estado_dian IN ('aceptada', 'enviada') 
-                                AND fecha_emision BETWEEN :s4 AND :e4" . $filtroProveedor . $filtroUsuario);
-        $stmtDS->bindParam(":s4", $inicio, PDO::PARAM_STR);
-        $stmtDS->bindParam(":e4", $fin, PDO::PARAM_STR);
-        if ($filtroProveedor != "")
-            $stmtDS->bindParam(":tp", $tercero, PDO::PARAM_INT);
-        if ($filtroUsuario != "")
-            $stmtDS->bindParam(":uidu", $idUsuario, PDO::PARAM_INT);
-        $stmtDS->execute();
-        $resDS = $stmtDS->fetch();
-
-        // 4. NOTAS DE AJUSTE DS (Reducciones de DS)
-        $stmtNA = $db->prepare("SELECT SUM(monto_total) as t, COUNT(*) as c 
-                                FROM notas_ajuste_ds 
-                                WHERE estado_dian IN ('aceptada', 'enviada') 
-                                AND IFNULL(fecha_envio_dian, fecha_registro) BETWEEN :s5 AND :e5" . $filtroProveedor . $filtroUsuario);
-        $stmtNA->bindParam(":s5", $inicio, PDO::PARAM_STR);
-        $stmtNA->bindParam(":e5", $fin, PDO::PARAM_STR);
-        if ($filtroProveedor != "")
-            $stmtNA->bindParam(":tp", $tercero, PDO::PARAM_INT);
-        if ($filtroUsuario != "")
-            $stmtNA->bindParam(":uidu", $idUsuario, PDO::PARAM_INT);
-        $stmtNA->execute();
-        $resNA = $stmtNA->fetch();
-
-        $totalVentasLiquido = 0;
-        $totalIva = 0;
-        $totalDSLiquido = 0;
-        $totalDocs = 0;
-
-        // Venta (Solo Facturas)
-        if ($categoria == "todos" || $categoria == "facturas") {
-            $totalVentasLiquido += ($resVentas["t"] ?? 0);
-            $totalIva += ($resVentas["i"] ?? 0);
-            $totalDocs += ($resVentas["c"] ?? 0);
+        if (isset($_SESSION["perfil"]) && stripos($_SESSION["perfil"], "Admin") === false) {
+            $idBodega = $_SESSION["id_bodega"];
         }
 
-        // Notas Crédito (Restan a venta)
-        if ($categoria == "todos" || $categoria == "nc") {
-            $totalVentasLiquido -= ($resNC["t"] ?? 0);
-            $totalDocs += ($resNC["c"] ?? 0);
+        $filtroBodegaVentas = ($idBodega != "" && $idBodega != "todos") ? " AND v.id_bodega = :ib1 " : "";
+        $filtroBodegaNC     = ($idBodega != "" && $idBodega != "todos") ? " AND v.id_bodega = :ib2 " : "";
+        $filtroBodegaDS     = ($idBodega != "" && $idBodega != "todos") ? " AND ds.id_bodega = :ib3 " : "";
+        $filtroBodegaNA     = ($idBodega != "" && $idBodega != "todos") ? " AND ds.id_bodega = :ib4 " : "";
+
+        $uniones = [];
+        $uniones[] = "(SELECT 'Factura' as tipo, v.total as monto, v.impuesto as iva
+                      FROM ventas v
+                      WHERE v.estado_dian IN ('aceptada', 'enviada')
+                      AND (v.fecha BETWEEN :s1 AND :e1 OR v.fecha_envio_dian BETWEEN :f1 AND :h1) " . $filtroVentasCliente . $filtroVendedor . $filtroBodegaVentas . ")";
+
+        $uniones[] = "(SELECT 'Nota Credito' as tipo, nc.monto_total as monto, 0 as iva
+                      FROM notas_credito nc
+                      LEFT JOIN ventas v ON nc.id_venta_original = v.id
+                      WHERE nc.estado_dian IN ('aceptada', 'enviada')
+                      AND IFNULL(nc.fecha_envio_dian, nc.fecha_creacion) BETWEEN :s2 AND :e2 " . $filtroNCCliente . $filtroNCUsuario . $filtroBodegaNC . ")";
+
+        $uniones[] = "(SELECT 'Doc Soporte' as tipo, ds.monto_total as monto, 0 as iva
+                      FROM documentos_soporte ds
+                      WHERE ds.estado_dian IN ('aceptada', 'enviada')
+                      AND ds.fecha_emision BETWEEN :s3 AND :e3 " . $filtroDSProveedor . $filtroDSUsuario . $filtroBodegaDS . ")";
+
+        $uniones[] = "(SELECT 'Nota Ajuste' as tipo, na.monto_total as monto, 0 as iva
+                      FROM notas_ajuste_ds na
+                      LEFT JOIN documentos_soporte ds ON na.id_ds_original = ds.id
+                      WHERE na.estado_dian IN ('aceptada', 'enviada')
+                      AND IFNULL(na.fecha_envio_dian, na.fecha_registro) BETWEEN :s4 AND :e4 " . $filtroNAProveedor . $filtroNAUsuario . $filtroBodegaNA . ")";
+
+        $sql = "SELECT 
+                    SUM(CASE WHEN tipo = 'Factura' THEN monto ELSE 0 END) - SUM(CASE WHEN tipo = 'Nota Credito' THEN monto ELSE 0 END) as totalVentas,
+                    SUM(CASE WHEN tipo = 'Factura' THEN iva ELSE 0 END) as totalIva,
+                    SUM(CASE WHEN tipo = 'Doc Soporte' THEN monto ELSE 0 END) - SUM(CASE WHEN tipo = 'Nota Ajuste' THEN monto ELSE 0 END) as totalDS,
+                    COUNT(*) as totalDocs
+                FROM (" . implode(" UNION ALL ", $uniones) . ") as t";
+
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(":s1", $inicio, PDO::PARAM_STR); $stmt->bindParam(":e1", $fin, PDO::PARAM_STR);
+        $stmt->bindParam(":f1", $inicio, PDO::PARAM_STR); $stmt->bindParam(":h1", $fin, PDO::PARAM_STR);
+        $stmt->bindParam(":s2", $inicio, PDO::PARAM_STR); $stmt->bindParam(":e2", $fin, PDO::PARAM_STR);
+        $stmt->bindParam(":s3", $inicio, PDO::PARAM_STR); $stmt->bindParam(":e3", $fin, PDO::PARAM_STR);
+        $stmt->bindParam(":s4", $inicio, PDO::PARAM_STR); $stmt->bindParam(":e4", $fin, PDO::PARAM_STR);
+
+        if ($filtroVentasCliente != "") $stmt->bindParam(":tc1", $tercero, PDO::PARAM_INT);
+        if ($filtroNCCliente != "")     $stmt->bindParam(":tc2", $tercero, PDO::PARAM_INT);
+        if ($filtroDSProveedor != "")   $stmt->bindParam(":tp1", $tercero, PDO::PARAM_INT);
+        if ($filtroNAProveedor != "")   $stmt->bindParam(":tp2", $tercero, PDO::PARAM_INT);
+
+        if ($filtroVendedor != "")      $stmt->bindParam(":uidv", $idUsuario, PDO::PARAM_INT);
+        if ($filtroNCUsuario != "")     $stmt->bindParam(":uidu1", $idUsuario, PDO::PARAM_INT);
+        if ($filtroDSUsuario != "")     $stmt->bindParam(":uidu2", $idUsuario, PDO::PARAM_INT);
+        if ($filtroNAUsuario != "")     $stmt->bindParam(":uidu3", $idUsuario, PDO::PARAM_INT);
+
+        if ($idBodega != "" && $idBodega != "todos") {
+            $stmt->bindParam(":ib1", $idBodega, PDO::PARAM_INT);
+            $stmt->bindParam(":ib2", $idBodega, PDO::PARAM_INT);
+            $stmt->bindParam(":ib3", $idBodega, PDO::PARAM_INT);
+            $stmt->bindParam(":ib4", $idBodega, PDO::PARAM_INT);
         }
 
-        // Doc Soporte (Solo DS)
-        if (($categoria == "todos" && $tercero == "todos") || $categoria == "ds") {
-            $totalDSLiquido += ($resDS["t"] ?? 0);
-            $totalDocs += ($resDS["c"] ?? 0);
-        }
-
-        // Notas Ajuste (Restan a DS)
-        if (($categoria == "todos" && $tercero == "todos") || $categoria == "na") {
-            $totalDSLiquido -= ($resNA["t"] ?? 0);
-            $totalDocs += ($resNA["c"] ?? 0);
-        }
+        $stmt->execute();
+        $res = $stmt->fetch();
 
         return [
-            "totalVentas" => $totalVentasLiquido,
-            "totalIva" => $totalIva,
-            "totalDS" => $totalDSLiquido,
-            "totalDocs" => $totalDocs
+            "totalVentas" => (float)($res["totalVentas"] ?? 0),
+            "totalIva" => (float)($res["totalIva"] ?? 0),
+            "totalDS" => (float)($res["totalDS"] ?? 0),
+            "totalDocs" => (int)($res["totalDocs"] ?? 0)
         ];
     }
 
     /*=============================================
     OBTENER DATOS PARA GRÁFICO DE VENTAS
     =============================================*/
-    static public function mdlObtenerVentasGrafico($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos")
+    static public function mdlObtenerVentasGrafico($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos", $idBodega = "")
     {
         $db = Conexion::conectar();
         $inicio = $fechaInicial . " 00:00:00";
@@ -2267,25 +2252,34 @@ class ModeloFactus
         $filtroVendedor = ($idUsuario != "todos") ? " AND id_vendedor = :uidv " : "";
         $filtroUsuario  = ($idUsuario != "todos") ? " AND id_usuario = :uidu " : "";
 
+        // Seguridad: Si no es admin, solo ve su sucursal
+        if (isset($_SESSION["perfil"]) && stripos($_SESSION["perfil"], "Admin") === false) {
+            $idBodega = $_SESSION["id_bodega"];
+        }
+
+        $filtroBodega = ($idBodega != "" && $idBodega != "todos") ? " AND id_bodega = :ib " : "";
+
         if ($categoria == "ds") {
             $stmt = $db->prepare("SELECT DATE(fecha_emision) as dia, SUM(monto_total) as total 
                                   FROM documentos_soporte 
                                   WHERE estado_dian IN ('aceptada', 'enviada') 
-                                  AND fecha_emision BETWEEN :s1 AND :e1 " . $filtroProveedor . $filtroUsuario . "
+                                  AND fecha_emision BETWEEN :s1 AND :e1 " . $filtroProveedor . $filtroUsuario . $filtroBodega . "
                                   GROUP BY DATE(fecha_emision) 
                                   ORDER BY DATE(fecha_emision) ASC");
         } else if ($categoria == "nc") {
-            $stmt = $db->prepare("SELECT DATE(IFNULL(fecha_envio_dian, fecha_creacion)) as dia, SUM(monto_total) as total 
-                                  FROM notas_credito 
-                                  WHERE estado_dian IN ('aceptada', 'enviada') 
-                                  AND IFNULL(fecha_envio_dian, fecha_creacion) BETWEEN :s1 AND :e1 " . $filtroCliente . $filtroUsuario . "
+            $stmt = $db->prepare("SELECT DATE(IFNULL(nc.fecha_envio_dian, nc.fecha_creacion)) as dia, SUM(nc.monto_total) as total 
+                                  FROM notas_credito nc
+                                  LEFT JOIN ventas v ON nc.id_venta_original = v.id
+                                  WHERE nc.estado_dian IN ('aceptada', 'enviada') 
+                                  AND IFNULL(nc.fecha_envio_dian, nc.fecha_creacion) BETWEEN :s1 AND :e1 " . str_replace("id_cliente", "nc.id_cliente", $filtroCliente) . str_replace("id_usuario", "nc.id_usuario", $filtroUsuario) . str_replace("id_bodega", "v.id_bodega", $filtroBodega) . "
                                   GROUP BY DATE(IFNULL(fecha_envio_dian, fecha_creacion)) 
                                   ORDER BY DATE(IFNULL(fecha_envio_dian, fecha_creacion)) ASC");
         } else if ($categoria == "na") {
-            $stmt = $db->prepare("SELECT DATE(IFNULL(fecha_envio_dian, fecha_registro)) as dia, SUM(monto_total) as total 
-                                  FROM notas_ajuste_ds 
-                                  WHERE estado_dian IN ('aceptada', 'enviada') 
-                                  AND IFNULL(fecha_envio_dian, fecha_registro) BETWEEN :s1 AND :e1 " . $filtroProveedor . $filtroUsuario . "
+            $stmt = $db->prepare("SELECT DATE(IFNULL(na.fecha_envio_dian, na.fecha_registro)) as dia, SUM(na.monto_total) as total 
+                                  FROM notas_ajuste_ds na
+                                  LEFT JOIN documentos_soporte ds ON na.id_ds_original = ds.id
+                                  WHERE na.estado_dian IN ('aceptada', 'enviada') 
+                                  AND IFNULL(na.fecha_envio_dian, na.fecha_registro) BETWEEN :s1 AND :e1 " . str_replace("id_proveedor", "na.id_proveedor", $filtroProveedor) . str_replace("id_usuario", "na.id_usuario", $filtroUsuario) . str_replace("id_bodega", "ds.id_bodega", $filtroBodega) . "
                                   GROUP BY DATE(IFNULL(fecha_envio_dian, fecha_registro)) 
                                   ORDER BY DATE(IFNULL(fecha_envio_dian, fecha_registro)) ASC");
         } else {
@@ -2293,13 +2287,15 @@ class ModeloFactus
             $stmt = $db->prepare("SELECT DATE(fecha) as dia, SUM(total) as total 
                                   FROM ventas 
                                   WHERE estado_dian IN ('aceptada', 'enviada') 
-                                  AND fecha BETWEEN :s1 AND :e1 " . $filtroCliente . $filtroVendedor . "
+                                  AND fecha BETWEEN :s1 AND :e1 " . $filtroCliente . $filtroVendedor . $filtroBodega . "
                                   GROUP BY DATE(fecha) 
                                   ORDER BY DATE(fecha) ASC");
         }
 
         $stmt->bindParam(":s1", $inicio, PDO::PARAM_STR);
         $stmt->bindParam(":e1", $fin, PDO::PARAM_STR);
+        if ($idBodega != "" && $idBodega != "todos")
+            $stmt->bindParam(":ib", $idBodega, PDO::PARAM_INT);
 
         if ($categoria == "ds" || $categoria == "na") {
             if ($filtroProveedor != "")
@@ -2325,7 +2321,7 @@ class ModeloFactus
     /*=============================================
     MOSTRAR REPORTE DETALLADO (LISTADO CONSOLIDADO)
     =============================================*/
-    static public function mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos")
+    static public function mdlMostrarReporteDetallado($fechaInicial, $fechaFinal, $categoria, $tercero = "todos", $idUsuario = "todos", $idBodega = "")
     {
         $db = Conexion::conectar();
         
@@ -2337,40 +2333,55 @@ class ModeloFactus
         $inicio = $fechaInicial . " 00:00:00";
         $fin = $fechaFinal . " 23:59:59";
 
-        $filtroCliente = ($tercero != "todos" && ($categoria == "todos" || $categoria == "facturas" || $categoria == "nc")) ? " AND id_cliente = :tc " : "";
-        $filtroProveedor = ($tercero != "todos" && ($categoria == "ds" || $categoria == "na")) ? " AND id_proveedor = :tp " : "";
+        $filtroVentasCliente = ($tercero != "todos" && ($categoria == "todos" || $categoria == "facturas")) ? " AND v.id_cliente = :tc1 " : "";
+        $filtroNCCliente     = ($tercero != "todos" && ($categoria == "todos" || $categoria == "nc")) ? " AND nc.id_cliente = :tc2 " : "";
+        $filtroDSProveedor   = ($tercero != "todos" && ($categoria == "todos" || $categoria == "ds")) ? " AND ds.id_proveedor = :tp1 " : "";
+        $filtroNAProveedor   = ($tercero != "todos" && ($categoria == "todos" || $categoria == "na")) ? " AND na.id_proveedor = :tp2 " : "";
+
         $filtroVendedor = ($idUsuario != "todos") ? " AND v.id_vendedor = :uidv " : "";
         $filtroNCUsuario = ($idUsuario != "todos") ? " AND nc.id_usuario = :uidu1 " : "";
         $filtroDSUsuario = ($idUsuario != "todos") ? " AND ds.id_usuario = :uidu2 " : "";
         $filtroNAUsuario = ($idUsuario != "todos") ? " AND na.id_usuario = :uidu3 " : "";
+
+        // Seguridad: Si no es admin, solo ve su sucursal
+        if (isset($_SESSION["perfil"]) && stripos($_SESSION["perfil"], "Admin") === false) {
+            $idBodega = $_SESSION["id_bodega"];
+        }
+
+        $filtroBodegaVentas = ($idBodega != "" && $idBodega != "todos") ? " AND v.id_bodega = :ib1 " : "";
+        $filtroBodegaNC     = ($idBodega != "" && $idBodega != "todos") ? " AND v.id_bodega = :ib2 " : "";
+        $filtroBodegaDS     = ($idBodega != "" && $idBodega != "todos") ? " AND ds.id_bodega = :ib3 " : "";
+        $filtroBodegaNA     = ($idBodega != "" && $idBodega != "todos") ? " AND ds.id_bodega = :ib4 " : "";
 
         $queryVentas = "(SELECT 'Factura' as tipo, numero_factura as numero, IFNULL(cl.nombre, 'Venta General') as tercero, IFNULL(us.nombre, 'Sistema/Varios') as vendedor, v.fecha as fecha, total as monto, estado_dian as estado, v.id as id_doc
              FROM ventas v
              LEFT JOIN clientes cl ON v.id_cliente = cl.id
              LEFT JOIN usuarios us ON v.id_vendedor = us.id
              WHERE v.estado_dian IN ('aceptada', 'enviada')
-             AND (v.fecha BETWEEN :i1 AND :f1 OR v.fecha_envio_dian BETWEEN :i2 AND :f2) " . str_replace(":tc", ":tc1", $filtroCliente) . $filtroVendedor . ")";
+             AND (v.fecha BETWEEN :i1 AND :f1 OR v.fecha_envio_dian BETWEEN :i2 AND :f2) " . $filtroVentasCliente . $filtroVendedor . $filtroBodegaVentas . ")";
 
-        $queryNC = "(SELECT 'Nota Crédito' as tipo, numero_nota_credito as numero, IFNULL(cl.nombre, 'Sin Cliente') as tercero, IFNULL(us.nombre, 'Sistema') as vendedor, IFNULL(fecha_envio_dian, fecha_creacion) as fecha, monto_total as monto, estado_dian as estado, nc.id as id_doc
+        $queryNC = "(SELECT 'Nota Crédito' as tipo, nc.numero_nota_credito as numero, IFNULL(cl.nombre, 'Sin Cliente') as tercero, IFNULL(us.nombre, 'Sistema') as vendedor, IFNULL(nc.fecha_envio_dian, nc.fecha_creacion) as fecha, nc.monto_total as monto, nc.estado_dian as estado, nc.id as id_doc
              FROM notas_credito nc
+             LEFT JOIN ventas v ON nc.id_venta_original = v.id
              LEFT JOIN clientes cl ON nc.id_cliente = cl.id
              LEFT JOIN usuarios us ON nc.id_usuario = us.id
              WHERE nc.estado_dian IN ('aceptada', 'enviada')
-             AND IFNULL(nc.fecha_envio_dian, nc.fecha_creacion) BETWEEN :i3 AND :f3 " . str_replace(":tc", ":tc2", $filtroCliente) . $filtroNCUsuario . ")";
+             AND IFNULL(nc.fecha_envio_dian, nc.fecha_creacion) BETWEEN :i3 AND :f3 " . $filtroNCCliente . $filtroNCUsuario . $filtroBodegaNC . ")";
 
-        $queryDS = "(SELECT 'Doc. Soporte' as tipo, numero_ds as numero, IFNULL(pr.nombre, 'Empresa General') as tercero, IFNULL(us.nombre, 'Admin') as vendedor, fecha_emision as fecha, monto_total as monto, estado_dian as estado, ds.id as id_doc
+        $queryDS = "(SELECT 'Doc. Soporte' as tipo, ds.numero_ds as numero, IFNULL(pr.nombre, 'Empresa General') as tercero, IFNULL(us.nombre, 'Admin') as vendedor, ds.fecha_emision as fecha, ds.monto_total as monto, ds.estado_dian as estado, ds.id as id_doc
              FROM documentos_soporte ds
              LEFT JOIN proveedores pr ON ds.id_proveedor = pr.id
              LEFT JOIN usuarios us ON ds.id_usuario = us.id
              WHERE ds.estado_dian IN ('aceptada', 'enviada')
-             AND ds.fecha_emision BETWEEN :i4 AND :f4 " . str_replace(":tp", ":tp1", $filtroProveedor) . $filtroDSUsuario . ")";
+             AND ds.fecha_emision BETWEEN :i4 AND :f4 " . $filtroDSProveedor . $filtroDSUsuario . $filtroBodegaDS . ")";
 
-        $queryNA = "(SELECT 'Nota Ajuste DS' as tipo, numero_nota_ajuste as numero, IFNULL(pr.nombre, 'Sin Proveedor') as tercero, IFNULL(us.nombre, 'Admin') as vendedor, IFNULL(fecha_envio_dian, fecha_registro) as fecha, monto_total as monto, estado_dian as estado, na.id as id_doc
+        $queryNA = "(SELECT 'Nota Ajuste DS' as tipo, na.numero_nota_ajuste as numero, IFNULL(pr.nombre, 'Sin Proveedor') as tercero, IFNULL(us.nombre, 'Admin') as vendedor, IFNULL(na.fecha_envio_dian, na.fecha_registro) as fecha, na.monto_total as monto, na.estado_dian as estado, na.id as id_doc
              FROM notas_ajuste_ds na
+             LEFT JOIN documentos_soporte ds ON na.id_ds_original = ds.id
              LEFT JOIN proveedores pr ON na.id_proveedor = pr.id
              LEFT JOIN usuarios us ON na.id_usuario = us.id
              WHERE na.estado_dian IN ('aceptada', 'enviada')
-             AND IFNULL(na.fecha_envio_dian, na.fecha_registro) BETWEEN :i5 AND :f5 " . str_replace(":tp", ":tp2", $filtroProveedor) . $filtroNAUsuario . ")";
+             AND IFNULL(na.fecha_envio_dian, na.fecha_registro) BETWEEN :i5 AND :f5 " . $filtroNAProveedor . $filtroNAUsuario . $filtroBodegaNA . ")";
 
         $uniones = [];
         if ($categoria == "todos" || $categoria == "facturas") {
@@ -2399,38 +2410,46 @@ class ModeloFactus
             $stmt->bindParam(":f1", $fin, PDO::PARAM_STR);
             $stmt->bindParam(":i2", $inicio, PDO::PARAM_STR);
             $stmt->bindParam(":f2", $fin, PDO::PARAM_STR);
-            if ($filtroCliente != "")
+            if ($filtroVentasCliente != "")
                 $stmt->bindParam(":tc1", $tercero, PDO::PARAM_INT);
             if ($filtroVendedor != "")
                 $stmt->bindParam(":uidv", $idUsuario, PDO::PARAM_INT);
+            if ($idBodega != "" && $idBodega != "todos")
+                $stmt->bindParam(":ib1", $idBodega, PDO::PARAM_INT);
         }
 
         if ($categoria == "todos" || $categoria == "nc") {
             $stmt->bindParam(":i3", $inicio, PDO::PARAM_STR);
             $stmt->bindParam(":f3", $fin, PDO::PARAM_STR);
-            if ($filtroCliente != "")
+            if ($filtroNCCliente != "")
                 $stmt->bindParam(":tc2", $tercero, PDO::PARAM_INT);
             if ($filtroNCUsuario != "")
                 $stmt->bindParam(":uidu1", $idUsuario, PDO::PARAM_INT);
+            if ($idBodega != "" && $idBodega != "todos")
+                $stmt->bindParam(":ib2", $idBodega, PDO::PARAM_INT);
         }
 
         if (!($categoria == "todos" && $tercero != "todos")) {
             if ($categoria == "todos" || $categoria == "ds") {
                 $stmt->bindParam(":i4", $inicio, PDO::PARAM_STR);
                 $stmt->bindParam(":f4", $fin, PDO::PARAM_STR);
-                if ($filtroProveedor != "")
+                if ($filtroDSProveedor != "")
                     $stmt->bindParam(":tp1", $tercero, PDO::PARAM_INT);
                 if ($filtroDSUsuario != "")
                     $stmt->bindParam(":uidu2", $idUsuario, PDO::PARAM_INT);
+                if ($idBodega != "" && $idBodega != "todos")
+                    $stmt->bindParam(":ib3", $idBodega, PDO::PARAM_INT);
             }
 
             if ($categoria == "todos" || $categoria == "na") {
                 $stmt->bindParam(":i5", $inicio, PDO::PARAM_STR);
                 $stmt->bindParam(":f5", $fin, PDO::PARAM_STR);
-                if ($filtroProveedor != "")
+                if ($filtroNAProveedor != "")
                     $stmt->bindParam(":tp2", $tercero, PDO::PARAM_INT);
                 if ($filtroNAUsuario != "")
                     $stmt->bindParam(":uidu3", $idUsuario, PDO::PARAM_INT);
+                if ($idBodega != "" && $idBodega != "todos")
+                    $stmt->bindParam(":ib4", $idBodega, PDO::PARAM_INT);
             }
         }
 
@@ -2479,6 +2498,7 @@ class ModeloFactus
                 (SELECT COUNT(*) FROM notas_ajuste_ds WHERE id < na.id AND (numero_nota_ajuste IS NULL OR numero_nota_ajuste = '')) as rank_borrador
                 FROM notas_ajuste_ds na
                 LEFT JOIN proveedores p ON na.id_proveedor = p.id
+                LEFT JOIN documentos_soporte ds ON na.id_ds_original = ds.id
                 $where $order $limit";
         
         $stmt = Conexion::conectar()->prepare($sql);
@@ -2494,6 +2514,7 @@ class ModeloFactus
         $sql = "SELECT COUNT(*) as total 
                 FROM notas_ajuste_ds na
                 LEFT JOIN proveedores p ON na.id_proveedor = p.id
+                LEFT JOIN documentos_soporte ds ON na.id_ds_original = ds.id
                 $where";
         
         $stmt = Conexion::conectar()->prepare($sql);

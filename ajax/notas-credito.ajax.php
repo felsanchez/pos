@@ -80,14 +80,8 @@ class AjaxNotasCredito
             // Por defecto crear como borrador
             $firmar = false;
 
-            // Capturar salida de controlador si la hay (echo, print_r) para evitar romper JSON
-            ob_start();
             $respuesta = ControladorFactus::ctrGenerarNotaCredito($idVenta, $motivo, $listaProductos, $idCliente, $motivoDescripcion, $metodoPago, $observacion, $firmar);
-            $debugOutput = ob_get_clean(); // Descartar salida no deseada
 
-            if (!empty($debugOutput)) {
-                file_put_contents("debug_nc_output_error.txt", $debugOutput);
-            }
 
             echo json_encode($respuesta);
 
@@ -119,23 +113,11 @@ class AjaxNotasCredito
 
             $idNota = $_POST["idNota"];
 
-            file_put_contents("debug_nc_firmar_init.txt", "Firmando nota ID: $idNota - " . date("Y-m-d H:i:s") . "\n", FILE_APPEND);
-
-            ob_start();
             $respuesta = ControladorFactus::ctrFirmarNotaCredito($idNota);
-            $debugOutput = ob_get_clean();
-
-            if (!empty($debugOutput)) {
-                file_put_contents("debug_nc_firmar_error.txt", date("Y-m-d H:i:s") . "\n" . $debugOutput . "\n\n", FILE_APPEND);
-            }
-
-            file_put_contents("debug_nc_firmar_init.txt", "Respuesta: " . json_encode($respuesta) . "\n", FILE_APPEND);
 
             echo json_encode($respuesta);
 
         } catch (Throwable $e) {
-            $msg = get_class($e) . ": " . $e->getMessage() . " en " . $e->getFile() . ":" . $e->getLine();
-            file_put_contents("debug_nc_firmar_error.txt", date("Y-m-d H:i:s") . " THROWABLE: " . $msg . "\n", FILE_APPEND);
             echo json_encode([
                 "error" => true,
                 "mensaje" => "Error del servidor: " . $e->getMessage()

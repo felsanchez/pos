@@ -1,10 +1,32 @@
 <?php
 
-$tabla = "ventas";
-$item = null;
-$valor = null;
+// Obtener parámetros de filtro
+$idBodega = isset($idBodega) ? $idBodega : (isset($_POST["idBodega"]) ? $_POST["idBodega"] : "todos");
+$fechaInicial = isset($fechaInicial) ? $fechaInicial : (isset($_POST["fechaInicial"]) ? $_POST["fechaInicial"] : null);
+$fechaFinal = isset($fechaFinal) ? $fechaFinal : (isset($_POST["fechaFinal"]) ? $_POST["fechaFinal"] : null);
 
-$ventas = ControladorVentas::ctrMostrarVentasAsociativo($tabla, $item, $valor);
+if($fechaInicial == null || $fechaInicial == ""){
+    $fechaInicial = "2000-01-01";
+    $fechaFinal = "2100-12-31";
+}
+
+$inicio = $fechaInicial . " 00:00:00";
+$fin = $fechaFinal . " 23:59:59";
+
+// Traer ventas filtradas por fecha y bodega
+$db = Conexion::conectar();
+$filtroBodega = ($idBodega != "" && $idBodega != "todos") ? " AND v.id_bodega = :idBodega " : "";
+
+$sql = "SELECT u.nombre as nombre_vendedor, v.total, v.estado 
+        FROM ventas v 
+        LEFT JOIN usuarios u ON v.id_vendedor = u.id 
+        WHERE v.fecha BETWEEN :inicio AND :fin" . $filtroBodega;
+$stmt = $db->prepare($sql);
+$stmt->bindParam(":inicio", $inicio, PDO::PARAM_STR);
+$stmt->bindParam(":fin", $fin, PDO::PARAM_STR);
+if($filtroBodega != "") $stmt->bindParam(":idBodega", $idBodega, PDO::PARAM_INT);
+$stmt->execute();
+$ventas = $stmt->fetchAll();
 
 $sumaTotalVendedores = [];
 

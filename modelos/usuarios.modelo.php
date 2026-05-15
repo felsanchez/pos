@@ -44,7 +44,7 @@ class ModeloUsuarios
 	=============================================*/
 	static public function mdlMostrarUsuariosServerSide($tabla, $where, $order, $limit)
 	{
-		$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla $where $order $limit");
+		$stmt = Conexion::conectar()->prepare("SELECT u.*, b.nombre as sucursal FROM $tabla u LEFT JOIN bodegas b ON u.id_bodega = b.id $where $order $limit");
 		$stmt->execute();
 		return $stmt->fetchAll();
 	}
@@ -54,7 +54,7 @@ class ModeloUsuarios
 	=============================================*/
 	static public function mdlGetTotalUsuarios($tabla, $where)
 	{
-		$stmt = Conexion::conectar()->prepare("SELECT COUNT(*) FROM $tabla $where");
+		$stmt = Conexion::conectar()->prepare("SELECT COUNT(*) FROM $tabla u LEFT JOIN bodegas b ON u.id_bodega = b.id $where");
 		$stmt->execute();
 		return $stmt->fetchColumn();
 	}
@@ -67,7 +67,7 @@ class ModeloUsuarios
 	static public function mdlIngresarUsuario($tabla, $datos)
 	{
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(nombre, usuario, password, perfil, foto, email) VALUES (:nombre, :usuario, :password, :perfil, :foto, :email)");
+		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(nombre, usuario, password, perfil, foto, email, id_bodega) VALUES (:nombre, :usuario, :password, :perfil, :foto, :email, :id_bodega)");
 
 		$stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
 		$stmt->bindParam(":usuario", $datos["usuario"], PDO::PARAM_STR);
@@ -75,6 +75,7 @@ class ModeloUsuarios
 		$stmt->bindParam(":perfil", $datos["perfil"], PDO::PARAM_STR);
 		$stmt->bindParam(":foto", $datos["foto"], PDO::PARAM_STR);
 		$stmt->bindParam(":email", $datos["email"], PDO::PARAM_STR);
+		$stmt->bindParam(":id_bodega", $datos["id_bodega"], PDO::PARAM_INT);
 
 		if ($stmt->execute()) {
 
@@ -96,13 +97,15 @@ class ModeloUsuarios
 	static public function mdlEditarUsuario($tabla, $datos)
 	{
 
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET nombre = :nombre, perfil = :perfil, foto = :foto, email = :email WHERE usuario = :usuario");
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET nombre = :nombre, password = :password, perfil = :perfil, foto = :foto, email = :email, id_bodega = :id_bodega WHERE usuario = :usuario");
 
 		$stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
+		$stmt->bindParam(":password", $datos["password"], PDO::PARAM_STR);
 		$stmt->bindParam(":usuario", $datos["usuario"], PDO::PARAM_STR);
 		$stmt->bindParam(":perfil", $datos["perfil"], PDO::PARAM_STR);
 		$stmt->bindParam(":foto", $datos["foto"], PDO::PARAM_STR);
 		$stmt->bindParam(":email", $datos["email"], PDO::PARAM_STR);
+		$stmt->bindParam(":id_bodega", $datos["id_bodega"], PDO::PARAM_INT);
 
 		if ($stmt->execute()) {
 

@@ -2,11 +2,31 @@
 
 require_once __DIR__ . "/../../../modelos/configuracion.modelo.php";
 
-$item = null;
-$valor = null;
+// Obtener parámetros de filtro (pueden venir de AJAX o del scope global)
+$idBodega = isset($idBodega) ? $idBodega : (isset($_POST["idBodega"]) ? $_POST["idBodega"] : "todos");
+$fechaInicial = isset($fechaInicial) ? $fechaInicial : (isset($_POST["fechaInicial"]) ? $_POST["fechaInicial"] : null);
+$fechaFinal = isset($fechaFinal) ? $fechaFinal : (isset($_POST["fechaFinal"]) ? $_POST["fechaFinal"] : null);
 
-// Traemos todas las ventas con estado "venta"
-$ventas = ControladorVentas::ctrMostrarVentas($item, $valor);
+// Ajustar fechas
+if($fechaInicial == null || $fechaInicial == ""){
+    $fechaInicial = "2000-01-01";
+    $fechaFinal = "2100-12-31";
+}
+
+$inicio = $fechaInicial . " 00:00:00";
+$fin = $fechaFinal . " 23:59:59";
+
+// Traer ventas filtradas por fecha y bodega si aplica
+$db = Conexion::conectar();
+$filtroBodega = ($idBodega != "" && $idBodega != "todos") ? " AND id_bodega = :idBodega " : "";
+
+$sql = "SELECT metodo_pago, estado FROM ventas WHERE fecha BETWEEN :inicio AND :fin" . $filtroBodega;
+$stmt = $db->prepare($sql);
+$stmt->bindParam(":inicio", $inicio, PDO::PARAM_STR);
+$stmt->bindParam(":fin", $fin, PDO::PARAM_STR);
+if($filtroBodega != "") $stmt->bindParam(":idBodega", $idBodega, PDO::PARAM_INT);
+$stmt->execute();
+$ventas = $stmt->fetchAll();
 
 // Obtener métodos de pago desde la configuración
 $configuracion = ModeloConfiguracion::mdlObtenerConfiguracion();

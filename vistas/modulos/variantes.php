@@ -55,7 +55,6 @@ if (!puedeVer('variantes')) {
             <thead>
               <tr>
                 <th>Nombre</th>
-                <th>Orden</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
@@ -84,7 +83,7 @@ if (!puedeVer('variantes')) {
           value="<?php echo puedeAccion('variantes', 'eliminar') ? 1 : 0; ?>">
         <?php if (puedeAccion('variantes', 'crear')): ?>
           <button class="btn btn-primary pull-right" data-toggle="modal" data-target="#modalAgregarOpcion">
-            Agregar Opción
+            <i class="fa fa-plus"></i> Agregar Opción
           </button>
         <?php endif; ?>
       </div>
@@ -95,7 +94,6 @@ if (!puedeVer('variantes')) {
             <thead>
               <tr>
                 <th>Nombre</th>
-                <th>Orden</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
@@ -148,14 +146,8 @@ MODAL AGREGAR TIPO DE VARIANTE
             </div>
 
             <!-- ENTRADA PARA EL ORDEN -->
-            <div class="form-group">
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-sort-numeric-asc"></i></span>
-                <input type="number" class="form-control input-lg" id="nuevoOrdenTipo" name="nuevoOrdenTipo"
-                  placeholder="Orden de visualización" value="1" min="1" required>
-              </div>
-              <p class="help-block">El orden se autocompletará con el siguiente disponible</p>
-            </div>
+              <input type="hidden" id="nuevoOrdenTipo" name="nuevoOrdenTipo" value="1">
+
 
           </div>
 
@@ -220,15 +212,8 @@ MODAL AGREGAR OPCIÓN
             </div>
 
 
-            <!-- ENTRADA PARA EL ORDEN -->
-            <div class="form-group">
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-sort-numeric-asc"></i></span>
-                <input type="number" class="form-control input-lg" id="nuevoOrdenOpcion" name="nuevoOrdenOpcion"
-                  placeholder="Orden" value="1" min="1" required>
-              </div>
-              <p class="help-block">El orden se autocompletará con el siguiente disponible</p>
-            </div>
+              <input type="hidden" id="nuevoOrdenOpcion" name="nuevoOrdenOpcion" value="1">
+
 
           </div>
 
@@ -293,14 +278,8 @@ MODAL EDITAR TIPO DE VARIANTE
               </div>
             </div>
 
-            <!-- ENTRADA PARA EL ORDEN -->
-            <div class="form-group">
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-sort-numeric-asc"></i></span>
-                <input type="number" class="form-control input-lg" id="editarOrdenTipo" name="editarOrdenTipo" min="1"
-                  required>
-              </div>
-            </div>
+              <input type="hidden" id="editarOrdenTipo" name="editarOrdenTipo">
+
 
           </div>
 
@@ -364,14 +343,8 @@ MODAL EDITAR OPCIÓN
               </div>
             </div>
 
-            <!-- ENTRADA PARA EL ORDEN -->
-            <div class="form-group">
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-sort-numeric-asc"></i></span>
-                <input type="number" class="form-control input-lg" id="editarOrdenOpcion" name="editarOrdenOpcion"
-                  min="1" required>
-              </div>
-            </div>
+              <input type="hidden" id="editarOrdenOpcion" name="editarOrdenOpcion">
+
 
           </div>
 

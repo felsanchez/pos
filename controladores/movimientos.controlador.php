@@ -5,41 +5,22 @@ class ControladorMovimientos{
 	/*=============================================
 	REGISTRAR MOVIMIENTO DE STOCK
 	=============================================*/
-	static public function ctrRegistrarMovimiento($tipo, $idProducto, $idVariante, $nombreProducto, $tipoMovimiento, $cantidad, $stockAnterior, $stockNuevo, $referencia, $notas = ""){
+	static public function ctrRegistrarMovimiento($tipo, $idProducto, $idVariante, $nombreProducto, $tipoMovimiento, $cantidad, $stockAnterior, $stockNuevo, $referencia, $notas = "", $idBodega = null){
 
-		// DEBUG: Log de que se está llamando la función
+		// Si no se pasa idBodega, intentar obtenerlo de la sesión
+		if($idBodega == null){
+			$idBodega = (!empty($_SESSION["id_bodega"])) ? $_SESSION["id_bodega"] : 1;
+		}
 
-		file_put_contents("debug_movimientos.txt", "=== REGISTRAR MOVIMIENTO ===\n", FILE_APPEND);
-
-		file_put_contents("debug_movimientos.txt", "Fecha: " . date('Y-m-d H:i:s') . "\n", FILE_APPEND);
-
-		file_put_contents("debug_movimientos.txt", "Tipo: $tipo\n", FILE_APPEND);
-
-		file_put_contents("debug_movimientos.txt", "Producto ID: $idProducto\n", FILE_APPEND);
-
-		file_put_contents("debug_movimientos.txt", "Nombre: $nombreProducto\n", FILE_APPEND);
-
-		file_put_contents("debug_movimientos.txt", "Tipo Movimiento: $tipoMovimiento\n", FILE_APPEND);
-
-		file_put_contents("debug_movimientos.txt", "Cantidad: $cantidad\n", FILE_APPEND);
-
-		file_put_contents("debug_movimientos.txt", "Stock Anterior: $stockAnterior\n", FILE_APPEND);
-
-		file_put_contents("debug_movimientos.txt", "Stock Nuevo: $stockNuevo\n", FILE_APPEND);
-
-		file_put_contents("debug_movimientos.txt", "Referencia: $referencia\n", FILE_APPEND);
-
- 
 		// Obtener usuario actual de la sesión
 		$idUsuario = isset($_SESSION["id"]) ? $_SESSION["id"] : null;
 		$nombreUsuario = isset($_SESSION["nombre"]) ? $_SESSION["nombre"] : "Sistema"; 
-
-		file_put_contents("debug_movimientos.txt", "Usuario: $nombreUsuario (ID: $idUsuario)\n", FILE_APPEND); 
 
 		$datos = array(
 			"tipo_producto" => $tipo,
 			"id_producto" => $idProducto,
 			"id_variante" => $idVariante,
+			"id_bodega" => $idBodega,
 			"nombre_producto" => $nombreProducto,
 			"tipo_movimiento" => $tipoMovimiento,
 			"cantidad" => $cantidad,
@@ -52,8 +33,6 @@ class ControladorMovimientos{
 		); 
 
 		$respuesta = ModeloMovimientos::mdlRegistrarMovimiento($datos); 
-
-		file_put_contents("debug_movimientos.txt", "Respuesta: $respuesta\n\n", FILE_APPEND);
 		return $respuesta;
 	}
 
@@ -95,7 +74,7 @@ class ControladorMovimientos{
 	/*=============================================
 	OBTENER RESUMEN
 	=============================================*/
-	static public function ctrObtenerResumen(){
+	static public function ctrObtenerResumen($idBodegaInicial = null){
 
 		$filtros = array();
 
@@ -105,6 +84,13 @@ class ControladorMovimientos{
 
 		if(isset($_POST["fecha_hasta"]) && !empty($_POST["fecha_hasta"])){
 			$filtros["fecha_hasta"] = $_POST["fecha_hasta"];
+		}
+
+		// Soporte para filtrado por bodega
+		if(isset($_POST["id_bodega"]) && !empty($_POST["id_bodega"]) && $_POST["id_bodega"] !== 'todos'){
+			$filtros["id_bodega"] = $_POST["id_bodega"];
+		} else if ($idBodegaInicial !== null && $idBodegaInicial !== 'todos') {
+			$filtros["id_bodega"] = $idBodegaInicial;
 		}
 
 		$respuesta = ModeloMovimientos::mdlObtenerResumen($filtros);
@@ -206,13 +192,30 @@ class ControladorMovimientos{
 
 		$where = " WHERE (referencia NOT LIKE '%(por variante%' OR referencia IS NULL) ";
 
+		// Filtro por Bodega
+		if (!empty($params["id_bodega"]) && $params["id_bodega"] !== 'todos') {
+			$where .= " AND id_bodega = " . intval($params["id_bodega"]);
+		}
+
 		// Filtros personalizados
 		if (!empty($params["id_producto"])) {
 			$where .= " AND id_producto = " . intval($params["id_producto"]);
 		}
 
 		if (!empty($params["tipo_movimiento"])) {
-			$where .= " AND tipo_movimiento = '" . $params["tipo_movimiento"] . "'";
+			
+			$tipoBusqueda = $params["tipo_movimiento"];
+
+			if ($tipoBusqueda == "traslado_salida") {
+				// Buscar por tipo exacto o por palabra clave en referencia + cantidad negativa
+				$where .= " AND (tipo_movimiento = 'traslado_salida' OR (referencia LIKE '%Traslado%' AND cantidad < 0))";
+			} else if ($tipoBusqueda == "traslado_entrada") {
+				// Buscar por tipo exacto o por palabra clave en referencia + cantidad positiva
+				$where .= " AND (tipo_movimiento = 'traslado_entrada' OR (referencia LIKE '%Traslado%' AND cantidad > 0))";
+			} else {
+				$where .= " AND tipo_movimiento = '" . $tipoBusqueda . "'";
+			}
+
 		}
 
 		if (!empty($params["fecha_desde"])) {
@@ -249,7 +252,13 @@ class ControladorMovimientos{
 
 		// Obtener datos
 		$movimientos = ModeloMovimientos::mdlMostrarMovimientosServerSide($tabla, $where, $order, $limit);
-		$totalData = ModeloMovimientos::mdlGetTotalMovimientos($tabla, " WHERE (referencia NOT LIKE '%(por variante%' OR referencia IS NULL) ");
+		
+		$whereTotal = " WHERE (referencia NOT LIKE '%(por variante%' OR referencia IS NULL) ";
+		if (!empty($params["id_bodega"]) && $params["id_bodega"] !== 'todos') {
+			$whereTotal .= " AND id_bodega = " . intval($params["id_bodega"]);
+		}
+		
+		$totalData = ModeloMovimientos::mdlGetTotalMovimientos($tabla, $whereTotal);
 		$totalFiltered = ModeloMovimientos::mdlGetTotalMovimientos($tabla, $where);
 
 		$data = array();
@@ -269,9 +278,33 @@ class ControladorMovimientos{
 				"ajuste_manual" => '<span class="label label-default">Ajuste Manual</span>',
 				"creacion_producto" => '<span class="label label-primary">Creación</span>',
 				"creacion_variante" => '<span class="label label-info">Creación Variante</span>',
-				"edicion_stock" => '<span class="label label-default">Edición Stock</span>'
+				"edicion_stock" => '<span class="label label-default">Edición Stock</span>',
+				"traslado_salida" => '<span class="label label-warning" style="background-color: #ff851b !important;">Traslado (Salida)</span>',
+				"traslado_entrada" => '<span class="label label-info" style="background-color: #39cccc !important;">Traslado (Entrada)</span>'
 			];
-			$nestedData[] = isset($badges[$value["tipo_movimiento"]]) ? $badges[$value["tipo_movimiento"]] : $value["tipo_movimiento"];
+			// Lógica ultra-robusta para traslados y otros tipos
+			$tipoActual = trim($value["tipo_movimiento"]);
+			$referencia = trim($value["referencia"]);
+			
+			if (isset($badges[$tipoActual]) && $tipoActual != "") {
+				
+				$nestedData[] = $badges[$tipoActual];
+
+			} else if (stripos($tipoActual, 'traslado') !== false || stripos($referencia, 'traslado') !== false) {
+				
+				// DETECCIÓN POR NOMBRE O POR REFERENCIA (Si el tipo falló, la referencia nos salva)
+				if (stripos($tipoActual, 'salida') !== false || stripos($referencia, 'salida') !== false || intval($value["cantidad"]) < 0) {
+					$nestedData[] = '<span class="label label-warning" style="background-color: #ff851b !important;">Traslado (Salida)</span>';
+				} else {
+					$nestedData[] = '<span class="label label-info" style="background-color: #39cccc !important;">Traslado (Entrada)</span>';
+				}
+
+			} else {
+
+				// Fallback: Si el tipo está vacío, mostrar algo útil
+				$nestedData[] = ($tipoActual != "") ? e($tipoActual) : '<span class="label label-default">Movimiento</span>';
+				
+			}
 
 			// 2: Tipo Producto
 			$nestedData[] = ($value["tipo_producto"] == "producto") ? '<span class="label label-primary">Producto</span>' : '<span class="label label-info">Variante</span>';
@@ -297,7 +330,17 @@ class ControladorMovimientos{
 			$nestedData[] = e($value["nombre_usuario"]);
 
 			// 8: Referencia
-			$nestedData[] = e($value["referencia"]);
+			// Si es un traslado, mostramos la dirección del movimiento con prefijos De/Para para máxima claridad
+			if (stripos($tipoActual, 'traslado') !== false || stripos($referencia, 'traslado') !== false) {
+				
+				$prefijo = (stripos($tipoActual, 'salida') !== false || stripos($referencia, 'salida') !== false || intval($value["cantidad"]) < 0) ? "De: " : "Para: ";
+				$nestedData[] = $prefijo . e($value["nombre_bodega"]);
+
+			} else {
+
+				$nestedData[] = e($value["referencia"]);
+
+			}
 
 			// 9: Notas
 			$nestedData[] = e($value["notas"]);

@@ -13,15 +13,17 @@ require_once __DIR__ . "/../controladores/productos.controlador.php";
 require_once __DIR__ . "/../modelos/productos.modelo.php";
 require_once __DIR__ . "/../controladores/configuracion.controlador.php";
 require_once __DIR__ . "/../modelos/configuracion.modelo.php";
+require_once __DIR__ . "/../controladores/notificaciones.controlador.php";
+require_once __DIR__ . "/../modelos/notificaciones.modelo.php";
 require_once __DIR__ . "/../modelos/conexion.php";
 require_once __DIR__ . "/../modelos/csrf.php";
 require_once __DIR__ . "/../controladores/ventas.controlador.php";
 require_once __DIR__ . "/../modelos/ventas.modelo.php";
 require_once __DIR__ . "/../controladores/movimientos.controlador.php";
 require_once __DIR__ . "/../modelos/movimientos.modelo.php";
-require_once __DIR__ . "/../controladores/notificaciones.controlador.php";
 
 /*
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!CSRF::validateToken()) {
         http_response_code(403);

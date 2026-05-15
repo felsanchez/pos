@@ -83,8 +83,11 @@
 require_once "controladores/movimientos.controlador.php";
 require_once "modelos/movimientos.modelo.php";
 
+// Definir idBodega para la carga inicial de los gráficos
+$idBodegaInicial = (stripos($_SESSION["perfil"], "Admin") !== false) ? "todos" : $_SESSION["id_bodega"];
+
 // Pre-cargar solo el resumen para aparición inmediata (Las tarjetas)
-$pre_resumen = ControladorMovimientos::ctrObtenerResumen();
+$pre_resumen = ControladorMovimientos::ctrObtenerResumen($idBodegaInicial);
 
 $tv = 0;
 $tc = 0;
@@ -184,6 +187,36 @@ foreach ($pre_resumen as $item) {
 
     </div>
 
+    <!-- FILTRO MAESTRO DE SUCURSAL -->
+    <?php if (stripos($_SESSION["perfil"], "Admin") !== false): ?>
+      <div class="box box-default">
+        <div class="box-body" style="padding: 15px 25px;">
+          <div class="row" style="display: flex; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div class="col-md-4 col-sm-6 col-xs-12">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-size: 14px; color: #555;"><i class="fa fa-building text-primary"></i> Filtrar por Sucursal (Vista Global):</label>
+                <select class="form-control select2" id="sucursalReporteMaestro" style="width: 100%;" autocomplete="off">
+                  <option value="todos">Filtrar por Sucursal (Vista Global):</option>
+                  <?php
+                  $bodegas = ControladorBodegas::ctrMostrarBodegas(null, null);
+                  foreach ($bodegas as $key => $value) {
+                    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                  }
+                  ?>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-8 col-sm-6 hidden-xs">
+              <p class="text-muted" style="margin-top: 22px; font-style: italic;">
+                <i class="fa fa-info-circle"></i> Seleccione una sucursal para auditar los movimientos de inventario específicos de esa tienda.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    <?php else: ?>
+      <input type="hidden" id="sucursalReporteMaestro" value="<?php echo $_SESSION['id_bodega']; ?>">
+    <?php endif; ?>
 
     <!-- TABLA DE MOVIMIENTOS -->
     <div class="box">
@@ -198,12 +231,12 @@ foreach ($pre_resumen as $item) {
 
             <!-- Filtro por Producto -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Producto:</label>
+              <label class="hidden-xs" style="margin-bottom: 0;">Producto:</label>
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                     class="fa fa-search text-primary"></i></span>
                 <select class="form-control select2" id="cat_s" style="width: 140px; border-left: 0;">
-                  <option value="">Seleccionar Producto</option>
+                  <option value="">Mostrar Todos</option>
                   <?php
                   $item = null;
                   $valor = null;
@@ -219,12 +252,12 @@ foreach ($pre_resumen as $item) {
 
             <!-- Filtro por Movimiento -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Movimiento:</label>
+              <label class="hidden-xs" style="margin-bottom: 0;">Movimiento:</label>
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                     class="fa fa-search text-primary"></i></span>
                 <select class="form-control select2" id="tipo_s" style="width: 130px; border-left: 0;">
-                  <option value="">Seleccionar Tipo</option>
+                  <option value="">Mostrar Todos</option>
                   <option value="venta">Venta</option>
                   <option value="eliminacion_venta">Eliminación Venta</option>
                   <option value="devolucion">Devolución</option>
@@ -232,18 +265,20 @@ foreach ($pre_resumen as $item) {
                   <option value="creacion_variante">Creación Variante</option>
                   <option value="edicion_stock">Edición Stock</option>
                   <option value="ajuste_manual">Ajuste Manual</option>
+                  <option value="traslado_salida">Traslado (Salida)</option>
+                  <option value="traslado_entrada">Traslado (Entrada)</option>
                 </select>
               </div>
             </div>
 
             <!-- Filtro por Usuario -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Usuario:</label>
+              <label class="hidden-xs" style="margin-bottom: 0;">Usuario:</label>
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                     class="fa fa-search text-primary"></i></span>
                 <select class="form-control select2" id="user_s" style="width: 120px; border-left: 0;">
-                  <option value="">Seleccionar Usuario</option>
+                  <option value="">Mostrar Todos</option>
                   <?php
                   $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
                   foreach ($usuarios as $key => $value) {
@@ -256,7 +291,7 @@ foreach ($pre_resumen as $item) {
 
             <!-- Filtro por Rango de Fecha -->
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Filtrar por Fecha:</b></span>
+              <span class="hidden-xs"><b>Fecha:</b></span>
               <div class="form-group" style="margin-bottom: 0;">
                 <button type="button" class="btn btn-default" id="btn-rango-stock">
                   <span id="span-rango-stock">
@@ -334,7 +369,7 @@ foreach ($pre_resumen as $item) {
       <div class="modal-body">
         <div style="padding: 15px; border-radius: 10px; background-color: #f9f9f9;">
           <div class="form-group">
-            <label for="tipo-fecha-excel-stock">Filtrar por fecha</label>
+            <label for="tipo-fecha-excel-stock">Fecha</label>
             <select id="tipo-fecha-excel-stock" class="form-control" style="border-radius: 8px;">
               <option value="todo">Todo el historial</option>
               <option value="hoy">Hoy</option>

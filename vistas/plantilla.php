@@ -152,7 +152,7 @@ CUERPO DOCUMENTO
 <!--<body class="hold-transition skin-blue sidebar-collapse sidebar-mini login-page">-->
 <!-- Site wrapper -->
 
-<body class="hold-transition skin-blue sidebar-collapse sidebar-mini <?php if (!isset($_SESSION["iniciarSesion"]) || $_SESSION["iniciarSesion"] != "ok")
+<body class="hold-transition skin-blue sidebar-collapse sidebar-mini <?php echo isset($_GET['ruta']) ? e($_GET['ruta']) : 'inicio'; ?> <?php if (!isset($_SESSION["iniciarSesion"]) || $_SESSION["iniciarSesion"] != "ok")
   echo 'login-page'; ?>">
 
 
@@ -227,6 +227,9 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "reportes-facturacion" ||
         $_GET["ruta"] == "ver-detalle-orden" ||
         $_GET["ruta"] == "detalle-factura" ||
+        $_GET["ruta"] == "bodegas" ||
+        $_GET["ruta"] == "traslados" ||
+        $_GET["ruta"] == "crear-traslado" ||
         $_GET["ruta"] == "salir"
       ) {
 
@@ -269,9 +272,11 @@ CUERPO DOCUMENTO
   <script src="vistas/js/reportes.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/historial-stock.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/tipos-actividades.js"></script>
+  <script src="vistas/js/bodegas.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/gastos.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/logs.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/seguimiento-leads.js?v=<?php echo time(); ?>"></script>
+  <script src="vistas/js/traslados.js?v=<?php echo time(); ?>"></script>
 
   <!-- Prevenir que los enlaces se abran en nueva pestaña -->
   <script>

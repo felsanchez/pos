@@ -218,8 +218,10 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                        BOTON PARA AGREGAR PRODUCTO
                        ======================================-->
 
-                <!--BTN SE MUESTRA SOLO DESDE MOVIL-->
-                <button type="button" class="btn btn-default btnAgregarProducto solo-movil">Agregar producto</button>
+                <!--BTN SE MUESTRA EN CELULARES (xs) Y TABLETS (sm, md)-->
+                <button type="button" class="btn btn-warning btn-block btnAgregarProducto visible-xs visible-sm visible-md" style="margin-top: 10px; margin-bottom: 15px; font-weight: bold;">
+                  <i class="fa fa-plus"></i> Agregar producto
+                </button>
 
                 <hr>
 
@@ -415,22 +417,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
 
 
-<!--Verificar que tenga productos, antes de guardar la orden-->
-<script>
-  $(document).on("submit", ".formularioVenta", function (e) {
-    var listaProductos = $("#listaProductos").val();
-    if (listaProductos == "" || listaProductos == "[]") {
-      e.preventDefault();
-      swal({
-        type: "error",
-        title: "La orden no se puede guardar porque no tiene productos",
-        showConfirmButton: true,
-        confirmButtonText: "Cerrar"
-      });
-      return false;
-    }
-  });
-</script>
+
 
 
 

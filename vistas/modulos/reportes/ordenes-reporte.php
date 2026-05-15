@@ -3,9 +3,9 @@
   <div class="col-md-12">
     <form id="filtroOrdenesForm" class="form-inline" style="margin-bottom: 20px;">
       <div class="form-group" style="margin-right: 15px;">
-        <label for="tipoFechaOrdenes" style="margin-right: 5px;">Período:</label>
+        <label for="tipoFechaOrdenes" style="margin-right: 5px;">Fecha:</label>
         <select class="form-control" id="tipoFechaOrdenes" name="tipo">
-          <option value="todo">Todas las órdenes</option>
+          <option value="todo">Mostrar Todas</option>
           <option value="hoy">Hoy</option>
           <option value="ayer">Ayer</option>
           <option value="mes" selected>Este mes</option>
@@ -164,6 +164,19 @@ document.getElementById('tipoFechaOrdenes').addEventListener('change', function(
 function cargarDatosOrdenes() {
   const form = document.getElementById('filtroOrdenesForm');
   const formData = new FormData(form);
+
+  // Agregar id_bodega del filtro maestro si existe
+  const idBodega = $('#sucursalReporteMaestro').val();
+  
+  if (idBodega && idBodega !== 'todos') {
+    formData.append('id_bodega', idBodega);
+  }
+
+  console.log("=== ENVIANDO PETICIÓN A filtro_ordenes.php ===");
+  console.log("idBodega extraído:", idBodega);
+  for (let pair of formData.entries()) {
+    console.log(pair[0] + ': ' + pair[1]);
+  }
 
   fetch('vistas/modulos/reportes/filtro_ordenes.php', {
     method: 'POST',

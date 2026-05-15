@@ -135,9 +135,10 @@
 
             <!-- Filtro por Tipo -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Filtrar por Tipo:</label>
+              <label class="hidden-xs" style="margin-bottom: 0;">Tipo:</label>
               <div class="input-group">
-                <span class="input-group-addon" style="background-color: #f9f9f9;"><i class="fa fa-search text-primary"></i></span>
+                <span class="input-group-addon" style="background-color: #f9f9f9;"><i
+                    class="fa fa-search text-primary"></i></span>
                 <select class="form-control" id="filtroTipoNotificacion" style="width: 160px; border-left: 0;">
                   <option value="">Mostrar Todas</option>
                   <option value="Stock Agotado">Stock Agotado</option>
@@ -158,10 +159,11 @@
                 <i class="fa fa-check"></i> <span class="hidden-xs">Marcar todas leídas</span>
               </button>
 
-              <?php if(puedeAccion('notificaciones', 'eliminar')): ?>
-              <button class="btn btn-danger" id="btnBorrarSeleccionadas" style="display:none;" title="Borrar seleccionadas">
-                <i class="fa fa-trash"></i> <span class="hidden-xs">Borrar</span>
-              </button>
+              <?php if (puedeAccion('notificaciones', 'eliminar')): ?>
+                <button class="btn btn-danger" id="btnBorrarSeleccionadas" style="display:none;"
+                  title="Borrar seleccionadas">
+                  <i class="fa fa-trash"></i> <span class="hidden-xs">Borrar</span>
+                </button>
               <?php endif; ?>
             </div>
 

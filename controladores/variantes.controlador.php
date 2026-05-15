@@ -26,9 +26,8 @@ class ControladorVariantes{
 		// Columnas para ordenar
 		$columnsMap = array(
 			0 => 'nombre',
-			1 => 'orden',
-			2 => 'estado',
-			3 => 'id' // Acciones
+			1 => 'estado',
+			2 => 'id' // Acciones
 		);
 
 		$where = " WHERE 1=1 ";
@@ -43,10 +42,10 @@ class ControladorVariantes{
 		$order = "";
 		if (isset($params['order'][0]['column'])) {
 			$colIdx = $params['order'][0]['column'];
-			$colName = isset($columnsMap[$colIdx]) ? $columnsMap[$colIdx] : 'orden';
+			$colName = isset($columnsMap[$colIdx]) ? $columnsMap[$colIdx] : 'nombre';
 			$order = " ORDER BY " . $colName . " " . $params['order'][0]['dir'];
 		} else {
-			$order = " ORDER BY orden ASC";
+			$order = " ORDER BY nombre ASC";
 		}
 
 		// Paginación
@@ -69,10 +68,7 @@ class ControladorVariantes{
 			// 0: Nombre
 			$nestedData[] = e($value["nombre"]);
 
-			// 1: Orden
-			$nestedData[] = e($value["orden"]);
-
-			// 2: Estado
+			// 1: Estado
 			$estadoHtml = "";
 			if (puedeAccion('variantes', 'editar')) {
 				if ($value["estado"] != 0) {
@@ -89,7 +85,7 @@ class ControladorVariantes{
 			}
 			$nestedData[] = $estadoHtml;
 
-			// 3: Acciones
+			// 2: Acciones
 			$botonesAcciones = '<div class="btn-group">';
 			if (puedeAccion('variantes', 'editar')) {
 				$botonesAcciones .= '<button class="btn btn-warning btnEditarTipoVariante" idTipo="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarTipoVariante" title="Editar tipo"><i class="fa fa-pencil"></i></button>';

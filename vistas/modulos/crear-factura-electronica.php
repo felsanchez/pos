@@ -212,8 +212,10 @@ if ($ultimaVenta) {
                 <!--=====================================
                        BOTON PARA AGREGAR PRODUCTO
                        ======================================-->
-                <!--BTN SE MUESTRA SOLO DESDE MOVIL-->
-                <button type="button" class="btn btn-default  btnAgregarProducto solo-movil">Agregar producto</button>
+                <!--BTN SE MUESTRA EN CELULARES (xs) Y TABLETS (sm, md)-->
+                <button type="button" class="btn btn-warning btn-block btnAgregarProducto visible-xs visible-sm visible-md" style="margin-top: 10px; margin-bottom: 15px; font-weight: bold;">
+                  <i class="fa fa-plus"></i> Agregar producto
+                </button>
 
                 <hr>
 
@@ -617,7 +619,7 @@ MODAL AGREGAR CLIENTE
 
         // 1. Validar productos
         var listaProductos = $("#listaProductos").val();
-        if (listaProductos == "" || listaProductos == "[]") {
+        if (!listaProductos || listaProductos.trim() == "" || listaProductos.trim() == "[]") {
           swal({
             type: "error",
             title: "La venta no se puede guardar porque no tiene productos",

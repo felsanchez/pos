@@ -47,6 +47,18 @@ class ControladorVentas
 		// Filtros base (Excluir Facturas Electrónicas)
 		$where = " WHERE v.estado = 'venta' AND (v.numero_factura IS NULL OR v.numero_factura = '') AND (v.resolucion_id IS NULL OR v.resolucion_id = 0) ";
 
+		// Filtro por Bodega (Sucursal)
+		if (!empty($params['bodegaId']) && is_numeric($params['bodegaId'])) {
+			$where .= " AND v.id_bodega = " . $params['bodegaId'];
+		} else {
+			// Si no hay filtro explícito, aplicar restricción de sesión (excepto si es Admin en Bodega Principal viendo "Todo")
+			if (!empty($_SESSION["id_bodega"])) {
+				if ($_SESSION["perfil"] != "Administrador" || $_SESSION["id_bodega"] != 1) {
+					$where .= " AND v.id_bodega = " . $_SESSION["id_bodega"];
+				}
+			}
+		}
+
 		// Filtro por Fechas
 		if (!empty($params['fechaInicial']) && !empty($params['fechaFinal'])) {
 			$where .= " AND DATE(v.fecha) >= '" . $params['fechaInicial'] . "' AND DATE(v.fecha) <= '" . $params['fechaFinal'] . "' ";
@@ -127,8 +139,9 @@ class ControladorVentas
 			// 5: Total
 			$nestedData[] = $moneda . ' ' . number_format($value["total"], 2);
 
-			// 6: Notas
-			$nestedData[] = $value['notas'];
+			// 6: Notas - Limpiar etiquetas de notificación internas
+			$notasLimpias = str_replace(array(" [Notificado_n8n]", "[Notificado_n8n]", " [Notificado]", "[Notificado]"), "", $value['notas']);
+			$nestedData[] = e(trim($notasLimpias));
 
 			// 7: Observación (Editable)
 			$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . $value['id'] . '">' . $value['observacion'] . '</div>';
@@ -194,6 +207,18 @@ class ControladorVentas
 
 		// Filtros base para órdenes
 		$where = " WHERE v.estado = 'orden' ";
+
+		// Filtro por Bodega (Sucursal)
+		if (!empty($params['bodegaId']) && is_numeric($params['bodegaId'])) {
+			$where .= " AND v.id_bodega = " . $params['bodegaId'];
+		} else {
+			// Si no hay filtro explícito, aplicar restricción de sesión (excepto si es Admin en Bodega Principal viendo "Todo")
+			if (!empty($_SESSION["id_bodega"])) {
+				if ($_SESSION["perfil"] != "Administrador" || $_SESSION["id_bodega"] != 1) {
+					$where .= " AND v.id_bodega = " . $_SESSION["id_bodega"];
+				}
+			}
+		}
 
 		// Filtro por Fechas
 		if (!empty($params['fechaInicial']) && !empty($params['fechaFinal'])) {
@@ -279,8 +304,9 @@ class ControladorVentas
 			// 5: Total
 			$nestedData[] = e($moneda) . ' ' . e(number_format($value["total"], 2));
 
-			// 6: Notas (Editable)
-			$nestedData[] = '<div contenteditable="false" class="celda-nota" data-id="' . e($value['id']) . '">' . e($value['notas']) . '</div>';
+			// 6: Notas (Editable) - Limpiar etiquetas de notificación internas
+			$notasLimpias = str_replace(array(" [Notificado_n8n]", "[Notificado_n8n]", " [Notificado]", "[Notificado]"), "", $value['notas']);
+			$nestedData[] = '<div contenteditable="false" class="celda-nota" data-id="' . e($value['id']) . '">' . e(trim($notasLimpias)) . '</div>';
 
 			// 7: Observación (Editable)
 			$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . e($value['id']) . '">' . e($value['observacion']) . '</div>';
@@ -525,6 +551,18 @@ class ControladorVentas
 		// Filtros base para Facturas Electrónicas
 		$where = " WHERE v.estado = 'venta' AND (v.numero_factura != '' OR v.resolucion_id IS NOT NULL) ";
 
+		// Filtro por Bodega (Sucursal)
+		if (!empty($params['bodegaId']) && is_numeric($params['bodegaId'])) {
+			$where .= " AND v.id_bodega = " . $params['bodegaId'];
+		} else {
+			// Si no hay filtro explícito, aplicar restricción de sesión (excepto si es Admin en Bodega Principal viendo "Todo")
+			if (!empty($_SESSION["id_bodega"])) {
+				if ($_SESSION["perfil"] != "Administrador" || $_SESSION["id_bodega"] != 1) {
+					$where .= " AND v.id_bodega = " . $_SESSION["id_bodega"];
+				}
+			}
+		}
+
 		// Filtro por Fechas
 		if (!empty($params['fechaInicial']) && !empty($params['fechaFinal'])) {
 			$where .= " AND v.fecha BETWEEN '" . $params['fechaInicial'] . " 00:00:00' AND '" . $params['fechaFinal'] . " 23:59:59' ";
@@ -636,8 +674,9 @@ class ControladorVentas
 			}
 			$nestedData[] = $badgeDian;
 
-			// 7: Notas
-			$nestedData[] = e($value['notas']);
+			// 7: Notas - Limpiar etiquetas de notificación internas
+			$notasLimpias = str_replace(array(" [Notificado_n8n]", "[Notificado_n8n]", " [Notificado]", "[Notificado]"), "", $value['notas']);
+			$nestedData[] = e(trim($notasLimpias));
 
 			// 8: Observación (Editable)
 			$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . e($value["id"]) . '" data-placeholder="Escribe una observación...">' . e($value["observacion"]) . '</div>';
@@ -773,35 +812,59 @@ class ControladorVentas
 
 			// Obtener productos antiguos para restaurar stock
 			$productosAntiguos = json_decode($venta["productos"], true);
+			$idBodegaVenta = isset($venta["id_bodega"]) ? $venta["id_bodega"] : 1;
 
 			// Restaurar stock de productos antiguos
 			foreach ($productosAntiguos as $producto) {
-				$tablaProductos = "productos";
-				$item = "id";
-				$valor = $producto["id"];
-				$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, $item, $valor, "id");
+				
+				if (isset($producto["esVariante"]) && $producto["esVariante"] == "1") {
+					
+					$idVariante = $producto["idVariante"];
+					$traerVariante = ModeloProductos::mdlObtenerVariantePorId($idVariante, $idBodegaVenta);
+					$stockNuevo = $traerVariante["stock"] + $producto["cantidad"];
+					ModeloProductos::mdlActualizarStockVarianteBodega($idVariante, $idBodegaVenta, $stockNuevo);
 
-				$stockAntiguo = $traerProducto["stock"];
-				$stockNuevo = $stockAntiguo + $producto["cantidad"];
+				} else {
 
-				ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $stockNuevo, $producto["id"]);
+					$tablaProductos = "productos";
+					$item = "id";
+					$valor = $producto["id"];
+					$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, $item, $valor, "id", $idBodegaVenta);
+
+					$stockAntiguo = $traerProducto["stock"];
+					$stockNuevo = $stockAntiguo + $producto["cantidad"];
+
+					ModeloProductos::mdlActualizarStockBodega($producto["id"], $idBodegaVenta, $stockNuevo);
+				}
 			}
 
 			// Procesar nuevos productos y actualizar stock
 			$listaProductos = json_decode($_POST["listaProductos"], true);
+			$idBodegaActual = (!empty($_SESSION["id_bodega"])) ? $_SESSION["id_bodega"] : 1;
 
 			foreach ($listaProductos as $key => $value) {
-				$tablaProductos = "productos";
-				$item = "id";
-				$valor = $value["id"];
-				$orden = "id";
+				
+				if (isset($value["esVariante"]) && $value["esVariante"] == "1") {
+					
+					$idVariante = $value["idVariante"];
+					$traerVariante = ModeloProductos::mdlObtenerVariantePorId($idVariante, $idBodegaActual);
+					$stockNuevo = $traerVariante["stock"] - $value["cantidad"];
+					ModeloProductos::mdlActualizarStockVarianteBodega($idVariante, $idBodegaActual, $stockNuevo);
 
-				$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, $item, $valor, $orden);
+				} else {
 
-				$stockActual = $traerProducto["stock"];
-				$stockNuevo = $stockActual - $value["cantidad"];
+					$tablaProductos = "productos";
+					$item = "id";
+					$valor = $value["id"];
+					$orden = "id";
 
-				ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $stockNuevo, $value["id"]);
+					$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, $item, $valor, $orden, $idBodegaActual);
+
+					$stockActual = $traerProducto["stock"];
+					$stockNuevo = $stockActual - $value["cantidad"];
+
+					ModeloProductos::mdlActualizarStockBodega($value["id"], $idBodegaActual, $stockNuevo);
+				}
 			}
 
 			// Actualizar la venta
@@ -809,6 +872,7 @@ class ControladorVentas
 				"codigo" => $venta["codigo"], // WHERE clause
 				"id_cliente" => $_POST["seleccionarCliente"],
 				"id_vendedor" => $_POST["idVendedor"],
+				"id_bodega" => $idBodegaActual,
 				"numero_factura" => $venta["numero_factura"], // Mantener el mismo
 				"productos" => $_POST["listaProductos"],
 				"impuesto" => $_POST["nuevoPrecioImpuesto"],
@@ -820,7 +884,7 @@ class ControladorVentas
 				"fecha" => $venta["fecha"], // Mantener la misma
 				"tipo_descuento" => isset($_POST["tipoDescuento"]) ? $_POST["tipoDescuento"] : "",
 				"valor_descuento" => isset($_POST["valorDescuento"]) ? $_POST["valorDescuento"] : 0,
-				"monto_descuento" => isset($_POST["montoDescuento"]) ? $_POST["montoDescuento"] : 0,
+				"monto_descuento" => isset($_POST["monto_descuento"]) ? $_POST["monto_descuento"] : 0,
 				"recibe" => isset($_POST["recibe"]) ? $_POST["recibe"] : 0,
 				"extra" => isset($_POST["extra"]) ? $_POST["extra"] : 0,
 				"retenciones" => isset($_POST["datosRetenciones"]) ? $_POST["datosRetenciones"] : "",
@@ -853,65 +917,64 @@ class ControladorVentas
 
 		if (isset($_POST["nuevaVenta"])) {
 
-			// 🟢 DEBUG: Ver qué datos llegan al controlador
-			file_put_contents("debug_ventas_post.txt", print_r($_POST, true));
+			// 🟢 LOG DE EMERGENCIA: Ver qué está enviando realmente la tablet
+			file_put_contents("debug_ventas.txt", "FECHA: " . date("Y-m-d H:i:s") . " - PRODUCTOS: " . $_POST["listaProductos"] . "\n", FILE_APPEND);
 
+			// VALIDACIÓN: No permitir ejecutar la venta si no hay productos reales
+			$listaProductosTemp = json_decode($_POST["listaProductos"], true);
+			$productosValidos = [];
 
+			if (!empty($listaProductosTemp)) {
+				foreach ($listaProductosTemp as $prod) {
+					// Solo aceptamos productos que tengan un ID numérico válido
+					if (isset($prod["id"]) && !empty($prod["id"]) && is_numeric($prod["id"])) {
+						$productosValidos[] = $prod;
+					}
+				}
+			}
+			
+			if (empty($productosValidos)) {
 
-
-			//No permitir ejecutar la venta si no hay productos añadidos
-			if ($_POST["listaProductos"] == "") {
+				// Si es AJAX o Factura Electrónica, responder JSON
+				if ((isset($_POST["ajax"]) && $_POST["ajax"] == "true") || isset($_POST["guardarVentaFactus"]) || isset($_POST["activarFacturaElectronica"])) {
+					
+					echo json_encode([
+						"status" => "error", 
+						"titulo" => "No se puede guardar", 
+						"mensaje" => "No has seleccionado ningún producto válido. Por favor, selecciona un producto de la lista."
+					]);
+					return;
+				}
 
 				echo '<script>
-
 				swal({
 					  type: "error",
-					  title: "La venta no se puede ejecutar si no hay productos",
+					  title: "La venta no se puede ejecutar si no hay productos válidos",
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"
 					  }).then(() => {
 								window.location = "ventas";
 					  })
-
 				</script>';
 
 				return;
 			}
 
-			/*=============================================
-			 ACTUALIZAR LAS COMPRAS DEL CLIENTE Y REDUCIR EL STOCK Y AUMENTAR LAS VENTAS DE LOS PRODUCTOS
-			 =============================================*/
-
-			$listaProductos = json_decode($_POST["listaProductos"], true);
+			// Actualizar la lista con solo los productos válidos para el resto del proceso
+			$_POST["listaProductos"] = json_encode($productosValidos);
+			$listaProductos = $productosValidos;
 
 			// 🔹 Usar el código que viene del formulario (ya calculado en la vista)
 			$codigoVenta = $_POST["nuevaVenta"];
 			$tabla = "ventas";
 
-			// DEBUG: Ver qué productos llegan al crear orden/venta
-
-			file_put_contents(
-				"debug_crear_orden.txt",
-
-				"=== CREAR ORDEN/VENTA ===\n" .
-
-				"Estado: " . $_POST["estado"] . "\n" .
-
-				"Codigo Venta: " . $codigoVenta . "\n" .
-
-				"Lista Productos RAW: " . $_POST["listaProductos"] . "\n" .
-
-				"Lista Productos DECODED:\n" . print_r($listaProductos, true) . "\n",
-
-				FILE_APPEND
-
-			);
 
 			//exit;
 
 			$totalProductosComprados = array();
 
-
+			$idBodegaActual = (!empty($_SESSION["id_bodega"])) ? $_SESSION["id_bodega"] : 1;
+			
 			if ($_POST["estado"] == "venta") {
 
 				// 🟢 VALIDACIÓN PREVIA DE FACTURA ELECTRÓNICA
@@ -952,16 +1015,16 @@ class ControladorVentas
 					// Verificar si es una variante
 					if (isset($value["esVariante"]) && $value["esVariante"] == "1") {
 
-						// Es una variante - restar stock de productos_variantes
-						$tablaVariantes = "productos_variantes";
-						$idVariante = $value["idVariante"];
+						// Es una variante - restar stock de productos_variantes_bodegas
+						$idVariante = isset($value["idVariante"]) ? $value["idVariante"] : null;
 
-						// Obtener datos actuales de la variante
-						$traerVariante = ModeloProductos::mdlObtenerVariantePorId($idVariante);
 
-						// Actualizar stock de la variante
+						// Obtener datos actuales de la variante en esta bodega
+						$traerVariante = ModeloProductos::mdlObtenerVariantePorId($idVariante, $idBodegaActual);
+
+						// Actualizar stock de la variante en la bodega
 						$nuevoStockVariante = $traerVariante["stock"] - $value["cantidad"];
-						ModeloProductos::mdlActualizarStockVariante($tablaVariantes, $nuevoStockVariante, $idVariante);
+						ModeloProductos::mdlActualizarStockVarianteBodega($idVariante, $idBodegaActual, $nuevoStockVariante);
 
 						// 🟢 REGISTRAR MOVIMIENTO DE STOCK - VARIANTE
 						ControladorMovimientos::ctrRegistrarMovimiento(
@@ -974,51 +1037,49 @@ class ControladorVentas
 							$traerVariante["stock"],
 							$nuevoStockVariante,
 							"Venta #" . $codigoVenta,
-							""
+							"",
+							$idBodegaActual
 						);
 
-						// Actualizar también el stock del producto base
+						// Opcional: Actualizar también el stock global del producto base si se desea mantener consolidado
+						// Aunque lo ideal es que el global sea la suma de las bodegas.
 						$tablaProductos = "productos";
 						$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, "id", $value["id"], "id");
-						$nuevoStockBase = $traerProducto["stock"] - $value["cantidad"];
-						ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $nuevoStockBase, $value["id"]);
-
-						// 🟢 REGISTRAR MOVIMIENTO DE STOCK - PRODUCTO BASE
-						ControladorMovimientos::ctrRegistrarMovimiento(
-							"producto",
-							$value["id"],
-							null,
-							$traerProducto["descripcion"],
-							"venta",
-							-$value["cantidad"],
-							$traerProducto["stock"],
-							$nuevoStockBase,
-							"Venta #" . $codigoVenta . " (por variante)",
-							""
-						);
+						$nuevoStockBaseGlobal = $traerProducto["stock"] - $value["cantidad"];
+						ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $nuevoStockBaseGlobal, $value["id"]);
 
 						// Actualizar ventas del producto base (estadística)
 						$nuevasVentas = $value["cantidad"] + $traerProducto["ventas"];
 						ModeloProductos::mdlActualizarProducto($tablaProductos, "ventas", $nuevasVentas, $value["id"]);
 
 					} else {
-						// Es un producto normal - restar stock de productos
+						// Es un producto normal - restar stock de productos_bodegas
+						
+						// LOG DE EMERGENCIA
+						file_put_contents("debug_crear_orden.txt", "PROCESANDO PRODUCTO NORMAL: ID=" . $value["id"] . " - CANT=" . $value["cantidad"] . "\n", FILE_APPEND);
+
 						$tablaProductos = "productos";
 						$item = "id";
 						$valor = $value["id"];
 						$orden = "id";
 
-						$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, $item, $valor, $orden);
+						$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, $item, $valor, $orden, $idBodegaActual);
 
 						$item1a = "ventas";
 						$valor1a = $value["cantidad"] + $traerProducto["ventas"];
 
-						$nuevasVentas = ModeloProductos::mdlActualizarProducto($tablaProductos, $item1a, $valor1a, $valor);
+						// Las ventas estadísticas siguen siendo globales
+						ModeloProductos::mdlActualizarProducto($tablaProductos, $item1a, $valor1a, $valor);
 
-						$item1b = "stock";
-						$valor1b = $value["stock"];
+						// El stock se descuenta de la bodega
+						$nuevoStockBodega = $traerProducto["stock"] - $value["cantidad"];
+						ModeloProductos::mdlActualizarStockBodega($value["id"], $idBodegaActual, $nuevoStockBodega);
 
-						$nuevoStock = ModeloProductos::mdlActualizarProducto($tablaProductos, $item1b, $valor1b, $valor);
+						// Opcional: Actualizar stock global consolidado
+						$nuevoStockGlobal = $traerProducto["stock_global"] - $value["cantidad"]; // Asumiendo que stock_global es el consolidado o simplemente el stock total
+						// Por ahora mantenemos 'stock' en productos como el consolidado
+						$nuevoStockGlobal = (isset($traerProducto["stock_global"]) ? $traerProducto["stock_global"] : $traerProducto["stock"]) - $value["cantidad"];
+						ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $nuevoStockGlobal, $valor);
 
 						// 🟢 REGISTRAR MOVIMIENTO DE STOCK - PRODUCTO NORMAL
 						ControladorMovimientos::ctrRegistrarMovimiento(
@@ -1029,9 +1090,10 @@ class ControladorVentas
 							"venta",
 							-$value["cantidad"],
 							$traerProducto["stock"],
-							$valor1b,
+							$nuevoStockBodega,
 							"Venta #" . $codigoVenta,
-							""
+							"",
+							$idBodegaActual
 						);
 
 					}
@@ -1088,36 +1150,30 @@ class ControladorVentas
 			$datos = array(
 				"id_vendedor" => $_POST["idVendedor"],
 				"id_cliente" => $_POST["seleccionarCliente"],
-				//"codigo"=>$_POST["nuevaVenta"],
+				"id_bodega" => $idBodegaActual,
 				"codigo" => $codigoVenta,
-				"numero_factura" => null, // 🔹 INICIALMENTE NULL PARA NO COPIAR EL CÓDIGO INTERNO
+				"numero_factura" => isset($_POST["numeroFactura"]) ? $_POST["numeroFactura"] : "",
 				"productos" => $_POST["listaProductos"],
 				"impuesto" => $_POST["nuevoPrecioImpuesto"],
 				"neto" => $_POST["nuevoPrecioNeto"],
 				"total" => $_POST["totalVenta"],
+				"metodo_pago" => $_POST["listaMetodoPago"],
 				"notas" => $_POST["notas"],
 				"observacion" => isset($_POST["observacion"]) ? $_POST["observacion"] : "",
 				"estado" => $_POST["estado"],
-				"imagen" => $_POST["nuevaimagen"],
 				"fecha" => $fechaHoraActual,
-				"metodo_pago" => $_POST["listaMetodoPago"],
 				"tipo_descuento" => isset($_POST["tipoDescuento"]) ? $_POST["tipoDescuento"] : "",
 				"valor_descuento" => isset($_POST["valorDescuento"]) ? $_POST["valorDescuento"] : 0,
 				"monto_descuento" => isset($_POST["montoDescuento"]) ? $_POST["montoDescuento"] : 0,
 				"recibe" => isset($_POST["recibe"]) ? $_POST["recibe"] : null,
-				"extra" => null,
+				"extra" => isset($_POST["extra"]) ? $_POST["extra"] : "",
 				"retenciones" => isset($_POST["datosRetenciones"]) ? $_POST["datosRetenciones"] : null,
-				// Campos Facturación Electrónica (Valores por defecto iniciales)
+				// Facturación Electrónica
 				"resolucion_id" => isset($_POST["resolucion_id"]) ? $_POST["resolucion_id"] : null,
 				"fecha_vencimiento" => isset($_POST["fecha_vencimiento"]) ? $_POST["fecha_vencimiento"] : null,
 				"orden_compra" => isset($_POST["orden_compra"]) ? $_POST["orden_compra"] : null,
 				"forma_pago_dian" => isset($_POST["forma_pago_dian"]) ? $_POST["forma_pago_dian"] : null,
 				"metodo_pago_dian_id" => isset($_POST["metodo_pago_dian_id"]) ? $_POST["metodo_pago_dian_id"] : null,
-				"estado_dian" => isset($_POST["estado_dian"]) ? $_POST["estado_dian"] : 'pendiente',
-				"cufe" => isset($_POST["cufe"]) ? $_POST["cufe"] : null,
-				"qr_data" => isset($_POST["qr_data"]) ? $_POST["qr_data"] : null,
-				"xml_dian" => isset($_POST["xml_dian"]) ? $_POST["xml_dian"] : null,
-				"pdf_dian" => isset($_POST["pdf_dian"]) ? $_POST["pdf_dian"] : null,
 				"mensaje_dian" => isset($_POST["mensaje_dian"]) ? $_POST["mensaje_dian"] : null,
 				"fecha_envio_dian" => isset($_POST["fecha_envio_dian"]) ? $_POST["fecha_envio_dian"] : null
 			);
@@ -1159,26 +1215,34 @@ class ControladorVentas
 							foreach ($listaProductos as $key => $value) {
 								$tablaProductos = "productos";
 
-								// Obtener stock actual BD (ya disminuido)
-								$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, "id", $value["id"], "id");
-
-								// Nuevo Stock = Stock Actual + Cantidad Vendida
-								$item1b = "stock";
-								$valor1b = $traerProducto["stock"] + $value["cantidad"];
-								ModeloProductos::mdlActualizarProducto($tablaProductos, $item1b, $valor1b, $value["id"]);
-
-								// Restar ventas estatisticas
-								$item1a = "ventas";
-								$valor1a = $traerProducto["ventas"] - $value["cantidad"];
-								ModeloProductos::mdlActualizarProducto($tablaProductos, $item1a, $valor1a, $value["id"]);
-
 								// Revertir Variantes si existen
 								if (isset($value["esVariante"]) && $value["esVariante"] == "1") {
-									$tablaVariantes = "productos_variantes";
 									$idVariante = $value["idVariante"];
-									$traerVariante = ModeloProductos::mdlObtenerVariantePorId($idVariante);
+									$traerVariante = ModeloProductos::mdlObtenerVariantePorId($idVariante, $idBodegaActual);
 									$nuevoStockVariante = $traerVariante["stock"] + $value["cantidad"];
-									ModeloProductos::mdlActualizarStockVariante($tablaVariantes, $nuevoStockVariante, $idVariante);
+									ModeloProductos::mdlActualizarStockVarianteBodega($idVariante, $idBodegaActual, $nuevoStockVariante);
+									
+									// Revertir global también
+									$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, "id", $value["id"], "id");
+									ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $traerProducto["stock"] + $value["cantidad"], $value["id"]);
+									ModeloProductos::mdlActualizarProducto($tablaProductos, "ventas", $traerProducto["ventas"] - $value["cantidad"], $value["id"]);
+
+								} else {
+									// Obtener stock actual en bodega
+									$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, "id", $value["id"], "id", $idBodegaActual);
+
+									// Nuevo Stock Bodega = Stock Actual + Cantidad Vendida
+									$nuevoStockBodega = $traerProducto["stock"] + $value["cantidad"];
+									ModeloProductos::mdlActualizarStockBodega($value["id"], $idBodegaActual, $nuevoStockBodega);
+
+									// Revertir stock global
+									$nuevoStockGlobal = $traerProducto["stock_global"] + $value["cantidad"]; // Asumiendo stock_global o el campo stock de la tabla productos
+									ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $nuevoStockGlobal, $value["id"]);
+
+									// Restar ventas estadísticas
+									$item1a = "ventas";
+									$valor1a = $traerProducto["ventas"] - $value["cantidad"];
+									ModeloProductos::mdlActualizarProducto($tablaProductos, $item1a, $valor1a, $value["id"]);
 								}
 							}
 
@@ -1344,6 +1408,11 @@ class ControladorVentas
 			return ["status" => "error", "message" => "Faltan datos obligatorios (productos o cliente)"];
 		}
 
+		// Asegurar id_bodega
+		if (!isset($datos["id_bodega"]) || empty($datos["id_bodega"])) {
+			$datos["id_bodega"] = 1;
+		}
+
 		$listaProductos = json_decode($datos["listaProductos"], true);
 		$totalProductosComprados = array();
 
@@ -1416,16 +1485,26 @@ class ControladorVentas
 
 		if (isset($_POST["editarVenta"])) {
 
-			//No permitir ejecutar la venta si no hay productos añadidos
-			if ($_POST["listaProductos"] == "") {
+			// VALIDACIÓN: No permitir guardar si no hay productos reales
+			$listaProductosTemp = json_decode($_POST["listaProductos"], true);
+			$productosValidos = [];
+
+			if (!empty($listaProductosTemp)) {
+				foreach ($listaProductosTemp as $prod) {
+					if (isset($prod["id"]) && !empty($prod["id"]) && is_numeric($prod["id"])) {
+						$productosValidos[] = $prod;
+					}
+				}
+			}
+			
+			if (empty($productosValidos)) {
 
 				if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-					if (ob_get_length())
-						ob_clean();
+					
 					echo json_encode([
-						"status" => "error",
-						"titulo" => "Error de Validación",
-						"mensaje" => "Debe modificar los productos para guardar la venta"
+						"status" => "error", 
+						"titulo" => "No se puede guardar", 
+						"mensaje" => "No has seleccionado ningún producto válido. Por favor, selecciona un producto de la lista."
 					]);
 					return;
 				}
@@ -1433,7 +1512,7 @@ class ControladorVentas
 				echo '<script>
 				swal({
 					  type: "error",
-					  title: "Debe modificar los productos para guardar la  venta",
+					  title: "Debe seleccionar productos válidos para guardar la venta",
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"
 					  }).then(() => {
@@ -1443,11 +1522,17 @@ class ControladorVentas
 				return;
 			}
 
+			// Actualizar la lista con solo los productos válidos
+			$_POST["listaProductos"] = json_encode($productosValidos);
+
+
 			$tabla = "ventas";
 			$item = "codigo";
 			$valor = $_POST["editarVenta"];
 
 			$traerVenta = ModeloVentas::mdlMostrarVentas($tabla, $item, $valor);
+
+			$idBodegaActual = (!empty($traerVenta["id_bodega"]) && $traerVenta["id_bodega"] > 0) ? $traerVenta["id_bodega"] : (!empty($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1);
 
 			/*=============================================
 			 SI ERA ORDEN Y PASA A VENTA
@@ -1457,65 +1542,22 @@ class ControladorVentas
 				$listaProductos = json_decode($_POST["listaProductos"], true);
 				$totalProductosComprados = array();
 
-				// DEBUG: Ver qué datos están llegando
-
-				file_put_contents("debug_orden_a_venta.txt", "=== DATOS RECIBIDOS ===\n" . print_r($listaProductos, true));
-
 				foreach ($listaProductos as $key => $value) {
 
 					array_push($totalProductosComprados, $value["cantidad"]);
 
-					// DEBUG: Ver qué campos tiene cada producto
-					file_put_contents(
-						"debug_orden_a_venta.txt",
-						"\n=== PRODUCTO $key ===\n" .
-						"ID: " . (isset($value["id"]) ? $value["id"] : "NO EXISTE") . "\n" .
-						"esVariante: " . (isset($value["esVariante"]) ? $value["esVariante"] : "NO EXISTE") . "\n" .
-						"idVariante: " . (isset($value["idVariante"]) ? $value["idVariante"] : "NO EXISTE") . "\n" .
-						"Descripción: " . $value["descripcion"] . "\n",
-
-						FILE_APPEND
-					);
-
 					// Verificar si es una variante
 					if (isset($value["esVariante"]) && $value["esVariante"] == "1") {
 
-						file_put_contents("debug_orden_a_venta.txt", ">>> ES VARIANTE - Procesando...\n", FILE_APPEND);
-
-						// Es una variante - descontar stock de productos_variantes
-						$tablaVariantes = "productos_variantes";
+						// Es una variante - descontar stock de productos_variantes_bodegas
 						$idVariante = $value["idVariante"];
 
-						file_put_contents("debug_orden_a_venta.txt", "ID Variante: $idVariante\n", FILE_APPEND);
+						// Obtener datos actuales de la variante en esta bodega
+						$traerVariante = ModeloProductos::mdlObtenerVariantePorId($idVariante, $idBodegaActual);
 
-
-
-						// Obtener datos actuales de la variante
-
-						$traerVariante = ModeloProductos::mdlObtenerVariantePorId($idVariante);
-
-
-
-						file_put_contents(
-							"debug_orden_a_venta.txt",
-
-							"Stock actual variante: " . $traerVariante["stock"] . "\n" .
-
-							"Cantidad a descontar: " . $value["cantidad"] . "\n",
-
-							FILE_APPEND
-
-						);
-
-
-						// Actualizar stock de la variante
+						// Actualizar stock de la variante en la bodega
 						$nuevoStockVariante = $traerVariante["stock"] - $value["cantidad"];
-
-						file_put_contents("debug_orden_a_venta.txt", "Nuevo stock: $nuevoStockVariante\n", FILE_APPEND);
-
-						$resultadoActualizacion = ModeloProductos::mdlActualizarStockVariante($tablaVariantes, $nuevoStockVariante, $idVariante);
-
-						file_put_contents("debug_orden_a_venta.txt", "Resultado actualización: $resultadoActualizacion\n\n", FILE_APPEND);
+						ModeloProductos::mdlActualizarStockVarianteBodega($idVariante, $idBodegaActual, $nuevoStockVariante);
 
 						// 🟢 REGISTRAR MOVIMIENTO DE STOCK - VARIANTE (ORDEN → VENTA)
 						ControladorMovimientos::ctrRegistrarMovimiento(
@@ -1528,28 +1570,15 @@ class ControladorVentas
 							$traerVariante["stock"],
 							$nuevoStockVariante,
 							"Venta #" . $_POST["editarVenta"] . " (orden convertida a venta)",
-							""
+							"",
+							$idBodegaActual
 						);
 
-						// Actualizar también el stock del producto base
+						// Actualizar también el stock global consolidado
 						$tablaProductos = "productos";
 						$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, "id", $value["id"], "id");
-						$nuevoStockBase = $traerProducto["stock"] - $value["cantidad"];
-						ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $nuevoStockBase, $value["id"]);
-
-						// 🟢 REGISTRAR MOVIMIENTO DE STOCK - PRODUCTO BASE (ORDEN → VENTA)
-						ControladorMovimientos::ctrRegistrarMovimiento(
-							"producto",
-							$value["id"],
-							null,
-							$traerProducto["descripcion"],
-							"venta",
-							-$value["cantidad"],
-							$traerProducto["stock"],
-							$nuevoStockBase,
-							"Venta #" . $_POST["editarVenta"] . " (por variante - orden convertida)",
-							""
-						);
+						$nuevoStockBaseGlobal = $traerProducto["stock"] - $value["cantidad"];
+						ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $nuevoStockBaseGlobal, $value["id"]);
 
 						// Actualizar ventas del producto base (estadística)
 						$nuevasVentas = $value["cantidad"] + $traerProducto["ventas"];
@@ -1557,23 +1586,27 @@ class ControladorVentas
 
 
 					} else {
-						// Es un producto normal - descontar stock de productos
+						// Es un producto normal - descontar stock de productos_bodegas
 						$tablaProductos = "productos";
 						$itemProd = "id";
 						$valorProd = $value["id"];
 						$orden = "id";
 
-						$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, $itemProd, $valorProd, $orden);
+						$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, $itemProd, $valorProd, $orden, $idBodegaActual);
 
-						// Aumentar ventas
+						// Aumentar ventas estadísticas (globales)
 						$item1a = "ventas";
 						$valor1a = $value["cantidad"] + $traerProducto["ventas"];
 						ModeloProductos::mdlActualizarProducto($tablaProductos, $item1a, $valor1a, $valorProd);
 
-						// Disminuir stock
-						$item1b = "stock";
-						$valor1b = $traerProducto["stock"] - $value["cantidad"];
-						ModeloProductos::mdlActualizarProducto($tablaProductos, $item1b, $valor1b, $valorProd);
+						// Disminuir stock en la bodega
+						$nuevoStockBodega = $traerProducto["stock"] - $value["cantidad"];
+						ModeloProductos::mdlActualizarStockBodega($valorProd, $idBodegaActual, $nuevoStockBodega);
+
+						// Disminuir stock global consolidado
+						$nuevoStockGlobal = $traerProducto["stock_global"] - $value["cantidad"]; // Asumiendo stock_global o el campo stock de productos
+						$nuevoStockGlobal = (isset($traerProducto["stock_global"]) ? $traerProducto["stock_global"] : $traerProducto["stock"]) - $value["cantidad"];
+						ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $nuevoStockGlobal, $valorProd);
 
 						// 🟢 REGISTRAR MOVIMIENTO DE STOCK - PRODUCTO NORMAL (ORDEN → VENTA)
 						ControladorMovimientos::ctrRegistrarMovimiento(
@@ -1584,9 +1617,10 @@ class ControladorVentas
 							"venta",
 							-$value["cantidad"],
 							$traerProducto["stock"],
-							$valor1b,
+							$nuevoStockBodega,
 							"Venta #" . $_POST["editarVenta"] . " (orden convertida a venta)",
-							""
+							"",
+							$idBodegaActual
 						);
 					}
 				}
@@ -1820,6 +1854,7 @@ class ControladorVentas
 
 				"id_vendedor" => $_POST["idVendedor"],
 				"id_cliente" => $_POST["seleccionarCliente"],
+				"id_bodega" => $idBodegaActual,
 				"codigo" => $_POST["editarVenta"],
 				"numero_factura" => isset($traerVenta["numero_factura"]) ? $traerVenta["numero_factura"] : null, // 🔹 MANTENER NÚMERO EXISTENTE
 				"productos" => $_POST["listaProductos"],
@@ -2054,120 +2089,95 @@ class ControladorVentas
 			 =============================================*/
 
 			$productos = json_decode($traerVenta["productos"], true);
-
+			$idBodegaVenta = isset($traerVenta["id_bodega"]) && $traerVenta["id_bodega"] > 0 ? $traerVenta["id_bodega"] : 1;
 			$totalProductosComprados = array();
 
 			foreach ($productos as $key => $value) {
 
 				array_push($totalProductosComprados, $value["cantidad"]);
 
-				// Verificar si es una variante
+				// Si era una orden, no se descuenta stock, por lo que no se restaura
 				if (isset($traerVenta["estado"]) && $traerVenta["estado"] == "orden") {
 					continue;
 				}
 
 				if (isset($value["esVariante"]) && $value["esVariante"] == "1") {
 
-					// Es una variante - devolver stock a la variante Y al producto base
-					$tablaVariantes = "productos_variantes";
+					// Es una variante - devolver stock a la variante Y al producto base en la bodega correcta
 					$idVariante = $value["idVariante"];
 
-					// Obtener datos actuales de la variante
-					$traerVariante = ModeloProductos::mdlObtenerVariantePorId($idVariante);
+					// Obtener datos actuales de la variante en la bodega de la venta
+					$traerVariante = ModeloProductos::mdlObtenerVariantePorId($idVariante, $idBodegaVenta);
 
 					if ($traerVariante) {
-						// Devolver stock a la variante
+						// Devolver stock a la variante en la bodega
 						$nuevoStockVariante = $traerVariante["stock"] + $value["cantidad"];
-						ModeloProductos::mdlActualizarStockVariante($tablaVariantes, $nuevoStockVariante, $idVariante);
+						ModeloProductos::mdlActualizarStockVarianteBodega($idVariante, $idBodegaVenta, $nuevoStockVariante);
 
 						// 🟢 REGISTRAR MOVIMIENTO - DEVOLUCIÓN VARIANTE
-						if (isset($value["descripcion"]) && !empty($value["descripcion"])) {
-							ControladorMovimientos::ctrRegistrarMovimiento(
-								"variante",
-								$value["id"],
-								$idVariante,
-								$value["descripcion"],
-								"eliminacion_venta",
-								$value["cantidad"],
-								$traerVariante["stock"],
-								$nuevoStockVariante,
-								"Eliminación Venta #" . $traerVenta["codigo"],
-								""
-							);
-						}
-					}
-
-					// Devolver stock al producto base
-					$tablaProductos = "productos";
-					$item = "id";
-					$valor = $value["id"];
-					$orden = "id";
-
-					$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, $item, $valor, $orden);
-
-					// Devolver stock al producto base
-					$item1b = "stock";
-					$valor1b = $value["cantidad"] + $traerProducto["stock"];
-					$nuevoStock = ModeloProductos::mdlActualizarProducto($tablaProductos, $item1b, $valor1b, $valor);
-
-					// 🟢 REGISTRAR MOVIMIENTO - DEVOLUCIÓN PRODUCTO BASE
-					if ($traerProducto && isset($traerProducto["descripcion"])) {
 						ControladorMovimientos::ctrRegistrarMovimiento(
-							"producto",
+							"variante",
 							$value["id"],
-							null,
-							$traerProducto["descripcion"],
+							$idVariante,
+							$value["descripcion"],
 							"eliminacion_venta",
 							$value["cantidad"],
-							$traerProducto["stock"],
-							$valor1b,
-							"Eliminación Venta #" . $traerVenta["codigo"] . " (por variante)",
-							""
+							$traerVariante["stock"],
+							$nuevoStockVariante,
+							"Eliminación Venta #" . $traerVenta["codigo"],
+							"",
+							$idBodegaVenta
 						);
 					}
+
+					// Devolver stock al producto base (Global)
+					$tablaProductos = "productos";
+					$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, "id", $value["id"], "id");
+
+					// Devolver stock consolidado
+					$nuevoStockGlobal = $value["cantidad"] + $traerProducto["stock"];
+					ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $nuevoStockGlobal, $value["id"]);
 
 					// Restar las ventas del producto base
 					$item1a = "ventas";
 					$valor1a = $traerProducto["ventas"] - $value["cantidad"];
-					$nuevasVentas = ModeloProductos::mdlActualizarProducto($tablaProductos, $item1a, $valor1a, $valor);
+					ModeloProductos::mdlActualizarProducto($tablaProductos, $item1a, $valor1a, $value["id"]);
 
 				} else {
 
-					// Es un producto normal - devolver stock normal
+					// Es un producto normal - devolver stock a la bodega
 					$tablaProductos = "productos";
-
-					$item = "id";
 					$valor = $value["id"];
-					$orden = "id";
 
-					$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, $item, $valor, $orden);
+					$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, "id", $valor, "id", $idBodegaVenta);
 
+					// Restar ventas estadísticas (globales)
 					$item1a = "ventas";
 					$valor1a = $traerProducto["ventas"] - $value["cantidad"];
+					ModeloProductos::mdlActualizarProducto($tablaProductos, $item1a, $valor1a, $valor);
 
-					$nuevasVentas = ModeloProductos::mdlActualizarProducto($tablaProductos, $item1a, $valor1a, $valor);
+					// Devolver stock a la bodega
+					$nuevoStockBodega = $value["cantidad"] + $traerProducto["stock"];
+					ModeloProductos::mdlActualizarStockBodega($valor, $idBodegaVenta, $nuevoStockBodega);
 
-					$item1b = "stock";
-					$valor1b = $value["cantidad"] + $traerProducto["stock"];
-
-					$nuevoStock = ModeloProductos::mdlActualizarProducto($tablaProductos, $item1b, $valor1b, $valor);
+					// Devolver stock global
+					$nuevoStockGlobal = (isset($traerProducto["stock_global"]) ? $traerProducto["stock_global"] : $traerProducto["stock"]) + $value["cantidad"];
+					ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $nuevoStockGlobal, $valor);
 
 					// 🟢 REGISTRAR MOVIMIENTO - DEVOLUCIÓN PRODUCTO NORMAL
-					if ($traerProducto && isset($traerProducto["descripcion"])) {
-						ControladorMovimientos::ctrRegistrarMovimiento(
-							"producto",
-							$value["id"],
-							null,
-							$traerProducto["descripcion"],
-							"eliminacion_venta",
-							$value["cantidad"],
-							$traerProducto["stock"],
-							$valor1b,
-							"Eliminación Venta #" . $traerVenta["codigo"],
-							""
-						);
-					}
-
+					ControladorMovimientos::ctrRegistrarMovimiento(
+						"producto",
+						$value["id"],
+						null,
+						$traerProducto["descripcion"],
+						"eliminacion_venta",
+						$value["cantidad"],
+						$traerProducto["stock"],
+						$nuevoStockBodega,
+						"Eliminación Venta #" . $traerVenta["codigo"],
+						"",
+						$idBodegaVenta
+					);
 				}
 			}
 
@@ -2578,15 +2588,26 @@ class ControladorVentas
 	{
 		if (isset($_POST["guardarVentaFactus"])) {
 
-			// 1. Validar productos
-			if ($_POST["listaProductos"] == "") {
+			// 1. Validar productos reales
+			$listaProductosTemp = json_decode($_POST["listaProductos"], true);
+			$productosValidos = [];
+
+			if (!empty($listaProductosTemp)) {
+				foreach ($listaProductosTemp as $prod) {
+					if (isset($prod["id"]) && !empty($prod["id"]) && is_numeric($prod["id"])) {
+						$productosValidos[] = $prod;
+					}
+				}
+			}
+
+			if (empty($productosValidos)) {
+				
 				if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
-					if (ob_get_length())
-						ob_clean();
+					
 					echo json_encode([
 						"status" => "error",
 						"titulo" => "Error de Validación",
-						"mensaje" => "La venta no se puede ejecutar si no hay productos"
+						"mensaje" => "No has seleccionado ningún producto válido. Por favor, selecciona un producto de la lista."
 					]);
 					return;
 				}
@@ -2594,7 +2615,7 @@ class ControladorVentas
 				echo '<script>
 				swal({
 					  type: "error",
-					  title: "La venta no se puede ejecutar si no hay productos",
+					  title: "La venta no se puede ejecutar si no hay productos válidos",
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"
 					  }).then(() => {
@@ -2604,36 +2625,33 @@ class ControladorVentas
 				return;
 			}
 
-			/*=============================================
-			 2. GESTIÓN DE STOCK Y CLIENTES
-			 =============================================*/
-			$listaProductos = json_decode($_POST["listaProductos"], true);
+			// Actualizar lista
+			$_POST["listaProductos"] = json_encode($productosValidos);
+			$listaProductos = $productosValidos;
 			$codigoVenta = $_POST["nuevaVenta"];
 			$tabla = "ventas";
 			$totalProductosComprados = array();
+
+			$idBodegaActual = (!empty($_SESSION["id_bodega"])) ? $_SESSION["id_bodega"] : 1;
 
 			if ($_POST["estado"] == "venta") {
 				foreach ($listaProductos as $key => $value) {
 					array_push($totalProductosComprados, $value["cantidad"]);
 
 					// Verificar si es variante
-
-					// Verificar si es variante
 					if (isset($value["esVariante"]) && $value["esVariante"] == "1") {
-						$tablaVariantes = "productos_variantes";
+						
 						$idVariante = $value["idVariante"];
-						$traerVariante = ModeloProductos::mdlObtenerVariantePorId($idVariante);
+						$traerVariante = ModeloProductos::mdlObtenerVariantePorId($idVariante, $idBodegaActual);
 						$nuevoStockVariante = $traerVariante["stock"] - $value["cantidad"];
-						ModeloProductos::mdlActualizarStockVariante($tablaVariantes, $nuevoStockVariante, $idVariante);
+						ModeloProductos::mdlActualizarStockVarianteBodega($idVariante, $idBodegaActual, $nuevoStockVariante);
 
-						ControladorMovimientos::ctrRegistrarMovimiento("variante", $value["id"], $idVariante, $value["descripcion"], "venta", -$value["cantidad"], $traerVariante["stock"], $nuevoStockVariante, "Venta FE #" . $codigoVenta, "");
+						ControladorMovimientos::ctrRegistrarMovimiento("variante", $value["id"], $idVariante, $value["descripcion"], "venta", -$value["cantidad"], $traerVariante["stock"], $nuevoStockVariante, "Venta FE #" . $codigoVenta, "", $idBodegaActual);
 
 						$tablaProductos = "productos";
 						$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, "id", $value["id"], "id");
 						$nuevoStockBase = $traerProducto["stock"] - $value["cantidad"];
 						ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $nuevoStockBase, $value["id"]);
-
-						ControladorMovimientos::ctrRegistrarMovimiento("producto", $value["id"], null, $traerProducto["descripcion"], "venta", -$value["cantidad"], $traerProducto["stock"], $nuevoStockBase, "Venta FE #" . $codigoVenta, "");
 
 						$nuevasVentas = $value["cantidad"] + $traerProducto["ventas"];
 						ModeloProductos::mdlActualizarProducto($tablaProductos, "ventas", $nuevasVentas, $value["id"]);
@@ -2643,15 +2661,21 @@ class ControladorVentas
 						$item = "id";
 						$valor = $value["id"];
 						$orden = "id";
-						$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, $item, $valor, $orden);
+						
+						$traerProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, $item, $valor, $orden, $idBodegaActual);
+						
 						$item1a = "ventas";
 						$valor1a = $value["cantidad"] + $traerProducto["ventas"];
-						$nuevasVentas = ModeloProductos::mdlActualizarProducto($tablaProductos, $item1a, $valor1a, $valor);
-						$item1b = "stock";
-						$valor1b = $value["stock"];
-						$nuevoStock = ModeloProductos::mdlActualizarProducto($tablaProductos, $item1b, $valor1b, $valor);
+						ModeloProductos::mdlActualizarProducto($tablaProductos, $item1a, $valor1a, $valor);
 
-						ControladorMovimientos::ctrRegistrarMovimiento("producto", $value["id"], null, $traerProducto["descripcion"], "venta", -$value["cantidad"], $traerProducto["stock"], $valor1b, "Venta FE #" . $codigoVenta, "");
+						$nuevoStockBodega = $traerProducto["stock"] - $value["cantidad"];
+						ModeloProductos::mdlActualizarStockBodega($valor, $idBodegaActual, $nuevoStockBodega);
+
+						// Stock global consolidado
+						$nuevoStockGlobal = (isset($traerProducto["stock_global"]) ? $traerProducto["stock_global"] : $traerProducto["stock"]) - $value["cantidad"];
+						ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $nuevoStockGlobal, $valor);
+
+						ControladorMovimientos::ctrRegistrarMovimiento("producto", $value["id"], null, $traerProducto["descripcion"], "venta", -$value["cantidad"], $traerProducto["stock"], $nuevoStockBodega, "Venta FE #" . $codigoVenta, "", $idBodegaActual);
 					}
 				}
 			}
@@ -2707,6 +2731,7 @@ class ControladorVentas
 			$datos = array(
 				"id_vendedor" => $_POST["idVendedor"],
 				"id_cliente" => $_POST["seleccionarCliente"],
+				"id_bodega" => $idBodegaActual,
 				"codigo" => $_POST["nuevaVenta"], // USAR EL CÓDIGO DE FACTUS COMO CÓDIGO INTERNO
 				"productos" => $_POST["listaProductos"],
 				"impuesto" => $_POST["nuevoPrecioImpuesto"],

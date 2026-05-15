@@ -610,8 +610,9 @@ MODAL AGREGAR CLIENTE
     <script>
       $(document).on("submit", ".formularioVenta", function (e) {
         var listaProductos = $("#listaProductos").val();
-        if (listaProductos == "" || listaProductos == "[]") {
+        if (!listaProductos || listaProductos.trim() == "" || listaProductos.trim() == "[]") {
           e.preventDefault();
+          e.stopImmediatePropagation();
           swal({
             type: "error",
             title: "La venta no se puede guardar porque no tiene productos",

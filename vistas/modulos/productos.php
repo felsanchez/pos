@@ -48,13 +48,13 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
 
           <!-- Filtro Proveedor -->
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="hidden-xs"><b>Filtrar por Proveedor:</b></span>
+            <span class="hidden-xs"><b>Proveedor:</b></span>
             <div class="input-group" style="width: 200px;">
               <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
                 <i class="fa fa-search text-primary"></i>
               </span>
               <select class="form-control select2" id="filtroProveedor">
-                <option value="">Seleccionar proveedor...</option>
+                <option value="">Mostrar Todos</option>
                 <?php
                 $proveedoresFiltro = ControladorProveedores::ctrMostrarProveedores(null, null);
                 foreach ($proveedoresFiltro as $proveedorFiltro) {
@@ -67,13 +67,13 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
 
           <!-- Filtro Categoría -->
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="hidden-xs"><b>Filtrar por Categoría:</b></span>
+            <span class="hidden-xs"><b>Categoría:</b></span>
             <div class="input-group" style="width: 200px;">
               <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
                 <i class="fa fa-search text-primary"></i>
               </span>
               <select class="form-control select2" id="filtroCategoria">
-                <option value="">Seleccionar categoria...</option>
+                <option value="">Mostrar Todos</option>
                 <?php
                 $categoriasFiltro = ControladorCategorias::ctrMostrarCategorias(null, null);
                 foreach ($categoriasFiltro as $categoriaFiltro) {
@@ -579,10 +579,11 @@ MODAL EDITAR PRODUCTO
                   $item = null;
                   $valor = null;
                   $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
+                  $producto = isset($producto) ? $producto : null;
 
                   foreach ($categorias as $key => $value) {
 
-                    $selected = ($producto["id_categoria"] == $value["id"]) ? "selected" : "";
+                    $selected = ($producto && $producto["id_categoria"] == $value["id"]) ? "selected" : "";
 
                     echo '<option value="' . $value["id"] . '" ' . $selected . '>' . $value["categoria"] . '</option>';
                   }

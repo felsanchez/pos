@@ -45,7 +45,6 @@ if ($xml) {
 
       <div class="box-header with-border">
 
-
         <?php if (puedeAccion('factura_electronica', 'crear')): ?>
           <a href="crear-factura-electronica">
             <button class="btn btn-primary">
@@ -54,20 +53,39 @@ if ($xml) {
           </a>
         <?php endif; ?>
 
+        <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+          
+          <div style="display: flex; align-items: center; gap: 10px;">
 
-        <div class="pull-right contenedor-filtros fe-ui-hidden" id="contenedorFiltrosFacturas">
-
-          <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <!-- Filtro por Bodega (Administradores) -->
+            <?php if (stripos($_SESSION["perfil"], "Admin") !== false): ?>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="hidden-xs"><b>Sucursal:</b></span>
+                <div class="input-group" style="width: 180px;">
+                  <span class="input-group-addon"><i class="fa fa-building text-primary"></i></span>
+                  <select name="bodega" class="form-control select2 select-bodega">
+                    <option value="">Mostrar Todas</option>
+                    <?php
+                    $bodegas = ControladorBodegas::ctrMostrarBodegas(null, null);
+                    foreach ($bodegas as $key => $valueBodega) {
+                      $selected = (isset($_GET['bodega']) && $_GET['bodega'] == $valueBodega["id"]) ? 'selected' : '';
+                      echo '<option value="' . e($valueBodega["id"]) . '" ' . $selected . '>' . e($valueBodega["nombre"]) . '</option>';
+                    }
+                    ?>
+                  </select>
+                </div>
+              </div>
+            <?php endif; ?>
 
             <!-- Filtro por cliente -->
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Filtrar por Cliente:</b></span>
+              <span class="hidden-xs"><b>Cliente:</b></span>
               <div class="input-group" style="width: 200px;">
                 <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
                   <i class="fa fa-search text-primary"></i>
                 </span>
                 <select id="filtroClienteFacturas" class="form-control select2 select-cliente" style="width: 100%;">
-                  <option value="">Seleccionar cliente...</option>
+                  <option value="">Mostrar Todos</option>
                   <?php
                   $item = null;
                   $valor = null;
@@ -82,13 +100,13 @@ if ($xml) {
 
             <!-- Filtro por usuario -->
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Filtrar por Vendedor:</b></span>
+              <span class="hidden-xs"><b>Vendedor:</b></span>
               <div class="input-group" style="width: 200px;">
                 <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
                   <i class="fa fa-search text-primary"></i>
                 </span>
                 <select id="filtroUsuarioFacturas" class="form-control select2 select-usuario" style="width: 100%;">
-                  <option value="">Seleccionar usuario...</option>
+                  <option value="">Mostrar Todos</option>
                   <?php
                   $item = null;
                   $valor = null;
@@ -103,7 +121,7 @@ if ($xml) {
 
             <!-- Botón Rango de Fecha -->
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Filtrar por Fecha:</b></span>
+              <span class="hidden-xs"><b>Fecha:</b></span>
               <button type="button" class="btn btn-default" id="daterange-btn-factus">
                 <span>
                   <i class="fa fa-calendar"></i> Rango de fecha
@@ -118,7 +136,6 @@ if ($xml) {
             </button>
 
           </div>
-
         </div>
 
 
@@ -834,6 +851,7 @@ MODAL ENVIAR EMAIL
               d.fechaFinal = feFilterFechaFinal;
               d.clienteId = $('#filtroClienteFacturas').val() || '';
               d.usuarioId = $('#filtroUsuarioFacturas').val() || '';
+              d.bodegaId = $('.select-bodega').val() || '';
             }
           },
           "initComplete": function (settings, json) {
@@ -872,10 +890,10 @@ MODAL ENVIAR EMAIL
         });
 
         // Inicializar Select2
-        $('#filtroClienteFacturas, #filtroUsuarioFacturas').select2({ allowClear: false, width: '100%' });
+        $('#filtroClienteFacturas, #filtroUsuarioFacturas, .select-bodega').select2({ allowClear: false, width: '100%' });
 
-        // Filtrar automáticamente al cambiar cliente o usuario
-        $('#filtroClienteFacturas, #filtroUsuarioFacturas').on('change', function () {
+        // Filtrar automáticamente al cambiar cliente, usuario o bodega
+        $('#filtroClienteFacturas, #filtroUsuarioFacturas, .select-bodega').on('change', function () {
           reloadFETable();
         });
 
@@ -883,6 +901,7 @@ MODAL ENVIAR EMAIL
         $('#btnLimpiarFacturas').on('click', function () {
           $('#filtroClienteFacturas').val('').trigger('change');
           $('#filtroUsuarioFacturas').val('').trigger('change');
+          $('.select-bodega').val('').trigger('change.select2');
           feFilterFechaInicial = '';
           feFilterFechaFinal = '';
           $('#daterange-btn-factus span').html('<i class="fa fa-calendar"></i> Rango de fecha');

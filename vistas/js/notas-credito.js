@@ -1,5 +1,4 @@
 $(document).ready(function () {
-    console.log("Notas Crédito JS cargado");
 
     /*=============================================
     INICIALIZAR DATATABLES SERVER-SIDE - NOTAS CRÉDITO
@@ -17,6 +16,9 @@ $(document).ready(function () {
                 "type": "POST",
                 "data": function (d) {
                     d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+                    d.idBodega = $("#selectBodegaNC").val();
+                    d.fechaInicial = $("#fechaInicialNC").val();
+                    d.fechaFinal = $("#fechaFinalNC").val();
                 }
             },
             "autoWidth": false,
@@ -71,6 +73,51 @@ $(document).ready(function () {
                  $(".btn-group.col-acciones").parent().addClass("text-center").css("vertical-align", "middle");
             }
         });
+
+        /*=============================================
+        EVENTO AL CAMBIAR SUCURSAL
+        =============================================*/
+        $(document).on("change", "#selectBodegaNC", function() {
+            $("#tablaListadoNotasCredito").DataTable().ajax.reload();
+        });
+
+        /*=============================================
+        RANGO DE FECHAS
+        =============================================*/
+        if ($('#daterange-btn-nc').length > 0) {
+            $('#daterange-btn-nc').daterangepicker(
+                {
+                    ranges: {
+                        'Hoy': [moment(), moment()],
+                        'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                        'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+                        'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
+                        'Este mes': [moment().startOf('month'), moment().endOf('month')],
+                        'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                        'Todos los documentos': [moment('2000-01-01'), moment()]
+                    },
+                    startDate: moment().subtract(29, 'days'),
+                    endDate: moment()
+                },
+                function (start, end) {
+                    $('#daterange-btn-nc span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                    $('#fechaInicialNC').val(start.format('YYYY-MM-DD'));
+                    $('#fechaFinalNC').val(end.format('YYYY-MM-DD'));
+                    $("#tablaListadoNotasCredito").DataTable().ajax.reload();
+                }
+            );
+        }
+
+        /*=============================================
+        LIMPIAR FILTROS
+        =============================================*/
+        $(document).on("click", "#btnLimpiarFiltrosNC", function() {
+            $("#selectBodegaNC").val("").trigger("change");
+            $("#fechaInicialNC").val("");
+            $("#fechaFinalNC").val("");
+            $('#daterange-btn-nc span').html('<span><i class="fa fa-calendar"></i> Rango de fecha</span>');
+            $("#tablaListadoNotasCredito").DataTable().ajax.reload();
+        });
     }
 
     // 1. Inicializar - Calcular total al cargar
@@ -84,9 +131,6 @@ $(document).ready(function () {
             placeholder: "Seleccione una opción",
             allowClear: true
         });
-        console.log("Select2 inicializado");
-    } else {
-        console.log("Select2 no está disponible");
     }
 
     // 1.2 Evento: Checkbox "Seleccionar Todo"
@@ -285,7 +329,6 @@ $(document).ready(function () {
     // Usamos delegación de eventos y también select2:select por si acaso
     $(document).on("change", "#seleccionarFacturaReferencia", function () {
         var idVenta = $(this).val();
-        console.log("Cambio en Factura Referencia:", idVenta);
         if (idVenta) {
             window.location = "index.php?ruta=crear-nota-credito&idVenta=" + idVenta;
         }
@@ -294,7 +337,6 @@ $(document).ready(function () {
     // Evento específico de Select2
     $(document).on("select2:select", "#seleccionarFacturaReferencia", function (e) {
         var idVenta = e.params.data.id;
-        console.log("Select2:select en Factura Referencia:", idVenta);
         if (idVenta) {
             window.location = "index.php?ruta=crear-nota-credito&idVenta=" + idVenta;
         }
