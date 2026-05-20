@@ -1,0 +1,90 @@
+[2026-05-20 04:14:38] ctrCrearGasto: Array
+(
+    [csrf_token] => bdc0cbbd85485f06be72bfa8da2e38e4d3015350e6fc5a1f7eb32111e96c4df3
+    [nuevoConceptoGasto] => Playwright Gasto Test
+    [nuevoMontoGasto] => 150.75
+    [nuevaFechaGasto] => 2026-05-20
+    [nuevaCategoriaGasto] => 6
+    [nuevoProveedorGasto] => 
+    [nuevoMetodoPagoGasto] => Efectivo
+    [nuevoNumeroComprobante] => COMP-PW-789
+    [nuevoEstadoGasto] => aprobado
+    [nuevasNotasGasto] => Automated test notes
+)
+
+[2026-05-20 04:14:43] ctrEditarGasto: Array
+(
+    [csrf_token] => bdc0cbbd85485f06be72bfa8da2e38e4d3015350e6fc5a1f7eb32111e96c4df3
+    [editarConceptoGasto] => Antigravity Test Save
+    [idGasto] => 30
+    [editarMontoGasto] => 120.50
+    [editarFechaGasto] => 2026-05-20
+    [editarCategoriaGasto] => 1
+    [editarProveedorGasto] => 
+    [editarMetodoPagoGasto] => Efectivo
+    [editarNumeroComprobante] => COMP-PW-MODIFIED
+    [editarEstadoGasto] => aprobado
+    [imagenActual] => 
+    [editarNotasGasto] => Some test notes
+)
+
+[2026-05-20 05:01:45] ctrCrearGasto: Array
+(
+    [csrf_token] => a7085b05d041308cde0f73848553b15e8c8b43ababb9ee58f59c824e1e5462c6
+    [nuevoConceptoGasto] => Playwright Gasto Test
+    [nuevoMontoGasto] => 150.75
+    [nuevaFechaGasto] => 2026-05-20
+    [nuevaCategoriaGasto] => 6
+    [nuevoProveedorGasto] => 
+    [nuevoMetodoPagoGasto] => Efectivo
+    [nuevoNumeroComprobante] => COMP-PW-789
+    [nuevoEstadoGasto] => aprobado
+    [nuevasNotasGasto] => Automated test notes
+)
+
+[2026-05-20 05:01:49] ctrEditarGasto: Array
+(
+    [csrf_token] => a7085b05d041308cde0f73848553b15e8c8b43ababb9ee58f59c824e1e5462c6
+    [editarConceptoGasto] => Antigravity Test Save
+    [idGasto] => 30
+    [editarMontoGasto] => 120.50
+    [editarFechaGasto] => 2026-05-20
+    [editarCategoriaGasto] => 1
+    [editarProveedorGasto] => 
+    [editarMetodoPagoGasto] => Efectivo
+    [editarNumeroComprobante] => COMP-PW-MODIFIED
+    [editarEstadoGasto] => aprobado
+    [imagenActual] => 
+    [editarNotasGasto] => Some test notes
+)
+
+[2026-05-20 05:04:47] ctrCrearGasto: Array
+(
+    [csrf_token] => e179aec1037579a6f1f28a6d35cff7180fe3b133bf9cbb0692b11066ec36e0d1
+    [nuevoConceptoGasto] => Playwright Gasto Test
+    [nuevoMontoGasto] => 150.75
+    [nuevaFechaGasto] => 2026-05-20
+    [nuevaCategoriaGasto] => 6
+    [nuevoProveedorGasto] => 
+    [nuevoMetodoPagoGasto] => Efectivo
+    [nuevoNumeroComprobante] => COMP-PW-789
+    [nuevoEstadoGasto] => aprobado
+    [nuevasNotasGasto] => Automated test notes
+)
+
+[2026-05-20 05:04:52] ctrEditarGasto: Array
+(
+    [csrf_token] => e179aec1037579a6f1f28a6d35cff7180fe3b133bf9cbb0692b11066ec36e0d1
+    [editarConceptoGasto] => Playwright Gasto Test
+    [idGasto] => 34
+    [editarMontoGasto] => 150.75
+    [editarFechaGasto] => 2026-05-20
+    [editarCategoriaGasto] => 6
+    [editarProveedorGasto] => 
+    [editarMetodoPagoGasto] => Efectivo
+    [editarNumeroComprobante] => COMP-PW-MODIFIED
+    [editarEstadoGasto] => aprobado
+    [imagenActual] => 
+    [editarNotasGasto] => Automated test notes
+)
+

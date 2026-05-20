@@ -77,9 +77,13 @@ try {
   }
 
   // =============================================
-  // TOTAL DE INGRESOS (VENTAS)
+  // TOTAL DE INGRESOS (VENTAS POS + FE FIRMADAS)
   // =============================================
-  $sqlIngresos = "SELECT COALESCE(SUM(total), 0) as total FROM ventas WHERE estado = 'venta' AND $condicionFechaVentas $whereBodegaVentas";
+  $sqlIngresos = "SELECT COALESCE(SUM(total), 0) as total 
+                  FROM ventas 
+                  WHERE estado = 'venta' 
+                    AND (resolucion_id IS NULL OR (resolucion_id IS NOT NULL AND estado_dian IN ('aceptada', 'enviada')))
+                    AND $condicionFechaVentas $whereBodegaVentas";
   $stmtIngresos = $conn->prepare($sqlIngresos);
   if ($usaParametrosFecha) {
     $stmtIngresos->bindValue(':fecha_inicio', $fecha_inicio);
@@ -128,7 +132,9 @@ try {
   $sqlEvolucionIngresos = "
     SELECT DATE(fecha) as fecha, COALESCE(SUM(total), 0) as total
     FROM ventas
-    WHERE estado = 'venta' AND $condicionFechaVentas $whereBodegaVentas
+    WHERE estado = 'venta' 
+      AND (resolucion_id IS NULL OR (resolucion_id IS NOT NULL AND estado_dian IN ('aceptada', 'enviada')))
+      AND $condicionFechaVentas $whereBodegaVentas
     GROUP BY DATE(fecha)
     ORDER BY fecha ASC
   ";

@@ -23,17 +23,31 @@ class ControladorGastos{
 	{
 		$tabla = "gastos";
 
-		// Mapeo de columnas para ordenamiento
-		$columnsMap = array(
-			0 => 'g.concepto',
-			1 => 'g.monto',
-			2 => 'c.nombre',
-			3 => 'g.estado',
-			4 => 'p.nombre',
-			5 => 'g.id', // Imagen
-			6 => 'g.fecha',
-			7 => 'g.notas'
-		);
+		// Mapeo de columnas para ordenamiento dinámico
+		if ($_SESSION["perfil"] == "Administrador") {
+			$columnsMap = array(
+				0 => 'g.concepto',
+				1 => 'g.monto',
+				2 => 'c.nombre',
+				3 => 'g.estado',
+				4 => 'p.nombre',
+				5 => 'b.nombre', // Sucursal
+				6 => 'g.id',     // Imagen
+				7 => 'g.fecha',
+				8 => 'g.notas'
+			);
+		} else {
+			$columnsMap = array(
+				0 => 'g.concepto',
+				1 => 'g.monto',
+				2 => 'c.nombre',
+				3 => 'g.estado',
+				4 => 'p.nombre',
+				5 => 'g.id',     // Imagen
+				6 => 'g.fecha',
+				7 => 'g.notas'
+			);
+		}
 
 		$where = " WHERE 1=1 ";
 
@@ -58,7 +72,8 @@ class ControladorGastos{
 				$where .= " AND g.id_bodega = " . $params['bodegaId'];
 			}
 		} else {
-			$where .= " AND g.id_bodega = " . $_SESSION["id_bodega"];
+			$idBodega = !empty($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+			$where .= " AND g.id_bodega = " . $idBodega;
 		}
 
 		// Búsqueda global
@@ -72,7 +87,11 @@ class ControladorGastos{
 		if (isset($params['order'][0]['column'])) {
 			$colIdx = $params['order'][0]['column'];
 			$colName = isset($columnsMap[$colIdx]) ? $columnsMap[$colIdx] : 'g.id';
-			$order = " ORDER BY " . $colName . " " . $params['order'][0]['dir'];
+			if ($colName === 'g.fecha') {
+				$order = " ORDER BY g.fecha " . $params['order'][0]['dir'] . ", g.id DESC";
+			} else {
+				$order = " ORDER BY " . $colName . " " . $params['order'][0]['dir'];
+			}
 		} else {
 			$order = " ORDER BY g.id DESC";
 		}
@@ -88,7 +107,8 @@ class ControladorGastos{
 		
 		$whereTotal = " WHERE 1=1 ";
 		if ($_SESSION["perfil"] != "Administrador") {
-			$whereTotal .= " AND g.id_bodega = " . $_SESSION["id_bodega"];
+			$idBodega = !empty($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+			$whereTotal .= " AND g.id_bodega = " . $idBodega;
 		}
 		
 		$totalData = ModeloGastos::mdlGetTotalGastos($tabla, $whereTotal);
@@ -191,6 +211,7 @@ class ControladorGastos{
 	static public function ctrCrearGasto(){
 
 		if(isset($_POST["nuevoConceptoGasto"])){
+			@file_put_contents("log_post.txt", date("[Y-m-d H:i:s] ") . "ctrCrearGasto: " . print_r($_POST, true) . "\n", FILE_APPEND);
 
 			/*=============================================
 			VALIDAR CSRF
@@ -297,7 +318,7 @@ class ControladorGastos{
 							   "fecha" => $_POST["nuevaFechaGasto"],
 							   "id_categoria_gasto" => $_POST["nuevaCategoriaGasto"],
 							   "id_usuario" => $_SESSION["id"],
-							   "id_bodega" => $_SESSION["id_bodega"],
+							   "id_bodega" => !empty($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1,
 							   "id_proveedor" => !empty($_POST["nuevoProveedorGasto"]) ? $_POST["nuevoProveedorGasto"] : null,
 							   "metodo_pago" => $_POST["nuevoMetodoPagoGasto"],
 							   "numero_comprobante" => $_POST["nuevoNumeroComprobante"],
@@ -360,6 +381,7 @@ class ControladorGastos{
 	static public function ctrEditarGasto(){
 
 		if(isset($_POST["editarConceptoGasto"])){
+			@file_put_contents("log_post.txt", date("[Y-m-d H:i:s] ") . "ctrEditarGasto: " . print_r($_POST, true) . "\n", FILE_APPEND);
 
 			/*=============================================
 			VALIDAR CSRF

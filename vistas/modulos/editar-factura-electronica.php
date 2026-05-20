@@ -160,37 +160,6 @@ $productosVenta = json_decode($venta["productos"], true);
                   </div>
                 </div>
 
-                <!--=====================================
-                NOTAS DEL CLIENTE
-                ======================================-->
-                <div class="row">
-                  <div class="col-xs-12">
-                    <div class="form-group">
-                      <label>Notas del cliente</label>
-                      <div class="input-group">
-                        <span class="input-group-addon"><i class="fa fa-sticky-note"></i></span>
-                        <textarea class="form-control" id="notas" name="notas" rows="3"
-                          placeholder="Notas del cliente"><?php echo isset($venta["notas"]) ? $venta["notas"] : ''; ?></textarea>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!--=====================================
-                OBSERVACIÓN INTERNA
-                ======================================-->
-                <div class="row">
-                  <div class="col-xs-12">
-                    <div class="form-group">
-                      <label>Observación Interna</label>
-                      <div class="input-group">
-                        <span class="input-group-addon"><i class="fa fa-commenting-o"></i></span>
-                        <textarea class="form-control" id="observacion" name="observacion" rows="3"
-                          placeholder="Observaciones internas"><?php echo isset($venta["observacion"]) ? $venta["observacion"] : ''; ?></textarea>
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
                 <!--=====================================
                       ENTRADA PARA IMAGEN

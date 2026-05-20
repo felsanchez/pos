@@ -155,7 +155,11 @@ class ControladorProductos
 			$botonesAcciones = '<div class="btn-group">';
 			if (puedeAccion('productos', 'editar')) {
 				$botonesAcciones .= '<button class="btn btn-warning btnEditarProducto" idProducto="' . $value["id"] . '" title="Editar Producto"><i class="fa fa-pencil"></i></button>';
-				$botonesAcciones .= '<button class="btn btn-primary btnAjusteStock" idProducto="' . $value["id"] . '" data-toggle="modal" data-target="#modalAjusteStock" title="Ajustar Stock"><i class="fa fa-cubes"></i></button>';
+				if ($value["tiene_variantes"] == 1) {
+					$botonesAcciones .= '<button class="btn btn-primary btnAjusteStock" disabled title="No se puede ajustar de forma rápida: este producto tiene variantes"><i class="fa fa-cubes"></i></button>';
+				} else {
+					$botonesAcciones .= '<button class="btn btn-primary btnAjusteStock" idProducto="' . $value["id"] . '" data-toggle="modal" data-target="#modalAjusteStock" title="Ajustar Stock"><i class="fa fa-cubes"></i></button>';
+				}
 			}
 			if (puedeAccion('productos', 'eliminar')) {
 				$botonesAcciones .= '<button class="btn btn-danger btnEliminarProducto" idProducto="' . $value["id"] . '" codigo="' . $value["codigo"] . '" imagen="' . $value["imagen"] . '" title="Eliminar Producto"><i class="fa fa-times"></i></button>';
@@ -221,9 +225,10 @@ class ControladorProductos
 		}
 
 		// Obtener datos
-		$productos = ModeloProductos::mdlMostrarProductosServerSide($tabla, $where, $order, $limit);
-		$totalData = ModeloProductos::mdlGetTotalProductos($tabla, " WHERE 1=1 ");
-		$totalFiltered = ModeloProductos::mdlGetTotalProductos($tabla, $where);
+		$idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+		$productos = ModeloProductos::mdlMostrarProductosServerSide($tabla, $where, $order, $limit, $idBodegaActiva);
+		$totalData = ModeloProductos::mdlGetTotalProductos($tabla, " WHERE 1=1 ", $idBodegaActiva);
+		$totalFiltered = ModeloProductos::mdlGetTotalProductos($tabla, $where, $idBodegaActiva);
 
 		$data = array();
 		$start = isset($params['start']) ? intval($params['start']) : 0;
@@ -590,7 +595,7 @@ class ControladorProductos
 
 									// 📦 ASIGNAR STOCK INICIAL A BODEGA ACTIVA
 									$idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
-									ModeloProductos::mdlActualizarStockVarianteBodega($idVarianteNueva, $idBodegaActiva, $stockVariante);
+									ModeloProductos::mdlActualizarStockVarianteBodega($idVariante, $idBodegaActiva, $stockVariante);
 
 									// 🟢 REGISTRAR MOVIMIENTO DE STOCK - CREACIÓN DE VARIANTE
 
@@ -638,7 +643,24 @@ class ControladorProductos
 						/*=============================================
 						CALCULAR STOCK AUTOMÁTICO DEL PRODUCTO BASE
 						=============================================*/
-						// Calcular la suma del stock de todas las variantes
+						// 1. Sincronizar stock del producto base por bodega (en productos_bodegas)
+						$stmtBodegas = Conexion::conectar()->prepare("
+							SELECT id_bodega, SUM(pvb.stock) as stock_bodega 
+							FROM productos_variantes_bodegas pvb
+							INNER JOIN productos_variantes pv ON pvb.id_variante = pv.id
+							WHERE pv.id_producto = :id_producto AND pv.estado = 1
+							GROUP BY id_bodega
+						");
+						$stmtBodegas->bindParam(":id_producto", $idProducto, PDO::PARAM_INT);
+						$stmtBodegas->execute();
+						$resultadosBodegas = $stmtBodegas->fetchAll();
+						$stmtBodegas = null;
+
+						foreach ($resultadosBodegas as $rowBodega) {
+							ModeloProductos::mdlActualizarStockBodega($idProducto, $rowBodega["id_bodega"], $rowBodega["stock_bodega"]);
+						}
+
+						// 2. Calcular la suma del stock global (todas las variantes)
 						$stmt = Conexion::conectar()->prepare("SELECT SUM(stock) as stock_total FROM productos_variantes WHERE id_producto = :id_producto AND estado = 1");
 						$stmt->bindParam(":id_producto", $idProducto, PDO::PARAM_INT);
 						$stmt->execute();
@@ -647,7 +669,7 @@ class ControladorProductos
 
 						$stockTotal = $resultado["stock_total"] ? $resultado["stock_total"] : 0;
 
-						// Actualizar el stock del producto base
+						// Actualizar el stock global del producto base
 						$tablaProductos = "productos";
 						ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $stockTotal, $idProducto);
 
@@ -721,7 +743,9 @@ class ControladorProductos
 	static public function ctrEditarProducto()
 	{
 
-		if (isset($_POST["editarDescripcion"])) {
+		
+			file_put_contents("debug_post.txt", "=== CTR EDITAR (ID: " . (isset($_POST['idProducto']) ? $_POST['idProducto'] : 'none') . ") ===\n" . print_r($_POST, true) . "\n", FILE_APPEND);
+if (isset($_POST["editarDescripcion"])) {
 
 			/*=============================================
 			VALIDAR CSRF
@@ -856,6 +880,11 @@ class ControladorProductos
 				$stockAnterior = $productoAnterior["stock"];
 				$nuevoStock = $_POST["editarStock"];
 
+				// Fallback de compatibilidad de variables JS
+				if (!isset($_POST["totalCombinacionesEditar"]) && isset($_POST["totalCombinaciones"])) {
+					$_POST["totalCombinacionesEditar"] = $_POST["totalCombinaciones"];
+				}
+
 				$datos = array(
 					"id" => isset($_POST["idProducto"]) ? $_POST["idProducto"] : null,
 					"id_categoria" => $_POST["editarCategoria"],
@@ -919,7 +948,9 @@ class ControladorProductos
 					/*=============================================
 					PROCESAR NUEVAS VARIANTES (si se agregaron desde editar)
 					=============================================*/
-					if (isset($_POST["totalCombinacionesEditar"]) && $_POST["totalCombinacionesEditar"] > 0) {
+					$totalCombinacionesPost = isset($_POST["totalCombinacionesEditar"]) ? $_POST["totalCombinacionesEditar"] : (isset($_POST["totalCombinaciones"]) ? $_POST["totalCombinaciones"] : 0);
+					if ($totalCombinacionesPost > 0) {
+						$_POST["totalCombinacionesEditar"] = $totalCombinacionesPost; // Para mantener compatibilidad con el resto del codigo
 
 						// DEBUG: Log de inicio
 						file_put_contents("debug_editar_variantes.txt", "=== EDITAR PRODUCTO CON VARIANTES ===\n", FILE_APPEND);
@@ -942,21 +973,26 @@ class ControladorProductos
 							file_put_contents("debug_editar_variantes.txt", "\n--- Procesando combinación $i ---\n", FILE_APPEND);
 
 							// Verificar si esta combinación está seleccionada
-							if (isset($_POST["combinacionEditar_" . $i . "_ids"]) && isset($_POST["combinacionEditar_" . $i . "_nombre"])) {
+							// Fallback for incorrect prefixes sent by JS
+								$prefixComb = isset($_POST["combinacionEditar_" . $i . "_ids"]) ? "combinacionEditar_" : "combinacion_";
+								$prefixPrecio = isset($_POST["precioAdicionalEditar_" . $_POST[$prefixComb . $i . "_ids"]]) ? "precioAdicionalEditar_" : "precioAdicional_";
+								$prefixStock = isset($_POST["stockVarianteEditar_" . $_POST[$prefixComb . $i . "_ids"]]) ? "stockVarianteEditar_" : "stockVariante_";
 
-								$idsCombinacion = $_POST["combinacionEditar_" . $i . "_ids"];
-								$nombreCombinacion = $_POST["combinacionEditar_" . $i . "_nombre"];
+							if (isset($_POST[$prefixComb . $i . "_ids"]) && isset($_POST[$prefixComb . $i . "_nombre"])) {
+
+								$idsCombinacion = $_POST[$prefixComb . $i . "_ids"];
+								$nombreCombinacion = $_POST[$prefixComb . $i . "_nombre"];
 
 								file_put_contents("debug_editar_variantes.txt", "IDs Combinación: $idsCombinacion\n", FILE_APPEND);
 								file_put_contents("debug_editar_variantes.txt", "Nombre: $nombreCombinacion\n", FILE_APPEND);
 
 								// Obtener precio adicional y stock de esta combinación
-								$precioAdicional = isset($_POST["precioAdicionalEditar_" . $idsCombinacion]) && $_POST["precioAdicionalEditar_" . $idsCombinacion] !== ""
-									? $_POST["precioAdicionalEditar_" . $idsCombinacion]
+								$precioAdicional = isset($_POST[$prefixPrecio . $idsCombinacion]) && $_POST[$prefixPrecio . $idsCombinacion] !== ""
+									? $_POST[$prefixPrecio . $idsCombinacion]
 									: 0;
 
-								$stockVariante = isset($_POST["stockVarianteEditar_" . $idsCombinacion]) && $_POST["stockVarianteEditar_" . $idsCombinacion] !== ""
-									? $_POST["stockVarianteEditar_" . $idsCombinacion]
+								$stockVariante = isset($_POST[$prefixStock . $idsCombinacion]) && $_POST[$prefixStock . $idsCombinacion] !== ""
+									? $_POST[$prefixStock . $idsCombinacion]
 									: 0; // Si no se especifica, usar el stock base del producto 
 
 								file_put_contents("debug_editar_variantes.txt", "Precio Adicional: $precioAdicional\n", FILE_APPEND);
@@ -967,23 +1003,25 @@ class ControladorProductos
 
 									// ACTUALIZAR variante existente
 									$idVarianteExistente = $_POST["idVarianteExistente_" . $idsCombinacion];
+									$idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
 
-									// 🔹 OBTENER STOCK ANTERIOR de la variante para registrar movimiento
-									$stmtVarianteAntes = Conexion::conectar()->prepare("SELECT stock FROM productos_variantes WHERE id = :id");
+									// 🔹 OBTENER STOCK ANTERIOR de la variante en la BODEGA ACTIVA para registrar movimiento
+									$stmtVarianteAntes = Conexion::conectar()->prepare("SELECT stock FROM productos_variantes_bodegas WHERE id_variante = :id AND id_bodega = :id_bodega");
 									$stmtVarianteAntes->bindParam(":id", $idVarianteExistente, PDO::PARAM_INT);
+									$stmtVarianteAntes->bindParam(":id_bodega", $idBodegaActiva, PDO::PARAM_INT);
 									$stmtVarianteAntes->execute();
 									$varianteAntes = $stmtVarianteAntes->fetch();
-									$stockAnteriorVariante = $varianteAntes["stock"];
+									$stockAnteriorVariante = $varianteAntes ? $varianteAntes["stock"] : 0;
 									$stmtVarianteAntes = null;
 
-									file_put_contents("debug_editar_variantes.txt", ">>> UPDATE variante existente ID: $idVarianteExistente\n", FILE_APPEND);
+									file_put_contents("debug_editar_variantes.txt", ">>> UPDATE variante existente ID: $idVarianteExistente en bodega $idBodegaActiva\n", FILE_APPEND);
 									file_put_contents("debug_editar_variantes.txt", "Precio adicional a actualizar: $precioAdicional\n", FILE_APPEND);
-									file_put_contents("debug_editar_variantes.txt", "Stock a actualizar: $stockVariante\n", FILE_APPEND);
+									file_put_contents("debug_editar_variantes.txt", "Stock a actualizar en bodega: $stockVariante\n", FILE_APPEND);
 
 									$datosActualizar = array(
 										"id" => $idVarianteExistente,
 										"precio_adicional" => $precioAdicional,
-										"stock" => $stockVariante
+										"stock" => $stockVariante // se sobreescribirá abajo con la sumatoria
 									);
 
 									try {
@@ -993,7 +1031,20 @@ class ControladorProductos
 										if ($resultado === "ok") {
 											file_put_contents("debug_editar_variantes.txt", "UPDATE exitoso\n", FILE_APPEND);
 
-											// 🟢 REGISTRAR MOVIMIENTO DE STOCK - EDICIÓN DE VARIANTE EXISTENTE
+											// 📦 ACTUALIZAR STOCK EN LA BODEGA ACTIVA DIRECTAMENTE
+											ModeloProductos::mdlActualizarStockVarianteBodega($idVarianteExistente, $idBodegaActiva, $stockVariante);
+
+											// 🔹 RECALCULAR STOCK TOTAL DE LA VARIANTE (Suma de todas las bodegas)
+											$stmtTotalVar = Conexion::conectar()->prepare("SELECT SUM(stock) as total FROM productos_variantes_bodegas WHERE id_variante = :id");
+											$stmtTotalVar->bindParam(":id", $idVarianteExistente, PDO::PARAM_INT);
+											$stmtTotalVar->execute();
+											$resTotalVar = $stmtTotalVar->fetch();
+											$stockTotalVariante = $resTotalVar["total"] ? $resTotalVar["total"] : 0;
+											$stmtTotalVar = null;
+
+											ModeloProductos::mdlActualizarProducto("productos_variantes", "stock", $stockTotalVariante, $idVarianteExistente);
+
+											// 🟢 REGISTRAR MOVIMIENTO DE STOCK - EDICIÓN DE VARIANTE EXISTENTE EN LA BODEGA
 											if ($stockAnteriorVariante != $stockVariante) {
 												$diferenciaStock = $stockVariante - $stockAnteriorVariante;
 												ControladorMovimientos::ctrRegistrarMovimiento(
@@ -1006,7 +1057,8 @@ class ControladorProductos
 													$stockAnteriorVariante,
 													$stockVariante,
 													"Stock de variante actualizado",
-													""
+													"",
+													$idBodegaActiva
 												);
 											}
 
@@ -1096,8 +1148,28 @@ class ControladorProductos
 					/*=============================================
 					RECALCULAR STOCK AUTOMÁTICO DEL PRODUCTO BASE
 					=============================================*/
-					if (isset($_POST["totalCombinacionesEditar"]) && $_POST["totalCombinacionesEditar"] > 0) {
-						// Calcular la suma del stock de todas las variantes activas
+					$totalCombinacionesPost = isset($_POST["totalCombinacionesEditar"]) ? $_POST["totalCombinacionesEditar"] : (isset($_POST["totalCombinaciones"]) ? $_POST["totalCombinaciones"] : 0);
+					if ($totalCombinacionesPost > 0) {
+						$_POST["totalCombinacionesEditar"] = $totalCombinacionesPost; // Para mantener compatibilidad con el resto del codigo
+
+						// 1. Sincronizar stock del producto base por bodega (en productos_bodegas)
+						$stmtBodegas = Conexion::conectar()->prepare("
+							SELECT id_bodega, SUM(pvb.stock) as stock_bodega 
+							FROM productos_variantes_bodegas pvb
+							INNER JOIN productos_variantes pv ON pvb.id_variante = pv.id
+							WHERE pv.id_producto = :id_producto AND pv.estado = 1
+							GROUP BY id_bodega
+						");
+						$stmtBodegas->bindParam(":id_producto", $idProductoReal, PDO::PARAM_INT);
+						$stmtBodegas->execute();
+						$resultadosBodegas = $stmtBodegas->fetchAll();
+						$stmtBodegas = null;
+
+						foreach ($resultadosBodegas as $rowBodega) {
+							ModeloProductos::mdlActualizarStockBodega($idProductoReal, $rowBodega["id_bodega"], $rowBodega["stock_bodega"]);
+						}
+
+						// 2. Calcular la suma del stock global (todas las variantes activas)
 						$stmt = Conexion::conectar()->prepare("SELECT SUM(stock) as stock_total FROM productos_variantes WHERE id_producto = :id_producto AND estado = 1");
 						$stmt->bindParam(":id_producto", $idProductoReal, PDO::PARAM_INT);
 						$stmt->execute();
@@ -1106,7 +1178,7 @@ class ControladorProductos
 
 						$stockTotal = $resultado["stock_total"] ? $resultado["stock_total"] : 0;
 
-						// Actualizar el stock del producto base
+						// Actualizar el stock global del producto base
 						$tablaProductos = "productos";
 						ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $stockTotal, $idProductoReal);
 					}
@@ -1186,32 +1258,35 @@ class ControladorProductos
 			$imagen = $producto["imagen"];
 			$codigo = $producto["codigo"];
 
-			// Borrar imagen y directorio si no es la por defecto
-			if ($imagen != "" && $imagen != "vistas/img/productos/default/anonymous.png") {
+			// SIEMPRE usar la bodega activa de sesión — NUNCA hacer DELETE global desde aquí.
+			// La eliminación de un producto siempre es un soft-delete (estado=0) en la bodega activa.
+			$idBodega = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
 
-				// Usar rutas relativas al root para unlink
-				$rutaImagen = $imagen;
-				if (file_exists($rutaImagen)) {
-					unlink($rutaImagen);
-				}
+			// Log temporal de diagnóstico
+			file_put_contents("debug_eliminar_producto.txt",
+				date('Y-m-d H:i:s') . " | IdProducto=$idProducto | IdBodega=$idBodega | Method=" . $_SERVER['REQUEST_METHOD'] . "\n",
+				FILE_APPEND);
 
-				$directorio = 'vistas/img/productos/' . $codigo;
-				if (is_dir($directorio)) {
-					// rmdir solo funciona si el directorio está vacío
-					rmdir($directorio);
-				}
-			}
+			// NOTA: No borramos imagen/directorio porque la eliminación es siempre por bodega (soft-delete).
+			// El producto sigue existiendo en otras bodegas y necesita su imagen.
 
-			$respuesta = ModeloProductos::mdlEliminarProducto($tabla, $idProducto);
+			$respuesta = ModeloProductos::mdlEliminarProducto($tabla, $idProducto, $idBodega);
 
 			if ($respuesta == "ok") {
 				if (isset($_POST["idProductoEliminar"])) {
 					return "ok";
 				}
+				$titulo = $idBodega !== null
+					? "¡Producto eliminado de esta sucursal!"
+					: "¡El producto ha sido borrado correctamente!";
+				$texto = $idBodega !== null
+					? "El producto sigue disponible en las demás sucursales."
+					: "";
 				echo '<script>
 					swal({
 						type: "success",
-						title: "¡El producto ha sido borrado correctamente!",
+						title: "' . $titulo . '",
+						text: "' . $texto . '",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar",
 						}).then(() => {

@@ -56,7 +56,7 @@ switch ($tipo) {
 }
 
 // Agregar condición del estado
-$where = "estado = 'venta' AND $condicionFecha";
+$where = "estado = 'venta' AND (resolucion_id IS NULL OR (resolucion_id IS NOT NULL AND estado_dian IN ('aceptada', 'enviada'))) AND $condicionFecha";
 
 // Agregar filtros adicionales
 if (!empty($id_vendedor)) {

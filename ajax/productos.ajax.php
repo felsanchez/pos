@@ -346,9 +346,10 @@ OBTENER VARIANTES DE UN PRODUCTO
 if (isset($_POST["obtenerVariantesProducto"])) {
 
     $idProducto = $_POST["obtenerVariantesProducto"];
+    $idBodega = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
 
-    // Obtener variantes del producto
-    $variantes = ModeloProductos::mdlObtenerVariantesProducto($idProducto);
+    // Obtener variantes del producto con el stock de la bodega activa
+    $variantes = ModeloProductos::mdlObtenerVariantesProducto($idProducto, $idBodega);
 
     // Obtener producto base para calcular precio final
     $productoBase = ModeloProductos::mdlMostrarProductos("productos", "id", $idProducto, "id");
@@ -452,7 +453,7 @@ if (isset($_POST["editarVariante"])) {
 
     $tabla = "productos_variantes";
 
-    // 🔹 OBTENER STOCK ANTERIOR antes de editar
+    // 🔹 OBTENER DATOS DE LA VARIANTE Y PRODUCTO antes de editar
     require_once "../controladores/movimientos.controlador.php";
     require_once "../modelos/movimientos.modelo.php";
 
@@ -463,37 +464,34 @@ if (isset($_POST["editarVariante"])) {
 
     $stmt->bindParam(":id", $_POST["editarVariante"], PDO::PARAM_INT);
     $stmt->execute();
-    $varianteAnterior = $stmt->fetch();
+    $varianteAnteriorGlobal = $stmt->fetch();
     $stmt = null;
 
-    $stockAnterior = $varianteAnterior["stock"];
-    $nuevoStock = $_POST["editarStockVariante"];
+    $idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
 
+    // Obtener stock actual de la variante en ESTA bodega
+    $stmtBodega = Conexion::conectar()->prepare("SELECT stock FROM productos_variantes_bodegas WHERE id_variante = :id_variante AND id_bodega = :id_bodega");
+    $stmtBodega->bindParam(":id_variante", $_POST["editarVariante"], PDO::PARAM_INT);
+    $stmtBodega->bindParam(":id_bodega", $idBodegaActiva, PDO::PARAM_INT);
+    $stmtBodega->execute();
+    $resBodega = $stmtBodega->fetch();
+    $stmtBodega = null;
+
+    $stockBodegaAnterior = $resBodega ? $resBodega["stock"] : 0;
+    $nuevoStockBodega = $_POST["editarStockVariante"]; // El stock ingresado es el stock de esta bodega
+
+    // Primero actualizamos el precio adicional global (el stock global se actualizará a continuación sumando bodegas)
     $datos = array(
         "id" => $_POST["editarVariante"],
         "precio_adicional" => $_POST["editarPrecioAdicionalVariante"],
-        "stock" => $nuevoStock
+        "stock" => $varianteAnteriorGlobal["stock"]
     );
 
     $respuesta = ModeloProductos::mdlEditarVariante($tabla, $datos);
 
     if ($respuesta == "ok") {
-        // 📦 ACTUALIZAR STOCK EN BODEGA ACTIVA
-        $idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
         
-        // Obtener stock actual de la variante en ESTA bodega
-        $stmtBodega = Conexion::conectar()->prepare("SELECT stock FROM productos_variantes_bodegas WHERE id_variante = :id_variante AND id_bodega = :id_bodega");
-        $stmtBodega->bindParam(":id_variante", $_POST["editarVariante"], PDO::PARAM_INT);
-        $stmtBodega->bindParam(":id_bodega", $idBodegaActiva, PDO::PARAM_INT);
-        $stmtBodega->execute();
-        $resBodega = $stmtBodega->fetch();
-        $stmtBodega = null;
-
-        $stockBodegaAnterior = $resBodega ? $resBodega["stock"] : 0;
-        $diferenciaStock = $nuevoStock - $stockAnterior; // Diferencia global que queremos aplicar a esta bodega
-        $nuevoStockBodega = $stockBodegaAnterior + $diferenciaStock;
-        if($nuevoStockBodega < 0) $nuevoStockBodega = 0;
-
+        // 📦 ACTUALIZAR STOCK EN LA BODEGA ACTIVA DIRECTAMENTE
         ModeloProductos::mdlActualizarStockVarianteBodega($_POST["editarVariante"], $idBodegaActiva, $nuevoStockBodega);
 
         // 🔹 RECALCULAR STOCK TOTAL DE LA VARIANTE (Suma de todas las bodegas)
@@ -506,8 +504,8 @@ if (isset($_POST["editarVariante"])) {
 
         ModeloProductos::mdlActualizarProducto("productos_variantes", "stock", $stockTotalVariante, $_POST["editarVariante"]);
 
-        // 🔹 RECALCULAR STOCK TOTAL DEL PRODUCTO BASE
-        $idProductoBase = $varianteAnterior["id_producto"];
+        // 🔹 RECALCULAR STOCK TOTAL DEL PRODUCTO BASE (Suma de variantes activas)
+        $idProductoBase = $varianteAnteriorGlobal["id_producto"];
         $stmtTotalProd = Conexion::conectar()->prepare("SELECT SUM(stock) as total FROM productos_variantes WHERE id_producto = :id AND estado = 1");
         $stmtTotalProd->bindParam(":id", $idProductoBase, PDO::PARAM_INT);
         $stmtTotalProd->execute();
@@ -517,7 +515,7 @@ if (isset($_POST["editarVariante"])) {
 
         ModeloProductos::mdlActualizarProducto("productos", "stock", $stockTotalProducto, $idProductoBase);
         
-        // Sincronizar también el stock base en la bodega activa
+        // Sincronizar también el stock del producto base en la bodega activa
         $stmtBodegaProd = Conexion::conectar()->prepare("SELECT SUM(pvb.stock) as total FROM productos_variantes_bodegas pvb 
                                                        INNER JOIN productos_variantes pv ON pvb.id_variante = pv.id
                                                        WHERE pv.id_producto = :id AND pvb.id_bodega = :id_bodega AND pv.estado = 1");
@@ -531,9 +529,8 @@ if (isset($_POST["editarVariante"])) {
         ModeloProductos::mdlActualizarStockBodega($idProductoBase, $idBodegaActiva, $stockBodegaProducto);
     }
 
-    // 🟢 REGISTRAR MOVIMIENTO DE STOCK - EDICIÓN DE VARIANTE
-    if ($respuesta == "ok" && $stockAnterior != $nuevoStock) {
-
+    // 🟢 REGISTRAR MOVIMIENTO DE STOCK - EDICIÓN DE VARIANTE EN BODEGA
+    if ($respuesta == "ok" && $stockBodegaAnterior != $nuevoStockBodega) {
 
         // Obtener el nombre de la variante con sus opciones
         $stmtNombre = Conexion::conectar()->prepare("SELECT GROUP_CONCAT(ov.nombre SEPARATOR ' - ') as nombre_variante
@@ -547,22 +544,22 @@ if (isset($_POST["editarVariante"])) {
         $nombreVariante = $stmtNombre->fetch();
         $stmtNombre = null;
 
-        $nombreCompleto = $varianteAnterior["producto_descripcion"] . " - " . $nombreVariante["nombre_variante"];
+        $nombreCompleto = $varianteAnteriorGlobal["producto_descripcion"] . " - " . $nombreVariante["nombre_variante"];
 
-        $diferencia = $nuevoStock - $stockAnterior;
+        $diferencia = $nuevoStockBodega - $stockBodegaAnterior;
 
         ControladorMovimientos::ctrRegistrarMovimiento(
             "variante",
-            $varianteAnterior["id_producto"],
+            $varianteAnteriorGlobal["id_producto"],
             $_POST["editarVariante"],
             $nombreCompleto,
             "edicion_stock",
             $diferencia,
-            $stockAnterior,
-            $nuevoStock,
-
+            $stockBodegaAnterior,
+            $nuevoStockBodega,
             "Stock de variante editado manualmente",
-            ""
+            "",
+            $idBodegaActiva
         );
 
     }

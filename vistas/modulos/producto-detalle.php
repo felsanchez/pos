@@ -271,41 +271,38 @@ if ($modoEdicion) {
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="box-footer">
-                             <!-- ============================================= -->
+                    <!-- ============================================= -->
+                    <!-- SECCIÓN 3: GESTIÓN DE VARIANTES -->
+                    <!-- ============================================= -->
+                    <div class="box box-warning">
+                        <div class="box-header with-border">
+                            <h3 class="box-title"><i class="fa fa-sitemap"></i> Gestión de Variantes</h3>
+                        </div>
+                        
+                        <div class="box-body">
+                            <!-- ============================================= -->
                             <!-- CHECKBOX: HABILITAR VARIANTES -->
                             <!-- ============================================= -->
-                            <div class="form-group">
+                            <div class="form-group" style="margin-bottom: 0;">
                                 <label class="checkbox-inline" style="font-size: 16px;">
                                     <input type="checkbox" id="checkTieneVariantes" name="tieneVariantes"
                                         <?php echo ($modoEdicion && $producto['tiene_variantes'] == 1) ? 'checked' : ''; ?>>
                                     <strong>Este producto tiene variantes</strong> (Ej: Colores, Tallas, etc.)
                                 </label>
                                 <?php if ($modoEdicion && $producto['tiene_variantes'] == 1): ?>
-                                    <p class="help-block text-primary"><i class="fa fa-info-circle"></i> Este producto ya utiliza variantes. Puedes agregar más combinaciones si lo deseas.</p>
+                                    <p class="help-block text-primary" style="margin-top: 10px;"><i class="fa fa-info-circle"></i> Este producto ya utiliza variantes. Puedes agregar más combinaciones si lo deseas.</p>
                                 <?php elseif ($modoEdicion): ?>
-                                    <p class="help-block text-warning"><i class="fa fa-warning"></i> Al activar variantes en un producto existente, el stock global se sustituirá por el stock de las nuevas combinaciones que generes.</p>
+                                    <p class="help-block text-warning" style="margin-top: 10px;"><i class="fa fa-warning"></i> Al activar variantes en un producto existente, el stock global se sustituirá por el stock de las nuevas combinaciones que generes.</p>
                                 <?php endif; ?>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- ============================================= -->
-                    <!-- SECCIÓN 3: VARIANTES (Colapsable) -->
-                    <!-- ============================================= -->
-                    <div class="box box-warning collapsed-box" id="seccionVariantes" style="display: none;">
-                        <div class="box-header with-border">
-                            <h3 class="box-title"><i class="fa fa-sitemap"></i> Configuración de Variantes</h3>
-                            <div class="box-tools pull-right">
-                                <button type="button" class="btn btn-box-tool" data-widget="collapse">
-                                    <i class="fa fa-circle-o"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="box-body">
-                            <p class="text-muted">Selecciona los tipos de variantes y sus opciones para este
-                                producto.</p>
+                        <div id="seccionVariantes" style="display: none;">
+                            <div class="box-body" style="border-top: 1px solid #f4f4f4; padding-top: 20px;">
+                                <p class="text-muted">Selecciona los tipos de variantes y sus opciones para este
+                                    producto.</p>
 
                             <div id="contenedorVariantes">
                                 <!-- 1. Selección de Tipos de Variante -->
@@ -340,6 +337,7 @@ if ($modoEdicion) {
                                     </div>
                                 </div>
                             </div>
+                        </div>
                         </div>
                     </div>
 

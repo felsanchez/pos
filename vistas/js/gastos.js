@@ -114,15 +114,24 @@ $(document).ready(function () {
 
     // 7. Edición rápida de notas (Blur)
     $(document).on('blur', '.celda-notas-gasto', function () {
-        var id = $(this).data('id');
-        var nota = $(this).text().trim();
+        var elemento = $(this);
+        var id = elemento.data('id');
+        var nota = elemento.text().trim();
         if (!id) return;
         $.ajax({
             url: 'ajax/gastos-actualizar-nota.ajax.php',
             method: 'POST',
             data: { idGasto: id, nota: nota, csrf_token: $('meta[name="csrf-token"]').attr('content') },
-            success: function () {
-                console.log("Nota de gasto actualizada");
+            dataType: 'json',
+            success: function (respuesta) {
+                if (respuesta == "ok") {
+                    console.log("Nota de gasto actualizada");
+                    // Feedback visual (destello verde)
+                    elemento.css('background-color', '#dff0d8');
+                    setTimeout(function () {
+                        elemento.css('background-color', '');
+                    }, 500);
+                }
             }
         });
     });
@@ -146,8 +155,16 @@ $(document).ready(function () {
                 $("#editarFechaGasto").val(respuesta["fecha"]);
                 $("#editarCategoriaGasto").val(respuesta["id_categoria_gasto"]);
                 $("#editarProveedorGasto").val(respuesta["id_proveedor"]);
+                $("#editarMetodoPagoGasto").val(respuesta["metodo_pago"]);
+                $("#editarNumeroComprobante").val(respuesta["numero_comprobante"]);
                 $("#editarEstadoGasto").val(respuesta["estado"]);
                 $("#editarNotasGasto").val(respuesta["notas"]);
+                $("#imagenActual").val(respuesta["imagen_comprobante"]);
+                if (respuesta["imagen_comprobante"]) {
+                    $("#previsualizarImagen").html('<img src="' + respuesta["imagen_comprobante"] + '" class="img-thumbnail" width="100px">');
+                } else {
+                    $("#previsualizarImagen").empty();
+                }
                 $('#modalEditarGasto input[name="idGasto"]').val(idGasto);
             }
         });

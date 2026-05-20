@@ -26,10 +26,6 @@ if ($xml) {
 <div class="content-wrapper">
   <section class="content-header">
 
-    <!-- DEBUG INFO -->
-    <div class="alert alert-info" style="font-size: 10px; padding: 5px; margin-bottom: 5px;">
-      DEBUG: Ruta: <?php echo $_GET['ruta'] ?? 'ventas'; ?> | Perfil: <?php echo $_SESSION["perfil"]; ?>
-    </div>
 
     <h1>
       Administrar ventas

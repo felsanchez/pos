@@ -913,6 +913,8 @@ MODAL EDITAR VARIANTE
 
             <div class="form-group">
 
+              <label for="editarPrecioAdicionalVariante">Precio Adicional:</label>
+
               <div class="input-group">
 
                 <span class="input-group-addon"><i class="fa fa-dollar"></i></span>
@@ -928,6 +930,8 @@ MODAL EDITAR VARIANTE
             <!-- ENTRADA PARA STOCK -->
 
             <div class="form-group">
+
+              <label for="editarStockVariante">Stock:</label>
 
               <div class="input-group">
 

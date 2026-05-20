@@ -9,6 +9,7 @@
   min-height: 30px;
   position: relative;
   word-wrap: break-word;
+  transition: background-color 0.3s ease;
 }
 
 /* En tabla desktop, limitar ancho */

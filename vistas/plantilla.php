@@ -261,7 +261,9 @@ CUERPO DOCUMENTO
   <script src="vistas/js/clientes.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/estados-clientes.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/categorias.js?v=<?php echo time(); ?>"></script>
+  <?php if (isset($_GET["ruta"]) && $_GET["ruta"] != "producto-detalle"): ?>
   <script src="vistas/js/productos.js?v=<?php echo time(); ?>"></script>
+  <?php endif; ?>
 
   <script src="vistas/js/ventas.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/actividades.js?v=<?php echo time(); ?>"></script>

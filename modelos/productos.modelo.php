@@ -21,7 +21,13 @@ class ModeloProductos
 
 		if ($item != null) {
 
-			$stmt = Conexion::conectar()->prepare("SELECT $select FROM $tabla p $join WHERE p.$item = :$item ORDER BY p.id DESC");
+			$query = "SELECT $select FROM $tabla p $join WHERE p.$item = :$item";
+			if ($idBodega != null) {
+				$query .= " AND COALESCE(pb.estado, 1) = 1";
+			}
+			$query .= " ORDER BY p.id DESC";
+
+			$stmt = Conexion::conectar()->prepare($query);
 
 			if ($idBodega != null) {
 				$stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
@@ -34,7 +40,13 @@ class ModeloProductos
 			return $stmt->fetch();
 		} else {
 
-			$stmt = Conexion::conectar()->prepare("SELECT $select FROM $tabla p $join ORDER BY $orden DESC");
+			$query = "SELECT $select FROM $tabla p $join";
+			if ($idBodega != null) {
+				$query .= " WHERE COALESCE(pb.estado, 1) = 1";
+			}
+			$query .= " ORDER BY $orden DESC";
+
+			$stmt = Conexion::conectar()->prepare($query);
 
 			if ($idBodega != null) {
 				$stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
@@ -46,7 +58,6 @@ class ModeloProductos
 
 		}
 
-		$stmt->close();
 		$stmt = null;
 	}
 
@@ -55,6 +66,13 @@ class ModeloProductos
 	=============================================*/
 	static public function mdlMostrarProductosServerSide($tabla, $where, $order, $limit, $idBodega)
 	{
+		$condicionEstado = "COALESCE(pb.estado, 1) = 1";
+		if (empty(trim($where))) {
+			$where = "WHERE " . $condicionEstado;
+		} else {
+			$where .= " AND " . $condicionEstado;
+		}
+
 		$stmt = Conexion::conectar()->prepare("
 			SELECT p.id, p.codigo, p.descripcion, p.imagen, p.id_categoria, p.id_proveedor, 
 				   COALESCE(pb.stock, 0) as stock, p.precio_compra, p.precio_venta, p.ventas, 
@@ -81,6 +99,13 @@ class ModeloProductos
 		$joinBodega = "";
 		if($idBodega != null){
 			$joinBodega = "LEFT JOIN productos_bodegas pb ON p.id = pb.id_producto AND pb.id_bodega = $idBodega";
+
+			$condicionEstado = "COALESCE(pb.estado, 1) = 1";
+			if (empty(trim($where))) {
+				$where = "WHERE " . $condicionEstado;
+			} else {
+				$where .= " AND " . $condicionEstado;
+			}
 		}
 
 		$stmt = Conexion::conectar()->prepare("
@@ -203,24 +228,53 @@ class ModeloProductos
 	/*=============================================
 	ELIMINAR PRODUCTOS
 	=============================================*/
-	static public function mdlEliminarProducto($tabla, $datos)
+	static public function mdlEliminarProducto($tabla, $datos, $idBodega = null)
 	{
+		if ($idBodega != null) {
+			try {
+				$db = Conexion::conectar();
+				
+				// 1. Desactivar el producto en la bodega específica (estado = 0, stock = 0)
+				$stmtPb = $db->prepare("INSERT INTO productos_bodegas (id_producto, id_bodega, stock, estado) 
+										VALUES (:id_producto, :id_bodega, 0, 0) 
+										ON DUPLICATE KEY UPDATE estado = 0, stock = 0");
+				$stmtPb->bindParam(":id_producto", $datos, PDO::PARAM_INT);
+				$stmtPb->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
+				$stmtPb->execute();
+				$stmtPb = null;
 
-		$stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE id = :id");
+				// 2. Desactivar todas sus variantes en la bodega específica (estado = 0, stock = 0)
+				$stmtVar = $db->prepare("SELECT id FROM productos_variantes WHERE id_producto = :id_producto");
+				$stmtVar->bindParam(":id_producto", $datos, PDO::PARAM_INT);
+				$stmtVar->execute();
+				$variantes = $stmtVar->fetchAll(PDO::FETCH_ASSOC);
+				$stmtVar = null;
 
-		$stmt->bindParam(":id", $datos, PDO::PARAM_INT);
+				foreach ($variantes as $v) {
+					$stmtVb = $db->prepare("INSERT INTO productos_variantes_bodegas (id_variante, id_bodega, stock, estado) 
+											VALUES (:id_variante, :id_bodega, 0, 0) 
+											ON DUPLICATE KEY UPDATE estado = 0, stock = 0");
+					$stmtVb->bindParam(":id_variante", $v["id"], PDO::PARAM_INT);
+					$stmtVb->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
+					$stmtVb->execute();
+					$stmtVb = null;
+				}
 
-		if ($stmt->execute()) {
-
-			return "ok";
+				return "ok";
+			} catch (Exception $e) {
+				return "error";
+			}
 		} else {
+			$stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE id = :id");
+			$stmt->bindParam(":id", $datos, PDO::PARAM_INT);
 
-			return "error";
+			if ($stmt->execute()) {
+				return "ok";
+			} else {
+				return "error";
+			}
+			$stmt = null;
 		}
-
-		$stmt->close();
-		$stmt = null;
-
 	}
 
 
@@ -443,17 +497,26 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 	OBTENER VARIANTES DE UN PRODUCTO
 	=============================================*/
 
-	static public function mdlObtenerVariantesProducto($idProducto)
+	static public function mdlObtenerVariantesProducto($idProducto, $idBodega = null)
 	{
+		$select = "pv.*";
+		$join = "";
 
-		$stmt = Conexion::conectar()->prepare("SELECT * FROM productos_variantes WHERE id_producto = :id_producto ORDER BY id ASC");
+		if ($idBodega != null) {
+			$select = "pv.id, pv.id_producto, pv.sku, pv.precio_adicional, COALESCE(pvb.stock, 0) as stock, pv.imagen, pv.estado, pv.ventas, pv.fecha";
+			$join = "LEFT JOIN productos_variantes_bodegas pvb ON pv.id = pvb.id_variante AND pvb.id_bodega = :id_bodega";
+		}
+
+		$stmt = Conexion::conectar()->prepare("SELECT $select FROM productos_variantes pv $join WHERE pv.id_producto = :id_producto ORDER BY pv.id ASC");
+		
 		$stmt->bindParam(":id_producto", $idProducto, PDO::PARAM_INT);
+		if ($idBodega != null) {
+			$stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
+		}
 
 		$stmt->execute();
 
 		return $stmt->fetchAll();
-
-		$stmt->close();
 
 		$stmt = null;
 	}

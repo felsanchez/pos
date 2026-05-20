@@ -434,13 +434,30 @@ function cargarOpcionesVariante(idTipo, nombreTipo) {
                     if (opcion.estado == 1) {
                         // Verificar si esta opción debe estar chequeada (existe en alguna variante cargada)
                         var isChecked = "";
+                        var debaAgregar = false;
                         $.each(variantesExistentesData, function(key, val) {
                             var idsOpciones = key.split("_");
                             if(idsOpciones.indexOf(opcion.id.toString()) !== -1) {
                                 isChecked = "checked";
+                                debaAgregar = true;
                                 return false;
                             }
                         });
+
+                        if (debaAgregar) {
+                            if (!opcionesVariantesSeleccionadas[idTipo]) {
+                                opcionesVariantesSeleccionadas[idTipo] = [];
+                            }
+                            var existeOp = opcionesVariantesSeleccionadas[idTipo].find(function (op) {
+                                return op.id === opcion.id.toString();
+                            });
+                            if (!existeOp) {
+                                opcionesVariantesSeleccionadas[idTipo].push({
+                                    id: opcion.id.toString(),
+                                    nombre: opcion.nombre
+                                });
+                            }
+                        }
 
                         html += '<div class="checkbox" style="display:inline-block; margin-right: 15px;">';
                         html += '<label>';
@@ -475,6 +492,9 @@ function cargarOpcionesVariante(idTipo, nombreTipo) {
                 var idOpcion = $(this).attr("data-idopcion");
                 removerOpcionVariante(idTipo, idOpcion);
             });
+
+            // Forzar la generación de combinaciones en el flujo inicial
+            generarCombinaciones();
         }
     });
 }
@@ -514,7 +534,7 @@ function removerOpcionVariante(idTipo, idOpcion) {
 
 function generarCombinaciones() {
     var tiposConOpciones = Object.keys(opcionesVariantesSeleccionadas);
-    var modoEdicion = $('input[name="idProducto"]').length > 0 && $('input[name="idProducto"]').val() !== "";
+    var modoEdicion = ($('input[name="idProducto"]').first().val() !== "" || $('input[name="idProducto"]').last().val() !== "");
 
     if (tiposConOpciones.length === 0) {
         $("#combinacionesContainer").hide();
