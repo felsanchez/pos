@@ -8,31 +8,52 @@ $(document).ready(function () {
     CARGAR TABLA DINAMICA DE PRODUCTOS
     =============================================*/
     var tablaProductosDS = $(".tablaProductosDS").DataTable({
-        "ajax": "ajax/datatable-ventas.ajax.php",
+        "processing": true,
+        "serverSide": true,
+        "ajax": {
+            "url": "ajax/datatable-ventas.ajax.php",
+            "type": "POST",
+            "data": function (d) {
+                d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+            }
+        },
         "columnDefs": [
             {
-                "targets": -5,
-                "data": null,
-                "defaultContent": '<img class="img-thumbnail imgTablaDS" width="40px">'
+                "targets": 0, // #
             },
             {
-                "targets": -2,
-                "data": null,
+                "targets": 1, // Imagen
                 "render": function (data, type, row) {
-                    if (row[4] <= 10) {
-                        return '<button class="btn btn-danger">' + row[4] + '</button>';
-                    } else if (row[4] <= 15) {
-                        return '<button class="btn btn-warning">' + row[4] + '</button>';
-                    } else {
-                        return '<button class="btn btn-success">' + row[4] + '</button>';
-                    }
+                    return '<img class="img-thumbnail imgTablaDS" src="' + row[1] + '" width="40px">';
                 }
             },
             {
-                "targets": -1,
-                "data": null,
+                "targets": 2, // Código
+            },
+            {
+                "targets": 3, // Descripción
+            },
+            {
+                "targets": 4, // Stock
                 "render": function (data, type, row) {
-                    return '<div class="btn-group"><button class="btn btn-primary agregarProductoDS recuperarBoton" idProducto="' + row[5] + '">Agregar</button></div>';
+                    var stock = row[4];
+                    var btnClass = "btn-success";
+                    if (stock <= 10) {
+                        btnClass = "btn-danger";
+                    } else if (stock <= 15) {
+                        btnClass = "btn-warning";
+                    }
+                    return '<button class="btn ' + btnClass + '">' + stock + '</button>';
+                }
+            },
+            {
+                "targets": 5, // Acciones
+                "render": function (data, type, row) {
+                    if (row[6] == "1") {
+                        return '<div class="btn-group"><button class="btn btn-warning btnVariantesDS recuperarBoton" data-id-producto="' + row[5] + '"><i class="fa fa-list"></i> Variantes</button></div>';
+                    } else {
+                        return '<div class="btn-group"><button class="btn btn-primary agregarProductoDS recuperarBoton" idProducto="' + row[5] + '">Agregar</button></div>';
+                    }
                 }
             }
         ],
@@ -50,17 +71,6 @@ $(document).ready(function () {
                 "sNext": "Siguiente",
                 "sPrevious": "Anterior"
             }
-        }
-    });
-
-    /*=============================================
-    CARGAR IMAGENES CUANDO LA TABLA SE DIBUJA
-    =============================================*/
-    tablaProductosDS.on('draw.dt', function () {
-        var imgTabla = $(".imgTablaDS");
-        for (var i = 0; i < imgTabla.length; i++) {
-            var data = tablaProductosDS.row($(imgTabla[i]).parents("tr")).data();
-            $(imgTabla[i]).attr("src", data[1]);
         }
     });
 
@@ -88,20 +98,28 @@ $(document).ready(function () {
                 var stock = respuesta["stock"];
                 var precio = respuesta["precio_venta"];
 
+                var impuestoPorcentaje = respuesta["impuesto_porcentaje"] ? Number(respuesta["impuesto_porcentaje"]) : 0;
+                var impuestoNombre = respuesta["impuesto_nombre"] ? respuesta["impuesto_nombre"] : "Exento";
+                var nombreCorto = impuestoNombre.split(/[0-9]/)[0].trim();
+
                 $(".nuevoProducto").append(
                     '<div class="row" style="padding:5px 15px">' +
-                    '<div class="col-xs-6" style="padding-right:0px">' +
+                    '<div class="col-xs-5" style="padding-right:0px">' +
                     '<div class="input-group">' +
                     '<span class="input-group-addon"><button type="button" class="btn btn-danger btn-xs quitarProductoDS" idProducto="' + idProducto + '"><i class="fa fa-times"></i></button></span>' +
                     '<input type="text" class="form-control nuevaDescripcionProducto" idProducto="' + idProducto + '" value="' + descripcion + '" readonly required>' +
                     '</div>' +
                     '</div>' +
-                    '<div class="col-xs-3">' +
+                    '<!--Impuesto del producto (col-xs-2)-->' +
+                    '<div class="col-xs-2 ingresoImpuesto">' +
+                    '<input type="text" class="form-control nuevoImpuestoProducto" name="nuevoImpuestoProducto" value="' + nombreCorto + ' ' + impuestoPorcentaje + '%" porcentaje="' + impuestoPorcentaje + '" impuestoNombre="' + impuestoNombre + '" readonly required>' +
+                    '</div>' +
+                    '<div class="col-xs-2">' +
                     '<input type="number" class="form-control nuevaCantidadProductoDS" min="1" value="1" stock="' + stock + '" required>' +
                     '</div>' +
                     '<div class="col-xs-3 ingresoPrecio" style="padding-left:0px">' +
                     '<div class="input-group">' +
-                    '<input type="number" class="form-control nuevoPrecioProductoDS" precioReal="' + precio + '" value="' + precio + '" min="1" required>' +
+                    '<input type="text" class="form-control nuevoPrecioProductoDS" precioReal="' + precio + '" value="' + precio + '" readonly required>' +
                     '</div>' +
                     '</div>' +
                     '</div>'
@@ -116,12 +134,246 @@ $(document).ready(function () {
     });
 
     /*=============================================
+    EXPANDIR VARIANTES EN DOCUMENTO SOPORTE
+    =============================================*/
+
+    // Función para formatear la tabla de variantes en Documentos Soporte
+    function formatearTablaVariantesDS(variantes) {
+
+        if (!variantes || variantes.length === 0) {
+            return '<div class="alert alert-info">No hay variantes para este producto</div>';
+        }
+
+        // Función auxiliar para formatear precios
+        function formatearPrecio(numero) {
+            return Math.round(numero).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        var html = '<table class="table table-condensed table-bordered table-striped" style="background-color: white; margin-bottom: 0;">';
+        html += '<thead>';
+        html += '<tr>';
+        html += '<th>Variante</th>';
+        html += '<th width="120px">Precio</th>';
+        html += '<th width="80px">Stock</th>';
+        html += '<th width="100px">Acción</th>';
+        html += '</tr>';
+        html += '</thead>';
+        html += '<tbody>';
+
+        for (var i = 0; i < variantes.length; i++) {
+            var variante = variantes[i];
+
+            if (variante.estado != 1) continue;
+
+            // Verificar si esta variante ya está agregada en el documento
+            var yaAgregado = false;
+            $(".nuevaDescripcionProducto").each(function () {
+                if ($(this).attr("idVariante") == variante.id) {
+                    yaAgregado = true;
+                }
+            });
+
+            var stockBadge = '';
+            if (variante.stock <= 0) {
+                stockBadge = '<span class="badge bg-red">' + variante.stock + '</span>';
+            } else if (variante.stock <= 10) {
+                stockBadge = '<span class="badge bg-yellow">' + variante.stock + '</span>';
+            } else {
+                stockBadge = '<span class="badge bg-green">' + variante.stock + '</span>';
+            }
+
+            var botonAgregar = '';
+
+            if (variante.stock > 0) {
+                if (yaAgregado) {
+                    botonAgregar = '<button class="btn btn-default btn-xs agregarVarianteDS" ' +
+                        'idVariante="' + variante.id + '" ' +
+                        'idProductoBase="' + variante.id_producto + '" ' +
+                        'nombreVariante="' + variante.nombre + '" ' +
+                        'precioVariante="' + variante.precio_final + '" ' +
+                        'stockVariante="' + variante.stock + '" ' +
+                        'skuVariante="' + variante.sku + '" ' +
+                        'impuestoPorcentaje="' + (variante.impuesto_porcentaje || 0) + '" ' +
+                        'impuestoNombre="' + (variante.impuesto_nombre || 'Exento') + '" disabled>Agregar</button>';
+                } else {
+                    botonAgregar = '<button class="btn btn-primary btn-xs agregarVarianteDS" ' +
+                        'idVariante="' + variante.id + '" ' +
+                        'idProductoBase="' + variante.id_producto + '" ' +
+                        'nombreVariante="' + variante.nombre + '" ' +
+                        'precioVariante="' + variante.precio_final + '" ' +
+                        'stockVariante="' + variante.stock + '" ' +
+                        'skuVariante="' + variante.sku + '" ' +
+                        'impuestoPorcentaje="' + (variante.impuesto_porcentaje || 0) + '" ' +
+                        'impuestoNombre="' + (variante.impuesto_nombre || 'Exento') + '">Agregar</button>';
+                }
+            } else {
+                botonAgregar = '<button class="btn btn-default btn-xs" disabled>Sin stock</button>';
+            }
+
+            html += '<tr>';
+            html += '<td>' + variante.nombre + '</td>';
+            html += '<td><strong>$' + formatearPrecio(variante.precio_final) + '</strong></td>';
+            html += '<td class="text-center">' + stockBadge + '</td>';
+            html += '<td class="text-center">' + botonAgregar + '</td>';
+            html += '</tr>';
+        }
+
+        html += '</tbody>';
+        html += '</table>';
+        return html;
+    }
+
+    // Evento click en botón de expandir variantes
+    $(document).on('click', '.btnVariantesDS', function (e) {
+
+        e.stopPropagation();
+
+        var boton = $(this);
+        var tr = boton.closest('tr');
+
+        // Si el botón está en una fila hija (responsive), obtenemos la fila padre (la anterior)
+        if (tr.hasClass('child')) {
+            tr = tr.prev();
+        }
+
+        var row = tablaProductosDS.row(tr);
+        var idProducto = boton.attr('data-id-producto');
+        var icono = boton.find('i');
+
+        // Si la fila ya está expandida, colapsarla
+        if (row.child.isShown()) {
+            row.child.hide();
+            tr.removeClass('shown');
+            icono.removeClass('fa-minus').addClass('fa-list');
+            boton.removeClass('btn-danger').addClass('btn-warning');
+        } else {
+            // Expandir la fila
+
+            // Deshabilitar botón y mostrar loading
+            boton.prop('disabled', true);
+            icono.removeClass('fa-list').addClass('fa-spinner fa-spin');
+
+            // Solicitar variantes por AJAX
+            var datos = new FormData();
+            datos.append("obtenerVariantesProducto", idProducto);
+
+            $.ajax({
+                url: "ajax/productos.ajax.php",
+                method: "POST",
+                data: datos,
+                cache: false,
+                contentType: false,
+                processData: false,
+                dataType: "json",
+                success: function (variantes) {
+
+                    // Formatear tabla de variantes
+                    var tablaVariantes = formatearTablaVariantesDS(variantes);
+
+                    // Mostrar fila expandida
+                    row.child(tablaVariantes).show();
+                    tr.addClass('shown');
+
+                    // Cambiar icono del botón
+                    icono.removeClass('fa-spinner fa-spin fa-list').addClass('fa-minus');
+                    boton.removeClass('btn-warning').addClass('btn-danger');
+                    boton.prop('disabled', false);
+                },
+
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error("Error al cargar variantes:", textStatus, errorThrown);
+                    swal({
+                        type: "error",
+                        title: "Error al cargar las variantes",
+                        text: "Por favor, intenta nuevamente"
+                    });
+                    icono.removeClass('fa-spinner fa-spin').addClass('fa-list');
+                    boton.prop('disabled', false);
+                }
+            });
+        }
+
+    });
+
+    /*=============================================
+    AGREGANDO VARIANTES AL DOCUMENTO SOPORTE
+    =============================================*/
+    $(document).on("click", ".agregarVarianteDS", function () {
+
+        var idVariante = $(this).attr("idVariante");
+        var idProductoBase = $(this).attr("idProductoBase");
+        var nombreVariante = $(this).attr("nombreVariante");
+        var precioVariante = $(this).attr("precioVariante");
+        var stockVariante = $(this).attr("stockVariante");
+        var skuVariante = $(this).attr("skuVariante");
+        var impuestoPorcentaje = $(this).attr("impuestoPorcentaje") ? Number($(this).attr("impuestoPorcentaje")) : 0;
+        var impuestoNombre = $(this).attr("impuestoNombre") ? $(this).attr("impuestoNombre") : "Exento";
+        var nombreCorto = impuestoNombre.split(/[0-9]/)[0].trim();
+
+        // Cambiar apariencia del botón
+        $(this).removeClass("btn-primary").addClass("btn-default").prop("disabled", true);
+
+        // Agregar la variante al documento soporte
+        $(".nuevoProducto").append(
+            '<div class="row" style="padding:5px 15px">' +
+            '<div class="col-xs-5" style="padding-right:0px">' +
+            '<div class="input-group">' +
+            '<span class="input-group-addon"><button type="button" class="btn btn-danger btn-xs quitarProductoDS" idProducto="' + idProductoBase + '" idVariante="' + idVariante + '"><i class="fa fa-times"></i></button></span>' +
+            '<input type="text" class="form-control nuevaDescripcionProducto" idProducto="' + idProductoBase + '" esVariante="1" idVariante="' + idVariante + '" skuVariante="' + skuVariante + '" value="' + nombreVariante + '" readonly required>' +
+            '</div>' +
+            '</div>' +
+            '<!--Impuesto de la variante (col-xs-2)-->' +
+            '<div class="col-xs-2 ingresoImpuesto">' +
+            '<input type="text" class="form-control nuevoImpuestoProducto" name="nuevoImpuestoProducto" value="' + nombreCorto + ' ' + impuestoPorcentaje + '%" porcentaje="' + impuestoPorcentaje + '" impuestoNombre="' + impuestoNombre + '" readonly required>' +
+            '</div>' +
+            '<div class="col-xs-2">' +
+            '<input type="number" class="form-control nuevaCantidadProductoDS" min="1" value="1" stock="' + stockVariante + '" required>' +
+            '</div>' +
+            '<div class="col-xs-3 ingresoPrecio" style="padding-left:0px">' +
+            '<div class="input-group">' +
+            '<input type="text" class="form-control nuevoPrecioProductoDS" precioReal="' + precioVariante + '" value="' + precioVariante + '" readonly required>' +
+            '</div>' +
+            '</div>' +
+            '</div>'
+        );
+
+        // Cambiar apariencia del botón principal en la tabla
+        $(".btnVariantesDS[data-id-producto='" + idProductoBase + "']").removeClass("btn-warning").addClass("btn-default");
+
+        sumarTotalPreciosDS();
+        aplicarDescuentoDS();
+        listarProductosDS();
+        $(".nuevoPrecioProductoDS").number(true, 0);
+    });
+
+    /*=============================================
     QUITAR PRODUCTO Y RECUPERAR BOTON
     =============================================*/
     $(".formularioDocumentoSoporte").on("click", "button.quitarProductoDS", function () {
         $(this).parent().parent().parent().parent().remove();
         var idProducto = $(this).attr("idProducto");
-        $("button.recuperarBoton[idProducto='" + idProducto + "']").removeClass('btn-default').addClass('btn-primary agregarProductoDS').prop("disabled", false);
+        var idVariante = $(this).attr("idVariante");
+
+        if (idVariante) {
+            // Habilitar nuevamente el botón de la variante específica si el detalle está expandido
+            $("button.agregarVarianteDS[idVariante='" + idVariante + "']").removeClass('btn-default').addClass('btn-primary').prop("disabled", false);
+
+            var hayMasVariantes = false;
+            $(".nuevaDescripcionProducto").each(function () {
+                var idProd = $(this).attr("idProducto");
+                var esVariante = $(this).attr("esVariante");
+                if (idProd == idProducto && esVariante == "1") {
+                    hayMasVariantes = true;
+                }
+            });
+
+            // Si no quedan más variantes de este producto en el documento, restaurar el botón principal de variantes
+            if (!hayMasVariantes) {
+                $(".btnVariantesDS[data-id-producto='" + idProducto + "']").removeClass("btn-default").addClass("btn-warning");
+            }
+        } else {
+            $("button.recuperarBoton[idProducto='" + idProducto + "']").removeClass('btn-default').addClass('btn-primary agregarProductoDS').prop("disabled", false);
+        }
 
         if ($(".nuevoProducto").children().length == 0) {
             $("#nuevoSubtotalSinDescDS").val(0);
@@ -139,7 +391,15 @@ $(document).ready(function () {
     /*=============================================
     CANTIDAD O PRECIO CAMBIADO
     =============================================*/
-    $(".formularioDocumentoSoporte").on("change", "input.nuevaCantidadProductoDS, input.nuevoPrecioProductoDS", function () {
+    $(".formularioDocumentoSoporte").on("change", "input.nuevaCantidadProductoDS", function () {
+        var row = $(this).closest(".row");
+        var precioInput = row.find(".nuevoPrecioProductoDS");
+        var precioReal = Number(precioInput.attr("precioReal")) || 0;
+        var cantidad = Number($(this).val()) || 0;
+        var precioFinal = cantidad * precioReal;
+
+        precioInput.val(precioFinal);
+
         sumarTotalPreciosDS();
         aplicarDescuentoDS();
         listarProductosDS();
@@ -150,12 +410,10 @@ $(document).ready(function () {
     =============================================*/
     function sumarTotalPreciosDS() {
         var precioItem = $(".nuevoPrecioProductoDS");
-        var cantidadItem = $(".nuevaCantidadProductoDS");
         var sumaTotal = 0;
 
         for (var i = 0; i < precioItem.length; i++) {
-            var subtotalItem = Number($(precioItem[i]).val()) * Number($(cantidadItem[i]).val());
-            sumaTotal += subtotalItem;
+            sumaTotal += Number($(precioItem[i]).val()) || 0;
         }
 
         $("#nuevoSubtotalSinDescDS").val(sumaTotal);
@@ -278,15 +536,29 @@ $(document).ready(function () {
         var descripcion = $(".nuevaDescripcionProducto");
         var cantidad = $(".nuevaCantidadProductoDS");
         var precio = $(".nuevoPrecioProductoDS");
+        var impuesto = $(".nuevoImpuestoProducto");
 
         for (var i = 0; i < descripcion.length; i++) {
-            listaProductos.push({
+            var item = {
                 "id": $(descripcion[i]).attr("idProducto"),
                 "descripcion": $(descripcion[i]).val(),
                 "cantidad": $(cantidad[i]).val(),
-                "precio": $(precio[i]).val(),
-                "total": Number($(precio[i]).val()) * Number($(cantidad[i]).val())
-            });
+                "precio": $(precio[i]).attr("precioReal") || 0,
+                "total": $(precio[i]).val() || 0,
+                "impuesto": $(impuesto[i]).attr("porcentaje") || 0
+            };
+
+            var esVariante = $(descripcion[i]).attr("esVariante") || "0";
+            var idVariante = $(descripcion[i]).attr("idVariante");
+            var skuVariante = $(descripcion[i]).attr("skuVariante");
+
+            if (esVariante == "1" && idVariante && idVariante != "" && idVariante != "undefined") {
+                item.esVariante = "1";
+                item.idVariante = idVariante;
+                item.skuVariante = skuVariante;
+            }
+
+            listaProductos.push(item);
         }
         $("#listaProductosDS").val(JSON.stringify(listaProductos));
     }
@@ -320,14 +592,15 @@ $(document).ready(function () {
                 }
             },
             "autoWidth": false,
-            "order": [[3, "desc"]], // Ordenar por Fecha por defecto
+            "order": [[4, "desc"]], // Ordenar por Fecha por defecto
             "columnDefs": [
                 { "targets": 0, "responsivePriority": 1, "className": "vertical-middle" }, // Código
-                { "targets": 5, "responsivePriority": 2, "className": "text-left vertical-middle", "orderable": false }, // Acciones
+                { "targets": 6, "responsivePriority": 2, "className": "text-left vertical-middle", "orderable": false }, // Acciones
                 { "targets": 1, "responsivePriority": 3, "className": "vertical-middle" }, // Proveedor
-                { "targets": 2, "responsivePriority": 4, "className": "vertical-middle" }, // Total
-                { "targets": 3, "responsivePriority": 5, "className": "vertical-middle" }, // Fecha
-                { "targets": 4, "responsivePriority": 6, "className": "text-center vertical-middle" } // Estado DIAN
+                { "targets": 2, "responsivePriority": 4, "className": "vertical-middle" }, // Vendedor
+                { "targets": 3, "responsivePriority": 5, "className": "vertical-middle" }, // Total
+                { "targets": 4, "responsivePriority": 6, "className": "vertical-middle" }, // Fecha
+                { "targets": 5, "responsivePriority": 7, "className": "text-center vertical-middle" } // Estado DIAN
             ],
             "responsive": {
                 "details": {
@@ -750,5 +1023,134 @@ $(document).ready(function () {
         if ($.fn.DataTable.isDataTable('#tablaListadoDocumentoSoporte')) {
             $('#tablaListadoDocumentoSoporte').DataTable().ajax.reload();
         }
+    });
+
+    /*=============================================
+    AGREGAR PRODUCTO EN DISPOSITIVOS MÓVILES (DOCUMENTO SOPORTE)
+    =============================================*/
+    $(".btnAgregarProductoDS").click(function () {
+        var datos = new FormData();
+        datos.append("traerProductos", "ok");
+
+        $.ajax({
+            url: "ajax/productos.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function (respuesta) {
+                var optionsHtml = '<option value="">Seleccione el producto</option>';
+                if (respuesta && respuesta.length > 0) {
+                    respuesta.forEach(function(item) {
+                        var optionAttrs = 'idProducto="' + item.id + '"';
+                        optionAttrs += ' esVariante="' + (item.es_variante || 0) + '"';
+                        if (item.es_variante == 1) {
+                            optionAttrs += ' idVariante="' + item.id_variante + '" skuVariante="' + item.sku + '"';
+                        }
+                        optionAttrs += ' stock="' + item.stock + '"';
+                        optionAttrs += ' precio="' + item.precio_venta + '"';
+                        optionAttrs += ' impuestoPorcentaje="' + (item.impuesto_porcentaje || 0) + '"';
+                        optionAttrs += ' impuestoNombre="' + (item.impuesto_nombre || 'Exento') + '"';
+
+                        optionsHtml += '<option ' + optionAttrs + ' value="' + item.descripcion + '">' + item.descripcion + '</option>';
+                    });
+                }
+
+                $(".nuevoProducto").append(
+                    '<div class="row" style="padding:5px 15px">' +
+                    '<div class="col-xs-5" style="padding-right:0px">' +
+                    '<input type="text" class="form-control buscarProductoMovil" placeholder="🔍 Buscar..." style="margin-bottom: 4px; padding: 4px 8px; height: 28px; font-size: 11px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">' +
+                    '<div class="input-group">' +
+                    '<span class="input-group-addon"><button type="button" class="btn btn-danger btn-xs quitarProductoDS" idProducto><i class="fa fa-times"></i></button></span>' +
+                    '<select class="form-control nuevaDescripcionProducto" idProducto name="nuevaDescripcionProducto" required>' +
+                    optionsHtml +
+                    '</select>' +
+                    '</div>' +
+                    '</div>' +
+                    '<!--Impuesto del producto (col-xs-2)-->' +
+                    '<div class="col-xs-2 ingresoImpuesto">' +
+                    '<input type="text" class="form-control nuevoImpuestoProducto" name="nuevoImpuestoProducto" value="" porcentaje="0" impuestoNombre="Exento" readonly required>' +
+                    '</div>' +
+                    '<div class="col-xs-2">' +
+                    '<input type="number" class="form-control nuevaCantidadProductoDS" min="1" value="1" stock nuevoStock required>' +
+                    '</div>' +
+                    '<div class="col-xs-3 ingresoPrecio" style="padding-left:0px">' +
+                    '<div class="input-group">' +
+                    '<input type="text" class="form-control nuevoPrecioProductoDS" precioReal="" value="" readonly required>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>'
+                );
+
+                $(".nuevoPrecioProductoDS").number(true, 0);
+            }
+        });
+    });
+
+    $(".formularioDocumentoSoporte").on("change", "select.nuevaDescripcionProducto", function () {
+        var select = $(this);
+        var optionSelected = select.find("option:selected");
+        var row = select.closest(".row");
+
+        if (!optionSelected.length || !optionSelected.attr("idProducto")) {
+            select.removeAttr("idProducto");
+            select.removeAttr("esVariante");
+            select.removeAttr("idVariante");
+            select.removeAttr("skuVariante");
+
+            row.find(".quitarProductoDS").removeAttr("idProducto");
+            row.find(".quitarProductoDS").removeAttr("idVariante");
+
+            row.find(".nuevoPrecioProductoDS").val(0).attr("precioReal", 0);
+            row.find(".nuevaCantidadProductoDS").val(1).attr("stock", 0).attr("nuevoStock", 0);
+            row.find(".nuevoImpuestoProducto").val("Exento 0%").attr("porcentaje", 0).attr("impuestoNombre", "Exento");
+
+            sumarTotalPreciosDS();
+            aplicarDescuentoDS();
+            listarProductosDS();
+            return;
+        }
+
+        var idProducto = optionSelected.attr("idProducto");
+        var esVariante = optionSelected.attr("esVariante") || "0";
+        var idVariante = optionSelected.attr("idVariante") || "";
+        var skuVariante = optionSelected.attr("skuVariante") || "";
+        var stock = Number(optionSelected.attr("stock") || 0);
+        var precio = Number(optionSelected.attr("precio") || 0);
+        var impuestoPorcentaje = optionSelected.attr("impuestoPorcentaje") ? Number(optionSelected.attr("impuestoPorcentaje")) : 0;
+        var impuestoNombre = optionSelected.attr("impuestoNombre") || "Exento";
+        var nombreCorto = impuestoNombre.split(/[0-9]/)[0].trim();
+
+        select.attr("idProducto", idProducto);
+        select.attr("esVariante", esVariante);
+        select.attr("idVariante", idVariante);
+        select.attr("skuVariante", skuVariante);
+
+        row.find(".quitarProductoDS").attr("idProducto", idProducto);
+        row.find(".quitarProductoDS").attr("idVariante", idVariante);
+
+        var nuevoPrecioProducto = row.find(".nuevoPrecioProductoDS");
+        var nuevaCantidadProducto = row.find(".nuevaCantidadProductoDS");
+        var nuevoImpuestoProducto = row.find(".nuevoImpuestoProducto");
+
+        // Actualizar Impuesto
+        $(nuevoImpuestoProducto).val(nombreCorto + " " + impuestoPorcentaje + "%");
+        $(nuevoImpuestoProducto).attr("porcentaje", impuestoPorcentaje);
+        $(nuevoImpuestoProducto).attr("impuestoNombre", impuestoNombre);
+
+        // Actualizar Stock
+        $(nuevaCantidadProducto).attr("stock", stock);
+        $(nuevaCantidadProducto).attr("nuevoStock", stock);
+        $(nuevaCantidadProducto).val(1);
+
+        // Actualizar Precio
+        $(nuevoPrecioProducto).val(precio);
+        $(nuevoPrecioProducto).attr("precioReal", precio);
+
+        sumarTotalPreciosDS();
+        aplicarDescuentoDS();
+        listarProductosDS();
     });
 });

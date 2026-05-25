@@ -94,6 +94,18 @@ var table2 = $("table.tablaVentas").DataTable({
 		"type": "POST",
 		"data": function (d) {
 			d.csrf_token = $('meta[name="csrf-token"]').attr('content');
+			d.fechaInicial = $('#fechaInicial').val();
+			d.fechaFinal = $('#fechaFinal').val();
+			d.clienteId = $('.select-cliente').length ? ($('.select-cliente').val() || '') : '';
+			d.usuarioId = $('.select-usuario').length ? ($('.select-usuario').val() || '') : '';
+			d.bodegaId = $('.select-bodega').length ? ($('.select-bodega').val() || '') : '';
+
+			var urlParams = new URLSearchParams(window.location.search);
+			if (!d.fechaInicial) d.fechaInicial = urlParams.get('fechaInicial');
+			if (!d.fechaFinal) d.fechaFinal = urlParams.get('fechaFinal');
+			if (!d.clienteId) d.clienteId = urlParams.get('cliente');
+			if (!d.usuarioId) d.usuarioId = urlParams.get('usuario');
+			if (!d.bodegaId) d.bodegaId = urlParams.get('bodega');
 		}
 	},
 	"columnDefs": [
@@ -340,6 +352,7 @@ AGREGANDO PRODUCTOS A LA VENTA DESDE A TABLA
 $('.tablaVentas tbody').on("click", "button.agregarProducto", function () {
 
 	var idProducto = $(this).attr("idProducto");
+	var boton = $(this);
 
 	$(this).removeClass("btn-primary agregarProducto");
 
@@ -363,6 +376,18 @@ $('.tablaVentas tbody').on("click", "button.agregarProducto", function () {
 			var descripcion = respuesta["descripcion"];
 			var stock = respuesta["stock"];
 			var precio = respuesta["precio_venta"];
+
+			if (Number(stock) <= 0) {
+				swal({
+					title: "No hay stock disponible",
+					text: "El stock de este producto es 0",
+					type: "error",
+					confirmButtonText: "¡Cerrar!"
+				});
+
+				boton.removeClass("btn-default").addClass("btn-primary agregarProducto");
+				return;
+			}
 
 			// Calcular impuesto del producto (Precio incluye impuesto)
 			var impuestoPorcentaje = respuesta["impuesto_porcentaje"] ? Number(respuesta["impuesto_porcentaje"]) : 0;
@@ -459,6 +484,16 @@ $(document).on("click", ".agregarVarianteVenta", function () {
 	var precioVariante = $(this).attr("precioVariante");
 	var stockVariante = $(this).attr("stockVariante");
 	var skuVariante = $(this).attr("skuVariante");
+
+	if (Number(stockVariante) <= 0) {
+		swal({
+			title: "No hay stock disponible",
+			text: "El stock de esta variante es 0",
+			type: "error",
+			confirmButtonText: "¡Cerrar!"
+		});
+		return;
+	}
 
 	// Cambiar apariencia del botón
 	$(this).removeClass("btn-primary");
@@ -614,10 +649,30 @@ $(".formularioVenta").on("click", "button.quitarProducto", function () {
 	$(this).parent().parent().parent().parent().remove();
 
 	var idProducto = $(this).attr("idProducto");
+	var idVariante = $(this).attr("idVariante");
 
-	$("button.recuperarBoton[idProducto='" + idProducto + "']").removeClass('btn-default');
+	if (idVariante && idVariante !== "" && idVariante !== "undefined") {
+		// Restablecer botón de variantes si aplica
+		$("button.agregarVarianteVenta[idVariante='" + idVariante + "']").removeClass('btn-default').addClass('btn-primary').prop("disabled", false);
+		
+		// Verificar si quedan más variantes de este producto
+		var hayMasVariantes = false;
+		$(".nuevaDescripcionProducto").each(function () {
+			var idProd = $(this).attr("idProducto");
+			var esVar = $(this).attr("esVariante");
+			if (idProd == idProducto && esVar == "1") {
+				hayMasVariantes = true;
+			}
+		});
 
-	$("button.recuperarBoton[idProducto='" + idProducto + "']").addClass('btn-primary agregarProducto');
+		// Si no hay más variantes, habilitar el botón "Variantes" principal
+		if (!hayMasVariantes) {
+			$(".btnVariantesVenta[data-id-producto='" + idProducto + "']").removeClass("btn-default").addClass("btn-warning");
+		}
+	} else {
+		$("button.recuperarBoton[idProducto='" + idProducto + "']").removeClass('btn-default');
+		$("button.recuperarBoton[idProducto='" + idProducto + "']").addClass('btn-primary agregarProducto');
+	}
 
 
 	if ($(".nuevoProducto").children().length == 0) {
@@ -665,6 +720,22 @@ $(".btnAgregarProducto").click(function () {
 		dataType: "json",
 		success: function (respuesta) {
 
+			var optionsHtml = '<option value="">Seleccione el producto</option>';
+			if (respuesta && respuesta.length > 0) {
+				respuesta.forEach(function(item) {
+					var optionAttrs = 'idProducto="' + item.id + '"';
+					optionAttrs += ' esVariante="' + (item.es_variante || 0) + '"';
+					if (item.es_variante == 1) {
+						optionAttrs += ' idVariante="' + item.id_variante + '" skuVariante="' + item.sku + '"';
+					}
+					optionAttrs += ' stock="' + item.stock + '"';
+					optionAttrs += ' precio="' + item.precio_venta + '"';
+					optionAttrs += ' impuestoPorcentaje="' + (item.impuesto_porcentaje || 0) + '"';
+					optionAttrs += ' impuestoNombre="' + (item.impuesto_nombre || 'Exento') + '"';
+
+					optionsHtml += '<option ' + optionAttrs + ' value="' + item.descripcion + '">' + item.descripcion + '</option>';
+				});
+			}
 
 			$(".nuevoProducto").append(
 
@@ -674,13 +745,15 @@ $(".btnAgregarProducto").click(function () {
 
 				'<div class="col-xs-4" style="padding-right:0px">' +
 
+				'<input type="text" class="form-control buscarProductoMovil" placeholder="🔍 Buscar..." style="margin-bottom: 4px; padding: 4px 8px; height: 28px; font-size: 11px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">' +
+
 				'<div class="input-group">' +
 
 				'<span class="input-group-addon"><button type="button" class="btn btn-danger btn-xs quitarProducto" idProducto><i class="fa fa-times"></i></button></span>' +
 
 				'<select class="form-control nuevaDescripcionProducto" idProducto name="nuevaDescripcionProducto" required>' +
 
-				'<option>Seleccione el producto</option>' +
+				optionsHtml +
 
 				'</select>' +
 
@@ -716,23 +789,6 @@ $(".btnAgregarProducto").click(function () {
 
 				'</div>');
 
-
-			/*=============================================
-			AGREGAR LOS PRODUCTOS AL SELECT
-			=============================================*/
-
-			respuesta.forEach(funcionForEach);
-
-			function funcionForEach(item, index) {
-
-				$(".nuevaDescripcionProducto").append(
-
-					'<option idProducto="' + item.id + '" value="' + item.descripcion + '">' + item.descripcion + '</option>')
-			}
-
-			//Sumar total de precios
-			//sumarTotalPrecios()
-
 			//Agregar impuesto
 			aplicarDescuento()
 
@@ -753,62 +809,104 @@ SELECCIONAR PRODUCTOS (dispositivos)
 
 $(".formularioVenta").on("change", "select.nuevaDescripcionProducto", function () {
 
-	var nombreProducto = $(this).val();
 	var select = $(this);
+	var optionSelected = select.find("option:selected");
 	var row = select.closest(".row");
+
+	if (!optionSelected.length || !optionSelected.attr("idProducto")) {
+		// Limpiar si se selecciona la opción vacía
+		select.removeAttr("idProducto");
+		select.removeAttr("esVariante");
+		select.removeAttr("idVariante");
+		select.removeAttr("skuVariante");
+		
+		row.find(".quitarProducto").removeAttr("idProducto");
+		row.find(".quitarProducto").removeAttr("idVariante");
+		
+		row.find(".nuevoPrecioProducto").val(0).attr("precioReal", 0);
+		row.find(".nuevaCantidadProducto").val(1).attr("stock", 0).attr("nuevoStock", 0);
+		row.find(".nuevoImpuestoProducto").val("").attr("porcentaje", 0).attr("impuestoNombre", "");
+		
+		listarProductos();
+		sumarTotalPrecios();
+		sumarTotalImpuestos();
+		aplicarDescuento();
+		return;
+	}
+
+	var idProducto = optionSelected.attr("idProducto");
+	var esVariante = optionSelected.attr("esVariante") || "0";
+	var idVariante = optionSelected.attr("idVariante") || "";
+	var skuVariante = optionSelected.attr("skuVariante") || "";
+	var stock = Number(optionSelected.attr("stock") || 0);
+	var precio = Number(optionSelected.attr("precio") || 0);
+	var impuestoPorcentaje = optionSelected.attr("impuestoPorcentaje") ? Number(optionSelected.attr("impuestoPorcentaje")) : 0;
+	var impuestoNombre = optionSelected.attr("impuestoNombre") ? optionSelected.attr("impuestoNombre") : "Exento";
+
+	if (stock <= 0) {
+		swal({
+			title: "No hay stock disponible",
+			text: "El stock de este producto es 0",
+			type: "error",
+			confirmButtonText: "¡Cerrar!"
+		});
+		select.val("");
+		// Limpiar fila
+		select.removeAttr("idProducto");
+		select.removeAttr("esVariante");
+		select.removeAttr("idVariante");
+		select.removeAttr("skuVariante");
+		
+		row.find(".quitarProducto").removeAttr("idProducto");
+		row.find(".quitarProducto").removeAttr("idVariante");
+		
+		row.find(".nuevoPrecioProducto").val(0).attr("precioReal", 0);
+		row.find(".nuevaCantidadProducto").val(1).attr("stock", 0).attr("nuevoStock", 0);
+		row.find(".nuevoImpuestoProducto").val("").attr("porcentaje", 0).attr("impuestoNombre", "");
+		
+		listarProductos();
+		sumarTotalPrecios();
+		sumarTotalImpuestos();
+		aplicarDescuento();
+		return;
+	}
+
+	// Actualizar ID del producto en el select y en el botón de quitar
+	select.attr("idProducto", idProducto);
+	select.attr("esVariante", esVariante);
+	select.attr("idVariante", idVariante);
+	select.attr("skuVariante", skuVariante);
+
+	row.find(".quitarProducto").attr("idProducto", idProducto);
+	row.find(".quitarProducto").attr("idVariante", idVariante);
 
 	var nuevoPrecioProducto = row.find(".nuevoPrecioProducto");
 	var nuevaCantidadProducto = row.find(".nuevaCantidadProducto");
 	var nuevoImpuestoProducto = row.find(".nuevoImpuestoProducto");
 
-	var datos = new FormData();
-	datos.append("nombreProducto", nombreProducto);
+	// Actualizar Stock
+	$(nuevaCantidadProducto).attr("stock", stock);
+	$(nuevaCantidadProducto).attr("nuevoStock", stock - 1);
+	$(nuevaCantidadProducto).val(1);
 
-	$.ajax({
+	// Actualizar Precio
+	$(nuevoPrecioProducto).val(precio);
+	$(nuevoPrecioProducto).attr("precioReal", precio);
 
-		url: "ajax/productos.ajax.php",
-		method: "POST",
-		data: datos,
-		cache: false,
-		contentType: false,
-		processData: false,
-		dataType: "json",
-		success: function (respuesta) {
+	// Actualizar Impuestos
+	var nombreCorto = impuestoNombre.split(/[0-9]/)[0].trim();
 
-			if (respuesta) {
-				// Actualizar ID del producto en el select y en el botón de quitar
-				select.attr("idProducto", respuesta["id"]);
-				row.find(".quitarProducto").attr("idProducto", respuesta["id"]);
+	$(nuevoImpuestoProducto).val(nombreCorto + " " + impuestoPorcentaje + "%");
+	$(nuevoImpuestoProducto).attr("porcentaje", impuestoPorcentaje);
+	$(nuevoImpuestoProducto).attr("impuestoNombre", impuestoNombre);
 
-				// Actualizar Stock
-				$(nuevaCantidadProducto).attr("stock", respuesta["stock"]);
-				$(nuevaCantidadProducto).attr("nuevoStock", Number(respuesta["stock"]) - 1);
-				$(nuevaCantidadProducto).val(1);
+	// Agrupar productos en formato Json
+	listarProductos();
 
-				// Actualizar Precio
-				$(nuevoPrecioProducto).val(respuesta["precio_venta"]);
-				$(nuevoPrecioProducto).attr("precioReal", respuesta["precio_venta"]);
-
-				// Actualizar Impuestos
-				var impuestoPorcentaje = respuesta["impuesto_porcentaje"] ? Number(respuesta["impuesto_porcentaje"]) : 0;
-				var impuestoNombre = respuesta["impuesto_nombre"] ? respuesta["impuesto_nombre"] : "Exento";
-				var nombreCorto = impuestoNombre.split(/[0-9]/)[0].trim();
-
-				$(nuevoImpuestoProducto).val(nombreCorto + " " + impuestoPorcentaje + "%");
-				$(nuevoImpuestoProducto).attr("porcentaje", impuestoPorcentaje);
-				$(nuevoImpuestoProducto).attr("impuestoNombre", impuestoNombre);
-
-				// Agrupar productos en formato Json
-				listarProductos();
-
-				// Sumar totales
-				sumarTotalPrecios();
-				sumarTotalImpuestos();
-				aplicarDescuento();
-			}
-		}
-
-	})
+	// Sumar totales
+	sumarTotalPrecios();
+	sumarTotalImpuestos();
+	aplicarDescuento();
 
 })
 
@@ -2320,4 +2418,42 @@ $(document).on("click", ".btnGuardarImagenVenta", function () {
 			}
 		}
 	});
+});
+
+/*=============================================
+FILTRAR PRODUCTOS EN MÓVIL
+=============================================*/
+$(document).on("keyup", ".buscarProductoMovil", function() {
+	var input = $(this);
+	var filtro = input.val().toLowerCase();
+	var select = input.parent().find("select.nuevaDescripcionProducto");
+	
+	if (!select.data("original-options")) {
+		var options = select.find("option").clone();
+		select.data("original-options", options);
+	}
+	
+	var originalOptions = select.data("original-options");
+	var valorSeleccionado = select.val();
+	
+	select.empty();
+	select.append('<option value="">Seleccione el producto</option>');
+	
+	originalOptions.each(function() {
+		var option = $(this);
+		var texto = option.text().toLowerCase();
+		var valor = option.val();
+		
+		if (valor === "") return;
+		
+		if (texto.indexOf(filtro) > -1) {
+			select.append(option.clone());
+		}
+	});
+	
+	if (select.find("option[value='" + valorSeleccionado + "']").length > 0) {
+		select.val(valorSeleccionado);
+	} else {
+		select.val("");
+	}
 });

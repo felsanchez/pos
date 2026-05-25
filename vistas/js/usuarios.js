@@ -64,7 +64,7 @@ $(document).ready(function () {
 					}
 				}
 			},
-			"order": [[9, 'desc']],
+			"order": [[0, 'asc']],
 			"columnDefs": [
 				{
 					"targets": 0,

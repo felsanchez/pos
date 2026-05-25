@@ -7,12 +7,16 @@ class ControladorProductos
 	MOSTRAR PRODUCTOS
 	=============================================*/
 
-	static public function ctrMostrarProductos($item, $valor, $orden, $productosExistentes = [])
+	static public function ctrMostrarProductos($item, $valor, $orden, $idBodega = null)
 	{
 
 		$tabla = "productos";
 
-		$respuesta = ModeloProductos::mdlMostrarProductos($tabla, $item, $valor, $orden);
+		if ($idBodega === null && isset($_SESSION["id_bodega"])) {
+			$idBodega = $_SESSION["id_bodega"];
+		}
+
+		$respuesta = ModeloProductos::mdlMostrarProductos($tabla, $item, $valor, $orden, $idBodega);
 
 		return $respuesta;
 	}
@@ -27,15 +31,15 @@ class ControladorProductos
 		// Columnas para ordenar (deben coincidir con el índice enviado por DataTables)
 		$columnsMap = array(
 			0 => 'p.id',
-			1 => 'p.imagen',
-			2 => 'p.codigo',
-			3 => 'p.descripcion',
-			4 => 'c.categoria',
-			5 => 'p.stock',
-			6 => 't.nombre',
-			7 => 'p.precio_venta',
-			8 => 'prov.nombre',
-			9 => 'p.fecha'
+			1 => 'p.codigo',
+			2 => 'p.descripcion',
+			3 => 'c.categoria',
+			4 => 'p.stock',
+			5 => 't.nombre',
+			6 => 'p.precio_venta',
+			7 => 'prov.nombre',
+			8 => 'p.fecha',
+			9 => 'p.id'
 		);
 
 		$where = " WHERE 1=1 ";
@@ -1333,6 +1337,7 @@ if (isset($_POST["editarDescripcion"])) {
 
 		if (isset($_FILES["archivoCSV"])) {
 
+			$idBodegaActiva = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
 			$archivo = $_FILES["archivoCSV"]["tmp_name"];
 			$errores = array();
 			$productosImportar = array();
@@ -1475,7 +1480,7 @@ if (isset($_POST["editarDescripcion"])) {
 					// Verificar si el código ya existe
 					$item = "codigo";
 					$valor = $codigo;
-					$productoExiste = ModeloProductos::mdlMostrarProductos("productos", $item, $valor, null);
+					$productoExiste = ModeloProductos::mdlMostrarProductos("productos", $item, $valor, null, $idBodegaActiva);
 
 					if ($productoExiste) {
 						// Agregar a la lista de actualización masiva
@@ -1541,7 +1546,7 @@ if (isset($_POST["editarDescripcion"])) {
 				if (count($productosImportar) > 0 || count($productosActualizar) > 0) {
 
 					$tabla = "productos";
-					$respuesta = ModeloProductos::mdlImportarProductosMasivos($tabla, $productosImportar, $productosActualizar);
+					$respuesta = ModeloProductos::mdlImportarProductosMasivos($tabla, $productosImportar, $productosActualizar, $idBodegaActiva);
 
 					if ($respuesta == "ok") {
 

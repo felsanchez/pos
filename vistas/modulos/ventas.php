@@ -66,11 +66,19 @@ if ($xml) {
                 <div class="input-group" style="width: 180px;">
                   <span class="input-group-addon"><i class="fa fa-building text-primary"></i></span>
                   <select name="bodega" class="form-control select2 select-bodega">
-                    <option value="">Mostrar Todas</option>
                     <?php
+                    $bodegaSeleccionada = '';
+                    if (isset($_GET['bodega']) && $_GET['bodega'] !== '') {
+                      $bodegaSeleccionada = $_GET['bodega'];
+                    } elseif (!empty($_SESSION['id_bodega'])) {
+                      $bodegaSeleccionada = $_SESSION['id_bodega'];
+                    }
+                    $selectedTodas = ($bodegaSeleccionada === 'todas' || $bodegaSeleccionada === '') ? 'selected' : '';
+                    echo '<option value="todas" ' . $selectedTodas . '>Mostrar Todas</option>';
+                    
                     $bodegas = ControladorBodegas::ctrMostrarBodegas(null, null);
                     foreach ($bodegas as $key => $valueBodega) {
-                      $selected = (isset($_GET['bodega']) && $_GET['bodega'] == $valueBodega["id"]) ? 'selected' : '';
+                      $selected = ($bodegaSeleccionada == $valueBodega["id"]) ? 'selected' : '';
                       echo '<option value="' . e($valueBodega["id"]) . '" ' . $selected . '>' . e($valueBodega["nombre"]) . '</option>';
                     }
                     ?>

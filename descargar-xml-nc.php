@@ -1,4 +1,6 @@
 <?php
+require_once "modelos/session-manager.php";
+SessionManager::startSecure();
 
 require_once "controladores/factus.controlador.php";
 require_once "modelos/factus.modelo.php";
@@ -13,6 +15,18 @@ if (isset($_GET["xml"])) {
 
     if (!$nota) {
         die("No se encontró registro de la nota de crédito: " . htmlspecialchars($numeroNC));
+    }
+
+    // Restricción por Perfil: Si no es Admin, solo ve su sucursal
+    $esAdmin = (isset($_SESSION["perfil"]) && stripos($_SESSION["perfil"], "Admin") !== false);
+    $idBodegaSession = !empty($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
+
+    if (!$esAdmin) {
+        require_once "modelos/ventas.modelo.php";
+        $venta = ModeloVentas::mdlMostrarVentas("ventas", "id", $nota["id_venta_original"]);
+        if ($venta && $venta["id_bodega"] != $idBodegaSession) {
+            die("No autorizado para descargar este documento.");
+        }
     }
 
     // 2. Autenticar con Factus

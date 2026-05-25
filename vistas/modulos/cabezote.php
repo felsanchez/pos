@@ -203,15 +203,14 @@ BARRA DE NAVEGACION
 				<i class="fa fa-building"></i> 
 				<span class="hidden-xs">Sucursal:</span> 
 				<?php 
-					// Resolver nombre de sucursal: siempre desde la sesión (cacheado al cargar)
 					if(empty($_SESSION["nombre_bodega"])){
 						$idBodegaActiva = !empty($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
 						$bodegaActiva = ControladorBodegas::ctrMostrarBodegas("id", $idBodegaActiva);
 						if(empty($bodegaActiva) && $idBodegaActiva != 1){
-							// Fallback a bodega principal si la asignada no existe
 							$bodegaActiva = ControladorBodegas::ctrMostrarBodegas("id", 1);
 						}
 						$_SESSION["nombre_bodega"] = !empty($bodegaActiva["nombre"]) ? $bodegaActiva["nombre"] : "Principal";
+						$_SESSION["id_bodega"] = $idBodegaActiva;
 					}
 					echo e($_SESSION["nombre_bodega"]);
 				?>

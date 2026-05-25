@@ -28,6 +28,7 @@
             <thead>
               <tr>
                 <th>Categoría</th>
+                <th>Prefijo</th>
                 <th>Productos</th>
                 <th style="width: 100px">Acciones</th>
               </tr>
@@ -88,6 +89,21 @@ MODAL AGREGAR CATEGORIA
 
                 <input type="text" class="form-control input-lg" name="nuevaCategoria" id="nuevaCategoria"
                   placeholder="Ingresar categoría" required>
+
+              </div>
+
+            </div>
+
+            <!-- entrada para prefijo -->
+
+            <div class="form-group">
+
+              <div class="input-group">
+
+                <span class="input-group-addon"><i class="fa fa-code"></i></span>
+
+                <input type="text" class="form-control input-lg" name="nuevoPrefijo" id="nuevoPrefijo"
+                  placeholder="Ingresar prefijo">
 
               </div>
 
@@ -173,6 +189,21 @@ MODAL EDITAR CATEGORIA
                 <input type="text" class="form-control input-lg" name="editarCategoria" id="editarCategoria" required>
 
                 <input type="hidden" name="idCategoria" id="idCategoria" required>
+
+              </div>
+
+            </div>
+
+            <!-- entrada para prefijo -->
+
+            <div class="form-group">
+
+              <div class="input-group">
+
+                <span class="input-group-addon"><i class="fa fa-code"></i></span>
+
+                <input type="text" class="form-control input-lg" name="editarPrefijo" id="editarPrefijo"
+                  placeholder="Editar prefijo">
 
               </div>
 

@@ -22,6 +22,7 @@ $(".tablas").on("click", ".btnEditarCategoria", function(){
 		success: function(respuesta){
 
 			$("#editarCategoria").val(respuesta["categoria"]);
+			$("#editarPrefijo").val(respuesta["prefijo"]);
 			$("#idCategoria").val(respuesta["id"]);
 
 		}
@@ -136,6 +137,78 @@ $("#nuevaCategoria").change(function(){
 })
 
 /*=============================================
+VALIDAR NO REPETIR PREFIJO (CREAR)
+=============================================*/
+$(document).on("change", "#nuevoPrefijo", function(){
+
+	$(".alert").remove();
+
+	var prefijo = $(this).val();
+
+	if (prefijo === "") return;
+
+	var datos = new FormData();
+	datos.append("validarPrefijo", prefijo);
+
+	$.ajax({
+		url:"ajax/categorias.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function(respuesta){
+
+			if(respuesta){
+
+				$("#nuevoPrefijo").parent().after('<div class="alert alert-warning">Este prefijo ya está siendo usado por otra categoría!</div>');
+
+				$("#nuevoPrefijo").val("");
+			}
+
+		}
+	})
+})
+
+/*=============================================
+VALIDAR NO REPETIR PREFIJO (EDITAR)
+=============================================*/
+$(document).on("change", "#editarPrefijo", function(){
+
+	$(".alert").remove();
+
+	var prefijo = $(this).val();
+	var idCategoria = $("#idCategoria").val();
+
+	if (prefijo === "") return;
+
+	var datos = new FormData();
+	datos.append("validarPrefijo", prefijo);
+	datos.append("idCategoriaActual", idCategoria);
+
+	$.ajax({
+		url:"ajax/categorias.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function(respuesta){
+
+			if(respuesta){
+
+				$("#editarPrefijo").parent().after('<div class="alert alert-warning">Este prefijo ya está siendo usado por otra categoría!</div>');
+
+				$("#editarPrefijo").val("");
+			}
+
+		}
+	})
+})
+
+/*=============================================
 TABLA CATEGORIAS - SERVER-SIDE
 =============================================*/
 $(document).ready(function () {
@@ -154,6 +227,7 @@ $(document).ready(function () {
 					d.csrf_token = $('meta[name="csrf-token"]').attr('content');
 				}
 			},
+			"order": [[0, 'asc']],
 			"autoWidth": false,
 			"responsive": {
 				"details": {
@@ -182,8 +256,9 @@ $(document).ready(function () {
 			},
 			"columnDefs": [
 				{ "targets": 0, "responsivePriority": 1 }, // Categoría
-				{ "targets": 2, "responsivePriority": 2, "orderable": false }, // Acciones
-				{ "targets": 1, "responsivePriority": 3 } // Productos
+				{ "targets": 1, "responsivePriority": 4 }, // Prefijo
+				{ "targets": 2, "responsivePriority": 3 }, // Productos
+				{ "targets": 3, "responsivePriority": 2, "orderable": false } // Acciones
 			],
 			"language": {
 				"sProcessing": "Procesando...",

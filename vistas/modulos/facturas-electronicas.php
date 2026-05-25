@@ -63,12 +63,20 @@ if ($xml) {
                 <span class="hidden-xs"><b>Sucursal:</b></span>
                 <div class="input-group" style="width: 180px;">
                   <span class="input-group-addon"><i class="fa fa-building text-primary"></i></span>
-                  <select name="bodega" class="form-control select2 select-bodega">
-                    <option value="">Mostrar Todas</option>
+                  <select name="bodega" class="form-control select2 select-bodega"
+                    data-default="<?php echo !empty($_SESSION['id_bodega']) ? e($_SESSION['id_bodega']) : 'todas'; ?>">
                     <?php
+                    $bodegaSeleccionadaFE = '';
+                    if (isset($_GET['bodega']) && $_GET['bodega'] !== '') {
+                      $bodegaSeleccionadaFE = $_GET['bodega'];
+                    } elseif (!empty($_SESSION['id_bodega'])) {
+                      $bodegaSeleccionadaFE = $_SESSION['id_bodega'];
+                    }
+                    $selectedTodasFE = ($bodegaSeleccionadaFE === 'todas' || $bodegaSeleccionadaFE === '') ? 'selected' : '';
+                    echo '<option value="todas" ' . $selectedTodasFE . '>Mostrar Todas</option>';
                     $bodegas = ControladorBodegas::ctrMostrarBodegas(null, null);
                     foreach ($bodegas as $key => $valueBodega) {
-                      $selected = (isset($_GET['bodega']) && $_GET['bodega'] == $valueBodega["id"]) ? 'selected' : '';
+                      $selected = ($bodegaSeleccionadaFE == $valueBodega["id"]) ? 'selected' : '';
                       echo '<option value="' . e($valueBodega["id"]) . '" ' . $selected . '>' . e($valueBodega["nombre"]) . '</option>';
                     }
                     ?>
@@ -851,7 +859,7 @@ MODAL ENVIAR EMAIL
               d.fechaFinal = feFilterFechaFinal;
               d.clienteId = $('#filtroClienteFacturas').val() || '';
               d.usuarioId = $('#filtroUsuarioFacturas').val() || '';
-              d.bodegaId = $('.select-bodega').val() || '';
+              d.bodegaId = $('.select-bodega').length ? ($('.select-bodega').val() || 'todas') : '';
             }
           },
           "initComplete": function (settings, json) {
@@ -901,7 +909,8 @@ MODAL ENVIAR EMAIL
         $('#btnLimpiarFacturas').on('click', function () {
           $('#filtroClienteFacturas').val('').trigger('change');
           $('#filtroUsuarioFacturas').val('').trigger('change');
-          $('.select-bodega').val('').trigger('change.select2');
+          var defaultBodega = $('.select-bodega').data('default') || 'todas';
+          $('.select-bodega').val(defaultBodega).trigger('change.select2');
           feFilterFechaInicial = '';
           feFilterFechaFinal = '';
           $('#daterange-btn-factus span').html('<i class="fa fa-calendar"></i> Rango de fecha');

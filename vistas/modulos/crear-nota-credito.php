@@ -19,6 +19,25 @@ if (isset($_GET["idVenta"])) {
     $venta = ControladorVentas::ctrMostrarVentas("id", $idVenta);
 
     if ($venta) {
+        // Validación de Bodega para No-Administradores
+        $esAdmin = (isset($_SESSION["perfil"]) && stripos($_SESSION["perfil"], "Admin") !== false);
+        $idBodegaSession = !empty($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
+        if (!$esAdmin && $venta["id_bodega"] != $idBodegaSession) {
+            echo '
+            <script>
+              swal({
+                type: "error",
+                title: "Acceso no autorizado",
+                text: "Esta venta no pertenece a su sucursal/bodega.",
+                showConfirmButton: true,
+                confirmButtonText: "Volver"
+              }).then(function (result) {
+                window.location = "notas-credito";
+              });
+            </script>';
+            return;
+        }
+
         $cliente = ControladorClientes::ctrMostrarClientes("id", $venta["id_cliente"]);
         $vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $venta["id_vendedor"]);
         // Decodificar productos
@@ -135,6 +154,17 @@ endif; ?>
 
                         <input type="hidden" name="idUsuarioSesion" id="idUsuarioSesion" value="<?php echo $_SESSION['id'] ?? ''; ?>">
 
+                        <?php
+                        // Determinar bodega activa para esta NC:
+                        // - Si el usuario tiene bodega en sesión (no-admin o admin asignado a una bodega) → usar esa
+                        // - Si el admin no tiene bodega asignada (NULL) y hay una factura seleccionada → usar la de la factura
+                        // - Fallback final: bodega 1
+                        $idBodegaFormNC = !empty($_SESSION['id_bodega'])
+                            ? intval($_SESSION['id_bodega'])
+                            : (!empty($venta['id_bodega']) ? intval($venta['id_bodega']) : 1);
+                        ?>
+                        <input type="hidden" name="idBodegaSesion" id="idBodegaSesion" value="<?php echo $idBodegaFormNC; ?>">
+
                         <div class="box-body">
 
                             <?php if (!$idVenta || !$venta): ?>
@@ -154,12 +184,19 @@ endif; ?>
                                                 <?php
     // Cargar todas las facturas en estado "enviada" o "aceptada"
     $ventas = ControladorVentas::ctrMostrarVentas(null, null);
+    $idBodegaSession = !empty($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : null;
+
     foreach ($ventas as $key => $value) {
         if ($value["estado_dian"] == "enviada" || $value["estado_dian"] == "aceptada") {
+            // Filtrar por Bodega activa del usuario
+            if ($idBodegaSession !== null && $value["id_bodega"] != $idBodegaSession) {
+                continue;
+            }
+
             $clienteVenta = ControladorClientes::ctrMostrarClientes("id", $value["id_cliente"]);
             $nombreCliente = $clienteVenta ? $clienteVenta["nombre"] : "Cliente Desconocido";
 
-            echo '<option value="' . $value["id"] . '">' . $value["numero_factura"] . ' - ' . $nombreCliente . ' - $' . number_format($value["total"], 2) . '</option>';
+            echo '<option value="' . $value["id"] . '">' . $value["numero_factura"] . ' - ' . $nombreCliente . ' - $' . number_format((float)($value["total"] ?? 0), 2) . '</option>';
         }
     }
 ?>
@@ -324,59 +361,141 @@ else: ?>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php
-    foreach ($productos as $key => $prod) {
-        // Buscamos info extra del producto si es necesario (ej. impuestos)
-        // Por ahora usamos los datos guardados en la venta para integridad
-        $totalFila = $prod["precio"] * $prod["cantidad"]; // Precio incluye impuesto según lógica pos
+                                                     <?php
+      $productosProcesados = [];
+      $totalConocido = 0;
+      $itemsDesconocidos = [];
+      $cantidadDesconocida = 0;
 
-        // Recuperar código si falta
-        $codigoProducto = $prod["codigo"] ?? "";
-        if (empty($codigoProducto)) {
-            $infoP = ModeloProductos::mdlMostrarProductos("productos", "id", $prod["id"], "id");
-            $codigoProducto = $infoP["codigo"] ?? "";
-        }
-?>
-                                            <tr>
-                                                <td class="text-center">
-                                                    <input type="checkbox" class="checkProducto" name="productosSeleccionados[]"
-                                                        value="<?php echo $key; ?>" checked>
-                                                </td>
-                                                <td><?php echo $codigoProducto; ?></td>
-                                                <td><?php echo $prod["descripcion"]; ?></td>
-                                                <td>
-                                                    <input type="text" class="form-control input-sm"
-                                                        value="<?php echo $prod["cantidad"]; ?>" readonly>
-                                                </td>
-                                                <td>
-                                                    <input type="number" class="form-control input-sm cantidadDevolver"
-                                                        name="cantidad_<?php echo $key; ?>" min="1"
-                                                        max="<?php echo $prod["cantidad"]; ?>"
-                                                        value="<?php echo $prod["cantidad"]; ?>"
-                                                        data-precio="<?php echo $prod["precio"]; ?>"
-                                                        data-impuesto="<?php echo $prod["impuesto"]; ?>"
-                                                        data-key="<?php echo $key; ?>">
-                                                </td>
-                                                <td>$<?php echo number_format($prod["precio"], 2); ?></td>
-                                                <td class="subtotalFila">
-                                                    $<?php echo number_format($prod["total"], 2); ?></td>
+      // Paso 1: Cargar datos conocidos y buscar en la BD
+      foreach ($productos as $key => $prod) {
+          $infoP = ModeloProductos::mdlMostrarProductos("productos", "id", $prod["id"], "id");
+          
+          $precio = null;
+          if (isset($prod["precio"]) && floatval($prod["precio"]) > 0) {
+              $precio = floatval($prod["precio"]);
+          } else if ($infoP && isset($infoP["precio_venta"]) && floatval($infoP["precio_venta"]) > 0) {
+              $precio = floatval($infoP["precio_venta"]);
+          }
 
-                                                <!-- Inputs ocultos para enviar datos -->
-                                                <input type="hidden" name="idProducto_<?php echo $key; ?>"
-                                                    value="<?php echo $prod["id"]; ?>">
-                                                <input type="hidden" name="codigo_<?php echo $key; ?>"
-                                                    value="<?php echo $codigoProducto; ?>">
-                                                <input type="hidden" name="descripcion_<?php echo $key; ?>"
-                                                    value="<?php echo $prod["descripcion"]; ?>">
-                                                <input type="hidden" name="precio_<?php echo $key; ?>"
-                                                    value="<?php echo $prod["precio"]; ?>">
-                                                <input type="hidden" name="totalOriginal_<?php echo $key; ?>"
-                                                    value="<?php echo $prod["total"]; ?>">
-                                            </tr>
-                                            <?php
-    }
+          $cantidad = isset($prod["cantidad"]) ? floatval($prod["cantidad"]) : 1;
+          
+          $total = null;
+          if (isset($prod["total"]) && floatval($prod["total"]) > 0) {
+              $total = floatval($prod["total"]);
+          }
+
+          if ($precio !== null && $total === null) {
+              $total = $precio * $cantidad;
+          }
+
+          if ($total !== null && $precio === null) {
+              $precio = $total / $cantidad;
+          }
+
+          $impuestoPorcentaje = 0;
+          if (isset($prod["impuesto"]) && $prod["impuesto"] !== "") {
+              $impuestoPorcentaje = floatval($prod["impuesto"]);
+          } else if ($infoP && isset($infoP["tasa_impuesto"])) {
+              $impuestoPorcentaje = floatval($infoP["tasa_impuesto"]);
+          }
+
+          $codigoProducto = $prod["codigo"] ?? ($infoP["codigo"] ?? "");
+          $descripcionProducto = $prod["descripcion"] ?? ($infoP["descripcion"] ?? "Producto");
+
+          $productosProcesados[$key] = [
+              "id" => $prod["id"],
+              "descripcion" => $descripcionProducto,
+              "cantidad" => $cantidad,
+              "precio" => $precio,
+              "total" => $total,
+              "impuesto" => $impuestoPorcentaje,
+              "codigo" => $codigoProducto
+          ];
+
+          if ($total !== null) {
+              $totalConocido += $total;
+          } else {
+              $itemsDesconocidos[] = $key;
+              $cantidadDesconocida += $cantidad;
+          }
+      }
+
+      // Paso 2: Distribuir el total de la venta restante (de la factura original)
+      $totalFactura = isset($venta["total"]) ? floatval($venta["total"]) : 0;
+      $totalRestante = max(0, $totalFactura - $totalConocido);
+
+      if (count($itemsDesconocidos) > 0 && $totalRestante > 0) {
+          if ($cantidadDesconocida > 0) {
+              $precioPorUnidad = $totalRestante / $cantidadDesconocida;
+              foreach ($itemsDesconocidos as $key) {
+                  $cantidad = $productosProcesados[$key]["cantidad"];
+                  $productosProcesados[$key]["precio"] = $precioPorUnidad;
+                  $productosProcesados[$key]["total"] = $precioPorUnidad * $cantidad;
+              }
+          } else {
+              $montoPorItem = $totalRestante / count($itemsDesconocidos);
+              foreach ($itemsDesconocidos as $key) {
+                  $productosProcesados[$key]["precio"] = $montoPorItem;
+                  $productosProcesados[$key]["total"] = $montoPorItem;
+              }
+          }
+      } else if (count($itemsDesconocidos) > 0) {
+          foreach ($itemsDesconocidos as $key) {
+              $productosProcesados[$key]["precio"] = 0;
+              $productosProcesados[$key]["total"] = 0;
+          }
+      }
+
+      // Renderizar los productos
+      foreach ($productosProcesados as $key => $prodProcesado) {
+          $precioUnitario = $prodProcesado["precio"];
+          $cantidad = $prodProcesado["cantidad"];
+          $totalFila = $prodProcesado["total"];
+          $impuestoPorcentaje = $prodProcesado["impuesto"];
+          $codigoProducto = $prodProcesado["codigo"];
+          $descripcionProducto = $prodProcesado["descripcion"];
+          $idProducto = $prodProcesado["id"];
 ?>
-                                    </tbody>
+                                             <tr>
+                                                 <td class="text-center">
+                                                     <input type="checkbox" class="checkProducto" name="productosSeleccionados[]"
+                                                         value="<?php echo $key; ?>" checked>
+                                                 </td>
+                                                 <td><?php echo $codigoProducto; ?></td>
+                                                 <td><?php echo $descripcionProducto; ?></td>
+                                                 <td>
+                                                     <input type="text" class="form-control input-sm"
+                                                         value="<?php echo $cantidad; ?>" readonly>
+                                                 </td>
+                                                 <td>
+                                                     <input type="number" class="form-control input-sm cantidadDevolver"
+                                                         name="cantidad_<?php echo $key; ?>" min="1"
+                                                         max="<?php echo $cantidad; ?>"
+                                                         value="<?php echo $cantidad; ?>"
+                                                         data-precio="<?php echo $precioUnitario; ?>"
+                                                         data-impuesto="<?php echo $impuestoPorcentaje; ?>"
+                                                         data-key="<?php echo $key; ?>">
+                                                 </td>
+                                                 <td>$<?php echo number_format($precioUnitario, 2); ?></td>
+                                                 <td class="subtotalFila">
+                                                     $<?php echo number_format($totalFila, 2); ?></td>
+
+                                                 <!-- Inputs ocultos para enviar datos -->
+                                                 <input type="hidden" name="idProducto_<?php echo $key; ?>"
+                                                     value="<?php echo $idProducto; ?>">
+                                                 <input type="hidden" name="codigo_<?php echo $key; ?>"
+                                                     value="<?php echo $codigoProducto; ?>">
+                                                 <input type="hidden" name="descripcion_<?php echo $key; ?>"
+                                                     value="<?php echo $descripcionProducto; ?>">
+                                                 <input type="hidden" name="precio_<?php echo $key; ?>"
+                                                     value="<?php echo $precioUnitario; ?>">
+                                                 <input type="hidden" name="totalOriginal_<?php echo $key; ?>"
+                                                     value="<?php echo $totalFila; ?>">
+                                             </tr>
+                                             <?php
+      }
+  ?>                                    </tbody>
                                 </table>
                             </div>
 

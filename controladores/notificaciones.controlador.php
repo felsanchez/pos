@@ -179,8 +179,9 @@ class ControladorNotificaciones
 
 
 		// Obtener actividades que vencen dentro del rango
-		// Usamos ctrMostrarActividadesConCliente para obtener también el nombre del usuario
-		$actividades = ModeloActividades::mdlMostrarActividadesConCliente("actividades", null, null);
+		// Filtrar por bodega activa para evitar notificaciones cruzadas entre sucursales
+		$idBodegaActiva = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
+		$actividades = ModeloActividades::mdlMostrarActividadesConCliente("actividades", null, null, $idBodegaActiva);
 
 		if (!$actividades) {
 			return;

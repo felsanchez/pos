@@ -16,21 +16,22 @@ $(document).ready(function () {
                 "type": "POST",
                 "data": function (d) {
                     d.csrf_token = $('meta[name="csrf-token"]').attr('content');
-                    d.idBodega = $("#selectBodegaNC").val();
+                    d.idBodega = $("#selectBodegaNC").length ? ($("#selectBodegaNC").val() || 'todas') : '';
                     d.fechaInicial = $("#fechaInicialNC").val();
                     d.fechaFinal = $("#fechaFinalNC").val();
                 }
             },
             "autoWidth": false,
-            "order": [[4, "desc"]],
+            "order": [[5, "desc"]],
             "columnDefs": [
                 { "targets": 0, "responsivePriority": 1, "className": "vertical-middle" }, // Código
                 { "targets": 1, "responsivePriority": 2, "className": "vertical-middle" }, // Factura Original
-                { "targets": 6, "responsivePriority": 3, "className": "text-center vertical-middle", "orderable": false }, // Acciones
+                { "targets": 7, "responsivePriority": 3, "className": "text-center vertical-middle", "orderable": false }, // Acciones
                 { "targets": 2, "responsivePriority": 4, "className": "vertical-middle" }, // Cliente
-                { "targets": 3, "responsivePriority": 5, "className": "vertical-middle" }, // Total
-                { "targets": 4, "responsivePriority": 6, "className": "vertical-middle" }, // Fecha
-                { "targets": 5, "responsivePriority": 7, "className": "vertical-middle text-center" } // Estado DIAN
+                { "targets": 3, "responsivePriority": 5, "className": "vertical-middle" }, // Vendedor
+                { "targets": 4, "responsivePriority": 6, "className": "vertical-middle" }, // Total
+                { "targets": 5, "responsivePriority": 7, "className": "vertical-middle" }, // Fecha
+                { "targets": 6, "responsivePriority": 8, "className": "vertical-middle text-center" } // Estado DIAN
             ],
             "responsive": {
                 "details": {
@@ -112,7 +113,8 @@ $(document).ready(function () {
         LIMPIAR FILTROS
         =============================================*/
         $(document).on("click", "#btnLimpiarFiltrosNC", function() {
-            $("#selectBodegaNC").val("").trigger("change");
+            var defaultBodega = $("#selectBodegaNC").data("default") || "todas";
+            $("#selectBodegaNC").val(defaultBodega).trigger("change.select2");
             $("#fechaInicialNC").val("");
             $("#fechaFinalNC").val("");
             $('#daterange-btn-nc span').html('<span><i class="fa fa-calendar"></i> Rango de fecha</span>');
@@ -290,6 +292,7 @@ $(document).ready(function () {
                 datos.append("observacion", observacion);
                 datos.append("listaProductos", JSON.stringify(listaProductos));
                 datos.append("idUsuario", $("#idUsuarioSesion").val());
+                datos.append("idBodegaSesion", $("#idBodegaSesion").val());
                 // csrf_token removido - manejado por csrf-helper.js
 
                 $.ajax({
@@ -453,6 +456,14 @@ $(document).ready(function () {
                             type: "error",
                             title: "¡No se puede eliminar!",
                             text: "La nota ya fue enviada a la DIAN.",
+                            showConfirmButton: true,
+                            confirmButtonText: "Cerrar"
+                        });
+                    } else if (respuesta == "error_permiso") {
+                        swal({
+                            type: "error",
+                            title: "¡No autorizado!",
+                            text: "Esta nota crédito no pertenece a su sucursal/bodega.",
                             showConfirmButton: true,
                             confirmButtonText: "Cerrar"
                         });

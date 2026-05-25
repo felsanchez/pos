@@ -1431,12 +1431,12 @@ class ModeloFactus
 				id_venta_original, numero_factura_original, tipo_nota, motivo,
 				productos, monto_total, estado_dian, numero_nota_credito,
 				cufe_nc, qr_data_nc, xml_dian_nc, pdf_dian_nc, mensaje_dian,
-				fecha_envio_dian, id_usuario, id_cliente, observacion, metodo_pago
+				fecha_envio_dian, id_usuario, id_cliente, id_bodega, observacion, metodo_pago
 			) VALUES (
 				:id_venta, :num_factura, :tipo, :motivo,
 				:productos, :monto, :estado, :num_nc,
 				:cufe, :qr, :xml, :pdf, :mensaje,
-				:fecha_envio, :usuario, :id_cliente, :observacion, :metodo_pago
+				:fecha_envio, :usuario, :id_cliente, :id_bodega, :observacion, :metodo_pago
 			)"
         );
 
@@ -1456,6 +1456,7 @@ class ModeloFactus
         $stmt->bindParam(":fecha_envio", $datos["fecha_envio_dian"], PDO::PARAM_STR);
         $stmt->bindParam(":usuario", $datos["id_usuario"], PDO::PARAM_INT);
         $stmt->bindParam(":id_cliente", $datos["id_cliente"], PDO::PARAM_INT);
+        $stmt->bindParam(":id_bodega", $datos["id_bodega"], PDO::PARAM_INT);
         $stmt->bindParam(":observacion", $datos["observacion"], PDO::PARAM_STR);
         $stmt->bindParam(":metodo_pago", $datos["metodo_pago"], PDO::PARAM_STR);
 
@@ -1841,9 +1842,14 @@ class ModeloFactus
     /*=============================================
     MOSTRAR ÚLTIMO DOCUMENTO SOPORTE
     =============================================*/
-    static public function mdlMostrarUltimoDocumentoSoporte()
+    static public function mdlMostrarUltimoDocumentoSoporte($idBodega = null)
     {
-        $stmt = Conexion::conectar()->prepare("SELECT * FROM documentos_soporte ORDER BY id DESC LIMIT 1");
+        if ($idBodega !== null) {
+            $stmt = Conexion::conectar()->prepare("SELECT * FROM documentos_soporte WHERE id_bodega = :id_bodega ORDER BY id DESC LIMIT 1");
+            $stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
+        } else {
+            $stmt = Conexion::conectar()->prepare("SELECT * FROM documentos_soporte ORDER BY id DESC LIMIT 1");
+        }
         $stmt->execute();
         return $stmt->fetch();
     }
@@ -2031,10 +2037,12 @@ class ModeloFactus
         $stmt = Conexion::conectar()->prepare(
             "SELECT nc.*,
                     c.nombre AS cliente_nombre,
-                    c.email  AS cliente_email
+                    c.email  AS cliente_email,
+                    u.nombre AS nombre_vendedor
              FROM notas_credito nc
              LEFT JOIN clientes c ON nc.id_cliente = c.id
              LEFT JOIN ventas v ON nc.id_venta_original = v.id
+             LEFT JOIN usuarios u ON nc.id_usuario = u.id
              $where $order $limit"
         );
         $stmt->execute();
@@ -2050,6 +2058,7 @@ class ModeloFactus
             "SELECT COUNT(*) FROM notas_credito nc
              LEFT JOIN clientes c ON nc.id_cliente = c.id
              LEFT JOIN ventas v ON nc.id_venta_original = v.id
+             LEFT JOIN usuarios u ON nc.id_usuario = u.id
              $where"
         );
         $stmt->execute();
@@ -2169,7 +2178,7 @@ class ModeloFactus
         }
 
         $filtroBodegaVentas = ($idBodega != "" && $idBodega != "todos") ? " AND v.id_bodega = :ib1 " : "";
-        $filtroBodegaNC     = ($idBodega != "" && $idBodega != "todos") ? " AND v.id_bodega = :ib2 " : "";
+        $filtroBodegaNC     = ($idBodega != "" && $idBodega != "todos") ? " AND nc.id_bodega = :ib2 " : "";
         $filtroBodegaDS     = ($idBodega != "" && $idBodega != "todos") ? " AND ds.id_bodega = :ib3 " : "";
         $filtroBodegaNA     = ($idBodega != "" && $idBodega != "todos") ? " AND ds.id_bodega = :ib4 " : "";
 
@@ -2271,7 +2280,7 @@ class ModeloFactus
                                   FROM notas_credito nc
                                   LEFT JOIN ventas v ON nc.id_venta_original = v.id
                                   WHERE nc.estado_dian IN ('aceptada', 'enviada') 
-                                  AND IFNULL(nc.fecha_envio_dian, nc.fecha_creacion) BETWEEN :s1 AND :e1 " . str_replace("id_cliente", "nc.id_cliente", $filtroCliente) . str_replace("id_usuario", "nc.id_usuario", $filtroUsuario) . str_replace("id_bodega", "v.id_bodega", $filtroBodega) . "
+                                  AND IFNULL(nc.fecha_envio_dian, nc.fecha_creacion) BETWEEN :s1 AND :e1 " . str_replace("id_cliente", "nc.id_cliente", $filtroCliente) . str_replace("id_usuario", "nc.id_usuario", $filtroUsuario) . str_replace("id_bodega", "nc.id_bodega", $filtroBodega) . "
                                   GROUP BY DATE(IFNULL(fecha_envio_dian, fecha_creacion)) 
                                   ORDER BY DATE(IFNULL(fecha_envio_dian, fecha_creacion)) ASC");
         } else if ($categoria == "na") {
@@ -2349,7 +2358,7 @@ class ModeloFactus
         }
 
         $filtroBodegaVentas = ($idBodega != "" && $idBodega != "todos") ? " AND v.id_bodega = :ib1 " : "";
-        $filtroBodegaNC     = ($idBodega != "" && $idBodega != "todos") ? " AND v.id_bodega = :ib2 " : "";
+        $filtroBodegaNC     = ($idBodega != "" && $idBodega != "todos") ? " AND nc.id_bodega = :ib2 " : "";
         $filtroBodegaDS     = ($idBodega != "" && $idBodega != "todos") ? " AND ds.id_bodega = :ib3 " : "";
         $filtroBodegaNA     = ($idBodega != "" && $idBodega != "todos") ? " AND ds.id_bodega = :ib4 " : "";
 
@@ -2461,11 +2470,12 @@ class ModeloFactus
     =============================================*/
     static public function mdlMostrarDocumentosSoporteServerSide($where, $order, $limit)
     {
-        $sql = "SELECT ds.*, p.nombre as nombre_proveedor,
+        $sql = "SELECT ds.*, p.nombre as nombre_proveedor, u.nombre as nombre_vendedor,
                 (SELECT 1 FROM notas_ajuste_ds WHERE id_ds_original = ds.id LIMIT 1) as tiene_nota,
                 (SELECT COUNT(*) FROM documentos_soporte WHERE id < ds.id AND (numero_ds IS NULL OR numero_ds = '')) as rank_borrador
                 FROM documentos_soporte ds
                 LEFT JOIN proveedores p ON ds.id_proveedor = p.id
+                LEFT JOIN usuarios u ON ds.id_usuario = u.id
                 $where $order $limit";
         
         $stmt = Conexion::conectar()->prepare($sql);
@@ -2481,6 +2491,7 @@ class ModeloFactus
         $sql = "SELECT COUNT(*) as total 
                 FROM documentos_soporte ds
                 LEFT JOIN proveedores p ON ds.id_proveedor = p.id
+                LEFT JOIN usuarios u ON ds.id_usuario = u.id
                 $where";
         
         $stmt = Conexion::conectar()->prepare($sql);
@@ -2494,10 +2505,11 @@ class ModeloFactus
     =============================================*/
     static public function mdlMostrarNotasAjusteDSServerSide($where, $order, $limit)
     {
-        $sql = "SELECT na.*, p.nombre as nombre_proveedor, p.correo as correo_proveedor,
+        $sql = "SELECT na.*, p.nombre as nombre_proveedor, p.correo as correo_proveedor, u.nombre as nombre_vendedor,
                 (SELECT COUNT(*) FROM notas_ajuste_ds WHERE id < na.id AND (numero_nota_ajuste IS NULL OR numero_nota_ajuste = '')) as rank_borrador
                 FROM notas_ajuste_ds na
                 LEFT JOIN proveedores p ON na.id_proveedor = p.id
+                LEFT JOIN usuarios u ON na.id_usuario = u.id
                 LEFT JOIN documentos_soporte ds ON na.id_ds_original = ds.id
                 $where $order $limit";
         
@@ -2514,6 +2526,7 @@ class ModeloFactus
         $sql = "SELECT COUNT(*) as total 
                 FROM notas_ajuste_ds na
                 LEFT JOIN proveedores p ON na.id_proveedor = p.id
+                LEFT JOIN usuarios u ON na.id_usuario = u.id
                 LEFT JOIN documentos_soporte ds ON na.id_ds_original = ds.id
                 $where";
         

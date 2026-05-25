@@ -10,9 +10,14 @@ class ModeloCategorias{
 
 	static public function mdlIngresarCategoria($tabla, $datos){
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(categoria) VALUES (:categoria)");
-			
-		$stmt -> bindParam(":categoria", $datos, PDO::PARAM_STR);
+		if (is_array($datos)) {
+			$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(categoria, prefijo) VALUES (:categoria, :prefijo)");
+			$stmt -> bindParam(":categoria", $datos["categoria"], PDO::PARAM_STR);
+			$stmt -> bindParam(":prefijo", $datos["prefijo"], PDO::PARAM_STR);
+		} else {
+			$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(categoria) VALUES (:categoria)");
+			$stmt -> bindParam(":categoria", $datos, PDO::PARAM_STR);
+		}
 
 		if ($stmt->execute()) {
 
@@ -88,9 +93,10 @@ class ModeloCategorias{
 
 	static public function mdlEditarCategoria($tabla, $datos){
 
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET categoria = :categoria WHERE id = :id");
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET categoria = :categoria, prefijo = :prefijo WHERE id = :id");
 			
 		$stmt -> bindParam(":categoria", $datos["categoria"], PDO::PARAM_STR);
+		$stmt -> bindParam(":prefijo", $datos["prefijo"], PDO::PARAM_STR);
 		$stmt -> bindParam(":id", $datos["id"], PDO::PARAM_STR);
 
 		if ($stmt->execute()) {

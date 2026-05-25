@@ -95,12 +95,15 @@ $(document).ready(function () {
 			}
 	});
 
-	// Inicializar Select2 al abrir los modales
+	// Inicializar Select2 al abrir los modales (solo para el modal activo)
 	$('#modalAgregarProveedor, #modalEditarProveedor').on('shown.bs.modal', function () {
-		if ($(".select2").length > 0) {
-			$(".select2").select2({
-				placeholder: "Seleccionar opción",
-				allowClear: true
+		var modal = $(this);
+		if (typeof $.fn.select2 !== 'undefined') {
+			modal.find(".select2").select2({
+				placeholder: "Seleccionar municipio",
+				allowClear: true,
+				width: '100%',
+				dropdownParent: modal
 			});
 		}
 	});

@@ -86,6 +86,16 @@
         </select>
       </div>
 
+      <!-- Filtro por tipo de ingresos -->
+      <div class="filtro-grupo-fin">
+        <label for="filtro-tipo-ingreso">Tipo de Ingreso:</label>
+        <select id="filtro-tipo-ingreso" name="tipo_ingreso" class="form-control">
+          <option value="todas">Mostrar todas (Ventas + FE)</option>
+          <option value="ventas">Solo Ventas POS</option>
+          <option value="fe">Solo Facturas Electrónicas</option>
+        </select>
+      </div>
+
       <!-- Botón de filtrar -->
       <div class="filtro-grupo-fin">
         <button type="submit" class="btn btn-primary w-100 btn-filtrar-fin">Aplicar filtros</button>
@@ -282,9 +292,11 @@
     const fechaInicio = document.getElementById('fecha-desde-fin').value;
     const fechaFin = document.getElementById('fecha-hasta-fin').value;
     const idCategoria = document.getElementById('filtro-categoria-gasto').value;
+    const tipoIngreso = document.getElementById('filtro-tipo-ingreso').value;
 
     const formData = new FormData();
     formData.append('tipo', tipo);
+    formData.append('tipo_ingreso', tipoIngreso);
 
     if (tipo === 'personalizado') {
       if (!fechaInicio || !fechaFin) {

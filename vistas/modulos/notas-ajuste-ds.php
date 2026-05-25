@@ -40,13 +40,20 @@ if ($_SESSION["perfil"] == "Especial") {
                             <div class="input-group" style="width: 200px;">
                                 <span class="input-group-addon"><i class="fa fa-building text-primary"></i></span>
                                 <select class="form-control select2" id="sucursal_na" name="sucursal_na">
-                                    <option value="">Todas las Sucursales</option>
                                     <?php
+                                    $bodegaSeleccionada = '';
+                                    if (!empty($_SESSION['id_bodega'])) {
+                                        $bodegaSeleccionada = $_SESSION['id_bodega'];
+                                    }
+                                    $selectedTodas = ($bodegaSeleccionada === 'todas' || $bodegaSeleccionada === '') ? 'selected' : '';
+                                    echo '<option value="" ' . $selectedTodas . '>Todas las Sucursales</option>';
+
                                     $item = null;
                                     $valor = null;
                                     $bodegas = ControladorBodegas::ctrMostrarBodegas($item, $valor);
                                     foreach ($bodegas as $key => $value) {
-                                        echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                                        $selected = ($bodegaSeleccionada == $value["id"]) ? 'selected' : '';
+                                        echo '<option value="' . $value["id"] . '" ' . $selected . '>' . $value["nombre"] . '</option>';
                                     }
                                     ?>
                                 </select>
@@ -89,6 +96,7 @@ if ($_SESSION["perfil"] == "Especial") {
                                 <th>Código Nota</th>
                                 <th>Doc. Original</th>
                                 <th>Proveedor</th>
+                                <th>Vendedor</th>
                                 <th>Total</th>
                                 <th>Fecha</th>
                                 <th>Estado DIAN</th>
@@ -172,7 +180,7 @@ MODAL ENVIAR EMAIL NOTA AJUSTE
                         }
                     },
                     "autoWidth": false,
-                    "order": [[4, "desc"]], // Fecha
+                    "order": [[5, "desc"]], // Fecha
                     "responsive": {
                         "details": {
                             "type": "inline",
@@ -199,12 +207,13 @@ MODAL ENVIAR EMAIL NOTA AJUSTE
                     },
                     "columnDefs": [
                         { "targets": 0, "responsivePriority": 1 }, // Código
-                        { "targets": 6, "responsivePriority": 2, "orderable": false }, // Acciones
+                        { "targets": 7, "responsivePriority": 2, "orderable": false }, // Acciones
                         { "targets": 1, "responsivePriority": 3 }, // Doc Original
                         { "targets": 2, "responsivePriority": 4 }, // Proveedor
-                        { "targets": 3, "responsivePriority": 5 }, // Total
-                        { "targets": 4, "responsivePriority": 6 }, // Fecha
-                        { "targets": 5, "responsivePriority": 7 }  // Estado DIAN
+                        { "targets": 3, "responsivePriority": 5 }, // Vendedor
+                        { "targets": 4, "responsivePriority": 6 }, // Total
+                        { "targets": 5, "responsivePriority": 7 }, // Fecha
+                        { "targets": 6, "responsivePriority": 8 }  // Estado DIAN
                     ],
                     "language": {
                         "sProcessing": "Procesando...",

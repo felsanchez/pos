@@ -43,12 +43,22 @@ if ($_SESSION["perfil"] == "Especial") {
                             <span class="hidden-xs"><b>Sucursal:</b></span>
                             <div class="input-group" style="width: 180px;">
                                 <span class="input-group-addon"><i class="fa fa-building text-primary"></i></span>
-                                <select id="selectBodegaNC" class="form-control select2">
-                                    <option value="">Mostrar Todas</option>
+                                <select id="selectBodegaNC" class="form-control select2"
+                                    data-default="<?php echo !empty($_SESSION['id_bodega']) ? e($_SESSION['id_bodega']) : 'todas'; ?>">
                                     <?php
+                                    $bodegaSeleccionadaNC = '';
+                                    if (isset($_GET['bodega']) && $_GET['bodega'] !== '') {
+                                        $bodegaSeleccionadaNC = $_GET['bodega'];
+                                    } elseif (!empty($_SESSION['id_bodega'])) {
+                                        $bodegaSeleccionadaNC = $_SESSION['id_bodega'];
+                                    }
+                                    $selectedTodasNC = ($bodegaSeleccionadaNC === 'todas' || $bodegaSeleccionadaNC === '') ? 'selected' : '';
+                                    echo '<option value="todas" ' . $selectedTodasNC . '>Mostrar Todas</option>';
+
                                     $bodegas = ControladorBodegas::ctrMostrarBodegas(null, null);
                                     foreach ($bodegas as $key => $valueBodega) {
-                                        echo '<option value="' . e($valueBodega["id"]) . '">' . e($valueBodega["nombre"]) . '</option>';
+                                        $selected = ($bodegaSeleccionadaNC == $valueBodega["id"]) ? 'selected' : '';
+                                        echo '<option value="' . e($valueBodega["id"]) . '" ' . $selected . '>' . e($valueBodega["nombre"]) . '</option>';
                                     }
                                     ?>
                                 </select>
@@ -100,6 +110,7 @@ if ($_SESSION["perfil"] == "Especial") {
                                 <th>Código Nota</th>
                                 <th>Factura Original</th>
                                 <th>Cliente</th>
+                                <th>Vendedor</th>
                                 <th>Total</th>
                                 <th>Fecha</th>
                                 <th>Estado DIAN</th>

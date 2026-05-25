@@ -392,23 +392,83 @@ SISTEMA DE DISEÑO ESTÁNDAR - POS PREMIUM
         padding: 0 !important;
     }
 
-    /* Productos - diseño vertical en móvil */
-    .nuevoProducto .row.col-xs-10 {
+    /* Productos - diseño de tarjetas (cards) en móvil */
+    .nuevoProducto .row {
+        background: #fdfdfd;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin: 0 0 12px 0 !important;
+        padding: 12px !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
         width: 100% !important;
-        margin: 0;
-        padding: 5px 15px;
     }
 
-    .nuevoProducto .row .col-xs-7,
-    .nuevoProducto .row .col-xs-2,
-    .nuevoProducto .row .col-xs-3 {
+    /* Columna de descripción (Toma todo el ancho superior) */
+    .nuevoProducto .row > div:nth-child(1) {
         width: 100% !important;
-        padding: 0;
-        margin-bottom: 10px;
+        padding: 0 !important;
+        margin-bottom: 8px;
     }
 
-    .nuevoProducto .row .col-xs-7 {
-        margin-bottom: 5px;
+    /* Columnas inferiores (Impuesto, Cantidad, Precio) - 3 columnas de 33.3% para Ventas y Documento Soporte */
+    .formularioVenta .nuevoProducto .row > div:nth-child(2),
+    .formularioVenta .nuevoProducto .row > div:nth-child(3),
+    .formularioVenta .nuevoProducto .row > div:nth-child(4),
+    .formularioDocumentoSoporte .nuevoProducto .row > div:nth-child(2),
+    .formularioDocumentoSoporte .nuevoProducto .row > div:nth-child(3),
+    .formularioDocumentoSoporte .nuevoProducto .row > div:nth-child(4) {
+        width: 33.333% !important;
+        padding: 0 4px !important;
+        margin-bottom: 0 !important;
+        box-sizing: border-box;
+    }
+
+    /* Etiquetas superiores para las 3 columnas inferiores de Ventas y Documento Soporte */
+    .formularioVenta .nuevoProducto .row > div:nth-child(2)::before,
+    .formularioDocumentoSoporte .nuevoProducto .row > div:nth-child(2)::before {
+        content: "Impuesto";
+        display: block;
+        font-size: 10px;
+        color: #7f8c8d;
+        font-weight: bold;
+        margin-bottom: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .formularioVenta .nuevoProducto .row > div:nth-child(3)::before,
+    .formularioDocumentoSoporte .nuevoProducto .row > div:nth-child(3)::before {
+        content: "Cant.";
+        display: block;
+        font-size: 10px;
+        color: #7f8c8d;
+        font-weight: bold;
+        margin-bottom: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .formularioVenta .nuevoProducto .row > div:nth-child(4)::before,
+    .formularioDocumentoSoporte .nuevoProducto .row > div:nth-child(4)::before {
+        content: "Total";
+        display: block;
+        font-size: 10px;
+        color: #7f8c8d;
+        font-weight: bold;
+        margin-bottom: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Inputs de menor tamaño en móvil */
+    .nuevoProducto .row input {
+        height: 32px !important;
+        padding: 4px 6px !important;
+        font-size: 12px !important;
+        border-radius: 4px !important;
     }
 
     /* Descuento - ancho completo */

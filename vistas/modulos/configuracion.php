@@ -597,6 +597,25 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                   <div class="callout callout-success" style="margin-top: 15px;">
                     <h4><i class="fa fa-key"></i> Autenticación Rápida con Factus</h4>
                     <p>Obtén nuevos tokens de acceso usando las credenciales guardadas actualmente.</p>
+                    <style>
+                      #btnAutenticarConfig {
+                        background-color: #10b981 !important;
+                        border-color: #059669 !important;
+                        font-weight: bold;
+                        padding: 10px 20px;
+                        font-size: 16px;
+                        border-radius: 4px;
+                        transition: background-color 0.2s ease, transform 0.1s ease;
+                      }
+                      #btnAutenticarConfig:hover, #btnAutenticarConfig:focus, #btnAutenticarConfig:active {
+                        background-color: #059669 !important;
+                        border-color: #047857 !important;
+                        color: #fff !important;
+                      }
+                      #btnAutenticarConfig:active {
+                        transform: scale(0.98);
+                      }
+                    </style>
                     <button type="button" class="btn btn-success" id="btnAutenticarConfig">
                       <i class="fa fa-key"></i> Autenticar y Obtener Tokens
                     </button>

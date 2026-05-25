@@ -45,7 +45,8 @@ class ControladorActividades{
 					           "fecha" => $_POST["nuevaFecha"],
 							   "estado" => $_POST["nuevoEstado"],
 							   "id_cliente" => $idCliente,
-							   "observacion" => $_POST["nuevaObservacion"]);
+							   "observacion" => $_POST["nuevaObservacion"],
+							   "id_bodega" => isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1);
 
 				$respuesta = ModeloActividades::mdlIngresarActividad($tabla, $datos);
 
@@ -125,6 +126,10 @@ class ControladorActividades{
 
 		$where = " WHERE 1=1 ";
 
+		// Filtro por bodega activa
+		$idBodegaActiva = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
+		$where .= " AND a.id_bodega = $idBodegaActiva ";
+
 		// Búsqueda global (DataTables)
 		if (!empty($params['search']['value'])) {
 			$searchValue = $params['search']['value'];
@@ -160,7 +165,7 @@ class ControladorActividades{
 
 		// Obtener datos
 		$actividades = ModeloActividades::mdlMostrarActividadesServerSide($tabla, $where, $order, $limit);
-		$totalData = ModeloActividades::mdlGetTotalActividades($tabla, " WHERE 1=1 ");
+		$totalData = ModeloActividades::mdlGetTotalActividades($tabla, " WHERE 1=1 AND a.id_bodega = $idBodegaActiva ");
 		$totalFiltered = ModeloActividades::mdlGetTotalActividades($tabla, $where);
 
 		$data = array();

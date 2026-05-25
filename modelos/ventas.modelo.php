@@ -381,7 +381,7 @@ class ModeloVentas
 													LEFT JOIN clientes c ON v.id_cliente = c.id
 													LEFT JOIN usuarios u ON v.id_vendedor = u.id
 													WHERE v.fecha like '%$fechaInicial%' AND v.estado = :estado
-													AND (v.numero_factura != '' OR v.resolucion_id IS NOT NULL)
+													AND (v.numero_factura != '' OR (v.resolucion_id IS NOT NULL AND v.resolucion_id != 0))
 													ORDER BY v.id DESC");
 
 			$stmt->bindParam(":estado", $estado, PDO::PARAM_STR);
@@ -590,7 +590,7 @@ class ModeloVentas
 													LEFT JOIN clientes c ON v.id_cliente = c.id
 													LEFT JOIN usuarios u ON v.id_vendedor = u.id
 													WHERE v.estado = :estado 
-													AND (v.numero_factura != '' OR v.resolucion_id IS NOT NULL)
+													AND (v.numero_factura != '' OR (v.resolucion_id IS NOT NULL AND v.resolucion_id != 0))
 													ORDER BY v.id DESC");
 
 			$stmt->bindParam(":estado", $estado, PDO::PARAM_STR);
@@ -610,7 +610,7 @@ class ModeloVentas
 													LEFT JOIN clientes c ON v.id_cliente = c.id
 													LEFT JOIN usuarios u ON v.id_vendedor = u.id
 													WHERE v.fecha like '%$fechaInicial%' AND v.estado = :estado
-													AND (v.numero_factura != '' OR v.resolucion_id IS NOT NULL)
+													AND (v.numero_factura != '' OR (v.resolucion_id IS NOT NULL AND v.resolucion_id != 0))
 													ORDER BY v.id DESC");
 
 			$stmt->bindParam(":estado", $estado, PDO::PARAM_STR);
@@ -639,7 +639,7 @@ class ModeloVentas
 														LEFT JOIN clientes c ON v.id_cliente = c.id
 														LEFT JOIN usuarios u ON v.id_vendedor = u.id
 														WHERE v.fecha BETWEEN '$fechaInicial' AND '$fechaFinalMasUno' AND v.estado = :estado
-														AND (v.numero_factura != '' OR v.resolucion_id IS NOT NULL)
+														AND (v.numero_factura != '' OR (v.resolucion_id IS NOT NULL AND v.resolucion_id != 0))
 														ORDER BY v.id DESC");
 
 			} else {
@@ -653,7 +653,7 @@ class ModeloVentas
 														LEFT JOIN clientes c ON v.id_cliente = c.id
 														LEFT JOIN usuarios u ON v.id_vendedor = u.id
 														WHERE v.fecha BETWEEN '$fechaInicial' AND '$fechaFinal' AND v.estado = :estado
-														AND (v.numero_factura != '' OR v.resolucion_id IS NOT NULL)
+														AND (v.numero_factura != '' OR (v.resolucion_id IS NOT NULL AND v.resolucion_id != 0))
 														ORDER BY v.id DESC");
 
 			}

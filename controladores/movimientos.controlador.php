@@ -268,7 +268,28 @@ class ControladorMovimientos{
 			$nestedData = array();
 
 			// 0: Producto
-			$nestedData[] = e($value["nombre_producto"]);
+			$nombreProducto = e($value["nombre_producto"]);
+			$esVistaGlobal = !isset($params["id_bodega"]) || $params["id_bodega"] === "" || $params["id_bodega"] === "todos";
+			if ($esVistaGlobal && !empty($value["nombre_bodega"])) {
+				$idBodega = intval($value["id_bodega"]);
+				$coloresBodega = [
+					1 => '#6f42c1', // Morado elegante (predeterminado)
+					2 => '#0f766e', // Teal / Verde azulado oscuro
+					3 => '#1e3a8a', // Azul marino profundo
+					4 => '#c2410c', // Terracota / Naranja quemado
+					5 => '#15803d', // Verde bosque
+					6 => '#be185d', // Fucsia / Rosa oscuro
+					7 => '#4f46e5', // Índigo vibrante
+					8 => '#475569'  // Pizarra
+				];
+				
+				$colorFondo = isset($coloresBodega[$idBodega]) 
+					? $coloresBodega[$idBodega] 
+					: "hsl(" . (($idBodega * 137) % 360) . ", 65%, 40%)";
+
+				$nombreProducto .= ' <span class="label" style="background-color: ' . $colorFondo . '; color: white; margin-left: 5px; font-weight: 500; font-size: 10px; padding: 2px 6px; border-radius: 4px;">' . e($value["nombre_bodega"]) . '</span>';
+			}
+			$nestedData[] = $nombreProducto;
 
 			// 1: Tipo Movimiento (Badge)
 			$badges = [

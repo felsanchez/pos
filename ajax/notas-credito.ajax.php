@@ -80,8 +80,17 @@ class AjaxNotasCredito
             // Por defecto crear como borrador
             $firmar = false;
 
+            // DEBUG TEMPORAL - Ver qué valores llegan
+            $debugLog = date('Y-m-d H:i:s') . " | POST idBodegaSesion: " . ($_POST['idBodegaSesion'] ?? 'NO_EXISTE') 
+                . " | SESSION id_bodega: " . ($_SESSION['id_bodega'] ?? 'NULL')
+                . " | POST idVenta: " . ($_POST['idVenta'] ?? 'NO_EXISTE')
+                . "\n";
+            file_put_contents(__DIR__ . "/../tmp/debug_nc_bodega.txt", $debugLog, FILE_APPEND);
+
             $respuesta = ControladorFactus::ctrGenerarNotaCredito($idVenta, $motivo, $listaProductos, $idCliente, $motivoDescripcion, $metodoPago, $observacion, $firmar);
 
+            // DEBUG TEMPORAL - Ver respuesta
+            file_put_contents(__DIR__ . "/../tmp/debug_nc_bodega.txt", "  RESPUESTA: " . json_encode($respuesta) . "\n", FILE_APPEND);
 
             echo json_encode($respuesta);
 

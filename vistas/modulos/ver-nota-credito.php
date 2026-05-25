@@ -34,6 +34,14 @@ $configFactus = ControladorFactus::ctrObtenerConfiguracion();
 require_once "modelos/ventas.modelo.php";
 $venta = ModeloVentas::mdlMostrarVentas("ventas", "id", $notaCredito["id_venta_original"]);
 
+// Validación de Bodega para No-Administradores
+$esAdmin = (isset($_SESSION["perfil"]) && stripos($_SESSION["perfil"], "Admin") !== false);
+$idBodegaSession = !empty($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
+if (!$esAdmin && $venta && $venta["id_bodega"] != $idBodegaSession) {
+    echo '<script>window.location = "notas-credito";</script>';
+    return;
+}
+
 // Productos de la NC
 $listaProducto = !empty($notaCredito["productos"]) ? json_decode($notaCredito["productos"], true) : [];
 

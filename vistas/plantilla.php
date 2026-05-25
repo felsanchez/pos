@@ -9,6 +9,10 @@ CSRF::generateToken(); // Generar token al cargar la página
 
 // Incluir sanitizador XSS
 require_once "modelos/sanitizer.php";
+
+// Obtener configuración general del sistema de forma dinámica
+$configuracionGeneral = ControladorConfiguracion::ctrObtenerConfiguracion();
+$nombreEmpresa = !empty($configuracionGeneral["nombre_empresa"]) ? $configuracionGeneral["nombre_empresa"] : "Kontrol Pos";
 ?>
 
 <!DOCTYPE html>
@@ -17,7 +21,7 @@ require_once "modelos/sanitizer.php";
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Grupo Fej Technologies</title>
+  <title><?php echo htmlspecialchars($nombreEmpresa); ?></title>
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
 

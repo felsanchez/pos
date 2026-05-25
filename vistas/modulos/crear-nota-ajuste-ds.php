@@ -18,6 +18,25 @@ if (isset($_GET["idDS"])) {
     $documentoSoporte = ControladorFactus::ctrMostrarDocumentosSoporte("id", $idDS);
 
     if ($documentoSoporte) {
+        // Validación de Bodega para No-Administradores
+        $esAdmin = (isset($_SESSION["perfil"]) && stripos($_SESSION["perfil"], "Admin") !== false);
+        $idBodegaSession = !empty($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
+        if (!$esAdmin && $documentoSoporte["id_bodega"] != $idBodegaSession) {
+            echo '
+            <script>
+              swal({
+                type: "error",
+                title: "Acceso no autorizado",
+                text: "Este documento soporte no pertenece a su sucursal/bodega.",
+                showConfirmButton: true,
+                confirmButtonText: "Volver"
+              }).then(function (result) {
+                window.location = "notas-ajuste-ds";
+              });
+            </script>';
+            return;
+        }
+
         $proveedor = ControladorProveedores::ctrMostrarProveedores("id", $documentoSoporte["id_proveedor"]);
         // Decodificar productos
         $productos = json_decode($documentoSoporte["productos"], true);
@@ -134,8 +153,15 @@ endif; ?>
                                         <?php
     // Cargar todos los DS que están en estado "enviada" (exitosos)
     $documentos = ControladorFactus::ctrMostrarDocumentosSoporte(null, null);
+    $idBodegaSession = !empty($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : null;
+
     foreach ($documentos as $key => $value) {
         if ($value["estado_dian"] == "enviada") {
+            // Filtrar por Bodega activa del usuario
+            if ($idBodegaSession !== null && $value["id_bodega"] != $idBodegaSession) {
+                continue;
+            }
+
             $provDS = ControladorProveedores::ctrMostrarProveedores("id", $value["id_proveedor"]);
             $nombreProv = $provDS ? $provDS["nombre"] : "Proveedor Desconocido";
 

@@ -36,13 +36,20 @@
                             <div class="input-group" style="width: 200px;">
                                 <span class="input-group-addon"><i class="fa fa-building text-primary"></i></span>
                                 <select class="form-control select2" id="sucursal_ds" name="sucursal_ds">
-                                    <option value="">Todas las Sucursales</option>
                                     <?php
+                                    $bodegaSeleccionada = '';
+                                    if (!empty($_SESSION['id_bodega'])) {
+                                        $bodegaSeleccionada = $_SESSION['id_bodega'];
+                                    }
+                                    $selectedTodas = ($bodegaSeleccionada === 'todas' || $bodegaSeleccionada === '') ? 'selected' : '';
+                                    echo '<option value="" ' . $selectedTodas . '>Todas las Sucursales</option>';
+
                                     $item = null;
                                     $valor = null;
                                     $bodegas = ControladorBodegas::ctrMostrarBodegas($item, $valor);
                                     foreach ($bodegas as $key => $value) {
-                                        echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                                        $selected = ($bodegaSeleccionada == $value["id"]) ? 'selected' : '';
+                                        echo '<option value="' . $value["id"] . '" ' . $selected . '>' . $value["nombre"] . '</option>';
                                     }
                                     ?>
                                 </select>
@@ -64,6 +71,7 @@
                             <tr>
                                 <th>Código</th>
                                 <th>Proveedor</th>
+                                <th>Vendedor</th>
                                 <th>Total</th>
                                 <th>Fecha</th>
                                 <th>Estado DIAN</th>

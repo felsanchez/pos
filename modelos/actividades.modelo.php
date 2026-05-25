@@ -10,7 +10,7 @@ class ModeloActividades{
 
 	static public function mdlIngresarActividad($tabla, $datos){
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(descripcion, tipo, id_user, fecha, estado, id_cliente, observacion) VALUES (:descripcion, :tipo, :id_user, :fecha, :estado, :id_cliente, :observacion)");
+		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(descripcion, tipo, id_user, fecha, estado, id_cliente, observacion, id_bodega) VALUES (:descripcion, :tipo, :id_user, :fecha, :estado, :id_cliente, :observacion, :id_bodega)");
 
 		$stmt->bindParam(":descripcion", $datos["descripcion"], PDO::PARAM_STR);
 		$stmt->bindParam(":tipo", $datos["tipo"], PDO::PARAM_STR);
@@ -19,6 +19,8 @@ class ModeloActividades{
 		$stmt->bindParam(":estado", $datos["estado"], PDO::PARAM_STR);
 		$stmt->bindParam(":id_cliente", $datos["id_cliente"], PDO::PARAM_STR);
 		$stmt->bindParam(":observacion", $datos["observacion"], PDO::PARAM_STR);
+		$idBodega = isset($datos["id_bodega"]) ? intval($datos["id_bodega"]) : 1;
+		$stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
 
 		if($stmt->execute()){
 
@@ -283,7 +285,7 @@ class ModeloActividades{
 
 
 //CUADRO ACTIVIDADES CON CLIENTE********************************************************
-		static public function mdlMostrarActividadesConCliente($tabla, $item, $valor){
+		static public function mdlMostrarActividadesConCliente($tabla, $item, $valor, $idBodega = null){
     if($item != null){
         $stmt = Conexion::conectar()->prepare("
             SELECT 
@@ -295,11 +297,12 @@ class ModeloActividades{
             LEFT JOIN usuarios u ON a.id_user = u.id
             WHERE a.$item = :$item
         ");
-        $stmt -> bindParam(":".$item, $valor, PDO::PARAM_STR);
-        $stmt -> execute();
-        return $stmt -> fetch();
+        $stmt->bindParam(":".$item, $valor, PDO::PARAM_STR);
+        $stmt->execute();
+        return $stmt->fetch();
     } 
     else{
+        $bodegaFiltro = ($idBodega !== null) ? "WHERE a.id_bodega = " . intval($idBodega) : "";
         $stmt = Conexion::conectar()->prepare("
             SELECT 
                 a.*, 
@@ -308,12 +311,13 @@ class ModeloActividades{
             FROM $tabla a
             LEFT JOIN clientes c ON a.id_cliente = c.id
             LEFT JOIN usuarios u ON a.id_user = u.id
+            $bodegaFiltro
             ORDER BY a.id DESC
         ");
-        $stmt -> execute();
-        return $stmt -> fetchAll(); 
+        $stmt->execute();
+        return $stmt->fetchAll(); 
     }
-    $stmt -> close();
+    $stmt->close();
     $stmt = null;
 }
 

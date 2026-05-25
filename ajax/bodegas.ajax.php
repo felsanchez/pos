@@ -29,6 +29,13 @@ class AjaxBodegas
 
 	public function ajaxIngresarSucursal()
 	{
+		if($this->ingresarId == "todas") {
+			$_SESSION["id_bodega"] = "";
+			$_SESSION["nombre_bodega"] = "Todas las sucursales";
+			echo "ok";
+			return;
+		}
+
 		$item = "id";
 		$valor = $this->ingresarId;
 		$sucursal = ControladorBodegas::ctrMostrarBodegas($item, $valor);

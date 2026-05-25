@@ -253,27 +253,92 @@ $etiquetaDocumento = "Factura";
 
         $itemsTabla = [];
 
+        $productosProcesados = [];
+        $totalConocido = 0;
+        $itemsDesconocidos = [];
+        $cantidadDesconocida = 0;
+
         if (is_array($listaProducto)) {
-          foreach ($listaProducto as $prod) {
-            // Obtener info básica de la BD
+          foreach ($listaProducto as $key => $prod) {
             $infoP = ModeloProductos::mdlMostrarProductos("productos", "id", $prod["id"], "id");
             
-            // Determinar Precio y Total con fallbacks
-            $precioUnitario = isset($prod["precio"]) ? floatval($prod["precio"]) : floatval($infoP["precio_venta"] ?? 0);
-            $cantidad = floatval($prod["cantidad"] ?? 1);
-            $totalProductoConImpuesto = isset($prod["total"]) ? floatval($prod["total"]) : ($precioUnitario * $cantidad);
-
-            if ($totalProductoConImpuesto <= 0 && $precioUnitario > 0) {
-              $totalProductoConImpuesto = $precioUnitario * $cantidad;
+            $precio = null;
+            if (isset($prod["precio"]) && floatval($prod["precio"]) > 0) {
+              $precio = floatval($prod["precio"]);
+            } else if ($infoP && isset($infoP["precio_venta"]) && floatval($infoP["precio_venta"]) > 0) {
+              $precio = floatval($infoP["precio_venta"]);
             }
 
-            // Impuesto
+            $cantidad = isset($prod["cantidad"]) ? floatval($prod["cantidad"]) : 1;
+            
+            $total = null;
+            if (isset($prod["total"]) && floatval($prod["total"]) > 0) {
+              $total = floatval($prod["total"]);
+            }
+
+            if ($precio !== null && $total === null) {
+              $total = $precio * $cantidad;
+            }
+
+            if ($total !== null && $precio === null) {
+              $precio = $total / $cantidad;
+            }
+
             $impuestoPorcentaje = 19; // Default
-            if (isset($prod["impuesto"]) && $prod["impuesto"] !== "" && $prod["impuesto"] > 0) {
+            if (isset($prod["impuesto"]) && $prod["impuesto"] !== "") {
               $impuestoPorcentaje = floatval($prod["impuesto"]);
-            } else if (isset($infoP["tasa_impuesto"])) {
+            } else if ($infoP && isset($infoP["tasa_impuesto"])) {
               $impuestoPorcentaje = floatval($infoP["tasa_impuesto"]);
             }
+
+            $productosProcesados[$key] = [
+              "id" => $prod["id"],
+              "descripcion" => $prod["descripcion"] ?? ($infoP["descripcion"] ?? "Producto"),
+              "cantidad" => $cantidad,
+              "precio" => $precio,
+              "total" => $total,
+              "impuesto" => $impuestoPorcentaje
+            ];
+
+            if ($total !== null) {
+              $totalConocido += $total;
+            } else {
+              $itemsDesconocidos[] = $key;
+              $cantidadDesconocida += $cantidad;
+            }
+          }
+
+          // Distribuir el total estimado de la venta original
+          $totalVenta = isset($venta["total"]) ? floatval($venta["total"]) : 0;
+          $totalRestante = max(0, $totalVenta - $totalConocido);
+
+          if (count($itemsDesconocidos) > 0 && $totalRestante > 0) {
+            if ($cantidadDesconocida > 0) {
+              $precioPorUnidad = $totalRestante / $cantidadDesconocida;
+              foreach ($itemsDesconocidos as $key) {
+                $cantidad = $productosProcesados[$key]["cantidad"];
+                $productosProcesados[$key]["precio"] = $precioPorUnidad;
+                $productosProcesados[$key]["total"] = $precioPorUnidad * $cantidad;
+              }
+            } else {
+              $montoPorItem = $totalRestante / count($itemsDesconocidos);
+              foreach ($itemsDesconocidos as $key) {
+                $productosProcesados[$key]["precio"] = $montoPorItem;
+                $productosProcesados[$key]["total"] = $montoPorItem;
+              }
+            }
+          } else if (count($itemsDesconocidos) > 0) {
+            foreach ($itemsDesconocidos as $key) {
+              $productosProcesados[$key]["precio"] = 0;
+              $productosProcesados[$key]["total"] = 0;
+            }
+          }
+
+          foreach ($productosProcesados as $prod) {
+            $precioUnitario = $prod["precio"];
+            $cantidad = $prod["cantidad"];
+            $totalProductoConImpuesto = $prod["total"];
+            $impuestoPorcentaje = $prod["impuesto"];
 
             // Cálculos
             $baseItemBruta = $totalProductoConImpuesto / (1 + ($impuestoPorcentaje / 100));
@@ -291,7 +356,7 @@ $etiquetaDocumento = "Factura";
             $impuestoItem = $precioConDescuento - $baseItemNeta;
 
             $subtotalRecalculado += $baseItemNeta;
-            $impuestoGeneral += $impuestoGeneral += $impuestoItem;
+            $impuestoGeneral += $impuestoItem;
 
             // Guardar para la tabla
             $itemsTabla[] = [

@@ -95,7 +95,7 @@ $(document).ready(function () {
 					d.fechaFinal = $('#fechaFinal').val();
 					d.clienteId = $('#filtroClienteOrdenes').val();
 					d.usuarioId = $('#filtroUsuarioOrdenes').val();
-					d.bodegaId = $('.select-bodega').val();
+					d.bodegaId = $('.select-bodega').length ? ($('.select-bodega').val() || '') : '';
 
 					var urlParams = new URLSearchParams(window.location.search);
 					if (!d.fechaInicial) d.fechaInicial = urlParams.get('fechaInicial');

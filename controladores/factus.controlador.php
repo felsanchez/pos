@@ -1132,6 +1132,17 @@ class ControladorFactus
 			];
 		}
 
+		// Restricción por Perfil: Si no es Admin, solo puede generar NC para ventas de su sucursal
+		$isAdmin = (isset($_SESSION["perfil"]) && stripos($_SESSION["perfil"], "Admin") !== false);
+		$idBodegaSession = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : null;
+
+		if (!$isAdmin && $idBodegaSession !== null && $venta["id_bodega"] != $idBodegaSession) {
+			return [
+				"error" => true,
+				"mensaje" => "La factura no pertenece a su sucursal/bodega asignada."
+			];
+		}
+
 		// Verificar que tenga número de factura (fue enviada a DIAN)
 		if (empty($venta["numero_factura"])) {
 			return [
@@ -1170,6 +1181,15 @@ class ControladorFactus
 				$numeroNC = $prefijo . $siguienteNumero;
 			}
 
+			// La bodega de la NC es la bodega activa donde se está creando:
+			// 1. POST idBodegaSesion (enviado explícitamente desde el formulario)
+			// 2. SESSION id_bodega (usuarios no-admin con bodega asignada)
+			// 3. Bodega de la venta original (fallback para admins sin bodega)
+			// 4. Bodega 1 (fallback final)
+			$idBodegaNC = !empty($_POST["idBodegaSesion"]) ? intval($_POST["idBodegaSesion"])
+				: (!empty($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"])
+				: (!empty($venta["id_bodega"]) ? intval($venta["id_bodega"]) : 1));
+
 			$datosGuardar = [
 				"id_venta_original" => $idVenta,
 				"numero_factura_original" => $venta["numero_factura"],
@@ -1187,6 +1207,7 @@ class ControladorFactus
 				"mensaje_dian" => 'Nota Crédito guardada localmente (Borrador). Pendiente por firmar.',
 				"fecha_envio_dian" => null,
 				"id_usuario" => !empty($_SESSION['id']) ? $_SESSION['id'] : (!empty($_POST['idUsuario']) ? intval($_POST['idUsuario']) : null),
+				"id_bodega" => $idBodegaNC,
 				"observacion" => $observacion,
 				"metodo_pago" => $metodoPago
 			];
@@ -1235,6 +1256,15 @@ class ControladorFactus
 			$respuestaFactus = json_decode($resultado['respuesta'], true);
 
 			// Extraer datos de la respuesta
+			// La bodega de la NC es la bodega activa donde se está creando:
+			// 1. POST idBodegaSesion (enviado explícitamente desde el formulario)
+			// 2. SESSION id_bodega (usuarios no-admin con bodega asignada)
+			// 3. Bodega de la venta original (fallback para admins sin bodega)
+			// 4. Bodega 1 (fallback final)
+			$idBodegaNC = !empty($_POST["idBodegaSesion"]) ? intval($_POST["idBodegaSesion"])
+				: (!empty($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"])
+				: (!empty($venta["id_bodega"]) ? intval($venta["id_bodega"]) : 1));
+
 			$datosGuardar = [
 				"id_venta_original" => $idVenta,
 				"numero_factura_original" => $venta["numero_factura"],
@@ -1252,6 +1282,7 @@ class ControladorFactus
 				"mensaje_dian" => $respuestaFactus['message'] ?? 'NC generada exitosamente',
 				"fecha_envio_dian" => date('Y-m-d H:i:s'),
 				"id_usuario" => !empty($_SESSION['id']) ? $_SESSION['id'] : (!empty($_POST['idUsuario']) ? intval($_POST['idUsuario']) : null),
+				"id_bodega" => $idBodegaNC,
 				"observacion" => $observacion,
 				"metodo_pago" => $metodoPago
 			];
@@ -1261,54 +1292,8 @@ class ControladorFactus
 
 			if ($guardado == "ok") {
 
-				// =========================================================
-				// 🔄 ACTUALIZAR STOCK Y REGISTRAR MOVIMIENTO (DEVOLUCIÓN)
-				// =========================================================
-				require_once __DIR__ . "/../modelos/productos.modelo.php";
-				require_once __DIR__ . "/../modelos/movimientos.modelo.php";
-				require_once __DIR__ . "/../modelos/usuarios.modelo.php";
-
-				$productosNC = !empty($listaProductos) ? $listaProductos : json_decode($venta['productos'], true);
-				$idUsuario = !empty($_SESSION['id']) ? $_SESSION['id'] : (!empty($_POST['idUsuario']) ? intval($_POST['idUsuario']) : 1);
-				$datosUsuario = ModeloUsuarios::mdlMostrarUsuarios("usuarios", "id", $idUsuario);
-				$nombreUsuario = $datosUsuario ? $datosUsuario["nombre"] : "Sistema";
-
-				foreach ($productosNC as $prod) {
-					
-					$idProd = $prod["id"];
-					$cantidad = intval($prod["cantidad"]);
-					$esVariante = (isset($prod["idVariante"]) && $prod["idVariante"] > 0) || (isset($prod["variante"]) && $prod["variante"] == "si");
-
-					// 1. Obtener datos actuales para el historial
-					$itemActual = ModeloProductos::mdlMostrarProductos("productos", "id", $idProd, "id");
-					
-					if($itemActual){
-
-						$stockAnterior = $itemActual["stock"];
-						$stockNuevo = $stockAnterior + $cantidad;
-
-						// 2. Actualizar Stock físico
-						ModeloProductos::mdlActualizarProducto("productos", "stock", $stockNuevo, $idProd);
-
-						// 3. Registrar en Historial de Movimientos
-						$datosMov = [
-							"tipo_producto" => ($esVariante) ? "variante" : "producto",
-							"id_producto" => $idProd,
-							"id_variante" => isset($prod["idVariante"]) ? $prod["idVariante"] : 0,
-							"nombre_producto" => $itemActual["descripcion"],
-							"tipo_movimiento" => "devolucion",
-							"cantidad" => $cantidad,
-							"stock_anterior" => $stockAnterior,
-							"stock_nuevo" => $stockNuevo,
-							"id_usuario" => $idUsuario,
-							"nombre_usuario" => $nombreUsuario,
-							"referencia" => "NC: " . $datosGuardar["numero_nota_credito"],
-							"notas" => "Devolución por Nota de Crédito #" . $datosGuardar["numero_nota_credito"]
-						];
-
-						ModeloMovimientos::mdlRegistrarMovimiento($datosMov);
-					}
-				}
+				// 🔄 Actualizar Inventario (Stock físico por bodega, global, y registrar movimiento)
+				self::actualizarInventarioPorNotaCredito($datosGuardar, $listaProductos, $venta, $datosGuardar);
 
 				// Actualizar consecutivo del rango NC
 				$rangoNC = ModeloFactus::mdlObtenerRangoNC();
@@ -1378,6 +1363,32 @@ class ControladorFactus
 			$nota = ModeloFactus::mdlMostrarNotasCredito("notas_credito", "id", $idNota);
 
 			if ($nota && $nota["estado_dian"] == "borrador") {
+
+				// Restricción por Perfil: Si no es Admin, solo puede eliminar si pertenece a su sucursal
+				$isAdmin = (isset($_SESSION["perfil"]) && stripos($_SESSION["perfil"], "Admin") !== false);
+				$idBodegaSession = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : null;
+
+				if (!$isAdmin && $idBodegaSession !== null) {
+					require_once __DIR__ . "/../modelos/ventas.modelo.php";
+					$venta = ModeloVentas::mdlMostrarVentas("ventas", "id", $nota["id_venta_original"]);
+					if ($venta && $venta["id_bodega"] != $idBodegaSession) {
+						if (isset($_POST["accion"]) && $_POST["accion"] == "eliminarNotaCredito") {
+							return "error_permiso";
+						}
+						echo '<script>
+							swal({
+								type: "error",
+								title: "No autorizado",
+								text: "Esta nota crédito no pertenece a su sucursal/bodega.",
+								showConfirmButton: true,
+								confirmButtonText: "Cerrar"
+							}).then(() => {
+								window.location = "notas-credito";
+							});
+						</script>';
+						return;
+					}
+				}
 
 				$respuesta = ModeloFactus::mdlEliminarNotaCredito($idNota);
 
@@ -1676,9 +1687,9 @@ class ControladorFactus
 	/*=============================================
 	MOSTRAR ÚLTIMO DOCUMENTO SOPORTE
 	=============================================*/
-	static public function ctrMostrarUltimoDocumentoSoporte()
+	static public function ctrMostrarUltimoDocumentoSoporte($idBodega = null)
 	{
-		return ModeloFactus::mdlMostrarUltimoDocumentoSoporte();
+		return ModeloFactus::mdlMostrarUltimoDocumentoSoporte($idBodega);
 	}
 
 	/*=============================================
@@ -1853,6 +1864,17 @@ class ControladorFactus
 			return ["error" => true, "mensaje" => "No se encontró la factura de venta original asociada a esta nota"];
 		}
 
+		// Restricción por Perfil: Si no es Admin, solo puede firmar NC para ventas de su sucursal
+		$isAdmin = (isset($_SESSION["perfil"]) && stripos($_SESSION["perfil"], "Admin") !== false);
+		$idBodegaSession = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : null;
+
+		if (!$isAdmin && $idBodegaSession !== null && $venta["id_bodega"] != $idBodegaSession) {
+			return [
+				"error" => true,
+				"mensaje" => "La factura asociada a esta nota crédito no pertenece a su sucursal/bodega asignada."
+			];
+		}
+
 		// Reconstruir listaProductos a partir del JSON guardado en la nota
 		$listaProductos = json_decode($notaCredito["productos"], true);
 
@@ -1902,7 +1924,7 @@ class ControladorFactus
 			if ($actualizado == "ok") {
 
 				// 🔄 Actualizar Inventario
-				self::actualizarInventarioPorNotaCredito($datosActualizar, $listaProductos, $venta);
+				self::actualizarInventarioPorNotaCredito($datosActualizar, $listaProductos, $venta, $notaCredito);
 
 				// Actualizar consecutivo del rango NC
 				$rangoNC = ModeloFactus::mdlObtenerRangoNC();
@@ -2014,10 +2036,12 @@ class ControladorFactus
 			$unidadMedidaRes = isset($productoBD['unidad_medida_id']) && !empty($productoBD['unidad_medida_id']) ? intval($productoBD['unidad_medida_id']) : 70;
 			$idUnidadMedidaItem = ModeloFactus::mdlObtenerIdUnidadMedida($unidadMedidaRes);
 
+			$codeReference = !empty($pd['skuVariante']) ? $pd['skuVariante'] : (!empty($productoBD['codigo']) ? $productoBD['codigo'] : ("ITEM-" . ($key + 1)));
+
 			$items[] = [
 				"scheme_id" => "1",
 				"name" => $pd['descripcion'],
-				"code_reference" => !empty($productoBD['codigo']) ? $productoBD['codigo'] : ("ITEM-" . ($key + 1)),
+				"code_reference" => $codeReference,
 				"quantity" => intval($pd['cantidad']),
 				"discount_rate" => number_format($tasaDescuentoItem, 2, '.', ''),
 				"price" => number_format(floatval($pd['precio']), 2, '.', ''),
@@ -2405,26 +2429,40 @@ class ControladorFactus
 			0 => 'nc.numero_nota_credito',
 			1 => 'nc.numero_factura_original',
 			2 => 'c.nombre',
-			3 => 'nc.monto_total',
-			4 => 'nc.fecha_creacion',
-			5 => 'nc.estado_dian',
+			3 => 'u.nombre',
+			4 => 'nc.monto_total',
+			5 => 'nc.fecha_creacion',
+			6 => 'nc.estado_dian',
 		];
 
 		$where = " WHERE 1=1 ";
 
-		// Restricción por Perfil: Si no es Admin, solo ve su sucursal
-		$isAdmin = (stripos($_SESSION["perfil"], "Admin") !== false);
-		$idBodegaSession = $_SESSION["id_bodega"];
-
-		if (!$isAdmin) {
-			$where .= " AND v.id_bodega = $idBodegaSession ";
+		// Filtro por Bodega (Sucursal)
+		$bodegaFilter = "";
+		$esAdmin = (stripos($_SESSION["perfil"], "Admin") !== false);
+		if (!$esAdmin) {
+			// Usuarios no-admin: siempre restringir a su bodega asignada
+			if (!empty($_SESSION["id_bodega"])) {
+				$bodegaFilter = " AND nc.id_bodega = " . intval($_SESSION["id_bodega"]);
+			} else {
+				$bodegaFilter = " AND nc.id_bodega = 1";
+			}
 		} else {
-			// Filtro por Bodega (solo para Admins)
-			if (!empty($params['idBodega'])) {
-				$idBodega = intval($params['idBodega']);
-				$where .= " AND v.id_bodega = $idBodega ";
+			// Administradores: respetar el filtro del dropdown
+			if (isset($params['idBodega']) && $params['idBodega'] === 'todas') {
+				$bodegaFilter = "";
+			} else if (!empty($params['idBodega']) && is_numeric($params['idBodega'])) {
+				$bodegaFilter = " AND nc.id_bodega = " . intval($params['idBodega']);
+			} else {
+				if (!empty($_SESSION["id_bodega"])) {
+					$bodegaFilter = " AND nc.id_bodega = " . intval($_SESSION["id_bodega"]);
+				} else {
+					$bodegaFilter = " AND nc.id_bodega = 1";
+				}
 			}
 		}
+
+		$where .= $bodegaFilter;
 
 		// Filtro por Rango de Fechas
 		if (!empty($params['fechaInicial']) && !empty($params['fechaFinal'])) {
@@ -2457,10 +2495,7 @@ class ControladorFactus
 			$limit = " LIMIT " . intval($params['start']) . ", " . intval($params['length']);
 		}
 
-		$whereBase = " WHERE 1=1 ";
-		if (!$isAdmin) {
-			$whereBase .= " AND v.id_bodega = $idBodegaSession ";
-		}
+		$whereBase = " WHERE 1=1 " . $bodegaFilter;
 
 		$notas     = ModeloFactus::mdlMostrarNotasCreditoServerSide($where, $order, $limit);
 		$total     = ModeloFactus::mdlGetTotalNotasCredito($whereBase);
@@ -2482,6 +2517,9 @@ class ControladorFactus
 
 			// Col 2: Cliente
 			$row[] = e($value['cliente_nombre'] ?? 'N/A');
+
+			// Col 2.5: Vendedor
+			$row[] = e($value['nombre_vendedor'] ?? 'N/A');
 
 			// Col 3: Total
 			$row[] = '$ ' . number_format((float)($value['monto_total'] ?? 0), 2);
@@ -2553,10 +2591,11 @@ class ControladorFactus
 			0 => 'na.numero_nota_ajuste',
 			1 => 'na.numero_ds_original',
 			2 => 'p.nombre',
-			3 => 'na.monto_total',
-			4 => 'na.fecha_envio_dian',
-			5 => 'na.estado_dian',
-			6 => 'na.id'
+			3 => 'u.nombre',
+			4 => 'na.monto_total',
+			5 => 'na.fecha_envio_dian',
+			6 => 'na.estado_dian',
+			7 => 'na.id'
 		];
 
 		// Datos para lógica de borradores
@@ -2625,6 +2664,9 @@ class ControladorFactus
 
 			// 3. Proveedor
 			$row[] = e($value["nombre_proveedor"] ?? "N/A");
+
+			// 3.5 Vendedor
+			$row[] = e($value["nombre_vendedor"] ?? "N/A");
 
 			// 4. Total
 			$row[] = '$ ' . number_format((float) ($value["monto_total"] ?? 0), 2);
@@ -2822,7 +2864,7 @@ class ControladorFactus
 	/*=============================================
 	MÉTODO AUXILIAR PARA ACTUALIZAR INVENTARIO (NC)
 	=============================================*/
-	private static function actualizarInventarioPorNotaCredito($datosNC, $listaProductos, $venta)
+	private static function actualizarInventarioPorNotaCredito($datosNC, $listaProductos, $venta, $notaCredito = null)
 	{
 		require_once __DIR__ . "/../modelos/productos.modelo.php";
 		require_once __DIR__ . "/../modelos/movimientos.modelo.php";
@@ -2835,42 +2877,106 @@ class ControladorFactus
 		$datosUsuario = ModeloUsuarios::mdlMostrarUsuarios("usuarios", "id", $idUsuario);
 		$nombreUsuario = $datosUsuario ? $datosUsuario["nombre"] : "Sistema";
 
-		$numeroNC = $datosNC["numero_nota_credito"] ?? "NC-S/N";
+		$numeroNC = $datosNC["numero_nota_credito"] ?? ($notaCredito["numero_nota_credito"] ?? "NC-S/N");
+
+		// Determinar bodega destino:
+		// 1. De la nota de crédito cargada de la BD (si se provee)
+		// 2. Del array $datosNC (si tiene id_bodega, ej. en creación directa)
+		// 3. Fallback a la bodega de la venta original
+		// 4. Fallback final bodega 1
+		$idBodegaNC = !empty($notaCredito["id_bodega"]) ? intval($notaCredito["id_bodega"])
+			: (!empty($datosNC["id_bodega"]) ? intval($datosNC["id_bodega"])
+			: (!empty($venta["id_bodega"]) ? intval($venta["id_bodega"]) : 1));
 
 		foreach ($productosNC as $prod) {
 			
 			$idProd = $prod["id"];
 			$cantidad = intval($prod["cantidad"]);
-			$esVariante = (isset($prod["idVariante"]) && $prod["idVariante"] > 0) || (isset($prod["variante"]) && $prod["variante"] == "si");
+			$idVariante = isset($prod["idVariante"]) ? intval($prod["idVariante"]) : 0;
+			$esVariante = ($idVariante > 0) || (isset($prod["variante"]) && $prod["variante"] == "si");
 
-			// 1. Obtener datos actuales
-			$itemActual = ModeloProductos::mdlMostrarProductos("productos", "id", $idProd, "id");
-			
-			if($itemActual){
+			if ($esVariante) {
+				// VARIANTES
+				// 1. Obtener datos actuales de la variante (global y bodega)
+				$traerVarianteGlobal = ModeloProductos::mdlObtenerVariantePorId($idVariante);
+				$traerVarianteBodega = ModeloProductos::mdlObtenerVariantePorId($idVariante, $idBodegaNC);
 
-				$stockAnterior = $itemActual["stock"];
-				$stockNuevo = $stockAnterior + $cantidad;
+				if ($traerVarianteGlobal) {
+					$stockAntGlobal = $traerVarianteGlobal["stock"];
+					$stockNuevoGlobal = $stockAntGlobal + $cantidad;
 
-				// 2. Actualizar Stock físico
-				ModeloProductos::mdlActualizarProducto("productos", "stock", $stockNuevo, $idProd);
+					$stockAntBodega = $traerVarianteBodega ? $traerVarianteBodega["stock"] : 0;
+					$stockNuevoBodega = $stockAntBodega + $cantidad;
 
-				// 3. Registrar en Historial
-				$datosMov = [
-					"tipo_producto" => ($esVariante) ? "variante" : "producto",
-					"id_producto" => $idProd,
-					"id_variante" => isset($prod["idVariante"]) ? $prod["idVariante"] : 0,
-					"nombre_producto" => $itemActual["descripcion"],
-					"tipo_movimiento" => "devolucion",
-					"cantidad" => $cantidad,
-					"stock_anterior" => $stockAnterior,
-					"stock_nuevo" => $stockNuevo,
-					"id_usuario" => $idUsuario,
-					"nombre_usuario" => $nombreUsuario,
-					"referencia" => "NC: " . $numeroNC,
-					"notas" => "Devolución por Nota de Crédito #" . $numeroNC
-				];
+					// 2. Actualizar stock global de la variante
+					ModeloProductos::mdlActualizarStockVariante("productos_variantes", $stockNuevoGlobal, $idVariante);
 
-				ModeloMovimientos::mdlRegistrarMovimiento($datosMov);
+					// 3. Actualizar stock de la variante en la bodega
+					ModeloProductos::mdlActualizarStockVarianteBodega($idVariante, $idBodegaNC, $stockNuevoBodega);
+
+					// 4. Actualizar stock global del producto base consolidado
+					$traerProdGlobal = ModeloProductos::mdlMostrarProductos("productos", "id", $idProd, "id");
+					if ($traerProdGlobal) {
+						$nuevoProdGlobal = $traerProdGlobal["stock"] + $cantidad;
+						ModeloProductos::mdlActualizarProducto("productos", "stock", $nuevoProdGlobal, $idProd);
+					}
+
+					// 5. Registrar en Historial de Movimientos
+					$datosMov = [
+						"tipo_producto"   => "variante",
+						"id_producto"     => $idProd,
+						"id_variante"     => $idVariante,
+						"id_bodega"       => $idBodegaNC,
+						"nombre_producto" => $traerProdGlobal ? $traerProdGlobal["descripcion"] : ($prod["descripcion"] ?? ""),
+						"tipo_movimiento" => "devolucion",
+						"cantidad"        => $cantidad,
+						"stock_anterior"  => $stockAntBodega,
+						"stock_nuevo"     => $stockNuevoBodega,
+						"id_usuario"      => $idUsuario,
+						"nombre_usuario"  => $nombreUsuario,
+						"referencia"      => "NC: " . $numeroNC,
+						"notas"           => "Devolución por Nota de Crédito #" . $numeroNC
+					];
+					ModeloMovimientos::mdlRegistrarMovimiento($datosMov);
+				}
+
+			} else {
+				// PRODUCTO SIMPLE
+				// 1. Obtener datos actuales del producto (global y bodega)
+				$traerProdGlobal = ModeloProductos::mdlMostrarProductos("productos", "id", $idProd, "id");
+				$traerProdBodega = ModeloProductos::mdlMostrarProductos("productos", "id", $idProd, "id", $idBodegaNC);
+
+				if ($traerProdGlobal) {
+					$stockAntGlobal = $traerProdGlobal["stock"];
+					$stockNuevoGlobal = $stockAntGlobal + $cantidad;
+
+					$stockAntBodega = $traerProdBodega ? $traerProdBodega["stock"] : 0;
+					$stockNuevoBodega = $stockAntBodega + $cantidad;
+
+					// 2. Actualizar stock global del producto
+					ModeloProductos::mdlActualizarProducto("productos", "stock", $stockNuevoGlobal, $idProd);
+
+					// 3. Actualizar stock en la bodega
+					ModeloProductos::mdlActualizarStockBodega($idProd, $idBodegaNC, $stockNuevoBodega);
+
+					// 4. Registrar en Historial de Movimientos
+					$datosMov = [
+						"tipo_producto"   => "producto",
+						"id_producto"     => $idProd,
+						"id_variante"     => 0,
+						"id_bodega"       => $idBodegaNC,
+						"nombre_producto" => $traerProdGlobal["descripcion"],
+						"tipo_movimiento" => "devolucion",
+						"cantidad"        => $cantidad,
+						"stock_anterior"  => $stockAntBodega,
+						"stock_nuevo"     => $stockNuevoBodega,
+						"id_usuario"      => $idUsuario,
+						"nombre_usuario"  => $nombreUsuario,
+						"referencia"      => "NC: " . $numeroNC,
+						"notas"           => "Devolución por Nota de Crédito #" . $numeroNC
+					];
+					ModeloMovimientos::mdlRegistrarMovimiento($datosMov);
+				}
 			}
 		}
 	}
@@ -2882,10 +2988,11 @@ class ControladorFactus
 		$columns = [
 			0 => 'ds.numero_ds',
 			1 => 'p.nombre',
-			2 => 'ds.monto_total',
-			3 => 'ds.fecha_emision',
-			4 => 'ds.estado_dian',
-			5 => 'ds.id'
+			2 => 'u.nombre',
+			3 => 'ds.monto_total',
+			4 => 'ds.fecha_emision',
+			5 => 'ds.estado_dian',
+			6 => 'ds.id'
 		];
 
 		// Datos para lógica de borradores (necesarios para el buscador)
@@ -2995,6 +3102,7 @@ class ControladorFactus
 			$resData[] = [
 				$codigo,
 				e($value["nombre_proveedor"]),
+				e($value["nombre_vendedor"] ?? "N/A"),
 				'$ ' . e(number_format($value["monto_total"], 0)),
 				e($value["fecha_emision"]),
 				$estado,

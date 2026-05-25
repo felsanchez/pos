@@ -32,7 +32,31 @@ class ControladorCategorias{
 
 				$tabla = "categorias";
 
-				$datos = $_POST["nuevaCategoria"];
+				$prefijo = isset($_POST["nuevoPrefijo"]) && $_POST["nuevoPrefijo"] !== "" ? $_POST["nuevoPrefijo"] : null;
+
+				// Validar si el prefijo ya existe
+				if ($prefijo !== null) {
+					$prefijoExistente = ModeloCategorias::mdlMostrarCategorias($tabla, "prefijo", $prefijo);
+					if ($prefijoExistente) {
+						echo '<script>
+							swal({
+								type: "error",
+								title: "¡Error!",
+								text: "El prefijo ya está siendo usado por otra categoría.",
+								showConfirmButton: true,
+								confirmButtonText: "Cerrar"
+							}).then(() => {
+								window.location = "categorias";
+							});
+						</script>';
+						return;
+					}
+				}
+
+				$datos = array(
+					"categoria" => $_POST["nuevaCategoria"],
+					"prefijo" => $prefijo
+				);
 
 				$respuesta = ModeloCategorias::mdlIngresarCategoria($tabla, $datos);
 
@@ -98,7 +122,8 @@ class ControladorCategorias{
 		// Columnas para ordenar
 		$columns = array(
 			0 => 'categoria',
-			1 => 'id' 
+			1 => 'prefijo',
+			2 => 'id' 
 		);
 
 		$where = " WHERE 1=1 ";
@@ -139,11 +164,14 @@ class ControladorCategorias{
 			// 0: Categoría
 			$nestedData[] = '<span class="text-uppercase">' . e($value["categoria"]) . '</span>';
 
-			// 1: Productos
+			// 1: Prefijo
+			$nestedData[] = '<span>' . e($value["prefijo"]) . '</span>';
+
+			// 2: Productos
 			$totalProductos = ModeloCategorias::mdlContarProductosPorCategoria($value["id"]);
 			$nestedData[] = '<span class="badge bg-blue">' . $totalProductos . '</span>';
 
-			// 2: Acciones
+			// 3: Acciones
 			$botonesAcciones = '<div class="btn-group">';
 			if (puedeAccion('categorias', 'editar')) {
 				$botonesAcciones .= '<button class="btn btn-warning btnEditarCategoria" idCategoria="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarCategoria" title="Editar categoría"><i class="fa fa-pencil"></i></button>';
@@ -200,7 +228,33 @@ class ControladorCategorias{
 
 				$tabla = "categorias";
 
-				$datos = array("categoria"=>$_POST["editarCategoria"],"id"=>$_POST["idCategoria"]);
+				$prefijo = isset($_POST["editarPrefijo"]) && $_POST["editarPrefijo"] !== "" ? $_POST["editarPrefijo"] : null;
+				$idCategoria = $_POST["idCategoria"];
+
+				// Validar si el prefijo ya existe y no es de la categoría actual
+				if ($prefijo !== null) {
+					$prefijoExistente = ModeloCategorias::mdlMostrarCategorias($tabla, "prefijo", $prefijo);
+					if ($prefijoExistente && $prefijoExistente["id"] != $idCategoria) {
+						echo '<script>
+							swal({
+								type: "error",
+								title: "¡Error!",
+								text: "El prefijo ya está siendo usado por otra categoría.",
+								showConfirmButton: true,
+								confirmButtonText: "Cerrar"
+							}).then(() => {
+								window.location = "categorias";
+							});
+						</script>';
+						return;
+					}
+				}
+
+				$datos = array(
+					"categoria" => $_POST["editarCategoria"],
+					"prefijo" => $prefijo,
+					"id" => $idCategoria
+				);
 
 				$respuesta = ModeloCategorias::mdlEditarCategoria($tabla, $datos);
 

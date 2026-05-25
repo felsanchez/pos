@@ -53,10 +53,6 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
               <div class="box">
 
-                <!--=====================================
-                      ENTRADA DEL VENDEDOR
-                      ======================================-->
-
                 <div class="form-group">
 
                   <label>Vendedor</label>

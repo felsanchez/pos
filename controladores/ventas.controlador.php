@@ -48,16 +48,31 @@ class ControladorVentas
 		$where = " WHERE v.estado = 'venta' AND (v.numero_factura IS NULL OR v.numero_factura = '') AND (v.resolucion_id IS NULL OR v.resolucion_id = 0) ";
 
 		// Filtro por Bodega (Sucursal)
-		if (!empty($params['bodegaId']) && is_numeric($params['bodegaId'])) {
-			$where .= " AND v.id_bodega = " . $params['bodegaId'];
-		} else {
-			// Si no hay filtro explícito, aplicar restricción de sesión (excepto si es Admin en Bodega Principal viendo "Todo")
+		$bodegaFilter = "";
+		$esAdmin = (isset($_SESSION["perfil"]) && $_SESSION["perfil"] == "Administrador");
+		if (!$esAdmin) {
+			// Usuarios no-admin: siempre restringir a su bodega asignada
 			if (!empty($_SESSION["id_bodega"])) {
-				if ($_SESSION["perfil"] != "Administrador" || $_SESSION["id_bodega"] != 1) {
-					$where .= " AND v.id_bodega = " . $_SESSION["id_bodega"];
+				$bodegaFilter = " AND v.id_bodega = " . intval($_SESSION["id_bodega"]);
+			} else {
+				$bodegaFilter = " AND v.id_bodega = 1";
+			}
+		} else {
+			// Administradores: respetar el filtro del dropdown
+			if (isset($params['bodegaId']) && $params['bodegaId'] === 'todas') {
+				$bodegaFilter = "";
+			} else if (!empty($params['bodegaId']) && is_numeric($params['bodegaId'])) {
+				$bodegaFilter = " AND v.id_bodega = " . intval($params['bodegaId']);
+			} else {
+				if (!empty($_SESSION["id_bodega"])) {
+					$bodegaFilter = " AND v.id_bodega = " . intval($_SESSION["id_bodega"]);
+				} else {
+					$bodegaFilter = " AND v.id_bodega = 1";
 				}
 			}
 		}
+
+		$where .= $bodegaFilter;
 
 		// Filtro por Fechas
 		if (!empty($params['fechaInicial']) && !empty($params['fechaFinal'])) {
@@ -98,7 +113,7 @@ class ControladorVentas
 
 		// Obtener datos
 		$ventas = ModeloVentas::mdlMostrarVentasServerSide($tabla, $where, $order, $limit);
-		$totalData = ModeloVentas::mdlGetTotalVentas($tabla, " WHERE v.estado = 'venta' AND (v.numero_factura IS NULL OR v.numero_factura = '') AND (v.resolucion_id IS NULL OR v.resolucion_id = 0) ");
+		$totalData = ModeloVentas::mdlGetTotalVentas($tabla, " WHERE v.estado = 'venta' AND (v.numero_factura IS NULL OR v.numero_factura = '') AND (v.resolucion_id IS NULL OR v.resolucion_id = 0) " . $bodegaFilter);
 		$totalFiltered = ModeloVentas::mdlGetTotalVentas($tabla, $where);
 
 		$data = array();
@@ -209,16 +224,23 @@ class ControladorVentas
 		$where = " WHERE v.estado = 'orden' ";
 
 		// Filtro por Bodega (Sucursal)
-		if (!empty($params['bodegaId']) && is_numeric($params['bodegaId'])) {
-			$where .= " AND v.id_bodega = " . $params['bodegaId'];
+		$bodegaFilter = "";
+		if (isset($params['bodegaId']) && $params['bodegaId'] === 'todas') {
+			$bodegaFilter = "";
+		} else if (!empty($params['bodegaId']) && is_numeric($params['bodegaId'])) {
+			// Admin seleccionó una bodega específica desde el filtro
+			$bodegaFilter = " AND v.id_bodega = " . intval($params['bodegaId']);
 		} else {
-			// Si no hay filtro explícito, aplicar restricción de sesión (excepto si es Admin en Bodega Principal viendo "Todo")
 			if (!empty($_SESSION["id_bodega"])) {
-				if ($_SESSION["perfil"] != "Administrador" || $_SESSION["id_bodega"] != 1) {
-					$where .= " AND v.id_bodega = " . $_SESSION["id_bodega"];
+				$bodegaFilter = " AND v.id_bodega = " . intval($_SESSION["id_bodega"]);
+			} else {
+				if ($_SESSION["perfil"] != "Administrador") {
+					$bodegaFilter = " AND v.id_bodega = 1";
 				}
 			}
 		}
+
+		$where .= $bodegaFilter;
 
 		// Filtro por Fechas
 		if (!empty($params['fechaInicial']) && !empty($params['fechaFinal'])) {
@@ -259,7 +281,9 @@ class ControladorVentas
 
 		// Obtener datos
 		$ordenes = ModeloVentas::mdlMostrarVentasServerSide($tabla, $where, $order, $limit);
-		$totalData = ModeloVentas::mdlGetTotalVentas($tabla, " WHERE v.estado = 'orden' ");
+		// totalData: total de órdenes para la bodega activa (sin filtros de fecha/cliente/búsqueda)
+		$whereTotalBase = " WHERE v.estado = 'orden' " . $bodegaFilter;
+		$totalData = ModeloVentas::mdlGetTotalVentas($tabla, $whereTotalBase);
 		$totalFiltered = ModeloVentas::mdlGetTotalVentas($tabla, $where);
 
 		$data = array();
@@ -549,19 +573,34 @@ class ControladorVentas
 		$prefijoDian = !empty($configuracion["prefijo_dian"]) ? $configuracion["prefijo_dian"] : "FE";
 
 		// Filtros base para Facturas Electrónicas
-		$where = " WHERE v.estado = 'venta' AND (v.numero_factura != '' OR v.resolucion_id IS NOT NULL) ";
+		$where = " WHERE v.estado = 'venta' AND (v.numero_factura != '' OR (v.resolucion_id IS NOT NULL AND v.resolucion_id != 0)) ";
 
 		// Filtro por Bodega (Sucursal)
-		if (!empty($params['bodegaId']) && is_numeric($params['bodegaId'])) {
-			$where .= " AND v.id_bodega = " . $params['bodegaId'];
-		} else {
-			// Si no hay filtro explícito, aplicar restricción de sesión (excepto si es Admin en Bodega Principal viendo "Todo")
+		$bodegaFilter = "";
+		$esAdmin = (isset($_SESSION["perfil"]) && $_SESSION["perfil"] == "Administrador");
+		if (!$esAdmin) {
+			// Usuarios no-admin: siempre restringir a su bodega asignada
 			if (!empty($_SESSION["id_bodega"])) {
-				if ($_SESSION["perfil"] != "Administrador" || $_SESSION["id_bodega"] != 1) {
-					$where .= " AND v.id_bodega = " . $_SESSION["id_bodega"];
+				$bodegaFilter = " AND v.id_bodega = " . intval($_SESSION["id_bodega"]);
+			} else {
+				$bodegaFilter = " AND v.id_bodega = 1";
+			}
+		} else {
+			// Administradores: respetar el filtro del dropdown
+			if (isset($params['bodegaId']) && $params['bodegaId'] === 'todas') {
+				$bodegaFilter = "";
+			} else if (!empty($params['bodegaId']) && is_numeric($params['bodegaId'])) {
+				$bodegaFilter = " AND v.id_bodega = " . intval($params['bodegaId']);
+			} else {
+				if (!empty($_SESSION["id_bodega"])) {
+					$bodegaFilter = " AND v.id_bodega = " . intval($_SESSION["id_bodega"]);
+				} else {
+					$bodegaFilter = " AND v.id_bodega = 1";
 				}
 			}
 		}
+
+		$where .= $bodegaFilter;
 
 		// Filtro por Fechas
 		if (!empty($params['fechaInicial']) && !empty($params['fechaFinal'])) {
@@ -602,7 +641,7 @@ class ControladorVentas
 
 		// Obtener datos
 		$facturas = ModeloVentas::mdlMostrarVentasServerSide($tabla, $where, $order, $limit);
-		$totalData = ModeloVentas::mdlGetTotalVentas($tabla, " WHERE v.estado = 'venta' AND (v.numero_factura != '' OR v.resolucion_id IS NOT NULL) ");
+		$totalData = ModeloVentas::mdlGetTotalVentas($tabla, " WHERE v.estado = 'venta' AND (v.numero_factura != '' OR (v.resolucion_id IS NOT NULL AND v.resolucion_id != 0)) " . $bodegaFilter);
 		$totalFiltered = ModeloVentas::mdlGetTotalVentas($tabla, $where);
 
 		$data = array();
@@ -840,7 +879,7 @@ class ControladorVentas
 
 			// Procesar nuevos productos y actualizar stock
 			$listaProductos = json_decode($_POST["listaProductos"], true);
-			$idBodegaActual = (!empty($_SESSION["id_bodega"])) ? $_SESSION["id_bodega"] : 1;
+			$idBodegaActual = isset($_POST["id_bodega"]) ? intval($_POST["id_bodega"]) : ((!empty($_SESSION["id_bodega"])) ? $_SESSION["id_bodega"] : 1);
 
 			foreach ($listaProductos as $key => $value) {
 				
@@ -973,7 +1012,7 @@ class ControladorVentas
 
 			$totalProductosComprados = array();
 
-			$idBodegaActual = (!empty($_SESSION["id_bodega"])) ? $_SESSION["id_bodega"] : 1;
+			$idBodegaActual = isset($_POST["id_bodega"]) ? intval($_POST["id_bodega"]) : ((!empty($_SESSION["id_bodega"])) ? $_SESSION["id_bodega"] : 1);
 			
 			if ($_POST["estado"] == "venta") {
 
@@ -2632,7 +2671,7 @@ class ControladorVentas
 			$tabla = "ventas";
 			$totalProductosComprados = array();
 
-			$idBodegaActual = (!empty($_SESSION["id_bodega"])) ? $_SESSION["id_bodega"] : 1;
+			$idBodegaActual = isset($_POST["id_bodega"]) ? intval($_POST["id_bodega"]) : ((!empty($_SESSION["id_bodega"])) ? $_SESSION["id_bodega"] : 1);
 
 			if ($_POST["estado"] == "venta") {
 				foreach ($listaProductos as $key => $value) {

@@ -234,23 +234,7 @@
       </div>
     </div>
 
-    <!-- SECCIÓN 5: ESTADO DE RESULTADOS (FACTURACIÓN ELECTRÓNICA) -->
-    <div class="box box-info collapsed-box" id="seccion-estado-resultados-facturacion">
-      <div class="box-header with-border">
-        <h3 class="box-title"><i class="fa fa-balance-scale"></i> Estado de Resultados (Facturación Electrónica)</h3>
-        <div class="box-tools pull-right">
-          <button type="button" class="btn btn-box-tool" data-widget="collapse">
-            <i class="fa fa-plus"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="box-body" style="display: none;">
-        <?php include "reportes/estado-resultados-facturacion.php"; ?>
-      </div>
-    </div>
-
-    <!-- SECCIÓN 6: REPORTE DE FACTURACIÓN ELECTRÓNICA -->
+    <!-- SECCIÓN 5: REPORTE DE FACTURACIÓN ELECTRÓNICA -->
     <div class="box box-danger collapsed-box" id="seccion-reportes-facturacion">
       <div class="box-header with-border">
         <h3 class="box-title"><i class="fa fa-file-text-o"></i> Reportes Facturación Electrónica</h3>
@@ -1072,11 +1056,7 @@
       var formOrden = document.getElementById('filtroOrdenesForm');
       if (formOrden) formOrden.dispatchEvent(new Event('submit', { cancelable: true }));
 
-      // 4. Estado de Resultados FE (Sección 5)
-      var formFinanFact = document.getElementById('filtro-financiero-fact');
-      if (formFinanFact) formFinanFact.dispatchEvent(new Event('submit', { cancelable: true }));
-
-      // 5. Reporte Facturación Electrónica (Sección 6)
+      // 4. Reporte Facturación Electrónica (Sección 5)
       if ($('#btnFiltrarReportes').length) $('#btnFiltrarReportes').click();
 
       // 6. Gráficos de Rendimiento (Sección 2)
@@ -1109,11 +1089,10 @@
     if ($(window).width() < 768) {
       $('.box').addClass('collapsed-box-mobile');
     } else {
-      // En desktop: colapsar solo las secciones 2, 3, 4, 5 y 6 (dejar la 1ra expandida)
+      // En desktop: colapsar solo las secciones 2, 3, 4 y 5 (dejar la 1ra expandida)
       $('#seccion-graficos-rendimiento').addClass('collapsed-box');
       $('#seccion-estado-resultados').addClass('collapsed-box');
       $('#seccion-analisis-ordenes').addClass('collapsed-box');
-      $('#seccion-estado-resultados-facturacion').addClass('collapsed-box');
       $('#seccion-reportes-facturacion').addClass('collapsed-box');
     }
 

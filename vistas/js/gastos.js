@@ -22,7 +22,7 @@ $(document).ready(function () {
                     $(row).attr('style', data.DT_RowAttr.style);
                 }
             },
-            "order": [[ $('#tablaGastos thead th:contains("Fecha")').index() != -1 ? $('#tablaGastos thead th:contains("Fecha")').index() : 6, "desc"]],
+            "order": [[0, "asc"]],
             "columnDefs": [
                 { "targets": 0, "className": "dtr-control", "responsivePriority": 1 },
                 { "targets": -1, "responsivePriority": 2, "orderable": false }, // Acciones

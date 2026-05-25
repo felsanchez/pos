@@ -719,7 +719,7 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 	IMPORTAR Y ACTUALIZAR PRODUCTOS MASIVOS
 	=============================================*/
 
-	static public function mdlImportarProductosMasivos($tabla, $productosInsertar, $productosActualizar = array())
+	static public function mdlImportarProductosMasivos($tabla, $productosInsertar, $productosActualizar = array(), $idBodega = null)
 	{
 
 		$conexion = Conexion::conectar();
@@ -731,7 +731,15 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 			$id_usuario_sesion = isset($_SESSION["id"]) ? $_SESSION["id"] : 1; // Fallback al admin
 			$nombre_usuario_sesion = isset($_SESSION["nombre"]) ? $_SESSION["nombre"] : "Sistema";
 
-			$stmtHistorial = $conexion->prepare("INSERT INTO movimientos_stock (tipo_producto, id_producto, id_variante, nombre_producto, tipo_movimiento, cantidad, stock_anterior, stock_nuevo, id_usuario, nombre_usuario, referencia, notas) VALUES (:tipo_producto, :id_producto, :id_variante, :nombre_producto, :tipo_movimiento, :cantidad, :stock_anterior, :stock_nuevo, :id_usuario, :nombre_usuario, :referencia, :notas)");
+			$stmtHistorial = $conexion->prepare("INSERT INTO movimientos_stock (tipo_producto, id_producto, id_variante, id_bodega, nombre_producto, tipo_movimiento, cantidad, stock_anterior, stock_nuevo, id_usuario, nombre_usuario, referencia, notas) VALUES (:tipo_producto, :id_producto, :id_variante, :id_bodega, :nombre_producto, :tipo_movimiento, :cantidad, :stock_anterior, :stock_nuevo, :id_usuario, :nombre_usuario, :referencia, :notas)");
+
+			// Prepare statement for products-bodegas and global stock update
+			$stmtPb = null;
+			$stmtUpdateGlobalStock = null;
+			if ($idBodega !== null) {
+				$stmtPb = $conexion->prepare("INSERT INTO productos_bodegas (id_producto, id_bodega, stock, estado) VALUES (:id_producto, :id_bodega, :stock, 1) ON DUPLICATE KEY UPDATE stock = :stock, estado = 1");
+				$stmtUpdateGlobalStock = $conexion->prepare("UPDATE productos SET stock = (SELECT COALESCE(SUM(stock), 0) FROM productos_bodegas WHERE id_producto = :id_producto) WHERE id = :id_producto");
+			}
 
 			// 1. INSERCIONES DE PRODUCTOS NUEVOS
 			if (count($productosInsertar) > 0) {
@@ -770,6 +778,16 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 
 					$idNuevoProducto = $conexion->lastInsertId();
 
+					if ($idBodega !== null) {
+						$stmtPb->bindParam(":id_producto", $idNuevoProducto, PDO::PARAM_INT);
+						$stmtPb->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
+						$stmtPb->bindParam(":stock", $producto["stock"], PDO::PARAM_INT);
+						$stmtPb->execute();
+
+						$stmtUpdateGlobalStock->bindParam(":id_producto", $idNuevoProducto, PDO::PARAM_INT);
+						$stmtUpdateGlobalStock->execute();
+					}
+
 					// Registrar historial si tiene stock inicial
 					if ($producto["stock"] > 0) {
 						$tipo_movimiento = "creacion_producto";
@@ -782,6 +800,7 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 						$stmtHistorial->bindParam(":tipo_producto", $tipo_producto, PDO::PARAM_STR);
 						$stmtHistorial->bindParam(":id_producto", $idNuevoProducto, PDO::PARAM_INT);
 						$stmtHistorial->bindParam(":id_variante", $id_variante, PDO::PARAM_INT);
+						$stmtHistorial->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
 						$stmtHistorial->bindParam(":nombre_producto", $producto["descripcion"], PDO::PARAM_STR);
 						$stmtHistorial->bindParam(":tipo_movimiento", $tipo_movimiento, PDO::PARAM_STR);
 						$stmtHistorial->bindParam(":cantidad", $producto["stock"], PDO::PARAM_INT);
@@ -818,6 +837,16 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 
 					$stmtUpdate->execute();
 
+					if ($idBodega !== null) {
+						$stmtPb->bindParam(":id_producto", $producto["id"], PDO::PARAM_INT);
+						$stmtPb->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
+						$stmtPb->bindParam(":stock", $producto["stock"], PDO::PARAM_INT);
+						$stmtPb->execute();
+
+						$stmtUpdateGlobalStock->bindParam(":id_producto", $producto["id"], PDO::PARAM_INT);
+						$stmtUpdateGlobalStock->execute();
+					}
+
 					// Registrar historial solo si el stock cambió
 					if ($producto["stock"] != $producto["stock_anterior"]) {
 						$diferencia = $producto["stock"] - $producto["stock_anterior"];
@@ -830,6 +859,7 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 						$stmtHistorial->bindParam(":tipo_producto", $tipo_producto, PDO::PARAM_STR);
 						$stmtHistorial->bindParam(":id_producto", $producto["id"], PDO::PARAM_INT);
 						$stmtHistorial->bindParam(":id_variante", $id_variante, PDO::PARAM_INT);
+						$stmtHistorial->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
 						$stmtHistorial->bindParam(":nombre_producto", $producto["descripcion"], PDO::PARAM_STR);
 						$stmtHistorial->bindParam(":tipo_movimiento", $tipo_movimiento, PDO::PARAM_STR);
 						$stmtHistorial->bindParam(":cantidad", $diferencia, PDO::PARAM_INT);
@@ -851,6 +881,8 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 			$stmtInsert = null;
 			$stmtUpdate = null;
 			$stmtHistorial = null;
+			$stmtPb = null;
+			$stmtUpdateGlobalStock = null;
 			return "ok";
 
 		} catch (Exception $e) {
@@ -861,6 +893,8 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 			$stmtInsert = null;
 			$stmtUpdate = null;
 			$stmtHistorial = null;
+			$stmtPb = null;
+			$stmtUpdateGlobalStock = null;
 			return "error";
 		}
 	}

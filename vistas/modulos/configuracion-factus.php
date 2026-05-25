@@ -266,7 +266,27 @@ if (!$configuracion) {
 									<i class="fa fa-refresh"></i> Probar Conexión
 								</button>
 
-								<button type="button" class="btn btn-success" id="btnAutenticar" style="margin-left: 10px;">
+								<style>
+									#btnAutenticar {
+										background-color: #10b981 !important;
+										border-color: #059669 !important;
+										font-weight: bold;
+										padding: 10px 20px;
+										font-size: 16px;
+										border-radius: 4px;
+										transition: background-color 0.2s ease, transform 0.1s ease;
+										margin-left: 10px;
+									}
+									#btnAutenticar:hover, #btnAutenticar:focus, #btnAutenticar:active {
+										background-color: #059669 !important;
+										border-color: #047857 !important;
+										color: #fff !important;
+									}
+									#btnAutenticar:active {
+										transform: scale(0.98);
+									}
+								</style>
+								<button type="button" class="btn btn-success" id="btnAutenticar">
 									<i class="fa fa-key"></i> Autenticar y Obtener Tokens
 								</button>
 

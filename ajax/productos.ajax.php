@@ -35,31 +35,42 @@ class AjaxProductos
 
     public function ajaxCrearCodigoProducto()
     {
+        // 1. Obtener el prefijo de la categoría
+        $prefijo = null;
+        $stmtCat = Conexion::conectar()->prepare("SELECT prefijo FROM categorias WHERE id = :id");
+        $stmtCat->bindParam(":id", $this->idCategoria, PDO::PARAM_INT);
+        $stmtCat->execute();
+        $cat = $stmtCat->fetch();
+        $stmtCat = null;
 
-        // Buscar el último código NUMÉRICO de esta categoría
+        if ($cat && !empty($cat["prefijo"])) {
+            $prefijo = $cat["prefijo"];
+        } else {
+            $prefijo = $this->idCategoria;
+        }
 
+        // 2. Buscar el último código NUMÉRICO de esta categoría que empiece por este prefijo
+        $prefixLike = $prefijo . '%';
         $stmt = Conexion::conectar()->prepare("SELECT codigo FROM productos
-
 												WHERE id_categoria = :id_categoria
-
+												AND codigo LIKE :prefix_like
 												AND codigo REGEXP '^[0-9]+$'
-
 												ORDER BY CAST(codigo AS UNSIGNED) DESC
-
 												LIMIT 1");
 
-
-
         $stmt->bindParam(":id_categoria", $this->idCategoria, PDO::PARAM_INT);
-
+        $stmt->bindParam(":prefix_like", $prefixLike, PDO::PARAM_STR);
         $stmt->execute();
-
         $respuesta = $stmt->fetch();
-
         $stmt = null;
 
-        echo json_encode($respuesta);
-
+        if (!$respuesta) {
+            // Devolvemos el prefijo + "00" en formato array para que JS le sume 1 y quede como prefijo + "01"
+            $codigoBase = $prefijo . "00";
+            echo json_encode(array("codigo" => $codigoBase));
+        } else {
+            echo json_encode($respuesta);
+        }
     }
 
 
@@ -80,14 +91,86 @@ class AjaxProductos
             $valor = null;
             $orden = "id";
 
-            $respuesta = ControladorProductos::ctrMostrarProductos($item, $valor, $orden);
+            $productos = ControladorProductos::ctrMostrarProductos($item, $valor, $orden);
 
-            // LOGGING DEBUG
-            $logFile = fopen("debug_ajax_productos.txt", "a");
-            fwrite($logFile, "Response ID: " . print_r($respuesta, true) . "\n");
-            fclose($logFile);
+            // Obtener tributos para mapear impuestos de forma eficiente
+            require_once "../modelos/factus.modelo.php";
+            $tributos = ModeloFactus::mdlObtenerTributos();
+            $tributosMap = array();
+            if (is_array($tributos)) {
+                foreach ($tributos as $t) {
+                    $tributosMap[$t['id']] = $t;
+                }
+            }
 
-            echo json_encode($respuesta);
+            $idBodega = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+            $resultado = array();
+
+            if (is_array($productos)) {
+                foreach ($productos as $prod) {
+                    // Obtener impuesto del producto
+                    $impuestoPorcentaje = 0;
+                    $impuestoNombre = "Exento";
+                    if (isset($prod["tributo_id"]) && $prod["tributo_id"] != 0 && isset($tributosMap[$prod["tributo_id"]])) {
+                        $t = $tributosMap[$prod["tributo_id"]];
+                        $impuestoPorcentaje = isset($t["porcentaje_defecto"]) ? $t["porcentaje_defecto"] : (isset($t["porcentaje"]) ? $t["porcentaje"] : 0);
+                        $impuestoNombre = $t["nombre"];
+                    }
+
+                    if (isset($prod["tiene_variantes"]) && $prod["tiene_variantes"] == 1) {
+                        // Obtener variantes
+                        $variantes = ModeloProductos::mdlObtenerVariantesProducto($prod["id"], $idBodega);
+                        if (is_array($variantes)) {
+                            foreach ($variantes as $var) {
+                                if ($var["estado"] != 1) continue;
+
+                                // Obtener opciones
+                                $opciones = ModeloProductos::mdlObtenerOpcionesVariante($var["id"]);
+                                $nombreVariante = array();
+                                if (is_array($opciones)) {
+                                    foreach ($opciones as $opcion) {
+                                        $nombreVariante[] = $opcion["nombre"];
+                                    }
+                                }
+                                $nombreVarianteStr = implode(" - ", $nombreVariante);
+                                $descripcionCompleta = $prod["descripcion"] . " - " . $nombreVarianteStr;
+
+                                $precioFinal = $prod["precio_venta"] + $var["precio_adicional"];
+
+                                $resultado[] = array(
+                                    "id" => $prod["id"],
+                                    "descripcion" => $descripcionCompleta,
+                                    "tiene_variantes" => 1,
+                                    "es_variante" => 1,
+                                    "id_variante" => $var["id"],
+                                    "sku" => $var["sku"],
+                                    "stock" => $var["stock"],
+                                    "precio_venta" => $precioFinal,
+                                    "impuesto_porcentaje" => $impuestoPorcentaje,
+                                    "impuesto_nombre" => $impuestoNombre
+                                );
+                            }
+                        }
+                    } else {
+                        // Producto simple
+                        $resultado[] = array(
+                            "id" => $prod["id"],
+                            "descripcion" => $prod["descripcion"],
+                            "tiene_variantes" => 0,
+                            "es_variante" => 0,
+                            "id_variante" => null,
+                            "sku" => $prod["codigo"],
+                            "stock" => $prod["stock"],
+                            "precio_venta" => $prod["precio_venta"],
+                            "impuesto_porcentaje" => $impuestoPorcentaje,
+                            "impuesto_nombre" => $impuestoNombre
+                        );
+                    }
+                }
+            }
+
+            echo json_encode($resultado);
+            exit;
         } else if ($this->nombreProducto != "") {
 
             $item = "descripcion";

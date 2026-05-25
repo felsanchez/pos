@@ -13,6 +13,7 @@ try {
   $fecha_fin = $_POST['fecha_fin'] ?? null;
   $id_categoria = isset($_POST['id_categoria']) && $_POST['id_categoria'] !== '' ? (int)$_POST['id_categoria'] : null;
   $id_bodega = $_POST['id_bodega'] ?? null;
+  $tipo_ingreso = $_POST['tipo_ingreso'] ?? 'todas';
 
   // Validación básica
   if (!$tipo) {
@@ -76,13 +77,21 @@ try {
     $whereBodegaGastosAlias = " AND g.id_bodega = :id_bodega";
   }
 
+  // Filtro por Tipo de Ingreso
+  $condicionTipoIngreso = "(resolucion_id IS NULL OR resolucion_id = 0 OR (resolucion_id IS NOT NULL AND resolucion_id != 0 AND estado_dian IN ('aceptada', 'enviada')))";
+  if ($tipo_ingreso === 'ventas') {
+      $condicionTipoIngreso = "(resolucion_id IS NULL OR resolucion_id = 0)";
+  } elseif ($tipo_ingreso === 'fe') {
+      $condicionTipoIngreso = "(resolucion_id IS NOT NULL AND resolucion_id != 0 AND estado_dian IN ('aceptada', 'enviada'))";
+  }
+
   // =============================================
   // TOTAL DE INGRESOS (VENTAS POS + FE FIRMADAS)
   // =============================================
   $sqlIngresos = "SELECT COALESCE(SUM(total), 0) as total 
                   FROM ventas 
                   WHERE estado = 'venta' 
-                    AND (resolucion_id IS NULL OR (resolucion_id IS NOT NULL AND estado_dian IN ('aceptada', 'enviada')))
+                    AND $condicionTipoIngreso
                     AND $condicionFechaVentas $whereBodegaVentas";
   $stmtIngresos = $conn->prepare($sqlIngresos);
   if ($usaParametrosFecha) {
@@ -133,7 +142,7 @@ try {
     SELECT DATE(fecha) as fecha, COALESCE(SUM(total), 0) as total
     FROM ventas
     WHERE estado = 'venta' 
-      AND (resolucion_id IS NULL OR (resolucion_id IS NOT NULL AND estado_dian IN ('aceptada', 'enviada')))
+      AND $condicionTipoIngreso
       AND $condicionFechaVentas $whereBodegaVentas
     GROUP BY DATE(fecha)
     ORDER BY fecha ASC

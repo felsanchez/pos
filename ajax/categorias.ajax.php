@@ -60,6 +60,26 @@ class AjaxCategorias{
 
 		echo json_encode($respuesta);
 	}
+
+	/*=============================================
+	VALIDAR NO REPETIR PREFIJO
+	=============================================*/
+
+	public $validarPrefijo;
+	public $idCategoriaActual;
+	public function ajaxValidarPrefijo(){
+
+		$item = "prefijo";
+		$valor = $this->validarPrefijo;
+
+		$respuesta = ControladorCategorias::ctrMostrarCategorias($item, $valor);
+
+		if ($respuesta && (!$this->idCategoriaActual || $respuesta["id"] != $this->idCategoriaActual)) {
+			echo json_encode($respuesta);
+		} else {
+			echo json_encode(false);
+		}
+	}
 	
 }
 
@@ -93,4 +113,15 @@ if(isset($_POST["validarCategoria"])){
 	$valCategoria = new AjaxCategorias();
 	$valCategoria -> validarCategoria = $_POST["validarCategoria"];
 	$valCategoria -> ajaxValidarCategoria();
+}
+
+/*=============================================
+VALIDAR NO REPETIR PREFIJO
+=============================================*/
+if(isset($_POST["validarPrefijo"])){
+
+	$valPrefijo = new AjaxCategorias();
+	$valPrefijo -> validarPrefijo = $_POST["validarPrefijo"];
+	$valPrefijo -> idCategoriaActual = isset($_POST["idCategoriaActual"]) ? $_POST["idCategoriaActual"] : null;
+	$valPrefijo -> ajaxValidarPrefijo();
 }

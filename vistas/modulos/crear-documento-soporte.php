@@ -150,6 +150,11 @@ if ($ultimoDS) {
 
                                 <input type="hidden" id="listaProductosDS" name="listaProductosDS">
 
+                                <!-- Botón para agregar producto en dispositivos móviles -->
+                                <button type="button" class="btn btn-warning btn-block btnAgregarProductoDS visible-xs visible-sm visible-md" style="margin-top: 10px; margin-bottom: 15px; font-weight: bold;">
+                                  <i class="fa fa-plus"></i> Agregar producto
+                                </button>
+
                                 <hr>
 
                                 <!-- Totales -->
