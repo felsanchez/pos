@@ -1,5 +1,16 @@
 <?php
 
+if (!class_exists("ControladorCajas")) {
+	if (file_exists(__DIR__ . "/cajas.controlador.php")) {
+		require_once __DIR__ . "/cajas.controlador.php";
+	}
+}
+if (!class_exists("ModeloCajas")) {
+	if (file_exists(__DIR__ . "/../modelos/cajas.modelo.php")) {
+		require_once __DIR__ . "/../modelos/cajas.modelo.php";
+	}
+}
+
 class ControladorGastos{
 
 	/*=============================================
@@ -209,6 +220,21 @@ class ControladorGastos{
 	=============================================*/
 
 	static public function ctrCrearGasto(){
+		// Validar si el control de caja está activo y hay caja abierta
+		if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
+			echo '<script>
+				swal({
+					type: "error",
+					title: "Caja Cerrada",
+					text: "Debe abrir caja antes de realizar esta operación.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then(() => {
+					window.location = "inicio";
+				});
+			</script>';
+			return;
+		}
 
 		if(isset($_POST["nuevoConceptoGasto"])){
 			@file_put_contents("log_post.txt", date("[Y-m-d H:i:s] ") . "ctrCrearGasto: " . print_r($_POST, true) . "\n", FILE_APPEND);
@@ -330,7 +356,12 @@ class ControladorGastos{
 
 				if($respuesta == "ok"){
 
-				// Verificar si el gasto creado requiere notificación
+					// Registrar egreso en caja si el gasto se pagó en efectivo y su estado es aprobado
+					if (class_exists("ControladorCajas") && strtolower(trim($_POST["nuevoMetodoPagoGasto"])) == "efectivo" && $_POST["nuevoEstadoGasto"] == "aprobado") {
+						ControladorCajas::ctrRegistrarMovimiento("egreso", $_POST["nuevoMontoGasto"], "Gasto: " . $_POST["nuevoConceptoGasto"]);
+					}
+
+					// Verificar si el gasto creado requiere notificación
 				ControladorNotificaciones::ctrVerificarGastosProximos();
 
 					echo'<script>
@@ -379,6 +410,21 @@ class ControladorGastos{
 	=============================================*/
 
 	static public function ctrEditarGasto(){
+		// Validar si el control de caja está activo y hay caja abierta
+		if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
+			echo '<script>
+				swal({
+					type: "error",
+					title: "Caja Cerrada",
+					text: "Debe abrir caja antes de realizar esta operación.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then(() => {
+					window.location = "inicio";
+				});
+			</script>';
+			return;
+		}
 
 		if(isset($_POST["editarConceptoGasto"])){
 			@file_put_contents("log_post.txt", date("[Y-m-d H:i:s] ") . "ctrEditarGasto: " . print_r($_POST, true) . "\n", FILE_APPEND);
@@ -496,9 +542,42 @@ class ControladorGastos{
 							   "estado" => $_POST["editarEstadoGasto"],
 							   "notas" => $_POST["editarNotasGasto"]);
 
+				$gastoOriginal = ModeloGastos::mdlMostrarGastos("gastos", "id", $_POST["idGasto"]);
+				$originalAprobadoEfectivo = ($gastoOriginal && strtolower(trim($gastoOriginal["metodo_pago"])) == "efectivo" && $gastoOriginal["estado"] == "aprobado");
+
 				$respuesta = ModeloGastos::mdlEditarGasto($tabla, $datos);
 
 				if($respuesta == "ok"){
+
+					// Sincronizar con caja chica
+					if (class_exists("ControladorCajas")) {
+						$nuevoAprobadoEfectivo = (strtolower(trim($_POST["editarMetodoPagoGasto"])) == "efectivo" && $_POST["editarEstadoGasto"] == "aprobado");
+						
+						// Caso 1: No estaba aprobado/efectivo, pero ahora sí (Registrar egreso)
+						if (!$originalAprobadoEfectivo && $nuevoAprobadoEfectivo) {
+							ControladorCajas::ctrRegistrarMovimiento("egreso", $_POST["editarMontoGasto"], "Gasto: " . $_POST["editarConceptoGasto"]);
+						}
+						// Caso 2: Estaba aprobado/efectivo, pero ahora ya no (eg: rechazado, pendiente o no efectivo) (Revertir registrando un ingreso corrector)
+						elseif ($originalAprobadoEfectivo && !$nuevoAprobadoEfectivo) {
+							ControladorCajas::ctrRegistrarMovimiento("ingreso", $gastoOriginal["monto"], "Reversión Gasto: " . $gastoOriginal["concepto"]);
+						}
+						// Caso 3: Sigue siendo aprobado/efectivo pero cambió el monto o concepto (Registrar el ajuste diferencial o el ajuste de concepto)
+						elseif ($originalAprobadoEfectivo && $nuevoAprobadoEfectivo) {
+							$cambioMonto = (floatval($gastoOriginal["monto"]) != floatval($_POST["editarMontoGasto"]));
+							$cambioConcepto = ($gastoOriginal["concepto"] != $_POST["editarConceptoGasto"]);
+
+							if ($cambioMonto) {
+								$diferencia = floatval($_POST["editarMontoGasto"]) - floatval($gastoOriginal["monto"]);
+								if ($diferencia > 0) {
+									ControladorCajas::ctrRegistrarMovimiento("egreso", $diferencia, "Ajuste Gasto (Incremento): " . $_POST["editarConceptoGasto"]);
+								} else {
+									ControladorCajas::ctrRegistrarMovimiento("ingreso", abs($diferencia), "Ajuste Gasto (Reducción): " . $_POST["editarConceptoGasto"]);
+								}
+							} elseif ($cambioConcepto) {
+								// Si solo cambió el concepto, podemos registrar un log explicativo (opcional, o simplemente nada ya que el saldo es el mismo)
+							}
+						}
+					}
 
 				// Verificar si el gasto editado requiere notificación
 				ControladorNotificaciones::ctrVerificarGastosProximos();
@@ -588,6 +667,11 @@ class ControladorGastos{
 			$respuesta = ModeloGastos::mdlEliminarGasto($tabla, $idGasto);
 
 			if($respuesta == "ok"){
+
+				// Si el gasto eliminado estaba aprobado y pagado en efectivo, reintegrar a la caja chica
+				if ($gasto && class_exists("ControladorCajas") && strtolower(trim($gasto["metodo_pago"])) == "efectivo" && $gasto["estado"] == "aprobado") {
+					ControladorCajas::ctrRegistrarMovimiento("ingreso", $gasto["monto"], "Reversión Gasto (Eliminado): " . $gasto["concepto"]);
+				}
 
 				if (isset($_POST["idGastoEliminar"])) {
 					return "ok";

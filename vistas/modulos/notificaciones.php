@@ -144,7 +144,6 @@
                   <option value="Stock Agotado">Stock Agotado</option>
                   <option value="Stock Bajo">Stock Bajo</option>
                   <option value="Actividad Próxima">Actividad Próxima</option>
-                  <option value="Gasto Próximo">Gasto Próximo</option>
                   <option value="Orden Agente IA">Orden Agente IA</option>
                   <option value="Transacción Bold">Transacción de Bold</option>
                   <option value="Edicion de pedido">Solicitud Edición de pedido</option>

@@ -197,9 +197,9 @@ BARRA DE NAVEGACION
 			<span class="sr-only">Toggle navigation</span>
 		</a>
 
-		<!-- Sucursal Activa -->
-		<div class="navbar-custom-menu pull-left" style="margin-left: 10px; margin-top: 10px; color: white;">
-			<span class="label label-primary" style="font-size: 13px; padding: 5px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+		<!-- Sucursal Activa y Módulo de Caja Chica -->
+		<div class="navbar-custom-menu pull-left" style="margin-left: 10px; margin-top: 10px; color: white; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+			<span class="label label-primary" style="font-size: 13px; padding: 5px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-block;">
 				<i class="fa fa-building"></i> 
 				<span class="hidden-xs">Sucursal:</span> 
 				<?php 
@@ -215,6 +215,30 @@ BARRA DE NAVEGACION
 					echo e($_SESSION["nombre_bodega"]);
 				?>
 			</span>
+
+			<?php 
+			if (class_exists("ControladorCajas") && isset($configuracion["control_caja"]) && intval($configuracion["control_caja"]) === 1): 
+				$cajaAbierta = ControladorCajas::ctrVerificarCajaAbierta();
+				$moneda = !empty($configuracion["moneda"]) ? $configuracion["moneda"] : "$";
+			?>
+				<div class="btn-group-caja-header" style="display: inline-flex; gap: 6px; align-items: center;">
+					<?php if (!$cajaAbierta): ?>
+						<button class="btn btn-success btn-xs btnAbrirCajaModal" data-toggle="modal" data-target="#modalAperturaCaja" style="border-radius: 12px; padding: 3px 10px; font-weight: bold; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+							<i class="fa fa-unlock"></i> Abrir Caja
+						</button>
+					<?php else: ?>
+						<button class="btn btn-warning btn-xs btnMovimientoCajaModal" data-toggle="modal" data-target="#modalMovimientoCaja" style="border-radius: 12px; padding: 3px 10px; font-weight: bold; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 2px 4px rgba(0,0,0,0.15); color: #fff;">
+							<i class="fa fa-exchange"></i> Movimiento
+						</button>
+						<button class="btn btn-danger btn-xs btnCerrarCajaModal" data-toggle="modal" data-target="#modalCerrarCaja" style="border-radius: 12px; padding: 3px 10px; font-weight: bold; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+							<i class="fa fa-lock"></i> Cerrar Caja
+						</button>
+						<span class="label label-success hidden-xs" style="font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 500; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+							<i class="fa fa-check-circle"></i> Caja Abierta (Base: <?php echo $moneda . ' ' . number_format($cajaAbierta["monto_apertura"], 2); ?>)
+						</span>
+					<?php endif; ?>
+				</div>
+			<?php endif; ?>
 		</div>
 
 

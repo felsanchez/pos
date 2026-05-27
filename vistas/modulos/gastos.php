@@ -489,10 +489,12 @@ MODAL EDITAR GASTO
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-credit-card"></i></span>
                     <select class="form-control" name="editarMetodoPagoGasto" id="editarMetodoPagoGasto" required>
-                      <option value="Efectivo">Efectivo</option>
-                      <option value="Transferencia">Transferencia</option>
-                      <option value="Tarjeta">Tarjeta</option>
-                      <option value="Cheque">Cheque</option>
+                      <?php
+                      foreach ($mediosPago as $medio) {
+                        $medio = trim($medio);
+                        echo '<option value="' . $medio . '">' . $medio . '</option>';
+                      }
+                      ?>
                     </select>
                   </div>
                 </div>

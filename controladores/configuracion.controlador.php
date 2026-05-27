@@ -125,6 +125,8 @@ class ControladorConfiguracion
 
 			$alertaAgenteIA = isset($_POST["alertaAgenteIA"]) ? 1 : 0;
 
+			$controlCaja = isset($_POST["controlCaja"]) ? 1 : 0;
+
 			$datos = array(
 				"nombre_empresa" => $_POST["nombreEmpresa"],
 				"nit" => $_POST["nitEmpresa"],
@@ -145,6 +147,7 @@ class ControladorConfiguracion
 				"alerta_gastos_proximos" => $alertaGastosProximos,
 				"dias_antes_gasto" => $_POST["diasAntesGasto"],
 				"alerta_agente_ia" => $alertaAgenteIA,
+				"control_caja" => $controlCaja,
 				"mensaje_ticket" => $_POST["mensajeTicket"],
 				"color_principal" => $_POST["colorPrincipal"],
 				"color_secundario" => $_POST["colorSecundario"],

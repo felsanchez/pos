@@ -86,3 +86,15 @@ $nombreEmpresa = !empty($configFactus["nombre_empresa"]) ? $configFactus["nombre
   </section>
 
 </div>
+
+<?php if (isset($_SESSION["alertaCajaCerrada"]) && $_SESSION["alertaCajaCerrada"] === true): ?>
+  <script>
+    swal({
+      title: "¡Caja Cerrada!",
+      text: "Debe realizar la Apertura de Caja en el módulo de ventas antes de poder crear o editar transacciones.",
+      icon: "warning",
+      confirmButtonText: "Entendido"
+    });
+  </script>
+  <?php unset($_SESSION["alertaCajaCerrada"]); ?>
+<?php endif; ?>

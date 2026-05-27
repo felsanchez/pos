@@ -182,6 +182,27 @@ CUERPO DOCUMENTO
 
     if (isset($_GET["ruta"])) {
 
+      $rutasProtegidas = [
+          "crear-venta", 
+          "crear-orden", 
+          "crear-factura-electronica", 
+          "crear-nota-credito", 
+          "crear-documento-soporte", 
+          "crear-nota-ajuste-ds", 
+          "gastos",
+          "orden-a-factura-electronica",
+          "editar-factura-electronica",
+          "editar-orden",
+          "editar-venta1"
+      ];
+
+      if (in_array($_GET["ruta"], $rutasProtegidas)) {
+          if (!ControladorCajas::ctrValidarCajaAbierta()) {
+              $_GET["ruta"] = "inicio";
+              $_SESSION["alertaCajaCerrada"] = true;
+          }
+      }
+
       if (
         $_GET["ruta"] == "inicio" ||
         $_GET["ruta"] == "usuarios" ||
@@ -190,6 +211,7 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "producto-detalle" ||
         $_GET["ruta"] == "ventas" ||
         $_GET["ruta"] == "crear-venta" ||
+        $_GET["ruta"] == "editar-venta1" ||
         $_GET["ruta"] == "crear-factura-electronica" ||
         $_GET["ruta"] == "editar-factura-electronica" ||
         $_GET["ruta"] == "facturas-electronicas" ||
@@ -214,6 +236,7 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "estados-actividades" ||
         $_GET["ruta"] == "tipos-actividades" ||
         $_GET["ruta"] == "gastos" ||
+        $_GET["ruta"] == "cierres-caja" ||
         $_GET["ruta"] == "configuracion" ||
         $_GET["ruta"] == "configuracion-factus" ||
         $_GET["ruta"] == "notificaciones" ||
@@ -250,6 +273,11 @@ CUERPO DOCUMENTO
     =============================================*/
     include "modulos/footer.php";
 
+    // Modales de Caja Chica globales (solo si el control está activo)
+    if ($configuracionGeneral && isset($configuracionGeneral["control_caja"]) && intval($configuracionGeneral["control_caja"]) === 1) {
+        include "modulos/modales-caja.php";
+    }
+
     echo '</div>';
 
   } else {
@@ -283,6 +311,10 @@ CUERPO DOCUMENTO
   <script src="vistas/js/logs.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/seguimiento-leads.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/traslados.js?v=<?php echo time(); ?>"></script>
+
+  <?php if (isset($_SESSION["iniciarSesion"]) && $_SESSION["iniciarSesion"] == "ok" && isset($configuracionGeneral["control_caja"]) && intval($configuracionGeneral["control_caja"]) === 1): ?>
+  <script src="vistas/js/cajas.js?v=<?php echo time(); ?>"></script>
+  <?php endif; ?>
 
   <!-- Prevenir que los enlaces se abran en nueva pestaña -->
   <script>

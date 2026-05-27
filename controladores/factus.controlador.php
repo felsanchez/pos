@@ -1,5 +1,16 @@
 <?php
 
+if (!class_exists("ControladorCajas")) {
+	if (file_exists(__DIR__ . "/cajas.controlador.php")) {
+		require_once __DIR__ . "/cajas.controlador.php";
+	}
+}
+if (!class_exists("ModeloCajas")) {
+	if (file_exists(__DIR__ . "/../modelos/cajas.modelo.php")) {
+		require_once __DIR__ . "/../modelos/cajas.modelo.php";
+	}
+}
+
 class ControladorFactus
 {
 
@@ -577,6 +588,14 @@ class ControladorFactus
 	=============================================*/
 	static public function ctrGenerarFacturaElectronica($idVenta, $firmar = true)
 	{
+		// Validar si el control de caja está activo y hay caja abierta
+		if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
+			return array(
+				"error" => true,
+				"mensaje" => "Debe abrir caja antes de realizar esta operación."
+			);
+		}
+
 		// 1. Obtener datos de la venta
 		require_once __DIR__ . "/../modelos/ventas.modelo.php";
 		require_once __DIR__ . "/../modelos/clientes.modelo.php";
@@ -1121,6 +1140,14 @@ class ControladorFactus
 	=============================================*/
 	static public function ctrGenerarNotaCredito($idVenta, $motivo, $listaProductos = null, $idCliente = null, $motivoDescripcion = null, $metodoPago = "Efectivo", $observacion = "", $firmar = false)
 	{
+		// Validar si el control de caja está activo y hay caja abierta
+		if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
+			return array(
+				"error" => true,
+				"mensaje" => "Debe abrir caja antes de realizar esta operación."
+			);
+		}
+
 		// 1. Validar venta original
 		require_once __DIR__ . "/../modelos/ventas.modelo.php";
 		$venta = ModeloVentas::mdlMostrarVentas("ventas", "id", $idVenta);
@@ -1713,6 +1740,14 @@ class ControladorFactus
 	=============================================*/
 	static public function ctrCrearDocumentoSoporte()
 	{
+		// Validar si el control de caja está activo y hay caja abierta
+		if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
+			return array(
+				"error" => true,
+				"mensaje" => "Debe abrir caja antes de realizar esta operación."
+			);
+		}
+
 		if (isset($_POST["seleccionarProveedor"])) {
 
 			// 1. Validar productos
@@ -2109,6 +2144,14 @@ class ControladorFactus
 	=============================================*/
 	static public function ctrCrearNotaAjusteDS()
 	{
+		// Validar si el control de caja está activo y hay caja abierta
+		if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
+			return array(
+				"error" => true,
+				"mensaje" => "Debe abrir caja antes de realizar esta operación."
+			);
+		}
+
 		if (isset($_POST["idDS"])) {
 
 			$idDS = $_POST["idDS"];

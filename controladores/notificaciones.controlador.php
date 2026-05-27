@@ -234,65 +234,7 @@ class ControladorNotificaciones
 
 	static public function ctrVerificarGastosProximos()
 	{
-
-		// Obtener configuración
-		$configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
-
-		$alertaGastos = isset($configuracion["alerta_gastos_proximos"]) ? $configuracion["alerta_gastos_proximos"] : 1;
-		$diasAntes = isset($configuracion["dias_antes_gasto"]) ? $configuracion["dias_antes_gasto"] : 5;
-
-		// Si la alerta está desactivada, no hacer nada
-		if (!$alertaGastos) {
-			return;
-		}
-
-		// Calcular fecha objetivo (hoy + días antes)
-		$fechaObjetivo = date('Y-m-d', strtotime("+$diasAntes days"));
-		$fechaHoy = date('Y-m-d');
-
-		// Obtener gastos que vencen dentro del rango
-		$gastos = ControladorGastos::ctrMostrarGastos(null, null);
-
-		if (!$gastos) {
-			return;
-		}
-
-		foreach ($gastos as $gasto) {
-
-			// Solo alertar sobre gastos que tienen fecha de vencimiento
-			if (isset($gasto["fecha"]) && !empty($gasto["fecha"])) {
-
-				$fechaVencimiento = date('Y-m-d', strtotime($gasto["fecha"]));
-
-				// Si la fecha de vencimiento está dentro del rango de alerta
-				if ($fechaVencimiento >= $fechaHoy && $fechaVencimiento <= $fechaObjetivo) {
-
-					// Verificar si ya existe una notificación no leída para este gasto
-					$existe = ModeloNotificaciones::mdlExisteNotificacion("gasto_proximo", $gasto["id"], "gasto");
-
-					if (!$existe) {
-						// Calcular días faltantes
-						$diasFaltantes = (strtotime($fechaVencimiento) - strtotime($fechaHoy)) / 86400;
-						$diasFaltantes = round($diasFaltantes);
-
-						$mensajeDias = $diasFaltantes == 0 ? "hoy" : ($diasFaltantes == 1 ? "mañana" : "en $diasFaltantes días");
-
-						// Crear notificación
-						ControladorNotificaciones::ctrCrearNotificacion(
-							"gasto_proximo",
-							"Gasto Próximo a Vencer",
-							"El gasto \"" . $gasto["concepto"] . "\" vence $mensajeDias (" . $gasto["fecha"] . "). Monto: $" . number_format($gasto["monto"], 2) . ".",
-							"gasto",
-							$gasto["id"]
-						);
-					}
-
-				}
-
-			}
-
-		}
-
+		return;
 	}
 
 

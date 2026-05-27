@@ -1,5 +1,16 @@
 <?php
 
+if (!class_exists("ControladorCajas")) {
+	if (file_exists(__DIR__ . "/cajas.controlador.php")) {
+		require_once __DIR__ . "/cajas.controlador.php";
+	}
+}
+if (!class_exists("ModeloCajas")) {
+	if (file_exists(__DIR__ . "/../modelos/cajas.modelo.php")) {
+		require_once __DIR__ . "/../modelos/cajas.modelo.php";
+	}
+}
+
 //date_default_timezone_set('America/Bogota');
 
 class ControladorVentas
@@ -825,6 +836,25 @@ class ControladorVentas
 
 	static public function ctrCrearVenta()
 	{
+		// Validar si el control de caja está activo y hay caja abierta
+		if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
+			if (isset($_POST["ajax"]) && $_POST["ajax"] == "true") {
+				echo json_encode(["status" => "error", "titulo" => "Caja Cerrada", "mensaje" => "Debe abrir caja antes de realizar esta operación."]);
+				return;
+			}
+			echo '<script>
+				swal({
+					type: "error",
+					title: "Caja Cerrada",
+					text: "Debe abrir caja antes de realizar esta operación.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then(() => {
+					window.location = "inicio";
+				});
+			</script>';
+			return;
+		}
 
 		// 🔹 MANEJAR EDICIÓN DE FACTURA EN BORRADOR
 		if (isset($_POST["editarVentaFactus"]) && isset($_POST["idVenta"])) {
@@ -1186,11 +1216,20 @@ class ControladorVentas
 				$codigoVenta = $nuevoCodigoReal;
 			}
 
+			$idTurnoCaja = null;
+			if (class_exists("ControladorCajas")) {
+				$caja = ControladorCajas::ctrVerificarCajaAbierta();
+				if ($caja) {
+					$idTurnoCaja = $caja["id"];
+				}
+			}
+
 			$datos = array(
 				"id_vendedor" => $_POST["idVendedor"],
 				"id_cliente" => $_POST["seleccionarCliente"],
 				"id_bodega" => $idBodegaActual,
 				"codigo" => $codigoVenta,
+				"id_turno_caja" => $idTurnoCaja,
 				"numero_factura" => isset($_POST["numeroFactura"]) ? $_POST["numeroFactura"] : "",
 				"productos" => $_POST["listaProductos"],
 				"impuesto" => $_POST["nuevoPrecioImpuesto"],
@@ -1521,6 +1560,25 @@ class ControladorVentas
 
 	static public function ctrEditarVenta()
 	{
+		// Validar si el control de caja está activo y hay caja abierta
+		if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
+			if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+				echo json_encode(["status" => "error", "titulo" => "Caja Cerrada", "mensaje" => "Debe abrir caja antes de realizar esta operación."]);
+				return;
+			}
+			echo '<script>
+				swal({
+					type: "error",
+					title: "Caja Cerrada",
+					text: "Debe abrir caja antes de realizar esta operación.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then(() => {
+					window.location = "inicio";
+				});
+			</script>';
+			return;
+		}
 
 		if (isset($_POST["editarVenta"])) {
 
@@ -2625,6 +2683,26 @@ class ControladorVentas
 	 =============================================*/
 	static public function ctrCrearVentaFactus()
 	{
+		// Validar si el control de caja está activo y hay caja abierta
+		if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
+			if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+				echo json_encode(["status" => "error", "titulo" => "Caja Cerrada", "mensaje" => "Debe abrir caja antes de realizar esta operación."]);
+				return;
+			}
+			echo '<script>
+				swal({
+					type: "error",
+					title: "Caja Cerrada",
+					text: "Debe abrir caja antes de realizar esta operación.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then(() => {
+					window.location = "inicio";
+				});
+			</script>';
+			return;
+		}
+
 		if (isset($_POST["guardarVentaFactus"])) {
 
 			// 1. Validar productos reales
@@ -2767,11 +2845,20 @@ class ControladorVentas
 				$observacionFinal = $ventaOriginal["observacion"];
 			}
 
+			$idTurnoCaja = null;
+			if (class_exists("ControladorCajas")) {
+				$caja = ControladorCajas::ctrVerificarCajaAbierta();
+				if ($caja) {
+					$idTurnoCaja = $caja["id"];
+				}
+			}
+
 			$datos = array(
 				"id_vendedor" => $_POST["idVendedor"],
 				"id_cliente" => $_POST["seleccionarCliente"],
 				"id_bodega" => $idBodegaActual,
 				"codigo" => $_POST["nuevaVenta"], // USAR EL CÓDIGO DE FACTUS COMO CÓDIGO INTERNO
+				"id_turno_caja" => $idTurnoCaja,
 				"productos" => $_POST["listaProductos"],
 				"impuesto" => $_POST["nuevoPrecioImpuesto"],
 				"neto" => $_POST["nuevoPrecioNeto"],

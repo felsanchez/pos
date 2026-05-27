@@ -79,7 +79,7 @@ class ModeloVentas
 			throw new Exception("Error Crítico: Intento de guardar venta sin productos en el Modelo.");
 		}
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(codigo, numero_factura, id_cliente, id_vendedor, id_bodega, productos, impuesto, neto, total, metodo_pago, notas, observacion, estado, imagen, fecha, tipo_descuento, valor_descuento, monto_descuento, recibe, extra, retenciones, resolucion_id, fecha_vencimiento, orden_compra, forma_pago_dian, metodo_pago_dian_id, estado_dian, cufe, qr_data, xml_dian, pdf_dian, mensaje_dian, fecha_envio_dian) VALUES (:codigo, :numero_factura, :id_cliente, :id_vendedor, :id_bodega, :productos, :impuesto, :neto, :total, :metodo_pago, :notas, :observacion, :estado, :imagen, :fecha, :tipo_descuento, :valor_descuento, :monto_descuento, :recibe, :extra, :retenciones, :resolucion_id, :fecha_vencimiento, :orden_compra, :forma_pago_dian, :metodo_pago_dian_id, :estado_dian, :cufe, :qr_data, :xml_dian, :pdf_dian, :mensaje_dian, :fecha_envio_dian)");
+		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(codigo, numero_factura, id_cliente, id_vendedor, id_bodega, productos, impuesto, neto, total, metodo_pago, notas, observacion, estado, imagen, fecha, tipo_descuento, valor_descuento, monto_descuento, recibe, extra, retenciones, resolucion_id, fecha_vencimiento, orden_compra, forma_pago_dian, metodo_pago_dian_id, estado_dian, cufe, qr_data, xml_dian, pdf_dian, mensaje_dian, fecha_envio_dian, id_turno_caja) VALUES (:codigo, :numero_factura, :id_cliente, :id_vendedor, :id_bodega, :productos, :impuesto, :neto, :total, :metodo_pago, :notas, :observacion, :estado, :imagen, :fecha, :tipo_descuento, :valor_descuento, :monto_descuento, :recibe, :extra, :retenciones, :resolucion_id, :fecha_vencimiento, :orden_compra, :forma_pago_dian, :metodo_pago_dian_id, :estado_dian, :cufe, :qr_data, :xml_dian, :pdf_dian, :mensaje_dian, :fecha_envio_dian, :id_turno_caja)");
 
 		$stmt->bindParam(":codigo", $datos["codigo"], PDO::PARAM_INT);
 		$stmt->bindParam(":numero_factura", $datos["numero_factura"], PDO::PARAM_STR); // Se inicia como NULL
@@ -102,6 +102,9 @@ class ModeloVentas
 		$stmt->bindParam(":recibe", $datos["recibe"], PDO::PARAM_STR);
 		$stmt->bindParam(":extra", $datos["extra"], PDO::PARAM_STR);
 		$stmt->bindParam(":retenciones", $datos["retenciones"], PDO::PARAM_STR);
+
+		$idTurnoCajaVal = isset($datos["id_turno_caja"]) ? $datos["id_turno_caja"] : null;
+		$stmt->bindParam(":id_turno_caja", $idTurnoCajaVal, PDO::PARAM_INT);
 
 		// Campos Facturación Electrónica
 		$stmt->bindParam(":resolucion_id", $datos["resolucion_id"], PDO::PARAM_INT);

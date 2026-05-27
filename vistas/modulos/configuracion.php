@@ -89,6 +89,24 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
 
               <hr>
 
+              <!-- Control de Caja -->
+              <h5 class="text-muted"><i class="fa fa-unlock-alt"></i> Control de Turnos y Caja Chica</h5>
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="form-group">
+                    <div class="checkbox">
+                      <label style="font-weight: normal; cursor: pointer;">
+                        <input type="checkbox" name="controlCaja" value="1" <?php echo (!empty($configuracion["control_caja"]) && $configuracion["control_caja"] == 1) ? "checked" : ""; ?>>
+                        <strong>Activar Control de Apertura y Cierre de Caja (Arqueo)</strong>
+                      </label>
+                    </div>
+                    <p class="help-block">Si está activo, se restringirá la creación en Ventas, Órdenes, Facturación Electrónica, Notas de Crédito/Ajuste, Documento Soporte y Gastos hasta que el cajero abra su turno de caja.</p>
+                  </div>
+                </div>
+              </div>
+
+              <hr>
+
               <!-- Medios de Pago -->
               <h5 class="text-muted"><i class="fa fa-credit-card"></i> Medios de Pago</h5>
 
@@ -1081,6 +1099,7 @@ MODAL: CREAR / EDITAR PERFIL (FUERA DEL FORM)
                 'consulta-ventas'      => ['crear', 'editar', 'eliminar', 'imprimir'],
                 'ordenes'              => ['imprimir'],
                 'ventas'               => ['imprimir'],
+                'cierres-caja'         => ['crear','editar','eliminar'],
                 // factura_electronica, documento_soporte, notas_credito, notas_ajuste conservan 'imprimir' (Descargar)
               ];
               foreach ($modulosMatriz as $slug => $nombreModulo):

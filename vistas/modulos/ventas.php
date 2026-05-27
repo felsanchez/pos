@@ -389,6 +389,3 @@ MODAL EDITAR CLIENTE
   </div>
 </div>
 
-
-<!-- Scripts específicos del módulo -->
-<script src="vistas/js/ventas.js"></script>

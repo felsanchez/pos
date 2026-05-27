@@ -89,6 +89,15 @@
               </li>';
       }
 
+      if (puedeVer('cierres-caja')) {
+        echo '<li>
+                      <a href="cierres-caja">
+                        <i class="fa fa-lock"></i>
+                        <span>Cierres de Caja</span>
+                      </a>
+                    </li>';
+      }
+
       if (puedeVer('productos') || puedeVer('categorias') || puedeVer('variantes') || puedeVer('proveedores')) {
         echo '<li class="treeview">
                 <a href="">
@@ -201,6 +210,8 @@
                       </a>
                     </li>';
       }
+
+
 
       if (puedeVer('factura_electronica') || puedeVer('notas_credito')) {
         echo '<li class="treeview">

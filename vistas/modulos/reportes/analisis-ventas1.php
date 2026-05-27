@@ -44,43 +44,65 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
   <style>
     .formulario-filtros-container {
       max-width: 100%;
-      padding: 15px;
-      border-radius: 10px;
+      padding: 20px;
+      border-radius: 12px;
       background-color: #ffffff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+      margin-bottom: 25px;
+      border: 1px solid #f0f0f0;
     }
     .formulario-filtros label {
       font-weight: 600;
-      margin-top: 10px;
-      font-size: 12px;
+      margin-top: 5px;
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     .formulario-filtros select,
     .formulario-filtros input[type="date"] {
       border-radius: 8px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #dcdcdc;
+      padding: 8px 12px;
+      height: auto;
+      box-shadow: none;
+      transition: border-color 0.2s;
+    }
+    .formulario-filtros select:focus,
+    .formulario-filtros input[type="date"]:focus {
+      border-color: #0072ff;
     }
     .d-none {
       display: none !important;
     }
     .filtros-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 15px;
+      align-items: end;
     }
     .filtro-grupo {
       min-width: 0;
     }
     .btn-filtrar {
-      margin-top: 25px;
+      margin-top: 0;
+      margin-bottom: 12px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #0072ff, #00c6ff);
+      border: none;
+      color: #fff;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .btn-filtrar:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      color: #fff;
     }
   </style>
-
-<style>
-  .d-none {
-    display: none !important;
-  }
-</style>
 
   <div class="row">
       <div class="card-body">
@@ -92,7 +114,7 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
 
                     <!-- Filtro de fecha -->
                     <div class="filtro-grupo">
-                      <label for="tipo-fecha">Fecha:</label>
+                      <label for="tipo-fecha">Rango de Fecha</label>
                       <select id="tipo-fecha" name="tipo" class="form-control">
                         <option value="todo">Mostrar Todas</option>
                         <option value="hoy">Hoy</option>
@@ -101,12 +123,12 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
                         <option value="personalizado">Personalizado</option>
                       </select>
 
-                      <div id="campo-desde" class="form-group d-none">
+                      <div id="campo-desde" class="form-group d-none" style="margin-top: 10px; margin-bottom: 0;">
                         <label for="fecha-desde">Desde</label>
                         <input type="date" id="fecha-desde" name="fecha_inicio" class="form-control">
                       </div>
 
-                      <div id="campo-hasta" class="form-group d-none">
+                      <div id="campo-hasta" class="form-group d-none" style="margin-top: 10px; margin-bottom: 0;">
                         <label for="fecha-hasta">Hasta</label>
                         <input type="date" id="fecha-hasta" name="fecha_fin" class="form-control">
                       </div>
@@ -165,19 +187,18 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
                 </form>
               </div>
 
-        <div class="row">  
-          <!--<div class="col-md-8">-->
-            <p class="text-center">
-              <strong>Ventas</strong>
-            </p>
-              <!--VALOR VENTAS -->
-              <div class="text-center mb-3">
-                <h5>Total de ventas en el periodo seleccionado:</h5>
-                <h3 id="total-ventas" class="text-success">$0</h3>
-              </div>
-
-            <div id="sales-chart"></div>         
-          <!--</div>-->               
+        <!-- Contenedor del Gráfico de Ventas -->
+        <div class="box box-primary" style="border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); overflow: hidden; margin-bottom: 25px;">
+          <div class="box-header with-border" style="background-color: #fafafa; padding: 15px 20px;">
+            <h3 class="box-title" style="font-weight: 700; color: #333;"><i class="fa fa-line-chart" style="margin-right: 8px; color: #0072ff;"></i>Evolución de Ventas</h3>
+          </div>
+          <div class="box-body" style="padding: 20px;">
+            <div class="text-center" style="margin-bottom: 20px;">
+              <h4 style="color: #666; font-weight: 500; margin: 0 0 5px 0; font-size: 14px;">Total Ventas Periodo</h4>
+              <h2 id="total-ventas" style="color: #2e7d32; font-weight: 800; margin: 0; font-size: 32px; letter-spacing: -1px;">$0</h2>
+            </div>
+            <div id="sales-chart" style="min-height: 220px;"></div>
+          </div>
         </div>
        
       </div>
@@ -192,27 +213,62 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
   const salesChart = new ApexCharts(document.querySelector('#sales-chart'), {
     series: [],
     chart: {
-      height: 180,
+      height: 220,
       type: 'area',
-      toolbar: { show: false }
+      toolbar: { show: false },
+      fontFamily: 'inherit'
     },
-    colors: ['#0d6efd'],
+    colors: ['#0072ff'],
     dataLabels: { enabled: false },
-    stroke: { curve: 'smooth' },
-    xaxis: { type: 'datetime', categories: [] },
-    tooltip: { x: { format: 'dd MMM yyyy' } }
+    stroke: { curve: 'smooth', width: 3 },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.5,
+        opacityTo: 0.05,
+        stops: [0, 90, 100]
+      }
+    },
+    grid: {
+      borderColor: '#f1f1f1',
+      strokeDashArray: 4,
+      xaxis: { lines: { show: false } }
+    },
+    xaxis: { 
+      type: 'datetime', 
+      categories: [],
+      labels: {
+        style: { colors: '#999', fontSize: '11px' }
+      }
+    },
+    yaxis: {
+      labels: {
+        style: { colors: '#999', fontSize: '11px' },
+        formatter: function (val) {
+          return '$' + Math.round(val).toLocaleString('es-CO');
+        }
+      }
+    },
+    tooltip: { 
+      x: { format: 'dd MMM yyyy' },
+      y: {
+        formatter: function (val) {
+          return '$' + Math.round(val).toLocaleString('es-CO');
+        }
+      }
+    }
   });
 
   salesChart.render();
 
   // Ejecutar por defecto el filtro del mes al cargar la página
-window.addEventListener('DOMContentLoaded', function () {
-  const form = document.getElementById('filtro-fechas');
-  document.getElementById('tipo-fecha').value = 'mes'; // Establece tipo "mes"
-  form.dispatchEvent(new Event('submit')); // Dispara el envío del formulario
-});
+  window.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('filtro-fechas');
+    document.getElementById('tipo-fecha').value = 'mes'; // Establece tipo "mes"
+    form.dispatchEvent(new Event('submit')); // Dispara el envío del formulario
+  });
 
-  
   // Mostrar campos personalizados al seleccionar "personalizado"
   document.getElementById('tipo-fecha').addEventListener('change', function () {
     const tipo = this.value;
@@ -264,13 +320,9 @@ window.addEventListener('DOMContentLoaded', function () {
     const idBodega = sucursalMaestra ? sucursalMaestra.value : '';
     if (idBodega && idBodega !== 'todos') formData.append('id_bodega', idBodega);
 
-    //fetch('/pos/vistas/modulos/reportes/filtro_ventas.php', {
-    let rutaBase = window.location.hostname.includes("localhost")
-      ? "/pos"
-      : ""; // en producción no va "/pos"
+    let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";
 
     fetch(`${rutaBase}/vistas/modulos/reportes/filtro_ventas.php`, {
-
       method: 'POST',
       body: formData
     })
@@ -279,17 +331,19 @@ window.addEventListener('DOMContentLoaded', function () {
       const datos = data.datos;
       const total = data.total;
 
-      // Mostrar el total en el HTML
+      // 1. Mostrar el total en el título del gráfico
       document.getElementById('total-ventas').textContent = total.toLocaleString('es-CO', {
         style: 'currency',
-        currency: 'COP'
+        currency: 'COP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
       });
 
       // Extraer fechas y totales para la gráfica
       const fechas = datos.map(item => item.fecha);
       const totales = datos.map(item => item.total_ventas);
 
-      // Actualizar el gráfico
+      // Actualizar el gráfico de línea
       salesChart.updateOptions({
         xaxis: { categories: fechas },
         series: [{
@@ -298,9 +352,27 @@ window.addEventListener('DOMContentLoaded', function () {
         }]
       });
 
+      // 2. Actualizar el gráfico de dona de productos más vendidos
+      if (typeof actualizarGraficoProductos === 'function') {
+        actualizarGraficoProductos(data.productos_top);
+      }
+
+      // 3. Actualizar las cajas superiores
+      const formatCOP = (val) => '$' + Math.round(val).toLocaleString('es-CO');
+      const formatQty = (val) => Math.round(val).toLocaleString('es-CO');
+
+      const cajaTotal = document.getElementById('caja-total-ventas');
+      const cajaTicket = document.getElementById('caja-ticket-promedio');
+      const cajaCantVentas = document.getElementById('caja-cant-ventas');
+      const cajaCantOrdenes = document.getElementById('caja-cant-ordenes');
+
+      if (cajaTotal) cajaTotal.textContent = formatCOP(data.total);
+      if (cajaTicket) cajaTicket.textContent = formatCOP(data.ticket_promedio);
+      if (cajaCantVentas) cajaCantVentas.textContent = formatQty(data.total_ventas_cantidad);
+      if (cajaCantOrdenes) cajaCantOrdenes.textContent = formatQty(data.total_ordenes);
     })
     .catch(error => {
       console.error("Error al cargar datos:", error);
     });
-  }); // <- cierre correcto del addEventListener
+  });
 </script>

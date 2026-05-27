@@ -21,6 +21,7 @@ class ModeloPerfiles
         'historial_stock'      => 'Historial de Stock',
         'traslados'            => 'Traslados entre Bodegas',
         'gastos'               => 'Gastos',
+        'cierres-caja'         => 'Cierres de Caja',
         'notificaciones'       => 'Notificaciones',
         'configuracion'        => 'Configuración',
     ];
