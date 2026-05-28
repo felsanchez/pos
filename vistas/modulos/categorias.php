@@ -103,7 +103,7 @@ MODAL AGREGAR CATEGORIA
                 <span class="input-group-addon"><i class="fa fa-code"></i></span>
 
                 <input type="text" class="form-control input-lg" name="nuevoPrefijo" id="nuevoPrefijo"
-                  placeholder="Ingresar prefijo">
+                  placeholder="Ingresar prefijo" required>
 
               </div>
 
@@ -203,7 +203,7 @@ MODAL EDITAR CATEGORIA
                 <span class="input-group-addon"><i class="fa fa-code"></i></span>
 
                 <input type="text" class="form-control input-lg" name="editarPrefijo" id="editarPrefijo"
-                  placeholder="Editar prefijo">
+                  placeholder="Editar prefijo" required>
 
               </div>
 

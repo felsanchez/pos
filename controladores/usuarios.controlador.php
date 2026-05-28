@@ -477,18 +477,12 @@ class ControladorUsuarios
 
 					$directorio = "vistas/img/usuarios/" . $_POST["editarUsuario"];
 
-					//PRIMERO PREGUNTAMOS SI EXISTE UNA IMAGEN EN LA BD
-
-					if (!empty($_POST["fotoActual"])) {
-
-						unlink($_POST["fotoActual"]);
-					} else {
-
+					// Si no hay foto actual, crear el directorio
+					if (empty($_POST["fotoActual"])) {
 						mkdir($directorio, 0755);
 					}
 
-
-					//DE A CUERDO AL TIPO DE IMAGEN APLICAMOS LAS FUNCIONES PHP, 1ro EN JPEG
+					//DE ACUERDO AL TIPO DE IMAGEN APLICAMOS LAS FUNCIONES PHP, 1ro EN JPEG
 
 					if ($_FILES["editarFoto"]["type"] == "image/jpeg") {
 
@@ -528,6 +522,8 @@ class ControladorUsuarios
 
 					}
 				}
+
+				$fotoActualAEliminar = (!empty($_POST["fotoActual"]) && $ruta !== $_POST["fotoActual"]) ? $_POST["fotoActual"] : null;
 
 				$tabla = "usuarios";
 
@@ -571,9 +567,24 @@ class ControladorUsuarios
 					"id_bodega" => $_POST["editarIdBodega"]
 				);
 
-				$respuesta = ModeloUsuarios::mdlEditarUsuario($tabla, $datos);
+				/*=============================================
+				TRANSACCIÓN PDO: EDITAR USUARIO
+				=============================================*/
+				$db = Conexion::conectar();
+				try {
+					$db->beginTransaction();
 
-				if ($respuesta == "ok") {
+					$respuesta = ModeloUsuarios::mdlEditarUsuario($tabla, $datos);
+					if ($respuesta != "ok") {
+						throw new Exception("Error al actualizar el usuario en la base de datos.");
+					}
+
+					$db->commit();
+
+					// Eliminar foto anterior DESPUÉS del commit para evitar pérdida si falla la BD
+					if ($fotoActualAEliminar && file_exists($fotoActualAEliminar)) {
+						unlink($fotoActualAEliminar);
+					}
 
 					echo '<script>
 					swal({
@@ -587,8 +598,21 @@ class ControladorUsuarios
 						});
 				</script>';
 
+				} catch (Exception $e) {
+					$db->rollBack();
+					$mensajeError = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+					echo '<script>
+						swal({
+							type: "error",
+							title: "Error al editar el usuario",
+							text: "' . $mensajeError . '",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then(() => {
+							window.location = "usuarios";
+						})
+					</script>';
 				}
-
 
 			} else {
 				echo '<script>
@@ -675,18 +699,6 @@ class ControladorUsuarios
 
 			$foto = $usuario["foto"];
 			$usrName = $usuario["usuario"];
-
-			// Borrar foto y directorio si no es la por defecto
-			if ($foto != "" && $foto != "vistas/img/usuarios/default/anonymous.png") {
-				if (file_exists($foto)) {
-					unlink($foto);
-				}
-				$dir = 'vistas/img/usuarios/' . $usrName;
-				if (is_dir($dir)) {
-					rmdir($dir);
-				}
-			}
-
 
 			// Verificar si hay actividades asociados
 			$actividadesAsociados = ModeloActividades::mdlMostrarActividades("actividades", "id_user", $idUsuario, "id");
@@ -794,10 +806,31 @@ class ControladorUsuarios
 				return;
 			}
 
+			/*=============================================
+			TRANSACCIÓN PDO: BORRAR USUARIO
+			=============================================*/
+			$db = Conexion::conectar();
+			try {
+				$db->beginTransaction();
 
-			$respuesta = ModeloUsuarios::mdlBorrarUsuario($tabla, $idUsuario);
+				$respuesta = ModeloUsuarios::mdlBorrarUsuario($tabla, $idUsuario);
+				if ($respuesta != "ok") {
+					throw new Exception("Error al eliminar el usuario de la base de datos.");
+				}
 
-			if ($respuesta == "ok") {
+				$db->commit();
+
+				// Borrar foto y directorio DESPUÉS del commit para evitar pérdida si falla la BD
+				if ($foto != "" && $foto != "vistas/img/usuarios/default/anonymous.png") {
+					if (file_exists($foto)) {
+						unlink($foto);
+					}
+					$dir = 'vistas/img/usuarios/' . $usrName;
+					if (is_dir($dir)) {
+						rmdir($dir);
+					}
+				}
+
 				if (isset($_POST["idUsuarioEliminar"])) {
 					return "ok";
 				}
@@ -813,6 +846,23 @@ class ControladorUsuarios
 						});
 				</script>';
 
+			} catch (Exception $e) {
+				$db->rollBack();
+				$mensajeError = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+				if (isset($_POST["idUsuarioEliminar"])) {
+					return "error";
+				}
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error al borrar el usuario",
+						text: "' . $mensajeError . '",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "usuarios";
+					})
+				</script>';
 			}
 		}
 

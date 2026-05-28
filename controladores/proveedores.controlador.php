@@ -52,9 +52,17 @@ class ControladorProveedores
 					"organizacion_id" => $_POST["nuevaOrganizacion"]
 				);
 
-				$respuesta = ModeloProveedores::mdlIngresarProveedor($tabla, $datos);
+				$db = Conexion::conectar();
+				try {
+					$db->beginTransaction();
 
-				if ($respuesta == "ok") {
+					$respuesta = ModeloProveedores::mdlIngresarProveedor($tabla, $datos);
+
+					if ($respuesta != "ok") {
+						throw new Exception("Error al guardar el proveedor.");
+					}
+					
+					$db->commit();
 
 					echo '<script>
 					swal({
@@ -66,7 +74,20 @@ class ControladorProveedores
 						}).then(() => {
 								window.location = "proveedores";
 						});
-				</script>';
+					</script>';
+				} catch (Exception $e) {
+					$db->rollBack();
+					echo '<script>
+					swal({
+						type: "error",
+						title: "¡Error!",
+						text: "Error interno: ' . addslashes($e->getMessage()) . '",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+						}).then(() => {
+							window.location = "proveedores";
+						});
+					</script>';
 				}
 
 			} else {
@@ -251,9 +272,17 @@ class ControladorProveedores
 					"organizacion_id" => $_POST["editarOrganizacion"]
 				);
 
-				$respuesta = ModeloProveedores::mdlEditarProveedor($tabla, $datos);
+				$db = Conexion::conectar();
+				try {
+					$db->beginTransaction();
 
-				if ($respuesta == "ok") {
+					$respuesta = ModeloProveedores::mdlEditarProveedor($tabla, $datos);
+
+					if ($respuesta != "ok") {
+						throw new Exception("Error al editar el proveedor.");
+					}
+
+					$db->commit();
 
 					echo '<script>
 					swal({
@@ -265,7 +294,20 @@ class ControladorProveedores
 						}).then(() => {
 								window.location = "proveedores";
 						});
-				</script>';
+					</script>';
+				} catch (Exception $e) {
+					$db->rollBack();
+					echo '<script>
+					swal({
+						type: "error",
+						title: "¡Error!",
+						text: "Error interno: ' . addslashes($e->getMessage()) . '",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+						}).then(() => {
+							window.location = "proveedores";
+						});
+					</script>';
 				}
 
 			} else {
@@ -362,9 +404,18 @@ class ControladorProveedores
 				return;
 			}
 
-			$respuesta = ModeloProveedores::mdlBorrarProveedor($tabla, $idProveedor);
+			$db = Conexion::conectar();
+			try {
+				$db->beginTransaction();
 
-			if ($respuesta == "ok") {
+				$respuesta = ModeloProveedores::mdlBorrarProveedor($tabla, $idProveedor);
+
+				if ($respuesta != "ok") {
+					throw new Exception("Error al borrar el proveedor.");
+				}
+
+				$db->commit();
+
 				if (isset($_POST["idProveedorEliminar"])) {
 					return "ok";
 				}
@@ -376,6 +427,22 @@ class ControladorProveedores
 						confirmButtonText: "Cerrar"
 					}).then(() => {
 							window.location = "proveedores";
+					});
+				</script>';
+			} catch (Exception $e) {
+				$db->rollBack();
+				if (isset($_POST["idProveedorEliminar"])) {
+					return "error";
+				}
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡Error!",
+						text: "Error interno: ' . addslashes($e->getMessage()) . '",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "proveedores";
 					});
 				</script>';
 			}

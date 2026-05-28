@@ -414,13 +414,15 @@ class ControladorClientes
 			}
 
 			$tabla = "clientes";
-			$datos = isset($_GET["idCliente"]) ? $_GET["idCliente"] : $_POST["idClienteEliminar"];
+			$idCliente = isset($_GET["idCliente"]) ? $_GET["idCliente"] : $_POST["idClienteEliminar"];
 
 			// Detectar de dónde viene la eliminación
 			$ruta = isset($_GET["ruta"]) ? $_GET["ruta"] : (isset($_POST["ruta"]) ? $_POST["ruta"] : "clientes");
 
-			// Verificar si hay actividades asociados
-			$actividadesAsociados = ModeloActividades::mdlMostrarActividades("actividades", "id_cliente", $datos);
+			// ── Validaciones pre-transacción (solo lectura) ──────────────────
+
+			// Verificar si hay actividades asociadas
+			$actividadesAsociados = ModeloActividades::mdlMostrarActividades("actividades", "id_cliente", $idCliente);
 
 			if (!empty($actividadesAsociados)) {
 				if (isset($_POST["idClienteEliminar"])) {
@@ -440,9 +442,8 @@ class ControladorClientes
 				return;
 			}
 
-
-			// Verificar si hay ventas asociados
-			$ventasAsociados = ModeloVentas::mdlMostrarVentas("ventas", "id_cliente", $datos);
+			// Verificar si hay ventas asociadas
+			$ventasAsociados = ModeloVentas::mdlMostrarVentas("ventas", "id_cliente", $idCliente);
 
 			if (!empty($ventasAsociados)) {
 				if (isset($_POST["idClienteEliminar"])) {
@@ -463,8 +464,7 @@ class ControladorClientes
 			}
 
 			// Verificar si hay notas crédito asociadas
-			// Usamos ModeloFactus que es el que gestiona notas_credito en este proyecto
-			$notasAsociadas = ModeloFactus::mdlMostrarNotasCredito("notas_credito", "id_cliente", $datos);
+			$notasAsociadas = ModeloFactus::mdlMostrarNotasCredito("notas_credito", "id_cliente", $idCliente);
 
 			if (!empty($notasAsociadas)) {
 				if (isset($_POST["idClienteEliminar"])) {
@@ -484,24 +484,53 @@ class ControladorClientes
 				return;
 			}
 
+			// ── Eliminación atómica ──────────────────────────────────────────
+			$db = Conexion::conectar();
 
-			$respuesta = ModeloClientes::mdlEliminarCliente($tabla, $datos);
+			try {
+				$db->beginTransaction();
 
-			if ($respuesta == "ok") {
+				$respuesta = ModeloClientes::mdlEliminarCliente($tabla, $idCliente);
+
+				if ($respuesta !== "ok") {
+					throw new Exception("Error al eliminar el cliente de la base de datos.");
+				}
+
+				$db->commit();
+
 				if (isset($_POST["idClienteEliminar"])) {
 					return "ok";
 				}
+
 				echo '<script>
 					swal({
 						type: "success",
 						title: "¡El cliente ha sido borrado correctamente!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "' . $ruta . '";
+					});
+				</script>';
 
-						}).then(() => {
+			} catch (Exception $e) {
+				$db->rollBack();
+				Logger::error("Error en ctrEliminarCliente ID $idCliente: " . $e->getMessage());
 
-								window.location = "' . $ruta . '";
-						});
+				if (isset($_POST["idClienteEliminar"])) {
+					return "error";
+				}
+
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error al eliminar",
+						text: "No se pudo eliminar el cliente. Intenta de nuevo.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "' . $ruta . '";
+					});
 				</script>';
 			}
 

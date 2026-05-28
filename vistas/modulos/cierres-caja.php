@@ -87,7 +87,6 @@ $moneda = !empty($configuracion["moneda"]) ? $configuracion["moneda"] : "$";
         <table class="table table-bordered table-striped tablaHistorialCajas display nowrap" width="100%">
           <thead>
             <tr>
-              <th style="width:10px">#</th>
               <th>Sucursal</th>
               <th>Cajero</th>
               <th>Apertura</th>

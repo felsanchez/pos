@@ -22,7 +22,6 @@ $(document).ready(function () {
                 }
             },
             "columns": [
-                { "data": 0 }, // Turno #
                 { "data": 1 }, // Sucursal
                 { "data": 2 }, // Cajero
                 { "data": 3 }, // Apertura
@@ -33,7 +32,7 @@ $(document).ready(function () {
                 { "data": 8 }, // Diferencia
                 { "data": 9, "orderable": false } // Acciones
             ],
-            "order": [[0, "desc"]],
+            "order": [[2, "desc"]],
             "language": {
                 "sProcessing": "Procesando...",
                 "sLengthMenu": "Mostrar _MENU_ registros",

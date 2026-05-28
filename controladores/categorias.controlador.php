@@ -58,9 +58,16 @@ class ControladorCategorias{
 					"prefijo" => $prefijo
 				);
 
-				$respuesta = ModeloCategorias::mdlIngresarCategoria($tabla, $datos);
-
-				if($respuesta == "ok"){
+				$db = Conexion::conectar();
+				try {
+					$db->beginTransaction();
+					$respuesta = ModeloCategorias::mdlIngresarCategoria($tabla, $datos);
+					
+					if($respuesta != "ok"){
+						throw new Exception("Error al guardar la categoría.");
+					}
+					
+					$db->commit();
 
 					echo '<script>
 					swal({
@@ -72,7 +79,20 @@ class ControladorCategorias{
 						}).then(() => {
 							window.location = "categorias";
 						});
-				</script>';
+					</script>';
+				} catch (Exception $e) {
+					$db->rollBack();
+					echo '<script>
+					swal({
+						type: "error",
+						title: "¡Error!",
+						text: "Error interno: ' . addslashes($e->getMessage()) . '",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+						}).then(() => {
+							window.location = "categorias";
+						});
+					</script>';
 				}
 
 			}
@@ -256,9 +276,17 @@ class ControladorCategorias{
 					"id" => $idCategoria
 				);
 
-				$respuesta = ModeloCategorias::mdlEditarCategoria($tabla, $datos);
+				$db = Conexion::conectar();
+				try {
+					$db->beginTransaction();
+					
+					$respuesta = ModeloCategorias::mdlEditarCategoria($tabla, $datos);
 
-				if($respuesta == "ok"){
+					if($respuesta != "ok"){
+						throw new Exception("Error al editar la categoría.");
+					}
+
+					$db->commit();
 
 					echo '<script>
 					swal({
@@ -270,7 +298,20 @@ class ControladorCategorias{
 						}).then(() => {
 							window.location = "categorias";
 						});
-				</script>';
+					</script>';
+				} catch (Exception $e) {
+					$db->rollBack();
+					echo '<script>
+					swal({
+						type: "error",
+						title: "¡Error!",
+						text: "Error interno: ' . addslashes($e->getMessage()) . '",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+						}).then(() => {
+							window.location = "categorias";
+						});
+					</script>';
 				}
 
 			}
@@ -353,9 +394,18 @@ class ControladorCategorias{
 				return;
 			}
 
-			$respuesta = ModeloCategorias::mdlBorrarCategoria($tabla, $idCategoria);
+			$db = Conexion::conectar();
+			try {
+				$db->beginTransaction();
 
-			if ($respuesta == "ok") {
+				$respuesta = ModeloCategorias::mdlBorrarCategoria($tabla, $idCategoria);
+
+				if ($respuesta != "ok") {
+					throw new Exception("Error al borrar la categoría.");
+				}
+
+				$db->commit();
+
 				if (isset($_POST["idCategoriaEliminar"])) {
 					return "ok";
 				}
@@ -363,6 +413,22 @@ class ControladorCategorias{
 					swal({
 						type: "success",
 						title: "¡La categoría ha sido borrada correctamente!",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "categorias";
+					});
+				</script>';
+			} catch (Exception $e) {
+				$db->rollBack();
+				if (isset($_POST["idCategoriaEliminar"])) {
+					return "error";
+				}
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡Error!",
+						text: "Error interno: ' . addslashes($e->getMessage()) . '",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 					}).then(() => {

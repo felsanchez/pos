@@ -44,10 +44,11 @@ class ControladorConfiguracion
 			}
 
 			/*=============================================
-			VALIDAR LOGO
+			PREPARAR LOGO PRINCIPAL (nuevo archivo físico)
 			=============================================*/
 
 			$rutaLogo = $_POST["logoActual"];
+			$logoAnteriorAEliminar = null; // Se eliminará DESPUÉS del commit
 
 			if (isset($_FILES["nuevoLogo"]["tmp_name"]) && !empty($_FILES["nuevoLogo"]["tmp_name"])) {
 
@@ -56,22 +57,15 @@ class ControladorConfiguracion
 				$nuevoAncho = 500;
 				$nuevoAlto = 500;
 
-				/*=============================================
-				CREAMOS EL DIRECTORIO DONDE VAMOS A GUARDAR EL LOGO
-				=============================================*/
-
 				$directorio = "vistas/img/configuracion/";
 
 				if (!file_exists($directorio)) {
 					mkdir($directorio, 0755, true);
 				}
 
-				/*=============================================
-				ELIMINAR LOGO ANTERIOR SI EXISTE
-				=============================================*/
-
+				// Registrar logo anterior para eliminar DESPUÉS del commit exitoso
 				if (!empty($_POST["logoActual"]) && file_exists($_POST["logoActual"])) {
-					unlink($_POST["logoActual"]);
+					$logoAnteriorAEliminar = $_POST["logoActual"];
 				}
 
 				/*=============================================
@@ -156,17 +150,25 @@ class ControladorConfiguracion
 				"mensaje_confirmado" => $_POST["mensajeConfirmado"]
 			);
 
-			$respuesta = ModeloConfiguracion::mdlActualizarConfiguracion($tabla, $datos);
+			/*=============================================
+			TRANSACCIÓN PDO: ACTUALIZAR CONFIGURACIÓN
+			=============================================*/
+			$db = Conexion::conectar();
+			try {
+				$db->beginTransaction();
 
-			if ($respuesta == "ok") {
+				$respuesta = ModeloConfiguracion::mdlActualizarConfiguracion($tabla, $datos);
+				if ($respuesta != "ok") {
+					throw new Exception("Error al actualizar la configuración principal.");
+				}
 
-				// 🟢 ACTUALIZAR CONFIGURACIÓN DE FACTUS (SI SE ENVIARON DATOS)
+				// ACTUALIZAR CONFIGURACIÓN DE FACTUS DENTRO DE LA MISMA TRANSACCIÓN
+				$logoFactusAnteriorAEliminar = null;
 				if (isset($_POST["nombrefactus"])) {
-					// 1. Obtener config actual para no borrar otros datos (token, etc.)
 					$configFactus = ModeloFactus::mdlObtenerConfiguracion();
 
 					/*=============================================
-					VALIDAR LOGO FACTUS
+					PREPARAR LOGO FACTUS (nuevo archivo físico)
 					=============================================*/
 
 					$rutaLogoFactus = isset($configFactus["logo_empresa"]) ? $configFactus["logo_empresa"] : "";
@@ -184,8 +186,9 @@ class ControladorConfiguracion
 							mkdir($directorio, 0755, true);
 						}
 
+						// Registrar logo Factus anterior para eliminar DESPUÉS del commit
 						if (!empty($configFactus["logo_empresa"]) && file_exists($configFactus["logo_empresa"])) {
-							unlink($configFactus["logo_empresa"]);
+							$logoFactusAnteriorAEliminar = $configFactus["logo_empresa"];
 						}
 
 						/*=============================================
@@ -234,7 +237,6 @@ class ControladorConfiguracion
 						"ambiente" => $configFactus['ambiente'],
 						"activo" => $configFactus['activo'],
 						"rango_numeracion_id" => $configFactus['rango_numeracion_id'],
-						// Nuevos campos
 						// Determine if we should update company data based on lock status
 						"nombre_empresa" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['nombre_empresa'] : $_POST["nombrefactus"],
 						"nit_empresa" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['nit_empresa'] : $_POST["nitfactus"],
@@ -242,25 +244,34 @@ class ControladorConfiguracion
 						"telefono_empresa" => $_POST["telefonofactus"],
 						"email_empresa" => $_POST["emailfactus"],
 						"municipio_id" => $_POST["municipiofactus"],
-
 						// Campos extendidos
 						"tributo_emisor" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['tributo_emisor'] : (isset($_POST["tributofactus"]) ? $_POST["tributofactus"] : 'no_responsable'),
 						"actividad_economica" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['actividad_economica'] : (isset($_POST["actividadfactus"]) ? $_POST["actividadfactus"] : null),
 						"registro_mercantil" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['registro_mercantil'] : (isset($_POST["registrofactus"]) ? $_POST["registrofactus"] : null),
 						"dv" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['dv'] : (isset($_POST["dvfactus"]) ? $_POST["dvfactus"] : null),
-
 						// Encode checkbox array as JSON
 						"responsabilidades_fiscales" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['responsabilidades_fiscales'] : (isset($_POST["responsabilidadesfactus"]) ? json_encode($_POST["responsabilidadesfactus"]) : '[]'),
 						"tipo_persona" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['tipo_persona'] : (isset($_POST["tipopersonafactus"]) ? $_POST["tipopersonafactus"] : '2'),
-
 						// Mantener bloqueo actual
 						"bloqueo_datos_emisor" => $configFactus['bloqueo_datos_emisor'],
-
 						// Nuevo Logo Factus
 						"logo_empresa" => $rutaLogoFactus
 					);
 
-					ModeloFactus::mdlActualizarConfiguracion($datosFactus);
+					$respFactus = ModeloFactus::mdlActualizarConfiguracion($datosFactus);
+					if ($respFactus != "ok") {
+						throw new Exception("Error al actualizar la configuración de facturación.");
+					}
+				}
+
+				$db->commit();
+
+				// Eliminar logos anteriores DESPUÉS del commit para preservarlos si la BD falla
+				if ($logoAnteriorAEliminar && file_exists($logoAnteriorAEliminar)) {
+					unlink($logoAnteriorAEliminar);
+				}
+				if ($logoFactusAnteriorAEliminar && file_exists($logoFactusAnteriorAEliminar)) {
+					unlink($logoFactusAnteriorAEliminar);
 				}
 
 				echo '<script>
@@ -276,6 +287,20 @@ class ControladorConfiguracion
 
 				</script>';
 
+			} catch (Exception $e) {
+				$db->rollBack();
+				$mensajeError = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error al guardar la configuración",
+						text: "' . $mensajeError . '",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "configuracion";
+					})
+				</script>';
 			}
 
 		}

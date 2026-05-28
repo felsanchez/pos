@@ -336,8 +336,6 @@ class ControladorGastos{
 				$ultimoCodigo = ModeloGastos::mdlObtenerUltimoCodigo($tabla);
 				$nuevoCodigo = "GAS-" . str_pad($ultimoCodigo + 1, 3, "0", STR_PAD_LEFT);
 
-				$tabla = "gastos";
-
 				$datos = array("codigo" => $nuevoCodigo,
 							   "concepto" => $_POST["nuevoConceptoGasto"],
 							   "monto" => $_POST["nuevoMontoGasto"],
@@ -352,20 +350,32 @@ class ControladorGastos{
 							   "estado" => $_POST["nuevoEstadoGasto"],
 							   "notas" => $_POST["nuevasNotasGasto"]);
 
-				$respuesta = ModeloGastos::mdlIngresarGasto($tabla, $datos);
+				/*=============================================
+				TRANSACCIÓN PDO: INSERTAR GASTO + MOVER CAJA
+				=============================================*/
+				$db = Conexion::conectar();
+				try {
+					$db->beginTransaction();
 
-				if($respuesta == "ok"){
+					$respuesta = ModeloGastos::mdlIngresarGasto($tabla, $datos);
+					if ($respuesta != "ok") {
+						throw new Exception("Error al guardar el gasto.");
+					}
 
 					// Registrar egreso en caja si el gasto se pagó en efectivo y su estado es aprobado
 					if (class_exists("ControladorCajas") && strtolower(trim($_POST["nuevoMetodoPagoGasto"])) == "efectivo" && $_POST["nuevoEstadoGasto"] == "aprobado") {
-						ControladorCajas::ctrRegistrarMovimiento("egreso", $_POST["nuevoMontoGasto"], "Gasto: " . $_POST["nuevoConceptoGasto"]);
+						$resCaja = ControladorCajas::ctrRegistrarMovimiento("egreso", $_POST["nuevoMontoGasto"], "Gasto: " . $_POST["nuevoConceptoGasto"]);
+						if ($resCaja !== false && $resCaja == "error") {
+							throw new Exception("Error al registrar el movimiento en caja.");
+						}
 					}
 
+					$db->commit();
+
 					// Verificar si el gasto creado requiere notificación
-				ControladorNotificaciones::ctrVerificarGastosProximos();
+					ControladorNotificaciones::ctrVerificarGastosProximos();
 
 					echo'<script>
-
 					swal({
 						  type: "success",
 						  title: "El gasto ha sido guardado correctamente",
@@ -374,11 +384,23 @@ class ControladorGastos{
 						  }).then(() => {
 								window.location = "gastos";
 							})
-
 					</script>';
 
+				} catch (Exception $e) {
+					$db->rollBack();
+					$mensajeError = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+					echo '<script>
+						swal({
+							type: "error",
+							title: "Error al guardar el gasto",
+							text: "' . $mensajeError . '",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then(() => {
+							window.location = "gastos";
+						})
+					</script>';
 				}
-
 
 			}else{
 
@@ -544,46 +566,59 @@ class ControladorGastos{
 
 				$gastoOriginal = ModeloGastos::mdlMostrarGastos("gastos", "id", $_POST["idGasto"]);
 				$originalAprobadoEfectivo = ($gastoOriginal && strtolower(trim($gastoOriginal["metodo_pago"])) == "efectivo" && $gastoOriginal["estado"] == "aprobado");
+				$nuevoAprobadoEfectivo = (strtolower(trim($_POST["editarMetodoPagoGasto"])) == "efectivo" && $_POST["editarEstadoGasto"] == "aprobado");
 
-				$respuesta = ModeloGastos::mdlEditarGasto($tabla, $datos);
+				/*=============================================
+				TRANSACCIÓN PDO: EDITAR GASTO + SINCRONIZAR CAJA
+				=============================================*/
+				$db = Conexion::conectar();
+				try {
+					$db->beginTransaction();
 
-				if($respuesta == "ok"){
+					$respuesta = ModeloGastos::mdlEditarGasto($tabla, $datos);
+					if ($respuesta != "ok") {
+						throw new Exception("Error al actualizar el gasto.");
+					}
 
 					// Sincronizar con caja chica
 					if (class_exists("ControladorCajas")) {
-						$nuevoAprobadoEfectivo = (strtolower(trim($_POST["editarMetodoPagoGasto"])) == "efectivo" && $_POST["editarEstadoGasto"] == "aprobado");
-						
 						// Caso 1: No estaba aprobado/efectivo, pero ahora sí (Registrar egreso)
 						if (!$originalAprobadoEfectivo && $nuevoAprobadoEfectivo) {
-							ControladorCajas::ctrRegistrarMovimiento("egreso", $_POST["editarMontoGasto"], "Gasto: " . $_POST["editarConceptoGasto"]);
+							$resCaja = ControladorCajas::ctrRegistrarMovimiento("egreso", $_POST["editarMontoGasto"], "Gasto: " . $_POST["editarConceptoGasto"]);
+							if ($resCaja !== false && $resCaja == "error") {
+								throw new Exception("Error al registrar egreso en caja.");
+							}
 						}
-						// Caso 2: Estaba aprobado/efectivo, pero ahora ya no (eg: rechazado, pendiente o no efectivo) (Revertir registrando un ingreso corrector)
+						// Caso 2: Estaba aprobado/efectivo, pero ahora ya no (Revertir)
 						elseif ($originalAprobadoEfectivo && !$nuevoAprobadoEfectivo) {
-							ControladorCajas::ctrRegistrarMovimiento("ingreso", $gastoOriginal["monto"], "Reversión Gasto: " . $gastoOriginal["concepto"]);
+							$resCaja = ControladorCajas::ctrRegistrarMovimiento("ingreso", $gastoOriginal["monto"], "Reversión Gasto: " . $gastoOriginal["concepto"]);
+							if ($resCaja !== false && $resCaja == "error") {
+								throw new Exception("Error al registrar reversión en caja.");
+							}
 						}
-						// Caso 3: Sigue siendo aprobado/efectivo pero cambió el monto o concepto (Registrar el ajuste diferencial o el ajuste de concepto)
+						// Caso 3: Sigue siendo aprobado/efectivo — ajuste diferencial por monto
 						elseif ($originalAprobadoEfectivo && $nuevoAprobadoEfectivo) {
 							$cambioMonto = (floatval($gastoOriginal["monto"]) != floatval($_POST["editarMontoGasto"]));
-							$cambioConcepto = ($gastoOriginal["concepto"] != $_POST["editarConceptoGasto"]);
-
 							if ($cambioMonto) {
 								$diferencia = floatval($_POST["editarMontoGasto"]) - floatval($gastoOriginal["monto"]);
 								if ($diferencia > 0) {
-									ControladorCajas::ctrRegistrarMovimiento("egreso", $diferencia, "Ajuste Gasto (Incremento): " . $_POST["editarConceptoGasto"]);
+									$resCaja = ControladorCajas::ctrRegistrarMovimiento("egreso", $diferencia, "Ajuste Gasto (Incremento): " . $_POST["editarConceptoGasto"]);
 								} else {
-									ControladorCajas::ctrRegistrarMovimiento("ingreso", abs($diferencia), "Ajuste Gasto (Reducción): " . $_POST["editarConceptoGasto"]);
+									$resCaja = ControladorCajas::ctrRegistrarMovimiento("ingreso", abs($diferencia), "Ajuste Gasto (Reducción): " . $_POST["editarConceptoGasto"]);
 								}
-							} elseif ($cambioConcepto) {
-								// Si solo cambió el concepto, podemos registrar un log explicativo (opcional, o simplemente nada ya que el saldo es el mismo)
+								if (isset($resCaja) && $resCaja !== false && $resCaja == "error") {
+									throw new Exception("Error al registrar ajuste en caja.");
+								}
 							}
 						}
 					}
 
-				// Verificar si el gasto editado requiere notificación
-				ControladorNotificaciones::ctrVerificarGastosProximos();
+					$db->commit();
+
+					// Verificar si el gasto editado requiere notificación
+					ControladorNotificaciones::ctrVerificarGastosProximos();
 
 					echo'<script>
-
 					swal({
 						  type: "success",
 						  title: "El gasto ha sido editado correctamente",
@@ -592,11 +627,23 @@ class ControladorGastos{
 						  }).then(() => {
 								window.location = "gastos";
 							})
-
 					</script>';
 
+				} catch (Exception $e) {
+					$db->rollBack();
+					$mensajeError = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+					echo '<script>
+						swal({
+							type: "error",
+							title: "Error al editar el gasto",
+							text: "' . $mensajeError . '",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then(() => {
+							window.location = "gastos";
+						})
+					</script>';
 				}
-
 
 			}else{
 
@@ -654,23 +701,38 @@ class ControladorGastos{
 				return;
 			}
 
-			$tabla ="gastos";
+			$tabla = "gastos";
 			$idGasto = isset($_GET["idGasto"]) ? $_GET["idGasto"] : $_POST["idGastoEliminar"];
 
-			// Obtener información del gasto para eliminar imagen si existe
+			// Obtener información del gasto antes de eliminar
 			$gasto = ModeloGastos::mdlMostrarGastos($tabla, "id", $idGasto);
+			$esAprobadoEfectivo = ($gasto && class_exists("ControladorCajas") && strtolower(trim($gasto["metodo_pago"])) == "efectivo" && $gasto["estado"] == "aprobado");
 
-			if(!empty($gasto["imagen_comprobante"]) && file_exists($gasto["imagen_comprobante"])){
-				unlink($gasto["imagen_comprobante"]);
-			}
+			/*=============================================
+			TRANSACCIÓN PDO: ELIMINAR GASTO + REVERTIR CAJA
+			=============================================*/
+			$db = Conexion::conectar();
+			try {
+				$db->beginTransaction();
 
-			$respuesta = ModeloGastos::mdlEliminarGasto($tabla, $idGasto);
-
-			if($respuesta == "ok"){
+				$respuesta = ModeloGastos::mdlEliminarGasto($tabla, $idGasto);
+				if ($respuesta != "ok") {
+					throw new Exception("Error al eliminar el gasto.");
+				}
 
 				// Si el gasto eliminado estaba aprobado y pagado en efectivo, reintegrar a la caja chica
-				if ($gasto && class_exists("ControladorCajas") && strtolower(trim($gasto["metodo_pago"])) == "efectivo" && $gasto["estado"] == "aprobado") {
-					ControladorCajas::ctrRegistrarMovimiento("ingreso", $gasto["monto"], "Reversión Gasto (Eliminado): " . $gasto["concepto"]);
+				if ($esAprobadoEfectivo) {
+					$resCaja = ControladorCajas::ctrRegistrarMovimiento("ingreso", $gasto["monto"], "Reversión Gasto (Eliminado): " . $gasto["concepto"]);
+					if ($resCaja !== false && $resCaja == "error") {
+						throw new Exception("Error al reintegrar el monto a caja.");
+					}
+				}
+
+				$db->commit();
+
+				// Eliminar imagen del comprobante DESPUÉS de confirmar el commit
+				if (!empty($gasto["imagen_comprobante"]) && file_exists($gasto["imagen_comprobante"])) {
+					unlink($gasto["imagen_comprobante"]);
 				}
 
 				if (isset($_POST["idGastoEliminar"])) {
@@ -678,18 +740,33 @@ class ControladorGastos{
 				}
 
 				echo'<script>
-
 				swal({
 					  type: "success",
 					  title: "El gasto ha sido eliminado correctamente",
 					  showConfirmButton: true,
 					  confirmButtonText: "Cerrar"
 					  }).then(() => {
-								window.location = "gastos";
+							window.location = "gastos";
 						})
-
 				</script>';
 
+			} catch (Exception $e) {
+				$db->rollBack();
+				$mensajeError = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+				if (isset($_POST["idGastoEliminar"])) {
+					return "error";
+				}
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Error al eliminar el gasto",
+						text: "' . $mensajeError . '",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "gastos";
+					})
+				</script>';
 			}
 
 		}

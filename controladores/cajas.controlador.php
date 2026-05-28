@@ -61,8 +61,20 @@ class ControladorCajas
             "observaciones_apertura" => $observacionesApertura
         );
 
-        $respuesta = ModeloCajas::mdlAbrirCaja($tabla, $datos);
-        return $respuesta;
+        $db = Conexion::conectar();
+        try {
+            $db->beginTransaction();
+            $respuesta = ModeloCajas::mdlAbrirCaja($tabla, $datos);
+            if ($respuesta === "ok") {
+                $db->commit();
+            } else {
+                $db->rollBack();
+            }
+            return $respuesta;
+        } catch (Exception $e) {
+            $db->rollBack();
+            return "error";
+        }
     }
 
     /*=============================================
@@ -84,8 +96,20 @@ class ControladorCajas
             "fecha" => date("Y-m-d H:i:s")
         );
 
-        $respuesta = ModeloCajas::mdlRegistrarMovimiento($tabla, $datos);
-        return $respuesta;
+        $db = Conexion::conectar();
+        try {
+            $db->beginTransaction();
+            $respuesta = ModeloCajas::mdlRegistrarMovimiento($tabla, $datos);
+            if ($respuesta === "ok") {
+                $db->commit();
+            } else {
+                $db->rollBack();
+            }
+            return $respuesta;
+        } catch (Exception $e) {
+            $db->rollBack();
+            return "error";
+        }
     }
 
     /*=============================================
@@ -155,8 +179,20 @@ class ControladorCajas
             "observaciones" => $observaciones
         );
 
-        $respuesta = ModeloCajas::mdlCerrarCaja($tabla, $datos);
-        return $respuesta;
+        $db = Conexion::conectar();
+        try {
+            $db->beginTransaction();
+            $respuesta = ModeloCajas::mdlCerrarCaja($tabla, $datos);
+            if ($respuesta === "ok") {
+                $db->commit();
+            } else {
+                $db->rollBack();
+            }
+            return $respuesta;
+        } catch (Exception $e) {
+            $db->rollBack();
+            return "error";
+        }
     }
 
     /*=============================================
@@ -168,15 +204,14 @@ class ControladorCajas
 
         // Mapeo de columnas para ordenamiento
         $columnsMap = array(
-            0 => 'c.id',
-            1 => 'b.nombre',
-            2 => 'u.nombre',
-            3 => 'c.fecha_apertura',
-            4 => 'c.fecha_cierre',
-            5 => 'c.monto_apertura',
-            6 => 'c.monto_cierre_teorico',
-            7 => 'c.monto_cierre_real',
-            8 => 'c.diferencia'
+            0 => 'b.nombre',
+            1 => 'u.nombre',
+            2 => 'c.fecha_apertura',
+            3 => 'c.fecha_cierre',
+            4 => 'c.monto_apertura',
+            5 => 'c.monto_cierre_teorico',
+            6 => 'c.monto_cierre_real',
+            7 => 'c.diferencia'
         );
 
         $where = " WHERE 1=1 ";

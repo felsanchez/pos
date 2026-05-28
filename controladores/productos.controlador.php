@@ -450,24 +450,36 @@ class ControladorProductos
 				);
 
 
-				// Si NO tiene variantes, usar el método normal
+				$db = Conexion::conectar();
 
-				if (!$tieneVariantes) {
+				try {
+					$db->beginTransaction();
 
-					$respuesta = ModeloProductos::mdlIngresarProducto($tabla, $datos);
+					// Si NO tiene variantes, usar el método normal
+					if (!$tieneVariantes) {
 
-					if ($respuesta == "ok") {
+						$respuesta = ModeloProductos::mdlIngresarProducto($tabla, $datos);
+						if ($respuesta != "ok") {
+							throw new Exception("Error al registrar el producto en la base de datos.");
+						}
+
 						// Obtener el ID del producto recién creado
 						$productoCreado = ModeloProductos::mdlMostrarProductos($tabla, "codigo", $_POST["nuevoCodigo"], "id");
+						if (!$productoCreado) {
+							throw new Exception("Error al recuperar el ID del producto registrado.");
+						}
 						$idProducto = $productoCreado["id"];
 
 						// 📦 ASIGNAR STOCK INICIAL A BODEGA ACTIVA
 						$idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
-						ModeloProductos::mdlActualizarStockBodega($idProducto, $idBodegaActiva, $stock);
+						$resStock = ModeloProductos::mdlActualizarStockBodega($idProducto, $idBodegaActiva, $stock);
+						if ($resStock != "ok") {
+							throw new Exception("Error al inicializar el stock en la bodega.");
+						}
 
 						// 🟢 REGISTRAR MOVIMIENTO DE STOCK - CREACIÓN DE PRODUCTO
 						if ($stock > 0) {
-							ControladorMovimientos::ctrRegistrarMovimiento(
+							$resMov = ControladorMovimientos::ctrRegistrarMovimiento(
 								"producto",
 								$idProducto,
 								null,
@@ -479,169 +491,123 @@ class ControladorProductos
 								"Producto creado con stock inicial",
 								""
 							);
+							if ($resMov != "ok") {
+								throw new Exception("Error al registrar el movimiento de stock inicial.");
+							}
 						}
-					}
 
-					/*=============================================
-					CALCULAR STOCK AUTOMÁTICO DEL PRODUCTO BASE
-					=============================================*/
-					if (isset($_POST["totalCombinaciones"]) && $_POST["totalCombinaciones"] > 0) {
+						/*=============================================
+						CALCULAR STOCK AUTOMÁTICO DEL PRODUCTO BASE
+						=============================================*/
+						if (isset($_POST["totalCombinaciones"]) && $_POST["totalCombinaciones"] > 0) {
+							// Calcular la suma del stock de todas las variantes
+							$stmt = Conexion::conectar()->prepare("SELECT SUM(stock) as stock_total FROM productos_variantes WHERE id_producto = :id_producto AND estado = 1");
+							$stmt->bindParam(":id_producto", $idProducto, PDO::PARAM_INT);
+							$stmt->execute();
+							$resultado = $stmt->fetch();
+							$stmt = null;
 
-						// Obtener el ID del producto recién creado
-						$tablaProductos = "productos";
-						$ultimoProducto = ModeloProductos::mdlMostrarProductos($tablaProductos, "codigo", $_POST["nuevoCodigo"], "id");
-						$idProducto = $ultimoProducto["id"];
+							$stockTotal = $resultado["stock_total"] ? $resultado["stock_total"] : 0;
 
-						// Calcular la suma del stock de todas las variantes
-						$stmt = Conexion::conectar()->prepare("SELECT SUM(stock) as stock_total FROM productos_variantes WHERE id_producto = :id_producto AND estado = 1");
-						$stmt->bindParam(":id_producto", $idProducto, PDO::PARAM_INT);
-						$stmt->execute();
-						$resultado = $stmt->fetch();
-						$stmt = null;
+							// Actualizar el stock del producto base
+							$resActBase = ModeloProductos::mdlActualizarProducto($tabla, "stock", $stockTotal, $idProducto);
+							if ($resActBase != "ok") {
+								throw new Exception("Error al actualizar el stock calculado del producto.");
+							}
+						}
 
-						$stockTotal = $resultado["stock_total"] ? $resultado["stock_total"] : 0;
+					} else {
 
-						// Actualizar el stock del producto base
-						ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $stockTotal, $idProducto);
-					}
+						// SI tiene variantes, usar el nuevo método que retorna ID
+						$idProducto = ModeloProductos::mdlIngresarProductoConVariantes($tabla, $datos);
 
-					if ($respuesta == "ok") {
-
-						echo '<script>
-
-						swal({
-							type: "success",
-							title: "¡El producto ha sido guardado correctamente!",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						}).then(() => {
-							window.location = "productos";
-						})
-
-						</script>';
-
-					}
-
-
-
-				} else {
-
-					// SI tiene variantes, usar el nuevo método que retorna ID
-
-					$idProducto = ModeloProductos::mdlIngresarProductoConVariantes($tabla, $datos);
-
-					if ($idProducto) {
+						if (!$idProducto) {
+							throw new Exception("Error al registrar el producto con variantes.");
+						}
 
 						// Procesar variantes
-
 						$totalCombinaciones = isset($_POST["totalCombinaciones"]) ? $_POST["totalCombinaciones"] : 0;
-
 						$variantesCreadas = 0;
 
 						for ($i = 0; $i < $totalCombinaciones; $i++) {
 
 							// Verificar si existe la combinación
-
 							if (isset($_POST["combinacion_" . $i . "_ids"])) {
 
-
 								$idsCombinacion = $_POST["combinacion_" . $i . "_ids"];
-
 								$nombreCombinacion = $_POST["combinacion_" . $i . "_nombre"];
 
-
 								// Obtener precio adicional y stock de la variante
-
 								$precioAdicional = isset($_POST["precioAdicional_" . $idsCombinacion]) && $_POST["precioAdicional_" . $idsCombinacion] !== ""
-
 									? $_POST["precioAdicional_" . $idsCombinacion]
-
 									: 0;
 
-
 								$stockVariante = isset($_POST["stockVariante_" . $idsCombinacion]) && $_POST["stockVariante_" . $idsCombinacion] !== ""
-
 									? $_POST["stockVariante_" . $idsCombinacion]
-
 									: $stock;
 
-
 								// Generar SKU
-
 								$idsOpcionesArray = explode("_", $idsCombinacion);
-
 								$sku = ModeloProductos::mdlGenerarSKU($_POST["nuevoCodigo"], $idsOpcionesArray);
 
-
 								// Datos de la variante
-
 								$datosVariante = array(
-
 									"id_producto" => $idProducto,
-
 									"sku" => $sku,
-
 									"precio_adicional" => $precioAdicional,
-
 									"stock" => $stockVariante,
-
 									"imagen" => $ruta,
-
 									"estado" => 1
-
 								);
 
 								// Guardar variante
-
 								$idVariante = ModeloProductos::mdlGuardarVariante($datosVariante);
 
-								if ($idVariante) {
-
-									// 📦 ASIGNAR STOCK INICIAL A BODEGA ACTIVA
-									$idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
-									ModeloProductos::mdlActualizarStockVarianteBodega($idVariante, $idBodegaActiva, $stockVariante);
-
-									// 🟢 REGISTRAR MOVIMIENTO DE STOCK - CREACIÓN DE VARIANTE
-
-									if ($stockVariante > 0) {
-
-										ControladorMovimientos::ctrRegistrarMovimiento(
-											"variante",
-											$idProducto,
-											$idVariante,
-											$_POST["nuevaDescripcion"] . " - " . $nombreCombinacion,
-											"creacion_variante",
-											$stockVariante,
-											0,
-											$stockVariante,
-											"Variante creada con stock inicial: " . $nombreCombinacion,
-											""
-										);
-									}
-
-
-									// Relacionar variante con sus opciones
-
-									foreach ($idsOpcionesArray as $idOpcion) {
-
-										$datosRelacion = array(
-
-											"id_producto_variante" => $idVariante,
-
-											"id_opcion_variante" => $idOpcion
-
-										);
-
-										ModeloProductos::mdlGuardarVarianteOpcion($datosRelacion);
-
-									}
-
-									$variantesCreadas++;
-
+								if (!$idVariante) {
+									throw new Exception("Error al guardar la variante de producto.");
 								}
 
-							}
+								// 📦 ASIGNAR STOCK INICIAL A BODEGA ACTIVA
+								$idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+								$resStockVar = ModeloProductos::mdlActualizarStockVarianteBodega($idVariante, $idBodegaActiva, $stockVariante);
+								if ($resStockVar != "ok") {
+									throw new Exception("Error al asignar stock inicial de variante en bodega.");
+								}
 
+								// 🟢 REGISTRAR MOVIMIENTO DE STOCK - CREACIÓN DE VARIANTE
+								if ($stockVariante > 0) {
+									$resMovVar = ControladorMovimientos::ctrRegistrarMovimiento(
+										"variante",
+										$idProducto,
+										$idVariante,
+										$_POST["nuevaDescripcion"] . " - " . $nombreCombinacion,
+										"creacion_variante",
+										$stockVariante,
+										0,
+										$stockVariante,
+										"Variante creada con stock inicial: " . $nombreCombinacion,
+										""
+									);
+									if ($resMovVar != "ok") {
+										throw new Exception("Error al registrar movimiento de stock de la variante.");
+									}
+								}
+
+								// Relacionar variante con sus opciones
+								foreach ($idsOpcionesArray as $idOpcion) {
+									$datosRelacion = array(
+										"id_producto_variante" => $idVariante,
+										"id_opcion_variante" => $idOpcion
+									);
+
+									$resRel = ModeloProductos::mdlGuardarVarianteOpcion($datosRelacion);
+									if ($resRel != "ok") {
+										throw new Exception("Error al relacionar la variante con su opción.");
+									}
+								}
+
+								$variantesCreadas++;
+							}
 						}
 
 						/*=============================================
@@ -661,7 +627,10 @@ class ControladorProductos
 						$stmtBodegas = null;
 
 						foreach ($resultadosBodegas as $rowBodega) {
-							ModeloProductos::mdlActualizarStockBodega($idProducto, $rowBodega["id_bodega"], $rowBodega["stock_bodega"]);
+							$resActStockB = ModeloProductos::mdlActualizarStockBodega($idProducto, $rowBodega["id_bodega"], $rowBodega["stock_bodega"]);
+							if ($resActStockB != "ok") {
+								throw new Exception("Error al sincronizar el stock por bodega del producto base.");
+							}
 						}
 
 						// 2. Calcular la suma del stock global (todas las variantes)
@@ -674,48 +643,45 @@ class ControladorProductos
 						$stockTotal = $resultado["stock_total"] ? $resultado["stock_total"] : 0;
 
 						// Actualizar el stock global del producto base
-						$tablaProductos = "productos";
-						ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $stockTotal, $idProducto);
+						$resActProdB = ModeloProductos::mdlActualizarProducto($tabla, "stock", $stockTotal, $idProducto);
+						if ($resActProdB != "ok") {
+							throw new Exception("Error al actualizar el stock global del producto base.");
+						}
+					}
 
+					$db->commit();
 
-						// Mostrar mensaje de éxito
-						echo '<script>
+					$tituloSuccess = $tieneVariantes ? "¡Producto guardado!" : "¡El producto ha sido guardado correctamente!";
+					$textSuccess = $tieneVariantes ? "Se crearon " . $variantesCreadas . " variantes correctamente" : "";
 
+					echo '<script>
 						swal({
 							type: "success",
-							title: "¡Producto guardado!",
-							text: "Se crearon ' . $variantesCreadas . ' variantes correctamente",
+							title: "' . $tituloSuccess . '",
+							text: "' . $textSuccess . '",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
 						}).then(() => {
 							window.location = "productos";
 						})
+					</script>';
 
-						</script>';
+				} catch (Exception $e) {
+					$db->rollBack();
+					Logger::error("Error al crear producto: " . $e->getMessage());
 
-
-
-					} else {
-
-						echo '<script>
-
+					echo '<script>
 						swal({
 							type: "error",
 							title: "Error al guardar el producto",
+							text: "' . addslashes($e->getMessage()) . '",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
 						}).then(() => {
 							// window.location = "productos";
 						})
-
-						</script>';
-
-					}
-
+					</script>';
 				}
-
-
-
 			} else {
 
 				echo '<script>
@@ -847,72 +813,68 @@ if (isset($_POST["editarDescripcion"])) {
 				}
 
 
-				$idProveedor = $_POST["editarProveedor"];
+				$db = Conexion::conectar();
 
-				// Si viene vacío, "0" o es 0, convertirlo a NULL
-				if (empty($idProveedor) || $idProveedor == "0" || $idProveedor == 0) {
-					$idProveedor = null;
-				}
+				try {
+					$db->beginTransaction();
 
+					$idProveedor = $_POST["editarProveedor"];
 
-				$tabla = "productos";
+					// Si viene vacío, "0" o es 0, convertirlo a NULL
+					if (empty($idProveedor) || $idProveedor == "0" || $idProveedor == 0) {
+						$idProveedor = null;
+					}
 
-				// 🔹 OBTENER STOCK ANTERIOR antes de editar
-				// Buscar por ID si existe, sino por código
-				if (isset($_POST["idProducto"]) && !empty($_POST["idProducto"])) {
-					$productoAnterior = ModeloProductos::mdlMostrarProductos($tabla, "id", $_POST["idProducto"], "id");
-				} else {
-					$productoAnterior = ModeloProductos::mdlMostrarProductos($tabla, "codigo", $_POST["editarCodigo"], "id");
-				}
+					$tabla = "productos";
 
-				// Validar que el producto existe
-				if (!$productoAnterior) {
-					echo '<script>
-						swal({
-							type: "error",
-							title: "Error al editar producto",
-							text: "No se pudo encontrar el producto en la base de datos",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						}).then(() => {
-							window.location = "productos";
-						});
-					</script>';
-					return;
-				}
+					// 🔹 OBTENER STOCK ANTERIOR antes de editar
+					// Buscar por ID si existe, sino por código
+					if (isset($_POST["idProducto"]) && !empty($_POST["idProducto"])) {
+						$productoAnterior = ModeloProductos::mdlMostrarProductos($tabla, "id", $_POST["idProducto"], "id");
+					} else {
+						$productoAnterior = ModeloProductos::mdlMostrarProductos($tabla, "codigo", $_POST["editarCodigo"], "id");
+					}
 
-				$stockAnterior = $productoAnterior["stock"];
-				$nuevoStock = $_POST["editarStock"];
+					// Validar que el producto existe
+					if (!$productoAnterior) {
+						throw new Exception("No se pudo encontrar el producto en la base de datos.");
+					}
 
-				// Fallback de compatibilidad de variables JS
-				if (!isset($_POST["totalCombinacionesEditar"]) && isset($_POST["totalCombinaciones"])) {
-					$_POST["totalCombinacionesEditar"] = $_POST["totalCombinaciones"];
-				}
+					$stockAnterior = $productoAnterior["stock"];
+					$nuevoStock = $_POST["editarStock"];
 
-				$datos = array(
-					"id" => isset($_POST["idProducto"]) ? $_POST["idProducto"] : null,
-					"id_categoria" => $_POST["editarCategoria"],
-					"tiene_variantes" => (isset($_POST["totalCombinacionesEditar"]) && $_POST["totalCombinacionesEditar"] > 0) ? 1 : $productoAnterior["tiene_variantes"],
-					"codigo" => $_POST["editarCodigo"],
-					"descripcion" => $_POST["editarDescripcion"],
-					"stock" => $nuevoStock,
-					"precio_compra" => $_POST["editarPrecioCompra"],
-					"precio_venta" => $_POST["editarPrecioVenta"],
-					"id_proveedor" => $_POST["editarProveedor"],
-					"imagen" => $ruta,
-					// Campos de facturación electrónica DIAN (Factus)
-					"unidad_medida_id" => isset($_POST["editarUnidadMedida"]) && !empty($_POST["editarUnidadMedida"]) ? $_POST["editarUnidadMedida"] : 94,
-					"codigo_estandar_id" => isset($_POST["editarCodigoEstandar"]) && !empty($_POST["editarCodigoEstandar"]) ? $_POST["editarCodigoEstandar"] : 999,
-					"es_excluido" => isset($_POST["editarEsExcluido"]) ? 1 : 0,
-					"tributo_id" => isset($_POST["editarTributo"]) && !empty($_POST["editarTributo"]) ? $_POST["editarTributo"] : 1,
-					"tasa_impuesto" => isset($_POST["editarTasaImpuesto"]) && !empty($_POST["editarTasaImpuesto"]) ? $_POST["editarTasaImpuesto"] : '0.00',
-					"notas_facturacion" => isset($_POST["editarNotasFacturacion"]) ? $_POST["editarNotasFacturacion"] : '',
-					"scheme_id" => isset($_POST["editarSchemeId"]) && !empty($_POST["editarSchemeId"]) ? $_POST["editarSchemeId"] : '999'
-				);
+					// Fallback de compatibilidad de variables JS
+					if (!isset($_POST["totalCombinacionesEditar"]) && isset($_POST["totalCombinaciones"])) {
+						$_POST["totalCombinacionesEditar"] = $_POST["totalCombinaciones"];
+					}
 
-				$respuesta = ModeloProductos::mdlEditarProducto($tabla, $datos);
+					$datos = array(
+						"id" => isset($_POST["idProducto"]) ? $_POST["idProducto"] : null,
+						"id_categoria" => $_POST["editarCategoria"],
+						"tiene_variantes" => (isset($_POST["totalCombinacionesEditar"]) && $_POST["totalCombinacionesEditar"] > 0) ? 1 : $productoAnterior["tiene_variantes"],
+						"codigo" => $_POST["editarCodigo"],
+						"descripcion" => $_POST["editarDescripcion"],
+						"stock" => $nuevoStock,
+						"precio_compra" => $_POST["editarPrecioCompra"],
+						"precio_venta" => $_POST["editarPrecioVenta"],
+						"id_proveedor" => $idProveedor,
+						"imagen" => $ruta,
+						// Campos de facturación electrónica DIAN (Factus)
+						"unidad_medida_id" => isset($_POST["editarUnidadMedida"]) && !empty($_POST["editarUnidadMedida"]) ? $_POST["editarUnidadMedida"] : 94,
+						"codigo_estandar_id" => isset($_POST["editarCodigoEstandar"]) && !empty($_POST["editarCodigoEstandar"]) ? $_POST["editarCodigoEstandar"] : 999,
+						"es_excluido" => isset($_POST["editarEsExcluido"]) ? 1 : 0,
+						"tributo_id" => isset($_POST["editarTributo"]) && !empty($_POST["editarTributo"]) ? $_POST["editarTributo"] : 1,
+						"tasa_impuesto" => isset($_POST["editarTasaImpuesto"]) && !empty($_POST["editarTasaImpuesto"]) ? $_POST["editarTasaImpuesto"] : '0.00',
+						"notas_facturacion" => isset($_POST["editarNotasFacturacion"]) ? $_POST["editarNotasFacturacion"] : '',
+						"scheme_id" => isset($_POST["editarSchemeId"]) && !empty($_POST["editarSchemeId"]) ? $_POST["editarSchemeId"] : '999'
+					);
 
-				if ($respuesta == "ok") {
+					$respuesta = ModeloProductos::mdlEditarProducto($tabla, $datos);
+
+					if ($respuesta != "ok") {
+						throw new Exception("Error al actualizar la información del producto.");
+					}
+
 					// 📦 ACTUALIZAR STOCK EN BODEGA ACTIVA (Para productos simples)
 					$idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
 					$idProductoReal = isset($_POST["idProducto"]) ? $_POST["idProducto"] : $productoAnterior["id"];
@@ -921,7 +883,10 @@ if (isset($_POST["editarDescripcion"])) {
 						$tieneVariantes = isset($_POST["tieneVariantes"]) ? 1 : 0;
 					}
 					if ($tieneVariantes == 0) {
-						ModeloProductos::mdlActualizarStockBodega($idProductoReal, $idBodegaActiva, $nuevoStock);
+						$resStockB = ModeloProductos::mdlActualizarStockBodega($idProductoReal, $idBodegaActiva, $nuevoStock);
+						if ($resStockB != "ok") {
+							throw new Exception("Error al actualizar el stock del producto en la bodega.");
+						}
 						// Recalcular stock global
 						$stmtSumBodegas = Conexion::conectar()->prepare("SELECT SUM(pb.stock) as total FROM productos_bodegas pb WHERE pb.id_producto = :id_producto");
 						$stmtSumBodegas->bindParam(":id_producto", $idProductoReal, PDO::PARAM_INT);
@@ -929,12 +894,16 @@ if (isset($_POST["editarDescripcion"])) {
 						$resSum = $stmtSumBodegas->fetch();
 						$stockGlobal = ($resSum && $resSum["total"]) ? $resSum["total"] : $nuevoStock;
 						$stmtSumBodegas = null;
-						ModeloProductos::mdlActualizarProducto("productos", "stock", $stockGlobal, $idProductoReal);
+						
+						$resActProd = ModeloProductos::mdlActualizarProducto("productos", "stock", $stockGlobal, $idProductoReal);
+						if ($resActProd != "ok") {
+							throw new Exception("Error al actualizar el stock global del producto.");
+						}
 					}
 					// 🟢 REGISTRAR MOVIMIENTO DE STOCK - EDICIÓN DE PRODUCTO
 					if ($stockAnterior != $nuevoStock && $productoAnterior && isset($productoAnterior["id"])) {
 						$diferencia = $nuevoStock - $stockAnterior;
-						ControladorMovimientos::ctrRegistrarMovimiento(
+						$resMov = ControladorMovimientos::ctrRegistrarMovimiento(
 							"producto",
 							$productoAnterior["id"],
 							null,
@@ -946,7 +915,9 @@ if (isset($_POST["editarDescripcion"])) {
 							"Stock editado manualmente",
 							""
 						);
-
+						if ($resMov != "ok") {
+							throw new Exception("Error al registrar el movimiento de ajuste de stock.");
+						}
 					}
 
 					/*=============================================
@@ -965,6 +936,9 @@ if (isset($_POST["editarDescripcion"])) {
 						if(!$idProductoReal) {
 							$idProducto = $_POST["editarCodigo"];
 							$productoBase = ModeloProductos::mdlMostrarProductos("productos", "codigo", $idProducto, "id");
+							if (!$productoBase) {
+								throw new Exception("Error al recuperar el producto base para variante.");
+							}
 							$idProductoReal = $productoBase["id"];
 						}
 
@@ -977,10 +951,9 @@ if (isset($_POST["editarDescripcion"])) {
 							file_put_contents("debug_editar_variantes.txt", "\n--- Procesando combinación $i ---\n", FILE_APPEND);
 
 							// Verificar si esta combinación está seleccionada
-							// Fallback for incorrect prefixes sent by JS
-								$prefixComb = isset($_POST["combinacionEditar_" . $i . "_ids"]) ? "combinacionEditar_" : "combinacion_";
-								$prefixPrecio = isset($_POST["precioAdicionalEditar_" . $_POST[$prefixComb . $i . "_ids"]]) ? "precioAdicionalEditar_" : "precioAdicional_";
-								$prefixStock = isset($_POST["stockVarianteEditar_" . $_POST[$prefixComb . $i . "_ids"]]) ? "stockVarianteEditar_" : "stockVariante_";
+							$prefixComb = isset($_POST["combinacionEditar_" . $i . "_ids"]) ? "combinacionEditar_" : "combinacion_";
+							$prefixPrecio = isset($_POST["precioAdicionalEditar_" . $_POST[$prefixComb . $i . "_ids"]]) ? "precioAdicionalEditar_" : "precioAdicional_";
+							$prefixStock = isset($_POST["stockVarianteEditar_" . $_POST[$prefixComb . $i . "_ids"]]) ? "stockVarianteEditar_" : "stockVariante_";
 
 							if (isset($_POST[$prefixComb . $i . "_ids"]) && isset($_POST[$prefixComb . $i . "_nombre"])) {
 
@@ -997,7 +970,7 @@ if (isset($_POST["editarDescripcion"])) {
 
 								$stockVariante = isset($_POST[$prefixStock . $idsCombinacion]) && $_POST[$prefixStock . $idsCombinacion] !== ""
 									? $_POST[$prefixStock . $idsCombinacion]
-									: 0; // Si no se especifica, usar el stock base del producto 
+									: 0;
 
 								file_put_contents("debug_editar_variantes.txt", "Precio Adicional: $precioAdicional\n", FILE_APPEND);
 								file_put_contents("debug_editar_variantes.txt", "Stock: $stockVariante\n", FILE_APPEND);
@@ -1019,69 +992,62 @@ if (isset($_POST["editarDescripcion"])) {
 									$stmtVarianteAntes = null;
 
 									file_put_contents("debug_editar_variantes.txt", ">>> UPDATE variante existente ID: $idVarianteExistente en bodega $idBodegaActiva\n", FILE_APPEND);
-									file_put_contents("debug_editar_variantes.txt", "Precio adicional a actualizar: $precioAdicional\n", FILE_APPEND);
-									file_put_contents("debug_editar_variantes.txt", "Stock a actualizar en bodega: $stockVariante\n", FILE_APPEND);
 
 									$datosActualizar = array(
 										"id" => $idVarianteExistente,
 										"precio_adicional" => $precioAdicional,
-										"stock" => $stockVariante // se sobreescribirá abajo con la sumatoria
+										"stock" => $stockVariante
 									);
 
-									try {
-										$resultado = ModeloProductos::mdlEditarVariante($tablaVariantes, $datosActualizar);
-										file_put_contents("debug_editar_variantes.txt", "Resultado UPDATE: $resultado\n", FILE_APPEND);
+									$resultado = ModeloProductos::mdlEditarVariante($tablaVariantes, $datosActualizar);
+									if ($resultado !== "ok") {
+										throw new Exception("Error al actualizar la variante ID: " . $idVarianteExistente);
+									}
 
-										if ($resultado === "ok") {
-											file_put_contents("debug_editar_variantes.txt", "UPDATE exitoso\n", FILE_APPEND);
+									// 📦 ACTUALIZAR STOCK EN LA BODEGA ACTIVA DIRECTAMENTE
+									$resStockV = ModeloProductos::mdlActualizarStockVarianteBodega($idVarianteExistente, $idBodegaActiva, $stockVariante);
+									if ($resStockV !== "ok") {
+										throw new Exception("Error al actualizar el stock de la variante en la bodega.");
+									}
 
-											// 📦 ACTUALIZAR STOCK EN LA BODEGA ACTIVA DIRECTAMENTE
-											ModeloProductos::mdlActualizarStockVarianteBodega($idVarianteExistente, $idBodegaActiva, $stockVariante);
+									// 🔹 RECALCULAR STOCK TOTAL DE LA VARIANTE (Suma de todas las bodegas)
+									$stmtTotalVar = Conexion::conectar()->prepare("SELECT SUM(stock) as total FROM productos_variantes_bodegas WHERE id_variante = :id");
+									$stmtTotalVar->bindParam(":id", $idVarianteExistente, PDO::PARAM_INT);
+									$stmtTotalVar->execute();
+									$resTotalVar = $stmtTotalVar->fetch();
+									$stockTotalVariante = $resTotalVar["total"] ? $resTotalVar["total"] : 0;
+									$stmtTotalVar = null;
 
-											// 🔹 RECALCULAR STOCK TOTAL DE LA VARIANTE (Suma de todas las bodegas)
-											$stmtTotalVar = Conexion::conectar()->prepare("SELECT SUM(stock) as total FROM productos_variantes_bodegas WHERE id_variante = :id");
-											$stmtTotalVar->bindParam(":id", $idVarianteExistente, PDO::PARAM_INT);
-											$stmtTotalVar->execute();
-											$resTotalVar = $stmtTotalVar->fetch();
-											$stockTotalVariante = $resTotalVar["total"] ? $resTotalVar["total"] : 0;
-											$stmtTotalVar = null;
+									$resActP = ModeloProductos::mdlActualizarProducto("productos_variantes", "stock", $stockTotalVariante, $idVarianteExistente);
+									if ($resActP !== "ok") {
+										throw new Exception("Error al actualizar el stock global de la variante.");
+									}
 
-											ModeloProductos::mdlActualizarProducto("productos_variantes", "stock", $stockTotalVariante, $idVarianteExistente);
-
-											// 🟢 REGISTRAR MOVIMIENTO DE STOCK - EDICIÓN DE VARIANTE EXISTENTE EN LA BODEGA
-											if ($stockAnteriorVariante != $stockVariante) {
-												$diferenciaStock = $stockVariante - $stockAnteriorVariante;
-												ControladorMovimientos::ctrRegistrarMovimiento(
-													"variante",
-													$idProductoReal,
-													$idVarianteExistente,
-													$_POST["editarDescripcion"] . " - " . $nombreCombinacion,
-													"edicion_stock",
-													$diferenciaStock,
-													$stockAnteriorVariante,
-													$stockVariante,
-													"Stock de variante actualizado",
-													"",
-													$idBodegaActiva
-												);
-											}
-
-										} else {
-											file_put_contents("debug_editar_variantes.txt", "UPDATE falló: $resultado\n", FILE_APPEND);
+									// 🟢 REGISTRAR MOVIMIENTO DE STOCK - EDICIÓN DE VARIANTE EXISTENTE EN LA BODEGA
+									if ($stockAnteriorVariante != $stockVariante) {
+										$diferenciaStock = $stockVariante - $stockAnteriorVariante;
+										$resMovV = ControladorMovimientos::ctrRegistrarMovimiento(
+											"variante",
+											$idProductoReal,
+											$idVarianteExistente,
+											$_POST["editarDescripcion"] . " - " . $nombreCombinacion,
+											"edicion_stock",
+											$diferenciaStock,
+											$stockAnteriorVariante,
+											$stockVariante,
+											"Stock de variante actualizado",
+											"",
+											$idBodegaActiva
+										);
+										if ($resMovV !== "ok") {
+											throw new Exception("Error al registrar movimiento de stock de la variante.");
 										}
-
-									} catch (Exception $e) {
-										file_put_contents("debug_editar_variantes.txt", "ERROR en UPDATE: " . $e->getMessage() . "\n", FILE_APPEND);
 									}
 
 								} else {
 									// CREAR nueva variante
-									file_put_contents("debug_editar_variantes.txt", ">>> INSERT nueva variante\n", FILE_APPEND);
-
 									$skuBase = $_POST["editarCodigo"];
 									$skuVariante = $skuBase . "_" . $idsCombinacion;
-
-									file_put_contents("debug_editar_variantes.txt", "SKU: $skuVariante\n", FILE_APPEND);
 
 									$datosVariante = array(
 										"id_producto" => $idProductoReal,
@@ -1094,60 +1060,54 @@ if (isset($_POST["editarDescripcion"])) {
 
 									// Guardar variante y obtener su ID
 									$idVarianteNueva = ModeloProductos::mdlGuardarVariante($datosVariante);
-									file_put_contents("debug_editar_variantes.txt", "Resultado INSERT: ID = $idVarianteNueva\n", FILE_APPEND);
+									if (!$idVarianteNueva) {
+										throw new Exception("Error al insertar la nueva variante.");
+									}
 
-									if ($idVarianteNueva) {
-										// 📦 ASIGNAR STOCK INICIAL A BODEGA ACTIVA
+									// 📦 ASIGNAR STOCK INICIAL A BODEGA ACTIVA
 									$idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
-									ModeloProductos::mdlActualizarStockVarianteBodega($idVarianteNueva, $idBodegaActiva, $stockVariante);
+									$resStockVNew = ModeloProductos::mdlActualizarStockVarianteBodega($idVarianteNueva, $idBodegaActiva, $stockVariante);
+									if ($resStockVNew !== "ok") {
+										throw new Exception("Error al asignar stock inicial a la nueva variante.");
+									}
 
 									// 🟢 REGISTRAR MOVIMIENTO DE STOCK - CREACIÓN DE VARIANTE
-										if ($stockVariante > 0) {
-											ControladorMovimientos::ctrRegistrarMovimiento(
-												"variante",
-												$idProductoReal,
-												$idVarianteNueva,
-												$_POST["editarDescripcion"] . " - " . $nombreCombinacion,
-												"creacion_variante",
-												$stockVariante,
-												0,
-												$stockVariante,
-												"Variante creada con stock inicial: " . $nombreCombinacion,
-												""
-											);
-
+									if ($stockVariante > 0) {
+										$resMovVNew = ControladorMovimientos::ctrRegistrarMovimiento(
+											"variante",
+											$idProductoReal,
+											$idVarianteNueva,
+											$_POST["editarDescripcion"] . " - " . $nombreCombinacion,
+											"creacion_variante",
+											$stockVariante,
+											0,
+											$stockVariante,
+											"Variante creada con stock inicial: " . $nombreCombinacion,
+											"",
+											$idBodegaActiva
+										);
+										if ($resMovVNew !== "ok") {
+											throw new Exception("Error al registrar el movimiento inicial de la variante.");
 										}
+									}
 
-										// Guardar las opciones de la variante
-										$opcionesArray = explode("_", $idsCombinacion);
-										file_put_contents("debug_editar_variantes.txt", "Guardando opciones: " . implode(", ", $opcionesArray) . "\n", FILE_APPEND);
+									// Guardar las opciones de la variante
+									$opcionesArray = explode("_", $idsCombinacion);
+									foreach ($opcionesArray as $idOpcion) {
+										$datosOpcion = array(
+											"id_producto_variante" => $idVarianteNueva,
+											"id_opcion_variante" => $idOpcion
+										);
 
-										foreach ($opcionesArray as $idOpcion) {
-											$datosOpcion = array(
-												"id_producto_variante" => $idVarianteNueva,
-												"id_opcion_variante" => $idOpcion
-											);
-
-											ModeloProductos::mdlGuardarVarianteOpcion($datosOpcion);
+										$resRelVarOpt = ModeloProductos::mdlGuardarVarianteOpcion($datosOpcion);
+										if ($resRelVarOpt !== "ok") {
+											throw new Exception("Error al relacionar variante con opción.");
 										}
-
-										file_put_contents("debug_editar_variantes.txt", "Opciones guardadas correctamente\n", FILE_APPEND);
-
-									} else {
-										file_put_contents("debug_editar_variantes.txt", "ERROR: No se pudo insertar la variante\n", FILE_APPEND);
 									}
 								}
-
-							} else {
-								file_put_contents("debug_editar_variantes.txt", "Combinación $i NO seleccionada (checkbox desmarcado)\n", FILE_APPEND);
 							}
-
 						}
-
-
-						file_put_contents("debug_editar_variantes.txt", "\n=== FIN PROCESAMIENTO ===\n\n", FILE_APPEND);
 					}
-
 
 					/*=============================================
 					RECALCULAR STOCK AUTOMÁTICO DEL PRODUCTO BASE
@@ -1170,7 +1130,10 @@ if (isset($_POST["editarDescripcion"])) {
 						$stmtBodegas = null;
 
 						foreach ($resultadosBodegas as $rowBodega) {
-							ModeloProductos::mdlActualizarStockBodega($idProductoReal, $rowBodega["id_bodega"], $rowBodega["stock_bodega"]);
+							$resActStockB = ModeloProductos::mdlActualizarStockBodega($idProductoReal, $rowBodega["id_bodega"], $rowBodega["stock_bodega"]);
+							if ($resActStockB !== "ok") {
+								throw new Exception("Error al sincronizar el stock por bodega del producto base.");
+							}
 						}
 
 						// 2. Calcular la suma del stock global (todas las variantes activas)
@@ -1183,9 +1146,13 @@ if (isset($_POST["editarDescripcion"])) {
 						$stockTotal = $resultado["stock_total"] ? $resultado["stock_total"] : 0;
 
 						// Actualizar el stock global del producto base
-						$tablaProductos = "productos";
-						ModeloProductos::mdlActualizarProducto($tablaProductos, "stock", $stockTotal, $idProductoReal);
+						$resActProdB = ModeloProductos::mdlActualizarProducto("productos", "stock", $stockTotal, $idProductoReal);
+						if ($resActProdB !== "ok") {
+							throw new Exception("Error al actualizar el stock global del producto base.");
+						}
 					}
+
+					$db->commit();
 
 					echo '<script>
 					swal({
@@ -1197,8 +1164,23 @@ if (isset($_POST["editarDescripcion"])) {
 							window.location = "productos";
 						})
 			     	</script>';
-				}
 
+				} catch (Exception $e) {
+					$db->rollBack();
+					Logger::error("Error al editar producto ID " . (isset($idProductoReal) ? $idProductoReal : "desconocido") . ": " . $e->getMessage());
+
+					echo '<script>
+						swal({
+							type: "error",
+							title: "Error al guardar el producto",
+							text: "' . addslashes($e->getMessage()) . '",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then(() => {
+							// window.location = "productos";
+						})
+					</script>';
+				}
 			} else {
 				echo '<script>
 					swal({
@@ -1274,7 +1256,21 @@ if (isset($_POST["editarDescripcion"])) {
 			// NOTA: No borramos imagen/directorio porque la eliminación es siempre por bodega (soft-delete).
 			// El producto sigue existiendo en otras bodegas y necesita su imagen.
 
-			$respuesta = ModeloProductos::mdlEliminarProducto($tabla, $idProducto, $idBodega);
+			$db = Conexion::conectar();
+			try {
+				$db->beginTransaction();
+
+				$respuesta = ModeloProductos::mdlEliminarProducto($tabla, $idProducto, $idBodega);
+				if ($respuesta != "ok") {
+					throw new Exception("Error al desactivar el producto en la bodega.");
+				}
+
+				$db->commit();
+			} catch (Exception $e) {
+				$db->rollBack();
+				Logger::error("Error al eliminar producto: " . $e->getMessage());
+				$respuesta = "error";
+			}
 
 			if ($respuesta == "ok") {
 				if (isset($_POST["idProductoEliminar"])) {
@@ -1897,7 +1893,10 @@ if (isset($_POST["editarDescripcion"])) {
 
 			if ($cantidad > 0) {
 				
-				$producto = ModeloProductos::mdlMostrarProductos("productos", "id", $idProducto, "id");
+				$idBodegaActiva = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
+
+				// Obtener el stock actual de la bodega activa
+				$producto = ModeloProductos::mdlMostrarProductos("productos", "id", $idProducto, "id", $idBodegaActiva);
 				
 				if ($producto) {
 					$stockActual = (int) $producto["stock"];
@@ -1911,11 +1910,31 @@ if (isset($_POST["editarDescripcion"])) {
 
 					$diferencia = $nuevoStock - $stockActual;
 
-					$respuesta = ModeloProductos::mdlActualizarProducto("productos", "stock", $nuevoStock, $idProducto);
+					$db = Conexion::conectar();
+					try {
+						$db->beginTransaction();
 
-					if ($respuesta == "ok") {
+						// 1. Actualizar el stock de la bodega activa
+						$resB = ModeloProductos::mdlActualizarStockBodega($idProducto, $idBodegaActiva, $nuevoStock);
+						if ($resB != "ok") {
+							throw new Exception("Error al actualizar el stock en la bodega activa.");
+						}
 
-						ControladorMovimientos::ctrRegistrarMovimiento(
+						// 2. Recalcular y actualizar el stock global sumando todas las bodegas
+						$stmtSumBodegas = $db->prepare("SELECT SUM(pb.stock) as total FROM productos_bodegas pb WHERE pb.id_producto = :id_producto");
+						$stmtSumBodegas->bindParam(":id_producto", $idProducto, PDO::PARAM_INT);
+						$stmtSumBodegas->execute();
+						$resSum = $stmtSumBodegas->fetch();
+						$stockGlobal = ($resSum && $resSum["total"]) ? (int) $resSum["total"] : $nuevoStock;
+						$stmtSumBodegas = null;
+
+						$resProd = ModeloProductos::mdlActualizarProducto("productos", "stock", $stockGlobal, $idProducto);
+						if ($resProd != "ok") {
+							throw new Exception("Error al actualizar el stock global del producto.");
+						}
+
+						// 3. Registrar el movimiento de stock
+						$resMov = ControladorMovimientos::ctrRegistrarMovimiento(
 							"producto",
 							$idProducto,
 							null,
@@ -1925,8 +1944,14 @@ if (isset($_POST["editarDescripcion"])) {
 							$stockActual,
 							$nuevoStock,
 							"Ajuste rápido",
-							""
+							"",
+							$idBodegaActiva
 						);
+						if ($resMov != "ok") {
+							throw new Exception("Error al registrar el movimiento de stock.");
+						}
+
+						$db->commit();
 
 						echo '<script>
 							swal({
@@ -1938,11 +1963,16 @@ if (isset($_POST["editarDescripcion"])) {
 								window.location = "productos";
 							});
 						</script>';
-					} else {
+
+					} catch (Exception $e) {
+						$db->rollBack();
+						Logger::error("Error en ajuste rápido de stock para producto ID " . $idProducto . ": " . $e->getMessage());
+
 						echo '<script>
 							swal({
 								type: "error",
-								title: "Error al actualizar la base de datos",
+								title: "Error al realizar el ajuste de stock",
+								text: "' . addslashes($e->getMessage()) . '",
 								showConfirmButton: true,
 								confirmButtonText: "Cerrar"
 							});

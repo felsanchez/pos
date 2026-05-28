@@ -1,10 +1,10 @@
 {
     "numbering_range_id": 1190,
-    "reference_code": "1085",
+    "reference_code": "1087",
     "observation": "",
-    "payment_form": "2",
-    "payment_due_date": "2026-05-30",
-    "payment_method_code": "47",
+    "payment_form": "1",
+    "payment_due_date": "0000-00-00",
+    "payment_method_code": "71",
     "operation_type": 10,
     "send_email": true,
     "establishment": {
@@ -58,21 +58,6 @@
             "standard_code_id": 1,
             "is_excluded": 0,
             "tribute_id": 4,
-            "withholding_taxes": []
-        },
-        {
-            "scheme_id": "1",
-            "note": "",
-            "code_reference": "ITEM-2",
-            "name": "guayo - Negro",
-            "quantity": 1,
-            "discount_rate": "0.00",
-            "price": "1000.000000",
-            "tax_rate": "0.00",
-            "unit_measure_id": 874,
-            "standard_code_id": 1,
-            "is_excluded": 0,
-            "tribute_id": 7,
             "withholding_taxes": []
         }
     ]
