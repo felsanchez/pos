@@ -105,6 +105,7 @@ class ModeloClientes
 					m.departamento as nombre_departamento
 					FROM $tabla c 
 					LEFT JOIN factus_municipios m ON (c.municipio_id = m.codigo OR c.municipio_id = m.id_factus)
+					WHERE c.eliminado = 0
 					ORDER BY c.id DESC";
 
 			$stmt = Conexion::conectar()->prepare($sql);
@@ -135,6 +136,12 @@ class ModeloClientes
 	=============================================*/
 	static public function mdlMostrarClientesServerSide($tabla, $where, $order, $limit)
 	{
+		if (empty(trim($where))) {
+			$where = "WHERE c.eliminado = 0";
+		} else {
+			$where .= " AND c.eliminado = 0";
+		}
+
 		$sql = "SELECT c.*, 
 				COALESCE(NULLIF(c.ciudad, ''), m.nombre) as ciudad_real,
 				m.nombre as nombre_municipio,
@@ -161,6 +168,12 @@ class ModeloClientes
 	=============================================*/
 	static public function mdlGetTotalClientes($tabla, $where)
 	{
+		if (empty(trim($where))) {
+			$where = "WHERE c.eliminado = 0";
+		} else {
+			$where .= " AND c.eliminado = 0";
+		}
+
 		$sql = "SELECT COUNT(*) 
 				FROM $tabla c 
 				LEFT JOIN factus_municipios m ON (c.municipio_id = m.codigo OR c.municipio_id = m.id_factus) 
@@ -225,7 +238,7 @@ class ModeloClientes
 	static public function mdlEliminarCliente($tabla, $datos)
 	{
 
-		$stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE id = :id");
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET eliminado = 1 WHERE id = :id");
 
 		$stmt->bindParam(":id", $datos, PDO::PARAM_INT);
 

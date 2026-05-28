@@ -56,7 +56,7 @@ class ModeloProveedores
 
 		} else {
 
-			$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla ORDER BY id DESC");
+			$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE eliminado = 0 ORDER BY id DESC");
 
 			$stmt->execute();
 
@@ -72,6 +72,11 @@ class ModeloProveedores
 	=============================================*/
 	static public function mdlMostrarProveedoresServerSide($tabla, $where, $order, $limit)
 	{
+		if (empty(trim($where))) {
+			$where = "WHERE eliminado = 0";
+		} else {
+			$where .= " AND eliminado = 0";
+		}
 		$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla $where $order $limit");
 		$stmt->execute();
 		return $stmt->fetchAll();
@@ -82,6 +87,11 @@ class ModeloProveedores
 	=============================================*/
 	static public function mdlGetTotalProveedores($tabla, $where)
 	{
+		if (empty(trim($where))) {
+			$where = "WHERE eliminado = 0";
+		} else {
+			$where .= " AND eliminado = 0";
+		}
 		$stmt = Conexion::conectar()->prepare("SELECT COUNT(*) FROM $tabla $where");
 		$stmt->execute();
 		return $stmt->fetchColumn();
@@ -129,7 +139,7 @@ class ModeloProveedores
 	static public function mdlBorrarProveedor($tabla, $datos)
 	{
 
-		$stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE id = :id");
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET eliminado = 1 WHERE id = :id");
 
 		$stmt->bindParam(":id", $datos, PDO::PARAM_INT);
 

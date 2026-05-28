@@ -56,7 +56,7 @@ class ControladorVentas
 		$formatoCodigoVenta = !empty($configuracion["formato_codigo_venta"]) ? $configuracion["formato_codigo_venta"] : "";
 
 		// Filtros base (Excluir Facturas Electrónicas)
-		$where = " WHERE v.estado = 'venta' AND (v.numero_factura IS NULL OR v.numero_factura = '') AND (v.resolucion_id IS NULL OR v.resolucion_id = 0) ";
+		$where = " WHERE v.estado IN ('venta', 'anulada') AND (v.numero_factura IS NULL OR v.numero_factura = '') AND (v.resolucion_id IS NULL OR v.resolucion_id = 0) ";
 
 		// Filtro por Bodega (Sucursal)
 		$bodegaFilter = "";
@@ -124,7 +124,7 @@ class ControladorVentas
 
 		// Obtener datos
 		$ventas = ModeloVentas::mdlMostrarVentasServerSide($tabla, $where, $order, $limit);
-		$totalData = ModeloVentas::mdlGetTotalVentas($tabla, " WHERE v.estado = 'venta' AND (v.numero_factura IS NULL OR v.numero_factura = '') AND (v.resolucion_id IS NULL OR v.resolucion_id = 0) " . $bodegaFilter);
+		$totalData = ModeloVentas::mdlGetTotalVentas($tabla, " WHERE v.estado IN ('venta', 'anulada') AND (v.numero_factura IS NULL OR v.numero_factura = '') AND (v.resolucion_id IS NULL OR v.resolucion_id = 0) " . $bodegaFilter);
 		$totalFiltered = ModeloVentas::mdlGetTotalVentas($tabla, $where);
 
 		$data = array();
@@ -141,11 +141,16 @@ class ControladorVentas
 								</span>';
 			}
 
+			$etiquetaAnulada = "";
+			if (isset($value["estado"]) && $value["estado"] == "anulada") {
+				$etiquetaAnulada = ' <span class="badge" style="background-color: #d9534f; color:white; font-size: 10px; padding: 2px 5px; border-radius: 4px; margin-left: 5px;" title="Venta Anulada"><i class="fa fa-ban"></i> Anulada</span>';
+			}
+
 			if (!empty($value["numero_factura"])) {
-				$codigoHtml = '<span style="font-weight:bold; font-size:1.1em; color:#605ca8;">' . $value["numero_factura"] . '</span>' . $etiquetaN8N;
+				$codigoHtml = '<span style="font-weight:bold; font-size:1.1em; color:#605ca8;">' . $value["numero_factura"] . '</span>' . $etiquetaN8N . $etiquetaAnulada;
 				$codigoHtml .= '<br><span style="font-size:0.85em; color:#999;">Ref: ' . $formatoCodigoVenta . $value["codigo"] . '</span>';
 			} else {
-				$codigoHtml = $formatoCodigoVenta . $value["codigo"] . $etiquetaN8N;
+				$codigoHtml = $formatoCodigoVenta . $value["codigo"] . $etiquetaN8N . $etiquetaAnulada;
 			}
 			$nestedData[] = $codigoHtml;
 
@@ -180,8 +185,8 @@ class ControladorVentas
 			if (puedeAccion('ventas', 'editar')) {
 				$botonesAcciones .= '<button class="btn btn-warning btnDetalleVenta" idVenta="' . $value["id"] . '" title="Ver detalle" style="width: auto !important;"><i class="fa fa-eye"></i></button>';
 			}
-			if (puedeAccion('ventas', 'eliminar')) {
-				$botonesAcciones .= '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar venta"><i class="fa fa-times"></i></button>';
+			if (puedeAccion('ventas', 'eliminar') && (!isset($value["estado"]) || $value["estado"] != "anulada")) {
+				$botonesAcciones .= '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Anular venta"><i class="fa fa-ban"></i></button>';
 			}
 			$botonesAcciones .= '</div>';
 			$nestedData[] = $botonesAcciones;

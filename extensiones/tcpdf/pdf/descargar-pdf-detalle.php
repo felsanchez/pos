@@ -111,6 +111,7 @@ class imprimirDetalleVenta
                 </td>
                 <td style="width:50%; text-align:right; vertical-align:middle;">
                     <span style="font-size:16px; font-weight:bold; color:#3c8dbc;">FACTURA DE VENTA</span><br>
+                    ' . (isset($venta["estado"]) && $venta["estado"] == "anulada" ? '<span style="color:#d9534f; font-weight:bold; font-size:14px;">ANULADA</span><br>' : '') . '
                     <span style="font-size:10px; color:#666;">Fecha: ' . $venta["fecha"] . '</span>
                 </td>
             </tr>
@@ -235,6 +236,7 @@ class imprimirDetalleVenta
                 </td>
                 <td style="width:50%; text-align:right; vertical-align:middle;">
                     <span style="font-size:16px; font-weight:bold; color:#3c8dbc;">FACTURA DE VENTA</span><br>
+                    ' . (isset($venta["estado"]) && $venta["estado"] == "anulada" ? '<span style="color:#d9534f; font-weight:bold; font-size:14px;">ANULADA</span><br>' : '') . '
                     <span style="font-size:10px; color:#666;">Fecha: ' . $venta["fecha"] . '</span>
                 </td>
             </tr>

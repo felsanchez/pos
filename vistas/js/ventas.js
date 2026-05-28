@@ -1565,14 +1565,14 @@ $(document).on("click", ".btnEliminarVenta", function () {
 
 	swal({
 
-		title: '¿Está seguro de eliminar esta venta?',
-		text: '¡Si no lo está puede cancelar la acción!',
+		title: '¿Está seguro de anular esta venta?',
+		text: 'Al anular la venta los productos regresarán al stock y ya no sumará en los totales ni reportes de ingresos.',
 		type: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
 		cancelButtonText: 'Cancelar',
-		confirmButtonText: 'Sí, eliminar documento'
+		confirmButtonText: 'Sí, anular documento'
 	}).then((result) => {
 
 		if (result.value) {
@@ -1606,8 +1606,8 @@ $(document).on("click", ".btnEliminarVenta", function () {
 					if (respuesta == "ok") {
 						swal({
 							type: "success",
-							title: "¡Venta eliminada correctamente!",
-							text: "El documento ha sido borrado exitosamente del sistema.",
+							title: "¡Venta anulada correctamente!",
+							text: "El documento ha sido anulado exitosamente del sistema.",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
 						}).then((result) => {

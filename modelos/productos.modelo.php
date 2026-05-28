@@ -41,8 +41,9 @@ class ModeloProductos
 		} else {
 
 			$query = "SELECT $select FROM $tabla p $join";
+			$query .= " WHERE p.eliminado = 0";
 			if ($idBodega != null) {
-				$query .= " WHERE COALESCE(pb.estado, 1) = 1";
+				$query .= " AND COALESCE(pb.estado, 1) = 1";
 			}
 			$query .= " ORDER BY $orden DESC";
 
@@ -66,7 +67,7 @@ class ModeloProductos
 	=============================================*/
 	static public function mdlMostrarProductosServerSide($tabla, $where, $order, $limit, $idBodega)
 	{
-		$condicionEstado = "COALESCE(pb.estado, 1) = 1";
+		$condicionEstado = "COALESCE(pb.estado, 1) = 1 AND p.eliminado = 0";
 		if (empty(trim($where))) {
 			$where = "WHERE " . $condicionEstado;
 		} else {
@@ -100,7 +101,14 @@ class ModeloProductos
 		if($idBodega != null){
 			$joinBodega = "LEFT JOIN productos_bodegas pb ON p.id = pb.id_producto AND pb.id_bodega = $idBodega";
 
-			$condicionEstado = "COALESCE(pb.estado, 1) = 1";
+			$condicionEstado = "COALESCE(pb.estado, 1) = 1 AND p.eliminado = 0";
+			if (empty(trim($where))) {
+				$where = "WHERE " . $condicionEstado;
+			} else {
+				$where .= " AND " . $condicionEstado;
+			}
+		} else {
+			$condicionEstado = "p.eliminado = 0";
 			if (empty(trim($where))) {
 				$where = "WHERE " . $condicionEstado;
 			} else {
@@ -265,7 +273,7 @@ class ModeloProductos
 				return "error";
 			}
 		} else {
-			$stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE id = :id");
+			$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET eliminado = 1 WHERE id = :id");
 			$stmt->bindParam(":id", $datos, PDO::PARAM_INT);
 
 			if ($stmt->execute()) {

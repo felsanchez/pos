@@ -21,6 +21,9 @@ $configFactus = ControladorFactus::ctrObtenerConfiguracion();
     <h1>
       Detalle de Venta
       <small>#<?php echo $venta["codigo"] ?? ''; ?></small>
+      <?php if(isset($venta["estado"]) && $venta["estado"] == "anulada"): ?>
+        <span class="label label-danger" style="margin-left: 10px; font-size: 14px; vertical-align: middle;">ANULADA</span>
+      <?php endif; ?>
     </h1>
     <ol class="breadcrumb">
       <li><a href="#"><i class="fa fa-dashboard"></i> Inicio</a></li>

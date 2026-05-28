@@ -197,7 +197,7 @@ class ModeloVentas
 	static public function mdlEliminarVenta($tabla, $id)
 	{
 
-		$stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE id = :id");
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET estado = 'anulada' WHERE id = :id");
 
 		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
 
