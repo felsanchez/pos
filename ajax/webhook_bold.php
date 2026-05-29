@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../modelos/logger.php';
 
 require_once "../controladores/ventas.controlador.php";
 require_once "../modelos/ventas.modelo.php";
@@ -18,7 +19,7 @@ function logWebhook($msg)
 {
     global $logFile;
     $date = date('Y-m-d H:i:s');
-    file_put_contents($logFile, "[$date] $msg\n", FILE_APPEND);
+    Logger::debug("[$date] $msg\n");
 }
 
 // 1. Recibir el payload
@@ -83,3 +84,4 @@ try {
     http_response_code(500);
     echo json_encode(["status" => "error", "message" => $e->getMessage()]);
 }
+

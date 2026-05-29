@@ -466,7 +466,7 @@ class ControladorFactus
 		$logPath = "C:/xampp/htdocs/pos/debug_price_validation.txt";
 
 		require_once __DIR__ . "/../modelos/productos.modelo.php";
-		file_put_contents($logPath, "JSON RECIBIDO: " . $productosJson . "\n", FILE_APPEND);
+		Logger::debug("JSON RECIBIDO: " . $productosJson . "\n");
 		$productos = json_decode($productosJson, true);
 
 		if (empty($productos) || !is_array($productos)) {
@@ -516,12 +516,12 @@ class ControladorFactus
 			$precioLimpio = str_replace([',', ' '], '', $precioRecibido);
 			$precioFloat = floatval($precioLimpio);
 
-			file_put_contents($logPath, "Validando producto: " . $nombre . " | Recibido: " . $precioRecibido . " | Limpio: " . $precioLimpio . " | floatval: " . $precioFloat . "\n", FILE_APPEND);
+			Logger::debug("Validando producto: " . $nombre . " | Recibido: " . $precioRecibido . " | Limpio: " . $precioLimpio . " | floatval: " . $precioFloat . "\n");
 			
 			if ($precioFloat <= 0) {
 				// 🛡️ FALLBACK: Si el precio es inválido en el JSON, intentar usar el de la base de datos
 				$precioFloat = floatval($productoBD['precio_venta'] ?? 0);
-				file_put_contents($logPath, "  -> [FALLBACK] Usando precio BD: " . $precioFloat . "\n", FILE_APPEND);
+				Logger::debug("  -> [FALLBACK] Usando precio BD: " . $precioFloat . "\n");
 			}
 
 			if ($precioFloat <= 0) {
@@ -647,9 +647,7 @@ class ControladorFactus
 			);
 
 			// 🟢 DEBUG: Log draft creation
-			file_put_contents(
-				"debug_draft_creation.txt",
-				"=== DRAFT CREATION [" . date('Y-m-d H:i:s') . "] ===\n" .
+			Logger::debug("=== DRAFT CREATION [" . date('Y-m-d H:i:s') . "] ===\n" .
 				"ID Venta: " . $idVenta . "\n" .
 				"Datos a actualizar: " . print_r($datosActualizar, true) . "\n",
 				FILE_APPEND
@@ -658,9 +656,7 @@ class ControladorFactus
 			$resultado = ModeloFactus::mdlActualizarDatosFactura($idVenta, $datosActualizar);
 
 			// 🟢 DEBUG: Log update result
-			file_put_contents(
-				"debug_draft_creation.txt",
-				"Resultado UPDATE: " . ($resultado ? "SUCCESS" : "FAILED") . "\n\n",
+			Logger::debug("Resultado UPDATE: " . ($resultado ? "SUCCESS" : "FAILED") . "\n\n",
 				FILE_APPEND
 			);
 
@@ -672,7 +668,7 @@ class ControladorFactus
 		}
 
 		// 🟢 LOGUEAR PAYLOAD ENVIADO
-		file_put_contents("debug_factus_request_" . $idVenta . ".txt", print_r($datosFactura, true));
+		Logger::debug(print_r($datosFactura, true));
 
 		// 4. Enviar factura a Factus (Con reintento automático si hay conflicto de consecutivos 409)
 		$intentos = 0;
@@ -694,12 +690,12 @@ class ControladorFactus
 					// Re-validar y re-preparar datos con el nuevo consecutivo
 					$datosFactura = self::prepararDatosFactura($venta);
 
-					file_put_contents("debug_retry_409.txt", "Reintento #$intentos: Forzando consecutivo a $nuevoConsecutivo\n", FILE_APPEND);
+					Logger::debug("Reintento #$intentos: Forzando consecutivo a $nuevoConsecutivo\n");
 				}
 			}
 
 			// 🟢 DEBUG: Ver qué datos se envían a Factus (JSON)
-			file_put_contents("debug_factus_request.json", json_encode($datosFactura, JSON_PRETTY_PRINT));
+			Logger::debug(json_encode($datosFactura, JSON_PRETTY_PRINT));
 
 			// Enviar solicitud
 			$resultado = ModeloFactus::mdlCrearFacturaElectronica($auth['token'], $datosFactura);
@@ -711,7 +707,7 @@ class ControladorFactus
 				// 409 Conflict: Con el código de referencia único, esto solo pasaría si reintentamos la misma fila ID
 				// pero Factus ya la tiene. En este caso no incrementamos, solo fallamos o logueamos.
 				$debugMsg = "Error 409: El documento ya existe en Factus con esta referencia única.\n";
-				file_put_contents("debug_retry_409.txt", $debugMsg, FILE_APPEND);
+				Logger::debug($debugMsg);
 				break;
 			} else {
 				// Otro error (400, 422, 500)
@@ -720,7 +716,7 @@ class ControladorFactus
 		}
 
 		// 🟢 LOGUEAR RESPUESTA COMPLETA (EXITO O ERROR AL FINAL)
-		file_put_contents("debug_factus_response_" . $idVenta . ".txt", print_r($resultado, true));
+		Logger::debug(print_r($resultado, true));
 
 		if ($exito) {
 			$respuestaFactus = json_decode($resultado['respuesta'], true);
@@ -751,7 +747,7 @@ class ControladorFactus
 			ModeloFactus::mdlActualizarDatosFactura($idVenta, $datosActualizar);
 
 			// 🟢 LOGUEAR RESPUESTA COMPLETA PARA DEBUG (TEMPORAL)
-			file_put_contents("debug_factus_response_" . $idVenta . ".txt", print_r($respuestaFactus, true));
+			Logger::debug(print_r($respuestaFactus, true));
 
 			// 🟢 ACTUALIZAR EL CONSECUTIVO EN factus_rangos PARA QUE EL SIGUIENTE SEA CORRECTO
 			if (!empty($datosActualizar["numero_factura"])) {
@@ -774,11 +770,7 @@ class ControladorFactus
 					ModeloFactus::mdlActualizarNumeroActualRango($rangoId, intval($nuevoNumero));
 
 					// Log para debug
-					file_put_contents(
-						"debug_consecutivo_update.txt",
-						"Factura: $numeroFactura | Número extraído: $nuevoNumero | Rango ID: $rangoId\n",
-						FILE_APPEND
-					);
+					Logger::debug("Factura: $numeroFactura | Número extraído: $nuevoNumero | Rango ID: $rangoId\n");
 				}
 			}
 
@@ -825,7 +817,7 @@ class ControladorFactus
 		$config = ModeloConfiguracion::mdlObtenerConfiguracion();
 
 		// DEBUG CONFIG
-		file_put_contents("debug_config_verification.txt", print_r($config, true));
+		Logger::debug(print_r($config, true));
 
 		$productosVenta = json_decode($venta['productos'], true);
 		$items = array();
@@ -1054,13 +1046,13 @@ class ControladorFactus
 				$inputResp = $cliente['responsabilidades_fiscales'] ?? 'R-99-PN';
 
 				// DEBUG: Registrar input 
-				file_put_contents("debug_fiscal_regex.txt", "Input Cliente ID " . ($cliente['id'] ?? '?') . ": " . $inputResp . "\n", FILE_APPEND);
+				Logger::debug("Input Cliente ID " . ($cliente['id'] ?? '?') . ": " . $inputResp . "\n", FILE_APPEND);
 
 				// Regex mejorada: Busca códigos como O-23, O-47, R-99-PN, ZY
 				preg_match_all('/\b([A-Z]{1,2}(?:-[0-9A-Z]+)*)\b/', $inputResp, $matches);
 				$rawCodes = array_unique($matches[0] ?? []);
 
-				file_put_contents("debug_fiscal_regex.txt", "Matches: " . print_r($rawCodes, true) . "\n", FILE_APPEND);
+				Logger::debug("Matches: " . print_r($rawCodes, true) . "\n", FILE_APPEND);
 
 				// Filtro de códigos válidos conocidos
 				$codigosValidos = ['O-13', 'O-15', 'O-23', 'O-47', 'R-99-PN', 'ZY'];
@@ -1084,7 +1076,7 @@ class ControladorFactus
 					if (strpos($inputResp, 'O-47') !== false && !in_array('O-47', $codes))
 						$codes[] = 'O-47';
 
-					file_put_contents("debug_fiscal_regex.txt", "FALLBACK TRIGGERED: O-23/O-47 detectado por strpos\n", FILE_APPEND);
+					Logger::debug("FALLBACK TRIGGERED: O-23/O-47 detectado por strpos\n");
 				}
 
 				$isJuridica = (trim(strtolower($cliente['tipo_persona'] ?? 'natural')) == 'juridica') || $tieneResponsabilidadJuridica;
@@ -1351,7 +1343,7 @@ class ControladorFactus
 			$error = json_decode($resultado['respuesta'], true);
 
 			// Log detallado para debug
-			file_put_contents("debug_nc_api_error.txt", date('Y-m-d H:i:s') . "\nHTTP: " . $resultado['http_code'] . "\nResponse: " . $resultado['respuesta'] . "\n\n", FILE_APPEND);
+			Logger::debug(date('Y-m-d H:i:s') . "\nHTTP: " . $resultado['http_code'] . "\nResponse: " . $resultado['respuesta'] . "\n\n", FILE_APPEND);
 
 			// Extraer errores de validación si existen
 			$mensajeError = $error['message'] ?? 'Error desconocido';

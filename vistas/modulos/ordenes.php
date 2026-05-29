@@ -397,5 +397,24 @@ MODAL EDITAR CLIENTE
 </div>
 
 
+<script>
+function alertaCajaCerradaOrdenes(){
+    swal({
+        title: '¡Caja Cerrada!',
+        text: 'Debe abrir caja antes de realizar esta operación.',
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3c8dbc',
+        cancelButtonColor: '#6c757d',
+        cancelButtonText: 'Entendido',
+        confirmButtonText: 'Abrir caja'
+    }).then(function(result){
+        if (result.value) {
+            $('#modalAperturaCaja').modal('show');
+        }
+    });
+}
+</script>
+
 <!-- Scripts específicos del módulo -->
 <script src="vistas/js/ordenes.js"></script>

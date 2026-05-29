@@ -6,14 +6,14 @@ class ControladorTraslados
     /*=============================================
     MOSTRAR TRASLADOS
     =============================================*/
-    static public function ctrMostrarTraslados($item, $valor)
+    static public function ctrMostrarTraslados($item, $valor, $fechaInicial = null, $fechaFinal = null)
     {
         $tabla = "traslados";
 
         // Limpieza automática de registros más antiguos de 3 meses
         ModeloTraslados::mdlLimpiarTrasladosAntiguos($tabla);
 
-        return ModeloTraslados::mdlMostrarTraslados($tabla, $item, $valor);
+        return ModeloTraslados::mdlMostrarTraslados($tabla, $item, $valor, $fechaInicial, $fechaFinal);
     }
 
     /*=============================================

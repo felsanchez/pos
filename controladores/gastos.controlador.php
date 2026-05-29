@@ -220,24 +220,25 @@ class ControladorGastos{
 	=============================================*/
 
 	static public function ctrCrearGasto(){
-		// Validar si el control de caja está activo y hay caja abierta
-		if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
-			echo '<script>
-				swal({
-					type: "error",
-					title: "Caja Cerrada",
-					text: "Debe abrir caja antes de realizar esta operación.",
-					showConfirmButton: true,
-					confirmButtonText: "Cerrar"
-				}).then(() => {
-					window.location = "inicio";
-				});
-			</script>';
-			return;
-		}
-
 		if(isset($_POST["nuevoConceptoGasto"])){
-			@file_put_contents("log_post.txt", date("[Y-m-d H:i:s] ") . "ctrCrearGasto: " . print_r($_POST, true) . "\n", FILE_APPEND);
+
+			// Validar si el control de caja está activo y hay caja abierta
+			if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Caja Cerrada",
+						text: "Debe abrir caja antes de realizar esta operación.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "inicio";
+					});
+				</script>';
+				return;
+			}
+
+			Logger::debug(date("[Y-m-d H:i:s] ") . "ctrCrearGasto: " . print_r($_POST, true) . "\n", FILE_APPEND);
 
 			/*=============================================
 			VALIDAR CSRF
@@ -432,24 +433,25 @@ class ControladorGastos{
 	=============================================*/
 
 	static public function ctrEditarGasto(){
-		// Validar si el control de caja está activo y hay caja abierta
-		if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
-			echo '<script>
-				swal({
-					type: "error",
-					title: "Caja Cerrada",
-					text: "Debe abrir caja antes de realizar esta operación.",
-					showConfirmButton: true,
-					confirmButtonText: "Cerrar"
-				}).then(() => {
-					window.location = "inicio";
-				});
-			</script>';
-			return;
-		}
-
 		if(isset($_POST["editarConceptoGasto"])){
-			@file_put_contents("log_post.txt", date("[Y-m-d H:i:s] ") . "ctrEditarGasto: " . print_r($_POST, true) . "\n", FILE_APPEND);
+
+			// Validar si el control de caja está activo y hay caja abierta
+			if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "Caja Cerrada",
+						text: "Debe abrir caja antes de realizar esta operación.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "inicio";
+					});
+				</script>';
+				return;
+			}
+
+			Logger::debug(date("[Y-m-d H:i:s] ") . "ctrEditarGasto: " . print_r($_POST, true) . "\n", FILE_APPEND);
 
 			/*=============================================
 			VALIDAR CSRF

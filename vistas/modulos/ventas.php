@@ -46,11 +46,35 @@ if ($xml) {
       <div class="box-header with-border">
 
         <?php if (puedeAccion('ventas', 'crear')): ?>
-          <a href="crear-venta">
-            <button class="btn btn-primary">
+          <?php if (ControladorCajas::ctrValidarCajaAbierta()): ?>
+            <a href="crear-venta">
+              <button class="btn btn-primary">
+                <i class="fa fa-plus"></i> Agregar venta
+              </button>
+            </a>
+          <?php else: ?>
+            <button class="btn btn-primary" onclick="alertaCajaCerradaVentas()">
               <i class="fa fa-plus"></i> Agregar venta
             </button>
-          </a>
+            <script>
+            function alertaCajaCerradaVentas(){
+                swal({
+                    title: '¡Caja Cerrada!',
+                    text: 'Debe abrir caja antes de realizar esta operación.',
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3c8dbc',
+                    cancelButtonColor: '#6c757d',
+                    cancelButtonText: 'Entendido',
+                    confirmButtonText: 'Abrir caja'
+                }).then(function(result){
+                    if (result.value) {
+                        $('#modalAperturaCaja').modal('show');
+                    }
+                });
+            }
+            </script>
+          <?php endif; ?>
         <?php endif; ?>
 
         <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">

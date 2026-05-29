@@ -18,6 +18,9 @@ if (isset($_GET["idTrasladoCancelar"])) {
   }
 }
 ?>
+<!-- DateRangePicker -->
+<link rel="stylesheet" href="vistas/bower_components/bootstrap-daterangepicker/daterangepicker.css">
+
 <style>
   .celda-notas-traslado {
     background: #fff9e6;
@@ -91,6 +94,33 @@ if (isset($_GET["idTrasladoCancelar"])) {
           </a>
         <?php endif; ?>
 
+        <div class="pull-right">
+          <form method="GET" action="index.php" style="display: flex; align-items: center; gap: 10px;">
+            <input type="hidden" name="ruta" value="traslados">
+            
+            <input type="hidden" name="fechaInicial" id="fechaInicial"
+              value="<?php echo isset($_GET["fechaInicial"]) ? $_GET["fechaInicial"] : null; ?>">
+            <input type="hidden" name="fechaFinal" id="fechaFinal"
+              value="<?php echo isset($_GET["fechaFinal"]) ? $_GET["fechaFinal"] : null; ?>">
+
+            <!-- Botón Rango de Fecha -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="hidden-xs"><b>Fecha:</b></span>
+              <button type="button" class="btn btn-default" id="daterange-btn-traslados">
+                <span>
+                  <i class="fa fa-calendar"></i> Rango de fecha
+                </span>
+                <i class="fa fa-caret-down"></i>
+              </button>
+            </div>
+
+            <!-- Botón Limpiar -->
+            <a href="index.php?ruta=traslados" class="btn btn-default" title="Limpiar">
+              <i class="fa fa-refresh"></i>
+            </a>
+          </form>
+        </div>
+
       </div>
 
       <div class="box-body">
@@ -121,7 +151,11 @@ if (isset($_GET["idTrasladoCancelar"])) {
 
               $item = null;
               $valor = null;
-              $traslados = ControladorTraslados::ctrMostrarTraslados($item, $valor);
+              
+              $fechaInicial = isset($_GET["fechaInicial"]) ? $_GET["fechaInicial"] : null;
+              $fechaFinal = isset($_GET["fechaFinal"]) ? $_GET["fechaFinal"] : null;
+
+              $traslados = ControladorTraslados::ctrMostrarTraslados($item, $valor, $fechaInicial, $fechaFinal);
 
               foreach ($traslados as $key => $value) {
 
@@ -237,7 +271,3 @@ MODAL VER DETALLE TRASLADO
     </div>
 
   </div>
-
-</div>
-
-<script src="vistas/js/traslados.js"></script>

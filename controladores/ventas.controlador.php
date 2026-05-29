@@ -420,13 +420,23 @@ class ControladorVentas
 			// 10: Convertir
 			$htmlConvertir = '<div style="white-space:nowrap; text-align:center;">';
 			if (puedeAccion('ordenes', 'editar')) {
-				$htmlConvertir .= '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-warning" title="Convertir a Venta" style="width: auto !important;">Convertir a Venta</a>';
-				$htmlConvertir .= ' <a href="index.php?ruta=orden-a-factura-electronica&idVenta=' . $value["id"] . '" 
-							class="btn btn-xs btn-primary" 
-							title="Convertir a Factura Electrónica" 
-							style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;">
-							<i class="fa fa-file-text-o"></i> Convertir a FE
-						</a>';
+				if (ControladorCajas::ctrValidarCajaAbierta()) {
+					$htmlConvertir .= '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-warning" title="Convertir a Venta" style="width: auto !important;">Convertir a Venta</a>';
+					$htmlConvertir .= ' <a href="index.php?ruta=orden-a-factura-electronica&idVenta=' . $value["id"] . '" 
+								class="btn btn-xs btn-primary" 
+								title="Convertir a Factura Electrónica" 
+								style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;">
+								<i class="fa fa-file-text-o"></i> Convertir a FE
+							</a>';
+				} else {
+					$htmlConvertir .= '<button type="button" class="btn btn-xs btn-warning" title="Convertir a Venta" style="width: auto !important;" onclick="alertaCajaCerradaOrdenes()">Convertir a Venta</button>';
+					$htmlConvertir .= ' <button type="button" 
+								class="btn btn-xs btn-primary" 
+								title="Convertir a Factura Electrónica" 
+								style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;" onclick="alertaCajaCerradaOrdenes()">
+								<i class="fa fa-file-text-o"></i> Convertir a FE
+							</button>';
+				}
 			}
 			$htmlConvertir .= '</div>';
 			$nestedData[] = $htmlConvertir;
@@ -841,8 +851,9 @@ class ControladorVentas
 
 	static public function ctrCrearVenta()
 	{
-		// Validar si el control de caja está activo y hay caja abierta
-		if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
+		// Validar si el control de caja está activo y hay caja abierta (excluir órdenes)
+		$esOrden = (isset($_POST["estado"]) && $_POST["estado"] == "orden") || (isset($_GET["ruta"]) && in_array($_GET["ruta"], ["crear-orden", "editar-orden", "ordenes"]));
+		if (!$esOrden && class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
 			if (isset($_POST["ajax"]) && $_POST["ajax"] == "true") {
 				echo json_encode(["status" => "error", "titulo" => "Caja Cerrada", "mensaje" => "Debe abrir caja antes de realizar esta operación."]);
 				return;
@@ -1008,7 +1019,7 @@ class ControladorVentas
 		if (isset($_POST["nuevaVenta"])) {
 
 			// 🟢 LOG DE EMERGENCIA: Ver qué está enviando realmente la tablet
-			file_put_contents("debug_ventas.txt", "FECHA: " . date("Y-m-d H:i:s") . " - PRODUCTOS: " . $_POST["listaProductos"] . "\n", FILE_APPEND);
+			Logger::debug("FECHA: " . date("Y-m-d H:i:s") . " - PRODUCTOS: " . $_POST["listaProductos"] . "\n", FILE_APPEND);
 
 			// VALIDACIÓN: No permitir ejecutar la venta si no hay productos reales
 			$listaProductosTemp = json_decode($_POST["listaProductos"], true);
@@ -1134,7 +1145,7 @@ class ControladorVentas
 							// Es un producto normal - restar stock de productos_bodegas
 							
 							// LOG DE EMERGENCIA
-							file_put_contents("debug_crear_orden.txt", "PROCESANDO PRODUCTO NORMAL: ID=" . $value["id"] . " - CANT=" . $value["cantidad"] . "\n", FILE_APPEND);
+							Logger::debug("PROCESANDO PRODUCTO NORMAL: ID=" . $value["id"] . " - CANT=" . $value["cantidad"] . "\n");
 
 							$tablaProductos = "productos";
 							$item = "id";
@@ -1483,8 +1494,9 @@ class ControladorVentas
 
 	static public function ctrEditarVenta()
 	{
-		// Validar si el control de caja está activo y hay caja abierta
-		if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
+		// Validar si el control de caja está activo y hay caja abierta (excluir órdenes)
+		$esOrden = (isset($_POST["estado"]) && $_POST["estado"] == "orden") || (isset($_GET["ruta"]) && in_array($_GET["ruta"], ["crear-orden", "editar-orden", "ordenes"]));
+		if (!$esOrden && class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
 			if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
 				echo json_encode(["status" => "error", "titulo" => "Caja Cerrada", "mensaje" => "Debe abrir caja antes de realizar esta operación."]);
 				return;
@@ -2873,7 +2885,7 @@ class ControladorVentas
 				}
 
 				// INSERTAR COMO UNA NUEVA VENTA (TIPO FE)
-				file_put_contents(__DIR__ . "/../scratch/debug_datos_insert.txt", date("Y-m-d H:i:s") . " - DATOS: " . json_encode($datos) . "\n", FILE_APPEND);
+				Logger::debug(date("Y-m-d H:i:s") . " - DATOS: " . json_encode($datos) . "\n", FILE_APPEND);
 				$respuesta = ModeloVentas::mdlIngresarVenta($tabla, $datos);
 
 				if (!is_numeric($respuesta)) {

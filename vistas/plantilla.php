@@ -184,15 +184,12 @@ CUERPO DOCUMENTO
 
       $rutasProtegidas = [
           "crear-venta", 
-          "crear-orden", 
           "crear-factura-electronica", 
           "crear-nota-credito", 
           "crear-documento-soporte", 
           "crear-nota-ajuste-ds", 
-          "gastos",
           "orden-a-factura-electronica",
           "editar-factura-electronica",
-          "editar-orden",
           "editar-venta1"
       ];
 

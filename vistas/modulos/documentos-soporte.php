@@ -21,11 +21,35 @@
             <div class="box-header with-border">
 
                 <?php if (puedeAccion('documento_soporte', 'crear')): ?>
+                  <?php if (ControladorCajas::ctrValidarCajaAbierta()): ?>
                     <a href="crear-documento-soporte">
                         <button class="btn btn-primary">
                             <i class="fa fa-plus"></i> Crear Documento Soporte
                         </button>
                     </a>
+                  <?php else: ?>
+                    <button class="btn btn-primary" onclick="alertaCajaCerradaDS()">
+                      <i class="fa fa-plus"></i> Crear Documento Soporte
+                    </button>
+                    <script>
+                    function alertaCajaCerradaDS(){
+                        swal({
+                            title: '¡Caja Cerrada!',
+                            text: 'Debe abrir caja antes de realizar esta operación.',
+                            type: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3c8dbc',
+                            cancelButtonColor: '#6c757d',
+                            cancelButtonText: 'Entendido',
+                            confirmButtonText: 'Abrir caja'
+                        }).then(function(result){
+                            if (result.value) {
+                                $('#modalAperturaCaja').modal('show');
+                            }
+                        });
+                    }
+                    </script>
+                  <?php endif; ?>
                 <?php endif; ?>
 
                 <!-- Filtro por Sucursal (Administradores) -->

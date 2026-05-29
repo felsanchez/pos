@@ -91,7 +91,7 @@ if (!empty($metodo_pago)) {
 }
 
 // 3. Unir condiciones para VENTAS (Incluir ventas POS y FE firmadas/enviadas, excluir borradores pendientes)
-$whereVentas = "estado = 'venta' AND ( ( (resolucion_id IS NULL OR resolucion_id = 0) AND (estado_dian IS NULL OR estado_dian = '') ) OR ( resolucion_id IS NOT NULL AND resolucion_id != 0 AND estado_dian IN ('aceptada', 'enviada') ) ) AND $condicionFecha" . $filtrosComunes . $filtrosVentasExtra;
+$whereVentas = "estado = 'venta' AND ( (resolucion_id IS NULL OR resolucion_id = 0) OR ( resolucion_id IS NOT NULL AND resolucion_id != 0 AND estado_dian IN ('aceptada', 'enviada') ) ) AND $condicionFecha" . $filtrosComunes . $filtrosVentasExtra;
 $paramsVentas = array_merge($fechaParams, $filtroParams, $ventasExtraParams);
 
 // 4. Unir condiciones para ORDENES

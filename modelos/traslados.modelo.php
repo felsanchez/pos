@@ -8,7 +8,7 @@ class ModeloTraslados
     /*=============================================
     MOSTRAR TRASLADOS
     =============================================*/
-    static public function mdlMostrarTraslados($tabla, $item, $valor)
+    static public function mdlMostrarTraslados($tabla, $item, $valor, $fechaInicial = null, $fechaFinal = null)
     {
         if ($item != null) {
             $stmt = Conexion::conectar()->prepare("SELECT t.*, 
@@ -25,15 +25,44 @@ class ModeloTraslados
             $stmt->execute();
             return $stmt->fetch();
         } else {
-            $stmt = Conexion::conectar()->prepare("SELECT t.*, 
-                                                        bo.nombre AS bodega_origen, 
-                                                        bd.nombre AS bodega_destino, 
-                                                        u.nombre AS usuario 
-                                                  FROM $tabla t
-                                                  INNER JOIN bodegas bo ON t.id_bodega_origen = bo.id
-                                                  INNER JOIN bodegas bd ON t.id_bodega_destino = bd.id
-                                                  INNER JOIN usuarios u ON t.id_usuario = u.id
-                                                  ORDER BY t.id DESC");
+            if ($fechaInicial != null && $fechaFinal != null) {
+                if ($fechaInicial == $fechaFinal) {
+                    $stmt = Conexion::conectar()->prepare("SELECT t.*, 
+                                                                bo.nombre AS bodega_origen, 
+                                                                bd.nombre AS bodega_destino, 
+                                                                u.nombre AS usuario 
+                                                          FROM $tabla t
+                                                          INNER JOIN bodegas bo ON t.id_bodega_origen = bo.id
+                                                          INNER JOIN bodegas bd ON t.id_bodega_destino = bd.id
+                                                          INNER JOIN usuarios u ON t.id_usuario = u.id
+                                                          WHERE DATE(t.fecha) = :fechaInicial
+                                                          ORDER BY t.id DESC");
+                    $stmt->bindParam(":fechaInicial", $fechaInicial, PDO::PARAM_STR);
+                } else {
+                    $stmt = Conexion::conectar()->prepare("SELECT t.*, 
+                                                                bo.nombre AS bodega_origen, 
+                                                                bd.nombre AS bodega_destino, 
+                                                                u.nombre AS usuario 
+                                                          FROM $tabla t
+                                                          INNER JOIN bodegas bo ON t.id_bodega_origen = bo.id
+                                                          INNER JOIN bodegas bd ON t.id_bodega_destino = bd.id
+                                                          INNER JOIN usuarios u ON t.id_usuario = u.id
+                                                          WHERE DATE(t.fecha) BETWEEN :fechaInicial AND :fechaFinal
+                                                          ORDER BY t.id DESC");
+                    $stmt->bindParam(":fechaInicial", $fechaInicial, PDO::PARAM_STR);
+                    $stmt->bindParam(":fechaFinal", $fechaFinal, PDO::PARAM_STR);
+                }
+            } else {
+                $stmt = Conexion::conectar()->prepare("SELECT t.*, 
+                                                            bo.nombre AS bodega_origen, 
+                                                            bd.nombre AS bodega_destino, 
+                                                            u.nombre AS usuario 
+                                                      FROM $tabla t
+                                                      INNER JOIN bodegas bo ON t.id_bodega_origen = bo.id
+                                                      INNER JOIN bodegas bd ON t.id_bodega_destino = bd.id
+                                                      INNER JOIN usuarios u ON t.id_usuario = u.id
+                                                      ORDER BY t.id DESC");
+            }
             $stmt->execute();
             return $stmt->fetchAll();
         }

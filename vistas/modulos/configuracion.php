@@ -237,25 +237,6 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
 
               <div class="row">
 
-                <!-- Alerta de Stock Bajo -->
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <div class="checkbox">
-                      <label style="font-weight: normal; cursor: pointer;">
-                        <input type="checkbox" name="alertaStockBajo" value="1" <?php echo (!empty($configuracion["alerta_stock_bajo"]) && $configuracion["alerta_stock_bajo"] == 1) || !isset($configuracion["alerta_stock_bajo"]) ? "checked" : ""; ?>>
-                        <strong>Activar alerta de stock bajo</strong>
-                      </label>
-                    </div>
-                    <div class="input-group">
-                      <span class="input-group-addon"><i class="fa fa-cubes"></i></span>
-                      <input type="number" class="form-control" name="umbralStockMinimo" min="1"
-                        value="<?php echo !empty($configuracion["umbral_stock_minimo"]) ? $configuracion["umbral_stock_minimo"] : '5'; ?>">
-                      <span class="input-group-addon">unidades</span>
-                    </div>
-                    <p class="help-block">Alertar cuando el stock esté por debajo de esta cantidad</p>
-                  </div>
-                </div>
-
                 <!-- Alerta de Stock Agotado -->
                 <div class="col-md-6">
                   <div class="form-group">
@@ -273,8 +254,8 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
 
               <hr>
 
-              <!-- Alertas de Actividades y Gastos -->
-              <h5 class="text-muted"><i class="fa fa-calendar"></i> Alertas de Actividades y Gastos</h5>
+              <!-- Alertas de Actividades -->
+              <h5 class="text-muted"><i class="fa fa-calendar"></i> Alertas de Actividades</h5>
 
               <div class="row">
 
@@ -297,24 +278,6 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                   </div>
                 </div>
 
-                <!-- Alerta de Gastos Próximos -->
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <div class="checkbox">
-                      <label style="font-weight: normal; cursor: pointer;">
-                        <input type="checkbox" name="alertaGastosProximos" value="1" <?php echo (!empty($configuracion["alerta_gastos_proximos"]) && $configuracion["alerta_gastos_proximos"] == 1) || !isset($configuracion["alerta_gastos_proximos"]) ? "checked" : ""; ?>>
-                        <strong>Activar alerta de gastos próximos a vencer</strong>
-                      </label>
-                    </div>
-                    <div class="input-group">
-                      <span class="input-group-addon"><i class="fa fa-money"></i></span>
-                      <input type="number" class="form-control" name="diasAntesGasto" min="1"
-                        value="<?php echo !empty($configuracion["dias_antes_gasto"]) ? $configuracion["dias_antes_gasto"] : '5'; ?>">
-                      <span class="input-group-addon">días antes</span>
-                    </div>
-                    <p class="help-block">Alertar X días antes del vencimiento del gasto</p>
-                  </div>
-                </div>
 
               </div>
 
@@ -779,6 +742,10 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                           <button type="button" class="btn btn-xs btn-danger btn-eliminar-perfil"
                             data-id="<?php echo $perfil['id']; ?>"
                             data-nombre="<?php echo htmlspecialchars($perfil['nombre']); ?>">
+                            <i class="fa fa-trash"></i> Eliminar
+                          </button>
+                          <?php else: ?>
+                          <button type="button" class="btn btn-xs btn-default" disabled title="No se puede eliminar porque tiene usuarios asociados">
                             <i class="fa fa-trash"></i> Eliminar
                           </button>
                           <?php endif; ?>

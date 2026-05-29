@@ -28,9 +28,33 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
       <div class="box-header with-border">
 
         <?php if (puedeAccion('gastos', 'crear')): ?>
-          <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarGasto">
-            <i class="fa fa-plus"></i> Agregar gasto
-          </button>
+          <?php if (ControladorCajas::ctrValidarCajaAbierta()): ?>
+            <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarGasto">
+              <i class="fa fa-plus"></i> Agregar gasto
+            </button>
+          <?php else: ?>
+            <button class="btn btn-primary" onclick="alertaCajaCerradaGastos()">
+              <i class="fa fa-plus"></i> Agregar gasto
+            </button>
+            <script>
+            function alertaCajaCerradaGastos(){
+                swal({
+                    title: '¡Caja Cerrada!',
+                    text: 'Debe abrir caja antes de realizar esta operación.',
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3c8dbc',
+                    cancelButtonColor: '#6c757d',
+                    cancelButtonText: 'Entendido',
+                    confirmButtonText: 'Abrir caja'
+                }).then(function(result){
+                    if (result.value) {
+                        $('#modalAperturaCaja').modal('show');
+                    }
+                });
+            }
+            </script>
+          <?php endif; ?>
         <?php endif; ?>
 
         <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarCategorias">

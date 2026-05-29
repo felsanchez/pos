@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../modelos/logger.php';
 // Iniciar buffer de salida para evitar problemas con headers
 ob_start();
 
@@ -85,12 +86,12 @@ class AjaxNotasCredito
                 . " | SESSION id_bodega: " . ($_SESSION['id_bodega'] ?? 'NULL')
                 . " | POST idVenta: " . ($_POST['idVenta'] ?? 'NO_EXISTE')
                 . "\n";
-            file_put_contents(__DIR__ . "/../tmp/debug_nc_bodega.txt", $debugLog, FILE_APPEND);
+            Logger::debug($debugLog);
 
             $respuesta = ControladorFactus::ctrGenerarNotaCredito($idVenta, $motivo, $listaProductos, $idCliente, $motivoDescripcion, $metodoPago, $observacion, $firmar);
 
             // DEBUG TEMPORAL - Ver respuesta
-            file_put_contents(__DIR__ . "/../tmp/debug_nc_bodega.txt", "  RESPUESTA: " . json_encode($respuesta) . "\n", FILE_APPEND);
+            Logger::debug("  RESPUESTA: " . json_encode($respuesta) . "\n", FILE_APPEND);
 
             echo json_encode($respuesta);
 

@@ -1,7 +1,7 @@
 $(document).ready(function () {
 
-    // 1. Verificación automática al cargar la vista de ventas
-    if ($("#modalAperturaCaja").length > 0) {
+    // 1. Verificación automática al cargar la vista
+    if ($("#modalAperturaCaja").length > 0 && $('body').hasClass('inicio')) {
         $.ajax({
             url: "ajax/cajas.ajax.php",
             method: "POST",

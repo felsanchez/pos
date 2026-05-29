@@ -142,7 +142,6 @@
                 <select class="form-control" id="filtroTipoNotificacion" style="width: 160px; border-left: 0;">
                   <option value="">Mostrar Todas</option>
                   <option value="Stock Agotado">Stock Agotado</option>
-                  <option value="Stock Bajo">Stock Bajo</option>
                   <option value="Actividad Próxima">Actividad Próxima</option>
                   <option value="Orden Agente IA">Orden Agente IA</option>
                   <option value="Transacción Bold">Transacción de Bold</option>
@@ -202,6 +201,8 @@
 
           foreach ($notificaciones as $notif) {
 
+            if ($notif["tipo"] == "stock_bajo") continue;
+
             // Determinar icono y color según tipo
             $icono = "fa-info-circle";
             $color = "text-blue";
@@ -211,10 +212,6 @@
               $icono = "fa-times-circle";
               $color = "text-red";
               $tipoTexto = "Stock Agotado";
-            } else if ($notif["tipo"] == "stock_bajo") {
-              $icono = "fa-exclamation-triangle";
-              $color = "text-yellow";
-              $tipoTexto = "Stock Bajo";
             } else if ($notif["tipo"] == "actividad_proxima") {
               $icono = "fa-calendar";
               $color = "text-blue";
@@ -286,6 +283,8 @@
 
           foreach ($notificaciones as $notif) {
 
+            if ($notif["tipo"] == "stock_bajo") continue;
+
             // Determinar icono y color según tipo
             $icono = "fa-info-circle";
             $color = "text-blue";
@@ -295,10 +294,6 @@
               $icono = "fa-times-circle";
               $color = "text-red";
               $tipoTexto = "Stock Agotado";
-            } else if ($notif["tipo"] == "stock_bajo") {
-              $icono = "fa-exclamation-triangle";
-              $color = "text-yellow";
-              $tipoTexto = "Stock Bajo";
             } else if ($notif["tipo"] == "actividad_proxima") {
               $icono = "fa-calendar";
               $color = "text-blue";

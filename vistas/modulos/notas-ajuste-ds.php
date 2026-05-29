@@ -25,11 +25,35 @@ if ($_SESSION["perfil"] == "Especial") {
         <div class="box">
             <div class="box-header with-border">
                 <?php if (puedeAccion('notas_ajuste', 'crear')): ?>
+                  <?php if (ControladorCajas::ctrValidarCajaAbierta()): ?>
                     <a href="crear-nota-ajuste-ds">
                         <button class="btn btn-primary">
                             <i class="fa fa-plus"></i> Crear Nota de Ajuste
                         </button>
                     </a>
+                  <?php else: ?>
+                    <button class="btn btn-primary" onclick="alertaCajaCerradaNA()">
+                      <i class="fa fa-plus"></i> Crear Nota de Ajuste
+                    </button>
+                    <script>
+                    function alertaCajaCerradaNA(){
+                        swal({
+                            title: '¡Caja Cerrada!',
+                            text: 'Debe abrir caja antes de realizar esta operación.',
+                            type: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3c8dbc',
+                            cancelButtonColor: '#6c757d',
+                            cancelButtonText: 'Entendido',
+                            confirmButtonText: 'Abrir caja'
+                        }).then(function(result){
+                            if (result.value) {
+                                $('#modalAperturaCaja').modal('show');
+                            }
+                        });
+                    }
+                    </script>
+                  <?php endif; ?>
                 <?php endif; ?>
 
                 <!-- Filtro por Sucursal (Administradores) -->

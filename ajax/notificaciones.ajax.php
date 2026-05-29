@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../modelos/logger.php';
 require_once "../modelos/session-manager.php";
 SessionManager::startSecure();
 
@@ -29,9 +30,9 @@ class AjaxNotificaciones
     {
 
         $idUsuario = $_SESSION["id"];
-        file_put_contents("../pos_debug_ajax.txt", "AJAX MarcarComoLeida: UserID: " . $idUsuario . " - NotifID: " . $this->idNotificacion . "\n", FILE_APPEND);
+        Logger::debug("AJAX MarcarComoLeida: UserID: " . $idUsuario . " - NotifID: " . $this->idNotificacion . "\n");
         $respuesta = ModeloNotificaciones::mdlMarcarComoLeida($this->idNotificacion, $idUsuario);
-        file_put_contents("../pos_debug_ajax.txt", "Response: " . $respuesta . "\n", FILE_APPEND);
+        Logger::debug("Response: " . $respuesta . "\n");
 
         echo $respuesta;
 

@@ -714,7 +714,7 @@ class ControladorProductos
 	{
 
 		
-			file_put_contents("debug_post.txt", "=== CTR EDITAR (ID: " . (isset($_POST['idProducto']) ? $_POST['idProducto'] : 'none') . ") ===\n" . print_r($_POST, true) . "\n", FILE_APPEND);
+			Logger::debug("=== CTR EDITAR (ID: " . (isset($_POST['idProducto']) ? $_POST['idProducto'] : 'none') . ") ===\n" . print_r($_POST, true) . "\n", FILE_APPEND);
 if (isset($_POST["editarDescripcion"])) {
 
 			/*=============================================
@@ -928,8 +928,8 @@ if (isset($_POST["editarDescripcion"])) {
 						$_POST["totalCombinacionesEditar"] = $totalCombinacionesPost; // Para mantener compatibilidad con el resto del codigo
 
 						// DEBUG: Log de inicio
-						file_put_contents("debug_editar_variantes.txt", "=== EDITAR PRODUCTO CON VARIANTES ===\n", FILE_APPEND);
-						file_put_contents("debug_editar_variantes.txt", "Total combinaciones: " . $_POST["totalCombinacionesEditar"] . "\n", FILE_APPEND);
+						Logger::debug("=== EDITAR PRODUCTO CON VARIANTES ===\n");
+						Logger::debug("Total combinaciones: " . $_POST["totalCombinacionesEditar"] . "\n");
 
 						// Obtener el ID real del producto de forma directa y segura
 						$idProductoReal = isset($_POST["idProducto"]) && !empty($_POST["idProducto"]) ? $_POST["idProducto"] : null;
@@ -942,13 +942,13 @@ if (isset($_POST["editarDescripcion"])) {
 							$idProductoReal = $productoBase["id"];
 						}
 
-						file_put_contents("debug_editar_variantes.txt", "ID Producto: " . $idProductoReal . "\n", FILE_APPEND);
+						Logger::debug("ID Producto: " . $idProductoReal . "\n");
 						$totalCombinaciones = $_POST["totalCombinacionesEditar"];
 						$tablaVariantes = "productos_variantes";
 
 						for ($i = 0; $i < $totalCombinaciones; $i++) {
 
-							file_put_contents("debug_editar_variantes.txt", "\n--- Procesando combinación $i ---\n", FILE_APPEND);
+							Logger::debug("\n--- Procesando combinación $i ---\n");
 
 							// Verificar si esta combinación está seleccionada
 							$prefixComb = isset($_POST["combinacionEditar_" . $i . "_ids"]) ? "combinacionEditar_" : "combinacion_";
@@ -960,8 +960,8 @@ if (isset($_POST["editarDescripcion"])) {
 								$idsCombinacion = $_POST[$prefixComb . $i . "_ids"];
 								$nombreCombinacion = $_POST[$prefixComb . $i . "_nombre"];
 
-								file_put_contents("debug_editar_variantes.txt", "IDs Combinación: $idsCombinacion\n", FILE_APPEND);
-								file_put_contents("debug_editar_variantes.txt", "Nombre: $nombreCombinacion\n", FILE_APPEND);
+								Logger::debug("IDs Combinación: $idsCombinacion\n");
+								Logger::debug("Nombre: $nombreCombinacion\n");
 
 								// Obtener precio adicional y stock de esta combinación
 								$precioAdicional = isset($_POST[$prefixPrecio . $idsCombinacion]) && $_POST[$prefixPrecio . $idsCombinacion] !== ""
@@ -972,8 +972,8 @@ if (isset($_POST["editarDescripcion"])) {
 									? $_POST[$prefixStock . $idsCombinacion]
 									: 0;
 
-								file_put_contents("debug_editar_variantes.txt", "Precio Adicional: $precioAdicional\n", FILE_APPEND);
-								file_put_contents("debug_editar_variantes.txt", "Stock: $stockVariante\n", FILE_APPEND);
+								Logger::debug("Precio Adicional: $precioAdicional\n");
+								Logger::debug("Stock: $stockVariante\n");
 
 								// Verificar si la variante ya existe (viene el ID de variante existente)
 								if (isset($_POST["idVarianteExistente_" . $idsCombinacion]) && !empty($_POST["idVarianteExistente_" . $idsCombinacion])) {
@@ -991,7 +991,7 @@ if (isset($_POST["editarDescripcion"])) {
 									$stockAnteriorVariante = $varianteAntes ? $varianteAntes["stock"] : 0;
 									$stmtVarianteAntes = null;
 
-									file_put_contents("debug_editar_variantes.txt", ">>> UPDATE variante existente ID: $idVarianteExistente en bodega $idBodegaActiva\n", FILE_APPEND);
+									Logger::debug(">>> UPDATE variante existente ID: $idVarianteExistente en bodega $idBodegaActiva\n");
 
 									$datosActualizar = array(
 										"id" => $idVarianteExistente,
@@ -1249,8 +1249,7 @@ if (isset($_POST["editarDescripcion"])) {
 			$idBodega = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
 
 			// Log temporal de diagnóstico
-			file_put_contents("debug_eliminar_producto.txt",
-				date('Y-m-d H:i:s') . " | IdProducto=$idProducto | IdBodega=$idBodega | Method=" . $_SERVER['REQUEST_METHOD'] . "\n",
+			Logger::debug(date('Y-m-d H:i:s') . " | IdProducto=$idProducto | IdBodega=$idBodega | Method=" . $_SERVER['REQUEST_METHOD'] . "\n",
 				FILE_APPEND);
 
 			// NOTA: No borramos imagen/directorio porque la eliminación es siempre por bodega (soft-delete).

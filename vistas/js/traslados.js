@@ -514,3 +514,40 @@ $(document).on("blur", ".celda-notas-traslado", function () {
         }
     });
 });
+
+/*=============================================
+RANGO DE FECHAS
+=============================================*/
+if ($('#daterange-btn-traslados').length > 0) {
+    $('#daterange-btn-traslados').daterangepicker(
+        {
+            ranges   : {
+              'Hoy'       : [moment(), moment()],
+              'Ayer'      : [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+              'Últimos 7 días' : [moment().subtract(6, 'days'), moment()],
+              'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
+              'Este mes'  : [moment().startOf('month'), moment().endOf('month')],
+              'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+            },
+            startDate: moment(),
+            endDate  : moment()
+        },
+        function (start, end) {
+            $('#daterange-btn-traslados span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+            var fechaInicial = start.format('YYYY-MM-DD');
+            var fechaFinal = end.format('YYYY-MM-DD');
+            window.location = "index.php?ruta=traslados&fechaInicial=" + fechaInicial + "&fechaFinal=" + fechaFinal;
+        }
+    );
+}
+
+// Restaurar el texto del rango de fechas si hay filtros activos en la URL
+$(document).ready(function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.has('fechaInicial') && urlParams.has('fechaFinal')){
+        var start = moment(urlParams.get('fechaInicial'));
+        var end = moment(urlParams.get('fechaFinal'));
+        $('#daterange-btn-traslados span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+    }
+});
+
