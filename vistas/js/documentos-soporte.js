@@ -1153,4 +1153,40 @@ $(document).ready(function () {
         aplicarDescuentoDS();
         listarProductosDS();
     });
+
+    /*=============================================
+    SELECCIONAR METODO DE PAGO DOCUMENTO SOPORTE
+    =============================================*/
+    $(document).on("change", "#nuevoMetodoPagoDS", function () {
+        var metodo = $(this).val();
+
+        if (metodo == "") {
+            $(this).parent().parent().parent().children(".cajasMetodoPagoDS").html("");
+            $("#listaMetodoPagoDS").val("");
+        } else {
+            $(this).parent().parent().parent().children(".cajasMetodoPagoDS").html(
+                '<div class="col-xs-6" style="padding-left:0px">' +
+                '<div class="input-group">' +
+                '<input type="text" class="form-control" id="nuevoCodigoTransaccionDS" name="nuevoCodigoTransaccionDS" placeholder="Ingrese el valor o código de transacción">' +
+                '<span class="input-group-addon"><i class="fa fa-lock"></i></span>' +
+                '</div>' +
+                '</div>'
+            );
+            listarMetodosDS();
+        }
+    });
+
+    $(document).on("change keyup", "#nuevoCodigoTransaccionDS", function () {
+        listarMetodosDS();
+    });
+
+    function listarMetodosDS() {
+        var metodo = $("#nuevoMetodoPagoDS").val();
+        var transaccion = $("#nuevoCodigoTransaccionDS").val();
+        if (transaccion && transaccion.trim() !== "") {
+            $("#listaMetodoPagoDS").val(metodo + "-" + transaccion);
+        } else {
+            $("#listaMetodoPagoDS").val(metodo);
+        }
+    }
 });

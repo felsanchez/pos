@@ -2256,14 +2256,14 @@ $(document).ready(function () {
 					});
 				}
 			},
-			"order": [[8, "desc"]],
+			"order": [[7, "desc"]],
 			"responsive": {
 				"details": {
 					"type": "inline",
 					"renderer": function (api, rowIdx, columns) {
 						var labels = {
-							2: 'Vendedor', 3: 'Forma de Pago', 4: 'Imagen',
-							5: 'Total', 6: 'Notas del cliente', 7: 'Observación', 8: 'Fecha'
+							2: 'Vendedor', 3: 'Imagen', 4: 'Total',
+							5: 'Notas del cliente', 6: 'Observación', 7: 'Fecha'
 						};
 						var idVenta = $(api.row(rowIdx).node()).attr('data-venta-id') || '';
 						var finalHtml = '';
@@ -2276,7 +2276,7 @@ $(document).ready(function () {
 							var label = labels[colIdx] || col.title || ('Columna ' + colIdx);
 							var data = col.data || '';
 
-							if (colIdx === 7) {
+							if (colIdx === 6) {
 								var obsTexto = $('<div>').html(data).text().trim();
 								finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
 								finalHtml += '<span class="text-bold" style="block;color:#555;margin-bottom:4px;"> ' + label + ':</span>';
@@ -2285,7 +2285,7 @@ $(document).ready(function () {
 								return;
 							}
 
-							if (colIdx === 6) {
+							if (colIdx === 5) {
 								var notasTexto = $('<div>').html(data).text().trim();
 								finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
 								finalHtml += '<span class="text-bold" style="color:#555;"><i class="fa fa-magic"></i> ' + label + ': </span>';
@@ -2307,15 +2307,14 @@ $(document).ready(function () {
 			},
 			"columnDefs": [
 				{ "targets": 0, "responsivePriority": 1 },
-				{ "targets": 9, "responsivePriority": 2, "orderable": false },
+				{ "targets": 8, "responsivePriority": 2, "orderable": false },
 				{ "targets": 1, "responsivePriority": 3 },
 				{ "targets": 2, "responsivePriority": 4 },
 				{ "targets": 3, "responsivePriority": 5 },
 				{ "targets": 4, "responsivePriority": 6 },
 				{ "targets": 5, "responsivePriority": 7 },
 				{ "targets": 6, "responsivePriority": 8 },
-				{ "targets": 7, "responsivePriority": 9 },
-				{ "targets": 8, "responsivePriority": 10 }
+				{ "targets": 7, "responsivePriority": 9 }
 			],
 			"language": {
 				"sProcessing": "Procesando...",

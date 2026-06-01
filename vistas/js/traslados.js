@@ -83,6 +83,7 @@ $(".tablaTraslados tbody").on("click", "button.agregarProducto", function(){
 
 	var datos = new FormData();
 	datos.append("idProducto", idProducto);
+	datos.append("idBodega", $("#nuevaBodegaOrigen").val());
 
 	$.ajax({
 		url:"ajax/productos.ajax.php",
@@ -170,11 +171,9 @@ $(".formularioTraslado").on("click", "button.quitarProducto", function(){
 
     // Volver a habilitar el botón en la tabla
     if(idVariante != "null" && idVariante != ""){
-        $('button.recuperarBoton[idVariante="'+idVariante+'"]').addClass("btn-primary agregarProducto");
-	    $('button.recuperarBoton[idVariante="'+idVariante+'"]').removeClass("btn-default");
+        $('button.recuperarBoton[idVariante="'+idVariante+'"]').addClass("btn-primary").removeClass("btn-default").prop("disabled", false);
     } else {
-        $('button.recuperarBoton[idProducto="'+idProducto+'"]').addClass("btn-primary agregarProducto");
-	    $('button.recuperarBoton[idProducto="'+idProducto+'"]').removeClass("btn-default");
+        $('button.recuperarBoton[idProducto="'+idProducto+'"]').addClass("btn-primary agregarProducto").removeClass("btn-default");
     }
 
 	if($(".nuevoProducto").children().length == 0){
@@ -290,7 +289,7 @@ function formatearTablaVariantesTraslado(variantes) {
                          '<span class="badge bg-green">' + variante.stock + '</span>';
 
 		var botonAgregar = (variante.stock > 0) ? 
-            '<button class="btn btn-primary btn-xs agregarVarianteTraslado" idVariante="' + variante.id + '" idProductoBase="' + variante.id_producto + '" nombreVariante="' + variante.nombre + '" stockVariante="' + variante.stock + '">Agregar</button>' : 
+            '<button class="btn btn-primary btn-xs agregarVarianteTraslado recuperarBoton" idVariante="' + variante.id + '" idProductoBase="' + variante.id_producto + '" nombreVariante="' + variante.nombre + '" stockVariante="' + variante.stock + '">Agregar</button>' : 
             '<button class="btn btn-default btn-xs" disabled>Sin stock</button>';
 
 		html += '<tr><td>' + variante.nombre + '</td><td class="text-center">' + stockBadge + '</td><td class="text-center">' + botonAgregar + '</td></tr>';

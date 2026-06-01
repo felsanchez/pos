@@ -142,9 +142,7 @@ class ControladorClientes
 			4 => 'direccion',
 			5 => 'estatus',
 			6 => 'notas',
-			7 => 'ultima_compra',
-			8 => 'id', // Acciones
-			9 => 'fecha'
+			7 => 'id'
 		);
 
 		$where = " WHERE 1=1 ";

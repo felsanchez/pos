@@ -120,6 +120,12 @@ class imprimirDocumentoSoporte
             $municipioProveedor = $mun ? $mun["nombre"] : $proveedor["municipio_id"];
         }
 
+        $partesMetodo = explode("-", $documentoSoporte["metodo_pago"] ?? 'N/A');
+        $metodoPagoTexto = $partesMetodo[0];
+        if (isset($partesMetodo[1]) && !empty($partesMetodo[1])) {
+            $metodoPagoTexto .= ' (' . $partesMetodo[1] . ')';
+        }
+
         $htmlHeader .= '<table class="table" cellpadding="6">
             <tr>
                 <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
@@ -143,7 +149,7 @@ class imprimirDocumentoSoporte
                 <td style="width:34%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Detalles DS</span><br><br>
                     <strong>Documento Soporte #' . $documentoSoporte["numero_ds"] . '</strong><br>
-                    <strong>Método de Pago:</strong> ' . ($documentoSoporte["metodo_pago"] ?? 'N/A') . '<br>
+                    <strong>Método de Pago:</strong> ' . $metodoPagoTexto . '<br>
                     <strong>Estado:</strong> ' . ucfirst($documentoSoporte["estado_dian"]) . '<br>
                     <strong>Vendedor:</strong> ' . ($vendedor["nombre"] ?? 'N/A') . '
                 </td>

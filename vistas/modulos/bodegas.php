@@ -71,7 +71,11 @@
                             <button class="btn btn-warning btnEditarBodega" idBodega="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarBodega" title="Editar bodega"><i class="fa fa-pencil"></i></button>';
 
                 if ($value["id"] != 1) {
-                  echo '<button class="btn btn-danger btnEliminarBodega" idBodega="' . $value["id"] . '" title="Eliminar bodega"><i class="fa fa-times"></i></button>';
+                  if ($value["estado"] != 0) {
+                    echo '<button class="btn btn-success btnActivarBodega" idBodega="' . $value["id"] . '" estadoBodega="0" title="Desactivar sucursal">Activado</button>';
+                  } else {
+                    echo '<button class="btn btn-danger btnActivarBodega" idBodega="' . $value["id"] . '" estadoBodega="1" title="Activar sucursal">Desactivado</button>';
+                  }
                 }
 
                 echo '</div>  
@@ -125,6 +129,10 @@ MODAL AGREGAR BODEGA
         ======================================-->
 
         <div class="modal-body">
+
+          <div class="alert alert-info" style="margin-bottom: 15px; font-size: 13px;">
+            <i class="fa fa-info-circle"></i> <strong>Nota:</strong> Al crear una nueva sucursal se compartirán automáticamente las categorías de productos, variantes de productos, proveedores y clientes entre todas las sucursales.
+          </div>
 
           <div class="box-body">
 

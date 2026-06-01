@@ -94,6 +94,9 @@
                       <?php
                         $bodegas = ControladorBodegas::ctrMostrarBodegas(null, null);
                         foreach ($bodegas as $key => $value) {
+                          if ($value["estado"] == 0) {
+                            continue;
+                          }
                           $selected = ($value["id"] == $_SESSION["id_bodega"]) ? "selected" : "";
                           echo '<option value="'.$value["id"].'" '.$selected.'>'.$value["nombre"].'</option>';
                         }
@@ -118,6 +121,9 @@
                       <option value="">Seleccionar bodega destino</option>
                       <?php
                         foreach ($bodegas as $key => $value) {
+                          if ($value["estado"] == 0) {
+                            continue;
+                          }
                           echo '<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
                         }
                       ?>

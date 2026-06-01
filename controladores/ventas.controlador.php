@@ -42,12 +42,11 @@ class ControladorVentas
 			0 => 'v.codigo',
 			1 => 'c.nombre',
 			2 => 'u.nombre',
-			3 => 'v.metodo_pago',
-			4 => 'v.id', // Imagen
-			5 => 'v.total',
-			6 => 'v.notas',
-			7 => 'v.observacion',
-			8 => 'v.fecha'
+			3 => 'v.id', // Imagen
+			4 => 'v.total',
+			5 => 'v.notas',
+			6 => 'v.observacion',
+			7 => 'v.fecha'
 		);
 
 		// Obtener configuración para moneda y formato
@@ -160,10 +159,7 @@ class ControladorVentas
 			// 2: Vendedor
 			$nestedData[] = e($value["nombre_vendedor"]);
 
-			// 3: Forma de pago
-			$nestedData[] = $moneda . ' ' . $value["metodo_pago"];
-
-			// 4: Imagen
+			// 3: Imagen
 			$imgSrc = $value["imagen"] != "" ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
 			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idventa="' . $value["id"] . '">';
 
@@ -215,17 +211,16 @@ class ControladorVentas
 		$tabla = "ventas";
 
 		// Mapeo de columnas para ordenamiento:
-		// 0=Código, 1=Cliente, 2=Vendedor, 3=Forma de pago, 4=Imagen, 5=Total, 6=Notas, 7=Observación, 8=Fecha, 9=Seguimiento, 10=Convertir, 11=Acciones
+		// 0=Código, 1=Cliente, 2=Vendedor, 3=Imagen, 4=Total, 5=Notas, 6=Observación, 7=Fecha
 		$columnsMap = array(
 			0 => 'v.codigo',
 			1 => 'c.nombre',
 			2 => 'u.nombre',
-			3 => 'v.metodo_pago',
-			4 => 'v.id', // Imagen
-			5 => 'v.total',
-			6 => 'v.notas',
-			7 => 'v.observacion',
-			8 => 'v.fecha'
+			3 => 'v.id', // Imagen
+			4 => 'v.total',
+			5 => 'v.notas',
+			6 => 'v.observacion',
+			7 => 'v.fecha'
 		);
 
 		// Obtener configuración para moneda y formato
@@ -584,18 +579,17 @@ class ControladorVentas
 		$tabla = "ventas";
 
 		// Mapeo de columnas para ordenamiento:
-		// 0=Código, 1=Cliente, 2=Vendedor, 3=Forma de pago, 4=Imagen, 5=Total, 6=Estado DIAN, 7=Notas, 8=Observación, 9=Fecha, 10=Acciones
+		// 0=Código, 1=Cliente, 2=Vendedor, 3=Imagen, 4=Total, 5=Estado DIAN, 6=Notas, 7=Observación, 8=Fecha, 9=Acciones
 		$columnsMap = array(
 			0 => 'v.numero_factura',
 			1 => 'c.nombre',
 			2 => 'u.nombre',
-			3 => 'v.metodo_pago',
-			4 => 'v.id', // Imagen
-			5 => 'v.total',
-			6 => 'v.estado_dian',
-			7 => 'v.notas',
-			8 => 'v.observacion',
-			9 => 'v.fecha'
+			3 => 'v.id', // Imagen
+			4 => 'v.total',
+			5 => 'v.estado_dian',
+			6 => 'v.notas',
+			7 => 'v.observacion',
+			8 => 'v.fecha'
 		);
 
 		// Obtener configuración
@@ -720,10 +714,7 @@ class ControladorVentas
 			// 2: Vendedor
 			$nestedData[] = e($value["nombre_vendedor"]);
 
-			// 3: Forma de pago
-			$nestedData[] = e($moneda) . ' ' . e($value["metodo_pago"]);
-
-			// 4: Imagen
+						// 4: Imagen
 			$imgSrc = ($value["imagen"] != "" && $value["imagen"] != null) ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
 			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idventa="' . $value["id"] . '">';
 

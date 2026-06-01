@@ -193,7 +193,6 @@ if ($xml) {
                   <th>Código</th>
                   <th>Cliente</th>
                   <th>Vendedor</th>
-                  <th>Forma de pago</th>
                   <th>Imagen</th>
 
                   <th>Total</th>
@@ -840,8 +839,8 @@ MODAL ENVIAR EMAIL
               "type": "inline",
               "renderer": function (api, rowIdx, columns) {
                 var labels = {
-                  2: 'Vendedor', 3: 'Forma de Pago', 4: 'Imagen',
-                  5: 'Total', 6: 'Estado DIAN', 7: 'Notas del cliente', 8: 'Observación', 9: 'Fecha'
+                  2: 'Vendedor', 3: 'Imagen', 4: 'Total',
+                  5: 'Estado DIAN', 6: 'Notas del cliente', 7: 'Observación', 8: 'Fecha'
                 };
                 var idVenta = $(api.row(rowIdx).node()).find('.celda-observacion').attr('data-id') || '';
                 var finalHtml = '';
@@ -854,7 +853,7 @@ MODAL ENVIAR EMAIL
                   var label = labels[colIdx] || col.title || ('Columna ' + colIdx);
                   var data = col.data || '';
 
-                  if (colIdx === 8) { // Observación
+                  if (colIdx === 7) { // Observación
                     var obsTexto = $('<div>').html(data).text().trim();
                     finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
                     finalHtml += '<span class="text-bold" style="display:block;color:#555;margin-bottom:4px;"> ' + label + ':</span>';
@@ -896,19 +895,18 @@ MODAL ENVIAR EMAIL
             $('#wrapperTablaFacturas').fadeIn(200);
             $('#contenedorFiltrosFacturas').removeClass('fe-ui-hidden').css('display', '');
           },
-          "order": [[9, "desc"]], // Fecha
+          "order": [[8, "desc"]], // Fecha
           "columnDefs": [
             { "targets": 0, "responsivePriority": 1 },
-            { "targets": 10, "responsivePriority": 2, "orderable": false },
+            { "targets": 9, "responsivePriority": 2, "orderable": false },
             { "targets": 1, "responsivePriority": 3 },
             { "targets": 2, "responsivePriority": 4 },
-            { "targets": 3, "responsivePriority": 5 },
-            { "targets": 4, "responsivePriority": 6, "orderable": false },
-            { "targets": 5, "responsivePriority": 7 },
-            { "targets": 6, "responsivePriority": 8, "orderable": false },
-            { "targets": 7, "responsivePriority": 9 },
-            { "targets": 8, "responsivePriority": 10, "orderable": false },
-            { "targets": 9, "responsivePriority": 11 }
+            { "targets": 3, "responsivePriority": 5, "orderable": false },
+            { "targets": 4, "responsivePriority": 6 },
+            { "targets": 5, "responsivePriority": 7, "orderable": false },
+            { "targets": 6, "responsivePriority": 8 },
+            { "targets": 7, "responsivePriority": 9, "orderable": false },
+            { "targets": 8, "responsivePriority": 10 }
           ],
           "language": {
             "sProcessing": "Procesando...",

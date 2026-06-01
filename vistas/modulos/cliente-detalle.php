@@ -260,7 +260,7 @@ function obtenerValor($cliente, $campo, $default = '') {
                                 <div class="input-group">
                                     <span class="input-group-addon"><i class="fa fa-flag"></i></span>
                                     <select class="form-control"
-                                            name="<?php echo $modoEdicion ? 'editarEstado' : 'nuevoEstatus'; ?>">
+                                             name="<?php echo $modoEdicion ? 'editarEstado' : 'nuevoEstatus'; ?>">
                                         <?php
                                         $campoFormEstatus = $modoEdicion ? 'editarEstado' : 'nuevoEstatus';
                                         $estadoActual = obtenerValorForm($campoFormEstatus, 'estatus', $datosSession, $cliente, 'nuevo');
@@ -283,6 +283,36 @@ function obtenerValor($cliente, $campo, $default = '') {
                             </div>
                         </div>
                     </div>
+
+                    <?php if ($modoEdicion): ?>
+                    <div class="row">
+                        <!-- Última compra -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Última Compra</label>
+                                <div class="input-group">
+                                    <span class="input-group-addon"><i class="fa fa-shopping-cart"></i></span>
+                                    <input type="text" class="form-control" 
+                                           value="<?php echo obtenerValorForm('', 'ultima_compra', $datosSession, $cliente); ?>" 
+                                           readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ingreso al sistema -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Ingreso al Sistema</label>
+                                <div class="input-group">
+                                    <span class="input-group-addon"><i class="fa fa-calendar-check-o"></i></span>
+                                    <input type="text" class="form-control" 
+                                           value="<?php echo obtenerValorForm('', 'fecha', $datosSession, $cliente); ?>" 
+                                           readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
 

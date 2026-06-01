@@ -214,22 +214,7 @@ $totalProductos = 0;
                                     </div>
                                 </div>
 
-                                <!--=====================================
-                      ENTRADA PARA QUIEN RECIBE
-                      ======================================-->
-                                <div class="row">
-                                    <div class="col-xs-12">
-                                        <div class="form-group">
-                                            <label>Nombre de quien recibe</label>
-                                            <div class="input-group">
-                                                <span class="input-group-addon"><i class="fa fa-user-circle"></i></span>
-                                                <input type="text" class="form-control" id="recibe" name="recibe"
-                                                    placeholder="Nombre de quien recibe (opcional)"
-                                                    value="<?php echo isset($venta['recibe']) ? htmlspecialchars($venta['recibe']) : ''; ?>">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+
 
                                 <!--=====================================
                       PRODUCTOS PRE-CARGADOS DE LA ORDEN

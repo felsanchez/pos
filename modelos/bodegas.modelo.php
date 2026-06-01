@@ -37,7 +37,7 @@ class ModeloBodegas
 			$stmt->execute();
 			return $stmt->fetch();
 		} else {
-			$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla ORDER BY id ASC");
+			$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla ORDER BY nombre ASC");
 			$stmt->execute();
 			return $stmt->fetchAll();
 		}

@@ -35,11 +35,9 @@ class ControladorProductos
 			2 => 'p.descripcion',
 			3 => 'c.categoria',
 			4 => 'p.stock',
-			5 => 't.nombre',
-			6 => 'p.precio_venta',
-			7 => 'prov.nombre',
-			8 => 'p.fecha',
-			9 => 'p.id'
+			5 => 'p.precio_venta',
+			6 => 'prov.nombre',
+			7 => 'p.id'
 		);
 
 		$where = " WHERE 1=1 ";
@@ -229,7 +227,7 @@ class ControladorProductos
 		}
 
 		// Obtener datos
-		$idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+		$idBodegaActiva = isset($params["idBodega"]) && !empty($params["idBodega"]) ? intval($params["idBodega"]) : (isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1);
 		$productos = ModeloProductos::mdlMostrarProductosServerSide($tabla, $where, $order, $limit, $idBodegaActiva);
 		$totalData = ModeloProductos::mdlGetTotalProductos($tabla, " WHERE 1=1 ", $idBodegaActiva);
 		$totalFiltered = ModeloProductos::mdlGetTotalProductos($tabla, $where, $idBodegaActiva);

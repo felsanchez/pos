@@ -639,9 +639,9 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 	=============================================*/
 	static public function mdlActualizarStockBodega($idProducto, $idBodega, $cantidad)
 	{
-		$stmt = Conexion::conectar()->prepare("INSERT INTO productos_bodegas (id_producto, id_bodega, stock) 
-											   VALUES (:id_producto, :id_bodega, :stock)
-											   ON DUPLICATE KEY UPDATE stock = :stock");
+		$stmt = Conexion::conectar()->prepare("INSERT INTO productos_bodegas (id_producto, id_bodega, stock, estado) 
+											   VALUES (:id_producto, :id_bodega, :stock, 1)
+											   ON DUPLICATE KEY UPDATE stock = :stock, estado = 1");
 
 		$stmt->bindParam(":id_producto", $idProducto, PDO::PARAM_INT);
 		$stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
@@ -659,9 +659,9 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 	=============================================*/
 	static public function mdlActualizarStockVarianteBodega($idVariante, $idBodega, $cantidad)
 	{
-		$stmt = Conexion::conectar()->prepare("INSERT INTO productos_variantes_bodegas (id_variante, id_bodega, stock) 
-											   VALUES (:id_variante, :id_bodega, :stock)
-											   ON DUPLICATE KEY UPDATE stock = :stock");
+		$stmt = Conexion::conectar()->prepare("INSERT INTO productos_variantes_bodegas (id_variante, id_bodega, stock, estado) 
+											   VALUES (:id_variante, :id_bodega, :stock, 1)
+											   ON DUPLICATE KEY UPDATE stock = :stock, estado = 1");
 
 		$stmt->bindParam(":id_variante", $idVariante, PDO::PARAM_INT);
 		$stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);

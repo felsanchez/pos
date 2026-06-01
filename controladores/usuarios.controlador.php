@@ -71,6 +71,18 @@ class ControladorUsuarios
 
 						if ($respuesta["estado"] == 1) {
 
+							// 🔹 Verificar si la sucursal del usuario está activa
+							require_once "modelos/bodegas.modelo.php";
+							$bodegaUsuario = ModeloBodegas::mdlMostrarBodegas("bodegas", "id", $respuesta["id_bodega"]);
+							if ($bodegaUsuario && $bodegaUsuario["estado"] == 0) {
+								echo '<br><div class="alert alert-danger">
+										<i class="fa fa-exclamation-triangle"></i>
+										<strong>Acceso Denegado.</strong><br>
+										La sucursal asociada a tu usuario está temporalmente desactivada. Contacta al administrador.
+									  </div>';
+								return;
+							}
+
 							// LOGIN EXITOSO - Limpiar intentos fallidos
 							RateLimiter::clearAttempts($ip);
 

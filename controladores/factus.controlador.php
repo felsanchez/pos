@@ -1132,40 +1132,36 @@ class ControladorFactus
 					Logger::debug("FALLBACK TRIGGERED: O-23/O-47 detectado por strpos\n");
 				}
 
-				$isJuridica = (trim(strtolower($cliente['tipo_persona'] ?? 'natural')) == 'juridica') || $tieneResponsabilidadJuridica;
+				$isJuridica = (trim(strtolower($cliente['tipo_persona'] ?? 'natural')) == 'juridica');
 
-				$isJuridica = (trim(strtolower($cliente['tipo_persona'] ?? 'natural')) == 'juridica') || $tieneResponsabilidadJuridica;
+				// 3. Tributo del Cliente
+				$tieneResponsabilidadIVA = !empty(array_intersect($codes, ['O-13', 'O-15', 'O-23', 'O-47']));
+				$tributeIdCliente = $tieneResponsabilidadIVA ? "18" : ($isJuridica && !in_array('ZY', $codes) ? "18" : "21");
 
-				// 3. Calcular DV y Definir IDs según Tipo
-				$dv = $cliente['digito_verificacion'] ?? '0';
-
-				// Si es Jurídica o si el documento es NIT (31), recalcular DV siempre por seguridad
-				if ($isJuridica || $cliente['tipo_documento_id'] == 31 || $cliente['tipo_documento_id'] == 3) { // 3 or 31 usually NIT
-					$dv = ModeloFactus::mdlCalcularDV($cliente['documento']);
+				// 4. Calcular DV si aplica (para Jurídicas o NIT)
+				$dv = $cliente['digito_verificacion'] ?? '';
+				if ($isJuridica || $cliente['tipo_documento_id'] == 6) { // 6 is database ID for NIT
+					$dv = (string) ModeloFactus::mdlCalcularDV($cliente['documento']);
+				} else {
+					$dv = '';
 				}
 
 				return array(
 					"identification" => $cliente['documento'] ?? '',
 					"dv" => $dv,
 					"company" => $isJuridica ? ($cliente['razon_social'] ?: $cliente['nombre']) : '',
-					"trade_name" => $cliente['nombre_comercial'] ?? '',
+					"trade_name" => $isJuridica ? ($cliente['nombre_comercial'] ?: $cliente['nombre']) : '',
 					"names" => $cliente['nombre'],
 					"address" => $cliente['direccion'] ?? 'Dirección no registrada',
 					"email" => $cliente['email'] ?? '',
 					"phone" => $cliente['telefono'] ?? '',
 
-
 					// IDs Inferidos
-					// 1: Juridica, 2: Natural. Si es Juridica por tipo_persona o por responsabilidades, usamos 1.
-					// PERO si es natural con responsabilidades (O-23), Factus a veces requiere NIT. 
-					// Sin embargo, si el usuario seleccionó Cédula (3), debemos respetar eso.
-					// La lógica anterior forzaba "6" (NIT) si detectaba responsabilidades, lo cual es incorrecto para naturales responsables de IVA.
-					"legal_organization_id" => (trim(strtolower($cliente['tipo_persona'] ?? 'natural')) == 'juridica') ? "1" : "2",
-					"tribute_id" => $isJuridica ? "18" : "21",
+					"legal_organization_id" => $isJuridica ? "1" : "2",
+					"tribute_id" => $tributeIdCliente,
 
-					// Mapeo especial: Si el usuario selecciona NUIP (ID 9), enviar como Registro Civil (ID 1) a Factus
-					// Esto soluciona que la DIAN muestre el campo vacío para NUIP
-					"identification_document_id" => ($tipoDocumentoId == 9) ? "1" : $tipoDocumentoId,
+					// Mapeo especial: Si el usuario selecciona NUIP (ID 11), enviar como Registro Civil (ID 1) a Factus
+					"identification_document_id" => ($tipoDocumentoId == 11) ? "1" : $tipoDocumentoId,
 
 					"fiscal_responsibilities" => array_map(function ($c) {
 						return ['code' => $c];
@@ -1191,6 +1187,25 @@ class ControladorFactus
 				"error" => true,
 				"mensaje" => "Debe abrir caja antes de realizar esta operación."
 			);
+		}
+
+		// Mapear motivo a tipo_nota ENUM de base de datos
+		$tipoNotaBD = "anulacion_total"; // Valor por defecto
+		switch ($motivo) {
+			case '1':
+				$tipoNotaBD = "devolucion_parcial";
+				break;
+			case '2':
+				$tipoNotaBD = "anulacion_total";
+				break;
+			case '3':
+			case '5':
+			case '6':
+				$tipoNotaBD = "descuento_posterior";
+				break;
+			case '4':
+				$tipoNotaBD = "ajuste_precio";
+				break;
 		}
 
 		// 1. Validar venta original
@@ -1265,7 +1280,7 @@ class ControladorFactus
 			$datosGuardar = [
 				"id_venta_original" => $idVenta,
 				"numero_factura_original" => $venta["numero_factura"],
-				"tipo_nota" => "NC_referencia",
+				"tipo_nota" => $tipoNotaBD,
 				"motivo" => $motivo,
 				"productos" => json_encode($listaProductos),
 				"monto_total" => $venta["total"],
@@ -1340,7 +1355,7 @@ class ControladorFactus
 			$datosGuardar = [
 				"id_venta_original" => $idVenta,
 				"numero_factura_original" => $venta["numero_factura"],
-				"tipo_nota" => "NC_referencia",
+				"tipo_nota" => $tipoNotaBD,
 				"motivo" => $motivo,
 				"productos" => json_encode($listaProductos), // Guardar productos de la NC
 				"monto_total" => $venta["total"],
@@ -1608,10 +1623,15 @@ class ControladorFactus
 			}, $responsabilidadesFiscalesEmpresa);
 		}
 
+		// Determinar datos del emisor con fallback correcto para evitar vacíos
+		$nombreEmisor = !empty($configFactus['nombre_empresa']) ? $configFactus['nombre_empresa'] : ($config['nombre_empresa'] ?? 'Mi Empresa');
+		$direccionEmisor = !empty($configFactus['direccion_empresa']) ? $configFactus['direccion_empresa'] : ($config['direccion'] ?? 'Dirección');
+		$telefonoEmisor = !empty($configFactus['telefono_empresa']) ? $configFactus['telefono_empresa'] : ($config['telefono'] ?? '1234567');
+		$emailEmisor = !empty($configFactus['email_empresa']) ? $configFactus['email_empresa'] : ($config['correo'] ?? 'empresa@example.com');
+
 		// Preparar customer (igual que en factura)
 		$municipioClienteId = $cliente['municipio_id'] ?? '';
 		$tipoDocCliente = !empty($cliente['tipo_documento_id']) ? intval($cliente['tipo_documento_id']) : 6;
-		$tipoPersonaCliente = isset($cliente['tipo_persona']) && in_array(intval($cliente['tipo_persona']), [1, 2]) ? intval($cliente['tipo_persona']) : 2;
 
 		// Responsabilidades fiscales del cliente
 		$inputRespCliente = $cliente['responsabilidades_fiscales'] ?? 'R-99-PN';
@@ -1623,6 +1643,36 @@ class ControladorFactus
 		});
 		if (empty($codesCliente)) {
 			$codesCliente = ['R-99-PN'];
+		}
+
+		// FALLBACK: Si la regex falló pero contiene O-23 u O-47
+		if (strpos($inputRespCliente, 'O-23') !== false && !in_array('O-23', $codesCliente)) {
+			$codesCliente[] = 'O-23';
+		}
+		if (strpos($inputRespCliente, 'O-47') !== false && !in_array('O-47', $codesCliente)) {
+			$codesCliente[] = 'O-47';
+		}
+
+		$isJuridicaCliente = (trim(strtolower($cliente['tipo_persona'] ?? 'natural')) == 'juridica');
+		$tieneResponsabilidadIVA = !empty(array_intersect($codesCliente, ['O-13', 'O-15', 'O-23', 'O-47']));
+		$tributeIdCliente = $tieneResponsabilidadIVA ? "18" : ($isJuridicaCliente && !in_array('ZY', $codesCliente) ? "18" : "21");
+
+		$dvCliente = $cliente['digito_verificacion'] ?? '';
+		if ($isJuridicaCliente || $cliente['tipo_documento_id'] == 6) { // 6 is database ID for NIT
+			$dvCliente = (string) ModeloFactus::mdlCalcularDV($cliente['documento']);
+		} else {
+			$dvCliente = '';
+		}
+
+		$municipioFactusClienteId = "169"; // Default Bogotá (ID Factus 169)
+		if (!empty($municipioClienteId)) {
+			$db = Conexion::conectar();
+			$stmtMun = $db->prepare("SELECT id_factus FROM factus_municipios WHERE id_factus = :id_factus LIMIT 1");
+			$stmtMun->execute([':id_factus' => $municipioClienteId]);
+			$resMun = $stmtMun->fetch();
+			if ($resMun && !empty($resMun['id_factus'])) {
+				$municipioFactusClienteId = $resMun['id_factus'];
+			}
 		}
 
 
@@ -1672,10 +1722,10 @@ class ControladorFactus
 			"send_email" => true,
 
 			"establishment" => [
-				"name" => $configFactus['nombre_empresa'] ?? $config['nombre_empresa'],
-				"address" => $configFactus['direccion_empresa'] ?? $config['direccion'],
-				"phone_number" => $configFactus['telefono_empresa'] ?? $config['telefono'],
-				"email" => $configFactus['email_empresa'] ?? $config['correo'],
+				"name" => $nombreEmisor,
+				"address" => $direccionEmisor,
+				"phone_number" => $telefonoEmisor,
+				"email" => $emailEmisor,
 				"municipality_id" => $municipioEmpresaId,
 				"merchant_registration" => $configFactus['registro_mercantil'] ?? '',
 				"economic_activity_code" => $configFactus['actividad_economica'] ?? '',
@@ -1684,21 +1734,21 @@ class ControladorFactus
 			],
 
 			"customer" => [
-				"identification" => $cliente['documento'],
-				"dv" => $cliente['dv'] ?? '',
-				"company" => $cliente['nombre'],
-				"trade_name" => $cliente['nombre'],
+				"identification" => $cliente['documento'] ?? '',
+				"dv" => $dvCliente,
+				"company" => $isJuridicaCliente ? ($cliente['razon_social'] ?: $cliente['nombre']) : '',
+				"trade_name" => $isJuridicaCliente ? ($cliente['nombre_comercial'] ?: $cliente['nombre']) : '',
 				"names" => $cliente['nombre'],
-				"address" => $cliente['direccion'],
-				"email" => $cliente['email'],
-				"phone" => $cliente['telefono'],
-				"legal_organization_id" => $tipoPersonaCliente,
-				"tribute_id" => "18", // Default ZZ para régimen simplificado
-				"identification_document_id" => $tipoDocCliente,
+				"address" => $cliente['direccion'] ?? 'Dirección no registrada',
+				"email" => $cliente['email'] ?? '',
+				"phone" => $cliente['telefono'] ?? '',
+				"legal_organization_id" => $isJuridicaCliente ? "1" : "2",
+				"tribute_id" => $tributeIdCliente,
+				"identification_document_id" => ($tipoDocCliente == 11) ? "1" : $tipoDocCliente,
 				"fiscal_responsibilities" => array_map(function ($c) {
 					return ['code' => $c];
 				}, $codesCliente),
-				"municipality_id" => $municipioClienteId
+				"municipality_id" => $municipioFactusClienteId
 			],
 
 			"items" => $items
@@ -2160,15 +2210,15 @@ class ControladorFactus
 			"provider" => [
 				"identification" => $proveedor['documento'],
 				"dv" => $dv,
-				"company" => ($tipoOrganizacion == "1") ? $proveedor['nombre'] : '',
-				"trade_name" => $proveedor['marca'] ?? $proveedor['nombre'], // nombre comercial
-				"names" => $proveedor['nombre'],
-				"address" => $proveedor['direccion'] ?? 'Dirección',
-				"email" => $proveedor['correo'] ?? 'correo@ejemplo.com',
-				"phone" => $proveedor['celular'] ?? '000000',
+				"company" => ($tipoOrganizacion == "1") ? (!empty($proveedor['nombre']) ? $proveedor['nombre'] : 'Proveedor') : '',
+				"trade_name" => !empty($proveedor['marca']) ? $proveedor['marca'] : (!empty($proveedor['nombre']) ? $proveedor['nombre'] : 'Proveedor'),
+				"names" => !empty($proveedor['nombre']) ? $proveedor['nombre'] : 'Proveedor',
+				"address" => !empty($proveedor['direccion']) ? $proveedor['direccion'] : 'Dirección no registrada',
+				"email" => !empty($proveedor['correo']) ? $proveedor['correo'] : 'correo@ejemplo.com',
+				"phone" => !empty($proveedor['celular']) ? $proveedor['celular'] : '000000',
 				"legal_organization_id" => strval($tipoOrganizacion),
 				"tribute_id" => "21", // ZZ No responsable de IVA
-				"identification_document_id" => strval($tipoDocumentoId),
+				"identification_document_id" => strval(($tipoDocumentoId == 11) ? "1" : $tipoDocumentoId),
 				"municipality_id" => strval(!empty($proveedor['municipio_id']) ? $proveedor['municipio_id'] : ($configFactus['municipio_id'] ?? '981')),
 				"country_code" => "CO"
 			],

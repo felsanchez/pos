@@ -224,25 +224,7 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
                 </div>
 
 
-                <!--=====================================
-                      ENTRADA PARA QUIEN RECIBE
-                      ======================================-->
 
-                <div class="form-group">
-
-                  <label>Nombre de quien recibe</label>
-
-                  <div class="input-group">
-
-                    <span class="input-group-addon"><i class="fa fa-user-circle"></i></span>
-
-                    <input type="text" class="form-control" id="recibe" name="recibe"
-                      placeholder="Nombre de quien recibe (opcional)"
-                      value="<?php echo isset($venta["recibe"]) ? $venta["recibe"] : ''; ?>">
-
-                  </div>
-
-                </div>
 
 
                 <!--=====================================

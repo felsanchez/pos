@@ -46,6 +46,7 @@ $(document).ready(function () {
 				{ "targets": 2, "responsivePriority": 3 },
 				{ "targets": 3, "responsivePriority": 4 }
 			],
+			"order": [[1, "asc"]],
 			"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
 			"language": {
 				"sProcessing": "Procesando...",
@@ -99,29 +100,49 @@ $(".tablaBodegas").on("click", ".btnEditarBodega", function(){
 })
 
 /*=============================================
-ELIMINAR BODEGA
+ACTIVAR BODEGA
 =============================================*/
-$(".tablaBodegas").on("click", ".btnEliminarBodega", function(){
+$(".tablaBodegas").on("click", ".btnActivarBodega", function(){
 
 	var idBodega = $(this).attr("idBodega");
+	var estadoBodega = $(this).attr("estadoBodega");
+	var boton = $(this);
 
-	swal({
-		title: '¿Está seguro de borrar la sucursal?',
-		text: "¡Si no lo está puede cancelar la acción!",
-		type: 'warning',
-		showCancelButton: true,
-		confirmButtonColor: '#3085d6',
-		cancelButtonColor: '#d33',
-		cancelButtonText: 'Cancelar',
-		confirmButtonText: 'Si, borrar sucursal!'
-	}).then(function(result){
+	var datos = new FormData();
+	datos.append("activarId", idBodega);
+	datos.append("activarBodega", estadoBodega);
 
-		if(result.value){
+	$.ajax({
+		url: "ajax/bodegas.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		success: function(respuesta){
 
-			window.location = "index.php?ruta=bodegas&idBodega="+idBodega;
+			if (estadoBodega == 0) {
+				boton.removeClass('btn-success').addClass('btn-danger');
+				boton.html('Desactivado');
+				boton.attr('estadoBodega', 1);
+			} else {
+				boton.removeClass('btn-danger').addClass('btn-success');
+				boton.html('Activado');
+				boton.attr('estadoBodega', 0);
+			}
+			
+			swal({
+				title: "¡Estado actualizado!",
+				text: "El estado de la sucursal ha sido cambiado correctamente.",
+				type: "success",
+				confirmButtonText: "Cerrar"
+			}).then(function(result) {
+				if (result.value) {
+					window.location = "bodegas";
+				}
+			});
 
 		}
-
 	})
 
 })

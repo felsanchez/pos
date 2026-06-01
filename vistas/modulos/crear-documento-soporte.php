@@ -220,18 +220,24 @@ if ($ultimoDS) {
                                 <!-- Método de Pago -->
                                 <div class="form-group">
                                     <label>Método de Pago</label>
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="fa fa-credit-card"></i></span>
-                                        <select class="form-control" id="nuevoMetodoPagoDS" name="nuevoMetodoPagoDS"
-                                            required>
-                                            <option value="">Seleccione método de pago</option>
-                                            <?php
-                                            foreach ($mediosPago as $medio) {
-                                                echo '<option value="' . $medio . '">' . $medio . '</option>';
-                                            }
-                                            ?>
-                                        </select>
+                                    <div class="row">
+                                        <div class="col-xs-6" style="padding-right:0px">
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i class="fa fa-credit-card"></i></span>
+                                                <select class="form-control" id="nuevoMetodoPagoDS" name="selectMetodoPagoDS" required>
+                                                    <option value="">Seleccione método de pago</option>
+                                                    <?php
+                                                    foreach ($mediosPago as $medio) {
+                                                        $medio = trim($medio);
+                                                        echo '<option value="' . $medio . '">' . $medio . '</option>';
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="cajasMetodoPagoDS"></div>
                                     </div>
+                                    <input type="hidden" id="listaMetodoPagoDS" name="nuevoMetodoPagoDS">
                                 </div>
 
                                 <hr>

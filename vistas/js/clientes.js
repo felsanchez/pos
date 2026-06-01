@@ -121,15 +121,13 @@ $(document).ready(function () {
     "dom": '<"row"<"col-sm-6"l><"col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
     "columnDefs": [
       { "targets": 0, "responsivePriority": 1 }, // Nombre
-      { "targets": 8, "responsivePriority": 2, "orderable": false }, // Acciones
+      { "targets": 7, "responsivePriority": 2, "orderable": false, "render": function (data, type, row) { return row[8]; } }, // Acciones
       { "targets": 1, "responsivePriority": 3 }, // Documento
       { "targets": 2, "responsivePriority": 4 }, // Email
       { "targets": 3, "responsivePriority": 5 }, // Teléfono
       { "targets": 4, "responsivePriority": 6 }, // Dirección
       { "targets": 5, "responsivePriority": 7 }, // Estado
-      { "targets": 6, "responsivePriority": 8 }, // Notas
-      { "targets": 7, "responsivePriority": 9 }, // Última compra
-      { "targets": 9, "responsivePriority": 10 } // Ingreso al sistema
+      { "targets": 6, "responsivePriority": 8 }  // Notas
     ],
     "drawCallback": function (settings) {
       if (typeof inicializarPlaceholdersClientes === "function") {

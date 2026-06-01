@@ -48,6 +48,30 @@ class AjaxBodegas
 			echo "error";
 		}
 	}
+
+	/*=============================================
+	ACTIVAR BODEGA
+	=============================================*/
+	public $activarId;
+	public $activarBodega;
+
+	public function ajaxActivarBodega()
+	{
+		$tabla = "bodegas";
+		$item1 = "estado";
+		$valor1 = $this->activarBodega;
+		$item2 = "id";
+		$valor2 = $this->activarId;
+
+		// Proteger la Bodega Principal (ID 1)
+		if ($valor2 == 1 && $valor1 == 0) {
+			echo "error_bodega_principal";
+			return;
+		}
+
+		$respuesta = ModeloBodegas::mdlActualizarBodega($tabla, $item1, $valor1, $item2, $valor2);
+		echo $respuesta;
+	}
 }
 
 /*=============================================
@@ -66,4 +90,14 @@ if (isset($_POST["ingresarId"])) {
 	$ingresar = new AjaxBodegas();
 	$ingresar->ingresarId = $_POST["ingresarId"];
 	$ingresar->ajaxIngresarSucursal();
+}
+
+/*=============================================
+ACTIVAR BODEGA
+=============================================*/
+if (isset($_POST["activarId"])) {
+	$activar = new AjaxBodegas();
+	$activar->activarId = $_POST["activarId"];
+	$activar->activarBodega = $_POST["activarBodega"];
+	$activar->ajaxActivarBodega();
 }

@@ -216,9 +216,7 @@ $editarCliente->ctrEditarCliente();
               <!--<th><i class="fa fa-pencil-square"></i> Notas</th>-->
               <th></i> Notas</th>
               <!--<th>Total compras</th>-->
-              <th>Última compra</th>
               <th>Acciones</th>
-              <th>Ingreso al sistema</th>
             </tr>
           </thead>
           <tbody>

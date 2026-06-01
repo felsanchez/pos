@@ -200,6 +200,21 @@ if ($modoEdicion) {
                                     </div>
                                 </div>
                             </div>
+
+                            <?php if ($modoEdicion): ?>
+                            <div class="row">
+                                <!-- Fecha de Agregado -->
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Fecha de Agregado</label>
+                                        <div class="input-group">
+                                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                            <input type="text" class="form-control" value="<?php echo $producto['fecha']; ?>" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
 

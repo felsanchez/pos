@@ -271,3 +271,5 @@ MODAL VER DETALLE TRASLADO
     </div>
 
   </div>
+
+</div>

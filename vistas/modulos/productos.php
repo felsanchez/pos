@@ -116,10 +116,8 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
                 <th>Descripción</th>
                 <th>Categoría</th>
                 <th>Stock</th>
-                <th>Impuesto</th>
                 <th>Precio de Venta</th>
                 <th>Proveedor</th>
-                <th>Agregado</th>
                 <th>Acciones</th>
               </tr>
             </thead>

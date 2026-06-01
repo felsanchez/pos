@@ -208,11 +208,13 @@ class AjaxProductos
             $valor = $this->idProducto;
             $orden = "id";
 
+            $idBodega = isset($_POST["idBodega"]) && !empty($_POST["idBodega"]) ? intval($_POST["idBodega"]) : null;
+
             // LOGGING DEBUG
             $logFile = fopen("debug_ajax_productos.txt", "a");
-            fwrite($logFile, "Querying - Item: " . $item . ", Valor: " . $valor . "\n");
+            fwrite($logFile, "Querying - Item: " . $item . ", Valor: " . $valor . ", idBodega: " . ($idBodega ?? 'null') . "\n");
 
-            $respuesta = ControladorProductos::ctrMostrarProductos($item, $valor, $orden);
+            $respuesta = ControladorProductos::ctrMostrarProductos($item, $valor, $orden, $idBodega);
 
             // PATCH: Handle list response vs single row
             if (is_array($respuesta) && isset($respuesta[0]) && is_array($respuesta[0])) {
@@ -433,7 +435,7 @@ OBTENER VARIANTES DE UN PRODUCTO
 if (isset($_POST["obtenerVariantesProducto"])) {
 
     $idProducto = $_POST["obtenerVariantesProducto"];
-    $idBodega = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+    $idBodega = isset($_POST["idBodega"]) && !empty($_POST["idBodega"]) ? intval($_POST["idBodega"]) : (isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1);
 
     // Obtener variantes del producto con el stock de la bodega activa
     $variantes = ModeloProductos::mdlObtenerVariantesProducto($idProducto, $idBodega);

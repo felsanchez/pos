@@ -235,7 +235,14 @@ $etiquetaDocumento = "Factura";
           #<?php echo (!empty($venta["numero_factura"]) ? $venta["numero_factura"] : ($venta["codigo"] ?? '')); ?></b><br>
         <br>
         <b>Vendedor:</b> <?php echo $vendedor["nombre"] ?? ''; ?><br>
-        <b>Método de Pago:</b> <?php echo $venta["metodo_pago"] ?? ''; ?><br>
+        <b>Método de Pago:</b>
+        <?php
+        $partesMetodo = explode("-", $venta["metodo_pago"] ?? "");
+        echo htmlspecialchars($partesMetodo[0]);
+        if (isset($partesMetodo[1]) && !empty($partesMetodo[1])) {
+            echo ' -' . htmlspecialchars($partesMetodo[1]);
+        }
+        ?><br>
       </div>
       <!-- /.col -->
     </div>
@@ -306,13 +313,28 @@ $etiquetaDocumento = "Factura";
               $impuestoPorcentaje = floatval($infoP["tasa_impuesto"]);
             }
 
+            $impuestoNombre = "";
+            if ($infoP && !empty($infoP["tributo_id"])) {
+              if (!class_exists("ModeloFactus")) {
+                require_once "modelos/factus.modelo.php";
+              }
+              $tributo = ModeloFactus::mdlMostrarTributo($infoP["tributo_id"]);
+              if ($tributo) {
+                $impuestoNombre = $tributo["nombre"];
+              }
+            }
+            if (empty($impuestoNombre)) {
+              $impuestoNombre = ($impuestoPorcentaje == 8) ? "INC" : "IVA";
+            }
+
             $productosProcesados[$key] = [
               "id" => $prod["id"],
               "descripcion" => $prod["descripcion"] ?? ($infoP["descripcion"] ?? "Producto"),
               "cantidad" => $cantidad,
               "precio" => $precio,
               "total" => $total,
-              "impuesto" => $impuestoPorcentaje
+              "impuesto" => $impuestoPorcentaje,
+              "impuesto_nombre" => $impuestoNombre
             ];
 
             if ($total !== null) {
@@ -354,6 +376,7 @@ $etiquetaDocumento = "Factura";
             $cantidad = $prod["cantidad"];
             $totalProductoConImpuesto = $prod["total"];
             $impuestoPorcentaje = $prod["impuesto"];
+            $impuestoNombre = $prod["impuesto_nombre"] ?? "";
 
             // Cálculos
             $baseItemBruta = $totalProductoConImpuesto / (1 + ($impuestoPorcentaje / 100));
@@ -379,7 +402,8 @@ $etiquetaDocumento = "Factura";
               "cantidad" => $cantidad,
               "precio" => $precioUnitario,
               "total" => $totalProductoConImpuesto,
-              "impuesto_porc" => $impuestoPorcentaje
+              "impuesto_porc" => $impuestoPorcentaje,
+              "impuesto_nombre" => $impuestoNombre
             ];
           }
         }
@@ -404,7 +428,7 @@ $etiquetaDocumento = "Factura";
                 <td><?php echo $item["descripcion"]; ?></td>
                 <td><?php echo $item["cantidad"]; ?></td>
                 <td>$<?php echo number_format($item["precio"], 2); ?></td>
-                <td><?php echo $item["impuesto_porc"]; ?>%</td>
+                <td><?php echo (!empty($item["impuesto_nombre"]) ? $item["impuesto_nombre"] . " " : "") . $item["impuesto_porc"]; ?>%</td>
                 <td>$<?php echo number_format($item["total"], 2); ?></td>
               </tr>
             <?php endforeach; ?>

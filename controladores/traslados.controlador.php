@@ -149,12 +149,20 @@ class ControladorTraslados
                     if ($res1 != "ok") {
                         throw new Exception("Error al actualizar el stock de la variante ID " . $item["id_variante"] . " en origen.");
                     }
+
+                    // Sincronizar el stock del producto base en la bodega de origen
+                    $stmtSincO = $db->prepare("SELECT SUM(pvb.stock) as total FROM productos_variantes_bodegas pvb INNER JOIN productos_variantes pv ON pvb.id_variante = pv.id WHERE pv.id_producto = :id_producto AND pvb.id_bodega = :id_bodega AND pv.estado = 1");
+                    $stmtSincO->execute([":id_producto" => $item["id_producto"], ":id_bodega" => $idOrigen]);
+                    $resSincO = $stmtSincO->fetch();
+                    $stockBaseO = ($resSincO && $resSincO["total"]) ? intval($resSincO["total"]) : 0;
+                    ModeloProductos::mdlActualizarStockBodega($item["id_producto"], $idOrigen, $stockBaseO);
                     
-                    ControladorMovimientos::ctrRegistrarMovimiento("variante", $item["id_producto"], $item["id_variante"], $item["nombre_variante"], "traslado_salida", -$item["cantidad"], $traerVarianteO["stock"], $nuevoStockO, "Traslado #" . $traslado["codigo"], "", $idOrigen);
+                    $nombreCompletoVariante = $item["nombre_producto"] . (!empty($item["nombre_variante"]) ? " - " . $item["nombre_variante"] : "");
+                    ControladorMovimientos::ctrRegistrarMovimiento("variante", $item["id_producto"], $item["id_variante"], $nombreCompletoVariante, "traslado_salida", -$item["cantidad"], $traerVarianteO["stock"], $nuevoStockO, "Traslado #" . $traslado["codigo"], "", $idOrigen);
 
                     // 2. Destino: Aumentar
                     $traerVarianteD = ModeloProductos::mdlObtenerVariantePorId($item["id_variante"], $idDestino);
-                    $stockActualD = isset($traerVarianteD["stock"]) ? $traerVarianteD["stock"] : 0;
+                    $stockActualD = (is_array($traerVarianteD) && isset($traerVarianteD["stock"])) ? $traerVarianteD["stock"] : 0;
                     $nuevoStockD = $stockActualD + $item["cantidad"];
                     
                     $res2 = ModeloProductos::mdlActualizarStockVarianteBodega($item["id_variante"], $idDestino, $nuevoStockD);
@@ -162,7 +170,14 @@ class ControladorTraslados
                         throw new Exception("Error al actualizar el stock de la variante ID " . $item["id_variante"] . " en destino.");
                     }
 
-                    ControladorMovimientos::ctrRegistrarMovimiento("variante", $item["id_producto"], $item["id_variante"], $item["nombre_variante"], "traslado_entrada", $item["cantidad"], $stockActualD, $nuevoStockD, "Traslado #" . $traslado["codigo"], "", $idDestino);
+                    // Sincronizar el stock del producto base en la bodega de destino
+                    $stmtSincD = $db->prepare("SELECT SUM(pvb.stock) as total FROM productos_variantes_bodegas pvb INNER JOIN productos_variantes pv ON pvb.id_variante = pv.id WHERE pv.id_producto = :id_producto AND pvb.id_bodega = :id_bodega AND pv.estado = 1");
+                    $stmtSincD->execute([":id_producto" => $item["id_producto"], ":id_bodega" => $idDestino]);
+                    $resSincD = $stmtSincD->fetch();
+                    $stockBaseD = ($resSincD && $resSincD["total"]) ? intval($resSincD["total"]) : 0;
+                    ModeloProductos::mdlActualizarStockBodega($item["id_producto"], $idDestino, $stockBaseD);
+
+                    ControladorMovimientos::ctrRegistrarMovimiento("variante", $item["id_producto"], $item["id_variante"], $nombreCompletoVariante, "traslado_entrada", $item["cantidad"], $stockActualD, $nuevoStockD, "Traslado #" . $traslado["codigo"], "", $idDestino);
 
                 } else {
                     
@@ -178,11 +193,11 @@ class ControladorTraslados
                         throw new Exception("Error al actualizar el stock del producto ID " . $item["id_producto"] . " en origen.");
                     }
 
-                    ControladorMovimientos::ctrRegistrarMovimiento("producto", $item["id_producto"], null, $traerProductoO["descripcion"], "traslado_salida", -$item["cantidad"], $traerProductoO["stock"], $nuevoStockO, "Traslado #" . $traslado["codigo"], "", $idOrigen);
+                    ControladorMovimientos::ctrRegistrarMovimiento("producto", $item["id_producto"], null, $item["nombre_producto"], "traslado_salida", -$item["cantidad"], $traerProductoO["stock"], $nuevoStockO, "Traslado #" . $traslado["codigo"], "", $idOrigen);
 
                     // 2. Destino: Aumentar
                     $traerProductoD = ModeloProductos::mdlMostrarProductos("productos", "id", $item["id_producto"], "id", $idDestino);
-                    $stockActualD = isset($traerProductoD["stock"]) ? $traerProductoD["stock"] : 0;
+                    $stockActualD = (is_array($traerProductoD) && isset($traerProductoD["stock"])) ? $traerProductoD["stock"] : 0;
                     $nuevoStockD = $stockActualD + $item["cantidad"];
                     
                     $res2 = ModeloProductos::mdlActualizarStockBodega($item["id_producto"], $idDestino, $nuevoStockD);
@@ -190,7 +205,7 @@ class ControladorTraslados
                         throw new Exception("Error al actualizar el stock del producto ID " . $item["id_producto"] . " en destino.");
                     }
 
-                    ControladorMovimientos::ctrRegistrarMovimiento("producto", $item["id_producto"], null, $traerProductoD["descripcion"], "traslado_entrada", $item["cantidad"], $stockActualD, $nuevoStockD, "Traslado #" . $traslado["codigo"], "", $idDestino);
+                    ControladorMovimientos::ctrRegistrarMovimiento("producto", $item["id_producto"], null, $item["nombre_producto"], "traslado_entrada", $item["cantidad"], $stockActualD, $nuevoStockD, "Traslado #" . $traslado["codigo"], "", $idDestino);
                 }
             }
 

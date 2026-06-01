@@ -165,7 +165,6 @@ if ($xml) {
                 <th>Código</th>
                 <th>Cliente</th>
                 <th>Vendedor</th>
-                <th>Forma de pago</th>
                 <th>Imagen</th>
                 <th>Total</th>
                 <th><i class="fa fa-magic"></i> Notas del Cliente</th>

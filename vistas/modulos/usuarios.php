@@ -233,6 +233,9 @@ MODAL AGREGAR USUARIO
                       <?php 
                         $bodegas = ControladorBodegas::ctrMostrarBodegas(null, null);
                         foreach ($bodegas as $key => $value) {
+                          if ($value["estado"] == 0) {
+                            continue;
+                          }
                           echo '<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
                         }
                       ?>
@@ -390,6 +393,9 @@ MODAL EDITAR USUARIO
                       <?php 
                         $bodegas = ControladorBodegas::ctrMostrarBodegas(null, null);
                         foreach ($bodegas as $key => $value) {
+                          if ($value["estado"] == 0) {
+                            continue;
+                          }
                           echo '<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
                         }
                       ?>

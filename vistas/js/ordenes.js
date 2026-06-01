@@ -104,7 +104,7 @@ $(document).ready(function () {
 					if (!d.usuarioId) d.usuarioId = urlParams.get('usuario');
 				}
 			},
-			"order": [[8, "desc"]],
+			"order": [[7, "desc"]],
 			"responsive": {
 				"details": {
 					"type": "inline",
@@ -118,7 +118,7 @@ $(document).ready(function () {
 
 							var label = col.title || ('Columna ' + col.columnIndex);
 
-							if (col.columnIndex === 6 || col.columnIndex === 7) {
+							if (col.columnIndex === 5 || col.columnIndex === 6) {
 								finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
 								finalHtml += '<span class="text-bold" style="display:block; color:#555; margin-bottom:5px;">' + label + ':</span>';
 							} else {
@@ -126,7 +126,7 @@ $(document).ready(function () {
 								finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
 							}
 
-							if (col.columnIndex === 7) {
+							if (col.columnIndex === 6) {
 								var rowNode = api.row(rowIdx).node();
 								var idOrden = $(rowNode).attr('data-orden-id') || "";
 								var observacionText = $(rowNode).find('.celda-observacion').text().trim();
@@ -150,20 +150,19 @@ $(document).ready(function () {
 				var defs = [
 					{ "targets": 0, "responsivePriority": 1 },
 					{ "targets": 1, "responsivePriority": 2 },
-					{ "targets": 11, "responsivePriority": 3, "orderable": false },
+					{ "targets": 10, "responsivePriority": 3, "orderable": false, "render": function (data, type, row) { return row[11]; } }, // Acciones
 					{ "targets": 2, "responsivePriority": 4 },
-					{ "targets": 3, "responsivePriority": 5 },
-					{ "targets": 4, "responsivePriority": 6 },
-					{ "targets": 5, "responsivePriority": 7 },
-					{ "targets": 6, "responsivePriority": 8 },
-					{ "targets": 7, "responsivePriority": 9 },
-					{ "targets": 8, "responsivePriority": 10 },
-					{ "targets": 9, "responsivePriority": 11, "orderable": false },
-					{ "targets": 10, "responsivePriority": 12, "orderable": false }
+					{ "targets": 3, "responsivePriority": 6, "render": function (data, type, row) { return row[4]; } }, // Imagen
+					{ "targets": 4, "responsivePriority": 7, "render": function (data, type, row) { return row[5]; } }, // Total
+					{ "targets": 5, "responsivePriority": 8, "render": function (data, type, row) { return row[6]; } }, // Notas
+					{ "targets": 6, "responsivePriority": 9, "render": function (data, type, row) { return row[7]; } }, // Observación
+					{ "targets": 7, "responsivePriority": 10, "render": function (data, type, row) { return row[8]; } }, // Fecha
+					{ "targets": 8, "responsivePriority": 11, "orderable": false, "render": function (data, type, row) { return row[9]; } }, // Seguimiento
+					{ "targets": 9, "responsivePriority": 12, "orderable": false, "render": function (data, type, row) { return row[10]; } } // Convertir
 				];
 
 				if (seguimientoActivo == "0") {
-					defs.push({ "targets": 9, "visible": false });
+					defs.push({ "targets": 8, "visible": false });
 				}
 
 				return defs;

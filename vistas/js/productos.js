@@ -87,7 +87,7 @@ var table = $("table.tablaProductos").DataTable({
 			"render": function (data, type, row) { return row[3]; }
 		},
 		{
-			"targets": 9, // Acciones
+			"targets": 7, // Acciones
 			"data": null,
 			"responsivePriority": 2,
 			"orderable": false,
@@ -104,24 +104,16 @@ var table = $("table.tablaProductos").DataTable({
 			"render": function (data, type, row) { return row[5]; }
 		},
 		{
-			"targets": 6, // Precio Venta
+			"targets": 5, // Precio Venta
 			"responsivePriority": 7,
-			"render": function (data, type, row) { return row[7]; }
+			"render": function (data, type, row) { 
+				return '<code class="text-green" style="background-color: #f4fdf7;">' + row[7] + '</code>'; 
+			}
 		},
 		{
-			"targets": 5, // Impuesto
-			"responsivePriority": 8,
-			"render": function (data, type, row) { return row[6]; }
-		},
-		{
-			"targets": 7, // Proveedor
+			"targets": 6, // Proveedor
 			"responsivePriority": 9,
 			"render": function (data, type, row) { return row[8]; }
-		},
-		{
-			"targets": 8, // Fecha (Agregado)
-			"responsivePriority": 10,
-			"render": function (data, type, row) { return row[9]; }
 		}
 	],
 
