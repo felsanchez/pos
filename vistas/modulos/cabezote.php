@@ -133,6 +133,18 @@ $totalNoLeidas = ControladorNotificaciones::ctrContarNoLeidas();
 		z-index: 20000 !important;
 	}
 
+	/* Mantener el logo en estado mini (sin expandirse) cuando el menú lateral está abierto en Desktop */
+	@media (min-width: 768px) {
+		body:not(.sidebar-collapse) .main-header .logo .logo-lg {
+			display: none !important;
+		}
+		body:not(.sidebar-collapse) .main-header .logo .logo-mini {
+			display: block !important;
+			width: 50px !important;
+			float: left;
+		}
+	}
+
 	/* Optimización de cabecera móvil - Logo pequeño y elegante */
 	@media (max-width: 767px) {
 		.main-header .logo {
@@ -576,10 +588,10 @@ BARRA DE NAVEGACION
 		$('#formPerfilUsuario').on('submit', function (e) {
 			e.preventDefault();
 
-			var nombre = $('#perfilNombre').val().trim();
-			var email = $('#perfilEmail').val().trim();
-			var password = $('#perfilPassword').val();
-			var passwordConfirm = $('#perfilPasswordConfirm').val();
+			var nombre = $('#formPerfilUsuario #perfilNombre').val().trim();
+			var email = $('#formPerfilUsuario #perfilEmail').val().trim();
+			var password = $('#formPerfilUsuario #perfilPassword').val();
+			var passwordConfirm = $('#formPerfilUsuario #perfilPasswordConfirm').val();
 
 			// Validar nombre
 			if (nombre === '') {

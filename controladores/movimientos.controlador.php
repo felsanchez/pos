@@ -296,6 +296,8 @@ class ControladorMovimientos{
 				"venta" => '<span class="label label-success">Venta</span>',
 				"devolucion" => '<span class="label label-warning">Devolución</span>',
 				"eliminacion_venta" => '<span class="label label-danger">Eliminación Venta</span>',
+				"eliminacion_producto" => '<span class="label label-danger">Eliminación</span>',
+				"eliminacion_variante" => '<span class="label label-danger">Eliminación</span>',
 				"ajuste_manual" => '<span class="label label-default">Ajuste Manual</span>',
 				"creacion_producto" => '<span class="label label-primary">Creación</span>',
 				"creacion_variante" => '<span class="label label-info">Creación Variante</span>',

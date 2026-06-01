@@ -286,6 +286,8 @@ class ModeloActividades{
 
 //CUADRO ACTIVIDADES CON CLIENTE********************************************************
 		static public function mdlMostrarActividadesConCliente($tabla, $item, $valor, $idBodega = null){
+    $bodegaFiltro = ($idBodega !== null) ? " AND a.id_bodega = " . intval($idBodega) : "";
+    
     if($item != null){
         $stmt = Conexion::conectar()->prepare("
             SELECT 
@@ -295,14 +297,19 @@ class ModeloActividades{
             FROM $tabla a
             LEFT JOIN clientes c ON a.id_cliente = c.id
             LEFT JOIN usuarios u ON a.id_user = u.id
-            WHERE a.$item = :$item
+            WHERE a.$item = :$item $bodegaFiltro
         ");
         $stmt->bindParam(":".$item, $valor, PDO::PARAM_STR);
         $stmt->execute();
-        return $stmt->fetch();
+        
+        if($item == "id"){
+            return $stmt->fetch();
+        } else {
+            return $stmt->fetchAll();
+        }
     } 
     else{
-        $bodegaFiltro = ($idBodega !== null) ? "WHERE a.id_bodega = " . intval($idBodega) : "";
+        $bodegaFiltroSolo = ($idBodega !== null) ? "WHERE a.id_bodega = " . intval($idBodega) : "";
         $stmt = Conexion::conectar()->prepare("
             SELECT 
                 a.*, 
@@ -311,7 +318,7 @@ class ModeloActividades{
             FROM $tabla a
             LEFT JOIN clientes c ON a.id_cliente = c.id
             LEFT JOIN usuarios u ON a.id_user = u.id
-            $bodegaFiltro
+            $bodegaFiltroSolo
             ORDER BY a.id DESC
         ");
         $stmt->execute();

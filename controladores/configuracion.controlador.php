@@ -117,9 +117,10 @@ class ControladorConfiguracion
 
 			$alertaGastosProximos = isset($_POST["alertaGastosProximos"]) ? 1 : 0;
 
-			$alertaAgenteIA = isset($_POST["alertaAgenteIA"]) ? 1 : 0;
+			$alertaAgenteIA = 1; // Siempre activado según requerimiento
 
-			$controlCaja = isset($_POST["controlCaja"]) ? 1 : 0;
+			$configActualGlobal = ModeloConfiguracion::mdlObtenerConfiguracion();
+			$controlCaja = $configActualGlobal["control_caja"];
 
 			$datos = array(
 				"nombre_empresa" => $_POST["nombreEmpresa"],

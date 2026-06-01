@@ -144,7 +144,7 @@
 <div class="login-box">
 
   <div class="login-logo">
-    <img src="vistas/img/plantilla/icono-negro11.png" class="img-responsive">
+    <img src="vistas/img/plantilla/logo-ppal.png" class="img-responsive">
   </div>
 
   <div class="login-box-body">

@@ -21,6 +21,13 @@ $moneda = !empty($configuracion["moneda"]) ? $configuracion["moneda"] : "$";
   </section>
 
   <section class="content">
+
+    <div class="alert alert-warning alert-dismissible">
+      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+      <h4><i class="icon fa fa-warning"></i> Atención!</h4>
+      Los registros de cierres y arqueos de caja se eliminan automáticamente del sistema después de transcurrir <b>3 meses</b> desde su creación.
+    </div>
+
     <div class="box">
       <div class="box-header with-border">
         

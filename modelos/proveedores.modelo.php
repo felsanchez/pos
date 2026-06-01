@@ -163,16 +163,35 @@ class ModeloProveedores
 	static public function mdlContarProductosPorProveedor($idProveedor)
 	{
 
-		$stmt = Conexion::conectar()->prepare("SELECT COUNT(*) as total FROM productos WHERE id_proveedor = :id_proveedor");
+		$idBodega = isset($_SESSION["id_bodega"]) && !empty($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
+
+		$query = "SELECT COUNT(DISTINCT p.id) as total FROM productos p ";
+		$query .= " INNER JOIN productos_bodegas pb ON p.id = pb.id_producto AND pb.id_bodega = $idBodega ";
+		$query .= " WHERE p.id_proveedor = :id_proveedor AND p.eliminado = 0 AND pb.estado = 1";
+
+		$stmt = Conexion::conectar()->prepare($query);
 
 		$stmt->bindParam(":id_proveedor", $idProveedor, PDO::PARAM_INT);
 		$stmt->execute();
 		$resultado = $stmt->fetch();
 
 		return $resultado["total"];
+	}
 
-		$stmt->close();
-		$stmt = null;
+	/*=============================================
+	CONTAR PRODUCTOS ACTIVOS GLOBALES (PROVEEDORES)
+	=============================================*/
+	static public function mdlContarProductosActivosGlobales($idProveedor){ 
+		$stmt = Conexion::conectar()->prepare("
+			SELECT COUNT(DISTINCT p.id) 
+			FROM productos p 
+			JOIN productos_bodegas pb ON p.id = pb.id_producto 
+			JOIN bodegas b ON pb.id_bodega = b.id
+			WHERE p.id_proveedor = :id_proveedor AND p.eliminado = 0 AND pb.estado = 1 AND b.estado = 1
+		");
+		$stmt -> bindParam(":id_proveedor", $idProveedor, PDO::PARAM_INT); 
+		$stmt -> execute();
+		return $stmt -> fetchColumn();
 	}
 
 

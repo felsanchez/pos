@@ -101,9 +101,12 @@ class ModeloVariantes{
 
 	static public function mdlMostrarOpcionesVariantes($tabla, $item, $valor){
 
+		$idBodega = isset($_SESSION["id_bodega"]) && !empty($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
+		error_log("VARIANTE DEBUG - Session Bodega: " . (isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 'no-set') . ", resolved idBodega: " . $idBodega);
+
 		if($item != null){
 
-			$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE $item = :$item ORDER BY orden ASC");
+			$stmt = Conexion::conectar()->prepare("SELECT ov.*, (SELECT COUNT(DISTINCT pvo.id_producto_variante) FROM productos_variantes_opciones pvo JOIN productos_variantes pv ON pvo.id_producto_variante = pv.id JOIN productos p ON pv.id_producto = p.id INNER JOIN productos_bodegas pb ON p.id = pb.id_producto AND pb.id_bodega = $idBodega INNER JOIN productos_variantes_bodegas pvb ON pv.id = pvb.id_variante AND pvb.id_bodega = $idBodega WHERE pvo.id_opcion_variante = ov.id AND p.eliminado = 0 AND pb.estado = 1 AND pv.estado = 1 AND pvb.estado = 1) as productos_asociados FROM $tabla ov WHERE ov.$item = :$item ORDER BY ov.orden ASC");
 
 			$stmt -> bindParam(":".$item, $valor, PDO::PARAM_STR);
 
@@ -113,7 +116,7 @@ class ModeloVariantes{
 
 		}else{
 
-			$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla ORDER BY orden ASC");
+			$stmt = Conexion::conectar()->prepare("SELECT ov.*, (SELECT COUNT(DISTINCT pvo.id_producto_variante) FROM productos_variantes_opciones pvo JOIN productos_variantes pv ON pvo.id_producto_variante = pv.id JOIN productos p ON pv.id_producto = p.id INNER JOIN productos_bodegas pb ON p.id = pb.id_producto AND pb.id_bodega = $idBodega INNER JOIN productos_variantes_bodegas pvb ON pv.id = pvb.id_variante AND pvb.id_bodega = $idBodega WHERE pvo.id_opcion_variante = ov.id AND p.eliminado = 0 AND pb.estado = 1 AND pv.estado = 1 AND pvb.estado = 1) as productos_asociados FROM $tabla ov ORDER BY ov.orden ASC");
 
 			$stmt -> execute();
 
@@ -320,16 +323,20 @@ class ModeloVariantes{
 
 
     /*=============================================
-    VERIFICAR SI TIPO DE VARIANTE ESTÁ EN USO
+    VERIFICAR SI TIPO DE VARIANTE ESTÁ EN USO (ACTIVO)
     =============================================*/ 
 
     static public function mdlVerificarUsoTipoVariante($idTipo){ 
 
         $stmt = Conexion::conectar()->prepare("
-            SELECT COUNT(*) as total
+            SELECT COUNT(DISTINCT pvo.id_producto_variante) as total
             FROM productos_variantes_opciones pvo
             INNER JOIN opciones_variantes ov ON pvo.id_opcion_variante = ov.id
+            JOIN productos_variantes pv ON pvo.id_producto_variante = pv.id
+            JOIN productos p ON pv.id_producto = p.id
+            JOIN productos_bodegas pb ON p.id = pb.id_producto
             WHERE ov.id_tipo_variante = :id_tipo
+            AND p.eliminado = 0 AND pb.estado = 1 AND pv.estado = 1
         ");
 
         $stmt->bindParam(":id_tipo", $idTipo, PDO::PARAM_INT);
@@ -342,25 +349,44 @@ class ModeloVariantes{
     }
 
     /*=============================================
-    VERIFICAR SI OPCIÓN DE VARIANTE ESTÁ EN USO
+    CONTAR USO GLOBAL DE OPCIÓN (PRODUCTOS ACTIVOS)
     =============================================*/ 
+    static public function mdlContarUsoGlobalOpcion($idOpcion){ 
+		$stmt = Conexion::conectar()->prepare("
+			SELECT COUNT(DISTINCT pvo.id_producto_variante) 
+			FROM productos_variantes_opciones pvo 
+			JOIN productos_variantes pv ON pvo.id_producto_variante = pv.id 
+			JOIN productos p ON pv.id_producto = p.id 
+			JOIN productos_bodegas pb ON p.id = pb.id_producto 
+            JOIN productos_variantes_bodegas pvb ON pv.id = pvb.id_variante AND pb.id_bodega = pvb.id_bodega
+            JOIN bodegas b ON pb.id_bodega = b.id
+			WHERE pvo.id_opcion_variante = :id_opcion 
+			AND p.eliminado = 0 AND pb.estado = 1 AND pv.estado = 1 AND pvb.estado = 1 AND b.estado = 1
+		");
+		$stmt->bindParam(":id_opcion", $idOpcion, PDO::PARAM_INT); 
+		$stmt->execute();
+		return $stmt->fetchColumn();
+    }
 
-    static public function mdlVerificarUsoOpcionVariante($tabla, $item, $valor){ 
-
-        $stmt = Conexion::conectar()->prepare("SELECT COUNT(*) as total FROM $tabla WHERE $item = :$item"); 
-
-        $stmt->bindParam(":".$item, $valor, PDO::PARAM_INT);
-
-        $stmt->execute(); 
-
-        $resultado = $stmt->fetch(); 
-
-        return $resultado["total"]; 
-
-        $stmt->close();
-
-        $stmt = null;
-
+    /*=============================================
+    CONTAR USO LOCAL DE OPCIÓN (PRODUCTOS ACTIVOS)
+    =============================================*/ 
+    static public function mdlContarUsoLocalOpcion($idOpcion){ 
+		$idBodega = isset($_SESSION["id_bodega"]) && !empty($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
+		$stmt = Conexion::conectar()->prepare("
+			SELECT COUNT(DISTINCT pvo.id_producto_variante) 
+			FROM productos_variantes_opciones pvo 
+			JOIN productos_variantes pv ON pvo.id_producto_variante = pv.id 
+			JOIN productos p ON pv.id_producto = p.id 
+			INNER JOIN productos_bodegas pb ON p.id = pb.id_producto AND pb.id_bodega = :id_bodega
+			INNER JOIN productos_variantes_bodegas pvb ON pv.id = pvb.id_variante AND pvb.id_bodega = :id_bodega
+			WHERE pvo.id_opcion_variante = :id_opcion 
+			AND p.eliminado = 0 AND pb.estado = 1 AND pv.estado = 1 AND pvb.estado = 1
+		");
+		$stmt->bindParam(":id_opcion", $idOpcion, PDO::PARAM_INT); 
+		$stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT); 
+		$stmt->execute();
+		return $stmt->fetchColumn();
     } 
 
     /*=============================================

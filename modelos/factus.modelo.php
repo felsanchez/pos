@@ -938,8 +938,8 @@ class ModeloFactus
         $config = self::mdlObtenerConfiguracion();
 
         if (!$config || empty($config['rango_numeracion_id'])) {
-            // Fallback: Si no hay configurado, tomar el último activo
-            $stmt = Conexion::conectar()->prepare("SELECT * FROM factus_rangos WHERE estado = 1 ORDER BY id DESC LIMIT 1");
+            // Fallback: Si no hay configurado, tomar el último activo de tipo Factura de Venta
+            $stmt = Conexion::conectar()->prepare("SELECT * FROM factus_rangos WHERE estado = 1 AND documento = 'Factura de Venta' ORDER BY id DESC LIMIT 1");
             $stmt->execute();
             return $stmt->fetch();
         }

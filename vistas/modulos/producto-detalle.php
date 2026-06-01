@@ -234,7 +234,7 @@ if ($modoEdicion) {
                                             <span class="input-group-addon"><i
                                                     class="fa fa-arrow-down"></i></span>
                                             <input type="number" class="form-control" id="precioCompra"
-                                                name="<?php echo $modoEdicion ? 'editarPrecioCompra' : 'nuevoPrecioCompra'; ?>" min="0" step="0.01" placeholder="0.00"
+                                                name="<?php echo $modoEdicion ? 'editarPrecioCompra' : 'nuevoPrecioCompra'; ?>" min="0" step="1" placeholder="0"
                                                 value="<?php echo $modoEdicion ? $producto['precio_compra'] : ''; ?>"
                                                 required>
                                         </div>
@@ -249,7 +249,7 @@ if ($modoEdicion) {
                                             <span class="input-group-addon"><i
                                                     class="fa fa-arrow-up"></i></span>
                                             <input type="number" class="form-control" id="precioVenta"
-                                                name="<?php echo $modoEdicion ? 'editarPrecioVenta' : 'nuevoPrecioVenta'; ?>" min="0" step="0.01" placeholder="0.00"
+                                                name="<?php echo $modoEdicion ? 'editarPrecioVenta' : 'nuevoPrecioVenta'; ?>" min="0" step="1" placeholder="0"
                                                 value="<?php echo $modoEdicion ? $producto['precio_venta'] : ''; ?>"
                                                 required>
                                         </div>
@@ -351,7 +351,7 @@ if ($modoEdicion) {
                         <div class="box-body">
                             <p class="help-block"><i class="fa fa-info-circle"></i> Estos datos son requeridos para generar facturas electrónicas válidas ante la DIAN.</p>
                             <div class="row">
-                                <!-- Unidad de Medida (Factus) -->
+                                <!-- Unidad de Medida -->
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Unidad de Medida *</label>
@@ -377,7 +377,7 @@ if ($modoEdicion) {
                                     </div>
                                 </div>
 
-                                <!-- Tipo de Tributo (Factus) -->
+                                <!-- Tipo de Tributo -->
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Tributo/Impuesto *</label>
@@ -392,7 +392,9 @@ if ($modoEdicion) {
                                                 $tributoActual = $modoEdicion && isset($producto['tributo_id']) ? $producto['tributo_id'] : '';
                                                 foreach ($tributos as $tributo) {
                                                     $selected = ($tributoActual == $tributo['id']) ? 'selected' : '';
-                                                    echo "<option value='{$tributo['id']}' $selected>{$tributo['nombre']}</option>";
+                                                    $pct = floatval($tributo['porcentaje_defecto']);
+                                                    $nombreMostrar = $tributo['nombre'] . ($pct > 0 ? " $pct%" : "");
+                                                    echo "<option value='{$tributo['id']}' $selected>{$nombreMostrar}</option>";
                                                 }
                                                 ?>
                                             </select>

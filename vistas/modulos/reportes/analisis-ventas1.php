@@ -315,9 +315,9 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
     if (idProducto) formData.append('id_producto', idProducto);
     if (metodoPago) formData.append('metodo_pago', metodoPago);
 
-    // Agregar id_bodega del filtro maestro si existe
+    // Agregar id_bodega del filtro maestro si existe o de la sesion actual
     const sucursalMaestra = document.getElementById('sucursalReporteMaestro');
-    const idBodega = sucursalMaestra ? sucursalMaestra.value : '';
+    const idBodega = sucursalMaestra ? sucursalMaestra.value : '<?php echo isset($_SESSION["id_bodega"]) && !empty($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1; ?>';
     if (idBodega && idBodega !== 'todos') formData.append('id_bodega', idBodega);
 
     let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";

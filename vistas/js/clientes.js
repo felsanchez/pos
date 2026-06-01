@@ -1,4 +1,16 @@
 /*=============================================
+CARGAR LA TABLA DINÁMICA DE CLIENTES
+=============================================*/
+$(document).ready(function() {
+	// Mover todos los modales de clientes al body para evitar conflictos de z-index
+	$('#modalAgregarCliente').appendTo('body');
+	$('#modalEditarCliente').appendTo('body');
+	$('#modalImportarClientes').appendTo('body');
+	$('#modalGestionarEstados').appendTo('body');
+	$('#modalEditarEstado').appendTo('body');
+});
+
+/*=============================================
 EDITAR CLIENTE (cargar datos en modal)
 =============================================*/
 $(document).on("click", ".btnEditarCliente", function () {

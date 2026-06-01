@@ -1035,6 +1035,7 @@ MODAL GESTIONAR ESTADOS
                       <td><input type="color" value="' . e($value["color"]) . '" disabled style="width: 50px;"></td>
                       <td>
                         <button class="btn btn-warning btn-xs btnEditarEstado"
+                          data-id="' . e($value["id"]) . '"
                           data-nombre="' . e($value["nombre"]) . '"
                           data-color="' . e($value["color"]) . '"
                           data-orden="' . e($value["orden"]) . '"

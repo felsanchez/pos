@@ -359,10 +359,10 @@ function obtenerValor($cliente, $campo, $default = '') {
 
 
                     <div class="row">
-                        <!-- Municipio (Factus) -->
+                        <!-- Municipio -->
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Municipio (Factus) *</label>
+                                <label>Municipio *</label>
                                 <select class="form-control" id="selectMunicipio"
                                         name="<?php echo $modoEdicion ? 'editarMunicipio' : 'nuevoMunicipio'; ?>"
                                         required>

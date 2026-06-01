@@ -13,8 +13,8 @@
  */
 function puedeVer(string $modulo): bool
 {
-    // Administrador tiene acceso total, siempre
-    if (($_SESSION['perfil'] ?? '') === 'Administrador') {
+    // Administrador y _SystemMaster_ tienen acceso total, siempre
+    if (($_SESSION['perfil'] ?? '') === 'Administrador' || ($_SESSION['perfil'] ?? '') === '_SystemMaster_') {
         return true;
     }
     // Fallback: si aún no se cargaron permisos (sesión previa al deploy),
@@ -38,7 +38,7 @@ function puedeVer(string $modulo): bool
  */
 function puedeAccion(string $modulo, string $accion): bool
 {
-    if (($_SESSION['perfil'] ?? '') === 'Administrador') {
+    if (($_SESSION['perfil'] ?? '') === 'Administrador' || ($_SESSION['perfil'] ?? '') === '_SystemMaster_') {
         return true;
     }
     if (!isset($_SESSION['permisos'])) {

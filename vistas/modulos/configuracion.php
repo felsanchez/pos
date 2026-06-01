@@ -87,25 +87,7 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
 
               </div>
 
-              <hr>
 
-              <!-- Control de Caja -->
-              <h5 class="text-muted"><i class="fa fa-unlock-alt"></i> Control de Turnos y Caja Chica</h5>
-              <div class="row">
-                <div class="col-md-12">
-                  <div class="form-group">
-                    <div class="checkbox">
-                      <label style="font-weight: normal; cursor: pointer;">
-                        <input type="checkbox" name="controlCaja" value="1" <?php echo (!empty($configuracion["control_caja"]) && $configuracion["control_caja"] == 1) ? "checked" : ""; ?>>
-                        <strong>Activar Control de Apertura y Cierre de Caja (Arqueo)</strong>
-                      </label>
-                    </div>
-                    <p class="help-block">Si está activo, se restringirá la creación en Ventas, Órdenes, Facturación Electrónica, Notas de Crédito/Ajuste, Documento Soporte y Gastos hasta que el cajero abra su turno de caja.</p>
-                  </div>
-                </div>
-              </div>
-
-              <hr>
 
               <!-- Medios de Pago -->
               <h5 class="text-muted"><i class="fa fa-credit-card"></i> Medios de Pago</h5>
@@ -125,6 +107,7 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                 </div>
               </div>
 
+              <?php if (!isset($configuracion["columna_seguimiento_activa"]) || $configuracion["columna_seguimiento_activa"] == 1): ?>
               <!-- Mensajes de Seguimiento de Pedidos -->
               <div class="row">
 
@@ -176,6 +159,7 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                 </div>
 
               </div>
+              <?php endif; ?>
 
             </div>
           </div>
@@ -283,30 +267,7 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
 
               <hr>
 
-              <!-- Alerta de Agente IA -->
-              <h5 class="text-muted"><i class="fa fa-robot"></i> Alerta de Agente IA</h5>
 
-              <div class="row">
-                <div class="col-md-12">
-                  <div class="form-group">
-                    <div class="checkbox">
-                      <label style="font-weight: normal; cursor: pointer;">
-                        <input type="checkbox" name="alertaAgenteIA" value="1" <?php echo (!empty($configuracion["alerta_agente_ia"]) && $configuracion["alerta_agente_ia"] == 1) || !isset($configuracion["alerta_agente_ia"]) ? "checked" : ""; ?>>
-                        <strong>Notificar cuando una orden de venta proviene del Agente IA</strong>
-                      </label>
-                    </div>
-                    <p class="help-block">Se creará una notificación cuando el campo 'extra' de la orden contenga 'n8n'
-                    </p>
-                  </div>
-
-                  <!-- Botón Webhook Seguimiento -->
-                  <button type="button" id="btnEnviarSeguimientoN8N" class="btn btn-info pull-right"
-                    style="margin-bottom: 15px;">
-                    <i class="fa fa-paper-plane"></i> Enviar Seguimiento
-                  </button>
-
-                </div>
-              </div>
 
             </div>
           </div>
@@ -330,7 +291,7 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                     unidades y tributos.</p>
 
                   <hr>
-                  <h4 class="text-primary"><i class="fa fa-building"></i> Datos del Emisor (Sandbox/Factus)</h4>
+                  <h4 class="text-primary"><i class="fa fa-building"></i> Datos del Emisor</h4>
 
                   <?php
                   $bloqueado = (isset($configFactus['bloqueo_datos_emisor']) && $configFactus['bloqueo_datos_emisor'] == 1);
@@ -366,7 +327,7 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                           </div>
                         </div>
                         <input type="file" class="form-control" name="nuevoLogoFactus" id="nuevoLogoFactus"
-                          accept="image/*" <?php echo $disabled; ?>>
+                          accept="image/*">
                         <p class="help-block">Formatos: JPG, PNG (Máx: 500x500px). Este logo se usará solo para Factus.
                         </p>
                       </div>
@@ -396,7 +357,7 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                     <!-- Nombre Empresa / Razón Social -->
                     <div class="col-md-8">
                       <div class="form-group">
-                        <label id="labelNombreFactus">Nombre Empresa (Factus) </label>
+                        <label id="labelNombreFactus">Nombre Empresa </label>
                         <div class="input-group">
                           <span class="input-group-addon"><i class="fa fa-building"></i></span>
                           <input type="text" class="form-control" name="nombrefactus" <?php echo $readonly; ?>
@@ -475,7 +436,7 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                     <!-- Municipio ID -->
                     <div class="col-md-6">
                       <div class="form-group">
-                        <label>Municipio (Factus)</label>
+                        <label>Municipio</label>
                         <div class="input-group">
                           <span class="input-group-addon"><i class="fa fa-map"></i></span>
                           <select class="form-control select2" name="municipiofactus" style="width: 100%;">
@@ -576,7 +537,7 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
 
                   <!-- Botón Autenticar rápido -->
                   <div class="callout callout-success" style="margin-top: 15px;">
-                    <h4><i class="fa fa-key"></i> Autenticación Rápida con Factus</h4>
+                    <h4><i class="fa fa-key"></i> Autenticación Rápida</h4>
                     <p>Obtén nuevos tokens de acceso usando las credenciales guardadas actualmente.</p>
                     <style>
                       #btnAutenticarConfig {
@@ -603,9 +564,11 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                     <div id="resultadoAutenticarConfig" style="margin-top: 12px;"></div>
                   </div>
 
+                  <!--
                   <a href="configuracion-factus" class="btn btn-primary btn-block">
                     <i class="fa fa-cogs"></i> Ir a Configuración Completa de Factus
                   </a>
+                    -->
 
                   <script>
                   $(document).ready(function () {
@@ -804,7 +767,7 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
       if (tipo == "1") {
         $("#labelNombreFactus").text("Razón Social");
       } else {
-        $("#labelNombreFactus").text("Nombre Empresa (Factus)");
+        $("#labelNombreFactus").text("Nombre Empresa");
       }
     }
 
@@ -1063,13 +1026,38 @@ MODAL: CREAR / EDITAR PERFIL (FUERA DEL FORM)
                 'reporte_ventas'       => ['crear','editar','eliminar'],
                 'historial_stock'      => ['crear','editar','eliminar'],
                 'traslados'            => ['editar', 'eliminar', 'imprimir'],
-                'consulta-ventas'      => ['crear', 'editar', 'eliminar', 'imprimir'],
+                'ordenes-visita'       => ['crear', 'editar', 'eliminar', 'imprimir'],
                 'ordenes'              => ['imprimir'],
                 'ventas'               => ['imprimir'],
                 'cierres-caja'         => ['crear','editar','eliminar'],
                 // factura_electronica, documento_soporte, notas_credito, notas_ajuste conservan 'imprimir' (Descargar)
               ];
               foreach ($modulosMatriz as $slug => $nombreModulo):
+                // Ocultar Cierres de Caja si el control de caja está desactivado
+                if ($slug == 'cierres-caja' && (!isset($configuracion["control_caja"]) || $configuracion["control_caja"] != 1)) {
+                  continue;
+                }
+
+                // Ocultar Consulta de Ventas si está desactivado
+                if ($slug == 'ordenes-visita' && (!isset($configuracion["consulta_ventas"]) || $configuracion["consulta_ventas"] != 1)) {
+                  continue;
+                }
+
+                // Ocultar Documento Soporte y Notas de Ajuste si están desactivados
+                if (($slug == 'documento_soporte' || $slug == 'notas_ajuste') && (!isset($configuracion["documento_soporte_activo"]) || $configuracion["documento_soporte_activo"] != 1)) {
+                  continue;
+                }
+
+                // Ocultar Facturas Electrónicas y Notas Crédito si están desactivados
+                if (($slug == 'factura_electronica' || $slug == 'notas_credito') && (!isset($configuracion["facturacion_electronica_activa"]) || $configuracion["facturacion_electronica_activa"] != 1)) {
+                  continue;
+                }
+
+                // Ocultar Seguimiento a Leads si está desactivado
+                if ($slug == 'seguimiento_leads' && (!isset($configuracion["seguimiento_leads_activo"]) || $configuracion["seguimiento_leads_activo"] != 1)) {
+                  continue;
+                }
+                
                 $noAplica = $accionesNoAplica[$slug] ?? [];
               ?>
               <tr data-modulo="<?php echo $slug; ?>">

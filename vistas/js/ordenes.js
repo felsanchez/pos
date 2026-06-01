@@ -145,20 +145,29 @@ $(document).ready(function () {
 					}
 				}
 			},
-			"columnDefs": [
-				{ "targets": 0, "responsivePriority": 1 },
-				{ "targets": 1, "responsivePriority": 2 },
-				{ "targets": 11, "responsivePriority": 3, "orderable": false },
-				{ "targets": 2, "responsivePriority": 4 },
-				{ "targets": 3, "responsivePriority": 5 },
-				{ "targets": 4, "responsivePriority": 6 },
-				{ "targets": 5, "responsivePriority": 7 },
-				{ "targets": 6, "responsivePriority": 8 },
-				{ "targets": 7, "responsivePriority": 9 },
-				{ "targets": 8, "responsivePriority": 10 },
-				{ "targets": 9, "responsivePriority": 11, "orderable": false },
-				{ "targets": 10, "responsivePriority": 12, "orderable": false }
-			],
+			"columnDefs": (function() {
+				var seguimientoActivo = $('#columnaSeguimientoActiva').val();
+				var defs = [
+					{ "targets": 0, "responsivePriority": 1 },
+					{ "targets": 1, "responsivePriority": 2 },
+					{ "targets": 11, "responsivePriority": 3, "orderable": false },
+					{ "targets": 2, "responsivePriority": 4 },
+					{ "targets": 3, "responsivePriority": 5 },
+					{ "targets": 4, "responsivePriority": 6 },
+					{ "targets": 5, "responsivePriority": 7 },
+					{ "targets": 6, "responsivePriority": 8 },
+					{ "targets": 7, "responsivePriority": 9 },
+					{ "targets": 8, "responsivePriority": 10 },
+					{ "targets": 9, "responsivePriority": 11, "orderable": false },
+					{ "targets": 10, "responsivePriority": 12, "orderable": false }
+				];
+
+				if (seguimientoActivo == "0") {
+					defs.push({ "targets": 9, "visible": false });
+				}
+
+				return defs;
+			})(),
 			"language": {
 				"sProcessing": "Procesando...",
 				"sLengthMenu": "Mostrar _MENU_ registros",

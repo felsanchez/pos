@@ -403,14 +403,14 @@ class ControladorVariantes{
 
      static public function ctrEliminarOpcionVariante($idOpcion){ 
 
-        // Verificar si la opción está siendo usada en productos
-        $tabla = "productos_variantes_opciones";
-        $item = "id_opcion_variante";
-        $valor = $idOpcion; 
+        // Verificar si la opción está siendo usada en productos activos
+        $usoGlobal = ModeloVariantes::mdlContarUsoGlobalOpcion($idOpcion); 
 
-        $checkUso = ModeloVariantes::mdlVerificarUsoOpcionVariante($tabla, $item, $valor); 
-
-        if($checkUso > 0){
+        if($usoGlobal > 0){
+            $usoLocal = ModeloVariantes::mdlContarUsoLocalOpcion($idOpcion);
+            if ($usoLocal == 0) {
+                return "error_productos_asociados_otra_sucursal";
+            }
             return "error";
         }
 

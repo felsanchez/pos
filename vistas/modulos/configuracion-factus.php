@@ -1,6 +1,12 @@
 <?php
+if (session_status() == PHP_SESSION_NONE) { session_start(); }
+if (!isset($_SESSION["usuario"]) || $_SESSION["usuario"] != "jumperadmindev") {
+    include "404.php";
+    exit;
+}
 
 $configuracion = ControladorFactus::ctrObtenerConfiguracion();
+$configuracionGlobal = ControladorConfiguracion::ctrObtenerConfiguracion();
 
 // Si no existe la configuración, mostrar valores por defecto
 if (!$configuracion) {
@@ -59,6 +65,141 @@ if (!$configuracion) {
 							<a href="https://developers.factus.com.co" target="_blank">https://developers.factus.com.co</a>
 						</p>
 					</div>
+
+					<div class="row">
+						<div class="col-md-12">
+							<div class="checkbox">
+								<label>
+									<?php 
+										$bloqueoActual = isset($configuracion['bloqueo_datos_emisor']) ? $configuracion['bloqueo_datos_emisor'] : 1;
+										$checkedBloqueo = ($bloqueoActual == 0) ? 'checked' : '';
+									?>
+									<input type="checkbox" name="habilitarEdicionFactusGlobal" <?php echo $checkedBloqueo; ?>> <b>Habilitar Edición de Datos del Emisor en Configuración General</b>
+								</label>
+								<p class="help-block">Si activas esto, podrás editar los datos del emisor (NIT, Domicilio, etc.) en la página de Configuración General.</p>
+							</div>
+						</div>
+					</div>
+
+					<!-- Control de Caja y Vistas -->
+					<h4 class="text-primary" style="margin-top: 20px;"><i class="fa fa-unlock-alt"></i> Control de Vistas</h4>
+					<div class="row">
+						<div class="col-md-12">
+							<div class="form-group">
+								<div class="checkbox">
+									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
+										<input type="checkbox" name="controlCaja" value="1" <?php echo (!empty($configuracionGlobal["control_caja"]) && $configuracionGlobal["control_caja"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar Control de Apertura y Cierre de Caja (Arqueo)</strong>
+									</label>
+								</div>
+								<p class="help-block">Si está activo, se restringirá la creación en Ventas, Órdenes, Facturación Electrónica, Notas de Crédito/Ajuste, Documento Soporte y Gastos hasta que el cajero abra su turno de caja.</p>
+							</div>
+							
+							<div class="form-group">
+								<div class="checkbox">
+									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
+										<input type="checkbox" name="consultaVentas" value="1" <?php echo (!isset($configuracionGlobal["consulta_ventas"]) || $configuracionGlobal["consulta_ventas"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar "Consulta de Ventas"</strong>
+									</label>
+								</div>
+								<p class="help-block">Si está desactivado, se ocultará la opción "Consulta de ventas" del menú lateral y de la matriz de permisos.</p>
+							</div>
+
+							<div class="form-group">
+								<div class="checkbox">
+									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
+										<input type="checkbox" name="documentoSoporte" value="1" <?php echo (!isset($configuracionGlobal["documento_soporte_activo"]) || $configuracionGlobal["documento_soporte_activo"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar "Documento Soporte" y "Notas de Ajuste"</strong>
+									</label>
+								</div>
+								<p class="help-block">Si está desactivado, se ocultarán las opciones de "Documento Soporte" y "Notas de Ajuste" del menú lateral y de la matriz de permisos.</p>
+							</div>
+
+							<div class="form-group">
+								<div class="checkbox">
+									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
+										<input type="checkbox" name="facturacionElectronica" value="1" <?php echo (!isset($configuracionGlobal["facturacion_electronica_activa"]) || $configuracionGlobal["facturacion_electronica_activa"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar "Facturación Electrónica" y "Notas Crédito"</strong>
+									</label>
+								</div>
+								<p class="help-block">Si está desactivado, se ocultarán las opciones de "Facturas Electrónicas" y "Notas Crédito" del menú lateral y de la matriz de permisos y la gráfica de FE.</p>
+							</div>
+
+							<div class="form-group">
+								<div class="checkbox">
+									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
+										<input type="checkbox" name="seguimientoLeads" value="1" <?php echo (!isset($configuracionGlobal["seguimiento_leads_activo"]) || $configuracionGlobal["seguimiento_leads_activo"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar "Seguimiento a Leads"</strong>
+									</label>
+								</div>
+								<p class="help-block">Si está desactivado, se ocultará la opción "Seguimiento a leads" del menú lateral y de la matriz de permisos.</p>
+							</div>
+
+							<div class="form-group">
+								<div class="checkbox">
+									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
+										<input type="checkbox" name="graficaAnalisisOrdenes" value="1" <?php echo (!isset($configuracionGlobal["grafica_analisis_ordenes_activa"]) || $configuracionGlobal["grafica_analisis_ordenes_activa"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar gráfica "Análisis de Órdenes" en Reportes</strong>
+									</label>
+								</div>
+								<p class="help-block">Si está desactivado, se ocultará la gráfica "Análisis de Órdenes de Venta" en la vista de reportes.</p>
+							</div>
+
+							<div class="form-group">
+								<div class="checkbox">
+									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
+										<input type="checkbox" name="columnaSeguimiento" value="1" <?php echo (!isset($configuracionGlobal["columna_seguimiento_activa"]) || $configuracionGlobal["columna_seguimiento_activa"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar columna "Seguimiento" en Órdenes</strong>
+									</label>
+								</div>
+								<p class="help-block">Si está desactivado, se ocultará la columna de seguimiento en la tabla de administrar órdenes de venta.</p>
+							</div>
+
+							<div class="form-group">
+								<div class="checkbox">
+									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
+										<input type="checkbox" name="botonConvertirFE" value="1" <?php echo (!isset($configuracionGlobal["boton_convertir_fe_activo"]) || $configuracionGlobal["boton_convertir_fe_activo"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar botón "Convertir a FE" en Órdenes</strong>
+									</label>
+								</div>
+								<p class="help-block">Si está desactivado, se ocultará el botón "Convertir a FE" en la columna "Convertir" de la tabla de administrar órdenes de venta.</p>
+							</div>
+
+							<div class="box box-warning" style="margin-top: 15px;">
+								<div class="box-header with-border">
+									<h3 class="box-title" style="font-size: 16px;"><i class="fa fa-bell"></i> Visibilidad de Notificaciones</h3>
+								</div>
+								<div class="box-body">
+									<div class="checkbox">
+										<label style="font-weight: normal; cursor: pointer;">
+											<input type="checkbox" name="notif_orden_agente_ia" value="1" <?php echo (!isset($configuracionGlobal["notif_orden_agente_ia"]) || $configuracionGlobal["notif_orden_agente_ia"] == 1) ? "checked" : ""; ?>>
+											<strong>Mostrar notificación: "Orden Agente IA"</strong>
+										</label>
+									</div>
+									<div class="checkbox">
+										<label style="font-weight: normal; cursor: pointer;">
+											<input type="checkbox" name="notif_transaccion_bold" value="1" <?php echo (!isset($configuracionGlobal["notif_transaccion_bold"]) || $configuracionGlobal["notif_transaccion_bold"] == 1) ? "checked" : ""; ?>>
+											<strong>Mostrar notificación: "Transacción Bold"</strong>
+										</label>
+									</div>
+									<div class="checkbox">
+										<label style="font-weight: normal; cursor: pointer;">
+											<input type="checkbox" name="notif_solicitud_edicion" value="1" <?php echo (!isset($configuracionGlobal["notif_solicitud_edicion"]) || $configuracionGlobal["notif_solicitud_edicion"] == 1) ? "checked" : ""; ?>>
+											<strong>Mostrar notificación: "Solicitud edición de pedido"</strong>
+										</label>
+									</div>
+									<div class="checkbox">
+										<label style="font-weight: normal; cursor: pointer;">
+											<input type="checkbox" name="notif_solicitud_eliminacion" value="1" <?php echo (!isset($configuracionGlobal["notif_solicitud_eliminacion"]) || $configuracionGlobal["notif_solicitud_eliminacion"] == 1) ? "checked" : ""; ?>>
+											<strong>Mostrar notificación: "Solicitud eliminación de pedido"</strong>
+										</label>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<hr>
 
 					<!-- Estado de conexión -->
 					<?php if ($configuracion['activo'] == 1): ?>
@@ -186,20 +327,7 @@ if (!$configuracion) {
 						</div>
 					</div>
 
-					<div class="row">
-						<div class="col-md-12">
-							<div class="checkbox">
-								<label>
-									<?php 
-										$bloqueoActual = isset($configuracion['bloqueo_datos_emisor']) ? $configuracion['bloqueo_datos_emisor'] : 1;
-										$checkedBloqueo = ($bloqueoActual == 0) ? 'checked' : '';
-									?>
-									<input type="checkbox" name="habilitarEdicionFactusGlobal" <?php echo $checkedBloqueo; ?>> <b>Habilitar Edición de Datos del Emisor en Configuración General</b>
-								</label>
-								<p class="help-block">Si activas esto, podrás editar los datos del emisor (NIT, Domicilio, etc.) en la página de Configuración General.</p>
-							</div>
-						</div>
-					</div>
+
 
 
 
@@ -298,12 +426,9 @@ if (!$configuracion) {
 				</div>
 
 				<div class="box-footer">
-					<button type="submit" class="btn btn-primary">
+					<button type="submit" class="btn btn-primary btn-lg" style="padding: 10px 30px; font-size: 18px;">
 						<i class="fa fa-save"></i> Guardar Configuración
 					</button>
-					<a href="configuracion" class="btn btn-default">
-						<i class="fa fa-arrow-left"></i> Volver
-					</a>
 				</div>
 
 			</form>

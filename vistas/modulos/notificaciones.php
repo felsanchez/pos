@@ -143,10 +143,22 @@
                   <option value="">Mostrar Todas</option>
                   <option value="Stock Agotado">Stock Agotado</option>
                   <option value="Actividad Próxima">Actividad Próxima</option>
+                  <?php 
+                  $configNotif = ControladorConfiguracion::ctrObtenerConfiguracion(); 
+                  ?>
+                  <?php if (!isset($configNotif["notif_orden_agente_ia"]) || $configNotif["notif_orden_agente_ia"] == 1): ?>
                   <option value="Orden Agente IA">Orden Agente IA</option>
+                  <option value="Orden creada">Orden creada</option>
+                  <?php endif; ?>
+                  <?php if (!isset($configNotif["notif_transaccion_bold"]) || $configNotif["notif_transaccion_bold"] == 1): ?>
                   <option value="Transacción Bold">Transacción de Bold</option>
+                  <?php endif; ?>
+                  <?php if (!isset($configNotif["notif_solicitud_edicion"]) || $configNotif["notif_solicitud_edicion"] == 1): ?>
                   <option value="Edicion de pedido">Solicitud Edición de pedido</option>
+                  <?php endif; ?>
+                  <?php if (!isset($configNotif["notif_solicitud_eliminacion"]) || $configNotif["notif_solicitud_eliminacion"] == 1): ?>
                   <option value="Eliminacion de pedido">Solicitud Eliminación de pedido</option>
+                  <?php endif; ?>
                 </select>
               </div>
             </div>

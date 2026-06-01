@@ -51,6 +51,35 @@ class ControladorFactus
 			// Procesar checkbox de activo
 			$activo = isset($_POST["factusActivo"]) ? 1 : 0;
 
+			// Actualizar Control de Caja y Vistas en la tabla configuracion global
+			$controlCaja = isset($_POST["controlCaja"]) ? 1 : 0;
+			$consultaVentas = isset($_POST["consultaVentas"]) ? 1 : 0;
+			$documentoSoporte = isset($_POST["documentoSoporte"]) ? 1 : 0;
+			$facturacionElectronica = isset($_POST["facturacionElectronica"]) ? 1 : 0;
+			$seguimientoLeads = isset($_POST["seguimientoLeads"]) ? 1 : 0;
+			$graficaAnalisisOrdenes = isset($_POST["graficaAnalisisOrdenes"]) ? 1 : 0;
+			$columnaSeguimiento = isset($_POST["columnaSeguimiento"]) ? 1 : 0;
+			$botonConvertirFE = isset($_POST["botonConvertirFE"]) ? 1 : 0;
+			$notif_orden_agente_ia = isset($_POST["notif_orden_agente_ia"]) ? 1 : 0;
+			$notif_transaccion_bold = isset($_POST["notif_transaccion_bold"]) ? 1 : 0;
+			$notif_solicitud_edicion = isset($_POST["notif_solicitud_edicion"]) ? 1 : 0;
+			$notif_solicitud_eliminacion = isset($_POST["notif_solicitud_eliminacion"]) ? 1 : 0;
+			
+			$stmtCaja = Conexion::conectar()->prepare("UPDATE configuracion SET control_caja = :control_caja, consulta_ventas = :consulta_ventas, documento_soporte_activo = :documento_soporte_activo, facturacion_electronica_activa = :facturacion_electronica_activa, seguimiento_leads_activo = :seguimiento_leads_activo, grafica_analisis_ordenes_activa = :grafica_analisis_ordenes_activa, columna_seguimiento_activa = :columna_seguimiento_activa, boton_convertir_fe_activo = :boton_convertir_fe_activo, notif_orden_agente_ia = :notif_orden_agente_ia, notif_transaccion_bold = :notif_transaccion_bold, notif_solicitud_edicion = :notif_solicitud_edicion, notif_solicitud_eliminacion = :notif_solicitud_eliminacion WHERE id = 1");
+			$stmtCaja->bindParam(":control_caja", $controlCaja, PDO::PARAM_INT);
+			$stmtCaja->bindParam(":consulta_ventas", $consultaVentas, PDO::PARAM_INT);
+			$stmtCaja->bindParam(":documento_soporte_activo", $documentoSoporte, PDO::PARAM_INT);
+			$stmtCaja->bindParam(":facturacion_electronica_activa", $facturacionElectronica, PDO::PARAM_INT);
+			$stmtCaja->bindParam(":seguimiento_leads_activo", $seguimientoLeads, PDO::PARAM_INT);
+			$stmtCaja->bindParam(":grafica_analisis_ordenes_activa", $graficaAnalisisOrdenes, PDO::PARAM_INT);
+			$stmtCaja->bindParam(":columna_seguimiento_activa", $columnaSeguimiento, PDO::PARAM_INT);
+			$stmtCaja->bindParam(":boton_convertir_fe_activo", $botonConvertirFE, PDO::PARAM_INT);
+			$stmtCaja->bindParam(":notif_orden_agente_ia", $notif_orden_agente_ia, PDO::PARAM_INT);
+			$stmtCaja->bindParam(":notif_transaccion_bold", $notif_transaccion_bold, PDO::PARAM_INT);
+			$stmtCaja->bindParam(":notif_solicitud_edicion", $notif_solicitud_edicion, PDO::PARAM_INT);
+			$stmtCaja->bindParam(":notif_solicitud_eliminacion", $notif_solicitud_eliminacion, PDO::PARAM_INT);
+			$stmtCaja->execute();
+
 			// 0. Obtener configuración actual para mantener datos de la empresa si no vienen en el POST
 			$configConfig = ModeloFactus::mdlObtenerConfiguracion();
 
@@ -783,13 +812,37 @@ class ControladorFactus
 			// Error al generar factura
 			$error = json_decode($resultado['respuesta'], true);
 
+			$mensajeError = $error['message'] ?? 'Error desconocido';
+			
+			// Si Factus devuelve detalles de validación en 'errors' o en 'data'->'errors', los agregamos al mensaje
+			$erroresValidacion = [];
+			if (isset($error['errors']) && is_array($error['errors'])) {
+				$erroresValidacion = $error['errors'];
+			} elseif (isset($error['data']['errors']) && is_array($error['data']['errors'])) {
+				$erroresValidacion = $error['data']['errors'];
+			}
+
+			if (!empty($erroresValidacion)) {
+				$detalles = [];
+				foreach ($erroresValidacion as $campo => $mensajesCampo) {
+					if (is_array($mensajesCampo)) {
+						$detalles[] = implode(", ", $mensajesCampo);
+					} else {
+						$detalles[] = $mensajesCampo;
+					}
+				}
+				if (!empty($detalles)) {
+					$mensajeError .= ": " . implode(". ", $detalles);
+				}
+			}
+
 			$datosActualizar = array(
 				"estado_dian" => "Error",
 				"cufe" => '',
 				"qr_data" => '',
 				"xml_dian" => '',
 				"pdf_dian" => '',
-				"mensaje_dian" => $error['message'] ?? $resultado['respuesta'],
+				"mensaje_dian" => $mensajeError,
 				"fecha_envio_dian" => date('Y-m-d H:i:s')
 			);
 
@@ -797,7 +850,7 @@ class ControladorFactus
 
 			return array(
 				"error" => true,
-				"mensaje" => "Error al generar factura: " . ($error['message'] ?? 'Error desconocido'),
+				"mensaje" => "Error al generar factura: " . $mensajeError,
 				"codigo_http" => $resultado['http_code'],
 				"detalles" => $resultado['respuesta']
 			);
@@ -975,7 +1028,7 @@ class ControladorFactus
 
 		// Obtener Rango Dinámico
 		$rango = ModeloFactus::mdlObtenerRangoActivo();
-		$rangoId = $rango['id_factus'] ?? 1;
+		$rangoId = isset($rango['id_factus']) ? (int)$rango['id_factus'] : 1;
 
 
 		// Lookup correct Factus Municipality ID

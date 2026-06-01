@@ -1,7 +1,13 @@
 <?php
+require_once "modelos/conexion.php";
 try {
-    $pdo = new PDO("mysql:host=127.0.0.1;port=3306", "root", "");
-    echo "SUCCESS";
+    $db = Conexion::conectar();
+    $stmt = $db->prepare("SHOW CREATE TABLE productos");
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    echo "<pre>";
+    print_r($result);
+    echo "</pre>";
 } catch (Exception $e) {
-    echo "ERROR: " . $e->getMessage();
+    echo $e->getMessage();
 }

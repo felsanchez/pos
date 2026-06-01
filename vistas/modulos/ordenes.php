@@ -176,6 +176,7 @@ if ($xml) {
                 <th>Acciones</th>
               </tr>
             </thead>
+            <input type="hidden" id="columnaSeguimientoActiva" value="<?php echo (!isset($configuracion["columna_seguimiento_activa"]) || $configuracion["columna_seguimiento_activa"] == 1) ? 1 : 0; ?>">
 
             <tbody>
               <!-- Datos cargados por DataTables Server-Side -->

@@ -42,11 +42,16 @@ class ModeloNotificaciones
 		$sql = "SELECT n.*, 
                 CASE WHEN nl.id_usuario IS NOT NULL THEN 1 ELSE 0 END as leida
                 FROM notificaciones n
-                LEFT JOIN notificaciones_leidas nl ON n.id = nl.id_notificacion AND nl.id_usuario = :id_usuario";
+                CROSS JOIN configuracion c
+                LEFT JOIN notificaciones_leidas nl ON n.id = nl.id_notificacion AND nl.id_usuario = :id_usuario
+                WHERE (n.tipo NOT IN ('orden_agente_ia', 'orden_creada') OR c.notif_orden_agente_ia = 1)
+                  AND (n.referencia_tipo != 'pago_bold' OR c.notif_transaccion_bold = 1)
+                  AND (n.referencia_tipo != 'solicitud_edicion' OR c.notif_solicitud_edicion = 1)
+                  AND (n.referencia_tipo != 'solicitud_eliminacion' OR c.notif_solicitud_eliminacion = 1)";
 
 		if ($soloNoLeidas) {
 			// Si solo queremos no leídas, filtramos donde NO haya registro en la tabla de lectura
-			$sql .= " WHERE nl.id_usuario IS NULL";
+			$sql .= " AND nl.id_usuario IS NULL";
 		}
 
 		$sql .= " ORDER BY n.fecha DESC";
@@ -87,8 +92,13 @@ class ModeloNotificaciones
 
 		$stmt = Conexion::conectar()->prepare("SELECT COUNT(*) as total 
                                                FROM notificaciones n
+                                               CROSS JOIN configuracion c
                                                LEFT JOIN notificaciones_leidas nl ON n.id = nl.id_notificacion AND nl.id_usuario = :id_usuario
-                                               WHERE nl.id_usuario IS NULL");
+                                               WHERE nl.id_usuario IS NULL
+                                                 AND (n.tipo NOT IN ('orden_agente_ia', 'orden_creada') OR c.notif_orden_agente_ia = 1)
+                                                 AND (n.referencia_tipo != 'pago_bold' OR c.notif_transaccion_bold = 1)
+                                                 AND (n.referencia_tipo != 'solicitud_edicion' OR c.notif_solicitud_edicion = 1)
+                                                 AND (n.referencia_tipo != 'solicitud_eliminacion' OR c.notif_solicitud_eliminacion = 1)");
 
 		$stmt->bindParam(":id_usuario", $idUsuario, PDO::PARAM_INT);
 		$stmt->execute();

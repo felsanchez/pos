@@ -139,12 +139,13 @@ $(document).on("click", ".btnVerOpciones", function () {
             '<thead>' +
                 '<tr>' +
                     '<th>Nombre</th>' +
+                    '<th>Productos</th>' +
                     '<th>Estado</th>' +
                     '<th>Acciones</th>' +
                 '</tr>' +
             '</thead>' +
             '<tbody id="' + bodyId + '">' +
-                '<tr><td colspan="3" class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando...</td></tr>' +
+                '<tr><td colspan="4" class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando...</td></tr>' +
             '</tbody>' +
         '</table>'
     );
@@ -187,6 +188,7 @@ $(document).on("click", ".btnVerOpciones", function () {
 
                     html += '<tr>' +
                             '<td>' + respuesta[i].nombre + '</td>' +
+                            '<td><span class="badge bg-blue">' + (respuesta[i].productos_asociados || 0) + '</span></td>' +
                             '<td>' + estadoHTML + '</td>' +
                             '<td>' +
                                 '<div class="btn-group">';
@@ -204,7 +206,7 @@ $(document).on("click", ".btnVerOpciones", function () {
                 }
 
             } else {
-                html = '<tr><td colspan="3" class="text-center">No hay opciones registradas</td></tr>';
+                html = '<tr><td colspan="4" class="text-center">No hay opciones registradas</td></tr>';
             }
 
             // 3. Inyectar en el body específico y reinicializar tabla específica
@@ -214,7 +216,7 @@ $(document).on("click", ".btnVerOpciones", function () {
             $("#" + tablaId).DataTable(localOptions);
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            $("#" + bodyId).html('<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>');
+            $("#" + bodyId).html('<tr><td colspan="4" class="text-center text-danger">Error de conexión</td></tr>');
         }
     });
 
@@ -606,6 +608,14 @@ $(document).on("click", ".btnEliminarOpcion", function () {
 
                         });
 
+                    } else if (respuesta == "error_productos_asociados_otra_sucursal") {
+                        swal({
+                            type: "error",
+                            title: "¡No se puede eliminar!",
+                            text: "No se puede eliminar porque tiene productos asociados en otra sucursal.",
+                            showConfirmButton: true,
+                            confirmButtonText: "Cerrar"
+                        });
                     } else {
 
                         swal({

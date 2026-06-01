@@ -1296,6 +1296,9 @@ function formatearTablaVariantes(variantes) {
 		// Botón de editar
 		botonesAcciones += '<button class="btn btn-warning btn-xs btnEditarVariante" idVariante="' + variante.id + '" precioAdicional="' + variante.precio_adicional + '" stock="' + variante.stock + '"><i class="fa fa-pencil"></i></button>';
 
+		// Botón de eliminar
+		botonesAcciones += ' <button class="btn btn-danger btn-xs btnEliminarVariante" idVariante="' + variante.id + '" idProducto="' + variante.id_producto + '"><i class="fa fa-trash"></i></button>';
+
 		// Stock con colores
 		var stockBadge = '';
 
@@ -1620,6 +1623,74 @@ $("#formEditarVariante").on("submit", function (e) {
 
 });
 
+/*=============================================
+ELIMINAR VARIANTE
+=============================================*/
+$(document).on("click", ".btnEliminarVariante", function(){
+
+	var idVariante = $(this).attr("idVariante");
+    var idProducto = $(this).attr("idProducto");
+	
+	swal({
+		title: '¿Eliminar variante?',
+		text: "Esta acción no se puede deshacer.",
+		type: 'warning',
+		showCancelButton: true,
+		confirmButtonColor: '#d33',
+		cancelButtonColor: '#3085d6',
+		cancelButtonText: 'Cancelar',
+		confirmButtonText: '¡Sí, eliminar!'
+	}).then(function(result){
+
+		if(result.value){
+
+            var datos = new FormData();
+            datos.append("idVarianteEliminar", idVariante);
+            datos.append("idProductoVarianteEliminar", idProducto);
+
+            $.ajax({
+                url:"ajax/productos.ajax.php",
+                method: "POST",
+                data: datos,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success:function(respuesta){
+                    if(respuesta == "ok" || respuesta.trim() == "ok"){
+                        swal({
+                            type: "success",
+                            title: "¡La variante ha sido eliminada correctamente!",
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+
+                        // Recargar la fila de variantes si está expandida
+                        var botonExpandir = $(".btnExpandirVariantes[data-id-producto='" + idProducto + "']");
+                        var row = null;
+                        if (typeof table !== 'undefined') {
+                            row = table.row(botonExpandir.closest('tr'));
+                        }
+                        
+                        if (botonExpandir.length > 0 && row && row.child && row.child.isShown()) {
+                            // Colapsar y volver a expandir para refrescar datos
+                            botonExpandir.click();
+                            setTimeout(function () {
+                                botonExpandir.click();
+                            }, 500);
+                        }
+
+                    } else {
+                        swal({
+                            type: "error",
+                            title: "Oops...",
+                            text: "No se pudo eliminar la variante."
+                        });
+                    }
+                }
+            });
+		}
+	})
+});
 
 /*=============================================
 VARIABLES PARA VARIANTES EN EDITAR PRODUCTO

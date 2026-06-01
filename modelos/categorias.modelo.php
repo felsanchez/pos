@@ -142,11 +142,20 @@ class ModeloCategorias{
 
 	static public function mdlContarProductosPorCategoria($idCategoria){ 
 
-		$stmt = Conexion::conectar()->prepare("SELECT COUNT(*) as total FROM productos WHERE id_categoria = :id_categoria");
+		$query = "SELECT COUNT(DISTINCT p.id) as total FROM productos p ";
+		
+		$idBodega = isset($_SESSION["id_bodega"]) && !empty($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
+		
+		$query .= " INNER JOIN productos_bodegas pb ON p.id = pb.id_producto AND pb.id_bodega = $idBodega ";
+		$query .= " WHERE p.id_categoria = :id_categoria AND p.eliminado = 0 AND pb.estado = 1";
+
+		$stmt = Conexion::conectar()->prepare($query);
 		$stmt -> bindParam(":id_categoria", $idCategoria, PDO::PARAM_INT); 
 		$stmt -> execute();
 
 		$resultado = $stmt -> fetch(); 
+		
+		error_log("CAT_DEBUG: cat=$idCategoria, bodega=" . (isset($_SESSION['id_bodega']) ? $_SESSION['id_bodega'] : 'NOT_SET') . ", total=" . $resultado["total"]);
 
 		return $resultado["total"];
 
@@ -154,5 +163,20 @@ class ModeloCategorias{
 		$stmt = null;
 	}
 
+	/*=============================================
+	CONTAR PRODUCTOS ACTIVOS GLOBALES (SIN IMPORTAR SUCURSAL)
+	=============================================*/
+	static public function mdlContarProductosActivosGlobales($idCategoria){ 
+		$stmt = Conexion::conectar()->prepare("
+			SELECT COUNT(DISTINCT p.id) 
+			FROM productos p 
+			JOIN productos_bodegas pb ON p.id = pb.id_producto 
+			JOIN bodegas b ON pb.id_bodega = b.id
+			WHERE p.id_categoria = :id_categoria AND p.eliminado = 0 AND pb.estado = 1 AND b.estado = 1
+		");
+		$stmt -> bindParam(":id_categoria", $idCategoria, PDO::PARAM_INT); 
+		$stmt -> execute();
+		return $stmt -> fetchColumn();
+	}
 	
 }

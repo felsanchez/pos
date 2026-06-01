@@ -156,4 +156,23 @@ class ModeloCajas
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /*=============================================
+    LIMPIAR CIERRES ANTIGUOS (MÁS DE 3 MESES)
+    =============================================*/
+    static public function mdlLimpiarCierresAntiguos($tabla)
+    {
+        // Limpiamos los movimientos asociados a los turnos antiguos primero
+        $stmt1 = Conexion::conectar()->prepare("DELETE FROM cajas_movimientos WHERE id_turno IN (SELECT id FROM $tabla WHERE fecha_apertura < DATE_SUB(NOW(), INTERVAL 3 MONTH))");
+        $stmt1->execute();
+
+        // Limpiamos los turnos antiguos
+        $stmt2 = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE fecha_apertura < DATE_SUB(NOW(), INTERVAL 3 MONTH)");
+
+        if ($stmt2->execute()) {
+            return "ok";
+        } else {
+            return "error";
+        }
+    }
 }

@@ -383,10 +383,30 @@ class ControladorProveedores
 				return;
 			}
 
-			// Verificar si hay productos asociados a este proveedor
-			$productosAsociados = ModeloProductos::mdlMostrarProductos("productos", "id_proveedor", $idProveedor, "id");
+			// Verificar si hay productos asociados a este proveedor (solo activos)
+			$totalProductosGlobales = ModeloProveedores::mdlContarProductosActivosGlobales($idProveedor);
 
-			if (!empty($productosAsociados)) {
+			if ($totalProductosGlobales > 0) {
+				$productosLocal = ModeloProveedores::mdlContarProductosPorProveedor($idProveedor);
+
+				if ($productosLocal == 0) {
+					if (isset($_POST["idProveedorEliminar"])) {
+						return "error_productos_asociados_otra_sucursal";
+					}
+					echo '<script>
+						swal({
+							type: "error",
+							title: "¡No se puede eliminar!",
+							text: "No se puede eliminar porque tiene productos asociados en otra sucursal.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then(() => {
+							window.location = "proveedores";
+						});
+					</script>';
+					return;
+				}
+
 				if (isset($_POST["idProveedorEliminar"])) {
 					return "error_productos_asociados";
 				}

@@ -218,6 +218,10 @@
       </div>
     </div>
 
+    <?php
+    $configuracionReportes = ControladorConfiguracion::ctrObtenerConfiguracion();
+    if (!isset($configuracionReportes["grafica_analisis_ordenes_activa"]) || $configuracionReportes["grafica_analisis_ordenes_activa"] == 1):
+    ?>
     <!-- SECCIÓN 4: REPORTE DE ÓRDENES -->
     <div class="box box-warning" id="seccion-analisis-ordenes">
       <div class="box-header with-border">
@@ -233,7 +237,28 @@
         <?php include "reportes/ordenes-reporte.php"; ?>
       </div>
     </div>
+    <?php endif; ?>
 
+    <!-- SECCIÓN 4.1: REPORTE DE ÓRDENES DE VENTA -->
+    <div class="box box-primary collapsed-box" id="seccion-analisis-ordenes-venta">
+      <div class="box-header with-border">
+        <h3 class="box-title"><i class="fa fa-shopping-bag"></i> Análisis de Órdenes de Venta</h3>
+        <div class="box-tools pull-right">
+          <button type="button" class="btn btn-box-tool" data-widget="collapse">
+            <i class="fa fa-plus"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="box-body" style="display: none;">
+        <?php include "reportes/ordenes-reporte-ventas.php"; ?>
+      </div>
+    </div>
+
+    <?php
+    $configuracionFE = ControladorConfiguracion::ctrObtenerConfiguracion();
+    if (!isset($configuracionFE["facturacion_electronica_activa"]) || $configuracionFE["facturacion_electronica_activa"] == 1):
+    ?>
     <!-- SECCIÓN 5: REPORTE DE FACTURACIÓN ELECTRÓNICA -->
     <div class="box box-danger collapsed-box" id="seccion-reportes-facturacion">
       <div class="box-header with-border">
@@ -413,6 +438,7 @@
         </div>
       </div>
     </div>
+    <?php endif; ?>
 
   </section>
 

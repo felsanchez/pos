@@ -235,6 +235,7 @@ class ControladorVentas
 		$mensajeRecibido = !empty($configuracion["mensaje_recibido"]) ? $configuracion["mensaje_recibido"] : "Su pedido ha sido recibido";
 		$mensajeProcesado = !empty($configuracion["mensaje_procesado"]) ? $configuracion["mensaje_procesado"] : "Su pedido ha sido procesado";
 		$mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuracion["mensaje_confirmado"] : "Su pedido ha sido confirmado";
+		$mostrarBtnFE = (!isset($configuracion["boton_convertir_fe_activo"]) || $configuracion["boton_convertir_fe_activo"] == 1);
 
 		// Filtros base para órdenes
 		$where = " WHERE v.estado = 'orden' ";
@@ -422,20 +423,24 @@ class ControladorVentas
 			if (puedeAccion('ordenes', 'editar')) {
 				if (ControladorCajas::ctrValidarCajaAbierta()) {
 					$htmlConvertir .= '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-warning" title="Convertir a Venta" style="width: auto !important;">Convertir a Venta</a>';
-					$htmlConvertir .= ' <a href="index.php?ruta=orden-a-factura-electronica&idVenta=' . $value["id"] . '" 
-								class="btn btn-xs btn-primary" 
-								title="Convertir a Factura Electrónica" 
-								style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;">
-								<i class="fa fa-file-text-o"></i> Convertir a FE
-							</a>';
+					if ($mostrarBtnFE) {
+						$htmlConvertir .= ' <a href="index.php?ruta=orden-a-factura-electronica&idVenta=' . $value["id"] . '" 
+									class="btn btn-xs btn-primary" 
+									title="Convertir a Factura Electrónica" 
+									style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;">
+									<i class="fa fa-file-text-o"></i> Convertir a FE
+								</a>';
+					}
 				} else {
 					$htmlConvertir .= '<button type="button" class="btn btn-xs btn-warning" title="Convertir a Venta" style="width: auto !important;" onclick="alertaCajaCerradaOrdenes()">Convertir a Venta</button>';
-					$htmlConvertir .= ' <button type="button" 
-								class="btn btn-xs btn-primary" 
-								title="Convertir a Factura Electrónica" 
-								style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;" onclick="alertaCajaCerradaOrdenes()">
-								<i class="fa fa-file-text-o"></i> Convertir a FE
-							</button>';
+					if ($mostrarBtnFE) {
+						$htmlConvertir .= ' <button type="button" 
+									class="btn btn-xs btn-primary" 
+									title="Convertir a Factura Electrónica" 
+									style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;" onclick="alertaCajaCerradaOrdenes()">
+									<i class="fa fa-file-text-o"></i> Convertir a FE
+								</button>';
+					}
 				}
 			}
 			$htmlConvertir .= '</div>';

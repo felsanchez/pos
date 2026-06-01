@@ -200,6 +200,9 @@ class ControladorCajas
     =============================================*/
     static public function ctrMostrarCierresCajaServerSide($params)
     {
+        // Limpieza automática de registros más antiguos de 3 meses
+        ModeloCajas::mdlLimpiarCierresAntiguos("cajas_turnos");
+
         $tabla = "cajas_turnos";
 
         // Mapeo de columnas para ordenamiento

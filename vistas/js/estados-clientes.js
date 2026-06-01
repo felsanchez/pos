@@ -40,39 +40,45 @@ if (!$.fn.DataTable.isDataTable('.tablaEstadosClientes')) {
  
 
 /*=============================================
-EDITAR ESTADO - Capturar datos por click directo
+EDITAR ESTADO - Usando evento show.bs.modal de Bootstrap
 =============================================*/
 
-$(document).off("click", ".btnEditarEstado");
-$(document).on("click", ".btnEditarEstado", function() {
-	var id = $(this).attr('data-id');
-	var nombre = $(this).attr('data-nombre');
-	var color = $(this).attr('data-color');
-	var orden = $(this).attr('data-orden');
-
-	console.log("✓ Click en botón editar - ID:", id, "Nombre:", nombre, "Color:", color, "Orden:", orden);
-
-	// Llenar el formulario del modal
-	$('#idEstado').val(id);
-	$('#editarEstadoNombre').val(nombre);
-	$('#editarEstadoColor').val(color);
-	$('#editarEstadoOrden').val(orden);
+$('#modalEditarEstado').off('show.bs.modal').on('show.bs.modal', function (event) {
+	// Re-apend to body immediately before opening to guarantee it's the last element in the DOM
+	$(this).appendTo('body');
 	
-	// Abrir el modal manualmente por si acaso el data-toggle falla o para asegurar orden
-	// $('#modalEditarEstado').modal('show');
+	var button = $(event.relatedTarget); // Botón que abrió el modal
+
+	// Obtener datos del botón
+	var id = button.attr('data-id');
+	var nombre = button.attr('data-nombre');
+	var color = button.attr('data-color');
+	var orden = button.attr('data-orden');
+
+	console.log("✓ Abriendo modal editar estado cliente - ID:", id, "Nombre:", nombre, "Color:", color, "Orden:", orden);
+
+	// Llenar el formulario
+	var modal = $(this);
+	modal.find('#idEstado').val(id);
+	modal.find('#editarEstadoNombre').val(nombre);
+	modal.find('#editarEstadoColor').val(color);
+	modal.find('#editarEstadoOrden').val(orden);
 });
 
 // Evento cuando el modal se muestra completamente
 $('#modalEditarEstado').off('shown.bs.modal').on('shown.bs.modal', function () {
-	console.log("✅ Modal editar mostrado completamente");
+	console.log("✅ Modal editar estado cliente mostrado completamente");
+
+	// Forzar z-index
+	$(this).css('z-index', 1060);
 
 	// Ajustar z-index de backdrops
 	var backdrops = $('.modal-backdrop');
 	console.log("Backdrops presentes:", backdrops.length);
 
-	if (backdrops.length === 2) {
+	if (backdrops.length >= 2) {
 		$(backdrops[0]).css('z-index', 1040);
-		$(backdrops[1]).css('z-index', 1055);
+		$(backdrops[backdrops.length - 1]).css('z-index', 1055);
 	}
 
 	// Forzar focus en el campo de nombre

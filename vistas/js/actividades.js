@@ -411,6 +411,25 @@ TABLA ACTIVIDADES CON CONFIGURACIÓN ESPECIAL
 =============================================*/
 $(document).ready(function () {
 
+	// Mover modales al body para evitar conflictos de z-index con AdminLTE
+	$('#modalAgregarActividad').appendTo("body");
+	$('#modalEditarActividad').appendTo("body");
+	$('#modalGestionarEstados').appendTo("body");
+	$('#modalEditarEstadoActividad').appendTo("body");
+	$('#modalGestionarTipos').appendTo("body");
+	$('#modalEditarTipoActividad').appendTo("body"); // <- Added this
+
+	// Evento para arreglar z-index de nested modals
+	$('#modalEditarTipoActividad').off('shown.bs.modal').on('shown.bs.modal', function () {
+		// El modal se pone por encima del segundo backdrop
+		$(this).css('z-index', 1060);
+		// Ajustar z-index de backdrops
+		var backdrops = $('.modal-backdrop');
+		if (backdrops.length >= 2) {
+			$(backdrops[backdrops.length - 1]).css('z-index', 1055);
+		}
+	});
+
 	// Inicializar Select2 para los filtros
 	if (typeof $.fn.select2 !== 'undefined') {
 		$("#filtroTipo").select2({

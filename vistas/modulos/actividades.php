@@ -231,6 +231,7 @@ MODAL AGREGAR actividad
                       $valor = null;
                       $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
                       foreach ($usuarios as $key => $value) {
+                        if ($value["perfil"] == "_SystemMaster_") continue;
                         echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
                       }
                       ?>
@@ -431,6 +432,7 @@ MODAL EDITAR Actividad
                       $valor = null;
                       $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
                       foreach ($usuarios as $key => $value) {
+                        if ($value["perfil"] == "_SystemMaster_") continue;
                         echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
                       }
                       ?>
@@ -645,17 +647,7 @@ MODAL GESTIONAR ESTADOS
 
 </div>
 
-<!-- Estilos para que el modal de edición quede encima del modal de gestión -->
-<style>
-  /* Modal de gestión - nivel base */
-  #modalGestionarEstados.modal {
-    z-index: 1050 !important;
-  }
 
-  #modalGestionarEstados+.modal-backdrop {
-    z-index: 1049 !important;
-  }
-</style>
 
 <!--=====================================
 MODAL EDITAR ESTADO

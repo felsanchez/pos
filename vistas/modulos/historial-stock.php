@@ -98,10 +98,10 @@ foreach ($pre_resumen as $item) {
   $tm += intval($item["total_movimientos"]);
   if ($item["tipo_movimiento"] == "venta")
     $tv = $item["total_unidades"];
-  if ($item["tipo_movimiento"] == "creacion_producto" || $item["tipo_movimiento"] == "creacion_variante")
+  if ($item["tipo_movimiento"] == "eliminacion_venta")
     $tc += intval($item["total_unidades"]);
-  if ($item["tipo_movimiento"] == "edicion_stock")
-    $te = $item["total_unidades"];
+  if ($item["tipo_movimiento"] == "edicion_stock" || $item["tipo_movimiento"] == "ajuste_manual")
+    $te += intval($item["total_movimientos"]);
 }
 ?>
 
@@ -150,13 +150,13 @@ foreach ($pre_resumen as $item) {
       </div>
 
       <div class="col-lg-3 col-xs-6">
-        <div class="small-box bg-green">
+        <div class="small-box bg-red">
           <div class="inner">
-            <h3 id="totalCreaciones"><?php echo $tc; ?></h3>
-            <p>Creación Productos/Variantes</p>
+            <h3 id="totalEliminacionesVentas"><?php echo $tc; ?></h3>
+            <p>Ventas Eliminadas</p>
           </div>
           <div class="icon">
-            <i class="fa fa-plus-circle"></i>
+            <i class="fa fa-times-circle"></i>
           </div>
         </div>
       </div>
@@ -165,7 +165,7 @@ foreach ($pre_resumen as $item) {
         <div class="small-box bg-yellow">
           <div class="inner">
             <h3 id="totalEdiciones"><?php echo $te; ?></h3>
-            <p>Edición de Stock</p>
+            <p>Ajustes y Ediciones</p>
           </div>
           <div class="icon">
             <i class="fa fa-edit"></i>
@@ -174,7 +174,7 @@ foreach ($pre_resumen as $item) {
       </div>
 
       <div class="col-lg-3 col-xs-6">
-        <div class="small-box bg-red">
+        <div class="small-box bg-green">
           <div class="inner">
             <h3 id="totalMovimientos"><?php echo $tm; ?></h3>
             <p>Total Movimientos</p>
@@ -261,8 +261,10 @@ foreach ($pre_resumen as $item) {
                   <option value="venta">Venta</option>
                   <option value="eliminacion_venta">Eliminación Venta</option>
                   <option value="devolucion">Devolución</option>
-                  <option value="creacion_producto">Creación</option>
+                  <option value="creacion_producto">Creación Producto</option>
+                  <option value="eliminacion_producto">Eliminación de Producto</option>
                   <option value="creacion_variante">Creación Variante</option>
+                  <option value="eliminacion_variante">Eliminación de Variantes</option>
                   <option value="edicion_stock">Edición Stock</option>
                   <option value="ajuste_manual">Ajuste Manual</option>
                   <option value="traslado_salida">Traslado (Salida)</option>

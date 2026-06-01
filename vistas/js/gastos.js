@@ -174,9 +174,12 @@ $(document).ready(function () {
         var idGasto = $(this).attr("idGasto");
         swal({
             title: '¿Eliminar gasto?',
-            text: "Esta acción no se puede deshacer",
-            icon: 'warning',
+            text: "Esta acción no se puede deshacer.",
+            type: 'warning',
             showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: 'Cancelar',
             confirmButtonText: 'Sí, eliminar'
         }).then((result) => {
             if (result.value) {
@@ -197,6 +200,123 @@ $(document).ready(function () {
                 });
             }
         });
+    });
+
+    $(document).on("click", ".btnEditarCategoriaGasto", function(){
+
+        var idCategoria = $(this).attr("idCategoria");
+    
+        var datos = new FormData();
+        datos.append("idCategoria", idCategoria);
+    
+        $.ajax({
+            url: "ajax/categorias_gastos.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType:"json",
+            success: function(respuesta){
+    
+                $("#editarNombreCategoriaGasto").val(respuesta["nombre"]);
+                $("#idCategoriaGasto").val(respuesta["id"]);
+                $("#editarColorCategoriaGasto").val(respuesta["color"]);
+                $("#editarDescripcionCategoriaGasto").val(respuesta["descripcion"]);
+    
+            }
+    
+        })
+    
+    });
+    
+    $(document).on("click", ".btnEliminarCategoriaGasto", function(){
+    
+        var idCategoria = $(this).attr("idCategoria");
+        var nombreCategoria = $(this).attr("nombreCategoria");
+    
+        swal({
+            title: '¿Está seguro de borrar la categoría?',
+            text: "¡Si no lo está puede cancelar la acción!",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Si, borrar categoría!'
+        }).then(function(result){
+    
+            if(result.value){
+    
+                var datos = new FormData();
+                datos.append("idCategoriaGastoEliminar", idCategoria);
+    
+                $.ajax({
+                    url: "ajax/categorias_gastos.ajax.php",
+                    method: "POST",
+                    data: datos,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function(respuesta){
+    
+                        if(respuesta == "ok"){
+    
+                            swal({
+                                type: "success",
+                                title: "La categoría ha sido borrada correctamente",
+                                showConfirmButton: true,
+                                confirmButtonText: "Cerrar"
+                            }).then(function(result){
+                                if (result.value) {
+                                    window.location = "gastos";
+                                }
+                            })
+    
+                        } else if (respuesta == "error_gastos_asociados") {
+                            swal({
+                                type: "error",
+                                title: "¡No se puede eliminar la categoría porque tiene gastos asociados!",
+                                showConfirmButton: true,
+                                confirmButtonText: "Cerrar"
+                            })
+                        } else if (respuesta == "error_csrf") {
+                            swal({
+                                type: "error",
+                                title: "Error de seguridad CSRF",
+                                showConfirmButton: true,
+                                confirmButtonText: "Cerrar"
+                            })
+                        }
+                    }
+    
+                })
+    
+            }
+    
+        })
+    
+    });
+
+    // Fijar z-index del modal Editar Categoría para que no se superponga incorrectamente con Gestionar Categorías
+    $('#modalEditarCategoria').off('show.bs.modal').on('show.bs.modal', function (event) {
+        $(this).appendTo('body');
+    });
+
+    $('#modalEditarCategoria').off('shown.bs.modal').on('shown.bs.modal', function () {
+        $(this).css('z-index', 1060);
+        var backdrops = $('.modal-backdrop');
+        if (backdrops.length >= 2) {
+            $(backdrops[0]).css('z-index', 1040);
+            $(backdrops[backdrops.length - 1]).css('z-index', 1055);
+        }
+        $('#editarNombreCategoriaGasto').focus();
+    });
+
+    $('#modalEditarCategoria').off('hidden.bs.modal').on('hidden.bs.modal', function () {
+        if ($('#modalGestionarCategorias').hasClass('in')) {
+            $('body').addClass('modal-open');
+        }
     });
 
 });

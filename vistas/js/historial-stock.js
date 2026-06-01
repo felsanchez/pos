@@ -165,16 +165,21 @@ $(document).ready(function () {
             data: filtros,
             dataType: "json",
             success: function (resumen) {
-                $("#totalVentas, #totalCreaciones, #totalEdiciones, #totalMovimientos").text("0");
+                $("#totalVentas, #totalEliminacionesVentas, #totalEdiciones, #totalMovimientos").text("0");
+                
                 var totalMovimientos = 0;
-                var totalCreaciones = 0;
+                var totalEliminacionesVentas = 0;
+                var totalEdiciones = 0;
+
                 resumen.forEach(function (item) {
                     totalMovimientos += parseInt(item.total_movimientos);
                     if (item.tipo_movimiento == "venta") $("#totalVentas").text(item.total_unidades);
-                    if (item.tipo_movimiento == "creacion_producto" || item.tipo_movimiento == "creacion_variante") totalCreaciones += parseInt(item.total_unidades);
-                    if (item.tipo_movimiento == "edicion_stock") $("#totalEdiciones").text(item.total_unidades);
+                    if (item.tipo_movimiento == "eliminacion_venta") totalEliminacionesVentas += parseInt(item.total_unidades);
+                    if (item.tipo_movimiento == "edicion_stock" || item.tipo_movimiento == "ajuste_manual") totalEdiciones += parseInt(item.total_movimientos);
                 });
-                $("#totalCreaciones").text(totalCreaciones);
+                
+                $("#totalEliminacionesVentas").text(totalEliminacionesVentas);
+                $("#totalEdiciones").text(totalEdiciones);
                 $("#totalMovimientos").text(totalMovimientos);
             }
         });

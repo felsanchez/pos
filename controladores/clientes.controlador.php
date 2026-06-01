@@ -421,48 +421,6 @@ class ControladorClientes
 
 			// ── Validaciones pre-transacción (solo lectura) ──────────────────
 
-			// Verificar si hay actividades asociadas
-			$actividadesAsociados = ModeloActividades::mdlMostrarActividades("actividades", "id_cliente", $idCliente);
-
-			if (!empty($actividadesAsociados)) {
-				if (isset($_POST["idClienteEliminar"])) {
-					return "error_actividades";
-				}
-				echo '<script>
-					swal({
-						type: "error",
-						title: "¡No se puede eliminar!",
-						text: "El cliente tiene actividades asociadas.",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					}).then(() => {
-						window.location = "' . $ruta . '";
-					});
-				</script>';
-				return;
-			}
-
-			// Verificar si hay ventas asociadas
-			$ventasAsociados = ModeloVentas::mdlMostrarVentas("ventas", "id_cliente", $idCliente);
-
-			if (!empty($ventasAsociados)) {
-				if (isset($_POST["idClienteEliminar"])) {
-					return "error_ventas";
-				}
-				echo '<script>
-					swal({
-						type: "error",
-						title: "¡No se puede eliminar!",
-						text: "El cliente tiene ventas asociadas.",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					}).then(() => {
-						window.location = "' . $ruta . '";
-					});
-				</script>';
-				return;
-			}
-
 			// Verificar si hay notas crédito asociadas
 			$notasAsociadas = ModeloFactus::mdlMostrarNotasCredito("notas_credito", "id_cliente", $idCliente);
 

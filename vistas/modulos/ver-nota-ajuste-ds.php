@@ -82,9 +82,45 @@ $listaProducto = json_decode($nota["productos"], true);
                             </div>
 
                             <div class="row invoice-info">
-                                <div class="col-sm-4 invoice-col">
+                                <div class="col-sm-3 invoice-col">
                                     <span
-                                        style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #3c8dbc; display: block; margin-bottom: 10px; width: fit-content;">Proveedor</span>
+                                        style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #3c8dbc; display: block; margin-bottom: 10px; width: fit-content;">Emisor (Comprador)</span>
+                                    <address>
+                                        <?php
+                                        $labelNombre = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1') ? 'Razón Social' : 'Nombre Empresa';
+                                        $nombreEmisor = isset($configFactus['nombre_empresa']) && !empty($configFactus['nombre_empresa']) ? $configFactus['nombre_empresa'] : ($configuracion["nombre_empresa"] ?? 'Nombre Empresa');
+                                        $nitEmisor = isset($configFactus['nit_empresa']) && !empty($configFactus['nit_empresa']) ? $configFactus['nit_empresa'] : ($configuracion["nit"] ?? '');
+                                        $direccionEmisor = isset($configFactus['direccion_empresa']) && !empty($configFactus['direccion_empresa']) ? $configFactus['direccion_empresa'] : ($configuracion["direccion"] ?? '');
+                                        $telefonoEmisor = isset($configFactus['telefono_empresa']) && !empty($configFactus['telefono_empresa']) ? $configFactus['telefono_empresa'] : ($configuracion["telefono"] ?? '');
+                                        $emailEmisor = isset($configFactus['email_empresa']) && !empty($configFactus['email_empresa']) ? $configFactus['email_empresa'] : ($configuracion["correo"] ?? '');
+                                        
+                                        $municipioEmisor = '';
+                                        if (isset($configFactus['municipio_id']) && !empty($configFactus['municipio_id'])) {
+                                            require_once "modelos/factus.modelo.php";
+                                            $muns = ModeloFactus::mdlObtenerMunicipios();
+                                            foreach ($muns as $mun) {
+                                                if ($mun['id_factus'] == $configFactus['municipio_id']) {
+                                                    $municipioEmisor = $mun['nombre'] . ' - ' . $mun['departamento'];
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        ?>
+                                        <strong><?php echo $labelNombre; ?>:</strong><br>
+                                        <?php echo $nombreEmisor; ?><br>
+                                        <strong>NIT:</strong> <?php echo $nitEmisor; ?><br>
+                                        <strong>Dirección:</strong> <?php echo $direccionEmisor; ?><br>
+                                        <?php if(!empty($municipioEmisor)): ?>
+                                        <strong>Municipio:</strong> <?php echo $municipioEmisor; ?><br>
+                                        <?php endif; ?>
+                                        <strong>Teléfono:</strong> <?php echo $telefonoEmisor; ?><br>
+                                        <strong>Email:</strong> <?php echo $emailEmisor; ?>
+                                    </address>
+                                </div>
+
+                                <div class="col-sm-3 invoice-col">
+                                    <span
+                                        style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #3c8dbc; display: block; margin-bottom: 10px; width: fit-content;">Proveedor (Vendedor)</span>
                                     <address>
                                         <strong>Nombre:</strong> <?php echo $proveedor["nombre"] ?? 'Proveedor'; ?><br>
                                         <strong>NIT:</strong> <?php echo $proveedor["documento"] ?? ''; ?><br>
@@ -102,17 +138,15 @@ $listaProducto = json_decode($nota["productos"], true);
                                     </address>
                                 </div>
 
-                                <div class="col-sm-4 invoice-col">
+                                <div class="col-sm-3 invoice-col">
                                     <span
-                                        style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #3c8dbc; display: block; margin-bottom: 10px; width: fit-content;">Referencia
-                                        Original</span>
+                                        style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #3c8dbc; display: block; margin-bottom: 10px; width: fit-content;">Referencia Original</span>
                                     <b>Doc. Soporte Original:</b> <?php echo $nota["numero_ds_original"]; ?>
                                 </div>
 
-                                <div class="col-sm-4 invoice-col">
+                                <div class="col-sm-3 invoice-col">
                                     <span
-                                        style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #3c8dbc; display: block; margin-bottom: 10px; width: fit-content;">Detalles
-                                        Nota</span>
+                                        style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #3c8dbc; display: block; margin-bottom: 10px; width: fit-content;">Detalles Nota</span>
                                     <b>Nota Ajuste #:</b> <?php echo $nota["numero_nota_ajuste"]; ?><br>
                                     <b>Concepto Ajuste:</b> <?php
                                     $conceptos = [

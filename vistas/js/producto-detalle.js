@@ -87,7 +87,7 @@ $(document).ready(function () {
 
         if (precioCompra > 0 && porcentaje > 0) {
             var precioVenta = precioCompra * (1 + (porcentaje / 100));
-            $('#precioVenta').val(precioVenta.toFixed(2));
+            $('#precioVenta').val(Math.round(precioVenta));
         }
     }
 
@@ -609,11 +609,11 @@ function generarCombinaciones() {
         html += '<td>';
         html += '<div class="input-group input-group-sm">';
         html += '<span class="input-group-addon">$</span>';
-        html += '<input type="number" class="form-control" name="' + prefixPrecio + idsCombinacion + '" placeholder="0" step="0.01" value="' + valorPrecio + '">';
+        html += '<input type="number" class="form-control" name="' + prefixPrecio + idsCombinacion + '" placeholder="0" step="1" value="' + Math.round(valorPrecio) + '">';
         html += '</div>';
         html += '</td>';
         html += '<td>';
-        html += '<input type="number" class="form-control input-sm" name="' + prefixStock + idsCombinacion + '" placeholder="0" min="0" value="' + valorStock + '">';
+        html += '<input type="number" class="form-control input-sm stockVariante" name="' + prefixStock + idsCombinacion + '" placeholder="0" min="0" step="1" value="' + Math.round(valorStock) + '">';
         html += '</td>';
 
         // Inputs hidden para enviar datos

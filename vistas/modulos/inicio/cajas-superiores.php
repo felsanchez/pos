@@ -94,6 +94,7 @@
 <?php
 // Obtener conexión para las estadísticas iniciales del mes actual (por defecto en el dashboard)
 $db = Conexion::conectar();
+$idBodegaActiva = isset($_SESSION["id_bodega"]) && !empty($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
 
 // 1. Obtener ventas del mes actual
 $sqlVentasMes = "
@@ -102,11 +103,13 @@ $sqlVentasMes = "
     COUNT(*) as total_cantidad 
   FROM ventas 
   WHERE estado = 'venta' 
+    AND id_bodega = :id_bodega
     AND ( ( (resolucion_id IS NULL OR resolucion_id = 0) AND (estado_dian IS NULL OR estado_dian = '') ) OR ( resolucion_id IS NOT NULL AND resolucion_id != 0 AND estado_dian IN ('aceptada', 'enviada') ) )
     AND MONTH(fecha) = MONTH(CURDATE()) 
     AND YEAR(fecha) = YEAR(CURDATE())
 ";
 $stmtVMes = $db->prepare($sqlVentasMes);
+$stmtVMes->bindParam(":id_bodega", $idBodegaActiva, PDO::PARAM_INT);
 $stmtVMes->execute();
 $resVMes = $stmtVMes->fetch(PDO::FETCH_ASSOC);
 
@@ -119,10 +122,12 @@ $sqlOrdenesMes = "
   SELECT COUNT(*) as total_cantidad 
   FROM ventas 
   WHERE estado = 'orden' 
+    AND id_bodega = :id_bodega
     AND MONTH(fecha) = MONTH(CURDATE()) 
     AND YEAR(fecha) = YEAR(CURDATE())
 ";
 $stmtOMes = $db->prepare($sqlOrdenesMes);
+$stmtOMes->bindParam(":id_bodega", $idBodegaActiva, PDO::PARAM_INT);
 $stmtOMes->execute();
 $resOMes = $stmtOMes->fetch(PDO::FETCH_ASSOC);
 $inicialCantOrdenes = $resOMes ? (int)$resOMes["total_cantidad"] : 0;

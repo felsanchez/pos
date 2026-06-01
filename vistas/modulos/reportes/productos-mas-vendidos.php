@@ -1,7 +1,7 @@
 <?php
 
 // Obtener parámetros de filtro (por defecto mes actual para coincidir con la vista de inicio)
-$idBodega = isset($idBodega) ? $idBodega : (isset($_POST["idBodega"]) ? $_POST["idBodega"] : "todos");
+$idBodega = isset($idBodega) ? $idBodega : (isset($_POST["idBodega"]) ? $_POST["idBodega"] : (isset($_SESSION["id_bodega"]) && !empty($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1));
 $fechaInicial = isset($fechaInicial) ? $fechaInicial : (isset($_POST["fechaInicial"]) ? $_POST["fechaInicial"] : null);
 $fechaFinal = isset($fechaFinal) ? $fechaFinal : (isset($_POST["fechaFinal"]) ? $_POST["fechaFinal"] : null);
 

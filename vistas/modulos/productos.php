@@ -920,7 +920,7 @@ MODAL EDITAR VARIANTE
                 <span class="input-group-addon"><i class="fa fa-dollar"></i></span>
 
                 <input type="number" class="form-control input-lg" id="editarPrecioAdicionalVariante"
-                  name="editarPrecioAdicionalVariante" step="0.01" placeholder="Precio adicional" required>
+                  name="editarPrecioAdicionalVariante" step="1" placeholder="Precio adicional" required>
 
               </div>
 
@@ -938,7 +938,7 @@ MODAL EDITAR VARIANTE
                 <span class="input-group-addon"><i class="fa fa-cubes"></i></span>
 
                 <input type="number" class="form-control input-lg" id="editarStockVariante" name="editarStockVariante"
-                  min="0" placeholder="Stock" required>
+                  min="0" step="1" placeholder="Stock" required>
 
               </div>
 

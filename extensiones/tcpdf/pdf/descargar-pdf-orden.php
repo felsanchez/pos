@@ -103,6 +103,17 @@ class imprimirDetalleOrden
         $emailEmisor = isset($configFactus['email_empresa']) && !empty($configFactus['email_empresa']) ? $configFactus['email_empresa'] : ($configuracion["correo"] ?? '');
         $labelNombreEmisor = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1') ? 'Razón Social' : 'Nombre Empresa';
 
+        $municipioEmisor = '';
+        if (isset($configFactus['municipio_id']) && !empty($configFactus['municipio_id'])) {
+            $muns = ModeloFactus::mdlObtenerMunicipios();
+            foreach ($muns as $mun) {
+                if ($mun['id_factus'] == $configFactus['municipio_id']) {
+                    $municipioEmisor = $mun['nombre'] . ' - ' . $mun['departamento'];
+                    break;
+                }
+            }
+        }
+
         // --- LOGO FACTUS (Si existe) ---
         $htmlLogo = '';
         if (isset($configFactus['logo_empresa']) && !empty($configFactus['logo_empresa'])) {
@@ -135,7 +146,8 @@ class imprimirDetalleOrden
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Empresa</span><br><br>
                     <strong>' . $labelNombreEmisor . ':</strong> ' . $nombreEmpresa . '<br>
                     <strong>NIT:</strong> ' . $nitEmisor . '<br>
-                    <strong>Dirección:</strong> ' . $direccionEmisor . '<br>
+                    <strong>Dirección:</strong> ' . $direccionEmisor . '<br>' .
+                    (!empty($municipioEmisor) ? '                    <strong>Municipio:</strong> ' . $municipioEmisor . '<br>' : '') . '
                     <strong>Teléfono:</strong> ' . $telefonoEmisor . '<br>
                     <strong>Email:</strong> ' . $emailEmisor . '
                 </td>
@@ -259,7 +271,8 @@ class imprimirDetalleOrden
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Empresa</span><br><br>
                     <strong>' . $labelNombreEmisor . ':</strong> ' . $nombreEmpresa . '<br>
                     <strong>NIT:</strong> ' . $nitEmisor . '<br>
-                    <strong>Dirección:</strong> ' . $direccionEmisor . '<br>
+                    <strong>Dirección:</strong> ' . $direccionEmisor . '<br>' .
+                    (!empty($municipioEmisor) ? '                    <strong>Municipio:</strong> ' . $municipioEmisor . '<br>' : '') . '
                     <strong>Teléfono:</strong> ' . $telefonoEmisor . '<br>
                     <strong>Email:</strong> ' . $emailEmisor . '
                 </td>

@@ -100,11 +100,26 @@ $retencionesDS = !empty($documentoSoporte["retenciones"]) ? json_decode($documen
                                         $direccionEmisor = isset($configFactus['direccion_empresa']) && !empty($configFactus['direccion_empresa']) ? $configFactus['direccion_empresa'] : ($configuracion["direccion"] ?? '');
                                         $telefonoEmisor = isset($configFactus['telefono_empresa']) && !empty($configFactus['telefono_empresa']) ? $configFactus['telefono_empresa'] : ($configuracion["telefono"] ?? '');
                                         $emailEmisor = isset($configFactus['email_empresa']) && !empty($configFactus['email_empresa']) ? $configFactus['email_empresa'] : ($configuracion["correo"] ?? '');
+                                        
+                                        $municipioEmisor = '';
+                                        if (isset($configFactus['municipio_id']) && !empty($configFactus['municipio_id'])) {
+                                            require_once "modelos/factus.modelo.php";
+                                            $muns = ModeloFactus::mdlObtenerMunicipios();
+                                            foreach ($muns as $mun) {
+                                                if ($mun['id_factus'] == $configFactus['municipio_id']) {
+                                                    $municipioEmisor = $mun['nombre'] . ' - ' . $mun['departamento'];
+                                                    break;
+                                                }
+                                            }
+                                        }
                                         ?>
                                         <strong><?php echo $labelNombre; ?>:</strong><br>
                                         <?php echo $nombreEmisor; ?><br>
                                         <strong>NIT:</strong> <?php echo $nitEmisor; ?><br>
                                         <strong>Dirección:</strong> <?php echo $direccionEmisor; ?><br>
+                                        <?php if(!empty($municipioEmisor)): ?>
+                                        <strong>Municipio:</strong> <?php echo $municipioEmisor; ?><br>
+                                        <?php endif; ?>
                                         <strong>Teléfono:</strong> <?php echo $telefonoEmisor; ?><br>
                                         <strong>Email:</strong> <?php echo $emailEmisor; ?>
                                     </address>

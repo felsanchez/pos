@@ -140,6 +140,26 @@ class ControladorBodegas
 			$tabla = "bodegas";
 			$datos = $_GET["idBodega"];
 
+			// Validar si la bodega tiene usuarios asociados
+			$usuariosAsociados = ModeloUsuarios::mdlMostrarUsuarios("usuarios", "id_bodega", $datos);
+			
+			if($usuariosAsociados){
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡No se puede borrar!",
+						text: "La sucursal tiene usuarios asociados. Reasígnalos a otra sucursal primero.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+						}).then(function(result){
+							if (result.value) {
+								window.location = "bodegas";
+							}
+						})
+				</script>';
+				return;
+			}
+
 			// Aquí deberíamos validar si la bodega tiene productos_bodegas asociados, etc.
 			// Por ahora se borrará si no hay constraints de Foreign Key restrictivas.
 

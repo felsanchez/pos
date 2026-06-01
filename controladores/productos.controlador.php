@@ -312,11 +312,11 @@ class ControladorProductos
 
 			$validarPrecioCompra = $tieneVariantes ? true : preg_match('/^[0-9]+$/', $_POST["nuevoPrecioCompra"]);
 
-			$validarPrecioVenta = $tieneVariantes ? true : preg_match('/^[0-9,.]+$/', $_POST["nuevoPrecioVenta"]);
+			$validarPrecioVenta = $tieneVariantes ? true : preg_match('/^[0-9]+$/', $_POST["nuevoPrecioVenta"]);
 
 
 			if (
-				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevaDescripcion"]) &&
+				preg_match('/^[^<>]+$/', $_POST["nuevaDescripcion"]) &&
 
 				$validarStock && $validarPrecioCompra && $validarPrecioVenta
 			) {
@@ -736,10 +736,10 @@ if (isset($_POST["editarDescripcion"])) {
 			}
 
 			if (
-				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarDescripcion"]) &&
+				preg_match('/^[^<>]+$/', $_POST["editarDescripcion"]) &&
 				preg_match('/^[0-9]+$/', $_POST["editarStock"]) &&
 				preg_match('/^[0-9]+$/', $_POST["editarPrecioCompra"]) &&
-				preg_match('/^[0-9,.]+$/', $_POST["editarPrecioVenta"])
+				preg_match('/^[0-9]+$/', $_POST["editarPrecioVenta"])
 			) {
 
 
@@ -1254,6 +1254,50 @@ if (isset($_POST["editarDescripcion"])) {
 
 			// NOTA: No borramos imagen/directorio porque la eliminación es siempre por bodega (soft-delete).
 			// El producto sigue existiendo en otras bodegas y necesita su imagen.
+
+            // Registrar movimiento de stock antes de eliminar (si tenía stock)
+            $productoBodega = ModeloProductos::mdlMostrarProductos($tabla, "id", $idProducto, null, $idBodega);
+            $stockAnterior = $productoBodega ? $productoBodega["stock"] : 0;
+            $tieneVariantes = $productoBodega ? $productoBodega["tiene_variantes"] : 0;
+            $descripcion = $productoBodega ? $productoBodega["descripcion"] : "Producto Eliminado";
+
+            if ($tieneVariantes) {
+                // Obtener variantes con su stock en bodega
+                $variantes = ModeloProductos::mdlObtenerVariantesProducto($idProducto, $idBodega);
+                foreach ($variantes as $var) {
+                    if ($var["stock"] > 0) {
+                        ControladorMovimientos::ctrRegistrarMovimiento(
+                            "variante",
+                            $idProducto,
+                            $var["id"],
+                            $descripcion,
+                            "eliminacion_producto",
+                            -abs($var["stock"]),
+                            $var["stock"],
+                            0,
+                            "Eliminación de producto",
+                            "",
+                            $idBodega
+                        );
+                    }
+                }
+            } else {
+                if ($stockAnterior > 0) {
+                    ControladorMovimientos::ctrRegistrarMovimiento(
+                        "producto",
+                        $idProducto,
+                        null,
+                        $descripcion,
+                        "eliminacion_producto",
+                        -abs($stockAnterior),
+                        $stockAnterior,
+                        0,
+                        "Eliminación de producto",
+                        "",
+                        $idBodega
+                    );
+                }
+            }
 
 			$db = Conexion::conectar();
 			try {

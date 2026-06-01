@@ -12,7 +12,7 @@ $nombreEmpresa = !empty($configFactus["nombre_empresa"]) ? $configFactus["nombre
 
     <h1>
       <?php echo $nombreEmpresa; ?>
-      <small>Panel de Control</small>
+      <small>Kontrol Pos</small>
     </h1>
 
     <ol class="breadcrumb">

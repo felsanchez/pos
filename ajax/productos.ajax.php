@@ -14,6 +14,10 @@ require_once "../modelos/categorias.modelo.php";
 
 require_once "../controladores/variantes.controlador.php";
 require_once "../modelos/variantes.modelo.php";
+
+require_once "../controladores/movimientos.controlador.php";
+require_once "../modelos/movimientos.modelo.php";
+
 require_once "../modelos/csrf.php";
 
 // VALIDAR CSRF para todas las peticiones POST
@@ -747,5 +751,123 @@ if (isset($_POST["obtenerVariantesParaEditar"])) {
     }
 
     echo json_encode($resultado);
+    exit;
+}
+
+/*=============================================
+ELIMINAR VARIANTE
+=============================================*/
+if (isset($_POST["idVarianteEliminar"])) {
+    
+    $idVariante = $_POST["idVarianteEliminar"];
+    $idProducto = $_POST["idProductoVarianteEliminar"];
+    $idBodegaActiva = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
+
+    $db = Conexion::conectar();
+    try {
+        $db->beginTransaction();
+
+        // 1. Obtener datos de la variante y producto
+        $stmt = $db->prepare("SELECT pv.*, p.descripcion as producto_descripcion 
+                               FROM productos_variantes pv 
+                               INNER JOIN productos p ON pv.id_producto = p.id 
+                               WHERE pv.id = :id");
+        $stmt->bindParam(":id", $idVariante, PDO::PARAM_INT);
+        $stmt->execute();
+        $variante = $stmt->fetch();
+        $stmt = null;
+
+        if (!$variante) {
+            throw new Exception("Variante no encontrada");
+        }
+
+        // Obtener stock actual de la variante en ESTA bodega
+        $stmtBodega = $db->prepare("SELECT stock FROM productos_variantes_bodegas WHERE id_variante = :id_variante AND id_bodega = :id_bodega");
+        $stmtBodega->bindParam(":id_variante", $idVariante, PDO::PARAM_INT);
+        $stmtBodega->bindParam(":id_bodega", $idBodegaActiva, PDO::PARAM_INT);
+        $stmtBodega->execute();
+        $resBodega = $stmtBodega->fetch();
+        $stmtBodega = null;
+
+        $stockBodegaAnterior = $resBodega ? $resBodega["stock"] : 0;
+
+        // 2. Registrar movimiento de stock si tenía stock > 0
+        if ($stockBodegaAnterior > 0) {
+            // Obtener el nombre de la variante con sus opciones
+            $stmtNombre = $db->prepare("SELECT GROUP_CONCAT(ov.nombre SEPARATOR ' - ') as nombre_variante
+                                         FROM productos_variantes_opciones pvo
+                                         INNER JOIN opciones_variantes ov ON pvo.id_opcion_variante = ov.id
+                                         WHERE pvo.id_producto_variante = :id_variante
+                                         ORDER BY ov.id ASC");
+            $stmtNombre->bindParam(":id_variante", $idVariante, PDO::PARAM_INT);
+            $stmtNombre->execute();
+            $nombreVariante = $stmtNombre->fetch();
+            $stmtNombre = null;
+
+            $nombreCompleto = $variante["producto_descripcion"] . " - " . (isset($nombreVariante["nombre_variante"]) ? $nombreVariante["nombre_variante"] : "");
+
+            $resMov = ControladorMovimientos::ctrRegistrarMovimiento(
+                "variante",
+                $idProducto,
+                $idVariante,
+                $nombreCompleto,
+                "eliminacion_variante", 
+                -abs($stockBodegaAnterior),
+                $stockBodegaAnterior,
+                0,
+                "Eliminación de variante",
+                "",
+                $idBodegaActiva
+            );
+            if ($resMov != "ok") {
+                throw new Exception("Error al registrar el movimiento de stock.");
+            }
+        }
+
+        // 3. Eliminar de la base de datos (se usa CASCADE o borrado explícito)
+        $stmtDelOpciones = $db->prepare("DELETE FROM productos_variantes_opciones WHERE id_producto_variante = :id_variante");
+        $stmtDelOpciones->bindParam(":id_variante", $idVariante, PDO::PARAM_INT);
+        $stmtDelOpciones->execute();
+
+        $stmtDelBodegas = $db->prepare("DELETE FROM productos_variantes_bodegas WHERE id_variante = :id_variante");
+        $stmtDelBodegas->bindParam(":id_variante", $idVariante, PDO::PARAM_INT);
+        $stmtDelBodegas->execute();
+
+        $stmtDelVariante = $db->prepare("DELETE FROM productos_variantes WHERE id = :id_variante");
+        $stmtDelVariante->bindParam(":id_variante", $idVariante, PDO::PARAM_INT);
+        $stmtDelVariante->execute();
+
+        // 4. Recalcular stock global del producto base
+        $stmtTotalProd = $db->prepare("SELECT SUM(stock) as total FROM productos_variantes WHERE id_producto = :id AND estado = 1");
+        $stmtTotalProd->bindParam(":id", $idProducto, PDO::PARAM_INT);
+        $stmtTotalProd->execute();
+        $resTotalProd = $stmtTotalProd->fetch();
+        $stockTotalProducto = $resTotalProd["total"] ? $resTotalProd["total"] : 0;
+        $stmtTotalProd = null;
+
+        $resActP = ModeloProductos::mdlActualizarProducto("productos", "stock", $stockTotalProducto, $idProducto);
+
+        // 5. Recalcular stock del producto en la bodega activa
+        $stmtBodegaProd = $db->prepare("SELECT SUM(pvb.stock) as total FROM productos_variantes_bodegas pvb 
+                                                       INNER JOIN productos_variantes pv ON pvb.id_variante = pv.id
+                                                       WHERE pv.id_producto = :id AND pvb.id_bodega = :id_bodega AND pv.estado = 1");
+        $stmtBodegaProd->bindParam(":id", $idProducto, PDO::PARAM_INT);
+        $stmtBodegaProd->bindParam(":id_bodega", $idBodegaActiva, PDO::PARAM_INT);
+        $stmtBodegaProd->execute();
+        $resBodegaProd = $stmtBodegaProd->fetch();
+        $stockBodegaProducto = $resBodegaProd["total"] ? $resBodegaProd["total"] : 0;
+        $stmtBodegaProd = null;
+
+        $resStockBProd = ModeloProductos::mdlActualizarStockBodega($idProducto, $idBodegaActiva, $stockBodegaProducto);
+
+        $db->commit();
+        echo "ok";
+
+    } catch (Exception $e) {
+        $db->rollBack();
+        Logger::error("Error al eliminar variante ID " . $idVariante . ": " . $e->getMessage());
+        echo "error";
+    }
+    
     exit;
 }

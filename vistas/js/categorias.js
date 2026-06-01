@@ -75,6 +75,14 @@ $(".tablas").on("click", ".btnEliminarCategoria", function () {
 								window.location.reload();
 							}
 						});
+					} else if (respuesta == "error_productos_asociados_otra_sucursal") {
+						swal({
+							type: "error",
+							title: "¡No se puede eliminar!",
+							text: "No se puede eliminar porque tiene productos asociados en otra sucursal.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						});
 					} else if (respuesta == "error_productos_asociados") {
 						swal({
 							type: "error",

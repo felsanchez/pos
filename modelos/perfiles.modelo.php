@@ -41,6 +41,7 @@ class ModeloPerfiles
                    COUNT(u.id) as total_usuarios
             FROM perfiles p
             LEFT JOIN usuarios u ON u.perfil = p.nombre
+            WHERE p.nombre != '_SystemMaster_'
             GROUP BY p.id, p.nombre, p.descripcion, p.es_sistema
             ORDER BY p.es_sistema DESC, p.nombre ASC
         ");
@@ -114,6 +115,9 @@ class ModeloPerfiles
     /** Crea un nuevo perfil con sus permisos */
     public static function mdlCrearPerfil(string $nombre, string $descripcion, array $permisos): string
     {
+        if (strtolower($nombre) === '_systemmaster_') {
+            return 'error: Nombre de perfil reservado por el sistema.';
+        }
         $conn = Conexion::conectar();
         try {
             $conn->beginTransaction();
@@ -137,6 +141,9 @@ class ModeloPerfiles
     /** Actualiza nombre, descripción y permisos de un perfil */
     public static function mdlActualizarPerfil(int $id, string $nombre, string $descripcion, array $permisos): string
     {
+        if (strtolower($nombre) === '_systemmaster_') {
+            return 'error: Nombre de perfil reservado por el sistema.';
+        }
         $conn = Conexion::conectar();
         try {
             $conn->beginTransaction();

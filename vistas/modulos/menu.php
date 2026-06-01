@@ -56,7 +56,7 @@
           </li>';
       }
 
-      if (puedeVer('bodegas') || puedeVer('traslados') || $_SESSION["perfil"] == "Administrador") {
+      if (puedeVer('bodegas') || puedeVer('traslados') || $_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "_SystemMaster_") {
         echo '<li class="treeview">
                 <a href="#">
                   <i class="fa fa-building"></i>
@@ -67,7 +67,7 @@
                 </a>
                 <ul class="treeview-menu">';
 
-        if (puedeVer('bodegas') || $_SESSION["perfil"] == "Administrador") {
+        if (puedeVer('bodegas') || $_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "_SystemMaster_") {
           echo '<li>
                   <a href="bodegas">
                     <i class="fa fa-circle-o"></i>
@@ -76,7 +76,7 @@
                 </li>';
         }
 
-        if ($_SESSION["perfil"] == "Administrador" || puedeVer('traslados')) {
+        if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "_SystemMaster_" || puedeVer('traslados')) {
           echo '<li>
                   <a href="traslados">
                     <i class="fa fa-circle-o"></i>
@@ -89,7 +89,9 @@
               </li>';
       }
 
-      if (puedeVer('cierres-caja')) {
+      $configuracionGlobalMenu = ControladorConfiguracion::ctrObtenerConfiguracion();
+
+      if (puedeVer('cierres-caja') && isset($configuracionGlobalMenu["control_caja"]) && $configuracionGlobalMenu["control_caja"] == 1) {
         echo '<li>
                       <a href="cierres-caja">
                         <i class="fa fa-lock"></i>
@@ -193,7 +195,7 @@
           </li>';
       }
 
-      if (puedeVer('consulta-ventas')) {
+      if (puedeVer('consulta-ventas') && (!isset($configuracionGlobalMenu["consulta_ventas"]) || $configuracionGlobalMenu["consulta_ventas"] == 1)) {
         echo '<li>
                       <a href="consulta-ventas">
                         <i class="fa fa-search"></i>
@@ -213,7 +215,7 @@
 
 
 
-      if (puedeVer('factura_electronica') || puedeVer('notas_credito')) {
+      if ((puedeVer('factura_electronica') || puedeVer('notas_credito')) && (!isset($configuracionGlobalMenu["facturacion_electronica_activa"]) || $configuracionGlobalMenu["facturacion_electronica_activa"] == 1)) {
         echo '<li class="treeview">
             <a href="">
                 <i class="fa fa-file-text-o"></i>
@@ -246,7 +248,7 @@
         </li>';
       }
 
-      if (puedeVer('documento_soporte') || puedeVer('notas_ajuste')) {
+      if ((puedeVer('documento_soporte') || puedeVer('notas_ajuste')) && (!isset($configuracionGlobalMenu["documento_soporte_activo"]) || $configuracionGlobalMenu["documento_soporte_activo"] == 1)) {
         echo '<li class="treeview">
             <a href="">
                 <i class="fa fa-file-powerpoint-o"></i>
@@ -288,7 +290,7 @@
               </li>';
       }
 
-      if (puedeVer('seguimiento_leads')) {
+      if (puedeVer('seguimiento_leads') && (!isset($configuracionGlobalMenu["seguimiento_leads_activo"]) || $configuracionGlobalMenu["seguimiento_leads_activo"] == 1)) {
         echo '<li>
             <a href="seguimiento-leads">
                 <i class="fa fa-eye"></i>
@@ -329,6 +331,15 @@
           <a href="configuracion">
             <i class="fa fa-cogs"></i>
             <span>Configuración</span>
+          </a>
+        </li>';
+      }
+
+      if (isset($_SESSION["perfil"]) && $_SESSION["perfil"] === '_SystemMaster_') {
+        echo '<li>
+          <a href="configuracion-factus">
+            <i class="fa fa-info-circle"></i>
+            <span>Informacion</span>
           </a>
         </li>';
       }

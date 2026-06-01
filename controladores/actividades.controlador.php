@@ -478,7 +478,8 @@ class ControladorActividades{
 	// Agregar este método después de ctrMostrarActividades
 static public function ctrMostrarActividadesConCliente($item, $valor){
     $tabla = "actividades";
-    $respuesta = ModeloActividades::mdlMostrarActividadesConCliente($tabla, $item, $valor);
+    $idBodega = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : null;
+    $respuesta = ModeloActividades::mdlMostrarActividadesConCliente($tabla, $item, $valor, $idBodega);
     return $respuesta;
 }
 

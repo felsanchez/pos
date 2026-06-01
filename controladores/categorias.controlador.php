@@ -373,10 +373,30 @@ class ControladorCategorias{
 			$tabla = "categorias";
 			$idCategoria = isset($_GET["idCategoria"]) ? $_GET["idCategoria"] : $_POST["idCategoriaEliminar"];
 
-			// Verificar si hay productos asociados a esta categoría
-			$productosAsociados = ModeloProductos::mdlMostrarProductos("productos", "id_categoria", $idCategoria, "id");
+			// Verificar si hay productos asociados a esta categoría (solo activos)
+			$totalProductosGlobales = ModeloCategorias::mdlContarProductosActivosGlobales($idCategoria);
 
-			if (!empty($productosAsociados)) {
+			if ($totalProductosGlobales > 0) {
+				$productosLocal = ModeloCategorias::mdlContarProductosPorCategoria($idCategoria);
+
+				if ($productosLocal == 0) {
+					if (isset($_POST["idCategoriaEliminar"])) {
+						return "error_productos_asociados_otra_sucursal";
+					}
+					echo '<script>
+						swal({
+							type: "error",
+							title: "¡No se puede eliminar!",
+							text: "No se puede eliminar porque tiene productos asociados en otra sucursal.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then(() => {
+							window.location = "categorias";
+						});
+					</script>';
+					return;
+				}
+
 				if (isset($_POST["idCategoriaEliminar"])) {
 					return "error_productos_asociados";
 				}
