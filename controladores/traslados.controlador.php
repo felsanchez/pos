@@ -14,14 +14,14 @@ class ControladorTraslados
         ModeloTraslados::mdlLimpiarTrasladosAntiguos($tabla);
 
         return ModeloTraslados::mdlMostrarTraslados($tabla, $item, $valor, $fechaInicial, $fechaFinal);
-    }
-
-    /*=============================================
+    }    /*=============================================
     CREAR TRASLADO
     =============================================*/
     static public function ctrCrearTraslado()
     {
         if (isset($_POST["nuevaBodegaDestino"])) {
+
+            $paginaDestino = puedeVer("traslados") ? "traslados" : "crear-traslado";
 
             if ($_POST["nuevaBodegaOrigen"] == $_POST["nuevaBodegaDestino"]) {
                 echo '<script>
@@ -31,7 +31,7 @@ class ControladorTraslados
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
                     }).then(() => {
-                        window.location = "traslados";
+                        window.location = "' . $paginaDestino . '";
                     })
                 </script>';
                 return;
@@ -44,19 +44,26 @@ class ControladorTraslados
 
                 $tabla = "traslados";
                 $listaProductos = json_decode($_POST["listaProductos"], true);
+                if (empty($listaProductos)) {
+                    throw new Exception("Debe seleccionar al menos un producto para realizar el traslado.");
+                }
                 $totalItems = 0;
                 foreach ($listaProductos as $producto) {
                     $totalItems += $producto["cantidad"];
                 }
 
+                $idOrigen = $_POST["nuevaBodegaOrigen"];
+                $idDestino = $_POST["nuevaBodegaDestino"];
+                $codigoTraslado = $_POST["nuevoCodigoTraslado"];
+
                 $datos = array(
-                    "codigo" => $_POST["nuevoCodigoTraslado"],
-                    "id_bodega_origen" => $_POST["nuevaBodegaOrigen"],
-                    "id_bodega_destino" => $_POST["nuevaBodegaDestino"],
+                    "codigo" => $codigoTraslado,
+                    "id_bodega_origen" => $idOrigen,
+                    "id_bodega_destino" => $idDestino,
                     "id_usuario" => $_SESSION["id"],
                     "total_items" => $totalItems,
                     "notas" => $_POST["nuevasNotas"],
-                    "estado" => "pendiente"
+                    "estado" => "completado"
                 );
 
                 $idTraslado = ModeloTraslados::mdlIngresarTraslado($tabla, $datos);
@@ -68,17 +75,94 @@ class ControladorTraslados
                 $tablaItems = "traslados_items";
                 foreach ($listaProductos as $value) {
                     
+                    $esVariante = (isset($value["esVariante"]) && $value["esVariante"] == "1") ? "variante" : "producto";
+                    $idProducto = $value["id"];
+                    $idVariante = (isset($value["idVariante"]) && !empty($value["idVariante"])) ? $value["idVariante"] : null;
+                    $cantidad = floatval($value["cantidad"]);
+
                     $datosItem = array(
                         "id_traslado" => $idTraslado,
-                        "tipo_producto" => (isset($value["esVariante"]) && $value["esVariante"] == "1") ? "variante" : "producto",
-                        "id_producto" => $value["id"],
-                        "id_variante" => (isset($value["idVariante"]) ? $value["idVariante"] : null),
-                        "cantidad" => $value["cantidad"]
+                        "tipo_producto" => $esVariante,
+                        "id_producto" => $idProducto,
+                        "id_variante" => $idVariante,
+                        "cantidad" => $cantidad
                     );
 
                     $respuestaItem = ModeloTraslados::mdlIngresarItemTraslado($tablaItems, $datosItem);
                     if ($respuestaItem != "ok") {
                         throw new Exception("Error al registrar uno de los productos en el traslado.");
+                    }
+
+                    // --- ACTUALIZACIÓN DE INVENTARIO ---
+                    if ($esVariante == "variante") {
+                        
+                        // 1. Origen: Descontar
+                        $traerVarianteO = ModeloProductos::mdlObtenerVariantePorId($idVariante, $idOrigen);
+                        if (!$traerVarianteO) {
+                            throw new Exception("No se encontró la variante en la bodega de origen.");
+                        }
+                        $nuevoStockO = $traerVarianteO["stock"] - $cantidad;
+                        
+                        $res1 = ModeloProductos::mdlActualizarStockVarianteBodega($idVariante, $idOrigen, $nuevoStockO);
+                        if ($res1 != "ok") {
+                            throw new Exception("Error al actualizar el stock de la variante en origen.");
+                        }
+
+                        // Sincronizar el stock del producto base en la bodega de origen
+                        $stmtSincO = $db->prepare("SELECT SUM(pvb.stock) as total FROM productos_variantes_bodegas pvb INNER JOIN productos_variantes pv ON pvb.id_variante = pv.id WHERE pv.id_producto = :id_producto AND pvb.id_bodega = :id_bodega AND pv.estado = 1");
+                        $stmtSincO->execute([":id_producto" => $idProducto, ":id_bodega" => $idOrigen]);
+                        $resSincO = $stmtSincO->fetch();
+                        $stockBaseO = ($resSincO && $resSincO["total"]) ? intval($resSincO["total"]) : 0;
+                        ModeloProductos::mdlActualizarStockBodega($idProducto, $idOrigen, $stockBaseO);
+                        
+                        ControladorMovimientos::ctrRegistrarMovimiento("variante", $idProducto, $idVariante, $value["descripcion"], "traslado_salida", -$cantidad, $traerVarianteO["stock"], $nuevoStockO, "Traslado #" . $codigoTraslado, "", $idOrigen);
+
+                        // 2. Destino: Aumentar
+                        $traerVarianteD = ModeloProductos::mdlObtenerVariantePorId($idVariante, $idDestino);
+                        $stockActualD = (is_array($traerVarianteD) && isset($traerVarianteD["stock"])) ? $traerVarianteD["stock"] : 0;
+                        $nuevoStockD = $stockActualD + $cantidad;
+                        
+                        $res2 = ModeloProductos::mdlActualizarStockVarianteBodega($idVariante, $idDestino, $nuevoStockD);
+                        if ($res2 != "ok") {
+                            throw new Exception("Error al actualizar el stock de la variante en destino.");
+                        }
+
+                        // Sincronizar el stock del producto base en la bodega de destino
+                        $stmtSincD = $db->prepare("SELECT SUM(pvb.stock) as total FROM productos_variantes_bodegas pvb INNER JOIN productos_variantes pv ON pvb.id_variante = pv.id WHERE pv.id_producto = :id_producto AND pvb.id_bodega = :id_bodega AND pv.estado = 1");
+                        $stmtSincD->execute([":id_producto" => $idProducto, ":id_bodega" => $idDestino]);
+                        $resSincD = $stmtSincD->fetch();
+                        $stockBaseD = ($resSincD && $resSincD["total"]) ? intval($resSincD["total"]) : 0;
+                        ModeloProductos::mdlActualizarStockBodega($idProducto, $idDestino, $stockBaseD);
+
+                        ControladorMovimientos::ctrRegistrarMovimiento("variante", $idProducto, $idVariante, $value["descripcion"], "traslado_entrada", $cantidad, $stockActualD, $nuevoStockD, "Traslado #" . $codigoTraslado, "", $idDestino);
+
+                    } else {
+                        
+                        // 1. Origen: Descontar
+                        $traerProductoO = ModeloProductos::mdlMostrarProductos("productos", "id", $idProducto, "id", $idOrigen);
+                        if (!$traerProductoO) {
+                            throw new Exception("No se encontró el producto en la bodega de origen.");
+                        }
+                        $nuevoStockO = $traerProductoO["stock"] - $cantidad;
+                        
+                        $res1 = ModeloProductos::mdlActualizarStockBodega($idProducto, $idOrigen, $nuevoStockO);
+                        if ($res1 != "ok") {
+                            throw new Exception("Error al actualizar el stock del producto en origen.");
+                        }
+
+                        ControladorMovimientos::ctrRegistrarMovimiento("producto", $idProducto, null, $value["descripcion"], "traslado_salida", -$cantidad, $traerProductoO["stock"], $nuevoStockO, "Traslado #" . $codigoTraslado, "", $idOrigen);
+
+                        // 2. Destino: Aumentar
+                        $traerProductoD = ModeloProductos::mdlMostrarProductos("productos", "id", $idProducto, "id", $idDestino);
+                        $stockActualD = (is_array($traerProductoD) && isset($traerProductoD["stock"])) ? $traerProductoD["stock"] : 0;
+                        $nuevoStockD = $stockActualD + $cantidad;
+                        
+                        $res2 = ModeloProductos::mdlActualizarStockBodega($idProducto, $idDestino, $nuevoStockD);
+                        if ($res2 != "ok") {
+                            throw new Exception("Error al actualizar el stock del producto en destino.");
+                        }
+
+                        ControladorMovimientos::ctrRegistrarMovimiento("producto", $idProducto, null, $value["descripcion"], "traslado_entrada", $cantidad, $stockActualD, $nuevoStockD, "Traslado #" . $codigoTraslado, "", $idDestino);
                     }
                 }
 
@@ -87,17 +171,17 @@ class ControladorTraslados
                 echo '<script>
                     swal({
                         type: "success",
-                        title: "El traslado ha sido registrado correctamente como PENDIENTE",
+                        title: "El traslado ha sido registrado y completado correctamente",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
                     }).then(() => {
-                        window.location = "traslados";
+                        window.location = "' . $paginaDestino . '";
                     })
                 </script>';
 
             } catch (Exception $e) {
                 $db->rollBack();
-                Logger::error("Error al crear traslado: " . $e->getMessage());
+                Logger::error("Error al crear y completar traslado: " . $e->getMessage());
 
                 echo '<script>
                     swal({
@@ -107,7 +191,7 @@ class ControladorTraslados
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
                     }).then(() => {
-                        window.location = "traslados";
+                        window.location = "' . $paginaDestino . '";
                     })
                 </script>';
             }

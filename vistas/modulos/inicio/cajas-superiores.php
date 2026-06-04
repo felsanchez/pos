@@ -219,7 +219,7 @@ $inicialCantOrdenes = $resOMes ? (int)$resOMes["total_cantidad"] : 0;
 
 <?php if (!puedeAccion('inicio', 'ver')): ?>
   <div class="text-center" style="padding: 40px 15px;">
-    <h1 class="panel-title">Bienvenido a Grupo Fej Technologies</h1>
+    <h1 class="panel-title">Bienvenido a Kontrol Pos</h1>
     <h3 style="color:#666; margin-bottom:30px;">Consulta el estado de tu orden con tu código del pedido</h3>
     <a href="consulta-ventas" class="btn btn-info btn-lg" style="border-radius:25px; padding: 12px 30px; font-weight:700;">
       Realizar Consulta <i class="fa fa-search" style="margin-left:8px;"></i>

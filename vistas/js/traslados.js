@@ -268,6 +268,23 @@ $(document).ready(function(){
 });
 
 /*=============================================
+VALIDAR QUE HAYA PRODUCTOS ANTES DE SUBMIT
+=============================================*/
+$(".formularioTraslado").on("submit", function(e){
+    var listaProductos = $("#listaProductos").val();
+    if(!listaProductos || listaProductos === "[]" || $(".nuevoProducto").children().length === 0){
+        e.preventDefault();
+        swal({
+            title: "No hay productos seleccionados",
+            text: "Por favor, agregue al menos un producto al traslado.",
+            type: "warning",
+            confirmButtonText: "Entendido"
+        });
+        return false;
+    }
+});
+
+/*=============================================
 EXPANDIR VARIANTES EN TRASLADOS
 =============================================*/
 function formatearTablaVariantesTraslado(variantes) {

@@ -73,6 +73,12 @@ class ControladorPerfiles
         }
 
         $resultado = ModeloPerfiles::mdlActualizarPerfil($id, $nombre, $descripcion, $permisos);
+        
+        // Si el perfil actualizado es el mismo del usuario en sesión, actualizar permisos en tiempo real
+        if ($resultado === 'ok' && isset($_SESSION['perfil']) && $_SESSION['perfil'] === $nombre) {
+            $_SESSION["permisos"] = ModeloPerfiles::mdlCargarPermisosEnSesion($nombre);
+        }
+
         echo json_encode(['resultado' => $resultado]);
         exit;
     }

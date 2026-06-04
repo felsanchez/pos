@@ -83,9 +83,23 @@
                     <span>Traslados</span>
                   </a>
                 </li>';
+        } else if (puedeAccion('traslados', 'crear')) {
+          echo '<li>
+                  <a href="crear-traslado">
+                    <i class="fa fa-circle-o"></i>
+                    <span>Crear Traslado</span>
+                  </a>
+                </li>';
         }
 
         echo '</ul>
+              </li>';
+      } else if (puedeAccion('traslados', 'crear')) {
+        echo '<li>
+                <a href="crear-traslado">
+                  <i class="fa fa-exchange"></i>
+                  <span>Crear Traslado</span>
+                </a>
               </li>';
       }
 
@@ -100,7 +114,9 @@
                     </li>';
       }
 
-      if (puedeVer('productos') || puedeVer('categorias') || puedeVer('variantes') || puedeVer('proveedores')) {
+      $verCatalogoTree = puedeVer('productos') || puedeVer('categorias') || puedeVer('variantes') || puedeVer('proveedores');
+
+      if ($verCatalogoTree) {
         echo '<li class="treeview">
                 <a href="">
                     <i class="fa fa-product-hunt"></i>
@@ -116,6 +132,13 @@
                       <a href="productos">
                         <i class="fa fa-circle-o"></i>
                         <span>Productos</span>
+                      </a>
+                    </li>';
+        } else if (puedeAccion('productos', 'crear')) {
+          echo '<li>
+                      <a href="producto-detalle">
+                        <i class="fa fa-circle-o"></i>
+                        <span>Crear Producto</span>
                       </a>
                     </li>';
         }
@@ -149,6 +172,13 @@
 
         echo '</ul>
               </li>';
+      } else if (puedeAccion('productos', 'crear')) {
+        echo '<li>
+                <a href="producto-detalle">
+                  <i class="fa fa-cube"></i>
+                  <span>Crear Producto</span>
+                </a>
+              </li>';
       }
 
       if (puedeVer('clientes')) {
@@ -156,6 +186,13 @@
             <a href="clientes">
               <i class="fa fa-users"></i>
               <span>Clientes</span>
+            </a>
+          </li>';
+      } else if (puedeAccion('clientes', 'crear')) {
+        echo '<li>
+            <a href="cliente-detalle">
+              <i class="fa fa-user-plus"></i>
+              <span>Crear Cliente</span>
             </a>
           </li>';
       }
@@ -193,6 +230,13 @@
               <span>Ordenes</span>
             </a>
           </li>';
+      } else if (puedeAccion('ordenes', 'crear')) {
+        echo '<li>
+            <a href="crear-orden">
+              <i class="fa fa-cart-plus"></i>
+              <span>Crear Orden</span>
+            </a>
+          </li>';
       }
 
       if (puedeVer('consulta-ventas') && (!isset($configuracionGlobalMenu["consulta_ventas"]) || $configuracionGlobalMenu["consulta_ventas"] == 1)) {
@@ -211,7 +255,15 @@
                         <span>Ventas</span>
                       </a>
                     </li>';
+      } else if (puedeAccion('ventas', 'crear')) {
+        echo '<li>
+                      <a href="crear-venta">
+                        <i class="fa fa-plus-square-o"></i>
+                        <span>Crear Venta</span>
+                      </a>
+                    </li>';
       }
+
 
 
 
@@ -315,7 +367,15 @@
             <span>Gastos</span>
           </a>
         </li>';
+      } else if (puedeAccion('gastos', 'crear')) {
+        echo '<li>
+          <a href="crear-gasto">
+            <i class="fa fa-money"></i>
+            <span>Crear Gasto</span>
+          </a>
+        </li>';
       }
+
 
       if (puedeVer('notificaciones')) {
         echo '<li>

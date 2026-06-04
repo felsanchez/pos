@@ -16,6 +16,7 @@ class ControladorClientes
 			VALIDAR CSRF
 			=============================================*/
 			if (!CSRF::validateToken()) {
+				$redireccionCsrf = puedeVer("clientes") ? "clientes" : "cliente-detalle";
 				echo '<script>
 					swal({
 						type: "error",
@@ -24,7 +25,7 @@ class ControladorClientes
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 					}).then(() => {
-						window.location = "clientes";
+						window.location = "' . $redireccionCsrf . '";
 					})
 				</script>';
 				return;
@@ -74,6 +75,9 @@ class ControladorClientes
 
 					// Determinar a dónde redirigir según el origen
 					$redireccion = isset($_POST["vistaOrigen"]) ? $_POST["vistaOrigen"] : "clientes";
+					if ($redireccion === "clientes" && !puedeVer("clientes")) {
+						$redireccion = "cliente-detalle";
+					}
 
 					echo '<script>
 					swal({
@@ -94,6 +98,9 @@ class ControladorClientes
 
 				// Determinar a dónde redirigir según la URL actual o el origen
 				$redireccion = isset($_POST["urlActual"]) ? $_POST["urlActual"] : (isset($_POST["vistaOrigen"]) ? $_POST["vistaOrigen"] : "clientes");
+				if ($redireccion === "clientes" && !puedeVer("clientes")) {
+					$redireccion = "cliente-detalle";
+				}
 
 				echo '<script>
 					swal({
@@ -275,6 +282,7 @@ class ControladorClientes
 			VALIDAR CSRF
 			=============================================*/
 			if (!CSRF::validateToken()) {
+				$redireccionCsrf = puedeVer("clientes") ? "clientes" : "cliente-detalle";
 				echo '<script>
 					swal({
 						type: "error",
@@ -282,10 +290,8 @@ class ControladorClientes
 						text: "Token CSRF inválido. Recarga la página.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
-					}).then((result)=>{
-						if(result.value){
-							window.location = "clientes";
-						}
+					}).then(() => {
+						window.location = "' . $redireccionCsrf . '";
 					})
 				</script>';
 				return;
@@ -339,6 +345,9 @@ class ControladorClientes
 
 					// Determinar a dónde redirigir según el origen
 					$redireccion = isset($_POST["vistaOrigen"]) ? $_POST["vistaOrigen"] : "clientes";
+					if ($redireccion === "clientes" && !puedeVer("clientes")) {
+						$redireccion = "cliente-detalle";
+					}
 
 					echo '<script>
 					swal({
@@ -359,6 +368,9 @@ class ControladorClientes
 
 				// Determinar a dónde redirigir según la URL actual o el origen
 				$redireccion = isset($_POST["urlActual"]) ? $_POST["urlActual"] : (isset($_POST["vistaOrigen"]) ? $_POST["vistaOrigen"] : "clientes");
+				if ($redireccion === "clientes" && !puedeVer("clientes")) {
+					$redireccion = "cliente-detalle";
+				}
 
 				echo '<script>
 					swal({

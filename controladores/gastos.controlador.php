@@ -177,7 +177,7 @@ class ControladorGastos{
 			// Columna 9: Acciones
 			$botonesAcciones = '<div class="btn-group">';
 			if (puedeAccion('gastos', 'editar')) {
-				$botonesAcciones .= '<button class="btn btn-warning btnEditarGasto" idGasto="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarGasto" title="Editar gasto"><i class="fa fa-pencil"></i></button>';
+				$botonesAcciones .= '<a href="index.php?ruta=editar-gasto&idGasto=' . $value["id"] . '" class="btn btn-warning" title="Editar gasto"><i class="fa fa-pencil"></i></a>';
 			}
 			if (puedeAccion('gastos', 'eliminar')) {
 				$botonesAcciones .= '<button class="btn btn-danger btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . e($value["concepto"]) . '" title="Eliminar gasto"><i class="fa fa-times"></i></button>';
@@ -222,6 +222,8 @@ class ControladorGastos{
 	static public function ctrCrearGasto(){
 		if(isset($_POST["nuevoConceptoGasto"])){
 
+			$rutaRedireccion = puedeVer("gastos") ? "gastos" : "crear-gasto";
+
 			// Validar si el control de caja está activo y hay caja abierta
 			if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
 				echo '<script>
@@ -252,7 +254,7 @@ class ControladorGastos{
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 					}).then(() => {
-						window.location = "gastos";
+						window.location = "' . $rutaRedireccion . '";
 					})
 				</script>';
 				return;
@@ -383,7 +385,7 @@ class ControladorGastos{
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
 						  }).then(() => {
-								window.location = "gastos";
+								window.location = "' . $rutaRedireccion . '";
 							})
 					</script>';
 
@@ -398,7 +400,7 @@ class ControladorGastos{
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
 						}).then(() => {
-							window.location = "gastos";
+							window.location = "' . $rutaRedireccion . '";
 						})
 					</script>';
 				}
@@ -415,7 +417,7 @@ class ControladorGastos{
 						  }).then(function(result){
 							if (result.value) {
 
-							window.location = "gastos";
+							window.location = "' . $rutaRedireccion . '";
 
 							}
 						})
@@ -428,12 +430,15 @@ class ControladorGastos{
 
 	}
 
+
 	/*=============================================
 	EDITAR GASTO
 	=============================================*/
 
 	static public function ctrEditarGasto(){
 		if(isset($_POST["editarConceptoGasto"])){
+
+			$rutaRedireccion = puedeVer("gastos") ? "gastos" : "inicio";
 
 			// Validar si el control de caja está activo y hay caja abierta
 			if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta()) {
@@ -466,7 +471,7 @@ class ControladorGastos{
 						confirmButtonText: "Cerrar"
 					}).then((result)=>{
 						if(result.value){
-							window.location = "gastos";
+							window.location = "' . $rutaRedireccion . '";
 						}
 					})
 				</script>';
@@ -564,7 +569,7 @@ class ControladorGastos{
 							   "numero_comprobante" => $_POST["editarNumeroComprobante"],
 							   "imagen_comprobante" => $rutaImagen,
 							   "estado" => $_POST["editarEstadoGasto"],
-							   "notas" => $_POST["editarNotasGasto"]);
+							   "notas" => $_POST["editarNotasGasto"] ?? "");
 
 				$gastoOriginal = ModeloGastos::mdlMostrarGastos("gastos", "id", $_POST["idGasto"]);
 				$originalAprobadoEfectivo = ($gastoOriginal && strtolower(trim($gastoOriginal["metodo_pago"])) == "efectivo" && $gastoOriginal["estado"] == "aprobado");
@@ -627,7 +632,7 @@ class ControladorGastos{
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
 						  }).then(() => {
-								window.location = "gastos";
+								window.location = "' . $rutaRedireccion . '";
 							})
 					</script>';
 
@@ -642,7 +647,7 @@ class ControladorGastos{
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
 						}).then(() => {
-							window.location = "gastos";
+							window.location = "' . $rutaRedireccion . '";
 						})
 					</script>';
 				}
@@ -659,7 +664,7 @@ class ControladorGastos{
 						  }).then(function(result){
 							if (result.value) {
 
-							window.location = "gastos";
+							window.location = "' . $rutaRedireccion . '";
 
 							}
 						})

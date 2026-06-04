@@ -1,10 +1,23 @@
 <?php
+// Determinar si es modo edición
+$modoEdicion = isset($_GET['id']) && !empty($_GET['id']);
+
+if ($modoEdicion) {
+    if (!puedeAccion('clientes', 'editar') && !puedeVer('clientes')) {
+        echo '<script>window.location = "inicio";</script>';
+        return;
+    }
+} else {
+    if (!puedeAccion('clientes', 'crear')) {
+        echo '<script>window.location = "inicio";</script>';
+        return;
+    }
+}
+
 // Obtener estados de clientes
 require_once "controladores/estados-clientes.controlador.php";
 require_once "modelos/estados-clientes.modelo.php";
 
-// Determinar si es modo edición
-$modoEdicion = isset($_GET['id']) && !empty($_GET['id']);
 $cliente = null;
 
 if ($modoEdicion) {
@@ -23,7 +36,8 @@ if ($modoEdicion) {
     // die();
 
     if (!$cliente || !is_array($cliente)) {
-        echo '<script>window.location = "clientes";</script>';
+        $redirectDest = puedeVer('clientes') ? 'clientes' : 'inicio';
+        echo '<script>window.location = "' . $redirectDest . '";</script>';
         return;
     }
 }
@@ -41,7 +55,7 @@ $estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null
 // Detectar si viene de contactos
 $esContacto = isset($_GET['origen']) && $_GET['origen'] === 'contactos';
 $tipoEntidad = $esContacto ? 'Contacto' : 'Cliente';
-$rutaVolver = $esContacto ? 'contactos' : 'clientes';
+$rutaVolver = $esContacto ? 'contactos' : (puedeVer('clientes') ? 'clientes' : 'inicio');
 
 // Prefijo para los campos según el modo
 $prefix = $modoEdicion ? 'editar' : 'nuevo';
@@ -75,7 +89,9 @@ function obtenerValor($cliente, $campo, $default = '') {
         </h1>
         <ol class="breadcrumb">
             <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-            <li><a href="<?php echo $rutaVolver; ?>"><?php echo $esContacto ? 'Contactos' : 'Clientes'; ?></a></li>
+            <?php if ($esContacto || puedeVer('clientes')): ?>
+                <li><a href="<?php echo $rutaVolver; ?>"><?php echo $esContacto ? 'Contactos' : 'Clientes'; ?></a></li>
+            <?php endif; ?>
             <li class="active"><?php echo $modoEdicion ? 'Editar' : 'Nuevo'; ?></li>
         </ol>
     </section>
@@ -90,7 +106,7 @@ function obtenerValor($cliente, $campo, $default = '') {
             <?php endif; ?>
 
             <!-- Campo oculto para saber a qué vista regresar -->
-            <input type="hidden" name="vistaOrigen" value="<?php echo isset($_GET['origen']) ? $_GET['origen'] : 'clientes'; ?>">
+            <input type="hidden" name="vistaOrigen" value="<?php echo isset($_GET['origen']) ? $_GET['origen'] : (puedeVer('clientes') ? 'clientes' : 'cliente-detalle'); ?>">
 
             <!-- Campo oculto para permanecer en la vista actual en caso de error -->
             <?php

@@ -618,102 +618,111 @@ MODAL AGREGAR CLIENTE
 
           <div class="box-body">
 
-            <!-- entrada para nombre -->
-
-            <div class="form-group">
-
-              <div class="input-group">
-
-                <span class="input-group-addon"><i class="fa fa-user"></i></span>
-
-                <input type="text" class="form-control input-lg" name="nuevoCliente" placeholder="Ingresar nombre"
-                  required>
-
+            <!-- Fila 1: Nombre y Documento -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Nombre Completo *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                    <input type="text" class="form-control" name="nuevoCliente" placeholder="Nombre del cliente"
+                      required>
+                  </div>
+                </div>
               </div>
 
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Documento *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-key"></i></span>
+                    <input type="number" min="0" class="form-control" name="nuevoDocumentoId"
+                      placeholder="Número de documento" required>
+                  </div>
+                </div>
+              </div>
             </div>
 
-
-            <!-- entrada para documento ID -->
-
-            <div class="form-group">
-
-              <div class="input-group">
-
-                <span class="input-group-addon"><i class="fa fa-key"></i></span>
-
-                <input type="number" min="0" class="form-control input-lg" name="nuevoDocumentoId"
-                  placeholder="Ingresar documento" required>
-
+            <!-- Fila 2: Teléfono y Email -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Teléfono *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-phone"></i></span>
+                    <input type="text" class="form-control" name="nuevoTelefono" placeholder="(300) 123-4567"
+                      data-inputmask="'mask':'(999) 999-9999'" data-mask required>
+                  </div>
+                </div>
               </div>
 
-            </div>
-
-
-            <!-- entrada para Email -->
-
-            <div class="form-group">
-
-              <div class="input-group">
-
-                <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
-
-                <input type="email" class="form-control input-lg" name="nuevoEmail" placeholder="Ingresar email"
-                  required>
-
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Email</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                    <input type="email" class="form-control" name="nuevoEmail" placeholder="correo@ejemplo.com">
+                  </div>
+                </div>
               </div>
-
             </div>
 
-
-            <!-- entrada para telefono -->
-
-            <div class="form-group">
-
-              <div class="input-group">
-
-                <span class="input-group-addon"><i class="fa fa-phone"></i></span>
-
-                <input type="text" class="form-control input-lg" name="nuevoTelefono" placeholder="Ingresar teléfono"
-                  data-inputmask="'mask':'(999) 999-9999'" data-mask required>
-
+            <!-- Fila 3: Municipio -->
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label>Municipio *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
+                    <select class="form-control" name="nuevoMunicipio" required>
+                      <option value="">-- Seleccionar Municipio --</option>
+                      <?php
+                      require_once "modelos/factus.modelo.php";
+                      $municipios = ModeloFactus::mdlObtenerMunicipios();
+                      foreach ($municipios as $municipio) {
+                        $textoMunicipio = $municipio['nombre'] . ' - ' . $municipio['departamento'];
+                        echo "<option value='{$municipio['id_factus']}'>{$textoMunicipio}</option>";
+                      }
+                      ?>
+                    </select>
+                  </div>
+                </div>
               </div>
-
             </div>
 
-
-            <!-- entrada para la direccion -->
-
-            <div class="form-group">
-
-              <div class="input-group">
-
-                <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
-
-                <input type="text" class="form-control input-lg" name="nuevaDireccion" placeholder="Ingresar dirección"
-                  required>
-
+            <!-- Fila 4: Dirección -->
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label>Dirección *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-home"></i></span>
+                    <input type="text" class="form-control" name="nuevaDireccion"
+                      placeholder="Calle, carrera, número, etc." required>
+                  </div>
+                </div>
               </div>
-
             </div>
 
-
-            <!-- entrada para la fecha naciminiento -->
-
-            <div class="form-group">
-
-              <div class="input-group">
-
-                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-
-                <input type="text" class="form-control input-lg" name="nuevaFechaNacimiento"
-                  placeholder="Ingresar fecha de nacimiento" data-inputmask="'alias': 'yyyy/mm/dd'" data-mask required>
-
+            <!-- Fila 5: Notas -->
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label>Notas</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
+                    <input type="text" class="form-control" name="nuevaNota"
+                      placeholder="Información adicional (opcional)">
+                  </div>
+                </div>
               </div>
-
             </div>
 
-
+            <!-- Campos ocultos -->
+            <input type="hidden" name="nuevoEstatus" value="nuevo">
+            <input type="hidden" name="origen" value="editar-orden">
+            <input type="hidden" name="vistaOrigen" value="index.php?ruta=editar-orden&idVenta=<?php echo $_GET["idVenta"]; ?>">
+            <input type="hidden" name="urlActual" value="index.php?ruta=editar-orden&idVenta=<?php echo $_GET["idVenta"]; ?>">
 
           </div>
 

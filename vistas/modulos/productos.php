@@ -1,4 +1,9 @@
 <?php
+if (!puedeVer('productos')) {
+    echo '<script>window.location = "inicio";</script>';
+    return;
+}
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);

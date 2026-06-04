@@ -1,4 +1,11 @@
 <?php
+if (!puedeVer("traslados")) {
+  echo '<script>
+    window.location = "inicio";
+  </script>';
+  return;
+}
+
 if (isset($_GET["idTrasladoCancelar"])) {
   $idTraslado = $_GET["idTrasladoCancelar"];
   $respuesta = ControladorTraslados::ctrCancelarTraslado($idTraslado);

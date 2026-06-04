@@ -562,9 +562,17 @@ $etiquetaDocumento = "Factura";
               <td>$<?php echo number_format($valorBrutoRecalculado, 2); ?></td>
             </tr>
             <!-- Descuento logic -->
-            <?php if ($montoDescuentoTotal > 0): ?>
+            <?php
+            $labelDescuento = "Descuento:";
+            if ($tipoDescuento == "porcentaje") {
+              $labelDescuento = 'Descuento (' . $valorDescuentoGlobal . '%):';
+            } else if ($tipoDescuento == "fijo") {
+              $labelDescuento = 'Descuento (Fijo ' . number_format((float)$valorDescuentoGlobal, 0, '', '.') . '):';
+            }
+            if ($montoDescuentoTotal > 0 || (float)$valorDescuentoGlobal > 0):
+            ?>
               <tr>
-                <th>Descuento:</th>
+                <th><?php echo $labelDescuento; ?></th>
                 <td>$<?php echo number_format((float) $descuentoBase, 2); ?></td>
               </tr>
             <?php endif; ?>
@@ -606,7 +614,7 @@ $etiquetaDocumento = "Factura";
 
         <!-- Boton PDF -->
         <a class="btn btn-danger pull-right" style="margin-right: 5px;"
-          href="extensiones/tcpdf/pdf/descargar-pdf-orden.php?idVenta=<?php echo $venta["id"]; ?>" target="_blank">
+          href="extensiones/tcpdf/pdf/descargar-pdf-factura.php?idVenta=<?php echo $venta["id"]; ?>" target="_blank">
           <i class="fa fa-file-pdf-o"></i> Descargar PDF
         </a>
 

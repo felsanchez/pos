@@ -24,6 +24,7 @@ try {
     require_once __DIR__ . "/../controladores/movimientos.controlador.php";
     require_once __DIR__ . "/../modelos/movimientos.modelo.php";
     require_once __DIR__ . "/../modelos/csrf.php";
+    require_once __DIR__ . "/../modelos/helpers.php";
 
     // 2. VALIDAR CSRF para todas las peticiones POST
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {

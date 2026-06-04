@@ -445,6 +445,8 @@ MODAL AGREGAR CLIENTE
   <div class="modal-custom-container">
     <form role="form" method="post" style="display: flex; flex-direction: column; height: 100%;">
 
+      <?php CSRF::insertToken(); ?>
+
       <!-- CABEZA DEL MODAL -->
       <div class="modal-custom-header">
         <h4 class="modal-title">Agregar cliente</h4>

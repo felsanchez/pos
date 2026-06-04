@@ -1168,19 +1168,29 @@ $(document).ready(function() {
   });
 
   $(document).on('change', '.perm-ver', function() {
-    var modulo = $(this).data('modulo');
+    var modulo = $.trim($(this).attr('data-modulo') || $(this).data('modulo') || '');
     var checked = $(this).is(':checked');
     if (!checked) {
-      $('[data-modulo="' + modulo + '"]').not(this).prop('checked', false);
+      if (modulo === 'traslados' || modulo === 'traslado' || modulo === 'productos' || modulo === 'producto' || modulo === 'clientes' || modulo === 'cliente' || modulo === 'ordenes' || modulo === 'orden' || modulo === 'ventas' || modulo === 'venta' || modulo === 'gastos' || modulo === 'gasto') {
+        $('[data-modulo="' + modulo + '"]').not(this).not('[data-accion="crear"]').prop('checked', false);
+      } else {
+        $('[data-modulo="' + modulo + '"]').not(this).prop('checked', false);
+      }
     }
   });
 
   $(document).on('change', '.perm-check:not(.perm-ver)', function() {
     if ($(this).is(':checked')) {
-      var modulo = $(this).data('modulo');
-      $('[data-modulo="' + modulo + '"][data-accion="ver"]').prop('checked', true);
+      var modulo = $.trim($(this).attr('data-modulo') || $(this).data('modulo') || '');
+      var accion = $(this).attr('data-accion') || '';
+      if (accion === 'crear' && (modulo === 'traslados' || modulo === 'traslado' || modulo === 'productos' || modulo === 'producto' || modulo === 'clientes' || modulo === 'cliente' || modulo === 'ordenes' || modulo === 'orden' || modulo === 'ventas' || modulo === 'venta' || modulo === 'gastos' || modulo === 'gasto')) {
+        // 'crear' is independent of 'ver' for these modules
+      } else {
+        $('[data-modulo="' + modulo + '"][data-accion="ver"]').prop('checked', true);
+      }
     }
   });
+
 
   $(document).on('click', '.btn-eliminar-perfil', function() {
     var id = $(this).data('id');

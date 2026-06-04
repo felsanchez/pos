@@ -1,4 +1,9 @@
 <?php
+if (!puedeAccion('ventas', 'crear')) {
+    echo '<script>window.location = "inicio";</script>';
+    return;
+}
+
 // Obtener configuración del sistema
 $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
 $impuestoDefecto = !empty($configuracion["impuesto_defecto"]) ? $configuracion["impuesto_defecto"] : 0;
@@ -356,7 +361,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
           ?>
 
-          <button class="btn btn-danger pull-left" onclick="location.href='ventas'">Cancelar</button>
+           <button class="btn btn-danger pull-left" onclick="location.href='<?php echo puedeVer("ventas") ? "ventas" : "inicio"; ?>'">Cancelar</button>
 
         </div>
 
@@ -417,6 +422,8 @@ MODAL AGREGAR CLIENTE
     <div class="modal-content">
 
       <form role="form" method="post">
+
+        <?php CSRF::insertToken(); ?>
 
         <!--=====================================
       CABEZA DEL MODAL

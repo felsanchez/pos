@@ -316,9 +316,9 @@ class imprimirDetalleVenta
         if (!empty($retencionesArr)) {
             $htmlLeft .= '<div class="lead">Retenciones:</div><table class="table" cellpadding="3">';
             foreach ($retencionesArr as $ret) {
-                $htmlLeft .= '<tr><td style="width:60%;"><strong>' . $ret['tipo'] . ' (' . $ret['porcentaje'] . '%):</strong></td><td style="text-align:right;">$' . number_format((float)$ret['monto'], 2) . '</td></tr>';
+                $htmlLeft .= '<tr><td style="width:60%;"><strong>' . $ret['tipo'] . ' (' . $ret['porcentaje'] . '%):</strong></td><td style="width:40%; text-align:right;">$' . number_format((float)$ret['monto'], 2) . '</td></tr>';
             }
-            $htmlLeft .= '<tr><td><strong>Total Retenido:</strong></td><td style="text-align:right; font-weight:bold;">$' . number_format((float)$totalRetencionesVenta, 2) . '</td></tr></table><br>';
+            $htmlLeft .= '<tr><td style="width:60%;"><strong>Total Retenido:</strong></td><td style="width:40%; text-align:right; font-weight:bold;">$' . number_format((float)$totalRetencionesVenta, 2) . '</td></tr></table><br>';
         }
 
         if (!empty($venta["notas"])) {
@@ -377,8 +377,15 @@ class imprimirDetalleVenta
         $htmlRight .= '<div class="lead">Totales</div>
                     <table class="total-table" cellpadding="6">
                         <tr><th>Subtotal:</th><td>$' . number_format((float)$bruto, 2) . '</td></tr>';
-        if ($montoDescTotal > 0) {
-            $htmlRight .= '<tr><th>Descuento:</th><td>$' . number_format((float)($bruto - $neta), 2) . '</td></tr>';
+        $labelDescuento = "Descuento:";
+        if ($tipoDesc == "porcentaje") {
+            $labelDescuento = 'Descuento (' . $descGlob . '%):';
+        } else if ($tipoDesc == "fijo") {
+            $labelDescuento = 'Descuento (Fijo ' . number_format((float)$descGlob, 0, '', '.') . '):';
+        }
+
+        if ($montoDescTotal > 0 || (float)$descGlob > 0) {
+            $htmlRight .= '<tr><th>' . $labelDescuento . '</th><td>$' . number_format((float)($bruto - $neta), 2) . '</td></tr>';
         }
         $htmlRight .= '<tr><th>Valor Bruto:</th><td>$' . number_format((float)$neta, 2) . '</td></tr>
                         <tr><th>Impuesto:</th><td>$' . number_format((float)$imp, 2) . '</td></tr>

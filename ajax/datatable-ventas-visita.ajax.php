@@ -1,4 +1,7 @@
 <?php
+ob_start();
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
 
 require_once "../modelos/session-manager.php";
 SessionManager::startSecure();
@@ -7,13 +10,18 @@ require_once "../controladores/ventas.controlador.php";
 require_once "../modelos/ventas.modelo.php";
 require_once "../controladores/productos.controlador.php";
 require_once "../modelos/productos.modelo.php";
+require_once "../controladores/configuracion.controlador.php";
+require_once "../modelos/configuracion.modelo.php";
 require_once "../modelos/csrf.php";
 require_once "../modelos/helpers.php";
+require_once "../modelos/sanitizer.php";
 
 // VALIDAR CSRF para todas las peticiones POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!CSRF::validateToken()) {
+        if (ob_get_length()) ob_clean();
         http_response_code(403);
+        header('Content-Type: application/json');
         die(json_encode(['error' => 'Token CSRF inválido', 'success' => false]));
     }
 }
@@ -32,6 +40,8 @@ class tablaVentas
 	{
 		$params = $_POST;
 		$respuesta = ControladorVentas::ctrMostrarConsultaVentasServerSide($params);
+		if (ob_get_length()) ob_clean();
+		header('Content-Type: application/json');
 		echo json_encode($respuesta);
 	}
 

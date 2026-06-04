@@ -315,10 +315,17 @@ EOF;
 							<td style="width:50%; font-size:9px; color:#333; text-align:right; border-bottom:1px solid #e0e0e0;">$ ' . number_format($valorBrutoRecalculado, 2) . '</td>
 						</tr>';
 
-		if ($montoDescuentoTotal > 0) {
+		$labelDescuento = "Descuento:";
+		if ($tipoDescuento == "porcentaje") {
+			$labelDescuento = 'Descuento (' . $valorDescuentoGlobal . '%):';
+		} else if ($tipoDescuento == "fijo") {
+			$labelDescuento = 'Descuento (Fijo ' . number_format((float)$valorDescuentoGlobal, 0, '', '.') . '):';
+		}
+
+		if ($montoDescuentoTotal > 0 || (float)$valorDescuentoGlobal > 0) {
 			$htmlTotales .= '
 						<tr>
-							<td style="width:50%; font-size:9px; color:#555; text-align:left; border-bottom:1px solid #e0e0e0;">Descuento:</td>
+							<td style="width:50%; font-size:9px; color:#555; text-align:left; border-bottom:1px solid #e0e0e0;">' . $labelDescuento . '</td>
 							<td style="width:50%; font-size:9px; color:#333; text-align:right; border-bottom:1px solid #e0e0e0;">$ ' . number_format($descuentoBase, 2) . '</td>
 						</tr>';
 		}

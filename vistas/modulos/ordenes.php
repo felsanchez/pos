@@ -1,3 +1,9 @@
+<?php
+if (!puedeVer('ordenes')) {
+    echo '<script>window.location = "inicio";</script>';
+    return;
+}
+?>
 <!-- DateRangePicker -->
 <link rel="stylesheet" href="vistas/bower_components/bootstrap-daterangepicker/daterangepicker.css">
 

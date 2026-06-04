@@ -341,7 +341,7 @@ class ControladorVentas
 			$nestedData[] = e($moneda) . ' ' . e(number_format($value["total"], 2));
 
 			// 6: Notas (Editable) - Limpiar etiquetas de notificación internas
-			$notasLimpias = str_replace(array(" [Notificado_n8n]", "[Notificado_n8n]", " [Notificado]", "[Notificado]"), "", $value['notas']);
+			$notasLimpias = str_replace(array(" [Notificado_n8n]", "[Notificado_n8n]", " [Notificado]", "[Notificado]"), "", $value['notas'] ?? '');
 			$nestedData[] = '<div contenteditable="false" class="celda-nota" data-id="' . e($value['id']) . '">' . e(trim($notasLimpias)) . '</div>';
 
 			// 7: Observación (Editable)
@@ -736,7 +736,7 @@ class ControladorVentas
 			$nestedData[] = $badgeDian;
 
 			// 7: Notas - Limpiar etiquetas de notificación internas
-			$notasLimpias = str_replace(array(" [Notificado_n8n]", "[Notificado_n8n]", " [Notificado]", "[Notificado]"), "", $value['notas']);
+			$notasLimpias = str_replace(array(" [Notificado_n8n]", "[Notificado_n8n]", " [Notificado]", "[Notificado]"), "", $value['notas'] ?? '');
 			$nestedData[] = e(trim($notasLimpias));
 
 			// 8: Observación (Editable)
@@ -971,7 +971,7 @@ class ControladorVentas
 					"fecha" => $venta["fecha"], // Mantener la misma
 					"tipo_descuento" => isset($_POST["tipoDescuento"]) ? $_POST["tipoDescuento"] : "",
 					"valor_descuento" => isset($_POST["valorDescuento"]) ? $_POST["valorDescuento"] : 0,
-					"monto_descuento" => isset($_POST["monto_descuento"]) ? $_POST["monto_descuento"] : 0,
+					"monto_descuento" => isset($_POST["montoDescuento"]) ? $_POST["montoDescuento"] : 0,
 					"recibe" => isset($_POST["recibe"]) ? $_POST["recibe"] : 0,
 					"extra" => isset($_POST["extra"]) ? $_POST["extra"] : 0,
 					"retenciones" => isset($_POST["datosRetenciones"]) ? $_POST["datosRetenciones"] : "",
@@ -1241,7 +1241,7 @@ class ControladorVentas
 					"neto" => $_POST["nuevoPrecioNeto"],
 					"total" => $_POST["totalVenta"],
 					"metodo_pago" => $_POST["listaMetodoPago"],
-					"notas" => $_POST["notas"],
+					"notas" => $_POST["notas"] ?? "",
 					"observacion" => isset($_POST["observacion"]) ? $_POST["observacion"] : "",
 					"estado" => $_POST["estado"],
 					"fecha" => $fechaHoraActual,
@@ -1298,6 +1298,7 @@ class ControladorVentas
 				$db->commit();
 
 				if ($_POST["estado"] == "orden") {
+					$rutaDestinoOrden = puedeVer("ordenes") ? "ordenes" : "crear-orden";
 					if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
 						if (ob_get_length())
 							ob_clean();
@@ -1305,7 +1306,7 @@ class ControladorVentas
 							"status" => "success",
 							"titulo" => "¡Orden Guardada!",
 							"mensaje" => "La orden ha sido guardada correctamente",
-							"ruta" => "ordenes"
+							"ruta" => $rutaDestinoOrden
 						]);
 						return;
 					}
@@ -1318,7 +1319,7 @@ class ControladorVentas
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
 						}).then(() => {
-								window.location = "ordenes";
+								window.location = "' . $rutaDestinoOrden . '";
 						});
 					</script>';
 				} else {
@@ -1331,7 +1332,7 @@ class ControladorVentas
 						$textoMensaje = "El documento ha sido registrado exitosamente en el sistema.";
 					}
 
-					$rutaRedireccion = "ventas";
+					$rutaRedireccion = puedeVer("ventas") ? "ventas" : "crear-venta";
 					if ((isset($_POST["activarFacturaElectronica"]) && $_POST["activarFacturaElectronica"] == "1") || isset($_POST["guardarVentaFactus"])) {
 						$rutaRedireccion = "facturas-electronicas";
 					}

@@ -8,6 +8,22 @@ if (!isset($_SESSION["iniciarSesion"]) || $_SESSION["iniciarSesion"] != "ok") {
     return;
 }
 
+$idProducto = (int)($_GET["id"] ?? 0);
+$modoEdicion = $idProducto > 0;
+
+if ($modoEdicion) {
+    if (!puedeAccion('productos', 'editar') && !puedeVer('productos')) {
+        echo '<script>window.location = "inicio";</script>';
+        return;
+    }
+} else {
+    if (!puedeAccion('productos', 'crear')) {
+        echo '<script>window.location = "inicio";</script>';
+        return;
+    }
+}
+
+
 // Obtener configuración del sistema
 $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
 $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configuracion["tipo_codigo_producto"] : "automatico";
@@ -408,7 +424,12 @@ if ($modoEdicion) {
                                                 foreach ($tributos as $tributo) {
                                                     $selected = ($tributoActual == $tributo['id']) ? 'selected' : '';
                                                     $pct = floatval($tributo['porcentaje_defecto']);
-                                                    $nombreMostrar = $tributo['nombre'] . ($pct > 0 ? " $pct%" : "");
+                                                    // Omitir porcentaje solo si el código es 'ZA' (IVA Excluido)
+                                                    if ($tributo['codigo'] == 'ZA') {
+                                                        $nombreMostrar = $tributo['nombre'];
+                                                    } else {
+                                                        $nombreMostrar = $tributo['nombre'] . " " . number_format($pct, 0) . "%";
+                                                    }
                                                     echo "<option value='{$tributo['id']}' $selected>{$nombreMostrar}</option>";
                                                 }
                                                 ?>

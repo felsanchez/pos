@@ -113,7 +113,7 @@ $configFactus = ControladorFactus::ctrObtenerConfiguracion();
       <div class="col-sm-4 invoice-col">
         <span
           style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #d2d6de; display: block; margin-bottom: 10px; width: fit-content;">Detalles</span>
-        <b>Factura #<?php echo $venta["codigo"] ?? ''; ?></b><br>
+        <b>Venta #<?php echo $venta["codigo"] ?? ''; ?></b><br>
         <br>
         <b>Vendedor:</b> <?php echo $vendedor["nombre"] ?? ''; ?><br>
         <b>Método de Pago:</b> <?php echo $venta["metodo_pago"] ?? ''; ?><br>
@@ -438,9 +438,17 @@ $configFactus = ControladorFactus::ctrObtenerConfiguracion();
               <td>$<?php echo number_format($valorBrutoRecalculado, 2); ?></td>
             </tr>
             <!-- Descuento logic -->
-            <?php if ($montoDescuentoTotal > 0): ?>
+            <?php
+            $labelDescuento = "Descuento:";
+            if ($tipoDescuento == "porcentaje") {
+              $labelDescuento = 'Descuento (' . $valorDescuentoGlobal . '%):';
+            } else if ($tipoDescuento == "fijo") {
+              $labelDescuento = 'Descuento (Fijo ' . number_format((float)$valorDescuentoGlobal, 0, '', '.') . '):';
+            }
+            if ($montoDescuentoTotal > 0 || (float)$valorDescuentoGlobal > 0):
+            ?>
               <tr>
-                <th>Descuento:</th>
+                <th><?php echo $labelDescuento; ?></th>
                 <td>$<?php echo number_format((float) $descuentoBase, 2); ?></td>
               </tr>
             <?php endif; ?>

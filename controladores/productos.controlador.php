@@ -286,6 +286,7 @@ class ControladorProductos
 			VALIDAR CSRF
 			=============================================*/
 			if (!CSRF::validateToken()) {
+				$paginaDestino = puedeVer("productos") ? "productos" : "producto-detalle";
 				echo '<script>
 					swal({
 						type: "error",
@@ -294,7 +295,7 @@ class ControladorProductos
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 					}).then(() => {
-						window.location = "productos";
+						window.location = "' . $paginaDestino . '";
 					})
 				</script>';
 				return;
@@ -331,7 +332,7 @@ class ControladorProductos
 				$codigoExistente = ModeloProductos::mdlMostrarProductos($tabla, $item, $valor, "id");
 
 				if ($codigoExistente) {
-
+					$paginaDestino = puedeVer("productos") ? "productos" : "producto-detalle";
 					echo '<script> 
 
 						swal({ 
@@ -342,7 +343,7 @@ class ControladorProductos
 							confirmButtonText: "Cerrar" 
 
 						}).then(() => {
-							window.location = "productos";
+							window.location = "' . $paginaDestino . '";
 						});
 					</script>';
 					return;
@@ -652,6 +653,7 @@ class ControladorProductos
 					$tituloSuccess = $tieneVariantes ? "¡Producto guardado!" : "¡El producto ha sido guardado correctamente!";
 					$textSuccess = $tieneVariantes ? "Se crearon " . $variantesCreadas . " variantes correctamente" : "";
 
+					$paginaDestino = puedeVer("productos") ? "productos" : "producto-detalle";
 					echo '<script>
 						swal({
 							type: "success",
@@ -660,7 +662,7 @@ class ControladorProductos
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
 						}).then(() => {
-							window.location = "productos";
+							window.location = "' . $paginaDestino . '";
 						})
 					</script>';
 
@@ -719,6 +721,7 @@ if (isset($_POST["editarDescripcion"])) {
 			VALIDAR CSRF
 			=============================================*/
 			if (!CSRF::validateToken()) {
+				$paginaDestino = puedeVer("productos") ? "productos" : "producto-detalle" . (isset($_POST["idProducto"]) ? "&id=" . $_POST["idProducto"] : "");
 				echo '<script>
 					swal({
 						type: "error",
@@ -727,7 +730,7 @@ if (isset($_POST["editarDescripcion"])) {
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 					}).then(() => {
-						window.location = "productos";
+						window.location = "' . $paginaDestino . '";
 					})
 				</script>';
 				return;
@@ -1152,6 +1155,7 @@ if (isset($_POST["editarDescripcion"])) {
 
 					$db->commit();
 
+					$paginaDestino = puedeVer("productos") ? "productos" : "producto-detalle&id=" . $idProductoReal;
 					echo '<script>
 					swal({
 						type: "success",
@@ -1159,7 +1163,7 @@ if (isset($_POST["editarDescripcion"])) {
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar",
 						}).then(() => {
-							window.location = "productos";
+							window.location = "' . $paginaDestino . '";
 						})
 			     	</script>';
 

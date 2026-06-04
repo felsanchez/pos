@@ -365,7 +365,7 @@ class ControladorFactus
 			["codigo" => "01", "nombre" => "IVA", "descripcion" => "Impuesto al Valor Agregado", "porcentaje" => 19.00],
 			["codigo" => "04", "nombre" => "INC", "descripcion" => "Impuesto Nacional al Consumo", "porcentaje" => 8.00],
 			["codigo" => "03", "nombre" => "ICA", "descripcion" => "Impuesto de Industria y Comercio", "porcentaje" => 0.00],
-			["codigo" => "22", "nombre" => "Bolsas", "descripcion" => "Impuesto al consumo de bolsas plásticas", "porcentaje" => 0.00],
+			["codigo" => "22", "nombre" => "INC Bolsas", "descripcion" => "Impuesto al consumo de bolsas plásticas", "porcentaje" => 0.00],
 			["codigo" => "ZA", "nombre" => "IVA Excluido", "descripcion" => "Bienes o servicios excluidos de IVA", "porcentaje" => 0.00]
 		];
 
@@ -894,25 +894,59 @@ class ControladorFactus
 			// 🔴 CORRECCIÓN: Verificar si el producto tiene tributo_id = 0 (sin impuesto)
 			// En PHP, empty(0) es true, así que debemos verificar explícitamente
 			$tributoIdOriginal = isset($productoBD['tributo_id']) ? intval($productoBD['tributo_id']) : 0;
+			$isExcluded = 0;
 
 			// Si el tributo_id es 0, el producto no tiene impuesto
 			if ($tributoIdOriginal === 0) {
-				$tributo = null;
 				$tasaImpuesto = 0.00;
-				$codeTributo = 7; // Código 7 = No causa impuesto
+				$codeTributo = 1; // ID 1 = IVA
+				$isExcluded = 1; // Excluido
 			} else {
 				// Producto con impuesto - obtener datos del tributo
 				$tributo = ModeloFactus::mdlMostrarTributo($tributoIdOriginal);
 				$tasaImpuesto = $tributo ? floatval($tributo['porcentaje_defecto']) : 19.00;
+				$codigo = $tributo ? $tributo['codigo'] : "";
 
-				// Usar el código del tributo (1 para IVA, etc.)
-				if ($tributo && !empty($tributo['codigo'])) {
-					$codeTributo = intval($tributo['codigo']);
+				// Mapeo dinámico según el código del tributo de la DIAN a los IDs de Factus API
+				if ($codigo == "01") { // IVA
+					$codeTributo = 1;
+					$isExcluded = 0;
+				} elseif ($codigo == "03") { // ICA
+					$codeTributo = 3;
+					$isExcluded = 0;
+				} elseif ($codigo == "04") { // INC
+					$codeTributo = 4;
+					$isExcluded = 0;
+				} elseif ($codigo == "22") { // INC Bolsas
+					$codeTributo = 22; // INC Bolsas ID in Factus is 22 (matches the DIAN code)
+					$isExcluded = 0;
+					// Nominal tax rate for INC Bolsas (value per bag, not percentage)
+					$tasaImpuesto = floatval($productoBD['tasa_impuesto'] ?? 0);
+					if ($tasaImpuesto <= 0) {
+						$anioActual = intval(date('Y'));
+						if ($anioActual >= 2026) {
+							$tasaImpuesto = 73.00;
+						} elseif ($anioActual == 2025) {
+							$tasaImpuesto = 66.00;
+						} else {
+							$tasaImpuesto = 60.00;
+						}
+					}
+				} elseif ($codigo == "ZA") { // IVA Excluido
+					$codeTributo = 1; // ID 1 = IVA
+					$tasaImpuesto = 0.00;
+					$isExcluded = 1;
 				} else {
-					$codeTributo = 1; // Fallback a IVA si no se encuentra
+					// Fallback a IVA
+					$codeTributo = 1;
+					$isExcluded = 0;
 				}
 			}
 			$unidadMedida = isset($productoBD['unidad_medida_id']) && !empty($productoBD['unidad_medida_id']) ? intval($productoBD['unidad_medida_id']) : 70;
+			// For INC Bolsas, force unit of measure to "unidad" (ID 70 in local map, code 94 in DIAN)
+			if (isset($codigo) && $codigo == "22") {
+				$unidadMedida = 70;
+			}
 
 			$precioLimpio = str_replace([',', ' '], '', $productoVenta['precio'] ?? '0');
 			$precioBruto = floatval($precioLimpio);
@@ -921,12 +955,8 @@ class ControladorFactus
 				$precioBruto = floatval($productoBD['precio_venta'] ?? 0);
 			}
 
-			// 🔹 CORRECCIÓN FAX07: Calcular el Precio Neto (Base) dado que POS usa precio con impuestos
-			if ($tasaImpuesto > 0) {
-				$precioNeto = $precioBruto / (1 + ($tasaImpuesto / 100));
-			} else {
-				$precioNeto = $precioBruto;
-			}
+			// Factus API espera el precio unitario con impuestos incluidos
+			$precioNeto = $precioBruto;
 
 			// 🔹 CALCULO DESCUENTO
 			$tasaDescuentoItem = 0;
@@ -1005,8 +1035,8 @@ class ControladorFactus
 				"tax_rate" => number_format($tasaImpuesto, 2, '.', ''),
 				"unit_measure_id" => $idUnidadMedida,
 				"standard_code_id" => 1,
-				"is_excluded" => 0,
-				"tribute_id" => $codeTributo, // ENVIAR CÓDIGO REAL (1 para IVA, 7 para sin impuesto)
+				"is_excluded" => $isExcluded,
+				"tribute_id" => $codeTributo,
 				"withholding_taxes" => $withholdingTaxesItem
 			);
 		}
@@ -1581,16 +1611,60 @@ class ControladorFactus
 			// Obtener información de tributo
 			$tributoIdOriginal = isset($productoBD['tributo_id']) ? intval($productoBD['tributo_id']) : 0;
 			$tasaImpuesto = 0.00;
-			$codeTributo = 7; // No causa impuesto
+			$codeTributo = 1; // Default IVA en Factus API
+			$isExcluded = 0;
 
-			if ($tributoIdOriginal !== 0) {
+			if ($tributoIdOriginal === 0) {
+				$tasaImpuesto = 0.00;
+				$codeTributo = 1; // ID 1 = IVA
+				$isExcluded = 1; // Excluido
+			} else {
 				$tributo = ModeloFactus::mdlMostrarTributo($tributoIdOriginal);
 				$tasaImpuesto = $tributo ? floatval($tributo['porcentaje_defecto']) : 19.00;
-				$codeTributo = $tributo ? intval($tributo['codigo']) : 1;
+				$codigo = $tributo ? $tributo['codigo'] : "";
+
+				// Mapeo dinámico según el código del tributo de la DIAN a los IDs de Factus API
+				if ($codigo == "01") { // IVA
+					$codeTributo = 1;
+					$isExcluded = 0;
+				} elseif ($codigo == "03") { // ICA
+					$codeTributo = 3;
+					$isExcluded = 0;
+				} elseif ($codigo == "04") { // INC
+					$codeTributo = 4;
+					$isExcluded = 0;
+				} elseif ($codigo == "22") { // INC Bolsas
+					$codeTributo = 22; // INC Bolsas ID in Factus is 22 (matches the DIAN code)
+					$isExcluded = 0;
+					// Nominal tax rate for INC Bolsas (value per bag, not percentage)
+					$tasaImpuesto = floatval($productoBD['tasa_impuesto'] ?? 0);
+					if ($tasaImpuesto <= 0) {
+						$anioActual = intval(date('Y'));
+						if ($anioActual >= 2026) {
+							$tasaImpuesto = 73.00;
+						} elseif ($anioActual == 2025) {
+							$tasaImpuesto = 66.00;
+						} else {
+							$tasaImpuesto = 60.00;
+						}
+					}
+				} elseif ($codigo == "ZA") { // IVA Excluido
+					$codeTributo = 1; // ID 1 = IVA
+					$tasaImpuesto = 0.00;
+					$isExcluded = 1;
+				} else {
+					// Fallback a IVA
+					$codeTributo = 1;
+					$isExcluded = 0;
+				}
 			}
 
 			// Obtener unidad de medida
 			$idUnidadMedida = !empty($productoBD['codigo_unidad']) ? intval($productoBD['codigo_unidad']) : 70;
+			// For INC Bolsas, force unit of measure to "unidad" (ID 70 in local map, code 94 in DIAN)
+			if (isset($codigo) && $codigo == "22") {
+				$idUnidadMedida = 70;
+			}
 
 			// Precio base - similar a la lógica de factura (se usa el precio directamente)
 			$precioBase = floatval($productoVenta['precio']);
@@ -1606,7 +1680,7 @@ class ControladorFactus
 				"tax_rate" => number_format($tasaImpuesto, 2, '.', ''),
 				"unit_measure_id" => $idUnidadMedida,
 				"standard_code_id" => 1,
-				"is_excluded" => 0,
+				"is_excluded" => $isExcluded,
 				"tribute_id" => $codeTributo,
 				"withholding_taxes" => [] // Vacío para simplificar en Fase 1
 			];

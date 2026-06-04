@@ -560,9 +560,17 @@ if ($venta["estado"] == "venta") {
               <td>$<?php echo number_format($valorBrutoRecalculado, 2); ?></td>
             </tr>
             <!-- Descuento logic -->
-            <?php if ($montoDescuentoTotal > 0): ?>
+            <?php
+            $labelDescuento = "Descuento:";
+            if ($tipoDescuento == "porcentaje") {
+              $labelDescuento = 'Descuento (' . $valorDescuentoGlobal . '%):';
+            } else if ($tipoDescuento == "fijo") {
+              $labelDescuento = 'Descuento (Fijo ' . number_format((float)$valorDescuentoGlobal, 0, '', '.') . '):';
+            }
+            if ($montoDescuentoTotal > 0 || (float)$valorDescuentoGlobal > 0):
+            ?>
               <tr>
-                <th>Descuento:</th>
+                <th><?php echo $labelDescuento; ?></th>
                 <td>$<?php echo number_format((float) $descuentoBase, 2); ?></td>
               </tr>
             <?php endif; ?>

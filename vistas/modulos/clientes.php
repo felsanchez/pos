@@ -1,3 +1,9 @@
+<?php
+if (!puedeVer('clientes')) {
+    echo '<script>window.location = "inicio";</script>';
+    return;
+}
+?>
 <!-- Librería de estilos de Choices.js -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
 

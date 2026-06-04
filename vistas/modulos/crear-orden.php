@@ -1,4 +1,9 @@
 <?php
+if (!puedeAccion('ordenes', 'crear')) {
+    echo '<script>window.location = "inicio";</script>';
+    return;
+}
+
 // Obtener configuración del sistema
 $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
 $impuestoDefecto = !empty($configuracion["impuesto_defecto"]) ? $configuracion["impuesto_defecto"] : 0;
@@ -172,8 +177,10 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
                     </select>
 
-                    <span class="input-group-addon"><button type="button" class="btn btn-default btn-xs"
-                        onclick="window.location.href='index.php?ruta=cliente-detalle'">Agregar cliente</button></span>
+                    <span class="input-group-addon">
+                      <button type="button" class="btn btn-default btn-xs" data-toggle="modal"
+                        data-target="#modalAgregarCliente" data-dismiss="modal">Agregar cliente</button>
+                    </span>
 
                   </div>
 
@@ -344,7 +351,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
           ?>
 
-          <button class="btn btn-danger pull-left" onclick="location.href='ordenes'">Cancelar</button>
+          <button class="btn btn-danger pull-left" onclick="location.href='<?php echo puedeVer("ordenes") ? "ordenes" : "inicio"; ?>'">Cancelar</button>
 
 
         </div>
@@ -392,14 +399,173 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
 </div>
 
+<!--=====================================
+MODAL AGREGAR CLIENTE
+======================================-->
 
+<div id="modalAgregarCliente" class="modal fade" role="dialog">
 
+  <div class="modal-dialog">
 
+    <div class="modal-content">
 
+      <form role="form" method="post">
 
+        <?php CSRF::insertToken(); ?>
 
+        <!--=====================================
+      CABEZA DEL MODAL
+      ======================================-->
 
+        <div class="modal-header" style="background:#3c8dbc; color: white">
 
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Agregar cliente</h4>
+
+        </div>
+
+        <!--=====================================
+      CUERPO DEL MODAL
+      ======================================-->
+
+        <div class="modal-body">
+
+          <div class="box-body">
+
+            <!-- Fila 1: Nombre y Documento -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Nombre Completo *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                    <input type="text" class="form-control" name="nuevoCliente" placeholder="Nombre del cliente"
+                      required>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Documento *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-key"></i></span>
+                    <input type="number" min="0" class="form-control" name="nuevoDocumentoId"
+                      placeholder="Número de documento" required>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fila 2: Teléfono y Email -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Teléfono *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-phone"></i></span>
+                    <input type="text" class="form-control" name="nuevoTelefono" placeholder="(300) 123-4567"
+                      data-inputmask="'mask':'(999) 999-9999'" data-mask required>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Email</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                    <input type="email" class="form-control" name="nuevoEmail" placeholder="correo@ejemplo.com">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fila 3: Municipio -->
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label>Municipio *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
+                    <select class="form-control" name="nuevoMunicipio" required>
+                      <option value="">-- Seleccionar Municipio --</option>
+                      <?php
+                      require_once "modelos/factus.modelo.php";
+                      $municipios = ModeloFactus::mdlObtenerMunicipios();
+                      foreach ($municipios as $municipio) {
+                        $textoMunicipio = $municipio['nombre'] . ' - ' . $municipio['departamento'];
+                        echo "<option value='{$municipio['id_factus']}'>{$textoMunicipio}</option>";
+                      }
+                      ?>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fila 4: Dirección -->
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label>Dirección *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-home"></i></span>
+                    <input type="text" class="form-control" name="nuevaDireccion"
+                      placeholder="Calle, carrera, número, etc." required>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fila 5: Notas -->
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label>Notas</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
+                    <input type="text" class="form-control" name="nuevaNota"
+                      placeholder="Información adicional (opcional)">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Campos ocultos -->
+            <input type="hidden" name="nuevoEstatus" value="nuevo">
+            <input type="hidden" name="origen" value="crear-orden">
+            <input type="hidden" name="vistaOrigen" value="crear-orden">
+
+          </div>
+
+        </div>
+
+        <!--=====================================
+        PIE DEL MODAL
+        ======================================-->
+
+        <div class="modal-footer">
+
+          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
+          <button type="submit" class="btn btn-primary">Guardar cliente</button>
+
+        </div>
+
+      </form>
+
+      <?php
+
+      $crearCliente = new ControladorClientes();
+      $crearCliente->ctrCrearCliente();
+
+      ?>
+
+    </div>
+
+  </div>
+
+</div>
 
 </div>
 

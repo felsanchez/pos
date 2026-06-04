@@ -190,7 +190,9 @@ CUERPO DOCUMENTO
           "crear-nota-ajuste-ds", 
           "orden-a-factura-electronica",
           "editar-factura-electronica",
-          "editar-venta1"
+          "editar-venta1",
+          "crear-gasto",
+          "editar-gasto"
       ];
 
       if (in_array($_GET["ruta"], $rutasProtegidas)) {
@@ -233,6 +235,10 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "estados-actividades" ||
         $_GET["ruta"] == "tipos-actividades" ||
         $_GET["ruta"] == "gastos" ||
+        $_GET["ruta"] == "crear-gasto" ||
+        $_GET["ruta"] == "editar-gasto" ||
+
+
         $_GET["ruta"] == "cierres-caja" ||
         $_GET["ruta"] == "configuracion" ||
         $_GET["ruta"] == "configuracion-factus" ||

@@ -1,3 +1,11 @@
+<?php
+if (!puedeAccion("traslados", "crear")) {
+  echo '<script>
+    window.location = "inicio";
+  </script>';
+  return;
+}
+?>
 <div class="content-wrapper">
 
   <section class="content-header">
