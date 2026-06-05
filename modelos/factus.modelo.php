@@ -723,7 +723,7 @@ class ModeloFactus
     static public function mdlObtenerIdUnidadMedida($unidadCodigo)
     {
         // Si es numérico y ya es un ID de Factus conocido, devolverlo
-        if (is_numeric($unidadCodigo) && in_array($unidadCodigo, [70, 414, 449, 499, 512, 874])) {
+        if (is_numeric($unidadCodigo) && in_array($unidadCodigo, [70, 414, 449, 499, 512, 874, 880])) {
             return intval($unidadCodigo);
         }
 
@@ -731,7 +731,8 @@ class ModeloFactus
         $mapa = [
             '70' => 70, // Unidad (Standard)
             '94' => 70, // Unidad (Legacy)
-            'KGM' => 449, // Kilogramo
+            'KGM' => 414, // Kilogramo
+            'GRM' => 880, // Gramo
             'LTR' => 512, // Litro
             'MTR' => 499, // Metro
             'H87' => 70, // Pieza (Unidad)
@@ -815,9 +816,9 @@ class ModeloFactus
         if (strpos($nombreNorm, 'vale') !== false)
             return "72";
 
-        // Otros -> usar Efectivo (10) como fallback ya que 'ZZ' es rechazado por Factus
+        // Otros -> usar Instrumento no definido (1)
         if (strpos($nombreNorm, 'otro') !== false || strpos($nombreNorm, 'definido') !== false)
-            return "10";
+            return "1";
 
         // Default si no coincide nada (Efectivo)
         return "10";
@@ -975,7 +976,12 @@ class ModeloFactus
         $stmt = Conexion::conectar()->prepare("
 			SELECT numero_factura, codigo, resolucion_id
 			FROM ventas 
-			WHERE (numero_factura IS NOT NULL AND numero_factura != '' AND numero_factura LIKE :prefijo)
+			WHERE (
+				(numero_factura IS NOT NULL AND numero_factura != '' AND numero_factura LIKE :prefijo)
+				OR
+				(resolucion_id IS NOT NULL AND resolucion_id != 0 AND (numero_factura IS NULL OR numero_factura = ''))
+			)
+			AND estado = 'venta'
 			ORDER BY id DESC
 		");
 
@@ -988,8 +994,15 @@ class ModeloFactus
         foreach ($facturas as $factura) {
             $numeroFactura = $factura["numero_factura"];
 
-            if (empty($numeroFactura))
+            if (empty($numeroFactura)) {
+                if (!empty($factura["codigo"])) {
+                    $numero = intval($factura["codigo"]);
+                    if ($numero > $ultimoLocal) {
+                        $ultimoLocal = $numero;
+                    }
+                }
                 continue;
+            }
 
             if (strpos($numeroFactura, $prefijo) === 0) {
                 $soloParteNumerica = substr($numeroFactura, strlen($prefijo));

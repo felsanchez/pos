@@ -130,6 +130,18 @@ class ControladorClientes
 
 		$respuesta = ModeloClientes::mdlMostrarClientes($tabla, $item, $valor);
 
+		if ($item === "id" && $respuesta === false) {
+			return array(
+				"id" => null,
+				"nombre" => "Cliente Eliminado",
+				"documento" => "00000000",
+				"email" => "",
+				"telefono" => "",
+				"direccion" => "",
+				"estatus" => "Ninguno"
+			);
+		}
+
 		return $respuesta;
 	}
 
@@ -431,26 +443,7 @@ class ControladorClientes
 
 			// ── Validaciones pre-transacción (solo lectura) ──────────────────
 
-			// Verificar si hay notas crédito asociadas
-			$notasAsociadas = ModeloFactus::mdlMostrarNotasCredito("notas_credito", "id_cliente", $idCliente);
 
-			if (!empty($notasAsociadas)) {
-				if (isset($_POST["idClienteEliminar"])) {
-					return "error_notas_credito";
-				}
-				echo '<script>
-					swal({
-						type: "error",
-						title: "¡No se puede eliminar!",
-						text: "El cliente tiene notas crédito asociadas.",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					}).then(() => {
-						window.location = "' . $ruta . '";
-					});
-				</script>';
-				return;
-			}
 
 			// ── Eliminación atómica ──────────────────────────────────────────
 			$db = Conexion::conectar();

@@ -30,6 +30,10 @@ echo "=== CUSTOMER BLOCK ===\n";
 print_r($datosFactura['customer']);
 echo "\n";
 
+echo "=== ITEMS BLOCK ===\n";
+print_r($datosFactura['items']);
+echo "\n";
+
 $apiUrl = "https://api-sandbox.factus.com.co";
 $url = $apiUrl . '/v1/bills/validate';
 

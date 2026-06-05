@@ -48,6 +48,51 @@ class AjaxProveedores{
 }
 
 /*=============================================
+VERIFICAR RELACIONES DEL PROVEEDOR ANTES DE ELIMINAR
+=============================================*/
+if (isset($_POST["idProveedorVerificarRelaciones"])) {
+	$idProveedor = $_POST["idProveedorVerificarRelaciones"];
+	
+	$db = Conexion::conectar();
+	$relaciones = [];
+
+	// 1. Verificar productos
+	$stmt = $db->prepare("SELECT COUNT(*) FROM productos WHERE id_proveedor = :id");
+	$stmt->bindParam(":id", $idProveedor, PDO::PARAM_INT);
+	$stmt->execute();
+	if ($stmt->fetchColumn() > 0) {
+		$relaciones[] = "productos";
+	}
+
+	// 2. Verificar gastos
+	$stmt = $db->prepare("SELECT COUNT(*) FROM gastos WHERE id_proveedor = :id");
+	$stmt->bindParam(":id", $idProveedor, PDO::PARAM_INT);
+	$stmt->execute();
+	if ($stmt->fetchColumn() > 0) {
+		$relaciones[] = "gastos";
+	}
+
+	// 3. Verificar documentos_soporte
+	$stmt = $db->prepare("SELECT COUNT(*) FROM documentos_soporte WHERE id_proveedor = :id");
+	$stmt->bindParam(":id", $idProveedor, PDO::PARAM_INT);
+	$stmt->execute();
+	if ($stmt->fetchColumn() > 0) {
+		$relaciones[] = "documentos soporte";
+	}
+
+	// 4. Verificar notas_ajuste_ds
+	$stmt = $db->prepare("SELECT COUNT(*) FROM notas_ajuste_ds WHERE id_proveedor = :id");
+	$stmt->bindParam(":id", $idProveedor, PDO::PARAM_INT);
+	$stmt->execute();
+	if ($stmt->fetchColumn() > 0) {
+		$relaciones[] = "notas de ajuste";
+	}
+
+	echo json_encode(["status" => "success", "relaciones" => $relaciones]);
+	exit;
+}
+
+/*=============================================
 ELIMINAR PROVEEDOR
 =============================================*/
 if (isset($_POST["idProveedorEliminar"])) {

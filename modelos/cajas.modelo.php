@@ -106,7 +106,7 @@ class ModeloCajas
     {
         $sql = "SELECT c.*, u.nombre as nombre_usuario, b.nombre as nombre_bodega 
                 FROM $tabla c
-                INNER JOIN usuarios u ON c.id_usuario = u.id
+                LEFT JOIN usuarios u ON c.id_usuario = u.id
                 INNER JOIN bodegas b ON c.id_bodega = b.id
                 $where $order $limit";
 
@@ -121,7 +121,7 @@ class ModeloCajas
     static public function mdlGetTotalCierresCaja($tabla, $where)
     {
         $sql = "SELECT COUNT(*) as total FROM $tabla c
-                INNER JOIN usuarios u ON c.id_usuario = u.id
+                LEFT JOIN usuarios u ON c.id_usuario = u.id
                 INNER JOIN bodegas b ON c.id_bodega = b.id
                 $where";
 
@@ -138,7 +138,7 @@ class ModeloCajas
     {
         $stmt = Conexion::conectar()->prepare("SELECT c.*, u.nombre as nombre_usuario, b.nombre as nombre_bodega 
                                                 FROM $tabla c
-                                                INNER JOIN usuarios u ON c.id_usuario = u.id
+                                                LEFT JOIN usuarios u ON c.id_usuario = u.id
                                                 INNER JOIN bodegas b ON c.id_bodega = b.id
                                                 WHERE c.id = :id LIMIT 1");
         $stmt->bindParam(":id", $idTurno, PDO::PARAM_INT);

@@ -119,6 +119,18 @@ class ControladorProveedores
 
 		$respuesta = ModeloProveedores::mdlMostrarProveedores($tabla, $item, $valor);
 
+		if ($item === "id" && $respuesta === false) {
+			return array(
+				"id" => null,
+				"nombre" => "Proveedor Eliminado",
+				"documento" => "00000000",
+				"marca" => "Ninguna",
+				"celular" => "",
+				"correo" => "",
+				"direccion" => ""
+			);
+		}
+
 		return $respuesta;
 	}
 
@@ -362,67 +374,7 @@ class ControladorProveedores
 			$tabla = "proveedores";
 			$idProveedor = isset($_GET["idProveedor"]) ? $_GET["idProveedor"] : $_POST["idProveedorEliminar"];
 
-			// Verificar si hay documentos soporte asociados a este proveedor
-			$docsSoporteAsociados = ModeloFactus::mdlMostrarDocumentosSoporte("id_proveedor", $idProveedor);
 
-			if (!empty($docsSoporteAsociados)) {
-				if (isset($_POST["idProveedorEliminar"])) {
-					return "error_documentos_soporte";
-				}
-				echo '<script>
-					swal({
-						type: "error",
-						title: "¡No se puede eliminar!",
-						text: "El proveedor tiene documentos soporte asociados.",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					}).then(() => {
-							window.location = "proveedores";
-					});
-				</script>';
-				return;
-			}
-
-			// Verificar si hay productos asociados a este proveedor (solo activos)
-			$totalProductosGlobales = ModeloProveedores::mdlContarProductosActivosGlobales($idProveedor);
-
-			if ($totalProductosGlobales > 0) {
-				$productosLocal = ModeloProveedores::mdlContarProductosPorProveedor($idProveedor);
-
-				if ($productosLocal == 0) {
-					if (isset($_POST["idProveedorEliminar"])) {
-						return "error_productos_asociados_otra_sucursal";
-					}
-					echo '<script>
-						swal({
-							type: "error",
-							title: "¡No se puede eliminar!",
-							text: "No se puede eliminar porque tiene productos asociados en otra sucursal.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						}).then(() => {
-							window.location = "proveedores";
-						});
-					</script>';
-					return;
-				}
-
-				if (isset($_POST["idProveedorEliminar"])) {
-					return "error_productos_asociados";
-				}
-				echo '<script>
-					swal({
-						type: "error",
-						title: "¡No se puede eliminar!",
-						text: "El proveedor tiene productos asociados.",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					}).then(() => {
-							window.location = "proveedores";
-					});
-				</script>';
-				return;
-			}
 
 			$db = Conexion::conectar();
 			try {

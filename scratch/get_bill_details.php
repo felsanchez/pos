@@ -8,7 +8,7 @@ $config = $stmt->fetch();
 $token = $config['access_token'];
 $apiUrl = $config['api_url'];
 
-$id = 54825;
+$id = 'SETP990000289';
 $endpoint = '/v1/bills/' . $id;
 $curl = curl_init();
 curl_setopt_array($curl, array(
@@ -16,7 +16,7 @@ curl_setopt_array($curl, array(
   CURLOPT_RETURNTRANSFER => true,
   CURLOPT_ENCODING => '',
   CURLOPT_TIMEOUT => 10,
-  CURLOPT_CUSTOMREQUEST => 'DELETE',
+  CURLOPT_CUSTOMREQUEST => 'GET',
   CURLOPT_HTTPHEADER => array(
     'Authorization: Bearer ' . $token,
     'Accept: application/json'
@@ -28,4 +28,9 @@ $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 curl_close($curl);
 
 echo "Endpoint: $endpoint | HTTP Code: $httpcode\n";
-echo "Response: \n" . json_encode(json_decode($response), JSON_PRETTY_PRINT) . "\n";
+$decoded = json_decode($response, true);
+if ($decoded) {
+    print_r($decoded);
+} else {
+    echo "Raw response:\n" . $response . "\n";
+}

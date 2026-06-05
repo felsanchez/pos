@@ -102,6 +102,83 @@ class AjaxUsuarios
 }
 
 /*=============================================
+VERIFICAR RELACIONES DEL USUARIO ANTES DE ELIMINAR
+=============================================*/
+if (isset($_POST["idUsuarioVerificarRelaciones"])) {
+	$idUsuario = $_POST["idUsuarioVerificarRelaciones"];
+	
+	$db = Conexion::conectar();
+	$relaciones = [];
+
+	// 1. Verificar actividades
+	$stmt = $db->prepare("SELECT COUNT(*) FROM actividades WHERE id_user = :id");
+	$stmt->bindParam(":id", $idUsuario, PDO::PARAM_INT);
+	$stmt->execute();
+	if ($stmt->fetchColumn() > 0) {
+		$relaciones[] = "actividades";
+	}
+
+	// 2. Verificar ventas
+	$stmt = $db->prepare("SELECT COUNT(*) FROM ventas WHERE id_vendedor = :id");
+	$stmt->bindParam(":id", $idUsuario, PDO::PARAM_INT);
+	$stmt->execute();
+	if ($stmt->fetchColumn() > 0) {
+		$relaciones[] = "ventas";
+	}
+
+	// 3. Verificar gastos
+	$stmt = $db->prepare("SELECT COUNT(*) FROM gastos WHERE id_usuario = :id");
+	$stmt->bindParam(":id", $idUsuario, PDO::PARAM_INT);
+	$stmt->execute();
+	if ($stmt->fetchColumn() > 0) {
+		$relaciones[] = "gastos";
+	}
+
+	// 4. Verificar cajas_turnos
+	$stmt = $db->prepare("SELECT COUNT(*) FROM cajas_turnos WHERE id_usuario = :id");
+	$stmt->bindParam(":id", $idUsuario, PDO::PARAM_INT);
+	$stmt->execute();
+	if ($stmt->fetchColumn() > 0) {
+		$relaciones[] = "turnos de caja";
+	}
+
+	// 5. Verificar notas_credito
+	$stmt = $db->prepare("SELECT COUNT(*) FROM notas_credito WHERE id_usuario = :id");
+	$stmt->bindParam(":id", $idUsuario, PDO::PARAM_INT);
+	$stmt->execute();
+	if ($stmt->fetchColumn() > 0) {
+		$relaciones[] = "notas crédito";
+	}
+
+	// 6. Verificar traslados
+	$stmt = $db->prepare("SELECT COUNT(*) FROM traslados WHERE id_usuario = :id");
+	$stmt->bindParam(":id", $idUsuario, PDO::PARAM_INT);
+	$stmt->execute();
+	if ($stmt->fetchColumn() > 0) {
+		$relaciones[] = "traslados";
+	}
+
+	// 7. Verificar documentos_soporte
+	$stmt = $db->prepare("SELECT COUNT(*) FROM documentos_soporte WHERE id_usuario = :id");
+	$stmt->bindParam(":id", $idUsuario, PDO::PARAM_INT);
+	$stmt->execute();
+	if ($stmt->fetchColumn() > 0) {
+		$relaciones[] = "documentos soporte";
+	}
+
+	// 8. Verificar notas_ajuste_ds
+	$stmt = $db->prepare("SELECT COUNT(*) FROM notas_ajuste_ds WHERE id_usuario = :id");
+	$stmt->bindParam(":id", $idUsuario, PDO::PARAM_INT);
+	$stmt->execute();
+	if ($stmt->fetchColumn() > 0) {
+		$relaciones[] = "notas de ajuste";
+	}
+
+	echo json_encode(["status" => "success", "relaciones" => $relaciones]);
+	exit;
+}
+
+/*=============================================
 ELIMINAR USUARIO
 =============================================*/
 if (isset($_POST["idUsuarioEliminar"])) {

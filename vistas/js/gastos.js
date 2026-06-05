@@ -194,7 +194,17 @@ $(document).ready(function () {
                     processData: false,
                     success: function (respuesta) {
                         if (respuesta == "ok") {
-                            swal({ icon: "success", title: "Eliminado" }).then(() => { location.reload(); });
+                            swal({
+                                type: "success",
+                                title: "¡Eliminado!",
+                                text: "El gasto ha sido eliminado correctamente.",
+                                showConfirmButton: true,
+                                confirmButtonText: "Cerrar"
+                            }).then((result) => {
+                                if (result.value) {
+                                    window.location.reload();
+                                }
+                            });
                         }
                     }
                 });

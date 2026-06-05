@@ -381,105 +381,147 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 	var fotoUsuario = $(this).attr("fotoUsuario");
 	var usuario = $(this).attr("usuario");
 
-	swal({
-		title: '¿Esta seguro de borrar el usuario?',
-		text: "¡Si no lo está puede cancelar la acción!",
-		type: 'warning',
-		showCancelButton: true,
-		confirmButtonColor: '#3085d6',
-		cancelButtonColor: '#d33',
-		cancelButtonText: 'Cancelar',
-		confirmButtonText: 'Si, borrar usuario!'
-	}).then((result) => {
+	// Primero verificar si tiene relaciones asociadas
+	var datosVerificacion = new FormData();
+	datosVerificacion.append("idUsuarioVerificarRelaciones", idUsuario);
 
-		if (result.value) {
+	$.ajax({
+		url: "ajax/usuarios.ajax.php",
+		method: "POST",
+		data: datosVerificacion,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			
+			var warningText = "¡Si no lo está puede cancelar la acción!";
+			
+			if (respuesta.status === "success" && respuesta.relaciones.length > 0) {
+				// Formatear el texto de relaciones
+				var listaRelaciones = "";
+				if (respuesta.relaciones.length === 1) {
+					listaRelaciones = respuesta.relaciones[0];
+				} else {
+					var ultima = respuesta.relaciones.pop();
+					listaRelaciones = respuesta.relaciones.join(", ") + " y " + ultima;
+				}
+				warningText = "El usuario tiene " + listaRelaciones + " asociadas. ¿Está seguro que desea eliminarlo?";
+			}
 
-			var datos = new FormData();
-			datos.append("idUsuarioEliminar", idUsuario);
-			// csrf_token removido - manejado por csrf-helper.js
+			swal({
+				title: '¿Esta seguro de borrar el usuario?',
+				text: warningText,
+				type: 'warning',
+				showCancelButton: true,
+				confirmButtonColor: '#3085d6',
+				cancelButtonColor: '#d33',
+				cancelButtonText: 'Cancelar',
+				confirmButtonText: 'Si, borrar usuario!'
+			}).then((result) => {
 
-			$.ajax({
-				url: "ajax/usuarios.ajax.php",
-				method: "POST",
-				data: datos,
-				cache: false,
-				contentType: false,
-				processData: false,
-				success: function (respuesta) {
-					if (respuesta == "ok") {
-						swal({
-							type: "success",
-							title: "¡El usuario ha sido borrado correctamente!",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						}).then((result) => {
-							if (result.value) {
-								window.location = "usuarios";
+				if (result.value) {
+
+					var datos = new FormData();
+					datos.append("idUsuarioEliminar", idUsuario);
+
+					$.ajax({
+						url: "ajax/usuarios.ajax.php",
+						method: "POST",
+						data: datos,
+						cache: false,
+						contentType: false,
+						processData: false,
+						success: function (respuesta) {
+							if (respuesta == "ok") {
+								swal({
+									type: "success",
+									title: "¡El usuario ha sido borrado correctamente!",
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								}).then((result) => {
+									if (result.value) {
+										window.location = "usuarios";
+									}
+								});
+							} else if (respuesta == "error_auto_eliminacion") {
+								swal({
+									type: "error",
+									title: "¡No puedes eliminar tu propio usuario!",
+									text: "Cierra la sesión e inicia con otro usuario para poder eliminar este.",
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								});
+							} else {
+								swal({
+									type: "error",
+									title: "Error",
+									text: "No se pudo eliminar el usuario. " + respuesta,
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								});
 							}
-						});
-					} else if (respuesta == "error_auto_eliminacion") {
-						swal({
-							type: "error",
-							title: "¡No puedes eliminar tu propio usuario!",
-							text: "Cierra la sesión e inicia con otro usuario para poder eliminar este.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					} else if (respuesta == "error_actividades") {
-						swal({
-							type: "error",
-							title: "¡No se puede eliminar!",
-							text: "El usuario tiene actividades asociadas.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					} else if (respuesta == "error_ventas") {
-						swal({
-							type: "error",
-							title: "¡No se puede eliminar!",
-							text: "El usuario tiene ventas asociadas.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					} else if (respuesta == "error_notas_credito") {
-						swal({
-							type: "error",
-							title: "¡No se puede eliminar!",
-							text: "El usuario tiene notas crédito asociadas.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					} else if (respuesta == "error_documentos_soporte") {
-						swal({
-							type: "error",
-							title: "¡No se puede eliminar!",
-							text: "El usuario tiene documentos soporte asociados.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					} else if (respuesta == "error_notas_ajuste") {
-						swal({
-							type: "error",
-							title: "¡No se puede eliminar!",
-							text: "El usuario tiene notas de ajuste asociadas.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					} else {
-						swal({
-							type: "error",
-							title: "Error",
-							text: "No se pudo eliminar el usuario. " + respuesta,
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					}
+						}
+					})
+				}
+			})
+		},
+		error: function () {
+			// Fallback en caso de error de red o de script
+			swal({
+				title: '¿Esta seguro de borrar el usuario?',
+				text: "¡Si no lo está puede cancelar la acción!",
+				type: 'warning',
+				showCancelButton: true,
+				confirmButtonColor: '#3085d6',
+				cancelButtonColor: '#d33',
+				cancelButtonText: 'Cancelar',
+				confirmButtonText: 'Si, borrar usuario!'
+			}).then((result) => {
+				if (result.value) {
+					var datos = new FormData();
+					datos.append("idUsuarioEliminar", idUsuario);
+
+					$.ajax({
+						url: "ajax/usuarios.ajax.php",
+						method: "POST",
+						data: datos,
+						cache: false,
+						contentType: false,
+						processData: false,
+						success: function (respuesta) {
+							if (respuesta == "ok") {
+								swal({
+									type: "success",
+									title: "¡El usuario ha sido borrado correctamente!",
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								}).then((result) => {
+									if (result.value) {
+										window.location = "usuarios";
+									}
+								});
+							} else if (respuesta == "error_auto_eliminacion") {
+								swal({
+									type: "error",
+									title: "¡No puedes eliminar tu propio usuario!",
+									text: "Cierra la sesión e inicia con otro usuario para poder eliminar este.",
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								});
+							} else {
+								swal({
+									type: "error",
+									title: "Error",
+									text: "No se pudo eliminar el usuario. " + respuesta,
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								});
+							}
+						}
+					})
 				}
 			})
 		}
-
-
-	})
-
-
+	});
 })

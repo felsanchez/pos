@@ -18,7 +18,7 @@ class ModeloTraslados
                                                   FROM $tabla t
                                                   INNER JOIN bodegas bo ON t.id_bodega_origen = bo.id
                                                   INNER JOIN bodegas bd ON t.id_bodega_destino = bd.id
-                                                  INNER JOIN usuarios u ON t.id_usuario = u.id
+                                                  LEFT JOIN usuarios u ON t.id_usuario = u.id
                                                   WHERE t.$item = :$item 
                                                   ORDER BY t.id DESC");
             $stmt->bindParam(":" . $item, $valor, PDO::PARAM_STR);
@@ -34,7 +34,7 @@ class ModeloTraslados
                                                           FROM $tabla t
                                                           INNER JOIN bodegas bo ON t.id_bodega_origen = bo.id
                                                           INNER JOIN bodegas bd ON t.id_bodega_destino = bd.id
-                                                          INNER JOIN usuarios u ON t.id_usuario = u.id
+                                                          LEFT JOIN usuarios u ON t.id_usuario = u.id
                                                           WHERE DATE(t.fecha) = :fechaInicial
                                                           ORDER BY t.id DESC");
                     $stmt->bindParam(":fechaInicial", $fechaInicial, PDO::PARAM_STR);
@@ -46,7 +46,7 @@ class ModeloTraslados
                                                           FROM $tabla t
                                                           INNER JOIN bodegas bo ON t.id_bodega_origen = bo.id
                                                           INNER JOIN bodegas bd ON t.id_bodega_destino = bd.id
-                                                          INNER JOIN usuarios u ON t.id_usuario = u.id
+                                                          LEFT JOIN usuarios u ON t.id_usuario = u.id
                                                           WHERE DATE(t.fecha) BETWEEN :fechaInicial AND :fechaFinal
                                                           ORDER BY t.id DESC");
                     $stmt->bindParam(":fechaInicial", $fechaInicial, PDO::PARAM_STR);
@@ -60,7 +60,7 @@ class ModeloTraslados
                                                       FROM $tabla t
                                                       INNER JOIN bodegas bo ON t.id_bodega_origen = bo.id
                                                       INNER JOIN bodegas bd ON t.id_bodega_destino = bd.id
-                                                      INNER JOIN usuarios u ON t.id_usuario = u.id
+                                                      LEFT JOIN usuarios u ON t.id_usuario = u.id
                                                       ORDER BY t.id DESC");
             }
             $stmt->execute();

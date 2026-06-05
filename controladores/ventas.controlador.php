@@ -1214,11 +1214,26 @@ class ControladorVentas
 				$fechaHoraActual = date('Y-m-d H:i:s');
 
 				// 🔹 VALIDACIÓN DE CONSECUTIVO (Corrección Duplicados)
-				$ventaExistente = ModeloVentas::mdlMostrarVentas($tabla, "codigo", $codigoVenta);
+				$esFE = (isset($_POST["activarFacturaElectronica"]) && $_POST["activarFacturaElectronica"] == "1") || isset($_POST["guardarVentaFactus"]);
+
+				if ($esFE) {
+					// Para FE, solo es duplicado si existe un registro activo (no anulado) con el mismo código
+					$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE codigo = :codigo AND estado = 'venta'");
+					$stmt->bindParam(":codigo", $codigoVenta, PDO::PARAM_STR);
+					$stmt->execute();
+					$ventaExistente = $stmt->fetch();
+				} else {
+					// Para POS, se mantiene el comportamiento estándar
+					$ventaExistente = ModeloVentas::mdlMostrarVentas($tabla, "codigo", $codigoVenta);
+				}
 
 				if ($ventaExistente) {
-					$nuevoCodigoReal = ModeloVentas::mdlObtenerSiguienteConsecutivo($tabla);
-					$codigoVenta = $nuevoCodigoReal;
+					if ($esFE) {
+						$codigoVenta = ModeloFactus::mdlObtenerSiguienteConsecutivoFactus(true);
+					} else {
+						$nuevoCodigoReal = ModeloVentas::mdlObtenerSiguienteConsecutivo($tabla);
+						$codigoVenta = $nuevoCodigoReal;
+					}
 				}
 
 				$idTurnoCaja = null;
@@ -1241,6 +1256,7 @@ class ControladorVentas
 					"neto" => $_POST["nuevoPrecioNeto"],
 					"total" => $_POST["totalVenta"],
 					"metodo_pago" => $_POST["listaMetodoPago"],
+					"notes" => $_POST["notas"] ?? "", // Conservamos propiedad notas de compatibilidad
 					"notas" => $_POST["notas"] ?? "",
 					"observacion" => isset($_POST["observacion"]) ? $_POST["observacion"] : "",
 					"estado" => $_POST["estado"],
@@ -1267,8 +1283,10 @@ class ControladorVentas
 					throw new Exception("Error al guardar la venta en la base de datos local.");
 				}
 
-				// 🔹 ACTUALIZAR EL CONSECUTIVO en la BD
-				ModeloVentas::mdlActualizarConsecutivo($tabla, $codigoVenta);
+				// 🔹 ACTUALIZAR EL CONSECUTIVO en la BD (Solo si es venta POS)
+				if (!$esFE) {
+					ModeloVentas::mdlActualizarConsecutivo($tabla, $codigoVenta);
+				}
 
 				// Verificar stock y generar notificaciones
 				ControladorNotificaciones::ctrVerificarStockProductos();
@@ -2729,6 +2747,13 @@ class ControladorVentas
 
 				$listaProductos = $productosValidos;
 				$codigoVenta = $_POST["nuevaVenta"];
+				
+				// 🔹 VALIDACIÓN DE CONSECUTIVO FACTUS (Corrección Duplicados)
+				$ventaExistente = ModeloVentas::mdlMostrarVentas("ventas", "codigo", $codigoVenta);
+				if ($ventaExistente) {
+					$codigoVenta = ModeloFactus::mdlObtenerSiguienteConsecutivoFactus(true);
+				}
+
 				$tabla = "ventas";
 				$totalProductosComprados = array();
 

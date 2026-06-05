@@ -391,6 +391,7 @@ if ($ultimaVenta) {
                         ======================================-->
                 <input type="hidden" name="estado" value="venta">
                 <input type="hidden" name="activarFacturaElectronica" value="1">
+                <input type="hidden" name="guardarVentaFactus" value="1">
 
                 <br>
 

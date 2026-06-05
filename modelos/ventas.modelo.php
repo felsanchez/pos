@@ -327,7 +327,7 @@ class ModeloVentas
 			return $resultado["ultimo_numero"] + 1;
 		} else {
 			// Si no existe el registro en consecutivos, intentar recuperar el max de ventas regulares
-			$stmt = Conexion::conectar()->prepare("SELECT MAX(codigo) as max_codigo FROM ventas WHERE (numero_factura IS NULL OR numero_factura = '')");
+			$stmt = Conexion::conectar()->prepare("SELECT MAX(codigo) as max_codigo FROM ventas WHERE (numero_factura IS NULL OR numero_factura = '') AND (resolucion_id IS NULL OR resolucion_id = 0)");
 			$stmt->execute();
 			$resultadoMax = $stmt->fetch();
 

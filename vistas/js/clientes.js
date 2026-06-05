@@ -257,77 +257,134 @@ ELIMINAR CLIENTE
 $(document).on("click", ".btnEliminarCliente", function () {
   var idCliente = $(this).attr("idCliente");
 
-  swal({
-    title: "¿Estás seguro de borrar el cliente?",
-    text: "¡Si no lo estás puedes cancelar la acción!",
-    type: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    cancelButtonText: 'Cancelar',
-    confirmButtonText: 'Sí, borrar'
-  }).then(function (result) {
-    if (result.value) {
-      var datos = new FormData();
-      datos.append("idClienteEliminar", idCliente);
-      datos.append("ruta", "clientes");
+  // Primero verificar si tiene relaciones asociadas
+  var datosVerificacion = new FormData();
+  datosVerificacion.append("idClienteVerificarRelaciones", idCliente);
 
-      $.ajax({
-        url: "ajax/clientes.ajax.php",
-        method: "POST",
-        data: datos,
-        cache: false,
-        contentType: false,
-        processData: false,
-        success: function (respuesta) {
-          respuesta = $.trim(respuesta);
-          if (respuesta === "ok") {
-            swal({
-              type: "success",
-              title: "¡El cliente ha sido borrado correctamente!",
-              showConfirmButton: true,
-              confirmButtonText: "Cerrar"
-            }).then(function (r) {
-              if (r.value) {
-                window.location = "clientes";
+  $.ajax({
+    url: "ajax/clientes.ajax.php",
+    method: "POST",
+    data: datosVerificacion,
+    cache: false,
+    contentType: false,
+    processData: false,
+    dataType: "json",
+    success: function (respuesta) {
+      var warningText = "¡Si no lo estás puedes cancelar la acción!";
+      
+      if (respuesta.status === "success" && respuesta.relaciones.length > 0) {
+        var listaRelaciones = "";
+        if (respuesta.relaciones.length === 1) {
+          listaRelaciones = respuesta.relaciones[0];
+        } else {
+          var ultima = respuesta.relaciones.pop();
+          listaRelaciones = respuesta.relaciones.join(", ") + " y " + ultima;
+        }
+        warningText = "El cliente tiene " + listaRelaciones + " asociadas. ¿Estás seguro de borrar el cliente?\n¡Si no lo estás puedes cancelar la acción!";
+      }
+
+      swal({
+        title: "¿Estás seguro de borrar el cliente?",
+        text: warningText,
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Sí, borrar'
+      }).then(function (result) {
+        if (result.value) {
+          var datos = new FormData();
+          datos.append("idClienteEliminar", idCliente);
+          datos.append("ruta", "clientes");
+
+          $.ajax({
+            url: "ajax/clientes.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function (respuesta) {
+              respuesta = $.trim(respuesta);
+              if (respuesta === "ok") {
+                swal({
+                  type: "success",
+                  title: "¡El cliente ha sido borrado correctamente!",
+                  showConfirmButton: true,
+                  confirmButtonText: "Cerrar"
+                }).then(function (r) {
+                  if (r.value) {
+                    window.location = "clientes";
+                  }
+                });
+              } else {
+                swal({
+                  type: "error",
+                  title: "Error",
+                  text: "No se pudo eliminar el cliente. " + respuesta,
+                  confirmButtonText: "Cerrar"
+                });
               }
-            });
-          } else if (respuesta === "error_actividades") {
-            swal({
-              type: "error",
-              title: "¡No se puede eliminar!",
-              text: "El cliente tiene actividades asociadas.",
-              confirmButtonText: "Cerrar"
-            });
-          } else if (respuesta === "error_ventas") {
-            swal({
-              type: "error",
-              title: "¡No se puede eliminar!",
-              text: "El cliente tiene ventas asociadas.",
-              confirmButtonText: "Cerrar"
-            });
-          } else if (respuesta === "error_notas_credito") {
-            swal({
-              type: "error",
-              title: "¡No se puede eliminar!",
-              text: "El cliente tiene notas crédito asociadas.",
-              confirmButtonText: "Cerrar"
-            });
-          } else {
-            swal({
-              type: "error",
-              title: "Error",
-              text: "No se pudo eliminar el cliente. " + respuesta,
-              confirmButtonText: "Cerrar"
-            });
-          }
-        },
-        error: function (xhr, status, err) {
-          swal({
-            type: "error",
-            title: "Error de conexión",
-            text: "No se pudo conectar con el servidor.",
-            confirmButtonText: "Cerrar"
+            },
+            error: function (xhr, status, err) {
+              swal({
+                type: "error",
+                title: "Error de conexión",
+                text: "No se pudo conectar con el servidor.",
+                confirmButtonText: "Cerrar"
+              });
+            }
+          });
+        }
+      });
+    },
+    error: function () {
+      // Fallback si la comprobación falla
+      swal({
+        title: "¿Estás seguro de borrar el cliente?",
+        text: "¡Si no lo estás puedes cancelar la acción!",
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Sí, borrar'
+      }).then(function (result) {
+        if (result.value) {
+          var datos = new FormData();
+          datos.append("idClienteEliminar", idCliente);
+          datos.append("ruta", "clientes");
+
+          $.ajax({
+            url: "ajax/clientes.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function (respuesta) {
+              respuesta = $.trim(respuesta);
+              if (respuesta === "ok") {
+                swal({
+                  type: "success",
+                  title: "¡El cliente ha sido borrado correctamente!",
+                  showConfirmButton: true,
+                  confirmButtonText: "Cerrar"
+                }).then(function (r) {
+                  if (r.value) {
+                    window.location = "clientes";
+                  }
+                });
+              } else {
+                swal({
+                  type: "error",
+                  title: "Error",
+                  text: "No se pudo eliminar el cliente. " + respuesta,
+                  confirmButtonText: "Cerrar"
+                });
+              }
+            }
           });
         }
       });

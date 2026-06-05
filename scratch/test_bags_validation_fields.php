@@ -36,6 +36,30 @@ $formatsToTest = [
         "per_unit_amount" => "73.00",
         "base_unit_measure" => "1.00",
         "is_nominal" => true
+    ],
+    "Format G (tax_rate=0, unit_amount=73)" => [
+        "tax_rate" => "0.00",
+        "tribute_id" => 22,
+        "unit_amount" => "73.00"
+    ],
+    "Format H (tax_rate=73, unit_amount=73)" => [
+        "tax_rate" => "73.00",
+        "tribute_id" => 22,
+        "unit_amount" => "73.00"
+    ],
+    "Format I (tax_rate=0, per_unit_amount=73, base_unit_measure=1, is_amount=true)" => [
+        "tax_rate" => "0.00",
+        "tribute_id" => 22,
+        "per_unit_amount" => "73.00",
+        "base_unit_measure" => "1.00",
+        "is_amount" => true
+    ],
+    "Format J (tax_rate=73, per_unit_amount=73, base_unit_measure=1, is_amount=true)" => [
+        "tax_rate" => "73.00",
+        "tribute_id" => 22,
+        "per_unit_amount" => "73.00",
+        "base_unit_measure" => "1.00",
+        "is_amount" => true
     ]
 ];
 
@@ -46,7 +70,7 @@ foreach ($formatsToTest as $name => $fields) {
     echo "=== Testing $name ===\n";
     $payload = [
         "numbering_range_id" => 1190,
-        "reference_code" => "TEST-BAGS-" . uniqid(),
+        "reference_code" => "TEST-BAGS-6a222776d5119",
         "observation" => "Testing nominal bags tax format: $name",
         "payment_form" => "1",
         "payment_due_date" => date('Y-m-d'),

@@ -2,14 +2,14 @@
 require_once "modelos/conexion.php";
 try {
     $db = Conexion::conectar();
-    echo "=== LAST 3 SALES ===\n";
-    $stmt = $db->prepare("SELECT id, codigo, neto, impuesto, total, productos FROM ventas ORDER BY id DESC LIMIT 3");
+    echo "=== LAST 10 SALES ===\n";
+    $stmt = $db->prepare("SELECT id, codigo, numero_factura, estado_dian, total, fecha FROM ventas ORDER BY id DESC LIMIT 10");
     $stmt->execute();
     $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
     foreach ($sales as $sale) {
-        echo "ID: {$sale['id']} | Codigo: {$sale['codigo']} | Neto: {$sale['neto']} | Impuesto: {$sale['impuesto']} | Total: {$sale['total']}\n";
-        echo "Productos: {$sale['productos']}\n\n";
+        echo "ID: {$sale['id']} | Codigo: {$sale['codigo']} | NumFactura: " . ($sale['numero_factura'] ?? 'NULL') . " | EstadoDIAN: " . ($sale['estado_dian'] ?? 'NULL') . " | Total: {$sale['total']} | Fecha: {$sale['fecha']}\n";
     }
+} catch (Exception $e) {
 
     echo "=== LAST 3 FACTURAS DIAN ===\n";
     // Check if table facturas_dian or similar exists

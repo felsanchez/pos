@@ -315,6 +315,17 @@ class ControladorUsuarios
 		$tabla = "usuarios";
 		$respuesta = ModeloUsuarios::MdlMostrarUsuarios($tabla, $item, $valor);
 
+		if ($item === "id" && $respuesta === false) {
+			return array(
+				"id" => null,
+				"nombre" => "Usuario Eliminado",
+				"usuario" => "usuario_eliminado",
+				"perfil" => "Ninguno",
+				"foto" => "vistas/img/usuarios/default/anonymous.png",
+				"estado" => 0
+			);
+		}
+
 		return $respuesta;
 	}
 
@@ -712,111 +723,12 @@ class ControladorUsuarios
 			$foto = $usuario["foto"];
 			$usrName = $usuario["usuario"];
 
-			// Verificar si hay actividades asociados
-			$actividadesAsociados = ModeloActividades::mdlMostrarActividades("actividades", "id_user", $idUsuario, "id");
-
-			if (!empty($actividadesAsociados)) {
-				if (isset($_POST["idUsuarioEliminar"])) {
-					return "error_actividades";
-				}
-				echo '<script>
-					swal({
-						type: "error",
-						title: "¡No se puede eliminar!",
-						text: "El usuario tiene actividades asociadas.",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					}).then(() => {
-						window.location = "usuarios";
-					});
-				</script>';
-				return;
-			}
 
 
-			// Verificar si hay ventas asociados
-			$ventasAsociados = ModeloVentas::mdlMostrarVentas("ventas", "id_vendedor", $idUsuario, "id");
 
-			if (!empty($ventasAsociados)) {
-				if (isset($_POST["idUsuarioEliminar"])) {
-					return "error_ventas";
-				}
-				echo '<script>
-					swal({
-						type: "error",
-						title: "¡No se puede eliminar!",
-						text: "El usuario tiene ventas asociadas.",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					}).then(() => {
-						window.location = "usuarios";
-					});
-				</script>';
-				return;
-			}
 
-			// Verificar si hay Notas Crédito asociadas
-			$notasCreditoAsociadas = ModeloFactus::mdlMostrarNotasCredito("notas_credito", "id_usuario", $idUsuario);
 
-			if (!empty($notasCreditoAsociadas)) {
-				if (isset($_POST["idUsuarioEliminar"])) {
-					return "error_notas_credito";
-				}
-				echo '<script>
-					swal({
-						type: "error",
-						title: "¡No se puede eliminar!",
-						text: "El usuario tiene notas crédito asociadas.",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					}).then(() => {
-						window.location = "usuarios";
-					});
-				</script>';
-				return;
-			}
 
-			// Verificar si hay Documentos Soporte asociados
-			$docsSoporteAsociados = ModeloFactus::mdlMostrarDocumentosSoporte("id_usuario", $idUsuario);
-
-			if (!empty($docsSoporteAsociados)) {
-				if (isset($_POST["idUsuarioEliminar"])) {
-					return "error_documentos_soporte";
-				}
-				echo '<script>
-					swal({
-						type: "error",
-						title: "¡No se puede eliminar!",
-						text: "El usuario tiene documentos soporte asociados.",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					}).then(() => {
-						window.location = "usuarios";
-					});
-				</script>';
-				return;
-			}
-
-			// Verificar si hay Notas de Ajuste DS asociadas
-			$notasAjusteAsociadas = ModeloFactus::mdlMostrarNotasAjusteDS("id_usuario", $idUsuario);
-
-			if (!empty($notasAjusteAsociadas)) {
-				if (isset($_POST["idUsuarioEliminar"])) {
-					return "error_notas_ajuste";
-				}
-				echo '<script>
-					swal({
-						type: "error",
-						title: "¡No se puede eliminar!",
-						text: "El usuario tiene notas de ajuste asociadas.",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					}).then(() => {
-						window.location = "usuarios";
-					});
-				</script>';
-				return;
-			}
 
 			/*=============================================
 			TRANSACCIÓN PDO: BORRAR USUARIO
@@ -862,7 +774,7 @@ class ControladorUsuarios
 				$db->rollBack();
 				$mensajeError = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
 				if (isset($_POST["idUsuarioEliminar"])) {
-					return "error";
+					return "error: " . $mensajeError;
 				}
 				echo '<script>
 					swal({

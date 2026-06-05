@@ -9,14 +9,28 @@ if ($auth['error']) {
 }
 $token = $auth['token'];
 
-// Loop through tribute IDs from 1 to 30
-for ($tId = 1; $tId <= 30; $tId++) {
-    echo "Testing tribute_id = $tId... ";
+// Field names to test for tax amount override
+$fieldsToTest = [
+    "tax_amount" => ["tax_amount" => "73.00"],
+    "tax_value" => ["tax_value" => "73.00"],
+    "tax" => ["tax" => "73.00"],
+    "amount" => ["amount" => "73.00"],
+    "value" => ["value" => "73.00"],
+    "total_tax" => ["total_tax" => "73.00"],
+    "tax_val" => ["tax_val" => "73.00"],
+    "tax_amount_value" => ["tax_amount_value" => "73.00"],
+];
+
+$apiUrl = "https://api-sandbox.factus.com.co";
+$url = $apiUrl . '/v1/bills/validate';
+
+foreach ($fieldsToTest as $name => $override) {
+    echo "=== Testing field: $name ===\n";
     
     $payload = [
         "numbering_range_id" => 1190,
-        "reference_code" => "TEST-BAGS-6a222776d5119",
-        "observation" => "Prueba de tribute_id " . $tId,
+        "reference_code" => "TEST-BAGS-6a222776d5119", // overwrite same draft to bypass lock
+        "observation" => "Testing tax amount field: $name",
         "payment_form" => "1",
         "payment_due_date" => date('Y-m-d'),
         "payment_method_code" => "10",
@@ -47,26 +61,25 @@ for ($tId = 1; $tId <= 30; $tId++) {
             ]
         ],
         "items" => [
-            [
+            array_merge([
                 "scheme_id" => "1",
                 "note" => "",
-                "code_reference" => "ITEM-1",
+                "code_reference" => "ITEM-BAGS",
                 "name" => "ppal bolsas",
                 "quantity" => 1,
                 "discount_rate" => "0.00",
-                "price" => "100.000000",
-                "tax_rate" => "73.00",
+                "price" => "27.000000", // tax-exclusive price
+                "tax_rate" => "0.00",
                 "unit_measure_id" => 70, // UNIDAD
                 "standard_code_id" => 1,
                 "is_excluded" => 0,
-                "tribute_id" => $tId,
+                "tribute_id" => 22,
+                "per_unit_amount" => "73.00",
+                "base_unit_measure" => "1.00",
                 "withholding_taxes" => []
-            ]
+            ], $override)
         ]
     ];
-
-    $apiUrl = "https://api-sandbox.factus.com.co";
-    $url = $apiUrl . '/v1/bills/validate';
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -78,26 +91,21 @@ for ($tId = 1; $tId <= 30; $tId++) {
         'Content-Type: application/json',
         'Accept: application/json'
     ));
-    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
 
     $respuesta = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
-    echo "HTTP CODE: $httpCode | ";
-    $parsed = json_decode($respuesta, true);
-    if ($parsed) {
-        if ($httpCode == 201) {
-            echo "SUCCESS!\n";
-        } else {
-            $msg = $parsed['message'] ?? '';
-            $errs = $parsed['errors'] ?? $parsed['data']['errors'] ?? [];
-            echo "Msg: $msg | Errs: " . json_encode($errs) . "\n";
-        }
+    echo "HTTP CODE: " . $httpCode . "\n";
+    $decoded = json_decode($respuesta, true);
+    if ($httpCode === 200 || $httpCode === 201) {
+        echo "SUCCESS! Response: " . ($decoded['message'] ?? 'Ok') . "\n";
+        break; // stop on success
     } else {
-        echo "Raw: " . substr($respuesta, 0, 200) . "\n";
+        echo "FAILED. Response: " . $respuesta . "\n\n";
     }
     
-    // Sleep a tiny bit to be gentle on the sandbox API
-    usleep(200000);
+    // Sleep slightly
+    usleep(500000);
 }

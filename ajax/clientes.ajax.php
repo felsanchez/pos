@@ -188,6 +188,43 @@ if (isset($_POST["idCliente"])) {
 }
 
 /*=============================================
+VERIFICAR RELACIONES DEL CLIENTE ANTES DE ELIMINAR
+=============================================*/
+if (isset($_POST["idClienteVerificarRelaciones"])) {
+  $idCliente = $_POST["idClienteVerificarRelaciones"];
+  
+  $db = Conexion::conectar();
+  $relaciones = [];
+
+  // 1. Verificar actividades
+  $stmt = $db->prepare("SELECT COUNT(*) FROM actividades WHERE id_cliente = :id");
+  $stmt->bindParam(":id", $idCliente, PDO::PARAM_INT);
+  $stmt->execute();
+  if ($stmt->fetchColumn() > 0) {
+    $relaciones[] = "actividades";
+  }
+
+  // 2. Verificar ventas
+  $stmt = $db->prepare("SELECT COUNT(*) FROM ventas WHERE id_cliente = :id");
+  $stmt->bindParam(":id", $idCliente, PDO::PARAM_INT);
+  $stmt->execute();
+  if ($stmt->fetchColumn() > 0) {
+    $relaciones[] = "ventas";
+  }
+
+  // 3. Verificar notas_credito
+  $stmt = $db->prepare("SELECT COUNT(*) FROM notas_credito WHERE id_cliente = :id");
+  $stmt->bindParam(":id", $idCliente, PDO::PARAM_INT);
+  $stmt->execute();
+  if ($stmt->fetchColumn() > 0) {
+    $relaciones[] = "notas crédito";
+  }
+
+  echo json_encode(["status" => "success", "relaciones" => $relaciones]);
+  exit;
+}
+
+/*=============================================
 SOLICITUD PARA ELIMINAR CLIENTE
 =============================================*/
 if (isset($_POST["idClienteEliminar"])) {

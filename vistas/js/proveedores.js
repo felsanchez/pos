@@ -176,85 +176,134 @@ $(".tablaProveedores").on("click", ".btnEditarProveedor", function () {
 
 
 $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
-
 	var idProveedor = $(this).attr("idProveedor");
 
-	swal({
+	// Primero verificar si tiene relaciones asociadas
+	var datosVerificacion = new FormData();
+	datosVerificacion.append("idProveedorVerificarRelaciones", idProveedor);
 
-		title: '¿Esta seguro de borrar el proveedor?',
-		text: "¡Si no lo está puede cancelar la acción!",
-		type: 'warning',
-		showCancelButton: true,
-		confirmButtonColor: '#3085d6',
-		cancelButtonColor: '#d33',
-		cancelButtonText: 'Cancelar',
-		confirmButtonText: 'Si, borrar proveedor!'
-	}).then((result) => {
-
-		if (result.value) {
-
-			var datos = new FormData();
-			datos.append("idProveedorEliminar", idProveedor);
-			// csrf_token removido - manejado por csrf-helper.js
-
-			$.ajax({
-				url: "ajax/proveedores.ajax.php",
-				method: "POST",
-				data: datos,
-				cache: false,
-				contentType: false,
-				processData: false,
-				success: function (respuesta) {
-					if (respuesta == "ok") {
-						swal({
-							type: "success",
-							title: "¡Borrado correctamente!",
-							text: "El proveedor ha sido borrado correctamente.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						}).then((result) => {
-							if (result.value) {
-								window.location.reload();
-							}
-						});
-					} else if (respuesta == "error_documentos_soporte") {
-						swal({
-							type: "error",
-							title: "¡No se puede eliminar!",
-							text: "El proveedor tiene documentos soporte asociados. Elimine o reasigne los documentos soporte antes de continuar.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					} else if (respuesta == "error_productos_asociados") {
-						swal({
-							type: "error",
-							title: "¡No se puede eliminar!",
-							text: "El proveedor tiene productos asociados.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					} else if (respuesta == "error_productos_asociados_otra_sucursal") {
-						swal({
-							type: "error",
-							title: "¡No se puede eliminar!",
-							text: "No se puede eliminar porque tiene productos asociados en otra sucursal.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					} else {
-						swal({
-							type: "error",
-							title: "Error",
-							text: "No se pudo eliminar. " + respuesta,
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					}
+	$.ajax({
+		url: "ajax/proveedores.ajax.php",
+		method: "POST",
+		data: datosVerificacion,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			var warningText = "¡Si no lo está puede cancelar la acción!";
+			
+			if (respuesta.status === "success" && respuesta.relaciones.length > 0) {
+				var listaRelaciones = "";
+				if (respuesta.relaciones.length === 1) {
+					listaRelaciones = respuesta.relaciones[0];
+				} else {
+					var ultima = respuesta.relaciones.pop();
+					listaRelaciones = respuesta.relaciones.join(", ") + " y " + ultima;
 				}
-			})
+				warningText = "El proveedor tiene " + listaRelaciones + " asociadas. ¿Esta seguro de borrar el proveedor?\n¡Si no lo está puede cancelar la acción!";
+			}
+
+			swal({
+				title: '¿Esta seguro de borrar el proveedor?',
+				text: warningText,
+				type: 'warning',
+				showCancelButton: true,
+				confirmButtonColor: '#3085d6',
+				cancelButtonColor: '#d33',
+				cancelButtonText: 'Cancelar',
+				confirmButtonText: 'Si, borrar proveedor!'
+			}).then((result) => {
+				if (result.value) {
+					var datos = new FormData();
+					datos.append("idProveedorEliminar", idProveedor);
+
+					$.ajax({
+						url: "ajax/proveedores.ajax.php",
+						method: "POST",
+						data: datos,
+						cache: false,
+						contentType: false,
+						processData: false,
+						success: function (respuesta) {
+							if (respuesta == "ok") {
+								swal({
+									type: "success",
+									title: "¡Borrado correctamente!",
+									text: "El proveedor ha sido borrado correctamente.",
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								}).then((result) => {
+									if (result.value) {
+										window.location.reload();
+									}
+								});
+							} else {
+								swal({
+									type: "error",
+									title: "Error",
+									text: "No se pudo eliminar. " + respuesta,
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								});
+							}
+						}
+					});
+				}
+			});
+		},
+		error: function () {
+			// Fallback si la comprobación falla
+			swal({
+				title: '¿Esta seguro de borrar el proveedor?',
+				text: "¡Si no lo está puede cancelar la acción!",
+				type: 'warning',
+				showCancelButton: true,
+				confirmButtonColor: '#3085d6',
+				cancelButtonColor: '#d33',
+				cancelButtonText: 'Cancelar',
+				confirmButtonText: 'Si, borrar proveedor!'
+			}).then((result) => {
+				if (result.value) {
+					var datos = new FormData();
+					datos.append("idProveedorEliminar", idProveedor);
+
+					$.ajax({
+						url: "ajax/proveedores.ajax.php",
+						method: "POST",
+						data: datos,
+						cache: false,
+						contentType: false,
+						processData: false,
+						success: function (respuesta) {
+							if (respuesta == "ok") {
+								swal({
+									type: "success",
+									title: "¡Borrado correctamente!",
+									text: "El proveedor ha sido borrado correctamente.",
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								}).then((result) => {
+									if (result.value) {
+										window.location.reload();
+									}
+								});
+							} else {
+								swal({
+									type: "error",
+									title: "Error",
+									text: "No se pudo eliminar. " + respuesta,
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								});
+							}
+						}
+					});
+				}
+			});
 		}
-	})
-})
+	});
+});
 
 
 // La lógica de guardado de notas se ha movido directamente a proveedores.php 

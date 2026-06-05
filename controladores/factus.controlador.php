@@ -366,7 +366,7 @@ class ControladorFactus
 			["codigo" => "04", "nombre" => "INC", "descripcion" => "Impuesto Nacional al Consumo", "porcentaje" => 8.00],
 			["codigo" => "03", "nombre" => "ICA", "descripcion" => "Impuesto de Industria y Comercio", "porcentaje" => 0.00],
 			["codigo" => "22", "nombre" => "INC Bolsas", "descripcion" => "Impuesto al consumo de bolsas plásticas", "porcentaje" => 0.00],
-			["codigo" => "ZA", "nombre" => "IVA Excluido", "descripcion" => "Bienes o servicios excluidos de IVA", "porcentaje" => 0.00]
+			["codigo" => "ZA", "nombre" => "(IVA) 0%", "descripcion" => "Bienes o servicios excluidos de IVA", "porcentaje" => 0.00]
 		];
 
 		try {
@@ -837,7 +837,7 @@ class ControladorFactus
 			}
 
 			$datosActualizar = array(
-				"estado_dian" => "Error",
+				"estado_dian" => "rechazada",
 				"cufe" => '',
 				"qr_data" => '',
 				"xml_dian" => '',
@@ -1660,9 +1660,16 @@ class ControladorFactus
 			}
 
 			// Obtener unidad de medida
-			$idUnidadMedida = !empty($productoBD['codigo_unidad']) ? intval($productoBD['codigo_unidad']) : 70;
+			$unidadMedida = isset($productoBD['unidad_medida_id']) && !empty($productoBD['unidad_medida_id']) ? intval($productoBD['unidad_medida_id']) : 70;
 			// For INC Bolsas, force unit of measure to "unidad" (ID 70 in local map, code 94 in DIAN)
 			if (isset($codigo) && $codigo == "22") {
+				$unidadMedida = 70;
+			}
+
+			// Validar Unidad de Medida (Mapeo a Factus)
+			$idUnidadMedida = ModeloFactus::mdlObtenerIdUnidadMedida($unidadMedida);
+			$unidadesSoportadas = [70, 414, 449, 499, 512, 874];
+			if (!in_array($idUnidadMedida, $unidadesSoportadas)) {
 				$idUnidadMedida = 70;
 			}
 
@@ -2737,7 +2744,7 @@ class ControladorFactus
 			$row[] = '$ ' . number_format((float)($value['monto_total'] ?? 0), 2);
 
 			// Col 4: Fecha
-			$row[] = e(substr($value['fecha_creacion'] ?? '', 0, 10));
+			$row[] = e($value['fecha_creacion'] ?? '');
 
 			// Col 5: Estado DIAN (Badge)
 			$badgeClass = ($estadoDian == 'borrador') ? 'label-warning' : (($estadoDian == 'rechazada') ? 'label-danger' : 'label-success');

@@ -3,18 +3,17 @@ require_once "controladores/factus.controlador.php";
 require_once "modelos/factus.modelo.php";
 require_once "modelos/conexion.php";
 
-// 1. Autenticar
 $auth = ControladorFactus::ctrAutenticar();
 if ($auth['error']) {
     die("Autenticacion fallida: " . $auth['mensaje']);
 }
 $token = $auth['token'];
 
-// 2. Prepare dummy payload with unit_measure_id = 70
+// We will send the SAME reference code as the pending draft (Bill ID 54825)
 $payload = [
     "numbering_range_id" => 1190,
     "reference_code" => "TEST-BAGS-6a222776d5119",
-    "observation" => "Prueba de bolsas con unidad de medida unidad",
+    "observation" => "Testing nominal bags tax with price=27.00, tax_rate=0.00, per_unit_amount=73.00",
     "payment_form" => "1",
     "payment_due_date" => date('Y-m-d'),
     "payment_method_code" => "10",
@@ -48,22 +47,21 @@ $payload = [
         [
             "scheme_id" => "1",
             "note" => "",
-            "code_reference" => "1109",
+            "code_reference" => "ITEM-BAGS",
             "name" => "ppal bolsas",
             "quantity" => 1,
             "discount_rate" => "0.00",
             "price" => "100.000000",
-            "tax_rate" => "73.00",
+            "tax_rate" => "0.00",
             "unit_measure_id" => 70, // UNIDAD
             "standard_code_id" => 1,
-            "is_excluded" => 0,
-            "tribute_id" => 11, // INC Bolsas
+            "is_excluded" => 1,
+            "tribute_id" => 1,
             "withholding_taxes" => []
         ]
     ]
 ];
 
-echo "=== SENDING PAYLOAD ===\n";
 $apiUrl = "https://api-sandbox.factus.com.co";
 $url = $apiUrl . '/v1/bills/validate';
 
@@ -81,13 +79,8 @@ curl_setopt($ch, CURLOPT_TIMEOUT, 60);
 
 $respuesta = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$curlError = curl_error($ch);
 curl_close($ch);
 
-echo "=== API RESPONSE ===\n";
+echo "=== RESEND DRAFT RESPONSE ===\n";
 echo "HTTP CODE: " . $httpCode . "\n";
-if ($curlError) {
-    echo "CURL Error: " . $curlError . "\n";
-} else {
-    echo "Raw: " . $respuesta . "\n";
-}
+echo "Raw: " . $respuesta . "\n";

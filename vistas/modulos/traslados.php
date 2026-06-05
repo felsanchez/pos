@@ -171,7 +171,7 @@ if (isset($_GET["idTrasladoCancelar"])) {
                         <td>' . $value["codigo"] . '</td>
                         <td>' . $value["bodega_origen"] . '</td>
                         <td>' . $value["bodega_destino"] . '</td>
-                        <td>' . $value["usuario"] . '</td>
+                        <td>' . (!empty($value["usuario"]) ? $value["usuario"] : 'Usuario eliminado') . '</td>
                         <td>' . $value["total_items"] . '</td>';
 
                 if ($value["estado"] == "pendiente") {
