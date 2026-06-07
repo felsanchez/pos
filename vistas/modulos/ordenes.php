@@ -53,6 +53,10 @@ if ($xml) {
           <a href="crear-orden" class="btn btn-primary" title="Agregar orden">
             <i class="fa fa-plus"></i> <span class="hidden-xs">Agregar orden</span>
           </a>
+        <?php else: ?>
+          <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear ordenes">
+            <i class="fa fa-plus"></i> <span class="hidden-xs">Agregar orden</span>
+          </button>
         <?php endif; ?>
 
         <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">

@@ -131,6 +131,10 @@ MODAL MOSTRAR actividad
             <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#modalAgregarActividad" style="font-weight: bold; color: #333;">
               <i class="fa fa-plus"></i> Agregar actividad
             </button>
+          <?php else: ?>
+            <button class="btn btn-default btn-sm" disabled style="font-weight: bold; color: #333; opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear actividades">
+              <i class="fa fa-plus"></i> Agregar actividad
+            </button>
           <?php endif; ?>
         </div>
         <div class="card-body">
@@ -609,6 +613,10 @@ MODAL AGREGAR actividad
         </button>
         <?php if(puedeAccion('actividades', 'crear')): ?>
         <button type="button" class="btn btn-primary" id="crearNuevaActividad">
+          <i class="fa fa-plus"></i> Crear Nueva Actividad
+        </button>
+        <?php else: ?>
+        <button type="button" class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear actividades">
           <i class="fa fa-plus"></i> Crear Nueva Actividad
         </button>
         <?php endif; ?>

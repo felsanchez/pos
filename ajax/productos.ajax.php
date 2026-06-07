@@ -839,6 +839,21 @@ if (isset($_POST["idVarianteEliminar"])) {
         $stmtDelVariante->bindParam(":id_variante", $idVariante, PDO::PARAM_INT);
         $stmtDelVariante->execute();
 
+        // 3.5. Si ya no quedan variantes para este producto, marcar tiene_variantes = 0
+        $stmtCount = $db->prepare("SELECT COUNT(*) as total FROM productos_variantes WHERE id_producto = :id_producto");
+        $stmtCount->bindParam(":id_producto", $idProducto, PDO::PARAM_INT);
+        $stmtCount->execute();
+        $resCount = $stmtCount->fetch();
+        $variantesRestantes = $resCount ? intval($resCount["total"]) : 0;
+        $stmtCount = null;
+
+        if ($variantesRestantes == 0) {
+            $stmtUpdateTieneVar = $db->prepare("UPDATE productos SET tiene_variantes = 0 WHERE id = :id_producto");
+            $stmtUpdateTieneVar->bindParam(":id_producto", $idProducto, PDO::PARAM_INT);
+            $stmtUpdateTieneVar->execute();
+            $stmtUpdateTieneVar = null;
+        }
+
         // 4. Recalcular stock global del producto base
         $stmtTotalProd = $db->prepare("SELECT SUM(stock) as total FROM productos_variantes WHERE id_producto = :id AND estado = 1");
         $stmtTotalProd->bindParam(":id", $idProducto, PDO::PARAM_INT);
@@ -863,12 +878,12 @@ if (isset($_POST["idVarianteEliminar"])) {
         $resStockBProd = ModeloProductos::mdlActualizarStockBodega($idProducto, $idBodegaActiva, $stockBodegaProducto);
 
         $db->commit();
-        echo "ok";
+        echo json_encode(array("status" => "ok", "variantesRestantes" => $variantesRestantes));
 
     } catch (Exception $e) {
         $db->rollBack();
         Logger::error("Error al eliminar variante ID " . $idVariante . ": " . $e->getMessage());
-        echo "error";
+        echo json_encode(array("status" => "error", "message" => $e->getMessage()));
     }
     
     exit;

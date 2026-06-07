@@ -829,10 +829,13 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 				$stmtUpdate = $conexion->prepare("UPDATE $tabla SET id_categoria = :id_categoria, id_proveedor = :id_proveedor, descripcion = :descripcion, stock = :stock, precio_compra = :precio_compra, precio_venta = :precio_venta, unidad_medida_id = :unidad_medida_id, tributo_id = :tributo_id WHERE id = :id");
 
 				foreach ($productosActualizar as $producto) {
+					$tieneVariantes = isset($producto["tiene_variantes"]) ? intval($producto["tiene_variantes"]) : 0;
+					$stockAEditar = $tieneVariantes ? intval($producto["stock_anterior"]) : intval($producto["stock"]);
+
 					$stmtUpdate->bindParam(":id_categoria", $producto["id_categoria"], PDO::PARAM_INT);
 					$stmtUpdate->bindParam(":id_proveedor", $producto["id_proveedor"], PDO::PARAM_INT);
 					$stmtUpdate->bindParam(":descripcion", $producto["descripcion"], PDO::PARAM_STR);
-					$stmtUpdate->bindParam(":stock", $producto["stock"], PDO::PARAM_INT);
+					$stmtUpdate->bindParam(":stock", $stockAEditar, PDO::PARAM_INT);
 					$stmtUpdate->bindParam(":precio_compra", $producto["precio_compra"], PDO::PARAM_STR);
 					$stmtUpdate->bindParam(":precio_venta", $producto["precio_venta"], PDO::PARAM_STR);
 					
@@ -845,7 +848,7 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 
 					$stmtUpdate->execute();
 
-					if ($idBodega !== null) {
+					if ($idBodega !== null && !$tieneVariantes) {
 						$stmtPb->bindParam(":id_producto", $producto["id"], PDO::PARAM_INT);
 						$stmtPb->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
 						$stmtPb->bindParam(":stock", $producto["stock"], PDO::PARAM_INT);
@@ -855,8 +858,8 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 						$stmtUpdateGlobalStock->execute();
 					}
 
-					// Registrar historial solo si el stock cambió
-					if ($producto["stock"] != $producto["stock_anterior"]) {
+					// Registrar historial solo si el stock cambió y NO tiene variantes
+					if (!$tieneVariantes && $producto["stock"] != $producto["stock_anterior"]) {
 						$diferencia = $producto["stock"] - $producto["stock_anterior"];
 						$tipo_movimiento = "edicion_stock";
 						$tipo_producto = "producto";
@@ -870,9 +873,9 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 						$stmtHistorial->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
 						$stmtHistorial->bindParam(":nombre_producto", $producto["descripcion"], PDO::PARAM_STR);
 						$stmtHistorial->bindParam(":tipo_movimiento", $tipo_movimiento, PDO::PARAM_STR);
-						$stmtHistorial->bindParam(":cantidad", $diferencia, PDO::PARAM_INT);
 						$stmtHistorial->bindParam(":stock_anterior", $producto["stock_anterior"], PDO::PARAM_INT);
 						$stmtHistorial->bindParam(":stock_nuevo", $producto["stock"], PDO::PARAM_INT);
+						$stmtHistorial->bindParam(":cantidad", $diferencia, PDO::PARAM_INT);
 						$stmtHistorial->bindParam(":id_usuario", $id_usuario_sesion, PDO::PARAM_INT);
 						$stmtHistorial->bindParam(":nombre_usuario", $nombre_usuario_sesion, PDO::PARAM_STR);
 						$stmtHistorial->bindParam(":referencia", $referencia, PDO::PARAM_STR);

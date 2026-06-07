@@ -75,6 +75,10 @@ if ($xml) {
             }
             </script>
           <?php endif; ?>
+        <?php else: ?>
+          <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear factura electrónica">
+            <i class="fa fa-plus"></i> Crear Factura Electrónica
+          </button>
         <?php endif; ?>
 
         <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
@@ -303,6 +307,10 @@ MODAL GENERAR NOTA CRÉDITO
       <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancelar</button>
       <?php if (puedeAccion('factura_electronica', 'crear')): ?>
         <button type="button" class="btn btn-danger" id="btnConfirmarNC">
+          <i class="fa fa-check"></i> Generar Nota Crédito
+        </button>
+      <?php else: ?>
+        <button type="button" class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para generar nota crédito">
           <i class="fa fa-check"></i> Generar Nota Crédito
         </button>
       <?php endif; ?>

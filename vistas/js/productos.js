@@ -1248,7 +1248,7 @@ function formatearTablaVariantes(variantes) {
 
 	html += '<th width="80px">Stock</th>';
 
-	html += '<th width="140px">Acciones</th>';
+	html += '<th width="80px">Acciones</th>';
 
 	html += '</tr>';
 
@@ -1276,14 +1276,6 @@ function formatearTablaVariantes(variantes) {
 
 		// Botones de Acciones
 		var botonesAcciones = '';
-
-		// Botón de estado (Activo/Inactivo)
-		if (variante.estado == 1) {
-			botonesAcciones += '<button class="btn btn-success btn-xs btnActivarVariante" idVariante="' + variante.id + '" estadoVariante="1"><i class="fa fa-check"></i> Activo</button> ';
-
-		} else {
-			botonesAcciones += '<button class="btn btn-danger btn-xs btnActivarVariante" idVariante="' + variante.id + '" estadoVariante="0"><i class="fa fa-times"></i> Inactivo</button> ';
-		}
 
 		// Botón de editar
 		botonesAcciones += '<button class="btn btn-warning btn-xs btnEditarVariante" idVariante="' + variante.id + '" precioAdicional="' + variante.precio_adicional + '" stock="' + variante.stock + '"><i class="fa fa-pencil"></i></button>';
@@ -1648,7 +1640,19 @@ $(document).on("click", ".btnEliminarVariante", function(){
                 contentType: false,
                 processData: false,
                 success:function(respuesta){
-                    if(respuesta == "ok" || respuesta.trim() == "ok"){
+                    var esExito = false;
+                    try {
+                        var resObj = typeof respuesta === 'object' ? respuesta : JSON.parse(respuesta);
+                        if (resObj.status === "ok") {
+                            esExito = true;
+                        }
+                    } catch(e) {
+                        if (respuesta == "ok" || respuesta.trim() == "ok") {
+                            esExito = true;
+                        }
+                    }
+
+                    if(esExito){
                         swal({
                             type: "success",
                             title: "¡La variante ha sido eliminada correctamente!",
@@ -1656,26 +1660,21 @@ $(document).on("click", ".btnEliminarVariante", function(){
                             timer: 1500
                         });
 
-                        // Recargar la fila de variantes si está expandida
-                        var botonExpandir = $(".btnExpandirVariantes[data-id-producto='" + idProducto + "']");
-                        var row = null;
+                        // Recargar el DataTable principal para refrescar el stock global y las acciones
                         if (typeof table !== 'undefined') {
-                            row = table.row(botonExpandir.closest('tr'));
-                        }
-                        
-                        if (botonExpandir.length > 0 && row && row.child && row.child.isShown()) {
-                            // Colapsar y volver a expandir para refrescar datos
-                            botonExpandir.click();
-                            setTimeout(function () {
-                                botonExpandir.click();
-                            }, 500);
+                            table.ajax.reload(null, false);
                         }
 
                     } else {
+                        var msg = "No se pudo eliminar la variante.";
+                        try {
+                            var resObj = typeof respuesta === 'object' ? respuesta : JSON.parse(respuesta);
+                            if (resObj.message) msg = resObj.message;
+                        } catch(e) {}
                         swal({
                             type: "error",
                             title: "Oops...",
-                            text: "No se pudo eliminar la variante."
+                            text: msg
                         });
                     }
                 }

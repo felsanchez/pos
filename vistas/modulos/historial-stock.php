@@ -284,6 +284,9 @@ foreach ($pre_resumen as $item) {
                   <?php
                   $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
                   foreach ($usuarios as $key => $value) {
+                    if ($value["perfil"] === "SystemMaster" || $value["perfil"] === "_SystemMaster_") {
+                      continue;
+                    }
                     echo '<option value="' . e($value["id"]) . '">' . e($value["nombre"]) . '</option>';
                   }
                   ?>

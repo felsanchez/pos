@@ -73,7 +73,8 @@ class ControladorUsuarios
 
 							// 🔹 Verificar si la sucursal del usuario está activa
 							require_once "modelos/bodegas.modelo.php";
-							$bodegaUsuario = ModeloBodegas::mdlMostrarBodegas("bodegas", "id", $respuesta["id_bodega"]);
+							$idBodegaLogueado = !empty($respuesta["id_bodega"]) ? $respuesta["id_bodega"] : 1;
+							$bodegaUsuario = ModeloBodegas::mdlMostrarBodegas("bodegas", "id", $idBodegaLogueado);
 							if ($bodegaUsuario && $bodegaUsuario["estado"] == 0) {
 								echo '<br><div class="alert alert-danger">
 										<i class="fa fa-exclamation-triangle"></i>
@@ -93,7 +94,7 @@ class ControladorUsuarios
 							$_SESSION["foto"] = $respuesta["foto"];
 							$_SESSION["perfil"] = $respuesta["perfil"];
 							$_SESSION["email"] = $respuesta["email"];
-							$_SESSION["id_bodega"] = $respuesta["id_bodega"];
+							$_SESSION["id_bodega"] = $idBodegaLogueado;
 
 							// Cargar permisos del perfil en sesión (una sola consulta al login)
 							$_SESSION["permisos"] = ModeloPerfiles::mdlCargarPermisosEnSesion($respuesta["perfil"]);
@@ -180,97 +181,158 @@ class ControladorUsuarios
 				return;
 			}
 
-			if (
-				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoNombre"]) &&
-				preg_match('/^[a-zA-Z0-9]+$/', $_POST["nuevoUsuario"]) &&
-				preg_match('/^[a-zA-Z0-9]+$/', $_POST["nuevoPassword"]) &&
-				preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["nuevoEmail"])
-			) {
+			// 1. Validar nombre completo
+			if (!preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoNombre"])) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡Nombre inválido!",
+						text: "El nombre completo no puede llevar caracteres especiales.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "usuarios";
+						}
+					});
+				</script>';
+				return;
+			}
 
+			// 2. Validar nombre de usuario (Login)
+			if (!preg_match('/^[a-zA-Z0-9]+$/', $_POST["nuevoUsuario"])) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡Usuario inválido!",
+						text: "El nombre de usuario no puede llevar espacios ni caracteres especiales.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "usuarios";
+						}
+					});
+				</script>';
+				return;
+			}
 
+			// 3. Validar correo electrónico
+			if (!preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["nuevoEmail"])) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡Correo inválido!",
+						text: "El formato de correo electrónico ingresado no es válido.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "usuarios";
+						}
+					});
+				</script>';
+				return;
+			}
 
-				/*=============================================
-				VALIDAR IMAGEN
-				=============================================*/
+			// 4. Validar contraseña
+			if (!preg_match('/^[a-zA-Z0-9]+$/', $_POST["nuevoPassword"])) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡Contraseña inválida!",
+						text: "La contraseña no puede contener espacios ni caracteres especiales.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "usuarios";
+						}
+					});
+				</script>';
+				return;
+			}
 
-				$ruta = "";
+			/*=============================================
+			VALIDAR IMAGEN
+			=============================================*/
 
-				//if(isset($_FILES["nuevaFoto"]["tmp_name"])){
-				if (isset($_FILES["nuevaFoto"]["tmp_name"]) && !empty($_FILES["nuevaFoto"]["tmp_name"])) {
+			$ruta = "";
 
-					list($ancho, $alto) = getimagesize($_FILES["nuevaFoto"]["tmp_name"]);
+			if (isset($_FILES["nuevaFoto"]["tmp_name"]) && !empty($_FILES["nuevaFoto"]["tmp_name"])) {
 
-					$nuevoAncho = 500;
-					$nuevoAlto = 500;
+				list($ancho, $alto) = getimagesize($_FILES["nuevaFoto"]["tmp_name"]);
 
-					//CREAMOS DIRECTORIO DE LAS FOTOS DEL USUARIO
+				$nuevoAncho = 500;
+				$nuevoAlto = 500;
 
-					$directorio = "vistas/img/usuarios/" . $_POST["nuevoUsuario"];
+				//CREAMOS DIRECTORIO DE LAS FOTOS DEL USUARIO
 
-					mkdir($directorio, 0755);
+				$directorio = "vistas/img/usuarios/" . $_POST["nuevoUsuario"];
 
+				mkdir($directorio, 0755);
 
-					//DE A CUERDO AL TIPO DE IMAGEN APLICAMOS LAS FUNCIONES PHP, 1ro EN JPEG
+				//DE ACUERDO AL TIPO DE IMAGEN APLICAMOS LAS FUNCIONES PHP, 1ro EN JPEG
 
-					if ($_FILES["nuevaFoto"]["type"] == "image/jpeg") {
+				if ($_FILES["nuevaFoto"]["type"] == "image/jpeg") {
 
-						//GUARDAMOS LA IMAGEN EN EL DIRECTORIO
+					//GUARDAMOS LA IMAGEN EN EL DIRECTORIO
 
-						$aleatorio = mt_rand(100, 999);
+					$aleatorio = mt_rand(100, 999);
 
-						$ruta = "vistas/img/usuarios/" . $_POST["nuevoUsuario"] . "/" . $aleatorio . ".jpeg";
+					$ruta = "vistas/img/usuarios/" . $_POST["nuevoUsuario"] . "/" . $aleatorio . ".jpeg";
 
-						$origen = imagecreatefromjpeg($_FILES["nuevaFoto"]["tmp_name"]);
+					$origen = imagecreatefromjpeg($_FILES["nuevaFoto"]["tmp_name"]);
 
-						$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+					$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
 
-						imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
+					imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
 
-						imagejpeg($destino, $ruta);
-
-					}
-
-					//FUNCIONES PARA PNG
-
-					if ($_FILES["nuevaFoto"]["type"] == "image/png") {
-
-						//GUARDAMOS LA IMAGEN EN EL DIRECTORIO
-
-						$aleatorio = mt_rand(100, 999);
-
-						$ruta = "vistas/img/usuarios/" . $_POST["nuevoUsuario"] . "/" . $aleatorio . ".png";
-
-						$origen = imagecreatefrompng($_FILES["nuevaFoto"]["tmp_name"]);
-
-						$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
-
-						imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
-
-						imagepng($destino, $ruta);
-
-					}
+					imagejpeg($destino, $ruta);
 
 				}
 
+				//FUNCIONES PARA PNG
 
-				$tabla = "usuarios";
+				if ($_FILES["nuevaFoto"]["type"] == "image/png") {
 
-				// Usar password_hash con bcrypt y factor de costo 12 (seguro)
-				$encriptar = password_hash($_POST["nuevoPassword"], PASSWORD_BCRYPT, ['cost' => 12]);
+					//GUARDAMOS LA IMAGEN EN EL DIRECTORIO
 
+					$aleatorio = mt_rand(100, 999);
 
-				$datos = array(
-					"nombre" => $_POST["nuevoNombre"],
-					"usuario" => $_POST["nuevoUsuario"],
-					"password" => $encriptar,
-					"perfil" => $_POST["nuevoPerfil"],
-					"foto" => $ruta,
-					"email" => $_POST["nuevoEmail"],
-					"id_bodega" => $_POST["nuevoIdBodega"]
-				);
+					$ruta = "vistas/img/usuarios/" . $_POST["nuevoUsuario"] . "/" . $aleatorio . ".png";
 
-				$respuesta = ModeloUsuarios::mdlIngresarUsuario($tabla, $datos);
+					$origen = imagecreatefrompng($_FILES["nuevaFoto"]["tmp_name"]);
+
+					$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+
+					imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
+
+					imagepng($destino, $ruta);
+
+				}
+
 			}
+
+
+			$tabla = "usuarios";
+
+			// Usar password_hash con bcrypt y factor de costo 12 (seguro)
+			$encriptar = password_hash($_POST["nuevoPassword"], PASSWORD_BCRYPT, ['cost' => 12]);
+
+
+			$datos = array(
+				"nombre" => $_POST["nuevoNombre"],
+				"usuario" => $_POST["nuevoUsuario"],
+				"password" => $encriptar,
+				"perfil" => $_POST["nuevoPerfil"],
+				"foto" => $ruta,
+				"email" => $_POST["nuevoEmail"],
+				"id_bodega" => (!empty($_POST["nuevoIdBodega"]) && is_numeric($_POST["nuevoIdBodega"])) ? intval($_POST["nuevoIdBodega"]) : 1,
+				"estado" => 1
+			);
+
+			$respuesta = ModeloUsuarios::mdlIngresarUsuario($tabla, $datos);
 
 			if ($respuesta == "ok") {
 
@@ -290,7 +352,8 @@ class ControladorUsuarios
 				echo '<script>
 					swal({
 						type: "error",
-						title: "¡El usuario no puede ir vacío o llevar caracteres especiales!",
+						title: "¡Error al guardar el usuario!",
+						text: "Por favor intenta nuevamente.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 
@@ -299,7 +362,6 @@ class ControladorUsuarios
 						});
 				</script>';
 			}
-
 
 		}
 
@@ -433,9 +495,13 @@ class ControladorUsuarios
 			$accionesHtml = '<div class="btn-group">';
 			if (puedeAccion('usuarios', 'editar')) {
 				$accionesHtml .= '<button class="btn btn-warning btnEditarUsuario" idUsuario="' . $value["id"] . '" title="Editar usuario"><i class="fa fa-pencil"></i></button>';
+			} else {
+				$accionesHtml .= '<button class="btn btn-warning" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-pencil"></i></button>';
 			}
 			if (puedeAccion('usuarios', 'eliminar')) {
 				$accionesHtml .= '<button class="btn btn-danger btnEliminarUsuario" idUsuario="' . $value["id"] . '" fotoUsuario="' . $value["foto"] . '" usuario="' . $value["usuario"] . '" title="Eliminar usuario"><i class="fa fa-times"></i></button>';
+			} else {
+				$accionesHtml .= '<button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para eliminar"><i class="fa fa-times"></i></button>';
 			}
 			$accionesHtml .= '</div>';
 
@@ -481,13 +547,47 @@ class ControladorUsuarios
 				return;
 			}
 
-			if (preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarNombre"]) && preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["editarEmail"])) {
+			if (
+				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarNombre"]) &&
+				preg_match('/^[a-zA-Z0-9]+$/', $_POST["editarUsuario"]) &&
+				preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["editarEmail"])
+			) {
+
+				$tabla = "usuarios";
+				$usuarioActual = ModeloUsuarios::MdlMostrarUsuarios($tabla, "id", $_POST["idUsuario"]);
+				$ruta = $_POST["fotoActual"];
+
+				// Si el login cambió, validar duplicado y renombrar carpeta de fotos
+				if ($_POST["editarUsuario"] !== $usuarioActual["usuario"]) {
+					$checkExiste = ModeloUsuarios::MdlMostrarUsuarios($tabla, "usuario", $_POST["editarUsuario"]);
+					if ($checkExiste) {
+						echo '<script>
+							swal({
+								type: "error",
+								title: "Error",
+								text: "El nombre de usuario (Login) ya está en uso.",
+								showConfirmButton: true,
+								confirmButtonText: "Cerrar"
+							}).then(() => {
+								window.location = "usuarios";
+							});
+						</script>';
+						return;
+					}
+
+					$dirAntiguo = "vistas/img/usuarios/" . $usuarioActual["usuario"];
+					$dirNuevo = "vistas/img/usuarios/" . $_POST["editarUsuario"];
+					if (is_dir($dirAntiguo)) {
+						rename($dirAntiguo, $dirNuevo);
+						if (!empty($ruta) && strpos($ruta, $dirAntiguo) === 0) {
+							$ruta = str_replace($dirAntiguo, $dirNuevo, $ruta);
+						}
+					}
+				}
 
 				/*=============================================
 				VALIDAR IMAGEN
 				=============================================*/
-
-				$ruta = $_POST["fotoActual"];
 
 				if (isset($_FILES["editarFoto"]["tmp_name"]) && !empty($_FILES["editarFoto"]["tmp_name"])) {
 
@@ -500,9 +600,8 @@ class ControladorUsuarios
 
 					$directorio = "vistas/img/usuarios/" . $_POST["editarUsuario"];
 
-					// Si no hay foto actual, crear el directorio
-					if (empty($_POST["fotoActual"])) {
-						mkdir($directorio, 0755);
+					if (!file_exists($directorio)) {
+						mkdir($directorio, 0755, true);
 					}
 
 					//DE ACUERDO AL TIPO DE IMAGEN APLICAMOS LAS FUNCIONES PHP, 1ro EN JPEG
@@ -548,8 +647,6 @@ class ControladorUsuarios
 
 				$fotoActualAEliminar = (!empty($_POST["fotoActual"]) && $ruta !== $_POST["fotoActual"]) ? $_POST["fotoActual"] : null;
 
-				$tabla = "usuarios";
-
 				if (isset($_POST["editarPassword"]) && $_POST["editarPassword"] != "") {
 
 					if (preg_match('/^[a-zA-Z0-9]+$/', $_POST["editarPassword"])) {
@@ -561,7 +658,7 @@ class ControladorUsuarios
 						echo '<script>
 					swal({
 						type: "error",
-						title: "¡El usuario no puede ir vacío o llevar caracteres especiales!",
+						title: "¡La contraseña no puede llevar caracteres especiales!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 
@@ -569,25 +666,25 @@ class ControladorUsuarios
 							window.location = "usuarios";
 						});
 				</script>';
+						return;
 
 					}
-
 
 				} else {
 
 					// Si no se cambia la contraseña, mantener la actual
-					$usuarioActual = ModeloUsuarios::MdlMostrarUsuarios($tabla, "usuario", $_POST["editarUsuario"]);
 					$encriptar = $usuarioActual["password"];
 				}
 
 				$datos = array(
+					"id" => $_POST["idUsuario"],
 					"nombre" => $_POST["editarNombre"],
 					"usuario" => $_POST["editarUsuario"],
 					"password" => $encriptar,
 					"perfil" => $_POST["editarPerfil"],
 					"foto" => $ruta,
 					"email" => $_POST["editarEmail"],
-					"id_bodega" => $_POST["editarIdBodega"]
+					"id_bodega" => (!empty($_POST["editarIdBodega"]) && is_numeric($_POST["editarIdBodega"])) ? intval($_POST["editarIdBodega"]) : 1
 				);
 
 				/*=============================================
@@ -641,7 +738,7 @@ class ControladorUsuarios
 				echo '<script>
 					swal({
 						type: "error",
-						title: "¡El nombre no puede ir vacío o llevar caracteres especiales!",
+						title: "¡El nombre o usuario no puede ir vacío o llevar caracteres especiales!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 
@@ -818,89 +915,140 @@ class ControladorUsuarios
 				return;
 			}
 
-			if (
-				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["registroNombre"]) &&
-				preg_match('/^[a-zA-Z0-9]+$/', $_POST["registroUsuario"]) &&
-				preg_match('/^[a-zA-Z0-9]+$/', $_POST["registroPassword"]) &&
-				preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["registroEmail"])
-			) {
-
-				// Verificar si el usuario ya existe
-				$tabla = "usuarios";
-				$item = "usuario";
-				$valor = $_POST["registroUsuario"];
-				$usuarioExiste = ModeloUsuarios::MdlMostrarUsuarios($tabla, $item, $valor);
-
-				if ($usuarioExiste) {
-					echo '<script>
-						swal({
-							type: "error",
-							title: "¡El usuario ya existe!",
-							text: "Por favor elige otro nombre de usuario.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						}).then(() => {
-							window.location = "login";
-						});
-					</script>';
-					return;
-				}
-
-				// Usar password_hash con bcrypt y factor de costo 12 (seguro)
-				$encriptar = password_hash($_POST["registroPassword"], PASSWORD_BCRYPT, ['cost' => 12]);
-
-				// Datos del nuevo usuario
-				$datos = array(
-					"nombre" => $_POST["registroNombre"],
-					"usuario" => $_POST["registroUsuario"],
-					"password" => $encriptar,
-					"perfil" => "Administrador",
-					"foto" => "",
-					"email" => $_POST["registroEmail"]
-				);
-
-				$respuesta = ModeloUsuarios::mdlIngresarUsuario($tabla, $datos);
-
-				if ($respuesta == "ok") {
-
-					echo '<script>
-						swal({
-							type: "success",
-							title: "¡Registro exitoso!",
-							text: "Ya puedes ingresar al sistema con tu usuario y contraseña.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						}).then(() => {
-							window.location = "login";
-						});
-					</script>';
-
-				} else {
-					echo '<script>
-						swal({
-							type: "error",
-							title: "¡Error al registrar!",
-							text: "Por favor intenta nuevamente.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						}).then(() => {
-							window.location = "login";
-						});
-					</script>';
-				}
-
-			} else {
+			// 1. Validar nombre completo
+			if (!preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["registroNombre"])) {
 				echo '<script>
 					swal({
 						type: "error",
-						title: "¡Error en los datos!",
-						text: "El nombre, usuario y contraseña no pueden llevar caracteres especiales.",
+						title: "¡Nombre inválido!",
+						text: "El nombre completo no puede llevar caracteres especiales.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 					}).then((result)=>{
 						if(result.value){
 							window.location = "login";
 						}
+					});
+				</script>';
+				return;
+			}
+
+			// 2. Validar nombre de usuario (Login)
+			if (!preg_match('/^[a-zA-Z0-9]+$/', $_POST["registroUsuario"])) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡Usuario inválido!",
+						text: "El nombre de usuario no puede llevar espacios ni caracteres especiales.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "login";
+						}
+					});
+				</script>';
+				return;
+			}
+
+			// 3. Validar correo electrónico
+			if (!preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["registroEmail"])) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡Correo inválido!",
+						text: "El formato de correo electrónico ingresado no es válido.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "login";
+						}
+					});
+				</script>';
+				return;
+			}
+
+			// 4. Validar contraseña
+			if (!preg_match('/^[a-zA-Z0-9]+$/', $_POST["registroPassword"])) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡Contraseña inválida!",
+						text: "La contraseña no puede contener espacios ni caracteres especiales.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result)=>{
+						if(result.value){
+							window.location = "login";
+						}
+					});
+				</script>';
+				return;
+			}
+
+			// Verificar si el usuario ya existe
+			$tabla = "usuarios";
+			$item = "usuario";
+			$valor = $_POST["registroUsuario"];
+			$usuarioExiste = ModeloUsuarios::MdlMostrarUsuarios($tabla, $item, $valor);
+
+			if ($usuarioExiste) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡El usuario ya existe!",
+						text: "Por favor elige otro nombre de usuario.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "login";
+					});
+				</script>';
+				return;
+			}
+
+			// Usar password_hash con bcrypt y factor de costo 12 (seguro)
+			$encriptar = password_hash($_POST["registroPassword"], PASSWORD_BCRYPT, ['cost' => 12]);
+
+			// Datos del nuevo usuario
+			$datos = array(
+				"nombre" => $_POST["registroNombre"],
+				"usuario" => $_POST["registroUsuario"],
+				"password" => $encriptar,
+				"perfil" => "Administrador",
+				"foto" => "",
+				"email" => $_POST["registroEmail"],
+				"id_bodega" => 1,
+				"estado" => 0
+			);
+
+			$respuesta = ModeloUsuarios::mdlIngresarUsuario($tabla, $datos);
+
+			if ($respuesta == "ok") {
+
+				echo '<script>
+					swal({
+						type: "success",
+						title: "¡Registro exitoso!",
+						text: "Ya puedes ingresar al sistema con tu usuario y contraseña.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "login";
+					});
+				</script>';
+
+			} else {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡Error al registrar!",
+						text: "Por favor intenta nuevamente.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "login";
 					});
 				</script>';
 			}

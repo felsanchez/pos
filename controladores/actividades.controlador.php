@@ -273,9 +273,13 @@ class ControladorActividades{
 			$botonesAcciones = '<div class="btn-group">';
 			if (puedeAccion('actividades', 'editar')) {
 				$botonesAcciones .= '<button class="btn btn-warning btnEditarActividad" data-id="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarActividad" idActividad="' . $value["id"] . '" title="Editar actividad"><i class="fa fa-pencil"></i></button>';
+			} else {
+				$botonesAcciones .= '<button class="btn btn-warning" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-pencil"></i></button>';
 			}
 			if (puedeAccion('actividades', 'eliminar')) {
 				$botonesAcciones .= '<button class="btn btn-danger btnEliminarActividad" idActividad="' . $value["id"] . '" title="Eliminar actividad"><i class="fa fa-times"></i></button>';
+			} else {
+				$botonesAcciones .= '<button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para eliminar"><i class="fa fa-times"></i></button>';
 			}
 			$botonesAcciones .= '</div>';
 			$nestedData[] = $botonesAcciones;

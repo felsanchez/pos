@@ -47,7 +47,8 @@ $(document).ready(function () {
                                 var rowNode = api.row(rowIdx).node();
                                 var idGasto = $(rowNode).find('.celda-notas-gasto').data('id') || "";
                                 var notasText = $(rowNode).find('.celda-notas-gasto').text().trim();
-                                finalHtml += '<div contenteditable="true" class="celda-notas-gasto" data-id="' + idGasto + '" style="flex:1; outline:none; border:1px dashed #ccc; padding:6px; background:#fff9e6; margin-top:5px; width:100%;">' + notasText + '</div>';
+                                var placeholderAttr = (notasText === "") ? ' data-placeholder="Escribe una nota..."' : "";
+                                finalHtml += '<div contenteditable="true" class="celda-notas-gasto" data-id="' + idGasto + '"' + placeholderAttr + ' style="flex:1; outline:none; border:1px dashed #ccc; padding:6px; background:#fff9e6; margin-top:5px; width:100%;">' + notasText + '</div>';
                             } else {
                                 finalHtml += '<span style="color:#333;">' + col.data + '</span>';
                             }
@@ -68,6 +69,9 @@ $(document).ready(function () {
             },
             "dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
             "preDrawCallback": function () { if (!$(this).hasClass('datatable-ready')) $(this).css('visibility', 'hidden'); },
+            "drawCallback": function (settings) {
+                inicializarPlaceholders();
+            },
             "initComplete": function () { $(this).addClass('datatable-ready').css('visibility', 'visible'); }
         });
     }
@@ -112,11 +116,29 @@ $(document).ready(function () {
         });
     }
 
-    // 7. Edición rápida de notas (Blur)
+    // 7. Edición rápida de notas (Blur & Input)
+    $(document).on('input', '.celda-notas-gasto', function () {
+        var elemento = $(this);
+        if (elemento.text().trim() === '') {
+            elemento.attr('data-placeholder', 'Escribe una nota...');
+            elemento.empty(); // Limpiar residuos del DOM como <br>
+        } else {
+            elemento.removeAttr('data-placeholder');
+        }
+    });
+
     $(document).on('blur', '.celda-notas-gasto', function () {
         var elemento = $(this);
         var id = elemento.data('id');
         var nota = elemento.text().trim();
+
+        if (nota === '') {
+            elemento.attr('data-placeholder', 'Escribe una nota...');
+            elemento.empty(); // Asegurar elemento vacío en el DOM
+        } else {
+            elemento.removeAttr('data-placeholder');
+        }
+
         if (!id) return;
         $.ajax({
             url: 'ajax/gastos-actualizar-nota.ajax.php',
@@ -135,6 +157,19 @@ $(document).ready(function () {
             }
         });
     });
+
+    // Función para inicializar placeholders en celdas vacías
+    function inicializarPlaceholders() {
+        $('.celda-notas-gasto').each(function () {
+            if ($(this).text().trim() === '') {
+                $(this).attr('data-placeholder', 'Escribe una nota...');
+            } else {
+                $(this).removeAttr('data-placeholder');
+            }
+        });
+    }
+
+    inicializarPlaceholders();
 
     // --- ACCIONES DE MODALES ---
     $(document).on("click", ".btnEditarGasto", function () {

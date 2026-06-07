@@ -46,6 +46,14 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
           <button class="btn btn-success" data-toggle="modal" data-target="#modalImportarProductos">
             <i class="fa fa-upload"></i> Exportar / Importar Productos
           </button>
+        <?php else: ?>
+          <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear productos">
+            <i class="fa fa-plus"></i> Agregar producto
+          </button>
+
+          <button class="btn btn-success" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para importar/exportar">
+            <i class="fa fa-upload"></i> Exportar / Importar Productos
+          </button>
         <?php endif; ?>
 
         <!-- Filtros Estandarizados en el Header (Alineados a la derecha) -->
@@ -94,6 +102,7 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
 
 
       <!--CODIGO PARA LLAMAR AL WEBHOOK DE n8n -->
+      <?php if (!isset($configuracion["boton_actualizar_producto_activo"]) || $configuracion["boton_actualizar_producto_activo"] == 1): ?>
       <div class="content-header">
         <form id="formN8N"
           action="https://demo-ppal-n8n.lhs6l6.easypanel.host/webhook/ed25e621-dcc5-45c0-918c-5ec3c9ecbdc3"
@@ -104,6 +113,7 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
           <button type="submit" class="btn btn-success">Actualizar</button>
         </form>
       </div>
+      <?php endif; ?>
 
 
 

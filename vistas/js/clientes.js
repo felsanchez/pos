@@ -163,6 +163,14 @@ $(document).on('focus', '.celda-notas', function () {
   // Ya no eliminamos el placeholder al enfocar
 });
 
+$(document).on('input', '.celda-notas', function () {
+  if ($(this).text().trim() === '') {
+    $(this).attr('data-placeholder', 'Escribe una nota...');
+  } else {
+    $(this).removeAttr('data-placeholder');
+  }
+});
+
 $(document).on('blur', '.celda-notas', function () {
   console.log('🔹 Blur detectado en Notas Cliente (ID: ' + $(this).attr('data-id') + ')');
   var elemento = $(this);
@@ -171,6 +179,8 @@ $(document).on('blur', '.celda-notas', function () {
 
   if (nuevaNota === '') {
     elemento.attr('data-placeholder', 'Escribe una nota...');
+  } else {
+    elemento.removeAttr('data-placeholder');
   }
 
   if (!id) {

@@ -23,6 +23,10 @@
           <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarUsuario">
             <i class="fa fa-plus"></i> Agregar usuario
           </button>
+        <?php else: ?>
+          <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear usuarios">
+            <i class="fa fa-plus"></i> Agregar usuario
+          </button>
         <?php endif; ?>
 
         <!-- Filtro por Perfil Estandarizado -->
@@ -345,7 +349,8 @@ MODAL EDITAR USUARIO
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-key"></i></span>
                     <input type="text" class="form-control input-lg" id="editarUsuario" name="editarUsuario" value=""
-                      placeholder="Nombre de usuario" readonly>
+                      placeholder="Nombre de usuario" required>
+                    <input type="hidden" name="idUsuario" id="idUsuario">
                   </div>
                 </div>
               </div>

@@ -38,13 +38,17 @@ class ControladorSeguimiento
             $where = "WHERE (nombre LIKE '%$s%' OR celular LIKE '%$s%' OR contexto LIKE '%$s%' OR estado LIKE '%$s%' OR fecha LIKE '%$s%')";
         }
 
-        // Orden
-        $order = "ORDER BY fecha DESC";
+        // Orden: por defecto id DESC para colocar los registros más nuevos arriba
+        $order = "ORDER BY id DESC";
         if (isset($params['order'][0]['column'])) {
             $colIdx = (int)$params['order'][0]['column'];
             if (isset($columnsMap[$colIdx])) {
                 $dir = $params['order'][0]['dir'] === 'asc' ? 'ASC' : 'DESC';
-                $order = "ORDER BY " . $columnsMap[$colIdx] . " $dir";
+                if ($columnsMap[$colIdx] === 'fecha') {
+                    $order = "ORDER BY id $dir";
+                } else {
+                    $order = "ORDER BY " . $columnsMap[$colIdx] . " $dir, id DESC";
+                }
             }
         }
 
@@ -74,8 +78,13 @@ class ControladorSeguimiento
             $seg3   = !empty($value["seguimiento3"]) ? '<span class="badge" style="background-color:#28a745">' . e($value["seguimiento3"])  . '</span>' : '';
             $pedido = !empty($value["hizo_pedido"])  ? '<span class="badge" style="background-color:#006400">' . e($value["hizo_pedido"]) . '</span>' : '';
 
-            // Checkbox (solo si el permiso se gestiona en el front; aquí siempre enviamos el input)
-            $checkbox = '<input type="checkbox" class="checkItem" value="' . $value["id"] . '">';
+            // Checkbox (deshabilitado si no tiene permisos para eliminar)
+            $puedoEliminar = function_exists('puedeAccion') ? puedeAccion('seguimiento_leads', 'eliminar') : true;
+            if ($puedoEliminar) {
+                $checkbox = '<input type="checkbox" class="checkItem" value="' . $value["id"] . '">';
+            } else {
+                $checkbox = '<input type="checkbox" class="checkItem" disabled style="cursor: not-allowed;" title="No tiene permisos para eliminar" value="' . $value["id"] . '">';
+            }
 
             $data[] = [
                 $checkbox,

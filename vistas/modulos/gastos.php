@@ -61,11 +61,21 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
             }
             </script>
           <?php endif; ?>
+        <?php else: ?>
+          <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear gastos">
+            <i class="fa fa-plus"></i> Agregar gasto
+          </button>
         <?php endif; ?>
 
-        <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarCategorias">
-          <i class="fa fa-tags"></i> Gestionar categorías
-        </button>
+        <?php if (puedeAccion('gastos', 'editar')): ?>
+          <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarCategorias">
+            <i class="fa fa-tags"></i> Gestionar categorías
+          </button>
+        <?php else: ?>
+          <button class="btn btn-default" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para gestionar categorías de gastos">
+            <i class="fa fa-tags"></i> Gestionar categorías
+          </button>
+        <?php endif; ?>
 
         <div class="pull-right contenedor-filtros">
 
@@ -164,9 +174,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
                 <th>Categoría</th>
                 <th>Estado</th>
                 <th>Proveedor</th>
-                <?php if ($_SESSION["perfil"] == "Administrador"): ?>
-                  <th>Sucursal</th>
-                <?php endif; ?>
+
                 <th>Imagen</th>
                 <th>Fecha</th>
                 <th>Notas</th>

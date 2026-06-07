@@ -180,9 +180,15 @@ class ControladorVentas
 			$botonesAcciones = '<div class="btn-group col-acciones">';
 			if (puedeAccion('ventas', 'editar')) {
 				$botonesAcciones .= '<button class="btn btn-warning btnDetalleVenta" idVenta="' . $value["id"] . '" title="Ver detalle" style="width: auto !important;"><i class="fa fa-eye"></i></button>';
+			} else {
+				$botonesAcciones .= '<button class="btn btn-warning" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-eye"></i></button>';
 			}
-			if (puedeAccion('ventas', 'eliminar') && (!isset($value["estado"]) || $value["estado"] != "anulada")) {
-				$botonesAcciones .= '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Anular venta"><i class="fa fa-ban"></i></button>';
+			if (!isset($value["estado"]) || $value["estado"] != "anulada") {
+				if (puedeAccion('ventas', 'eliminar')) {
+					$botonesAcciones .= '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Anular venta"><i class="fa fa-ban"></i></button>';
+				} else {
+					$botonesAcciones .= '<button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para eliminar"><i class="fa fa-ban"></i></button>';
+				}
 			}
 			$botonesAcciones .= '</div>';
 			$nestedData[] = $botonesAcciones;
@@ -369,6 +375,12 @@ class ControladorVentas
 								title="Enviar msg: Pedido Recibido">
 								1 msg
 							</button>';
+				} else {
+					$htmlSeguimiento .= '<button class="btn btn-default btn-xs" 
+								disabled style="margin-right:5px; border: 1px solid #ccc; color: green; width: auto !important; opacity: 0.5; cursor: not-allowed;" 
+								title="No tiene permisos para enviar mensaje">
+								1 msg
+							</button>';
 				}
 			}
 
@@ -388,6 +400,12 @@ class ControladorVentas
 								  title="Enviar msg: Pedido Procesado">
 								  2 msg
 							   </button>';
+				} else {
+					$htmlSeguimiento .= '<button class="btn btn-default btn-xs" 
+								  disabled style="margin-right:5px; border: 1px solid #ccc; color: blue; width: auto !important; opacity: 0.5; cursor: not-allowed;" 
+								  title="No tiene permisos para enviar mensaje">
+								  2 msg
+							   </button>';
 				}
 			}
 
@@ -405,6 +423,12 @@ class ControladorVentas
 								data-mensaje-alistado="' . e(htmlspecialchars($mensajeConfirmado)) . '"
 								style="margin-right:5px; border: 1px solid #ccc; color: purple; width: auto !important;" 
 								title="Enviar msg: Pedido Confirmado">
+								3 msg
+							</button>';
+				} else {
+					$htmlSeguimiento .= '<button class="btn btn-default btn-xs" 
+								disabled style="margin-right:5px; border: 1px solid #ccc; color: purple; width: auto !important; opacity: 0.5; cursor: not-allowed;" 
+								title="No tiene permisos para enviar mensaje">
 								3 msg
 							</button>';
 				}
@@ -437,6 +461,11 @@ class ControladorVentas
 								</button>';
 					}
 				}
+			} else {
+				$htmlConvertir .= '<button type="button" class="btn btn-xs btn-warning" disabled style="width: auto !important; opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar">Convertir a Venta</button>';
+				if ($mostrarBtnFE) {
+					$htmlConvertir .= ' <button type="button" class="btn btn-xs btn-primary" disabled style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8; opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-file-text-o"></i> Convertir a FE</button>';
+				}
 			}
 			$htmlConvertir .= '</div>';
 			$nestedData[] = $htmlConvertir;
@@ -447,6 +476,8 @@ class ControladorVentas
 
 			if (puedeAccion('ordenes', 'eliminar')) {
 				$botonesAcciones .= '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar Orden" style="width: auto !important;"><i class="fa fa-times"></i></button>';
+			} else {
+				$botonesAcciones .= '<button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed; width: auto !important;" title="No tiene permisos para eliminar"><i class="fa fa-times"></i></button>';
 			}
 			$botonesAcciones .= '</div>';
 			$nestedData[] = $botonesAcciones;
@@ -759,33 +790,52 @@ class ControladorVentas
 			// Firmar (para borradores)
 			$estadoLimpio = strtolower(trim($estadoDian));
 			if (in_array($estadoLimpio, ["creada", "borrador", "pendiente"])) {
-				$botonesAcciones .= '<button class="btn btnFirmarFactura" style="background-color: black; color: white; width: auto !important;" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
-									<i class="fa fa-paper-plane"></i>
-								</button>';
+				if (puedeAccion('factura_electronica', 'crear')) {
+					$botonesAcciones .= '<button class="btn btnFirmarFactura" style="background-color: black; color: white; width: auto !important;" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
+										<i class="fa fa-paper-plane"></i>
+									</button>';
+				} else {
+					$botonesAcciones .= '<button class="btn" disabled style="background-color: black; color: white; width: auto !important; opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para firmar y enviar">
+										<i class="fa fa-paper-plane"></i>
+									</button>';
+				}
 			}
 
 			// Editar Borrador
 			if (in_array($estadoDian, ['creada', 'pendiente', 'borrador'])) {
-				$botonesAcciones .= '<a class="btn btn-warning" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador" style="width: auto !important;">
-									<i class="fa fa-pencil"></i>
-								</a>';
+				if (puedeAccion('factura_electronica', 'editar')) {
+					$botonesAcciones .= '<a class="btn btn-warning" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador" style="width: auto !important;">
+										<i class="fa fa-pencil"></i>
+									</a>';
+				} else {
+					$botonesAcciones .= '<button class="btn btn-warning" disabled style="opacity: 0.5; cursor: not-allowed; width: auto !important;" title="No tiene permisos para editar">
+										<i class="fa fa-pencil"></i>
+									</button>';
+				}
 			}
 
-			if (puedeAccion('factura_electronica', 'editar')) {
-
-				// Enviar por Correo
-				if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
+			// Enviar por Correo
+			if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
+				if (puedeAccion('factura_electronica', 'editar')) {
 					$botonesAcciones .= ' <button class="btn btn-primary btnEnviarEmail" idVenta="' . $value["id"] . '" nombreCliente="' . e($value["nombre_cliente"]) . '" emailCliente="' . e($value["email_cliente"]) . '" title="Enviar por Correo" style="width: auto !important;">
+								<i class="fa fa-envelope"></i>
+							</button>';
+				} else {
+					$botonesAcciones .= ' <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed; width: auto !important;" title="No tiene permisos para enviar por correo">
 								<i class="fa fa-envelope"></i>
 							</button>';
 				}
 			}
 
-			if (puedeAccion('factura_electronica', 'eliminar')) {
-				// Solo mostrar botón eliminar si la factura NO ha sido firmada/aceptada
-				$estadosNoEliminables = ['enviada', 'aceptada'];
-				if (!in_array($value["estado_dian"], $estadosNoEliminables)) {
+			// Eliminar Borrador
+			$estadosNoEliminables = ['enviada', 'aceptada'];
+			if (!in_array($value["estado_dian"], $estadosNoEliminables)) {
+				if (puedeAccion('factura_electronica', 'eliminar')) {
 					$botonesAcciones .= ' <button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar Borrador" style="width: auto !important;">
+										<i class="fa fa-trash"></i>
+									</button>';
+				} else {
+					$botonesAcciones .= ' <button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed; width: auto !important;" title="No tiene permisos para eliminar">
 										<i class="fa fa-trash"></i>
 									</button>';
 				}
@@ -2264,19 +2314,25 @@ class ControladorVentas
 
 
 				/*=============================================
-				 ELIMINAR VENTA
+				 ELIMINAR VENTA O ORDEN
 				 =============================================*/
 
 				$idVentaEliminarReal = $traerVenta["id"];
-				$respuesta = ModeloVentas::mdlEliminarVenta($tabla, $idVentaEliminarReal);
+				$esOrden = (isset($traerVenta["estado"]) && $traerVenta["estado"] == "orden");
+
+				if ($esOrden) {
+					$respuesta = ModeloVentas::mdlEliminarVentaFisico($tabla, $idVentaEliminarReal);
+				} else {
+					$respuesta = ModeloVentas::mdlEliminarVenta($tabla, $idVentaEliminarReal);
+				}
 
 				if ($respuesta !== "ok") {
-					throw new Exception("Error al eliminar la venta de la base de datos.");
+					throw new Exception("Error al eliminar de la base de datos.");
 				}
 
 				$db->commit();
 
-				if (isset($_GET["estado"]) && $_GET["estado"] == "orden") {
+				if ($esOrden) {
 					if (isset($_POST["idVentaEliminar"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
 						if (ob_get_length())
 							ob_clean();

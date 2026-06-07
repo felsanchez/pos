@@ -222,10 +222,11 @@ $(".tablaUsuarios").on("click", ".btnEditarUsuario", function () {
 
 			$("#editarNombre").val(respuesta["nombre"]);
 			$("#editarUsuario").val(respuesta["usuario"]);
+			$("#idUsuario").val(respuesta["id"]);
 			$("#editarPerfil").html(respuesta["perfil"]);
 
 			$("#editarPerfil").val(respuesta["perfil"]);
-			$("#editarIdBodega").val(respuesta["id_bodega"]);
+			$("#editarIdBodega").val(respuesta["id_bodega"] ? respuesta["id_bodega"] : "1").trigger("change");
 			$("#fotoActual").val(respuesta["foto"]);
 			$("#passwordActual").val(respuesta["password"]);
 			$("#editarEmail").val(respuesta["email"]);
@@ -365,6 +366,41 @@ $("#nuevoUsuario").change(function () {
 				$("#nuevoUsuario").parent().after('<div class="alert alert-warning">Este usuario ya existe en la base de datos!</div>');
 
 				$("#nuevoUsuario").val("");
+			}
+
+		}
+	})
+})
+
+/*=============================================
+REVISAR SI EL USUARIO YA ESTA REGISTRADO AL EDITAR
+=============================================*/
+
+$("#editarUsuario").change(function () {
+
+	$(".alert").remove();
+
+	var usuario = $(this).val();
+	var idUsuario = $("#idUsuario").val();
+
+	var datos = new FormData();
+	datos.append("validarUsuario", usuario);
+
+	$.ajax({
+		url: "ajax/usuarios.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+
+			if (respuesta && respuesta["id"] != idUsuario) {
+
+				$("#editarUsuario").parent().after('<div class="alert alert-warning">Este usuario ya existe en la base de datos!</div>');
+
+				$("#editarUsuario").val("");
 			}
 
 		}

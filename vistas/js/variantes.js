@@ -182,8 +182,8 @@ $(document).on("click", ".btnVerOpciones", function () {
                             : '<button class="btn btn-danger btn-xs btnActivarOpcion" idOpcion="' + respuesta[i].id + '" estadoOpcion="1">Desactivado</button>';
                     } else {
                         estadoHTML = (respuesta[i].estado == 1) 
-                            ? '<button class="btn btn-success btn-xs">Activado</button>'
-                            : '<button class="btn btn-danger btn-xs">Desactivado</button>';
+                            ? '<button class="btn btn-success btn-xs" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para cambiar estado">Activado</button>'
+                            : '<button class="btn btn-danger btn-xs" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para cambiar estado">Desactivado</button>';
                     }
 
                     html += '<tr>' +
@@ -195,9 +195,13 @@ $(document).on("click", ".btnVerOpciones", function () {
                     
                     if (puedeEditar) {
                         html += '<button class="btn btn-warning btnEditarOpcion" idOpcion="' + respuesta[i].id + '" data-toggle="modal" data-target="#modalEditarOpcion" title="Editar opción"><i class="fa fa-pencil"></i></button>';
+                    } else {
+                        html += '<button class="btn btn-warning" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-pencil"></i></button>';
                     }
                     if (puedeEliminar) {
                         html += '<button class="btn btn-danger btnEliminarOpcion" idOpcion="' + respuesta[i].id + '" nombreOpcion="' + respuesta[i].nombre + '" title="Eliminar opción"><i class="fa fa-times"></i></button>';
+                    } else {
+                        html += '<button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para eliminar"><i class="fa fa-times"></i></button>';
                     }
                     
                     html += '</div>' +

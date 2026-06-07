@@ -139,15 +139,16 @@ class ControladorMovimientos{
 	=============================================*/
 	public function ctrDescargarHistorialStock()
 	{
-		$tabla = "movimientos_stock";
+		$filtros = array();
 
 		// Verificar si hay filtro de fechas
 		if (isset($_GET["fechaInicial"]) && isset($_GET["fechaFinal"])) {
-			$movimientos = ModeloMovimientos::mdlObtenerMovimientosPorFecha($tabla, $_GET["fechaInicial"], $_GET["fechaFinal"]);
-		} else {
-			// Obtener todos los movimientos
-			$movimientos = ModeloMovimientos::mdlMostrarMovimientos($tabla, null, null);
+			$filtros["fecha_desde"] = $_GET["fechaInicial"];
+			$filtros["fecha_hasta"] = $_GET["fechaFinal"];
 		}
+
+		// Obtener los movimientos
+		$movimientos = ModeloMovimientos::mdlMostrarMovimientos($filtros);
 
 		/*=============================================
 		CREAMOS EL ARCHIVO DE EXCEL
@@ -164,6 +165,69 @@ class ControladorMovimientos{
 		header("Pragma: public");
 		header('Content-Disposition:; filename="' . $Name . '"');
 		header("Content-Transfer-Encoding: binary");
+
+		$html = "<table border='0'>
+			<tr>
+				<td style='font-weight:bold; border:1px solid #eee; background-color: #f2f2f2;'>PRODUCTO</td>
+				<td style='font-weight:bold; border:1px solid #eee; background-color: #f2f2f2;'>SUCURSAL</td>
+				<td style='font-weight:bold; border:1px solid #eee; background-color: #f2f2f2;'>TIPO MOVIMIENTO</td>
+				<td style='font-weight:bold; border:1px solid #eee; background-color: #f2f2f2;'>TIPO PRODUCTO</td>
+				<td style='font-weight:bold; border:1px solid #eee; background-color: #f2f2f2;'>FECHA</td>
+				<td style='font-weight:bold; border:1px solid #eee; background-color: #f2f2f2;'>CANTIDAD</td>
+				<td style='font-weight:bold; border:1px solid #eee; background-color: #f2f2f2;'>STOCK ANTERIOR</td>
+				<td style='font-weight:bold; border:1px solid #eee; background-color: #f2f2f2;'>STOCK NUEVO</td>
+				<td style='font-weight:bold; border:1px solid #eee; background-color: #f2f2f2;'>USUARIO</td>
+				<td style='font-weight:bold; border:1px solid #eee; background-color: #f2f2f2;'>REFERENCIA</td>
+				<td style='font-weight:bold; border:1px solid #eee; background-color: #f2f2f2;'>NOTAS</td>
+			</tr>";
+
+		foreach ($movimientos as $row => $item) {
+			$sucursal = !empty($item["nombre_bodega"]) ? $item["nombre_bodega"] : 'Principal';
+			$tipoProducto = ($item["tipo_producto"] == "producto") ? 'Producto' : 'Variante';
+			
+			// Formatear tipo de movimiento para que sea amigable
+			$tipoMov = $item["tipo_movimiento"];
+			$badges = [
+				"venta" => "Venta",
+				"devolucion" => "Devolución",
+				"eliminacion_venta" => "Eliminación Venta",
+				"eliminacion_producto" => "Eliminación Producto",
+				"eliminacion_variante" => "Eliminación Variante",
+				"ajuste_manual" => "Ajuste Manual",
+				"creacion_producto" => "Creación Producto",
+				"creacion_variante" => "Creación Variante",
+				"edicion_stock" => "Edición Stock",
+				"traslado_salida" => "Traslado (Salida)",
+				"traslado_entrada" => "Traslado (Entrada)"
+			];
+			if (isset($badges[$tipoMov])) {
+				$tipoMovFriendly = $badges[$tipoMov];
+			} else {
+				$tipoMovFriendly = $tipoMov;
+			}
+
+			$html .= "<tr>
+				<td style='border:1px solid #eee;'>" . ($item["nombre_producto"] ?? '') . "</td>
+				<td style='border:1px solid #eee;'>" . $sucursal . "</td>
+				<td style='border:1px solid #eee;'>" . $tipoMovFriendly . "</td>
+				<td style='border:1px solid #eee;'>" . $tipoProducto . "</td>
+				<td style='border:1px solid #eee;'>" . ($item["fecha"] ?? '') . "</td>
+				<td style='border:1px solid #eee;'>" . intval($item["cantidad"] ?? 0) . "</td>
+				<td style='border:1px solid #eee;'>" . intval($item["stock_anterior"] ?? 0) . "</td>
+				<td style='border:1px solid #eee;'>" . intval($item["stock_nuevo"] ?? 0) . "</td>
+				<td style='border:1px solid #eee;'>" . ($item["nombre_usuario"] ?? '') . "</td>
+				<td style='border:1px solid #eee;'>" . ($item["referencia"] ?? '') . "</td>
+				<td style='border:1px solid #eee;'>" . ($item["notas"] ?? '') . "</td>
+			</tr>";
+		}
+
+		$html .= "</table>";
+
+		if (function_exists('mb_convert_encoding')) {
+			echo mb_convert_encoding($html, 'ISO-8859-1', 'UTF-8');
+		} else {
+			echo utf8_decode($html);
+		}
 
 		exit;
 	}
@@ -219,11 +283,11 @@ class ControladorMovimientos{
 		}
 
 		if (!empty($params["fecha_desde"])) {
-			$where .= " AND DATE(`fecha`) >= '" . $params["fecha_desde"] . "'";
+			$where .= " AND DATE(m.`fecha`) >= '" . $params["fecha_desde"] . "'";
 		}
 
 		if (!empty($params["fecha_hasta"])) {
-			$where .= " AND DATE(`fecha`) <= '" . $params["fecha_hasta"] . "'";
+			$where .= " AND DATE(m.`fecha`) <= '" . $params["fecha_hasta"] . "'";
 		}
 
 		if (!empty($params["usuario"])) {

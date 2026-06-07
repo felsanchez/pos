@@ -33,7 +33,7 @@ class ControladorProveedores
 			if (
 				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoProveedor"]) &&
 				($_POST["nuevaMarca"] == "" || preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevaMarca"])) &&
-				preg_match('/^[0-9]+$/', $_POST["nuevoCelular"])
+				preg_match('/^[()\-0-9 ]+$/', $_POST["nuevoCelular"])
 			) {
 
 				$tabla = "proveedores";
@@ -144,13 +144,12 @@ class ControladorProveedores
 		// Columnas para ordenar
 		$columnsMap = array(
 			0 => 'nombre',
-			1 => 'marca',
-			2 => 'celular',
-			3 => 'correo',
-			4 => 'direccion',
-			5 => 'id', // Productos (calculado)
-			6 => 'notas',
-			7 => 'id'  // Acciones
+			1 => 'celular',
+			2 => 'correo',
+			3 => 'direccion',
+			4 => 'id', // Productos (calculado)
+			5 => 'notas',
+			6 => 'id'  // Acciones
 		);
 
 		$where = " WHERE 1=1 ";
@@ -191,16 +190,13 @@ class ControladorProveedores
 			// 0: Nombre
 			$nestedData[] = e($value["nombre"]);
 
-			// 1: Marca
-			$nestedData[] = e($value["marca"]);
-
-			// 2: Celular
+			// 1: Celular
 			$nestedData[] = e($value["celular"]);
 
-			// 3: Correo
+			// 2: Correo
 			$nestedData[] = e($value["correo"]);
 
-			// 4: Dirección
+			// 3: Dirección
 			$nestedData[] = e($value["direccion"]);
 
 			// 5: Productos
@@ -215,9 +211,13 @@ class ControladorProveedores
 			$botonesAcciones = '<div class="btn-group">';
 			if (puedeAccion('proveedores', 'editar')) {
 				$botonesAcciones .= '<button class="btn btn-warning btnEditarProveedor" idProveedor="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarProveedor" title="Editar proveedor"><i class="fa fa-pencil"></i></button>';
+			} else {
+				$botonesAcciones .= '<button class="btn btn-warning" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-pencil"></i></button>';
 			}
 			if (puedeAccion('proveedores', 'eliminar')) {
 				$botonesAcciones .= '<button class="btn btn-danger btnEliminarProveedor" idProveedor="' . $value["id"] . '" title="Eliminar proveedor"><i class="fa fa-times"></i></button>';
+			} else {
+				$botonesAcciones .= '<button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para eliminar"><i class="fa fa-times"></i></button>';
 			}
 			$botonesAcciones .= '</div>';
 			$nestedData[] = $botonesAcciones;
@@ -266,7 +266,7 @@ class ControladorProveedores
 			if (
 				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarProveedor"]) &&
 				($_POST["editarMarca"] == "" || preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarMarca"])) &&
-				preg_match('/^[0-9]+$/', $_POST["editarCelular"])
+				preg_match('/^[()\-0-9 ]+$/', $_POST["editarCelular"])
 			) {
 
 				$tabla = "proveedores";

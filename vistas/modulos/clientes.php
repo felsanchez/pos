@@ -154,6 +154,18 @@ $editarCliente->ctrEditarCliente();
           <button class="btn btn-success" data-toggle="modal" data-target="#modalImportarClientes">
             <i class="fa fa-upload"></i> Exportar / Importar Clientes
           </button>
+        <?php else: ?>
+          <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear clientes">
+            <i class="fa fa-plus"></i> Agregar Cliente
+          </button>
+
+          <button class="btn btn-default" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para gestionar estados">
+            <i class="fa fa-flag"></i> Gestionar estados
+          </button>
+
+          <button class="btn btn-success" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para importar/exportar">
+            <i class="fa fa-upload"></i> Exportar / Importar Clientes
+          </button>
         <?php endif; ?>
 
         <!-- Filtro por Estado Estandarizado en el Header -->
@@ -884,11 +896,11 @@ MODAL IMPORTAR CLIENTES DESDE CSV
 
               <ol>
                 <li>Descarga la plantilla CSV haciendo clic en el botón de abajo</li>
-                <li>Completa los datos de los clientes (Tipo de Persona, Tipo Doc, Documento, Nombre, Teléfono,
-                  Dirección y Municipio son obligatorios)</li>
+                <li>Completa los datos de los clientes (Los campos marcados con * son obligatorios)</li>
                 <li><strong>Tipo Persona:</strong> Use "Persona natural" o "Persona juridica"</li>
-                <li><strong>Tipo Documento:</strong> Use CC, CE, DE, NIT, NUIP o PA</li>
+                <li><strong>Tipo Documento:</strong> Use CC, CE, DE, NIT, NUIP, PA, PASAPORTE, PEP, RC, TE o TI</li>
                 <li><strong>Persona Jurídica:</strong> Requiere que el tipo de documento sea NIT obligatoriamente</li>
+                <li><strong>Dígito de Verificación:</strong> Es obligatorio cuando el tipo de documento es NIT</li>
                 <li><strong>Municipio:</strong> Use el formato "Municipio - Departamento" (Ej: Medellin - Antioquia)
                 </li>
                 <li>Sube el archivo CSV completado</li>

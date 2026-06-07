@@ -15,6 +15,9 @@ if (!puedeVer('proveedores')) {
     font-size: 13px;
     color: #333;
     min-height: 30px;
+    min-width: 150px;
+    display: block;
+    width: 100%;
     position: relative;
   }
 
@@ -63,6 +66,10 @@ if (!puedeVer('proveedores')) {
             <i class="fa fa-plus"></i> Agregar proveedor
 
           </button>
+        <?php else: ?>
+          <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear proveedores">
+            <i class="fa fa-plus"></i> Agregar proveedor
+          </button>
         <?php endif; ?>
       </div>
 
@@ -74,7 +81,6 @@ if (!puedeVer('proveedores')) {
             <thead>
               <tr>
                 <th>Nombre</th>
-                <th>Nombre Comercial</th>
                 <th>Celular</th>
                 <th>Correo</th>
                 <th>Dirección</th>
@@ -238,8 +244,7 @@ MODAL AGREGAR Proveedor
                   <label>Celular *</label>
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-phone"></i></span>
-                    <input type="text" class="form-control" name="nuevoCelular" placeholder="Número de celular"
-                      required>
+                     <input type="text" class="form-control" name="nuevoCelular" placeholder="Número de celular" data-inputmask="'mask':'(999) 999-9999'" data-mask required>
                   </div>
                 </div>
               </div>
@@ -437,8 +442,7 @@ MODAL EDITAR Proveedor
                   <label>Celular *</label>
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-phone"></i></span>
-                    <input type="text" class="form-control" name="editarCelular" id="editarCelular"
-                      placeholder="Número de celular" required>
+                     <input type="text" class="form-control" name="editarCelular" id="editarCelular" placeholder="Número de celular" data-inputmask="'mask':'(999) 999-9999'" data-mask required>
                   </div>
                 </div>
               </div>
@@ -517,6 +521,15 @@ $borrarProveedor->ctrBorrarProveedor();
       celdaEditada = $(this);
     });
 
+    // Remover/agregar placeholder dinámicamente al escribir
+    $(document).on('input', '.celda-notas-proveedor', function () {
+      if ($(this).text().trim() === '') {
+        $(this).attr('data-placeholder', 'Escribe una nota...');
+      } else {
+        $(this).removeAttr('data-placeholder');
+      }
+    });
+
     // Observador Global para guardar al salir
     $(document).on('mousedown touchstart', function (e) {
       if (celdaEditada && !celdaEditada.is(e.target) && celdaEditada.has(e.target).length === 0) {
@@ -528,6 +541,12 @@ $borrarProveedor->ctrBorrarProveedor();
     function guardarNotasProveedor(elemento) {
       var id = elemento.attr('data-id');
       var nuevasNotas = elemento.text().trim();
+
+      if (nuevasNotas === '') {
+        elemento.attr('data-placeholder', 'Escribe una nota...');
+      } else {
+        elemento.removeAttr('data-placeholder');
+      }
 
       if (!id) return;
 

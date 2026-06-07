@@ -56,6 +56,10 @@ if (!empty($params)) {
           <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarActividad">
             <i class="fa fa-plus"></i> Agregar Actividad
           </button>
+        <?php else: ?>
+          <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear actividades">
+            <i class="fa fa-plus"></i> Agregar Actividad
+          </button>
         <?php endif; ?>
         <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
           <i class="fa fa-flag"></i> Gestionar estados

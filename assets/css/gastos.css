@@ -17,8 +17,9 @@ table .celda-notas-gasto {
   max-width: 200px;
 }
 
-/* Placeholder para cuando está vacío */
-.celda-notas-gasto:empty:before {
+/* Placeholder para cuando está vacío o tiene data-placeholder */
+.celda-notas-gasto:empty:before,
+.celda-notas-gasto[data-placeholder]:before {
   content: "Escribe una nota...";
   color: #999;
   font-style: italic;
@@ -26,7 +27,7 @@ table .celda-notas-gasto {
 
 /* Ocultar placeholder cuando tiene foco */
 .celda-notas-gasto:focus:before {
-  content: none;
+  content: none !important;
 }
 
 .celda-notas-gasto:focus {

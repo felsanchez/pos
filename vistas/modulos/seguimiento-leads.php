@@ -37,6 +37,10 @@ if ($_SESSION["perfil"] == "Especial" || !puedeAccion('seguimiento_leads', 'ver'
                 <button class="btn btn-danger" id="btnEliminarSeleccionados" disabled>
                     <i class="fa fa-trash"></i> Eliminar seleccionados
                 </button>
+                <?php else: ?>
+                <button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para eliminar leads">
+                    <i class="fa fa-trash"></i> Eliminar seleccionados
+                </button>
                 <?php endif; ?>
 
             </div>
@@ -50,6 +54,8 @@ if ($_SESSION["perfil"] == "Especial" || !puedeAccion('seguimiento_leads', 'ver'
                             <th style="width:10px">
                                 <?php if (puedeAccion('seguimiento_leads', 'eliminar')): ?>
                                     <input type="checkbox" id="checkAll">
+                                <?php else: ?>
+                                    <input type="checkbox" disabled style="cursor: not-allowed;" title="No tiene permisos para eliminar">
                                 <?php endif; ?>
                             </th>
                             <th>Ultimo seguimiento</th>

@@ -99,6 +99,10 @@ if (isset($_GET["idTrasladoCancelar"])) {
               <i class="fa fa-plus"></i> Crear Traslados
             </button>
           </a>
+        <?php else: ?>
+          <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear traslados">
+            <i class="fa fa-plus"></i> Crear Traslados
+          </button>
         <?php endif; ?>
 
         <div class="pull-right">

@@ -35,30 +35,16 @@ class ControladorGastos{
 		$tabla = "gastos";
 
 		// Mapeo de columnas para ordenamiento dinámico
-		if ($_SESSION["perfil"] == "Administrador") {
-			$columnsMap = array(
-				0 => 'g.concepto',
-				1 => 'g.monto',
-				2 => 'c.nombre',
-				3 => 'g.estado',
-				4 => 'p.nombre',
-				5 => 'b.nombre', // Sucursal
-				6 => 'g.id',     // Imagen
-				7 => 'g.fecha',
-				8 => 'g.notas'
-			);
-		} else {
-			$columnsMap = array(
-				0 => 'g.concepto',
-				1 => 'g.monto',
-				2 => 'c.nombre',
-				3 => 'g.estado',
-				4 => 'p.nombre',
-				5 => 'g.id',     // Imagen
-				6 => 'g.fecha',
-				7 => 'g.notas'
-			);
-		}
+		$columnsMap = array(
+			0 => 'g.concepto',
+			1 => 'g.monto',
+			2 => 'c.nombre',
+			3 => 'g.estado',
+			4 => 'p.nombre',
+			5 => 'g.id',     // Imagen
+			6 => 'g.fecha',
+			7 => 'g.notas'
+		);
 
 		$where = " WHERE 1=1 ";
 
@@ -159,10 +145,7 @@ class ControladorGastos{
 			// Columna 5: Proveedor
 			$nestedData[] = e(!empty($value["proveedor_nombre"]) ? $value["proveedor_nombre"] : '-');
 
-			// Columna Sucursal (Solo para Administrador)
-			if ($_SESSION["perfil"] == "Administrador") {
-				$nestedData[] = e($value["bodega_nombre"]);
-			}
+
 
 			// Columna 6: Imagen
 			$imgSrc = !empty($value["imagen_comprobante"]) ? $value["imagen_comprobante"] : "vistas/img/gastos/default/sin-imagen.png";
@@ -172,15 +155,20 @@ class ControladorGastos{
 			$nestedData[] = !empty($value["fecha"]) ? date("d/m/Y", strtotime($value["fecha"])) : '-';
 
 			// Columna 8: Notas (Editable)
-			$nestedData[] = '<div contenteditable="true" class="celda-notas-gasto" data-id="' . $value["id"] . '">' . e($value["notas"]) . '</div>';
+			$placeholderAttr = empty($value["notas"]) ? ' data-placeholder="Escribe una nota..."' : '';
+			$nestedData[] = '<div contenteditable="true" class="celda-notas-gasto" data-id="' . $value["id"] . '"' . $placeholderAttr . '>' . e($value["notas"]) . '</div>';
 
 			// Columna 9: Acciones
 			$botonesAcciones = '<div class="btn-group">';
 			if (puedeAccion('gastos', 'editar')) {
 				$botonesAcciones .= '<a href="index.php?ruta=editar-gasto&idGasto=' . $value["id"] . '" class="btn btn-warning" title="Editar gasto"><i class="fa fa-pencil"></i></a>';
+			} else {
+				$botonesAcciones .= '<button class="btn btn-warning" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-pencil"></i></button>';
 			}
 			if (puedeAccion('gastos', 'eliminar')) {
 				$botonesAcciones .= '<button class="btn btn-danger btnEliminarGasto" idGasto="' . $value["id"] . '" codigoGasto="' . $value["codigo"] . '" conceptoGasto="' . e($value["concepto"]) . '" title="Eliminar gasto"><i class="fa fa-times"></i></button>';
+			} else {
+				$botonesAcciones .= '<button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para eliminar"><i class="fa fa-times"></i></button>';
 			}
 			$botonesAcciones .= '</div>';
 			$nestedData[] = $botonesAcciones;

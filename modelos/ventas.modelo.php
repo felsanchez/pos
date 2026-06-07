@@ -214,6 +214,34 @@ class ModeloVentas
 	}
 
 	/*=============================================
+	ELIMINAR ORDEN FÍSICAMENTE
+	=============================================*/
+
+	static public function mdlEliminarVentaFisico($tabla, $id)
+	{
+		$db = Conexion::conectar();
+		
+		// Eliminar notificaciones asociadas
+		$stmtNotif = $db->prepare("DELETE FROM notificaciones WHERE referencia_tipo = 'venta' AND referencia_id = :id");
+		$stmtNotif->bindParam(":id", $id, PDO::PARAM_INT);
+		$stmtNotif->execute();
+
+		$stmt = $db->prepare("DELETE FROM $tabla WHERE id = :id");
+		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
+
+		if ($stmt->execute()) {
+			if ($stmt->rowCount() > 0) {
+				return "ok";
+			} else {
+				return "no_affected_rows";
+			}
+		} else {
+			$error = $stmt->errorInfo();
+			return "error_db: " . ($error[2] ?? "Unknown");
+		}
+	}
+
+	/*=============================================
 	RANGO FECHAS
 	=============================================*/
 

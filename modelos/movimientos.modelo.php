@@ -49,9 +49,10 @@ class ModeloMovimientos
 	static public function mdlMostrarMovimientos($filtros)
 	{
 
-		$sql = "SELECT m.*, p.descripcion as producto_descripcion
+		$sql = "SELECT m.*, p.descripcion as producto_descripcion, b.nombre as nombre_bodega
 		        FROM movimientos_stock m
 		        LEFT JOIN productos p ON m.id_producto = p.id
+		        LEFT JOIN bodegas b ON m.id_bodega = b.id
 		        WHERE 1=1";
 
 		// 🔹 OCULTAR MOVIMIENTOS AUTOMÁTICOS (aquellos generados por ventas de variantes)
@@ -286,7 +287,7 @@ class ModeloMovimientos
 	=============================================*/
 	static public function mdlGetTotalMovimientos($tabla, $where)
 	{
-		$sql = "SELECT COUNT(*) as total FROM $tabla $where";
+		$sql = "SELECT COUNT(*) as total FROM $tabla m $where";
 		
 		$stmt = Conexion::conectar()->prepare($sql);
 		$stmt->execute();

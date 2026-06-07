@@ -44,6 +44,10 @@ if (!puedeVer('variantes')) {
           <button class="btn btn-primary btnAbrirModalTipo" data-toggle="modal" data-target="#modalAgregarTipoVariante">
             <i class="fa fa-plus"></i> Agregar Tipo de Variante
           </button>
+        <?php else: ?>
+          <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear variantes">
+            <i class="fa fa-plus"></i> Agregar Tipo de Variante
+          </button>
         <?php endif; ?>
       </div>
 
@@ -83,6 +87,10 @@ if (!puedeVer('variantes')) {
           value="<?php echo puedeAccion('variantes', 'eliminar') ? 1 : 0; ?>">
         <?php if (puedeAccion('variantes', 'crear')): ?>
           <button class="btn btn-primary pull-right" data-toggle="modal" data-target="#modalAgregarOpcion">
+            <i class="fa fa-plus"></i> Agregar Opción
+          </button>
+        <?php else: ?>
+          <button class="btn btn-primary pull-right" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear variantes">
             <i class="fa fa-plus"></i> Agregar Opción
           </button>
         <?php endif; ?>

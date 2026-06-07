@@ -31,18 +31,68 @@ class ControladorClientes
 				return;
 			}
 
-			if (
-				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoCliente"]) &&
-				preg_match('/^[0-9]+$/', $_POST["nuevoDocumentoId"]) &&
-					//preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["nuevoEmail"]) &&
-				(empty($_POST["nuevoEmail"]) || preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["nuevoEmail"])) &&
-				preg_match('/^[()\-0-9 ]+$/', $_POST["nuevoTelefono"]) &&
-				//preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoDepartamento"]) &&
-				//preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoCiudad"]) &&
-				//preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoEstatus"]) &&
-				//preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevaNota"]) &&
-				preg_match('/^[#\.\-a-zA-Z0-9 ,]+$/', $_POST["nuevaDireccion"])
-			) {
+			$erroresValidacion = array();
+
+			// Validaciones principales
+			if (!isset($_POST["nuevoCliente"]) || !preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoCliente"])) {
+				$erroresValidacion[] = "El campo <b>Nombre</b> es obligatorio y no debe llevar caracteres especiales.";
+			}
+			if (!isset($_POST["nuevoDocumentoId"]) || !preg_match('/^[0-9]+$/', $_POST["nuevoDocumentoId"])) {
+				$erroresValidacion[] = "El campo <b>Número de Documento</b> es obligatorio y debe ser numérico.";
+			}
+			if (isset($_POST["nuevoEmail"]) && !empty($_POST["nuevoEmail"]) && !preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["nuevoEmail"])) {
+				$erroresValidacion[] = "El campo <b>Email</b> no tiene un formato válido.";
+			}
+			if (!isset($_POST["nuevoTelefono"]) || !preg_match('/^[()\-0-9 ]+$/', $_POST["nuevoTelefono"])) {
+				$erroresValidacion[] = "El campo <b>Teléfono</b> es obligatorio y solo debe llevar números, paréntesis o guiones.";
+			}
+			if (!isset($_POST["nuevaDireccion"]) || !preg_match('/^[#\.\-a-zA-Z0-9 ,]+$/', $_POST["nuevaDireccion"])) {
+				$erroresValidacion[] = "El campo <b>Dirección</b> es obligatorio y no debe llevar caracteres especiales.";
+			}
+
+			// Validaciones adicionales (Factus / Detalle)
+			if (isset($_POST["nuevoTipoPersona"]) && !in_array($_POST["nuevoTipoPersona"], ["natural", "juridica"])) {
+				$erroresValidacion[] = "El campo <b>Tipo de Persona</b> seleccionado no es válido.";
+			}
+
+			$tipoPersona = isset($_POST["nuevoTipoPersona"]) ? $_POST["nuevoTipoPersona"] : "natural";
+			if ($tipoPersona === "juridica") {
+				if (!isset($_POST["nuevaRazonSocial"]) || empty(trim($_POST["nuevaRazonSocial"]))) {
+					$erroresValidacion[] = "El campo <b>Razón Social</b> es obligatorio para personas jurídicas.";
+				} elseif (!preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ \.\-&,]+$/', $_POST["nuevaRazonSocial"])) {
+					$erroresValidacion[] = "El campo <b>Razón Social</b> no debe llevar caracteres especiales.";
+				}
+			}
+
+			if (isset($_POST["nuevoNombreComercial"]) && !empty($_POST["nuevoNombreComercial"]) && !preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ \.\-&,]+$/', $_POST["nuevoNombreComercial"])) {
+				$erroresValidacion[] = "El campo <b>Nombre Comercial</b> no debe llevar caracteres especiales.";
+			}
+
+			$tipoDocId = isset($_POST["nuevoTipoDocumento"]) ? $_POST["nuevoTipoDocumento"] : null;
+			if ($tipoDocId == 6) {
+				if (!isset($_POST["nuevoDigitoVerificacion"]) || $_POST["nuevoDigitoVerificacion"] === "") {
+					$erroresValidacion[] = "El campo <b>Dígito de Verificación</b> es obligatorio cuando el tipo de documento es NIT.";
+				} elseif (!preg_match('/^[0-9]$/', $_POST["nuevoDigitoVerificacion"])) {
+					$erroresValidacion[] = "El campo <b>Dígito de Verificación</b> debe ser un único número de 0 a 9.";
+				}
+			}
+
+			if (isset($_POST["nuevoMunicipio"]) && !empty($_POST["nuevoMunicipio"]) && !preg_match('/^[0-9]+$/', $_POST["nuevoMunicipio"])) {
+				$erroresValidacion[] = "El campo <b>Municipio</b> seleccionado no es válido.";
+			}
+
+			if (isset($_POST["nuevoCodigoPostal"]) && !empty($_POST["nuevoCodigoPostal"]) && !preg_match('/^[0-9]+$/', $_POST["nuevoCodigoPostal"])) {
+				$erroresValidacion[] = "El campo <b>Código Postal</b> debe ser numérico.";
+			}
+
+			if (isset($_POST["nuevasResponsabilidades"]) && !empty($_POST["nuevasResponsabilidades"])) {
+				$validResp = ["R-99-PN", "O-13", "O-15", "O-23", "O-47", "ZY"];
+				if (!in_array($_POST["nuevasResponsabilidades"], $validResp)) {
+					$erroresValidacion[] = "El campo <b>Responsabilidades Fiscales</b> seleccionado no es válido.";
+				}
+			}
+
+			if (empty($erroresValidacion)) {
 
 				$tabla = "clientes";
 
@@ -90,6 +140,34 @@ class ControladorClientes
 							   window.location = "' . $redireccion . '";
 						})
 			     	</script>';
+				} else {
+
+					// GUARDAR DATOS EN SESION PARA PERSISTENCIA
+					$_SESSION["datos_cliente_error"] = $_POST;
+
+					// Determinar a dónde redirigir según la URL actual o el origen
+					$redireccion = isset($_POST["urlActual"]) ? $_POST["urlActual"] : (isset($_POST["vistaOrigen"]) ? $_POST["vistaOrigen"] : "clientes");
+					if ($redireccion === "clientes" && !puedeVer("clientes")) {
+						$redireccion = "cliente-detalle";
+					}
+
+					$mensajeErrorDB = "Ocurrió un error inesperado al guardar el cliente en la base de datos.";
+					if ($respuesta == "error_duplicado") {
+						$mensajeErrorDB = "El número de documento o el teléfono ingresado ya se encuentra registrado.";
+					}
+
+					echo '<script>
+						swal({
+							type: "error",
+							title: "Error al guardar",
+							text: "' . $mensajeErrorDB . '",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+							}).then(() => {
+
+									window.location = "' . $redireccion . '";
+							})
+					</script>';
 				}
 			} else {
 
@@ -102,10 +180,13 @@ class ControladorClientes
 					$redireccion = "cliente-detalle";
 				}
 
+				$mensajeErrores = '<ul><li>' . implode('</li><li>', $erroresValidacion) . '</li></ul>';
+
 				echo '<script>
 					swal({
 						type: "error",
-						title: "¡El cliente no puede ir vacío o llevar caracteres especiales!",
+						title: "Error de validación",
+						html: "' . $mensajeErrores . '",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 						}).then(() => {
@@ -310,18 +391,68 @@ class ControladorClientes
 			}
 
 
-			if (
-				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarCliente"]) &&
-				preg_match('/^[0-9]+$/', $_POST["editarDocumentoId"]) &&
-					//preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["editarEmail"]) &&
-				(empty($_POST["editarEmail"]) || preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["editarEmail"])) &&
-				preg_match('/^[()\\-0-9 ]+$/', $_POST["editarTelefono"]) &&
-				//preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarDepartamento"]) &&
-				//preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarCiudad"]) &&
-				//preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarEstatus"]) &&
-				//preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarNota"]) &&
-				preg_match('/^[#\\.\\-a-zA-Z0-9 ]+$/', $_POST["editarDireccion"])
-			) {
+			$erroresValidacion = array();
+
+			// Validaciones principales
+			if (!isset($_POST["editarCliente"]) || !preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarCliente"])) {
+				$erroresValidacion[] = "El campo <b>Nombre</b> es obligatorio y no debe llevar caracteres especiales.";
+			}
+			if (!isset($_POST["editarDocumentoId"]) || !preg_match('/^[0-9]+$/', $_POST["editarDocumentoId"])) {
+				$erroresValidacion[] = "El campo <b>Número de Documento</b> es obligatorio y debe ser numérico.";
+			}
+			if (isset($_POST["editarEmail"]) && !empty($_POST["editarEmail"]) && !preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/', $_POST["editarEmail"])) {
+				$erroresValidacion[] = "El campo <b>Email</b> no tiene un formato válido.";
+			}
+			if (!isset($_POST["editarTelefono"]) || !preg_match('/^[()\-0-9 ]+$/', $_POST["editarTelefono"])) {
+				$erroresValidacion[] = "El campo <b>Teléfono</b> es obligatorio y solo debe llevar números, paréntesis o guiones.";
+			}
+			if (!isset($_POST["editarDireccion"]) || !preg_match('/^[#\.\-a-zA-Z0-9 ,]+$/', $_POST["editarDireccion"])) {
+				$erroresValidacion[] = "El campo <b>Dirección</b> es obligatorio y no debe llevar caracteres especiales.";
+			}
+
+			// Validaciones adicionales (Factus / Detalle)
+			if (isset($_POST["editarTipoPersona"]) && !in_array($_POST["editarTipoPersona"], ["natural", "juridica"])) {
+				$erroresValidacion[] = "El campo <b>Tipo de Persona</b> seleccionado no es válido.";
+			}
+
+			$tipoPersona = isset($_POST["editarTipoPersona"]) ? $_POST["editarTipoPersona"] : "natural";
+			if ($tipoPersona === "juridica") {
+				if (!isset($_POST["editarRazonSocial"]) || empty(trim($_POST["editarRazonSocial"]))) {
+					$erroresValidacion[] = "El campo <b>Razón Social</b> es obligatorio para personas jurídicas.";
+				} elseif (!preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ \.\-&,]+$/', $_POST["editarRazonSocial"])) {
+					$erroresValidacion[] = "El campo <b>Razón Social</b> no debe llevar caracteres especiales.";
+				}
+			}
+
+			if (isset($_POST["editarNombreComercial"]) && !empty($_POST["editarNombreComercial"]) && !preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ \.\-&,]+$/', $_POST["editarNombreComercial"])) {
+				$erroresValidacion[] = "El campo <b>Nombre Comercial</b> no debe llevar caracteres especiales.";
+			}
+
+			$tipoDocId = isset($_POST["editarTipoDocumento"]) ? $_POST["editarTipoDocumento"] : null;
+			if ($tipoDocId == 6) {
+				if (!isset($_POST["editarDigitoVerificacion"]) || $_POST["editarDigitoVerificacion"] === "") {
+					$erroresValidacion[] = "El campo <b>Dígito de Verificación</b> es obligatorio cuando el tipo de documento es NIT.";
+				} elseif (!preg_match('/^[0-9]$/', $_POST["editarDigitoVerificacion"])) {
+					$erroresValidacion[] = "El campo <b>Dígito de Verificación</b> debe ser un único número de 0 a 9.";
+				}
+			}
+
+			if (isset($_POST["editarMunicipio"]) && !empty($_POST["editarMunicipio"]) && !preg_match('/^[0-9]+$/', $_POST["editarMunicipio"])) {
+				$erroresValidacion[] = "El campo <b>Municipio</b> seleccionado no es válido.";
+			}
+
+			if (isset($_POST["editarCodigoPostal"]) && !empty($_POST["editarCodigoPostal"]) && !preg_match('/^[0-9]+$/', $_POST["editarCodigoPostal"])) {
+				$erroresValidacion[] = "El campo <b>Código Postal</b> debe ser numérico.";
+			}
+
+			if (isset($_POST["editarResponsabilidades"]) && !empty($_POST["editarResponsabilidades"])) {
+				$validResp = ["R-99-PN", "O-13", "O-15", "O-23", "O-47", "ZY"];
+				if (!in_array($_POST["editarResponsabilidades"], $validResp)) {
+					$erroresValidacion[] = "El campo <b>Responsabilidades Fiscales</b> seleccionado no es válido.";
+				}
+			}
+
+			if (empty($erroresValidacion)) {
 
 				$tabla = "clientes";
 
@@ -349,8 +480,6 @@ class ControladorClientes
 					"razon_social" => isset($_POST["editarRazonSocial"]) ? $_POST["editarRazonSocial"] : null
 				);
 
-
-
 				$respuesta = ModeloClientes::mdlEditarCliente($tabla, $datos);
 
 				if ($respuesta == "ok") {
@@ -372,6 +501,34 @@ class ControladorClientes
 							   window.location = "' . $redireccion . '";
 						})
 			     	</script>';
+				} else {
+
+					// GUARDAR DATOS EN SESION PARA PERSISTENCIA
+					$_SESSION["datos_cliente_error"] = $_POST;
+
+					// Determinar a dónde redirigir según la URL actual o el origen
+					$redireccion = isset($_POST["urlActual"]) ? $_POST["urlActual"] : (isset($_POST["vistaOrigen"]) ? $_POST["vistaOrigen"] : "clientes");
+					if ($redireccion === "clientes" && !puedeVer("clientes")) {
+						$redireccion = "cliente-detalle";
+					}
+
+					$mensajeErrorDB = "Ocurrió un error inesperado al guardar el cliente en la base de datos.";
+					if ($respuesta == "error_duplicado") {
+						$mensajeErrorDB = "El número de documento o el teléfono ingresado ya se encuentra registrado.";
+					}
+
+					echo '<script>
+						swal({
+							type: "error",
+							title: "Error al guardar",
+							text: "' . $mensajeErrorDB . '",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+							}).then(() => {
+
+									window.location = "' . $redireccion . '";
+							})
+					</script>';
 				}
 			} else {
 
@@ -384,10 +541,13 @@ class ControladorClientes
 					$redireccion = "cliente-detalle";
 				}
 
+				$mensajeErrores = '<ul><li>' . implode('</li><li>', $erroresValidacion) . '</li></ul>';
+
 				echo '<script>
 					swal({
 						type: "error",
-						title: "¡El cliente no puede ir vacío o llevar caracteres especiales!",
+						title: "Error de validación",
+						html: "' . $mensajeErrores . '",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 						}).then(() => {
@@ -529,7 +689,8 @@ class ControladorClientes
 
 			$archivo = $_FILES["archivoCSV"]["tmp_name"];
 			$errores = array();
-			$clientesImportar = array();
+			$clientesInsertar = array();
+			$clientesActualizar = array();
 
 			// Abrir archivo CSV
 			if (($handle = fopen($archivo, "r")) !== FALSE) {
@@ -590,14 +751,29 @@ class ControladorClientes
 					$nombre = trim($datos[4]);
 					$email = trim($datos[5]);
 					$telefono = trim($datos[6]);
+
+					// Formatear teléfono a (XXX) XXX-XXXX si tiene 10 dígitos (o 12 con prefijo 57)
+					$telefonoLimpio = preg_replace('/[^0-9]/', '', $telefono);
+					if (strlen($telefonoLimpio) === 12 && substr($telefonoLimpio, 0, 2) === '57') {
+						$telefonoLimpio = substr($telefonoLimpio, 2);
+					}
+					if (strlen($telefonoLimpio) === 10) {
+						$telefono = '(' . substr($telefonoLimpio, 0, 3) . ') ' . substr($telefonoLimpio, 3, 3) . '-' . substr($telefonoLimpio, 6);
+					}
 					$stringMunicipio = trim($datos[7]);
 					$direccion = trim($datos[8]);
 					$fechaNacimiento = trim($datos[9]);
 					$notas = trim($datos[10]);
 
 					// Validar campos obligatorios
-					if (empty($documento) || empty($nombre) || empty($stringTipoPersona) || empty($stringTipoDoc)) {
-						$errores[] = "Fila $numeroFila: Campos obligatorios vacíos (tipo persona, documento, nombre, tipo doc)";
+					if (empty($documento) || empty($nombre) || empty($stringTipoPersona) || empty($stringTipoDoc) || $direccion === "" || $stringMunicipio === "" || $telefono === "") {
+						$errores[] = "Fila $numeroFila: Campos obligatorios vacíos (tipo persona, tipo doc, documento, nombre, teléfono, dirección, municipio)";
+						continue;
+					}
+
+					// Validar formato de correo electrónico si se proporciona
+					if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+						$errores[] = "Fila $numeroFila: El correo electrónico '$email' no tiene un formato válido.";
 						continue;
 					}
 
@@ -611,7 +787,7 @@ class ControladorClientes
 					// Mapear tipo de documento
 					$tipoDocId = self::mapearTipoDocumento($stringTipoDoc);
 					if (!$tipoDocId) {
-						$errores[] = "Fila $numeroFila: Tipo de documento '$stringTipoDoc' no reconocido. Use CC, CE, DE, NIT, NUIP, PA.";
+						$errores[] = "Fila $numeroFila: Tipo de documento '$stringTipoDoc' no reconocido. Use CC, CE, DE, NIT, NUIP, PA, PASAPORTE, PEP, RC, TE, TI.";
 						continue;
 					}
 
@@ -621,10 +797,14 @@ class ControladorClientes
 						continue;
 					}
 
-					// Cálculo de DV para NIT si está vacío
-					if ($tipoDocId == 6 && empty($dv)) {
-						require_once "modelos/factus.modelo.php";
-						$dv = ModeloFactus::mdlCalcularDV($documento);
+					// Validación: Dígito de verificación obligatorio para NIT y debe ser un único número (0-9)
+					if ($tipoDocId == 6 && $dv === "") {
+						$errores[] = "Fila $numeroFila: El dígito de verificación es obligatorio cuando el tipo de documento es NIT.";
+						continue;
+					}
+					if ($dv !== "" && !preg_match('/^[0-9]$/', $dv)) {
+						$errores[] = "Fila $numeroFila: El dígito de verificación debe ser un único número de 0 a 9.";
+						continue;
 					}
 
 					// Mapear municipio
@@ -642,7 +822,7 @@ class ControladorClientes
 					$regimen = "simplificado";
 					$responsabilidades = ($tipoPersona == "natural") ? "R-99-PN" : "ZY";
 
-					$clientesImportar[] = array(
+					$datosCliente = array(
 						"nombre" => $nombre,
 						"documento" => $documento,
 						"email" => $email,
@@ -663,6 +843,22 @@ class ControladorClientes
 						"nombre_comercial" => ($tipoPersona == "juridica") ? $nombre : null,
 						"razon_social" => ($tipoPersona == "juridica") ? $nombre : null
 					);
+
+					// Verificar si el cliente ya existe por documento
+					$clienteExiste = ModeloClientes::mdlMostrarClientes("clientes", "documento", $documento);
+
+					if ($clienteExiste) {
+						$datosCliente["id"] = $clienteExiste["id"];
+						$clientesActualizar[$documento] = $datosCliente;
+						if (isset($clientesInsertar[$documento])) {
+							unset($clientesInsertar[$documento]);
+						}
+					} else {
+						$clientesInsertar[$documento] = $datosCliente;
+						if (isset($clientesActualizar[$documento])) {
+							unset($clientesActualizar[$documento]);
+						}
+					}
 				}
 
 				fclose($handle);
@@ -685,9 +881,13 @@ class ControladorClientes
 					});
 				</script>';
 
-			} elseif (count($clientesImportar) > 0) {
+			} elseif (count($clientesInsertar) > 0 || count($clientesActualizar) > 0) {
 
-				$respuesta = ModeloClientes::mdlImportarClientesMasivos("clientes", $clientesImportar);
+				// Convertir a arreglos indexados numéricamente
+				$clientesInsertar = array_values($clientesInsertar);
+				$clientesActualizar = array_values($clientesActualizar);
+
+				$respuesta = ModeloClientes::mdlImportarClientesMasivos("clientes", $clientesInsertar, $clientesActualizar);
 
 				if ($respuesta["estado"] == "ok") {
 
@@ -695,7 +895,7 @@ class ControladorClientes
 						swal({
 							type: "success",
 							title: "¡Importación Exitosa!",
-							text: "Se han importado ' . $respuesta["exitos"] . ' clientes correctamente.",
+							text: "Se han ingresado ' . $respuesta["ingresados"] . ' clientes y actualizado ' . $respuesta["actualizados"] . ' correctamente.",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
 						}).then(() => {
@@ -705,7 +905,7 @@ class ControladorClientes
 
 				} else {
 
-					$mensajeParcial = "Se importaron " . $respuesta["exitos"] . " clientes, pero hubo errores en algunos.";
+					$mensajeParcial = "Se han ingresado " . $respuesta["ingresados"] . " clientes y actualizado " . $respuesta["actualizados"] . " correctamente, pero se presentaron algunos errores.";
 					if (!empty($respuesta["errores"])) {
 						$mensajeParcial .= '<ul><li>' . implode('</li><li>', $respuesta["errores"]) . '</li></ul>';
 					}
@@ -759,8 +959,13 @@ class ControladorClientes
 			"CE" => 5,
 			"DE" => 8,
 			"NIT" => 6,
-			"NUIP" => 9,
-			"PA" => 7
+			"NUIP" => 11,
+			"PA" => 7,
+			"PASAPORTE" => 7,
+			"PEP" => 9,
+			"RC" => 1,
+			"TE" => 4,
+			"TI" => 2
 		];
 		return $map[$string] ?? null;
 	}

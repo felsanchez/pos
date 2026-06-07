@@ -1563,29 +1563,38 @@ $(document).on("click", ".btnEliminarVenta", function () {
 
 	var idVenta = $(this).attr("idVenta");
 
-	swal({
+	// Primero intentar con el parámetro 'ruta'
+	let ruta = new URLSearchParams(window.location.search).get('ruta');
 
-		title: '¿Está seguro de anular esta venta?',
-		text: 'Al anular la venta los productos regresarán al stock y ya no sumará en los totales ni reportes de ingresos.',
+	// Si no existe 'ruta', obtener el nombre del archivo
+	if (!ruta) {
+		const path = window.location.pathname;
+		const archivo = path.substring(path.lastIndexOf("/") + 1);
+		ruta = archivo.split(".php")[0]; // ejemplo: ordenes.php -> ordenes
+	}
+
+	var titulo = '¿Está seguro de anular esta venta?';
+	var texto = 'Al anular la venta los productos regresarán al stock y ya no sumará en los totales ni reportes de ingresos.';
+	var confirmText = 'Sí, anular documento';
+
+	if (ruta === "ordenes") {
+		titulo = '¿Está seguro de anular esta orden?';
+		texto = 'Al anular la orden esta ya no sumará en los totales.';
+		confirmText = 'Sí, anular orden';
+	}
+
+	swal({
+		title: titulo,
+		text: texto,
 		type: 'warning',
 		showCancelButton: true,
 		confirmButtonColor: '#3085d6',
 		cancelButtonColor: '#d33',
 		cancelButtonText: 'Cancelar',
-		confirmButtonText: 'Sí, anular documento'
+		confirmButtonText: confirmText
 	}).then((result) => {
 
 		if (result.value) {
-
-			// Primero intentar con el parámetro 'ruta'
-			let ruta = new URLSearchParams(window.location.search).get('ruta');
-
-			// Si no existe 'ruta', obtener el nombre del archivo
-			if (!ruta) {
-				const path = window.location.pathname;
-				const archivo = path.substring(path.lastIndexOf("/") + 1);
-				ruta = archivo.split(".php")[0]; // ejemplo: ordenes.php -> ordenes
-			}
 
 			var datos = new FormData();
 			datos.append("idVentaEliminar", idVenta);
@@ -1606,8 +1615,8 @@ $(document).on("click", ".btnEliminarVenta", function () {
 					if (respuesta == "ok") {
 						swal({
 							type: "success",
-							title: "¡Venta anulada correctamente!",
-							text: "El documento ha sido anulado exitosamente del sistema.",
+							title: ruta === "ordenes" ? "¡Orden anulada correctamente!" : "¡Venta anulada correctamente!",
+							text: ruta === "ordenes" ? "La orden ha sido anulada exitosamente del sistema." : "El documento ha sido anulado exitosamente del sistema.",
 							showConfirmButton: true,
 							confirmButtonText: "Cerrar"
 						}).then((result) => {

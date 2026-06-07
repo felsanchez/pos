@@ -18,6 +18,10 @@
           <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarCategoria">
             <i class="fa fa-plus"></i> Agregar categoría
           </button>
+        <?php else: ?>
+          <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear categorías">
+            <i class="fa fa-plus"></i> Agregar categoría
+          </button>
         <?php endif; ?>
       </div>
 

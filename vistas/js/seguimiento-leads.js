@@ -101,8 +101,8 @@ $(document).ready(function () {
             text: "¡Si no lo está puede cancelar la acción!",
             type: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#6c757d',
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
             cancelButtonText: 'Cancelar',
             confirmButtonText: 'Sí, borrar'
         }).then(function (result) {
@@ -117,12 +117,13 @@ $(document).ready(function () {
                             swal({
                                 type: "success",
                                 title: "Los registros han sido borrados correctamente",
-                                showConfirmButton: false,
-                                timer: 1500
+                                showConfirmButton: true,
+                                confirmButtonText: "Cerrar"
+                            }).then(function (result) {
+                                tablaSeguimiento.ajax.reload(null, false);
+                                $("#checkAll").prop("checked", false);
+                                actualizarBotonEliminar();
                             });
-                            tablaSeguimiento.ajax.reload(null, false);
-                            $("#checkAll").prop("checked", false);
-                            actualizarBotonEliminar();
                         } else {
                             swal({
                                 type: "error",

@@ -6,6 +6,7 @@ ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
 try {
+    require_once "../modelos/helpers.php";
     require_once "../controladores/seguimiento.controlador.php";
     require_once "../modelos/seguimiento.modelo.php";
     require_once "../modelos/csrf.php";

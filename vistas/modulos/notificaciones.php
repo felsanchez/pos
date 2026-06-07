@@ -147,7 +147,6 @@
                   $configNotif = ControladorConfiguracion::ctrObtenerConfiguracion(); 
                   ?>
                   <?php if (!isset($configNotif["notif_orden_agente_ia"]) || $configNotif["notif_orden_agente_ia"] == 1): ?>
-                  <option value="Orden Agente IA">Orden Agente IA</option>
                   <option value="Orden creada">Orden creada</option>
                   <?php endif; ?>
                   <?php if (!isset($configNotif["notif_transaccion_bold"]) || $configNotif["notif_transaccion_bold"] == 1): ?>

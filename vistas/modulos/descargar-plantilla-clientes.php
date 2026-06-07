@@ -22,15 +22,15 @@ fwrite($output, "sep=;\r\n");
 
 // Encabezados del CSV
 $encabezados = array(
-    'tipo de persona',
-    'tipo documento',
+    'tipo de persona*',
+    'tipo documento*',
     'digito de verificacion',
-    'numero de documento',
-    'nombre',
+    'numero de documento*',
+    'nombre*',
     'correo',
-    'telefono',
-    'municipio',
-    'direccion',
+    'telefono*',
+    'municipio*',
+    'direccion*',
     'fecha nacimiento',
     'notas adicionales'
 ); 

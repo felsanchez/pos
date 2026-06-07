@@ -54,6 +54,10 @@ if ($_SESSION["perfil"] == "Especial") {
                     }
                     </script>
                   <?php endif; ?>
+                <?php else: ?>
+                    <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear nota de ajuste">
+                      <i class="fa fa-plus"></i> Crear Nota de Ajuste
+                    </button>
                 <?php endif; ?>
 
                 <!-- Filtro por Sucursal (Administradores) -->

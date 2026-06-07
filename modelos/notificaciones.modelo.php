@@ -44,7 +44,8 @@ class ModeloNotificaciones
                 FROM notificaciones n
                 CROSS JOIN configuracion c
                 LEFT JOIN notificaciones_leidas nl ON n.id = nl.id_notificacion AND nl.id_usuario = :id_usuario
-                WHERE (n.tipo NOT IN ('orden_agente_ia', 'orden_creada') OR c.notif_orden_agente_ia = 1)
+                WHERE n.eliminada = 0
+                  AND (n.tipo NOT IN ('orden_agente_ia', 'orden_creada') OR c.notif_orden_agente_ia = 1)
                   AND (n.referencia_tipo != 'pago_bold' OR c.notif_transaccion_bold = 1)
                   AND (n.referencia_tipo != 'solicitud_edicion' OR c.notif_solicitud_edicion = 1)
                   AND (n.referencia_tipo != 'solicitud_eliminacion' OR c.notif_solicitud_eliminacion = 1)";
@@ -94,7 +95,8 @@ class ModeloNotificaciones
                                                FROM notificaciones n
                                                CROSS JOIN configuracion c
                                                LEFT JOIN notificaciones_leidas nl ON n.id = nl.id_notificacion AND nl.id_usuario = :id_usuario
-                                               WHERE nl.id_usuario IS NULL
+                                               WHERE n.eliminada = 0
+                                                 AND nl.id_usuario IS NULL
                                                  AND (n.tipo NOT IN ('orden_agente_ia', 'orden_creada') OR c.notif_orden_agente_ia = 1)
                                                  AND (n.referencia_tipo != 'pago_bold' OR c.notif_transaccion_bold = 1)
                                                  AND (n.referencia_tipo != 'solicitud_edicion' OR c.notif_solicitud_edicion = 1)
@@ -143,9 +145,9 @@ class ModeloNotificaciones
 	static public function mdlMarcarTodasComoLeidas($idUsuario)
 	{
 
-		// Insertamos todas las notificaciones que no estén ya leídas por este usuario
+		// Insertamos todas las notificaciones que no estén ya leídas por este usuario y que no estén eliminadas
 		$stmt = Conexion::conectar()->prepare("INSERT IGNORE INTO notificaciones_leidas (id_notificacion, id_usuario)
-                                               SELECT id, :id_usuario FROM notificaciones");
+                                               SELECT id, :id_usuario FROM notificaciones WHERE eliminada = 0");
 
 		$stmt->bindParam(":id_usuario", $idUsuario, PDO::PARAM_INT);
 
@@ -201,7 +203,7 @@ class ModeloNotificaciones
 		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
 		$stmt->execute();
 
-		$stmt = Conexion::conectar()->prepare("DELETE FROM notificaciones WHERE id = :id");
+		$stmt = Conexion::conectar()->prepare("UPDATE notificaciones SET eliminada = 1 WHERE id = :id");
 
 		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
 
@@ -271,7 +273,7 @@ class ModeloNotificaciones
 		}
 		$stmt->execute();
 
-		$stmt = Conexion::conectar()->prepare("DELETE FROM notificaciones WHERE id IN ($placeholders)");
+		$stmt = Conexion::conectar()->prepare("UPDATE notificaciones SET eliminada = 1 WHERE id IN ($placeholders)");
 
 		// Bind de cada ID
 		foreach ($ids as $index => $id) {

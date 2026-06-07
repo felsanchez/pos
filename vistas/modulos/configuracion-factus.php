@@ -165,6 +165,16 @@ if (!$configuracion) {
 								<p class="help-block">Si está desactivado, se ocultará el botón "Convertir a FE" en la columna "Convertir" de la tabla de administrar órdenes de venta.</p>
 							</div>
 
+							<div class="form-group">
+								<div class="checkbox">
+									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
+										<input type="checkbox" name="botonActualizarProducto" value="1" <?php echo (!isset($configuracionGlobal["boton_actualizar_producto_activo"]) || $configuracionGlobal["boton_actualizar_producto_activo"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar botón "Actualizar" en Productos</strong>
+									</label>
+								</div>
+								<p class="help-block">Si está desactivado, se ocultará el botón "Actualizar" en la parte superior del listado de productos.</p>
+							</div>
+
 							<div class="box box-warning" style="margin-top: 15px;">
 								<div class="box-header with-border">
 									<h3 class="box-title" style="font-size: 16px;"><i class="fa fa-bell"></i> Visibilidad de Notificaciones</h3>

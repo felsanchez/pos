@@ -14,7 +14,8 @@ $(document).ready(function () {
 							1: 'Nombre',
 							2: 'Dirección',
 							3: 'Teléfono',
-							4: 'Acciones'
+							4: 'Estado',
+							5: 'Acciones'
 						};
 
 						var finalHtml = '';
@@ -41,7 +42,8 @@ $(document).ready(function () {
 			},
 			"columnDefs": [
 				{ "targets": 0, "responsivePriority": 1 },
-				{ "targets": 4, "responsivePriority": 1, "orderable": false },
+				{ "targets": 5, "responsivePriority": 1, "orderable": false },
+				{ "targets": 4, "responsivePriority": 2, "orderable": false },
 				{ "targets": 1, "responsivePriority": 2 },
 				{ "targets": 2, "responsivePriority": 3 },
 				{ "targets": 3, "responsivePriority": 4 }

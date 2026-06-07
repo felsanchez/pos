@@ -349,10 +349,19 @@ $configFactus = ControladorFactus::ctrObtenerConfiguracion();
         <?php endif; ?>
 
         <!-- Notas del Cliente (solo si tiene contenido) -->
-        <?php if (!empty($venta["notas"])): ?>
+        <?php
+        $notasCliente = $venta["notas"] ?? "";
+        $notasCliente = trim(str_replace(array("[Notificado_n8n]", "[Notificado]"), "", $notasCliente));
+
+        if (!empty($venta["extra"]) && empty($notasCliente)) {
+            $notasCliente = "";
+        }
+
+        if (!empty($notasCliente)): 
+        ?>
           <p class="lead">Notas del Cliente:</p>
           <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
-            <?php echo $venta["notas"]; ?>
+            <?php echo $notasCliente; ?>
           </p>
         <?php endif; ?>
 

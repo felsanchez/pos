@@ -162,12 +162,21 @@ class ControladorProductos
 				} else {
 					$botonesAcciones .= '<button class="btn btn-primary btnAjusteStock" idProducto="' . $value["id"] . '" data-toggle="modal" data-target="#modalAjusteStock" title="Ajustar Stock"><i class="fa fa-cubes"></i></button>';
 				}
+			} else {
+				$botonesAcciones .= '<button class="btn btn-warning" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-pencil"></i></button>';
+				$botonesAcciones .= '<button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para ajustar stock"><i class="fa fa-cubes"></i></button>';
 			}
 			if (puedeAccion('productos', 'eliminar')) {
 				$botonesAcciones .= '<button class="btn btn-danger btnEliminarProducto" idProducto="' . $value["id"] . '" codigo="' . $value["codigo"] . '" imagen="' . $value["imagen"] . '" title="Eliminar Producto"><i class="fa fa-times"></i></button>';
+			} else {
+				$botonesAcciones .= '<button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para eliminar"><i class="fa fa-times"></i></button>';
 			}
-			if ($value["tiene_variantes"] == 1 && puedeAccion('variantes', 'editar')) {
-				$botonesAcciones .= '<button class="btn btn-info btnExpandirVariantes" data-id-producto="' . $value["id"] . '" title="Ver variantes"><i class="fa fa-plus"></i></button>';
+			if ($value["tiene_variantes"] == 1) {
+				if (puedeAccion('variantes', 'editar')) {
+					$botonesAcciones .= '<button class="btn btn-info btnExpandirVariantes" data-id-producto="' . $value["id"] . '" title="Ver variantes"><i class="fa fa-plus"></i></button>';
+				} else {
+					$botonesAcciones .= '<button class="btn btn-info" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para ver variantes"><i class="fa fa-plus"></i></button>';
+				}
 			}
 			$botonesAcciones .= '</div>';
 			$nestedData[] = $botonesAcciones;
@@ -1450,8 +1459,8 @@ if (isset($_POST["editarDescripcion"])) {
 
 					// Validar campos obligatorios (proveedor es OPCIONAL)
 
-					if (empty($codigo) || empty($descripcion) || empty($categoria)) {
-						$errores[] = "Fila $numeroFila: Campos obligatorios vacíos (código, descripción, categoría)";
+					if (empty($codigo) || empty($descripcion) || empty($categoria) || $unidadMedida === "" || $tributo === "") {
+						$errores[] = "Fila $numeroFila: Campos obligatorios vacíos (código, descripción, categoría, unidad de medida, tributo)";
 						continue;
 					}
 
@@ -1485,8 +1494,8 @@ if (isset($_POST["editarDescripcion"])) {
 					}
 
 					// --- PROCESAR UNIDAD DE MEDIDA ---
-					$idUnidadMedida = 70; // Default: Unidad (ID Factus 70)
-					if (!empty($unidadMedida)) {
+					$idUnidadMedida = null;
+					if ($unidadMedida !== "") {
 						if (is_numeric($unidadMedida)) {
 							$idUnidadMedida = intval($unidadMedida);
 						} else {
@@ -1502,8 +1511,8 @@ if (isset($_POST["editarDescripcion"])) {
 					}
 
 					// --- PROCESAR TRIBUTO ---
-					$idTributo = 1; // Default: IVA (ID 1)
-					if (!empty($tributo)) {
+					$idTributo = null;
+					if ($tributo !== "") {
 						if (is_numeric($tributo)) {
 							$idTributo = intval($tributo);
 						} else {
@@ -1536,7 +1545,8 @@ if (isset($_POST["editarDescripcion"])) {
 							"precio_compra" => $precioCompra,
 							"precio_venta" => $precioVenta,
 							"unidad_medida_id" => $idUnidadMedida,
-							"tributo_id" => $idTributo
+							"tributo_id" => $idTributo,
+							"tiene_variantes" => isset($productoExiste["tiene_variantes"]) ? intval($productoExiste["tiene_variantes"]) : 0
 						);
 					} else {
 						// Agregar producto a la lista de importación
@@ -1779,28 +1789,31 @@ if (isset($_POST["editarDescripcion"])) {
 			}
 		}
 
-		// Para formatos tipo "iva 19" o "inc 8"
-		$partes = explode(" ", $nombreNormalizado);
+		// Extraer valor numérico/porcentaje si existe
+		preg_match('/(\d+(?:[\.,]\d+)?)/', $nombreNormalizado, $matches);
+		$porcentajeBuscado = isset($matches[1]) ? floatval(str_replace(',', '.', $matches[1])) : null;
+
+		// Obtener la parte del nombre sin el porcentaje ni el símbolo %
+		$nombreSinPorcentaje = trim(preg_replace('/[\d\.,%]/', '', $nombreNormalizado));
+		$nombreSinPorcentajeNorm = self::normalizarTexto($nombreSinPorcentaje);
 
 		foreach ($tributos as $tributo) {
 
 			$tributoNombreNorm = self::normalizarTexto($tributo["nombre"]);
+			$tributoPct = floatval($tributo["porcentaje_defecto"]);
 
-			// Caso 1: Match exacto (por si acaso)
-			if ($tributoNombreNorm == $nombreNormalizado) {
-				return $tributo;
-			}
+			// Verificar si los nombres coinciden de alguna manera
+			$matchNombre = (strpos($tributoNombreNorm, $nombreSinPorcentajeNorm) !== false || 
+							strpos($nombreSinPorcentajeNorm, $tributoNombreNorm) !== false);
 
-			// Caso 2: Contiene todas las partes (ej: si buscas "iva 19" y el DB tiene "IVA 19% (General)")
-			$coincidencias = 0;
-			foreach ($partes as $parte) {
-				if (strpos($tributoNombreNorm, $parte) !== false) {
-					$coincidencias++;
+			if ($porcentajeBuscado !== null) {
+				if ($matchNombre && abs($tributoPct - $porcentajeBuscado) < 0.01) {
+					return $tributo;
 				}
-			}
-
-			if ($coincidencias == count($partes)) {
-				return $tributo;
+			} else {
+				if ($matchNombre) {
+					return $tributo;
+				}
 			}
 		}
 

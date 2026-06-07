@@ -325,68 +325,97 @@ class ModeloClientes
 	/*=============================================
 	IMPORTAR CLIENTES MASIVOS
 	=============================================*/
-	static public function mdlImportarClientesMasivos($tabla, $datos)
+	static public function mdlImportarClientesMasivos($tabla, $clientesInsertar, $clientesActualizar = array())
 	{
 		$db = Conexion::conectar();
-		$success = 0;
+		$successInsert = 0;
+		$successUpdate = 0;
 		$errors = [];
-
-		$sql = "INSERT INTO $tabla(nombre, documento, email, telefono, departamento, ciudad, direccion, estatus, notas, fecha_nacimiento, tipo_documento_id, digito_verificacion, tipo_persona, regimen_tributario, responsabilidades_fiscales, municipio_id, codigo_postal, nombre_comercial, razon_social) 
-                VALUES (:nombre, :documento, :email, :telefono, :departamento, :ciudad, :direccion, :estatus, :notas, :fecha_nacimiento, :tipo_documento_id, :digito_verificacion, :tipo_persona, :regimen_tributario, :responsabilidades_fiscales, :municipio_id, :codigo_postal, :nombre_comercial, :razon_social)
-                ON DUPLICATE KEY UPDATE
-                nombre = VALUES(nombre),
-                email = VALUES(email),
-                telefono = VALUES(telefono),
-                departamento = VALUES(departamento),
-                ciudad = VALUES(ciudad),
-                direccion = VALUES(direccion),
-                estatus = VALUES(estatus),
-                notas = VALUES(notas),
-                fecha_nacimiento = VALUES(fecha_nacimiento),
-                tipo_documento_id = VALUES(tipo_documento_id),
-                digito_verificacion = VALUES(digito_verificacion),
-                tipo_persona = VALUES(tipo_persona),
-                regimen_tributario = VALUES(regimen_tributario),
-                responsabilidades_fiscales = VALUES(responsabilidades_fiscales),
-                municipio_id = VALUES(municipio_id),
-                codigo_postal = VALUES(codigo_postal),
-                nombre_comercial = VALUES(nombre_comercial),
-                razon_social = VALUES(razon_social)";
 
 		try {
 			$db->beginTransaction();
 
-			$stmt = $db->prepare($sql);
+			// 1. INSERCIÓN DE NUEVOS CLIENTES
+			if (count($clientesInsertar) > 0) {
+				$stmtInsert = $db->prepare("INSERT INTO $tabla(nombre, documento, email, telefono, departamento, ciudad, direccion, estatus, notas, fecha_nacimiento, tipo_documento_id, digito_verificacion, tipo_persona, regimen_tributario, responsabilidades_fiscales, municipio_id, codigo_postal, nombre_comercial, razon_social, eliminado) 
+                        VALUES (:nombre, :documento, :email, :telefono, :departamento, :ciudad, :direccion, :estatus, :notas, :fecha_nacimiento, :tipo_documento_id, :digito_verificacion, :tipo_persona, :regimen_tributario, :responsabilidades_fiscales, :municipio_id, :codigo_postal, :nombre_comercial, :razon_social, 0)");
 
-			foreach ($datos as $fila) {
-				$stmt->bindParam(":nombre", $fila["nombre"], PDO::PARAM_STR);
-				$stmt->bindParam(":documento", $fila["documento"], PDO::PARAM_STR);
-				$stmt->bindParam(":email", $fila["email"], PDO::PARAM_STR);
-				$stmt->bindParam(":telefono", $fila["telefono"], PDO::PARAM_STR);
-				$stmt->bindParam(":departamento", $fila["departamento"], PDO::PARAM_STR);
-				$stmt->bindParam(":ciudad", $fila["ciudad"], PDO::PARAM_STR);
-				$stmt->bindParam(":direccion", $fila["direccion"], PDO::PARAM_STR);
-				$stmt->bindParam(":estatus", $fila["estatus"], PDO::PARAM_STR);
-				$stmt->bindParam(":notas", $fila["notas"], PDO::PARAM_STR);
-				$stmt->bindParam(":fecha_nacimiento", $fila["fecha_nacimiento"], PDO::PARAM_STR);
-				$stmt->bindParam(":tipo_documento_id", $fila["tipo_documento_id"], PDO::PARAM_INT);
-				$stmt->bindParam(":digito_verificacion", $fila["digito_verificacion"], PDO::PARAM_STR);
-				$stmt->bindParam(":tipo_persona", $fila["tipo_persona"], PDO::PARAM_STR);
-				$stmt->bindParam(":regimen_tributario", $fila["regimen_tributario"], PDO::PARAM_STR);
-				$stmt->bindParam(":responsabilidades_fiscales", $fila["responsabilidades_fiscales"], PDO::PARAM_STR);
-				$stmt->bindParam(":municipio_id", $fila["municipio_id"], PDO::PARAM_STR);
-				$stmt->bindParam(":codigo_postal", $fila["codigo_postal"], PDO::PARAM_STR);
-				$stmt->bindParam(":nombre_comercial", $fila["nombre_comercial"], PDO::PARAM_STR);
-				$stmt->bindParam(":razon_social", $fila["razon_social"], PDO::PARAM_STR);
+				foreach ($clientesInsertar as $fila) {
+					$stmtInsert->bindParam(":nombre", $fila["nombre"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":documento", $fila["documento"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":email", $fila["email"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":telefono", $fila["telefono"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":departamento", $fila["departamento"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":ciudad", $fila["ciudad"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":direccion", $fila["direccion"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":estatus", $fila["estatus"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":notas", $fila["notas"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":fecha_nacimiento", $fila["fecha_nacimiento"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":tipo_documento_id", $fila["tipo_documento_id"], PDO::PARAM_INT);
+					$stmtInsert->bindParam(":digito_verificacion", $fila["digito_verificacion"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":tipo_persona", $fila["tipo_persona"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":regimen_tributario", $fila["regimen_tributario"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":responsabilidades_fiscales", $fila["responsabilidades_fiscales"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":municipio_id", $fila["municipio_id"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":codigo_postal", $fila["codigo_postal"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":nombre_comercial", $fila["nombre_comercial"], PDO::PARAM_STR);
+					$stmtInsert->bindParam(":razon_social", $fila["razon_social"], PDO::PARAM_STR);
 
-				try {
-					if ($stmt->execute()) {
-						$success++;
-					} else {
-						$errors[] = "Error en fila con documento " . $fila["documento"];
+					try {
+						if ($stmtInsert->execute()) {
+							$successInsert++;
+						} else {
+							$errors[] = "Error al insertar fila con documento " . $fila["documento"];
+						}
+					} catch (PDOException $e) {
+						if ($e->getCode() == '23000' && strpos($e->getMessage(), 'unique_telefono') !== false) {
+							$errors[] = "Excepción al insertar documento " . $fila["documento"] . ": El número de teléfono ya se encuentra registrado para otro cliente.";
+						} else {
+							$errors[] = "Excepción al insertar documento " . $fila["documento"] . ": " . $e->getMessage();
+						}
 					}
-				} catch (PDOException $e) {
-					$errors[] = "Excepción en documento " . $fila["documento"] . ": " . $e->getMessage();
+				}
+			}
+
+			// 2. ACTUALIZACIÓN DE CLIENTES EXISTENTES
+			if (count($clientesActualizar) > 0) {
+				$stmtUpdate = $db->prepare("UPDATE $tabla SET nombre = :nombre, documento = :documento, email = :email, telefono = :telefono, departamento = :departamento, ciudad = :ciudad, direccion = :direccion, estatus = :estatus, notas = :notas, fecha_nacimiento = :fecha_nacimiento, tipo_documento_id = :tipo_documento_id, digito_verificacion = :digito_verificacion, tipo_persona = :tipo_persona, regimen_tributario = :regimen_tributario, responsabilidades_fiscales = :responsabilidades_fiscales, municipio_id = :municipio_id, codigo_postal = :codigo_postal, nombre_comercial = :nombre_comercial, razon_social = :razon_social, eliminado = 0 WHERE id = :id");
+
+				foreach ($clientesActualizar as $fila) {
+					$stmtUpdate->bindParam(":id", $fila["id"], PDO::PARAM_INT);
+					$stmtUpdate->bindParam(":nombre", $fila["nombre"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":documento", $fila["documento"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":email", $fila["email"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":telefono", $fila["telefono"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":departamento", $fila["departamento"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":ciudad", $fila["ciudad"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":direccion", $fila["direccion"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":estatus", $fila["estatus"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":notas", $fila["notas"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":fecha_nacimiento", $fila["fecha_nacimiento"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":tipo_documento_id", $fila["tipo_documento_id"], PDO::PARAM_INT);
+					$stmtUpdate->bindParam(":digito_verificacion", $fila["digito_verificacion"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":tipo_persona", $fila["tipo_persona"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":regimen_tributario", $fila["regimen_tributario"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":responsabilidades_fiscales", $fila["responsabilidades_fiscales"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":municipio_id", $fila["municipio_id"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":codigo_postal", $fila["codigo_postal"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":nombre_comercial", $fila["nombre_comercial"], PDO::PARAM_STR);
+					$stmtUpdate->bindParam(":razon_social", $fila["razon_social"], PDO::PARAM_STR);
+
+					try {
+						if ($stmtUpdate->execute()) {
+							$successUpdate++;
+						} else {
+							$errors[] = "Error al actualizar fila con documento " . $fila["documento"];
+						}
+					} catch (PDOException $e) {
+						if ($e->getCode() == '23000' && strpos($e->getMessage(), 'unique_telefono') !== false) {
+							$errors[] = "Excepción al actualizar documento " . $fila["documento"] . ": El número de teléfono ya se encuentra registrado para otro cliente.";
+						} else {
+							$errors[] = "Excepción al actualizar documento " . $fila["documento"] . ": " . $e->getMessage();
+						}
+					}
 				}
 			}
 
@@ -395,14 +424,20 @@ class ModeloClientes
 			$db->rollBack();
 			return [
 				"estado"  => "error",
-				"exitos"  => 0,
+				"ingresados"  => 0,
+				"actualizados" => 0,
+				"exitos" => 0,
 				"errores" => ["Error crítico en la transacción: " . $e->getMessage()]
 			];
 		}
 
+		$totalExitos = $successInsert + $successUpdate;
+
 		return [
-			"estado"  => count($errors) === 0 ? "ok" : (count($errors) < count($datos) ? "parcial" : "error"),
-			"exitos"  => $success,
+			"estado"  => count($errors) === 0 ? "ok" : ($totalExitos > 0 ? "parcial" : "error"),
+			"ingresados"  => $successInsert,
+			"actualizados" => $successUpdate,
+			"exitos" => $totalExitos,
 			"errores" => $errors
 		];
 	}

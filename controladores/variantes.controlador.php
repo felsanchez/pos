@@ -78,9 +78,9 @@ class ControladorVariantes{
 				}
 			} else {
 				if ($value["estado"] != 0) {
-					$estadoHtml = '<button class="btn btn-success btn-xs">Activado</button>';
+					$estadoHtml = '<button class="btn btn-success btn-xs" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar">Activado</button>';
 				} else {
-					$estadoHtml = '<button class="btn btn-danger btn-xs">Desactivado</button>';
+					$estadoHtml = '<button class="btn btn-danger btn-xs" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar">Desactivado</button>';
 				}
 			}
 			$nestedData[] = $estadoHtml;
@@ -89,10 +89,14 @@ class ControladorVariantes{
 			$botonesAcciones = '<div class="btn-group">';
 			if (puedeAccion('variantes', 'editar')) {
 				$botonesAcciones .= '<button class="btn btn-warning btnEditarTipoVariante" idTipo="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarTipoVariante" title="Editar tipo"><i class="fa fa-pencil"></i></button>';
+			} else {
+				$botonesAcciones .= '<button class="btn btn-warning" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-pencil"></i></button>';
 			}
 			$botonesAcciones .= '<button class="btn btn-info btnVerOpciones" idTipo="' . $value["id"] . '" nombreTipo="' . e($value["nombre"]) . '" title="Ver opciones"><i class="fa fa-list"></i> Opciones</button>';
 			if (puedeAccion('variantes', 'eliminar')) {
 				$botonesAcciones .= '<button class="btn btn-danger btnEliminarTipo" idTipo="' . $value["id"] . '" nombreTipo="' . e($value["nombre"]) . '" title="Eliminar tipo"><i class="fa fa-times"></i></button>';
+			} else {
+				$botonesAcciones .= '<button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para eliminar"><i class="fa fa-times"></i></button>';
 			}
 			$botonesAcciones .= '</div>';
 			$nestedData[] = $botonesAcciones;

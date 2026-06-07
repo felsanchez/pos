@@ -606,13 +606,21 @@ $(document).on('focus', '.celda-observacion', function () {
 	// Ya no eliminamos el placeholder al enfocar para evitar saltos de texto o cambios de fallback
 });
 
+$(document).on('input', '.celda-observacion', function () {
+	var elemento = $(this);
+	if (elemento.text().trim() === '') {
+		elemento.empty(); // Limpiar residuos del DOM como <br>
+	}
+});
+
 $(document).on('blur', '.celda-observacion', function () {
 	var elemento = $(this);
 	var id = elemento.attr('data-id'); // Usamos .attr() para mayor compatibilidad con elementos dinámicos
 	var nuevaObservacion = elemento.text().trim();
 
-	// Ya no es necesario manipular el atributo data-placeholder en JS
-	// El CSS (:empty:not(:focus)) se encarga de mostrarlo/ocultarlo correctamente
+	if (nuevaObservacion === '') {
+		elemento.empty(); // Asegurar elemento vacío en el DOM
+	}
 
 	// Obtener token CSRF del meta tag (doble chequeo)
 	var csrfToken = $('meta[name="csrf-token"]').attr('content');
