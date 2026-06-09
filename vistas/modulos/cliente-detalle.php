@@ -485,7 +485,7 @@ function obtenerValor($cliente, $campo, $default = '') {
             <!-- ============================================= -->
             <div class="box box-warning">
                 <div class="box-header with-border">
-                    <h3 class="box-title"><i class="fa fa-file-text"></i> Información de Facturación Electrónica (Factus)</h3>
+                    <h3 class="box-title"><i class="fa fa-file-text"></i> Información de Facturación y Ventas</h3>
                 </div>
                 <div class="box-body">
                     <p class="help-block"><i class="fa fa-info-circle"></i> Estos datos son requeridos para generar facturas electrónicas válidas ante la DIAN.</p>
@@ -522,21 +522,25 @@ function obtenerValor($cliente, $campo, $default = '') {
                                 <p class="help-block">Código de responsabilidad fiscal ante la DIAN</p>
                             </div>
                         </div>
-
-                        <!-- Código Postal -->
+                        <!-- Responsabilidad Tributaria -->
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Código Postal</label>
+                                <label>Responsabilidad Tributaria</label>
                                 <div class="input-group">
-                                    <span class="input-group-addon"><i class="fa fa-envelope-o"></i></span>
-                                    <input type="text" class="form-control"
-                                           name="<?php echo $modoEdicion ? 'editarCodigoPostal' : 'nuevoCodigoPostal'; ?>"
-                                           placeholder="Código postal"
-                                           value="<?php echo obtenerValorForm($prefix . 'CodigoPostal', 'codigo_postal', $datosSession, $cliente); ?>">
+                                    <span class="input-group-addon"><i class="fa fa-balance-scale"></i></span>
+                                    <?php
+                                    $campoFormResp = $modoEdicion ? 'editarResponsabilidadTributaria' : 'nuevoResponsabilidadTributaria';
+                                    $respTributariaActual = obtenerValorForm($campoFormResp, 'responsabilidad_tributaria', $datosSession, $cliente, 'no_responsable');
+                                    ?>
+                                    <select class="form-control"
+                                            name="<?php echo $modoEdicion ? 'editarResponsabilidadTributaria' : 'nuevoResponsabilidadTributaria'; ?>">
+                                        <option value="responsable" <?php echo ($respTributariaActual === 'responsable') ? 'selected' : ''; ?>>Responsable de IVA</option>
+                                        <option value="no_responsable" <?php echo ($respTributariaActual !== 'responsable') ? 'selected' : ''; ?>>No responsable de IVA</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
-                    </div>
+
                 </div>
             </div>
 

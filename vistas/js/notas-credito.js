@@ -26,29 +26,54 @@ $(document).ready(function () {
             "columnDefs": [
                 { "targets": 0, "responsivePriority": 1, "className": "vertical-middle" }, // Código
                 { "targets": 1, "responsivePriority": 2, "className": "vertical-middle" }, // Factura Original
-                { "targets": 7, "responsivePriority": 3, "className": "text-center vertical-middle", "orderable": false }, // Acciones
+                { "targets": 8, "responsivePriority": 3, "className": "text-center vertical-middle", "orderable": false }, // Acciones
                 { "targets": 2, "responsivePriority": 4, "className": "vertical-middle" }, // Cliente
                 { "targets": 3, "responsivePriority": 5, "className": "vertical-middle" }, // Vendedor
                 { "targets": 4, "responsivePriority": 6, "className": "vertical-middle" }, // Total
                 { "targets": 5, "responsivePriority": 7, "className": "vertical-middle" }, // Fecha
-                { "targets": 6, "responsivePriority": 8, "className": "vertical-middle text-center" } // Estado DIAN
+                { "targets": 6, "responsivePriority": 8, "className": "vertical-middle", "orderable": false }, // Observación
+                { "targets": 7, "responsivePriority": 9, "className": "vertical-middle text-center", "orderable": false } // Estado DIAN
             ],
             "responsive": {
                 "details": {
                     "type": "inline",
                     "renderer": function (api, rowIdx, columns) {
-                        var data = $.map(columns, function (col, i) {
-                            return col.hidden ?
-                                '<div style="padding:8px 12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">' +
-                                '<span style="font-weight:bold; color:#555;">' + col.title + ':</span> ' +
-                                '<span style="color:#333;">' + col.data + '</span>' +
-                                '</div>' :
-                                '';
-                        }).join('');
+                        var labels = {
+                            2: 'Cliente', 3: 'Vendedor', 4: 'Total',
+                            5: 'Fecha', 6: 'Observación', 7: 'Estado DIAN'
+                        };
+                        var $mainCell   = $(api.row(rowIdx).node()).find('.celda-observacion-nc');
+                        var idNota      = $mainCell.attr('data-id') || '';
+                        var estadoCelda = $mainCell.attr('data-estado') || 'borrador';
+                        var finalHtml   = '';
+                        var hasHidden   = false;
 
-                        return data ?
-                            $('<div style="background:#f9f9f9; border:1px solid #eee; margin:10px 0; border-radius:4px;"/>').append(data) :
-                            false;
+                        $.each(columns, function (i, col) {
+                            if (!col.hidden) return;
+                            hasHidden = true;
+                            var colIdx = col.columnIndex;
+                            var label  = labels[colIdx] || col.title || ('Columna ' + colIdx);
+                            var data   = col.data || '';
+
+                            if (colIdx === 6) { // Observación
+                                var obsTexto   = $('<div>').html(data).text().trim();
+                                var esFirmada  = (estadoCelda === 'firmada');
+                                var ceEditable = esFirmada ? 'false' : 'true';
+                                var ceTitulo   = esFirmada ? ' title="La observación no se puede editar en notas firmadas"' : '';
+                                finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
+                                finalHtml += '<span class="text-bold" style="display:block;color:#555;margin-bottom:4px;"> ' + label + ':</span>';
+                                finalHtml += '<div class="celda-observacion-nc" contenteditable="' + ceEditable + '" data-id="' + idNota + '" data-estado="' + estadoCelda + '" data-placeholder="Escribe una observación..."' + ceTitulo + '>' + obsTexto + '</div>';
+                                finalHtml += '</div>';
+                                return;
+                            }
+
+                            finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
+                            finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span> ';
+                            finalHtml += '<span>' + data + '</span>';
+                            finalHtml += '</div>';
+                        });
+
+                        return hasHidden ? $('<div/>').append(finalHtml) : false;
                     }
                 }
             },
@@ -86,27 +111,43 @@ $(document).ready(function () {
         RANGO DE FECHAS
         =============================================*/
         if ($('#daterange-btn-nc').length > 0) {
+            // Inicializar texto del span
+            $('#daterange-btn-nc span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+
             $('#daterange-btn-nc').daterangepicker(
                 {
                     ranges: {
+                        'Mostrar todas': [moment('2000-01-01'), moment()],
                         'Hoy': [moment(), moment()],
                         'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
                         'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
                         'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
                         'Este mes': [moment().startOf('month'), moment().endOf('month')],
-                        'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
-                        'Todos los documentos': [moment('2000-01-01'), moment()]
+                        'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
                     },
-                    startDate: moment().subtract(29, 'days'),
+                    startDate: moment(),
                     endDate: moment()
                 },
                 function (start, end) {
-                    $('#daterange-btn-nc span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-                    $('#fechaInicialNC').val(start.format('YYYY-MM-DD'));
-                    $('#fechaFinalNC').val(end.format('YYYY-MM-DD'));
+                    if (start.format('YYYY-MM-DD') === '2000-01-01') {
+                        $('#daterange-btn-nc span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+                        $('#fechaInicialNC').val('');
+                        $('#fechaFinalNC').val('');
+                    } else {
+                        $('#daterange-btn-nc span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                        $('#fechaInicialNC').val(start.format('YYYY-MM-DD'));
+                        $('#fechaFinalNC').val(end.format('YYYY-MM-DD'));
+                    }
                     $("#tablaListadoNotasCredito").DataTable().ajax.reload();
                 }
             );
+
+            $('#daterange-btn-nc').on('cancel.daterangepicker', function () {
+                $(this).find('span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+                $('#fechaInicialNC').val('');
+                $('#fechaFinalNC').val('');
+                $("#tablaListadoNotasCredito").DataTable().ajax.reload();
+            });
         }
 
         /*=============================================
@@ -117,9 +158,59 @@ $(document).ready(function () {
             $("#selectBodegaNC").val(defaultBodega).trigger("change.select2");
             $("#fechaInicialNC").val("");
             $("#fechaFinalNC").val("");
-            $('#daterange-btn-nc span').html('<span><i class="fa fa-calendar"></i> Rango de fecha</span>');
+            $('#daterange-btn-nc span').html('<span><i class="fa fa-calendar"></i> Mostrar todas</span>');
             $("#tablaListadoNotasCredito").DataTable().ajax.reload();
         });
+
+        /*=============================================
+        GUARDAR OBSERVACIÓN DE NOTA CRÉDITO (BLUR)
+        =============================================*/
+        // Limpiar <br> residual que deja el browser al borrar todo el texto
+        $(document).on('input', '.celda-observacion-nc', function () {
+            var $el = $(this);
+            if ($el.html().replace(/<br\s*\/?>/gi, '').trim() === '') {
+                $el.html('');
+            }
+        });
+
+        $(document).on('blur', '.celda-observacion-nc', function () {
+            var $el = $(this);
+            if ($el.attr('contenteditable') === 'false') return;
+
+            // Limpiar <br> residual también al salir del foco
+            if ($el.html().replace(/<br\s*\/?>/gi, '').trim() === '') {
+                $el.html('');
+            }
+
+            var idNota   = $el.attr('data-id');
+            var nuevaObs = $el.text().trim();
+
+            $.ajax({
+                url: 'ajax/notas-credito.ajax.php',
+                method: 'POST',
+                data: {
+                    idNotaCreditoObservacion: idNota,
+                    nuevaObservacion:         nuevaObs
+                },
+                dataType: 'json',
+                success: function (resp) {
+                    // Destello verde estándar (solo fondo)
+                    $el.css('background-color', '#dff0d8');
+                    setTimeout(function () {
+                        $el.css('background-color', '');
+                    }, 500);
+                },
+                error: function () {
+                    // Destello rojo estándar (solo fondo)
+                    $el.css('background-color', '#f2dede');
+                    setTimeout(function () {
+                        $el.css('background-color', '');
+                    }, 500);
+                }
+            });
+        });
+
+
     }
 
     // 1. Inicializar - Calcular total al cargar

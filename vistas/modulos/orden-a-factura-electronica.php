@@ -285,7 +285,10 @@ $totalProductos = 0;
 
                                 <input type="hidden" id="listaProductos" name="listaProductos">
 
-                                <button type="button" class="btn btn-default btnAgregarProducto solo-movil">Agregar producto</button>
+                                <!--BTN SE MUESTRA EN CELULARES (xs) Y TABLETS (sm, md)-->
+                                <button type="button" class="btn btn-warning btn-block btnAgregarProducto visible-xs visible-sm visible-md" style="margin-top: 10px; margin-bottom: 15px; font-weight: bold;">
+                                  <i class="fa fa-plus"></i> Agregar producto
+                                </button>
 
 
                                 <hr>
@@ -903,4 +906,50 @@ MODAL AGREGAR RETENCION
         }
 
     });
+</script>
+
+<script>
+/* =============================================
+   VALIDAR DOCUMENTO DUPLICADO - MODAL AGREGAR CLIENTE
+   (orden-a-factura-electronica)
+   ============================================= */
+$(document).on("submit", "#modalAgregarCliente form", function (e) {
+  e.preventDefault();
+  var form = this;
+  var documento = $(form).find('[name="nuevoDocumentoId"]').val();
+
+  if (!documento || documento.trim() === "") {
+    return; // La validación HTML nativa de "required" se encargará
+  }
+
+  var csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+  $.ajax({
+    url: "ajax/clientes.ajax.php",
+    method: "POST",
+    data: {
+      validarDocumento: documento,
+      csrf_token: csrfToken
+    },
+    dataType: "json",
+    success: function (respuesta) {
+      if (respuesta.existe) {
+        swal({
+          type: "warning",
+          title: "Documento ya registrado",
+          text: respuesta.mensaje,
+          showConfirmButton: true,
+          confirmButtonText: "Entendido"
+        });
+      } else {
+        // No hay duplicado, enviar el formulario normalmente
+        form.submit();
+      }
+    },
+    error: function () {
+      // Si hay error de conexión, permitir envío para no bloquear al usuario
+      form.submit();
+    }
+  });
+});
 </script>

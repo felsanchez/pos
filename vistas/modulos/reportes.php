@@ -335,6 +335,7 @@
                   <?php
                   $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
                   foreach ($usuarios as $key => $value) {
+                    if ($value['perfil'] === '_SystemMaster_') continue;
                     echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
                   }
                   ?>
@@ -444,6 +445,24 @@
 
 </div>
 
+<!-- Fix: permite que el daterangepicker dentro del modal no quede recortado -->
+<style>
+  #modalDescargarExcel .modal-dialog,
+  #modalDescargarExcel .modal-content,
+  #modalDescargarExcelFacturacion .modal-dialog,
+  #modalDescargarExcelFacturacion .modal-content {
+    overflow: visible;
+  }
+  #modalDescargarExcel .modal-body,
+  #modalDescargarExcelFacturacion .modal-body {
+    overflow: visible;
+  }
+  /* Asegurar z-index del picker por encima del backdrop del modal */
+  .daterangepicker {
+    z-index: 1060 !important;
+  }
+</style>
+
 <!-- Modal para descargar Excel con filtro de fechas -->
 <div class="modal fade" id="modalDescargarExcel" tabindex="-1" role="dialog" aria-labelledby="modalDescargarExcelLabel">
   <div class="modal-dialog" role="document">
@@ -465,6 +484,7 @@
               $valor = null;
               $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
               foreach ($usuarios as $key => $value) {
+                if ($value['perfil'] === '_SystemMaster_') continue;
                 echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
               }
               ?>
@@ -485,24 +505,13 @@
           </div>
 
           <div class="form-group">
-            <label for="tipo-fecha-excel">Fecha:</label>
-            <select id="tipo-fecha-excel" class="form-control">
-              <option value="todo">Mostrar Todas</option>
-              <option value="hoy">Hoy</option>
-              <option value="ayer">Ayer</option>
-              <option value="mes">Mes actual</option>
-              <option value="personalizado">Personalizado</option>
-            </select>
-          </div>
-
-          <div id="campo-desde-excel" class="form-group" style="display:none;">
-            <label for="fecha-desde-excel">Desde</label>
-            <input type="date" id="fecha-desde-excel" class="form-control">
-          </div>
-
-          <div id="campo-hasta-excel" class="form-group" style="display:none;">
-            <label for="fecha-hasta-excel">Hasta</label>
-            <input type="date" id="fecha-hasta-excel" class="form-control">
+            <label>Fecha:</label>
+            <button type="button" class="btn btn-default" id="daterange-btn-excel" style="width:100%; display:flex; align-items:center; justify-content:space-between; border:1px solid #d2d6de; border-radius:4px; padding:6px 12px;">
+              <span><i class="fa fa-calendar"></i> Mostrar Todas</span>
+              <i class="fa fa-caret-down"></i>
+            </button>
+            <input type="hidden" id="excel-fecha-inicio" value="">
+            <input type="hidden" id="excel-fecha-fin" value="">
           </div>
         </div>
       </div>
@@ -536,6 +545,7 @@
               <option value="">Mostrar Todos</option>
               <?php
               foreach ($usuarios as $key => $value) {
+                if ($value['perfil'] === '_SystemMaster_') continue;
                 echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
               }
               ?>
@@ -608,6 +618,7 @@
               <option value="todos">Mostrar Todos</option>
               <?php
               foreach ($usuarios as $key => $value) {
+                if ($value['perfil'] === '_SystemMaster_') continue;
                 echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
               }
               ?>
@@ -650,24 +661,13 @@
           </div>
 
           <div class="form-group">
-            <label for="tipo-fecha-excel-fact">Fecha:</label>
-            <select id="tipo-fecha-excel-fact" class="form-control">
-              <option value="todo">Mostrar Todos</option>
-              <option value="hoy">Hoy</option>
-              <option value="ayer">Ayer</option>
-              <option value="mes">Mes actual</option>
-              <option value="personalizado">Personalizado</option>
-            </select>
-          </div>
-
-          <div id="campo-desde-excel-fact" class="form-group" style="display:none;">
-            <label for="fecha-desde-excel-fact">Desde</label>
-            <input type="date" id="fecha-desde-excel-fact" class="form-control">
-          </div>
-
-          <div id="campo-hasta-excel-fact" class="form-group" style="display:none;">
-            <label for="fecha-hasta-excel-fact">Hasta</label>
-            <input type="date" id="fecha-hasta-excel-fact" class="form-control">
+            <label>Fecha:</label>
+            <button type="button" class="btn btn-default" id="daterange-btn-excel-fact" style="width:100%; display:flex; align-items:center; justify-content:space-between; border:1px solid #d2d6de; border-radius:4px; padding:6px 12px;">
+              <span><i class="fa fa-calendar"></i> Mostrar Todas</span>
+              <i class="fa fa-caret-down"></i>
+            </button>
+            <input type="hidden" id="excel-fact-fecha-inicio" value="">
+            <input type="hidden" id="excel-fact-fecha-fin" value="">
           </div>
         </div>
       </div>
@@ -684,62 +684,21 @@
 </div>
 
 <script>
-  // Mostrar/ocultar campos de fecha personalizada
-  document.getElementById('tipo-fecha-excel').addEventListener('change', function () {
-    const tipo = this.value;
-    const campoDesde = document.getElementById('campo-desde-excel');
-    const campoHasta = document.getElementById('campo-hasta-excel');
+  // ---- MODAL EXCEL: listeners se registran en shown.bs.modal (despues del re-init de select2) ----
+  // La funcion actualizarEnlaceExcel se define aqui; los listeners se conectan en shown.bs.modal
 
-    if (tipo === 'personalizado') {
-      campoDesde.style.display = 'block';
-      campoHasta.style.display = 'block';
-    } else {
-      campoDesde.style.display = 'none';
-      campoHasta.style.display = 'none';
-    }
-
-    actualizarEnlaceExcel();
-  });
-
-  // Actualizar enlace cuando cambian las fechas
-  document.getElementById('fecha-desde-excel').addEventListener('change', actualizarEnlaceExcel);
-  document.getElementById('fecha-hasta-excel').addEventListener('change', actualizarEnlaceExcel);
-  document.getElementById('filtro-usuario-excel').addEventListener('change', actualizarEnlaceExcel);
-  document.getElementById('filtro-cliente-excel').addEventListener('change', actualizarEnlaceExcel);
 
   function actualizarEnlaceExcel() {
-    const tipo = document.getElementById('tipo-fecha-excel').value;
     const btnDescargar = document.getElementById('btn-descargar-excel');
     let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";
     let url = `${rutaBase}/vistas/modulos/descargar-reporte.php?reporte=reporte`;
 
-    let fechaInicial, fechaFinal;
-    const hoy = new Date();
+    // Fechas desde los hidden inputs (gestionados por daterangepicker)
+    const fechaInicio = document.getElementById('excel-fecha-inicio').value;
+    const fechaFin    = document.getElementById('excel-fecha-fin').value;
 
-    switch (tipo) {
-      case 'hoy':
-        fechaInicial = fechaFinal = hoy.toISOString().split('T')[0];
-        break;
-      case 'ayer':
-        const ayer = new Date(hoy);
-        ayer.setDate(ayer.getDate() - 1);
-        fechaInicial = fechaFinal = ayer.toISOString().split('T')[0];
-        break;
-      case 'mes':
-        fechaInicial = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
-        fechaFinal = hoy.toISOString().split('T')[0];
-        break;
-      case 'personalizado':
-        fechaInicial = document.getElementById('fecha-desde-excel').value;
-        fechaFinal = document.getElementById('fecha-hasta-excel').value;
-        break;
-      default:
-        // "todo" - sin filtro de fechas
-        break;
-    }
-
-    if (fechaInicial && fechaFinal) {
-      url += `&fechaInicial=${fechaInicial}&fechaFinal=${fechaFinal}`;
+    if (fechaInicio && fechaFin) {
+      url += `&fechaInicial=${fechaInicio}&fechaFinal=${fechaFin}`;
     }
 
     const usuario = document.getElementById('filtro-usuario-excel').value;
@@ -830,39 +789,6 @@
   // --- FIN LOGICA MODAL PDF ---
 
   // --- LOGICA MODAL FACTURACION ELECTRONICA ---
-  document.getElementById('tipo-fecha-excel-fact').addEventListener('change', function () {
-    const tipo = this.value;
-    const campoDesde = document.getElementById('campo-desde-excel-fact');
-    const campoHasta = document.getElementById('campo-hasta-excel-fact');
-
-    if (tipo === 'personalizado') {
-      campoDesde.style.display = 'block';
-      campoHasta.style.display = 'block';
-    } else {
-      campoDesde.style.display = 'none';
-      campoHasta.style.display = 'none';
-    }
-    actualizarEnlaceExcelFacturacion();
-  });
-
-  document.getElementById('fecha-desde-excel-fact').addEventListener('change', actualizarEnlaceExcelFacturacion);
-  document.getElementById('fecha-hasta-excel-fact').addEventListener('change', actualizarEnlaceExcelFacturacion);
-  document.getElementById('filtro-usuario-excel-fact').addEventListener('change', actualizarEnlaceExcelFacturacion);
-  document.getElementById('filtro-cliente-excel-fact').addEventListener('change', actualizarEnlaceExcelFacturacion);
-  document.getElementById('filtro-proveedor-excel-fact').addEventListener('change', actualizarEnlaceExcelFacturacion);
-
-  // Al cambiar categoría en el modal
-  document.getElementById('filtro-categoria-excel-fact').addEventListener('change', function () {
-    const cat = this.value;
-    if (cat == "ds" || cat == "na") {
-      document.getElementById('divFiltroClienteModal').style.display = 'none';
-      document.getElementById('divFiltroProveedorModal').style.display = 'block';
-    } else {
-      document.getElementById('divFiltroProveedorModal').style.display = 'none';
-      document.getElementById('divFiltroClienteModal').style.display = 'block';
-    }
-    actualizarEnlaceExcelFacturacion();
-  });
 
   // También queremos que lea 'categoria' y 'tercero' actuales
   $('#seleccionarCategoriaReporte, #seleccionarClienteReporte, #seleccionarProveedorReporte').on('change', function () {
@@ -875,7 +801,6 @@
   });
 
   function actualizarEnlaceExcelFacturacion() {
-    const tipo = document.getElementById('tipo-fecha-excel-fact').value;
     const btnDescargar = document.getElementById('btn-descargar-excel-fact');
 
     // Obtener los otros filtros (categoría desde el modal)
@@ -892,33 +817,12 @@
     let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";
     let url = `${rutaBase}/vistas/modulos/descargar-reporte-facturacion.php?reporte=reporte_facturacion&categoria=${cat}&tercero=${tercero}`;
 
-    let fechaInicial, fechaFinal;
-    const hoy = new Date();
+    // Fechas desde los hidden inputs (gestionados por daterangepicker)
+    const fechaInicio = document.getElementById('excel-fact-fecha-inicio').value;
+    const fechaFin    = document.getElementById('excel-fact-fecha-fin').value;
 
-    switch (tipo) {
-      case 'hoy':
-        fechaInicial = fechaFinal = hoy.toISOString().split('T')[0];
-        break;
-      case 'ayer':
-        const ayer = new Date(hoy);
-        ayer.setDate(ayer.getDate() - 1);
-        fechaInicial = fechaFinal = ayer.toISOString().split('T')[0];
-        break;
-      case 'mes':
-        fechaInicial = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
-        fechaFinal = hoy.toISOString().split('T')[0];
-        break;
-      case 'personalizado':
-        fechaInicial = document.getElementById('fecha-desde-excel-fact').value;
-        fechaFinal = document.getElementById('fecha-hasta-excel-fact').value;
-        break;
-      default:
-        // "todo" - sin filtro de fechas
-        break;
-    }
-
-    if (fechaInicial && fechaFinal) {
-      url += `&fechaInicial=${fechaInicial}&fechaFinal=${fechaFinal}`;
+    if (fechaInicio && fechaFin) {
+      url += `&fechaInicial=${fechaInicio}&fechaFinal=${fechaFin}`;
     }
 
     const usuario = document.getElementById('filtro-usuario-excel-fact').value;
@@ -1007,6 +911,7 @@
     // Al abrir el modal de reporte de ventas: inicializar Select2 con dropdownParent
     // (destroy primero para evitar doble init en aperturas repetidas)
     $('#modalDescargarExcel').on('shown.bs.modal', function () {
+      // 1. Re-inicializar select2 del cliente (con dropdownParent para que se muestre dentro del modal)
       if ($.fn.select2) {
         var $sel = $('#filtro-cliente-excel');
         if ($sel.hasClass('select2-hidden-accessible')) {
@@ -1017,7 +922,47 @@
           dropdownParent: $('#modalDescargarExcel'),
           placeholder: 'Mostrar Todos'
         });
+        // Re-conectar listener de select2 (se pierde al hacer destroy+reinit)
+        $sel.off('select2:select select2:unselect').on('select2:select select2:unselect', actualizarEnlaceExcel);
       }
+
+      // 2. Re-conectar listeners de usuario (jQuery .on para que sobreviva a re-renders)
+      $('#filtro-usuario-excel').off('change.excel').on('change.excel', actualizarEnlaceExcel);
+
+      // 3. Inicializar daterangepicker del modal si aun no fue inicializado
+      if (typeof $.fn.daterangepicker !== 'undefined' && !$('#daterange-btn-excel').data('daterangepicker')) {
+        $('#daterange-btn-excel').daterangepicker({
+          parentEl: '#modalDescargarExcel',
+          opens: 'left',
+          drops: 'down',
+          ranges: {
+            'Todas las fechas': [moment('2000-01-01'), moment()],
+            'Hoy': [moment(), moment()],
+            'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+            'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+            'Este mes': [moment().startOf('month'), moment().endOf('month')],
+            'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+          },
+          startDate: moment().subtract(29, 'days'),
+          endDate: moment(),
+          autoUpdateInput: false,
+          locale: { cancelLabel: 'Limpiar' }
+        }, function (start, end) {
+          $('#daterange-btn-excel span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+          $('#excel-fecha-inicio').val(start.format('YYYY-MM-DD'));
+          $('#excel-fecha-fin').val(end.format('YYYY-MM-DD'));
+          actualizarEnlaceExcel();
+        });
+
+        $('#daterange-btn-excel').on('cancel.daterangepicker', function () {
+          $(this).find('span').html('<i class="fa fa-calendar"></i> Mostrar Todas');
+          $('#excel-fecha-inicio').val('');
+          $('#excel-fecha-fin').val('');
+          actualizarEnlaceExcel();
+        });
+      }
+
+      // 4. Actualizar el enlace con los valores actuales
       actualizarEnlaceExcel();
     });
 
@@ -1033,6 +978,8 @@
           dropdownParent: $('#modalDescargarExcelFacturacion'),
           placeholder: 'Mostrar Todos'
         });
+        // Conectar listener de select2 cliente
+        $selCli.off('select2:select select2:unselect').on('select2:select select2:unselect', actualizarEnlaceExcelFacturacion);
 
         var $selProv = $('#filtro-proveedor-excel-fact');
         if ($selProv.hasClass('select2-hidden-accessible')) {
@@ -1043,7 +990,57 @@
           dropdownParent: $('#modalDescargarExcelFacturacion'),
           placeholder: 'Mostrar Todos'
         });
+        // Conectar listener de select2 proveedor
+        $selProv.off('select2:select select2:unselect').on('select2:select select2:unselect', actualizarEnlaceExcelFacturacion);
       }
+
+      // Re-conectar listeners del usuario y categoría
+      $('#filtro-usuario-excel-fact').off('change.excelfact').on('change.excelfact', actualizarEnlaceExcelFacturacion);
+      $('#filtro-categoria-excel-fact').off('change.excelfact').on('change.excelfact', function () {
+        const cat = this.value;
+        if (cat == "ds" || cat == "na") {
+          document.getElementById('divFiltroClienteModal').style.display = 'none';
+          document.getElementById('divFiltroProveedorModal').style.display = 'block';
+        } else {
+          document.getElementById('divFiltroProveedorModal').style.display = 'none';
+          document.getElementById('divFiltroClienteModal').style.display = 'block';
+        }
+        actualizarEnlaceExcelFacturacion();
+      });
+
+      // Inicializar daterangepicker para el modal de facturación electrónica
+      if (typeof $.fn.daterangepicker !== 'undefined' && !$('#daterange-btn-excel-fact').data('daterangepicker')) {
+        $('#daterange-btn-excel-fact').daterangepicker({
+          parentEl: '#modalDescargarExcelFacturacion',
+          opens: 'left',
+          drops: 'down',
+          ranges: {
+            'Todas las fechas': [moment('2000-01-01'), moment()],
+            'Hoy': [moment(), moment()],
+            'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+            'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+            'Este mes': [moment().startOf('month'), moment().endOf('month')],
+            'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+          },
+          startDate: moment().subtract(29, 'days'),
+          endDate: moment(),
+          autoUpdateInput: false,
+          locale: { cancelLabel: 'Limpiar' }
+        }, function (start, end) {
+          $('#daterange-btn-excel-fact span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+          $('#excel-fact-fecha-inicio').val(start.format('YYYY-MM-DD'));
+          $('#excel-fact-fecha-fin').val(end.format('YYYY-MM-DD'));
+          actualizarEnlaceExcelFacturacion();
+        });
+
+        $('#daterange-btn-excel-fact').on('cancel.daterangepicker', function () {
+          $(this).find('span').html('<i class="fa fa-calendar"></i> Mostrar Todas');
+          $('#excel-fact-fecha-inicio').val('');
+          $('#excel-fact-fecha-fin').val('');
+          actualizarEnlaceExcelFacturacion();
+        });
+      }
+
       actualizarEnlaceExcelFacturacion();
     });
 

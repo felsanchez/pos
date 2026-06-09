@@ -187,6 +187,8 @@ $etiquetaDocumento = "Factura";
           $labelNombre = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1') ? 'Razón Social' : 'Nombre Empresa';
           $nombreEmisor = isset($configFactus['nombre_empresa']) && !empty($configFactus['nombre_empresa']) ? $configFactus['nombre_empresa'] : ($configuracion["nombre_empresa"] ?? 'Nombre Empresa');
           $nitEmisor = isset($configFactus['nit_empresa']) && !empty($configFactus['nit_empresa']) ? $configFactus['nit_empresa'] : ($configuracion["nit"] ?? '');
+          $dvEmisor = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1' && isset($configFactus['dv']) && $configFactus['dv'] !== '') ? ' - ' . $configFactus['dv'] : '';
+          $nitConDv = $nitEmisor . $dvEmisor;
           $direccionEmisor = isset($configFactus['direccion_empresa']) && !empty($configFactus['direccion_empresa']) ? $configFactus['direccion_empresa'] : ($configuracion["direccion"] ?? '');
           $telefonoEmisor = isset($configFactus['telefono_empresa']) && !empty($configFactus['telefono_empresa']) ? $configFactus['telefono_empresa'] : ($configuracion["telefono"] ?? '');
           $emailEmisor = isset($configFactus['email_empresa']) && !empty($configFactus['email_empresa']) ? $configFactus['email_empresa'] : ($configuracion["correo"] ?? '');
@@ -205,7 +207,7 @@ $etiquetaDocumento = "Factura";
           ?>
           <strong><?php echo $labelNombre; ?>:</strong><br>
           <?php echo $nombreEmisor; ?><br>
-          <strong>NIT:</strong> <?php echo $nitEmisor; ?><br>
+          <strong>NIT:</strong> <?php echo $nitConDv; ?><br>
           <strong>Dirección:</strong> <?php echo $direccionEmisor; ?><br>
           <?php if(!empty($municipioEmisor)): ?>
           <strong>Municipio:</strong> <?php echo $municipioEmisor; ?><br>
@@ -220,9 +222,14 @@ $etiquetaDocumento = "Factura";
           style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #d2d6de; display: block; margin-bottom: 10px; width: fit-content;">Cliente</span>
         <address>
           <strong>Cliente:</strong> <?php echo $cliente["nombre"] ?? ''; ?><br>
-          <strong>Documento:</strong> <?php echo $cliente["documento"] ?? ''; ?><br>
+          <strong>Documento:</strong> <?php echo $cliente["documento"] ?? ''; ?><?php if (($cliente["tipo_documento_id"] ?? 0) == 6 && !empty($cliente["digito_verificacion"])): ?> - <?php echo $cliente["digito_verificacion"]; ?><?php endif; ?><br>
           <strong>Dirección:</strong> <?php echo $cliente["direccion"] ?? ''; ?><br>
-          <strong>Ciudad:</strong> <?php echo $cliente["ciudad"] ?? ''; ?><br>
+          <?php 
+          $ciudadCliente = $cliente["ciudad"] ?? '';
+          $departamentoCliente = !empty($cliente["nombre_departamento"]) ? $cliente["nombre_departamento"] : ($cliente["departamento"] ?? '');
+          $ciudadConDepto = !empty($departamentoCliente) ? $ciudadCliente . ' - ' . $departamentoCliente : $ciudadCliente;
+          ?>
+          <strong>Municipio:</strong> <?php echo $ciudadConDepto; ?><br>
           <strong>Teléfono:</strong> <?php echo $cliente["telefono"] ?? ''; ?><br>
           <strong>Email:</strong> <?php echo $cliente["email"] ?? ''; ?>
         </address>
@@ -481,14 +488,6 @@ $etiquetaDocumento = "Factura";
           </p>
         <?php endif; ?>
 
-        <!-- Observaciones (Factura) -->
-        <?php if (!empty($venta["observacion"])): ?>
-          <p class="lead" style="margin-top: 20px;">Observaciones:</p>
-          <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
-            <?php echo $venta["observacion"]; ?>
-          </p>
-        <?php endif; ?>
-
         <!-- QR Column (Factura Electrónica) -->
         <?php if (!empty($venta["qr_data"])): ?>
           <div style="margin-top: 20px;">
@@ -548,6 +547,14 @@ $etiquetaDocumento = "Factura";
               </div>
             <?php endif; ?>
           </div>
+        <?php endif; ?>
+
+        <!-- Observaciones (Factura) -->
+        <?php if (!empty($venta["observacion"])): ?>
+          <p class="lead" style="margin-top: 20px;">Observaciones:</p>
+          <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
+            <?php echo $venta["observacion"]; ?>
+          </p>
         <?php endif; ?>
 
       </div>

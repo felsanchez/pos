@@ -213,6 +213,51 @@ SISTEMA DE DISEÑO ESTÁNDAR - POS PREMIUM
     background: #f9f9f9;
 }
 
+/* 8b. CELDA OBSERVACIÓN NC — mismo diseño que .celda-observacion */
+.celda-observacion-nc {
+    background: #fff9e6;
+    padding: 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #666;
+    border-left: 2px solid #f39c12;
+    cursor: text;
+    min-height: 30px;
+    transition: all 0.3s ease;
+}
+
+.celda-observacion-nc:empty:not(:focus):before {
+    content: attr(data-placeholder);
+    color: #999;
+    font-style: italic;
+}
+
+.celda-observacion-nc:not(:empty):before,
+.celda-observacion-nc:focus:before {
+    content: "" !important;
+    display: none !important;
+}
+
+.celda-observacion-nc:empty:not(:focus):not([data-placeholder]):before,
+.celda-observacion-nc:empty:not(:focus)[data-placeholder="true"]:before {
+    content: "Escribe una observación...";
+}
+
+.celda-observacion-nc:focus {
+    outline: 2px solid #f39c12;
+    background: #fffef5;
+    box-shadow: 0 0 5px rgba(243, 156, 18, 0.3);
+}
+
+/* Estado solo lectura (nota firmada/enviada DIAN) */
+.celda-observacion-nc[contenteditable="false"] {
+    cursor: default;
+    opacity: 0.75;
+    border-left-color: #bdc3c7;
+    background: #f9f9f9;
+}
+
+
 /* 9. AYUDAS DE VISUALIZACIÓN MÓVIL */
 .solo-movil {
     display: none;

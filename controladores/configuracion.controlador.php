@@ -168,6 +168,15 @@ class ControladorConfiguracion
 				if (isset($_POST["nombrefactus"])) {
 					$configFactus = ModeloFactus::mdlObtenerConfiguracion();
 
+					// Validación de DV obligatorio para Persona Jurídica
+					if ($configFactus['bloqueo_datos_emisor'] != 1) {
+						$tipoPersona = isset($_POST["tipopersonafactus"]) ? $_POST["tipopersonafactus"] : '2';
+						$dv = isset($_POST["dvfactus"]) ? $_POST["dvfactus"] : '';
+						if ($tipoPersona == '1' && trim($dv) === '') {
+							throw new Exception("El campo DV (Dígito de Verificación) es obligatorio cuando el Tipo de Persona es Persona Jurídica.");
+						}
+					}
+
 					/*=============================================
 					PREPARAR LOGO FACTUS (nuevo archivo físico)
 					=============================================*/
@@ -240,6 +249,7 @@ class ControladorConfiguracion
 						"rango_numeracion_id" => $configFactus['rango_numeracion_id'],
 						// Determine if we should update company data based on lock status
 						"nombre_empresa" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['nombre_empresa'] : $_POST["nombrefactus"],
+						"nombre_comercial" => ($configFactus['bloqueo_datos_emisor'] == 1) ? (isset($configFactus['nombre_comercial']) ? $configFactus['nombre_comercial'] : '') : (isset($_POST["nombrecomercialfactus"]) ? $_POST["nombrecomercialfactus"] : ''),
 						"nit_empresa" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['nit_empresa'] : $_POST["nitfactus"],
 						"direccion_empresa" => $_POST["direccionfactus"],
 						"telefono_empresa" => $_POST["telefonofactus"],

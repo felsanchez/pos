@@ -770,8 +770,13 @@ class ControladorVentas
 			$notasLimpias = str_replace(array(" [Notificado_n8n]", "[Notificado_n8n]", " [Notificado]", "[Notificado]"), "", $value['notas'] ?? '');
 			$nestedData[] = e(trim($notasLimpias));
 
-			// 8: Observación (Editable)
-			$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . e($value["id"]) . '" data-placeholder="Escribe una observación...">' . e($value["observacion"]) . '</div>';
+			// 8: Observación - Solo editable si la factura NO ha sido firmada
+			$esFirmada = in_array($estadoDian, ['enviada', 'aceptada']);
+			$obsEditable = $esFirmada ? 'false' : 'true';
+			$obsStyle = $esFirmada
+				? ' style="background:#f5f5f5; color:#777; cursor:default; font-style:italic;"'
+				: ' style="min-height:24px;"';
+			$nestedData[] = '<div contenteditable="' . $obsEditable . '" class="celda-observacion" data-id="' . e($value["id"]) . '" data-readonly="' . ($esFirmada ? '1' : '0') . '" data-placeholder="Escribe una observación..."' . $obsStyle . '>' . e($value["observacion"]) . '</div>';
 
 			// 9: Fecha
 			$nestedData[] = e($value["fecha"]);

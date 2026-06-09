@@ -71,7 +71,31 @@ $productosVenta = json_decode($venta["productos"], true);
 
         <div class="box box-success">
 
-          <div class="box-header with-border"></div>
+          <div class="box-header with-border">
+            <?php
+              $feNombreEmpresa   = isset($configFactus['nombre_empresa'])   && !empty($configFactus['nombre_empresa'])   ? $configFactus['nombre_empresa']   : ($configuracion['nombre_empresa'] ?? '');
+              $feNombreComercial = isset($configFactus['nombre_comercial']) && !empty($configFactus['nombre_comercial']) ? $configFactus['nombre_comercial'] : '';
+              $feNitEmpresa      = isset($configFactus['nit_empresa'])      && !empty($configFactus['nit_empresa'])      ? $configFactus['nit_empresa']      : ($configuracion['nit'] ?? '');
+              $feDvEmpresa       = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1' && isset($configFactus['dv']) && $configFactus['dv'] !== '') ? ' - ' . $configFactus['dv'] : '';
+              $feNitConDv        = $feNitEmpresa . $feDvEmpresa;
+            ?>
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <?php if (isset($configFactus['logo_empresa']) && !empty($configFactus['logo_empresa']) && file_exists($configFactus['logo_empresa'])): ?>
+                <img src="<?php echo $configFactus['logo_empresa']; ?>" style="max-height:48px; border-radius:4px;">
+              <?php endif; ?>
+              <div>
+                <?php if (!empty($feNombreEmpresa)): ?>
+                  <strong style="font-size:15px;"><?php echo $feNombreEmpresa; ?></strong><br>
+                <?php endif; ?>
+                <?php if (!empty($feNombreComercial)): ?>
+                  <span style="color:#555; font-size:13px;"><i class="fa fa-tag" style="margin-right:4px;"></i><?php echo $feNombreComercial; ?></span><br>
+                <?php endif; ?>
+                <?php if (!empty($feNitConDv)): ?>
+                  <span style="color:#777; font-size:12px;"><strong>NIT:</strong> <?php echo $feNitConDv; ?></span>
+                <?php endif; ?>
+              </div>
+            </div>
+          </div>
 
           <form role="form" method="post" class="formularioVenta">
 
@@ -996,7 +1020,7 @@ MODAL AGREGAR RETENCION
             '<!--Precio del producto (Debe mostrar el TOTAL de la fila)-->' +
             '<div class="col-xs-3 ingresoPrecio" style="padding-left:0px">' +
               '<div class="input-group">' +
-                '<span class="input-group-addon"><i class="ion ion-social-usd"></i></span>' +
+                //'<span class="input-group-addon"><i class="ion ion-social-usd"></i></span>' +
                 '<input type="text" class="form-control nuevoPrecioProducto" precioReal="' + precioUnitario + '" name="nuevoPrecioProducto" value="' + precioTotal + '" readonly required>' +
               '</div>' +
             '</div>' +

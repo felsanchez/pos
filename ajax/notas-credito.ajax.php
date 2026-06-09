@@ -155,4 +155,16 @@ if (isset($_POST["accion"]) && $_POST["accion"] == "firmarNotaCredito") {
     $firmarNC = new AjaxNotasCredito();
     $firmarNC->ajaxFirmarNotaCredito();
 }
+/*=============================================
+GUARDAR OBSERVACIÓN DE NOTA CRÉDITO
+=============================================*/
+if (isset($_POST["idNotaCreditoObservacion"])) {
+    $idNota         = intval($_POST["idNotaCreditoObservacion"]);
+    $nuevaObservacion = $_POST["nuevaObservacion"] ?? "";
+    $respuesta = ControladorFactus::ctrActualizarObservacionNC($idNota, $nuevaObservacion);
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+    echo json_encode(["resultado" => $respuesta]);
+    exit;
+}
 ?>

@@ -1,22 +1,35 @@
 <!-- Filtros -->
+<style>
+  .btn-daterange-ordv {
+    border-radius: 8px;
+    border: 1px solid #d2d6de;
+    background: #fff;
+    color: #555;
+    padding: 7px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: border-color 0.2s;
+  }
+  .btn-daterange-ordv:hover, .btn-daterange-ordv:focus {
+    border-color: #3c8dbc;
+    outline: none;
+    color: #333;
+  }
+</style>
 <div class="row">
   <div class="col-md-12">
-    <form id="filtroOrdenesVentasForm" class="form-inline" style="margin-bottom: 20px;">
-      <div class="form-group" style="margin-right: 15px;">
-        <label for="tipoFechaOrdenesVentas" style="margin-right: 5px;">Fecha:</label>
-        <select class="form-control" id="tipoFechaOrdenesVentas" name="tipo">
-          <option value="todo">Mostrar Todas</option>
-          <option value="hoy">Hoy</option>
-          <option value="ayer">Ayer</option>
-          <option value="mes" selected>Este mes</option>
-          <option value="personalizado">Personalizado</option>
-        </select>
-      </div>
-      <div class="form-group" id="fechasPersonalizadasOrdenesVentas" style="display: none; margin-right: 15px;">
-        <label style="margin-right: 5px;">Desde:</label>
-        <input type="date" class="form-control" id="fechaInicioOrdenesVentas" name="fecha_inicio">
-        <label style="margin: 0 5px;">Hasta:</label>
-        <input type="date" class="form-control" id="fechaFinOrdenesVentas" name="fecha_fin">
+    <form id="filtroOrdenesVentasForm" style="margin-bottom: 20px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span><b>Fecha:</b></span>
+        <button type="button" class="btn btn-default btn-daterange-ordv" id="daterange-btn-ordv">
+          <i class="fa fa-calendar"></i>
+          <span>Rango de fecha</span>
+          <i class="fa fa-caret-down"></i>
+        </button>
+        <input type="hidden" id="ordv-fecha-inicio" name="fecha_inicio">
+        <input type="hidden" id="ordv-fecha-fin" name="fecha_fin">
+        <input type="hidden" id="ordv-tipo" name="tipo" value="mes">
       </div>
       <button type="submit" class="btn btn-primary">
         <i class="fa fa-filter"></i> Filtrar
@@ -136,20 +149,58 @@
 let pieChartOrdenesVentas = null;
 let barChartConversionVentas = null;
 
-// Mostrar/ocultar fechas personalizadas
-document.getElementById('tipoFechaOrdenesVentas').addEventListener('change', function() {
-  const fechasPersonalizadas = document.getElementById('fechasPersonalizadasOrdenesVentas');
-  if (this.value === 'personalizado') {
-    fechasPersonalizadas.style.display = 'inline-block';
-  } else {
-    fechasPersonalizadas.style.display = 'none';
+// Inicializar DateRangePicker en Análisis de Órdenes de Venta
+$(document).ready(function () {
+  var ordvFechaInicio = moment().startOf('month').format('YYYY-MM-DD');
+  var ordvFechaFin = moment().endOf('month').format('YYYY-MM-DD');
+  $('#ordv-fecha-inicio').val(ordvFechaInicio);
+  $('#ordv-fecha-fin').val(ordvFechaFin);
+  $('#ordv-tipo').val('personalizado');
+  $('#daterange-btn-ordv span').text(moment().startOf('month').format('MMMM D, YYYY') + ' - ' + moment().endOf('month').format('MMMM D, YYYY'));
+
+  if (typeof $.fn.daterangepicker !== 'undefined') {
+    $('#daterange-btn-ordv').daterangepicker({
+      ranges: {
+        'Todas las fechas': [moment('2000-01-01'), moment()],
+        'Hoy': [moment(), moment()],
+        'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+        'Este mes': [moment().startOf('month'), moment().endOf('month')],
+        'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+      },
+      startDate: moment().startOf('month'),
+      endDate: moment().endOf('month'),
+      locale: { cancelLabel: 'Limpiar' }
+    }, function (start, end) {
+      $('#daterange-btn-ordv span').text(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+      $('#ordv-fecha-inicio').val(start.format('YYYY-MM-DD'));
+      $('#ordv-fecha-fin').val(end.format('YYYY-MM-DD'));
+      $('#ordv-tipo').val('personalizado');
+    });
+
+    $('#daterange-btn-ordv').on('cancel.daterangepicker', function () {
+      $(this).find('span').text('Rango de fecha');
+      $('#ordv-fecha-inicio').val('');
+      $('#ordv-fecha-fin').val('');
+      $('#ordv-tipo').val('todo');
+    });
   }
 });
 
+// Mostrar/ocultar fechas personalizadas - obsoleto, mantenido por compatibilidad
+
 // Función para cargar datos
 function cargarDatosOrdenesVentas() {
-  const form = document.getElementById('filtroOrdenesVentasForm');
-  const formData = new FormData(form);
+  const tipo = document.getElementById('ordv-tipo').value;
+  const fechaInicio = document.getElementById('ordv-fecha-inicio').value;
+  const fechaFin = document.getElementById('ordv-fecha-fin').value;
+
+  const formData = new FormData();
+  formData.append('tipo', tipo);
+  if (tipo === 'personalizado' && fechaInicio && fechaFin) {
+    formData.append('fecha_inicio', fechaInicio);
+    formData.append('fecha_fin', fechaFin);
+  }
 
   // Agregar id_bodega del filtro maestro si existe
   const idBodega = $('#sucursalReporteMaestro').val();

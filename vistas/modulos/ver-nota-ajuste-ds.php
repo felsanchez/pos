@@ -128,7 +128,7 @@ $listaProducto = json_decode($nota["productos"], true);
                                         <strong>Municipio:</strong> <?php
                                         if (!empty($proveedor["municipio_id"])) {
                                             $mun = ModeloFactus::mdlMostrarMunicipioPorId($proveedor["municipio_id"]);
-                                            echo $mun ? $mun["nombre"] : $proveedor["municipio_id"];
+                                            echo $mun ? ($mun["nombre"] . (!empty($mun["departamento"]) ? ' - ' . $mun["departamento"] : '')) : $proveedor["municipio_id"];
                                         } else {
                                             echo "No definido";
                                         }

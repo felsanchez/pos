@@ -60,9 +60,13 @@ if ($_SESSION["perfil"] == "Especial") {
                     </button>
                 <?php endif; ?>
 
-                <!-- Filtro por Sucursal (Administradores) -->
-                <?php if (stripos($_SESSION["perfil"], "Admin") !== false): ?>
-                    <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 5px;">
+                <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 5px;">
+
+                    <input type="hidden" id="fechaInicialNA" value="">
+                    <input type="hidden" id="fechaFinalNA" value="">
+
+                    <!-- Filtro por Sucursal (Administradores) -->
+                    <?php if (stripos($_SESSION["perfil"], "Admin") !== false): ?>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <span class="hidden-xs"><b>Sucursal:</b></span>
                             <div class="input-group" style="width: 200px;">
@@ -87,8 +91,24 @@ if ($_SESSION["perfil"] == "Especial") {
                                 </select>
                             </div>
                         </div>
+                    <?php endif; ?>
+
+                    <!-- Botón Rango de Fecha -->
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="hidden-xs"><b>Fecha:</b></span>
+                        <button type="button" class="btn btn-default" id="daterange-btn-na">
+                            <span>
+                                <i class="fa fa-calendar"></i> Mostrar todas
+                            </span>
+                            <i class="fa fa-caret-down"></i>
+                        </button>
                     </div>
-                <?php endif; ?>
+
+                    <!-- Botón Limpiar -->
+                    <button class="btn btn-default" id="btnLimpiarFiltrosNA" title="Limpiar filtros">
+                        <i class="fa fa-refresh"></i>
+                    </button>
+                </div>
             </div>
 
             <style>
@@ -205,6 +225,8 @@ MODAL ENVIAR EMAIL NOTA AJUSTE
                         "data": function(d) {
                             d.accion = "mostrarNotasAjusteDSServerSide";
                             d.idBodega = $("#sucursal_na").val();
+                            d.fechaInicial = $("#fechaInicialNA").val();
+                            d.fechaFinal = $("#fechaFinalNA").val();
                         }
                     },
                     "autoWidth": false,
@@ -265,6 +287,67 @@ MODAL ENVIAR EMAIL NOTA AJUSTE
                 tablaListadoNotasAjusteDS.ajax.reload();
             } else {
                 cargarTablaNotasAjusteDS();
+            }
+        });
+
+        /*=============================================
+        RANGO DE FECHAS NOTAS AJUSTE DS
+        =============================================*/
+        if ($('#daterange-btn-na').length > 0 && typeof $.fn.daterangepicker !== 'undefined') {
+            $('#daterange-btn-na span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+
+            $('#daterange-btn-na').daterangepicker(
+                {
+                    ranges: {
+                        'Mostrar todas': [moment('2000-01-01'), moment()],
+                        'Hoy': [moment(), moment()],
+                        'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                        'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+                        'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
+                        'Este mes': [moment().startOf('month'), moment().endOf('month')],
+                        'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                    },
+                    startDate: moment(),
+                    endDate: moment()
+                },
+                function (start, end) {
+                    if (start.format('YYYY-MM-DD') === '2000-01-01') {
+                        $('#daterange-btn-na span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+                        $('#fechaInicialNA').val('');
+                        $('#fechaFinalNA').val('');
+                    } else {
+                        $('#daterange-btn-na span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                        $('#fechaInicialNA').val(start.format('YYYY-MM-DD'));
+                        $('#fechaFinalNA').val(end.format('YYYY-MM-DD'));
+                    }
+                    if (tablaListadoNotasAjusteDS) {
+                        tablaListadoNotasAjusteDS.ajax.reload();
+                    }
+                }
+            );
+
+            $('#daterange-btn-na').on('cancel.daterangepicker', function () {
+                $(this).find('span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+                $('#fechaInicialNA').val('');
+                $('#fechaFinalNA').val('');
+                if (tablaListadoNotasAjusteDS) {
+                    tablaListadoNotasAjusteDS.ajax.reload();
+                }
+            });
+        }
+
+        /*=============================================
+        LIMPIAR FILTROS NOTAS AJUSTE DS
+        =============================================*/
+        $(document).on("click", "#btnLimpiarFiltrosNA", function() {
+            if ($("#sucursal_na").length > 0) {
+                $("#sucursal_na").val('').trigger("change.select2");
+            }
+            $("#fechaInicialNA").val("");
+            $("#fechaFinalNA").val("");
+            $('#daterange-btn-na span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+            if (tablaListadoNotasAjusteDS) {
+                tablaListadoNotasAjusteDS.ajax.reload();
             }
         });
     });

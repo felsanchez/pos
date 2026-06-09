@@ -248,30 +248,58 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
 
                     $respuesta = ControladorProductos::ctrMostrarProductos($item, $valor, $orden);
 
-                    $stockAntiguo = $respuesta["stock"] + $value["cantidad"];
+                    $tasa_impuesto = 0;
+                    $tributo_id = null;
+                    $precio_venta = 0;
+                    $stock_respuesta = 0;
+                    if ($respuesta) {
+                      $tasa_impuesto = isset($respuesta["tasa_impuesto"]) ? $respuesta["tasa_impuesto"] : 0;
+                      $tributo_id = isset($respuesta["tributo_id"]) ? $respuesta["tributo_id"] : null;
+                      $precio_venta = isset($respuesta["precio_venta"]) ? $respuesta["precio_venta"] : 0;
+                      $stock_respuesta = isset($respuesta["stock"]) ? $respuesta["stock"] : 0;
+                    }
+
+                    $stockAntiguo = $stock_respuesta + $value["cantidad"];
 
                     // Verificar si es una variante para agregar campos hidden
                   
                     $camposVariante = '';
+                    $attrVariante = '';
 
                     if (isset($value["esVariante"]) && $value["esVariante"] == "1") {
-
+                      $attrVariante = ' esVariante="1" idVariante="' . $value["idVariante"] . '" skuVariante="' . $value["skuVariante"] . '"';
                       $camposVariante = '<input type="hidden" class="esVariante" value="1">
+                                         <input type="hidden" class="idVarianteProducto" value="' . $value["idVariante"] . '">
+                                         <input type="hidden" class="skuVariante" value="' . $value["skuVariante"] . '">';
+                    }
 
-                                                   <input type="hidden" class="idVarianteProducto" value="' . $value["idVariante"] . '">
-
-                                                   <input type="hidden" class="skuVariante" value="' . $value["skuVariante"] . '">';
+                    $impuestoPorcentaje = isset($value["impuesto"]) ? $value["impuesto"] : $tasa_impuesto;
+                    $impuestoPorcentaje = floatval($impuestoPorcentaje);
+                    
+                    $impuestoNombre = "IVA 19%"; // default fallback
+                    if (!empty($tributo_id)) {
+                      require_once "modelos/factus.modelo.php";
+                      $tributo = ModeloFactus::mdlMostrarTributo($tributo_id);
+                      if ($tributo) {
+                        $impuestoNombre = $tributo["nombre"];
+                      }
+                    }
+                    
+                    $parts = preg_split('/[0-9]/', $impuestoNombre);
+                    $nombreCorto = isset($parts[0]) ? trim(str_replace('%', '', $parts[0])) : "IVA";
+                    if (empty($nombreCorto)) {
+                      $nombreCorto = "IVA";
                     }
 
                     echo '<div class="row" style="padding:5px 15px"> 
 
-                            <div class="col-xs-6" style="padding-right:0px"> 
+                            <div class="col-xs-5" style="padding-right:0px"> 
 
                               <div class="input-group"> 
 
                                  <span class="input-group-addon"><button type="button" class="btn btn-danger btn-xs quitarProducto" idProducto="' . $value["id"] . '"><i class="fa fa-times"></i></button></span>
 
-                                  <input type="text" class="form-control nuevaDescripcionProducto" idProducto="' . $value["id"] . '" name="agregarProducto" value="' . $value["descripcion"] . '" readonly required>
+                                  <input type="text" class="form-control nuevaDescripcionProducto" idProducto="' . $value["id"] . '" name="agregarProducto" value="' . $value["descripcion"] . '"' . $attrVariante . ' readonly required>
 
                                  ' . $camposVariante . '
                                           
@@ -279,7 +307,13 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
 
                             </div>
 
-                            <div class="col-xs-3">
+                            <div class="col-xs-2 ingresoImpuesto">
+
+                              <input type="text" class="form-control nuevoImpuestoProducto" name="nuevoImpuestoProducto" value="' . $nombreCorto . ' ' . $impuestoPorcentaje . '%" porcentaje="' . $impuestoPorcentaje . '" impuestoNombre="' . $impuestoNombre . '" readonly required>
+
+                            </div>
+
+                            <div class="col-xs-2">
                                        
                                 <input type="number" class="form-control nuevaCantidadProducto" name="nuevaCantidadProducto" min="1" value="' . $value["cantidad"] . '" stock="' . $stockAntiguo . '" nuevoStock="' . $value["stock"] . '" required>
 
@@ -291,7 +325,7 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
                                 <div class="input-group">
                                     
                                           
-                                    <input type="text" class="form-control nuevoPrecioProducto" precioReal="' . $respuesta["precio_venta"] . '" name="nuevoPrecioProducto" value="' . $value["total"] . '" readonly required>
+                                    <input type="text" class="form-control nuevoPrecioProducto" precioReal="' . $precio_venta . '" name="nuevoPrecioProducto" value="' . $value["total"] . '" readonly required>
 
                                 </div>
 
@@ -312,8 +346,10 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
                        BOTON PARA AGREGAR PRODUCTO
                        ======================================-->
 
-                <!--<button type="button" class="btn btn-default btnAgregarProducto solo-movil">Agregar producto</button>-->
-                <button type="button" class="btn btn-default btnAgregarProducto solo-movil">Agregar producto</button>
+                <!--BTN SE MUESTRA EN CELULARES (xs) Y TABLETS (sm, md)-->
+                <button type="button" class="btn btn-warning btn-block btnAgregarProducto visible-xs visible-sm visible-md" style="margin-top: 10px; margin-bottom: 15px; font-weight: bold;">
+                  <i class="fa fa-plus"></i> Agregar producto
+                </button>
 
                 <hr>
 
@@ -813,6 +849,14 @@ MODAL AGREGAR RETENCION
 <!-- Script para inicializar el descuento al cargar la página -->
 <script>
   $(document).ready(function () {
+    // Asegurarse de recalcular los totales e impuestos al cargar
+    try {
+      sumarTotalPrecios();
+      sumarTotalImpuestos();
+    } catch(e) {
+      console.error("Error al inicializar totales: ", e);
+    }
+
     // Si hay un descuento aplicado, recalcular el total al cargar
     if ($("#tipoDescuento").val() !== "") {
       // Asegurarse de que el atributo 'total' esté configurado
@@ -913,4 +957,50 @@ MODAL AGREGAR RETENCION
     }
 
   });
+</script>
+
+<script>
+/* =============================================
+   VALIDAR DOCUMENTO DUPLICADO - MODAL AGREGAR CLIENTE
+   (editar-orden)
+   ============================================= */
+$(document).on("submit", "#modalAgregarCliente form", function (e) {
+  e.preventDefault();
+  var form = this;
+  var documento = $(form).find('[name="nuevoDocumentoId"]').val();
+
+  if (!documento || documento.trim() === "") {
+    return; // La validación HTML nativa de "required" se encargará
+  }
+
+  var csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+  $.ajax({
+    url: "ajax/clientes.ajax.php",
+    method: "POST",
+    data: {
+      validarDocumento: documento,
+      csrf_token: csrfToken
+    },
+    dataType: "json",
+    success: function (respuesta) {
+      if (respuesta.existe) {
+        swal({
+          type: "warning",
+          title: "Documento ya registrado",
+          text: respuesta.mensaje,
+          showConfirmButton: true,
+          confirmButtonText: "Entendido"
+        });
+      } else {
+        // No hay duplicado, enviar el formulario normalmente
+        form.submit();
+      }
+    },
+    error: function () {
+      // Si hay error de conexión, permitir envío para no bloquear al usuario
+      form.submit();
+    }
+  });
+});
 </script>

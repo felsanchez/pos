@@ -97,6 +97,8 @@ $retencionesDS = !empty($documentoSoporte["retenciones"]) ? json_decode($documen
                                         $labelNombre = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1') ? 'Razón Social' : 'Nombre Empresa';
                                         $nombreEmisor = isset($configFactus['nombre_empresa']) && !empty($configFactus['nombre_empresa']) ? $configFactus['nombre_empresa'] : ($configuracion["nombre_empresa"] ?? 'Nombre Empresa');
                                         $nitEmisor = isset($configFactus['nit_empresa']) && !empty($configFactus['nit_empresa']) ? $configFactus['nit_empresa'] : ($configuracion["nit"] ?? '');
+                                        $dvEmisor = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1' && isset($configFactus['dv']) && $configFactus['dv'] !== '') ? ' - ' . $configFactus['dv'] : '';
+                                        $nitConDv = $nitEmisor . $dvEmisor;
                                         $direccionEmisor = isset($configFactus['direccion_empresa']) && !empty($configFactus['direccion_empresa']) ? $configFactus['direccion_empresa'] : ($configuracion["direccion"] ?? '');
                                         $telefonoEmisor = isset($configFactus['telefono_empresa']) && !empty($configFactus['telefono_empresa']) ? $configFactus['telefono_empresa'] : ($configuracion["telefono"] ?? '');
                                         $emailEmisor = isset($configFactus['email_empresa']) && !empty($configFactus['email_empresa']) ? $configFactus['email_empresa'] : ($configuracion["correo"] ?? '');
@@ -115,7 +117,7 @@ $retencionesDS = !empty($documentoSoporte["retenciones"]) ? json_decode($documen
                                         ?>
                                         <strong><?php echo $labelNombre; ?>:</strong><br>
                                         <?php echo $nombreEmisor; ?><br>
-                                        <strong>NIT:</strong> <?php echo $nitEmisor; ?><br>
+                                        <strong>NIT:</strong> <?php echo $nitConDv; ?><br>
                                         <strong>Dirección:</strong> <?php echo $direccionEmisor; ?><br>
                                         <?php if(!empty($municipioEmisor)): ?>
                                         <strong>Municipio:</strong> <?php echo $municipioEmisor; ?><br>
@@ -137,7 +139,7 @@ $retencionesDS = !empty($documentoSoporte["retenciones"]) ? json_decode($documen
                                         <strong>Municipio:</strong> <?php
                                         if (!empty($proveedor["municipio_id"])) {
                                             $mun = ModeloFactus::mdlMostrarMunicipioPorId($proveedor["municipio_id"]);
-                                            echo $mun ? $mun["nombre"] : $proveedor["municipio_id"];
+                                            echo $mun ? ($mun["nombre"] . (!empty($mun["departamento"]) ? ' - ' . $mun["departamento"] : '')) : $proveedor["municipio_id"];
                                         } else {
                                             echo "No definido";
                                         }

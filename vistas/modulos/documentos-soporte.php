@@ -56,9 +56,13 @@
                     </button>
                 <?php endif; ?>
 
-                <!-- Filtro por Sucursal (Administradores) -->
-                <?php if (stripos($_SESSION["perfil"], "Admin") !== false): ?>
-                    <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 5px;">
+                <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 5px;">
+                    
+                    <input type="hidden" id="fechaInicialDS" value="">
+                    <input type="hidden" id="fechaFinalDS" value="">
+
+                    <!-- Filtro por Sucursal (Administradores) -->
+                    <?php if (stripos($_SESSION["perfil"], "Admin") !== false): ?>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <span class="hidden-xs"><b>Sucursal:</b></span>
                             <div class="input-group" style="width: 200px;">
@@ -83,8 +87,24 @@
                                 </select>
                             </div>
                         </div>
+                    <?php endif; ?>
+
+                    <!-- Botón Rango de Fecha -->
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="hidden-xs"><b>Fecha:</b></span>
+                        <button type="button" class="btn btn-default" id="daterange-btn-ds">
+                            <span>
+                                <i class="fa fa-calendar"></i> Mostrar todas
+                            </span>
+                            <i class="fa fa-caret-down"></i>
+                        </button>
                     </div>
-                <?php endif; ?>
+
+                    <!-- Botón Limpiar -->
+                    <button class="btn btn-default" id="btnLimpiarFiltrosDS" title="Limpiar filtros">
+                        <i class="fa fa-refresh"></i>
+                    </button>
+                </div>
 
             </div>
 

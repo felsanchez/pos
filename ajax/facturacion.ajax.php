@@ -99,6 +99,8 @@ class AjaxFacturacion
         $telefonoEmisor = isset($configFactus['telefono_empresa']) && !empty($configFactus['telefono_empresa']) ? $configFactus['telefono_empresa'] : ($configuracion["telefono"] ?? '');
         $emailEmisor = isset($configFactus['email_empresa']) && !empty($configFactus['email_empresa']) ? $configFactus['email_empresa'] : ($configuracion["correo"] ?? '');
         $labelNombreEmisor = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1') ? 'Razón Social' : 'Nombre Empresa';
+        $dvEmisor = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1' && isset($configFactus['dv']) && $configFactus['dv'] !== '') ? ' - ' . $configFactus['dv'] : '';
+        $nitConDv = $nitEmisor . $dvEmisor;
 
         $htmlLogo = '';
         if (isset($configFactus['logo_empresa']) && !empty($configFactus['logo_empresa'])) {
@@ -128,7 +130,7 @@ class AjaxFacturacion
                 <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Empresa</span><br><br>
                     <strong>' . $labelNombreEmisor . ':</strong> ' . $nombreEmpresa . '<br>
-                    <strong>NIT:</strong> ' . $nitEmisor . '<br>
+                    <strong>NIT:</strong> ' . $nitConDv . '<br>
                     <strong>Dirección:</strong> ' . $direccionEmisor . '<br>
                     <strong>Teléfono:</strong> ' . $telefonoEmisor . '<br>
                     <strong>Email:</strong> ' . $emailEmisor . '
@@ -136,7 +138,7 @@ class AjaxFacturacion
                 <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Cliente</span><br><br>
                     <strong>Cliente:</strong> ' . ($cliente["nombre"] ?? '') . '<br>
-                    <strong>Documento:</strong> ' . ($cliente["documento"] ?? '') . '<br>
+                    <strong>Documento:</strong> ' . ($cliente["documento"] ?? '') . (($cliente["tipo_documento_id"] ?? 0) == 6 && !empty($cliente["digito_verificacion"]) ? '-' . $cliente["digito_verificacion"] : '') . '<br>
                     <strong>Dirección:</strong> ' . ($cliente["direccion"] ?? '') . '<br>
                     <strong>Ciudad:</strong> ' . ($cliente["ciudad"] ?? '') . '<br>
                     <strong>Teléfono:</strong> ' . ($cliente["telefono"] ?? '') . '<br>
@@ -406,6 +408,8 @@ class AjaxFacturacion
         $telefonoEmisor = isset($configFactus['telefono_empresa']) && !empty($configFactus['telefono_empresa']) ? $configFactus['telefono_empresa'] : ($configuracion["telefono"] ?? '');
         $emailEmisor = isset($configFactus['email_empresa']) && !empty($configFactus['email_empresa']) ? $configFactus['email_empresa'] : ($configuracion["correo"] ?? '');
         $labelNombreEmisor = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1') ? 'Razón Social' : 'Nombre Empresa';
+        $dvEmisor = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1' && isset($configFactus['dv']) && $configFactus['dv'] !== '') ? ' - ' . $configFactus['dv'] : '';
+        $nitConDv = $nitEmisor . $dvEmisor;
 
         $htmlLogo = '';
         if (isset($configFactus['logo_empresa']) && !empty($configFactus['logo_empresa'])) {
@@ -435,7 +439,7 @@ class AjaxFacturacion
                 <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Emisor</span><br><br>
                     <strong>' . $labelNombreEmisor . ':</strong> ' . $nombreEmpresa . '<br>
-                    <strong>NIT:</strong> ' . $nitEmisor . '<br>
+                    <strong>NIT:</strong> ' . $nitConDv . '<br>
                     <strong>Dirección:</strong> ' . $direccionEmisor . '<br>
                     <strong>Teléfono:</strong> ' . $telefonoEmisor . '<br>
                     <strong>Email:</strong> ' . $emailEmisor . '
@@ -443,7 +447,7 @@ class AjaxFacturacion
                 <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Cliente</span><br><br>
                     <strong>Cliente:</strong> ' . ($cliente["nombre"] ?? 'Consumidor Final') . '<br>
-                    <strong>Documento:</strong> ' . ($cliente["documento"] ?? '') . '<br>
+                    <strong>Documento:</strong> ' . ($cliente["documento"] ?? '') . (($cliente["tipo_documento_id"] ?? 0) == 6 && !empty($cliente["digito_verificacion"]) ? '-' . $cliente["digito_verificacion"] : '') . '<br>
                     <strong>Dirección:</strong> ' . ($cliente["direccion"] ?? '') . '<br>
                     <strong>Ciudad:</strong> ' . ($cliente["ciudad"] ?? '') . '<br>
                     <strong>Teléfono:</strong> ' . ($cliente["telefono"] ?? '') . '<br>
@@ -628,6 +632,8 @@ class AjaxFacturacion
         $telefonoEmisor = isset($configFactus['telefono_empresa']) && !empty($configFactus['telefono_empresa']) ? $configFactus['telefono_empresa'] : ($configuracion["telefono"] ?? '');
         $emailEmisor = isset($configFactus['email_empresa']) && !empty($configFactus['email_empresa']) ? $configFactus['email_empresa'] : ($configuracion["correo"] ?? '');
         $labelNombreEmisor = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1') ? 'Razón Social' : 'Nombre Empresa';
+        $dvEmisor = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1' && isset($configFactus['dv']) && $configFactus['dv'] !== '') ? ' - ' . $configFactus['dv'] : '';
+        $nitConDv = $nitEmisor . $dvEmisor;
 
         $htmlLogo = '';
         if (isset($configFactus['logo_empresa']) && !empty($configFactus['logo_empresa'])) {
@@ -663,7 +669,7 @@ class AjaxFacturacion
                 <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Comprador (Emisor)</span><br><br>
                     <strong>' . $labelNombreEmisor . ':</strong> ' . $nombreEmpresa . '<br>
-                    <strong>NIT:</strong> ' . $nitEmisor . '<br>
+                    <strong>NIT:</strong> ' . $nitConDv . '<br>
                     <strong>Dirección:</strong> ' . $direccionEmisor . '<br>
                     <strong>Teléfono:</strong> ' . $telefonoEmisor . '<br>
                     <strong>Email:</strong> ' . $emailEmisor . '
@@ -859,6 +865,8 @@ class AjaxFacturacion
         $telefonoEmisor = isset($configFactus['telefono_empresa']) && !empty($configFactus['telefono_empresa']) ? $configFactus['telefono_empresa'] : ($configuracion["telefono"] ?? '');
         $emailEmisor = isset($configFactus['email_empresa']) && !empty($configFactus['email_empresa']) ? $configFactus['email_empresa'] : ($configuracion["correo"] ?? '');
         $labelNombreEmisor = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1') ? 'Razón Social' : 'Nombre Empresa';
+        $dvEmisor = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1' && isset($configFactus['dv']) && $configFactus['dv'] !== '') ? ' - ' . $configFactus['dv'] : '';
+        $nitConDv = $nitEmisor . $dvEmisor;
 
         $htmlLogo = '';
         if (isset($configFactus['logo_empresa']) && !empty($configFactus['logo_empresa'])) {
@@ -903,7 +911,7 @@ class AjaxFacturacion
                 <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Comprador (Emisor)</span><br><br>
                     <strong>' . $labelNombreEmisor . ':</strong> ' . $nombreEmpresa . '<br>
-                    <strong>NIT:</strong> ' . $nitEmisor . '<br>
+                    <strong>NIT:</strong> ' . $nitConDv . '<br>
                     <strong>Dirección:</strong> ' . $direccionEmisor . '<br>
                     <strong>Teléfono:</strong> ' . $telefonoEmisor . '<br>
                     <strong>Email:</strong> ' . $emailEmisor . '

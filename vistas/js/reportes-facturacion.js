@@ -33,7 +33,7 @@ $(document).ready(function () {
     $('#daterange-btn-reportes').daterangepicker(
         {
             ranges: {
-                'Todos los documentos': [moment().subtract(20, 'years'), moment()],
+                'Todas las fechas': [moment().subtract(20, 'years'), moment()],
                 'Hoy': [moment(), moment()],
                 'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
                 'Últimos 7 días': [moment().subtract(6, 'days'), moment()],

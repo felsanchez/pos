@@ -22,12 +22,6 @@
     font-size: 12px;
   }
 
-  .filtro-financiero select,
-  .filtro-financiero input[type="date"] {
-    border-radius: 8px;
-    margin-bottom: 10px;
-  }
-
   .filtros-grid-fin {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -41,6 +35,27 @@
   .btn-filtrar-fin {
     margin-top: 25px;
   }
+
+  .btn-daterange-fin {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #d2d6de;
+    background: #fff;
+    color: #555;
+    text-align: left;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: border-color 0.2s;
+    margin-bottom: 10px;
+  }
+  .btn-daterange-fin:hover, .btn-daterange-fin:focus {
+    border-color: #3c8dbc;
+    outline: none;
+    color: #333;
+  }
+  .btn-daterange-fin span { flex: 1; }
 </style>
 
 <!-- Filtros del reporte financiero -->
@@ -50,24 +65,14 @@
 
       <!-- Filtro de fecha -->
       <div class="filtro-grupo-fin">
-        <label for="tipo-fecha-fin">Fecha:</label>
-        <select id="tipo-fecha-fin" name="tipo" class="form-control">
-          <option value="todo" selected>Mostrar Todas</option>
-          <option value="hoy">Hoy</option>
-          <option value="ayer">Ayer</option>
-          <option value="mes">Mes actual</option>
-          <option value="personalizado">Personalizado</option>
-        </select>
-
-        <div id="campo-desde-fin" class="form-group" style="display:none;">
-          <label for="fecha-desde-fin">Desde</label>
-          <input type="date" id="fecha-desde-fin" name="fecha_inicio" class="form-control">
-        </div>
-
-        <div id="campo-hasta-fin" class="form-group" style="display:none;">
-          <label for="fecha-hasta-fin">Hasta</label>
-          <input type="date" id="fecha-hasta-fin" name="fecha_fin" class="form-control">
-        </div>
+        <label>Fecha:</label>
+        <button type="button" class="btn btn-default btn-daterange-fin" id="daterange-btn-fin">
+          <span><i class="fa fa-calendar"></i> Rango de fecha</span>
+          <i class="fa fa-caret-down"></i>
+        </button>
+        <input type="hidden" id="fin-fecha-inicio" name="fecha_inicio">
+        <input type="hidden" id="fin-fecha-fin" name="fecha_fin">
+        <input type="hidden" id="fin-tipo" name="tipo" value="todo">
       </div>
 
       <!-- Filtro por categoría de gasto -->
@@ -272,12 +277,39 @@
   // Colores para categorías
   const coloresCategoria = ['#dd4b39', '#f39c12', '#00c0ef', '#00a65a', '#605ca8', '#d2d6de', '#3c8dbc', '#ff851b', '#39cccc', '#f56954'];
 
+  // Inicializar DateRangePicker
+  if (typeof $.fn.daterangepicker !== 'undefined') {
+    $('#daterange-btn-fin').daterangepicker({
+      ranges: {
+        'Todas las fechas': [moment('2000-01-01'), moment()],
+        'Hoy': [moment(), moment()],
+        'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+        'Este mes': [moment().startOf('month'), moment().endOf('month')],
+        'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+      },
+      startDate: moment().subtract(29, 'days'),
+      endDate: moment(),
+      locale: { cancelLabel: 'Limpiar' }
+    }, function (start, end) {
+      $('#daterange-btn-fin span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+      $('#fin-fecha-inicio').val(start.format('YYYY-MM-DD'));
+      $('#fin-fecha-fin').val(end.format('YYYY-MM-DD'));
+      $('#fin-tipo').val('personalizado');
+      document.getElementById('filtro-financiero').dispatchEvent(new Event('submit'));
+    });
+
+    $('#daterange-btn-fin').on('cancel.daterangepicker', function () {
+      $(this).find('span').html('<i class="fa fa-calendar"></i> Rango de fecha');
+      $('#fin-fecha-inicio').val('');
+      $('#fin-fecha-fin').val('');
+      $('#fin-tipo').val('todo');
+      document.getElementById('filtro-financiero').dispatchEvent(new Event('submit'));
+    });
+  }
+
   // Mostrar campos personalizados
-  document.getElementById('tipo-fecha-fin').addEventListener('change', function () {
-    const tipo = this.value;
-    document.getElementById('campo-desde-fin').style.display = tipo === 'personalizado' ? 'block' : 'none';
-    document.getElementById('campo-hasta-fin').style.display = tipo === 'personalizado' ? 'block' : 'none';
-  });
+  // (removed - now handled by daterangepicker)
 
   // Cargar datos al inicio
   window.addEventListener('DOMContentLoaded', function () {
@@ -288,9 +320,9 @@
   document.getElementById('filtro-financiero').addEventListener('submit', function (e) {
     e.preventDefault();
 
-    const tipo = document.getElementById('tipo-fecha-fin').value;
-    const fechaInicio = document.getElementById('fecha-desde-fin').value;
-    const fechaFin = document.getElementById('fecha-hasta-fin').value;
+    const tipo = document.getElementById('fin-tipo').value;
+    const fechaInicio = document.getElementById('fin-fecha-inicio').value;
+    const fechaFin = document.getElementById('fin-fecha-fin').value;
     const idCategoria = document.getElementById('filtro-categoria-gasto').value;
     const tipoIngreso = document.getElementById('filtro-tipo-ingreso').value;
 
@@ -299,10 +331,7 @@
     formData.append('tipo_ingreso', tipoIngreso);
 
     if (tipo === 'personalizado') {
-      if (!fechaInicio || !fechaFin) {
-        alert("Selecciona ambas fechas para el filtro personalizado.");
-        return;
-      }
+      if (!fechaInicio || !fechaFin) return;
       formData.append('fecha_inicio', fechaInicio);
       formData.append('fecha_fin', fechaFin);
     }

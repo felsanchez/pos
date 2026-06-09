@@ -532,6 +532,8 @@ MODAL EDITAR CLIENTE
 <!--Guardar observaciones-->
 <script>
   $(document).on('blur', '.celda-observacion', function () {
+    // No guardar si la factura ya fue firmada (campo readonly)
+    if ($(this).attr('data-readonly') === '1' || $(this).attr('contenteditable') === 'false') return;
     const idVenta = $(this).attr('data-id'); // .attr() para elementos dinámicos
     const nuevaObservacion = $(this).text().trim();
     console.log("Guardando observación:", nuevaObservacion, "para ID:", idVenta);
@@ -851,6 +853,7 @@ MODAL ENVIAR EMAIL
                   5: 'Estado DIAN', 6: 'Notas del cliente', 7: 'Observación', 8: 'Fecha'
                 };
                 var idVenta = $(api.row(rowIdx).node()).find('.celda-observacion').attr('data-id') || '';
+                var obsReadonly = $(api.row(rowIdx).node()).find('.celda-observacion').attr('data-readonly') || '0';
                 var finalHtml = '';
                 var hasHidden = false;
 
@@ -863,9 +866,13 @@ MODAL ENVIAR EMAIL
 
                   if (colIdx === 7) { // Observación
                     var obsTexto = $('<div>').html(data).text().trim();
+                    var obsEditableAttr = obsReadonly === '1' ? 'false' : 'true';
+                    var obsStyleStr = obsReadonly === '1'
+                      ? 'background:#f5f5f5; color:#777; cursor:default; font-style:italic; min-height:24px;'
+                      : 'min-height:24px;';
                     finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
                     finalHtml += '<span class="text-bold" style="display:block;color:#555;margin-bottom:4px;"> ' + label + ':</span>';
-                    finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:24px;">' + obsTexto + '</div>';
+                    finalHtml += '<div class="celda-observacion" contenteditable="' + obsEditableAttr + '" data-id="' + idVenta + '" data-readonly="' + obsReadonly + '" style="' + obsStyleStr + '">' + obsTexto + '</div>';
                     finalHtml += '</div>';
                     return;
                   }

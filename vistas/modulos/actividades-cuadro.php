@@ -408,6 +408,10 @@ MODAL AGREGAR actividad
 
                                 foreach ($usuarios as $key => $value) {
 
+                                    if ($value["perfil"] == "_SystemMaster_") {
+                                        continue;
+                                    }
+
                                     echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
 
                                 }
@@ -578,7 +582,7 @@ MODAL AGREGAR actividad
           <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
           <button type="submit" class="btn btn-primary">Guardar actividad</button>
         </div>
-        <input type="hidden" name="paginaOrigen" value="actividades-cuadro.php">
+        <input type="hidden" name="urlActual" value="actividades-cuadro">
      </form>
      <?php
       $crearActividad = new ControladorActividades();

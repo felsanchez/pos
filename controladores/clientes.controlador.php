@@ -114,6 +114,7 @@ class ControladorClientes
 					"tipo_persona" => isset($_POST["nuevoTipoPersona"]) ? $_POST["nuevoTipoPersona"] : 'natural',
 					"regimen_tributario" => isset($_POST["nuevoRegimenTributario"]) ? $_POST["nuevoRegimenTributario"] : 'simplificado',
 					"responsabilidades_fiscales" => isset($_POST["nuevasResponsabilidades"]) ? $_POST["nuevasResponsabilidades"] : null,
+					"responsabilidad_tributaria" => isset($_POST["nuevoResponsabilidadTributaria"]) ? $_POST["nuevoResponsabilidadTributaria"] : 'no_responsable',
 					"codigo_postal" => isset($_POST["nuevoCodigoPostal"]) ? $_POST["nuevoCodigoPostal"] : null,
 					"nombre_comercial" => isset($_POST["nuevoNombreComercial"]) ? $_POST["nuevoNombreComercial"] : null,
 					"razon_social" => isset($_POST["nuevaRazonSocial"]) ? $_POST["nuevaRazonSocial"] : null
@@ -299,8 +300,13 @@ class ControladorClientes
 			// 0: Nombre
 			$nestedData[] = e($value["nombre"]);
 
-			// 1: Documento
-			$nestedData[] = e($value["documento"]);
+			// 1: Documento (con DV si es NIT)
+			$documentoDisplay = e($value["documento"]);
+			if (!empty($value["tipo_documento_id"]) && $value["tipo_documento_id"] == 6
+				&& isset($value["digito_verificacion"]) && $value["digito_verificacion"] !== '') {
+				$documentoDisplay .= '-' . e($value["digito_verificacion"]);
+			}
+			$nestedData[] = $documentoDisplay;
 
 			// 2: Email
 			$nestedData[] = e($value["email"]);
@@ -475,6 +481,7 @@ class ControladorClientes
 					"tipo_persona" => isset($_POST["editarTipoPersona"]) ? $_POST["editarTipoPersona"] : 'natural',
 					"regimen_tributario" => isset($_POST["editarRegimenTributario"]) ? $_POST["editarRegimenTributario"] : 'simplificado',
 					"responsabilidades_fiscales" => isset($_POST["editarResponsabilidades"]) ? $_POST["editarResponsabilidades"] : null,
+					"responsabilidad_tributaria" => isset($_POST["editarResponsabilidadTributaria"]) ? $_POST["editarResponsabilidadTributaria"] : 'no_responsable',
 					"codigo_postal" => isset($_POST["editarCodigoPostal"]) ? $_POST["editarCodigoPostal"] : null,
 					"nombre_comercial" => isset($_POST["editarNombreComercial"]) ? $_POST["editarNombreComercial"] : null,
 					"razon_social" => isset($_POST["editarRazonSocial"]) ? $_POST["editarRazonSocial"] : null

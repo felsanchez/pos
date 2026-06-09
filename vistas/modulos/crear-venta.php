@@ -831,3 +831,49 @@ MODAL AGREGAR RETENCION
   </div> <!-- Fin de row -->
 </section> <!-- Fin de content -->
 </div> <!-- Fin de content-wrapper -->
+
+<script>
+/* =============================================
+   VALIDAR DOCUMENTO DUPLICADO - MODAL AGREGAR CLIENTE
+   (crear-venta)
+   ============================================= */
+$(document).on("submit", "#modalAgregarCliente form", function (e) {
+  e.preventDefault();
+  var form = this;
+  var documento = $(form).find('[name="nuevoDocumentoId"]').val();
+
+  if (!documento || documento.trim() === "") {
+    return; // La validación HTML nativa de "required" se encargará
+  }
+
+  var csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+  $.ajax({
+    url: "ajax/clientes.ajax.php",
+    method: "POST",
+    data: {
+      validarDocumento: documento,
+      csrf_token: csrfToken
+    },
+    dataType: "json",
+    success: function (respuesta) {
+      if (respuesta.existe) {
+        swal({
+          type: "warning",
+          title: "Documento ya registrado",
+          text: respuesta.mensaje,
+          showConfirmButton: true,
+          confirmButtonText: "Entendido"
+        });
+      } else {
+        // No hay duplicado, enviar el formulario normalmente
+        form.submit();
+      }
+    },
+    error: function () {
+      // Si hay error de conexión, permitir envío para no bloquear al usuario
+      form.submit();
+    }
+  });
+});
+</script>

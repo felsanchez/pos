@@ -76,7 +76,8 @@ if (!$configuracion) {
 									?>
 									<input type="checkbox" name="habilitarEdicionFactusGlobal" <?php echo $checkedBloqueo; ?>> <b>Habilitar Edición de Datos del Emisor en Configuración General</b>
 								</label>
-								<p class="help-block">Si activas esto, podrás editar los datos del emisor (NIT, Domicilio, etc.) en la página de Configuración General.</p>
+								<p class="help-block">Si activas esto, podrás editar los sgtes datos del emisor en Configuración. Estos datos deben coincidir con los registrados en Factus. 
+									(-Tipo de persona, -Razon social o nombre de Empresa, -Nombre Comercial, -El NIT no se edita ni en Factus, -Responsabilidades Fiscales, -Responsabilidad tributaria, -Actividad Económica).</p>
 							</div>
 						</div>
 					</div>

@@ -102,6 +102,11 @@ class imprimirDetalleFactura
         $telefonoEmisor = isset($configFactus['telefono_empresa']) && !empty($configFactus['telefono_empresa']) ? $configFactus['telefono_empresa'] : ($configuracion["telefono"] ?? '');
         $emailEmisor = isset($configFactus['email_empresa']) && !empty($configFactus['email_empresa']) ? $configFactus['email_empresa'] : ($configuracion["correo"] ?? '');
         $labelNombreEmisor = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1') ? 'Razón Social' : 'Nombre Empresa';
+        $dvEmisor = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1' && isset($configFactus['dv']) && $configFactus['dv'] !== '') ? ' - ' . $configFactus['dv'] : '';
+        $nitConDv = $nitEmisor . $dvEmisor;
+        $ciudadCliente = $cliente["ciudad"] ?? '';
+        $departamentoCliente = !empty($cliente["nombre_departamento"]) ? $cliente["nombre_departamento"] : ($cliente["departamento"] ?? '');
+        $ciudadConDeptoCliente = !empty($departamentoCliente) ? $ciudadCliente . ' - ' . $departamentoCliente : $ciudadCliente;
 
         $municipioEmisor = '';
         if (isset($configFactus['municipio_id']) && !empty($configFactus['municipio_id'])) {
@@ -145,7 +150,7 @@ class imprimirDetalleFactura
                 <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Empresa</span><br><br>
                     <strong>' . $labelNombreEmisor . ':</strong> ' . $nombreEmpresa . '<br>
-                    <strong>NIT:</strong> ' . $nitEmisor . '<br>
+                    <strong>NIT:</strong> ' . $nitConDv . '<br>
                     <strong>Dirección:</strong> ' . $direccionEmisor . '<br>' .
                     (!empty($municipioEmisor) ? '                    <strong>Municipio:</strong> ' . $municipioEmisor . '<br>' : '') . '
                     <strong>Teléfono:</strong> ' . $telefonoEmisor . '<br>
@@ -154,9 +159,9 @@ class imprimirDetalleFactura
                 <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Cliente</span><br><br>
                     <strong>Cliente:</strong> ' . ($cliente["nombre"] ?? '') . '<br>
-                    <strong>Documento:</strong> ' . ($cliente["documento"] ?? '') . '<br>
+                    <strong>Documento:</strong> ' . ($cliente["documento"] ?? '') . (($cliente["tipo_documento_id"] ?? 0) == 6 && !empty($cliente["digito_verificacion"]) ? '-' . $cliente["digito_verificacion"] : '') . '<br>
                     <strong>Dirección:</strong> ' . ($cliente["direccion"] ?? '') . '<br>
-                    <strong>Ciudad:</strong> ' . ($cliente["ciudad"] ?? '') . '<br>
+                    <strong>Municipio:</strong> ' . $ciudadConDeptoCliente . '<br>
                     <strong>Teléfono:</strong> ' . ($cliente["telefono"] ?? '') . '<br>
                     <strong>Email:</strong> ' . ($cliente["email"] ?? '') . '
                 </td>
@@ -270,7 +275,7 @@ class imprimirDetalleFactura
                 <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Empresa</span><br><br>
                     <strong>' . $labelNombreEmisor . ':</strong> ' . $nombreEmpresa . '<br>
-                    <strong>NIT:</strong> ' . $nitEmisor . '<br>
+                    <strong>NIT:</strong> ' . $nitConDv . '<br>
                     <strong>Dirección:</strong> ' . $direccionEmisor . '<br>' .
                     (!empty($municipioEmisor) ? '                    <strong>Municipio:</strong> ' . $municipioEmisor . '<br>' : '') . '
                     <strong>Teléfono:</strong> ' . $telefonoEmisor . '<br>
@@ -279,9 +284,9 @@ class imprimirDetalleFactura
                 <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Cliente</span><br><br>
                     <strong>Cliente:</strong> ' . ($cliente["nombre"] ?? '') . '<br>
-                    <strong>Documento:</strong> ' . ($cliente["documento"] ?? '') . '<br>
+                    <strong>Documento:</strong> ' . ($cliente["documento"] ?? '') . (($cliente["tipo_documento_id"] ?? 0) == 6 && !empty($cliente["digito_verificacion"]) ? '-' . $cliente["digito_verificacion"] : '') . '<br>
                     <strong>Dirección:</strong> ' . ($cliente["direccion"] ?? '') . '<br>
-                    <strong>Ciudad:</strong> ' . ($cliente["ciudad"] ?? '') . '<br>
+                    <strong>Municipio:</strong> ' . $ciudadConDeptoCliente . '<br>
                     <strong>Teléfono:</strong> ' . ($cliente["telefono"] ?? '') . '<br>
                     <strong>Email:</strong> ' . ($cliente["email"] ?? '') . '
                 </td>

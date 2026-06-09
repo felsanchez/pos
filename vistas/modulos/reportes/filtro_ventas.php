@@ -74,11 +74,20 @@ if (!empty($id_bodega) && $id_bodega !== 'todos') {
 }
 
 if (!empty($id_producto)) {
-  // El campo productos es un JSON, buscamos si contiene el id del producto
-  $filtrosComunes .= " AND (productos LIKE ? OR productos LIKE ? OR productos LIKE ?)";
-  $filtroParams[] = '%"id":"' . $id_producto . '"%';
-  $filtroParams[] = '%"id":' . $id_producto . ',%';
-  $filtroParams[] = '%"id":' . $id_producto . '}%';
+  if (strpos($id_producto, 'v_') === 0) {
+    // Es una variante de producto
+    $id_variante = substr($id_producto, 2);
+    $filtrosComunes .= " AND (productos LIKE ? OR productos LIKE ? OR productos LIKE ?)";
+    $filtroParams[] = '%"idVariante":"' . $id_variante . '"%';
+    $filtroParams[] = '%"idVariante":' . $id_variante . ',%';
+    $filtroParams[] = '%"idVariante":' . $id_variante . '}%';
+  } else {
+    // Es un producto base
+    $filtrosComunes .= " AND (productos LIKE ? OR productos LIKE ? OR productos LIKE ?)";
+    $filtroParams[] = '%"id":"' . $id_producto . '"%';
+    $filtroParams[] = '%"id":' . $id_producto . ',%';
+    $filtroParams[] = '%"id":' . $id_producto . '}%';
+  }
 }
 
 // Para las ventas también aplica el método de pago

@@ -35,9 +35,36 @@ if (!empty($configuracion["medios_pago"])) {
  // Obtener productos únicos (de la tabla productos)
 
 $conn = Conexion::conectar();
-$stmtProductos = $conn->prepare("SELECT id, descripcion FROM productos ORDER BY descripcion ASC");
+$stmtProductos = $conn->prepare("SELECT id, descripcion, tiene_variantes FROM productos ORDER BY descripcion ASC");
 $stmtProductos->execute();
 $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
+
+// Obtener todas las variantes activas con sus opciones
+$sqlVariantes = "
+  SELECT pv.id as id_variante, pv.id_producto, ov.nombre as opcion_nombre
+  FROM productos_variantes pv
+  INNER JOIN productos_variantes_opciones pvo ON pv.id = pvo.id_producto_variante
+  INNER JOIN opciones_variantes ov ON pvo.id_opcion_variante = ov.id
+  INNER JOIN tipos_variantes tv ON ov.id_tipo_variante = tv.id
+  WHERE pv.estado = 1
+  ORDER BY pv.id_producto, pv.id, tv.orden, ov.orden
+";
+$stmtVariantes = $conn->prepare($sqlVariantes);
+$stmtVariantes->execute();
+$varianteRows = $stmtVariantes->fetchAll(PDO::FETCH_ASSOC);
+
+$variantesAgrupadas = [];
+foreach ($varianteRows as $row) {
+    $idProd = $row['id_producto'];
+    $idVar = $row['id_variante'];
+    if (!isset($variantesAgrupadas[$idProd])) {
+        $variantesAgrupadas[$idProd] = [];
+    }
+    if (!isset($variantesAgrupadas[$idProd][$idVar])) {
+        $variantesAgrupadas[$idProd][$idVar] = [];
+    }
+    $variantesAgrupadas[$idProd][$idVar][] = $row['opcion_nombre'];
+}
 ?>
 
 <!--Estilo Filtro de fechas -->
@@ -102,6 +129,76 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
       transform: translateY(-1px);
       color: #fff;
     }
+    .btn-daterange-av {
+      width: 100%;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #dcdcdc;
+      background: #fff;
+      color: #555;
+      text-align: left;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .btn-daterange-av:hover, .btn-daterange-av:focus {
+      border-color: #0072ff;
+      outline: none;
+      box-shadow: none;
+      color: #333;
+    }
+    .btn-daterange-av span { flex: 1; }
+    .btn-limpiar {
+      margin-top: 0;
+      margin-bottom: 12px;
+      height: 40px;
+      width: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      border: 1px solid #dcdcdc;
+      color: #666;
+      background: #fff;
+      transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+    }
+    .btn-limpiar:hover {
+      background-color: #f5f5f5;
+      border-color: #ccc;
+      color: #333;
+      transform: translateY(-1px);
+    }
+    /* Normalizar Select2 para que coincida en altura y alineación con los selects nativos */
+    .formulario-filtros .select2-container {
+      display: block;
+      width: 100% !important;
+      margin-bottom: 12px;
+    }
+    .formulario-filtros .select2-container .select2-selection--single {
+      height: 38px;
+      border-radius: 8px;
+      border: 1px solid #dcdcdc;
+      padding: 4px 12px;
+      box-shadow: none;
+      transition: border-color 0.2s;
+      display: flex;
+      align-items: center;
+    }
+    .formulario-filtros .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: normal;
+      padding-left: 0;
+      color: #555;
+    }
+    .formulario-filtros .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 36px;
+    }
+    .formulario-filtros .select2-container--default.select2-container--focus .select2-selection--single,
+    .formulario-filtros .select2-container--default.select2-container--open .select2-selection--single {
+      border-color: #0072ff;
+      outline: none;
+    }
   </style>
 
   <div class="row">
@@ -114,32 +211,23 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
 
                     <!-- Filtro de fecha -->
                     <div class="filtro-grupo">
-                      <label for="tipo-fecha">Rango de Fecha</label>
-                      <select id="tipo-fecha" name="tipo" class="form-control">
-                        <option value="todo">Mostrar Todas</option>
-                        <option value="hoy">Hoy</option>
-                        <option value="ayer">Ayer</option>
-                        <option value="mes" selected>Mes actual</option>
-                        <option value="personalizado">Personalizado</option>
-                      </select>
-
-                      <div id="campo-desde" class="form-group d-none" style="margin-top: 10px; margin-bottom: 0;">
-                        <label for="fecha-desde">Desde</label>
-                        <input type="date" id="fecha-desde" name="fecha_inicio" class="form-control">
-                      </div>
-
-                      <div id="campo-hasta" class="form-group d-none" style="margin-top: 10px; margin-bottom: 0;">
-                        <label for="fecha-hasta">Hasta</label>
-                        <input type="date" id="fecha-hasta" name="fecha_fin" class="form-control">
-                      </div>
+                      <label>Rango de Fecha</label>
+                      <button type="button" class="btn btn-default btn-daterange-av" id="daterange-btn-av">
+                        <span><i class="fa fa-calendar"></i> Rango de fecha</span>
+                        <i class="fa fa-caret-down"></i>
+                      </button>
+                      <input type="hidden" id="av-fecha-inicio" name="fecha_inicio">
+                      <input type="hidden" id="av-fecha-fin" name="fecha_fin">
+                      <input type="hidden" id="av-tipo" name="tipo" value="mes">
                     </div>
 
                     <!-- Filtro por vendedor -->
                     <div class="filtro-grupo">
                       <label for="filtro-vendedor">Vendedor</label>
-                      <select id="filtro-vendedor" name="id_vendedor" class="form-control">
+                      <select id="filtro-vendedor" name="id_vendedor" class="form-control select2">
                         <option value="">Mostrar Todos</option>
                         <?php foreach($usuarios as $usuario): ?>
+                          <?php if ($usuario['perfil'] === '_SystemMaster_') continue; ?>
                           <option value="<?php echo $usuario['id']; ?>"><?php echo htmlspecialchars($usuario['nombre']); ?></option>
                         <?php endforeach; ?>
                       </select>
@@ -148,7 +236,7 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
                     <!-- Filtro por cliente -->
                     <div class="filtro-grupo">
                       <label for="filtro-cliente">Cliente</label>
-                      <select id="filtro-cliente" name="id_cliente" class="form-control">
+                      <select id="filtro-cliente" name="id_cliente" class="form-control select2">
                         <option value="">Mostrar Todos</option>
                         <?php foreach($clientes as $cliente): ?>
                           <option value="<?php echo $cliente['id']; ?>"><?php echo htmlspecialchars($cliente['nombre']); ?></option>
@@ -159,10 +247,23 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
                     <!-- Filtro por producto -->
                     <div class="filtro-grupo">
                       <label for="filtro-producto">Producto</label>
-                      <select id="filtro-producto" name="id_producto" class="form-control">
+                      <select id="filtro-producto" name="id_producto" class="form-control select2">
                         <option value="">Mostrar Todos</option>
                         <?php foreach($productos as $producto): ?>
-                          <option value="<?php echo $producto['id']; ?>"><?php echo htmlspecialchars($producto['descripcion']); ?></option>
+                          <?php 
+                            $hasVariants = (isset($producto['tiene_variantes']) && $producto['tiene_variantes'] == 1 && isset($variantesAgrupadas[$producto['id']]) && count($variantesAgrupadas[$producto['id']]) > 0);
+                            $disabled = $hasVariants ? 'disabled' : '';
+                          ?>
+                          <option value="<?php echo $producto['id']; ?>" <?php echo $disabled; ?>><?php echo htmlspecialchars($producto['descripcion']); ?></option>
+                          <?php if (isset($producto['tiene_variantes']) && $producto['tiene_variantes'] == 1 && isset($variantesAgrupadas[$producto['id']])): ?>
+                            <?php foreach($variantesAgrupadas[$producto['id']] as $idVar => $opciones): ?>
+                              <?php 
+                                $nombreVarianteStr = implode(" - ", $opciones);
+                                $descripcionCompleta = "└─ " . $producto['descripcion'] . " - " . $nombreVarianteStr;
+                              ?>
+                              <option value="v_<?php echo $idVar; ?>">&nbsp;&nbsp;&nbsp;&nbsp;<?php echo htmlspecialchars($descripcionCompleta); ?></option>
+                            <?php endforeach; ?>
+                          <?php endif; ?>
                         <?php endforeach; ?>
                       </select>
                     </div>
@@ -179,8 +280,11 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
                     </div>
 
                     <!-- Botón de filtrar -->
-                    <div class="filtro-grupo">
-                      <button type="submit" class="btn btn-primary w-100 btn-filtrar">Aplicar filtros</button>
+                    <div class="filtro-grupo" style="display: flex; gap: 10px; align-items: center;">
+                      <button type="submit" class="btn btn-primary w-100 btn-filtrar" style="flex: 1;">Aplicar filtros</button>
+                      <a href="index.php?ruta=<?php echo $_GET['ruta'] ?? 'reportes'; ?>" class="btn btn-default btn-limpiar" title="Limpiar">
+                        <i class="fa fa-refresh"></i>
+                      </a>
                     </div>
 
                   </div>
@@ -262,34 +366,58 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
 
   salesChart.render();
 
-  // Ejecutar por defecto el filtro del mes al cargar la página
-  window.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('filtro-fechas');
-    document.getElementById('tipo-fecha').value = 'mes'; // Establece tipo "mes"
-    form.dispatchEvent(new Event('submit')); // Dispara el envío del formulario
-  });
+  // Inicializar DateRangePicker en el filtro de fecha
+  $(document).ready(function () {
+    // Establecer rango por defecto: mes actual
+    var avFechaInicio = moment().startOf('month').format('YYYY-MM-DD');
+    var avFechaFin = moment().endOf('month').format('YYYY-MM-DD');
+    $('#av-fecha-inicio').val(avFechaInicio);
+    $('#av-fecha-fin').val(avFechaFin);
+    $('#av-tipo').val('personalizado');
+    $('#daterange-btn-av span').html('<i class="fa fa-calendar"></i> ' + moment().startOf('month').format('MMMM D, YYYY') + ' - ' + moment().endOf('month').format('MMMM D, YYYY'));
 
-  // Mostrar campos personalizados al seleccionar "personalizado"
-  document.getElementById('tipo-fecha').addEventListener('change', function () {
-    const tipo = this.value;
-    document.getElementById('campo-desde').classList.toggle('d-none', tipo !== 'personalizado');
-    document.getElementById('campo-hasta').classList.toggle('d-none', tipo !== 'personalizado');
-  });
+    if (typeof $.fn.daterangepicker !== 'undefined') {
+      $('#daterange-btn-av').daterangepicker({
+        ranges: {
+          'Todas las fechas': [moment('2000-01-01'), moment()],
+          'Hoy': [moment(), moment()],
+          'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+          'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+          'Este mes': [moment().startOf('month'), moment().endOf('month')],
+          'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+        },
+        startDate: moment().startOf('month'),
+        endDate: moment().endOf('month'),
+        locale: { cancelLabel: 'Limpiar' }
+      }, function (start, end) {
+        $('#daterange-btn-av span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+        $('#av-fecha-inicio').val(start.format('YYYY-MM-DD'));
+        $('#av-fecha-fin').val(end.format('YYYY-MM-DD'));
+        $('#av-tipo').val('personalizado');
+        // Disparar filtrado automático
+        document.getElementById('filtro-fechas').dispatchEvent(new Event('submit'));
+      });
 
-  // Ejecutar al cargar la página para aplicar correctamente la visibilidad
-  (function () {
-    const tipo = document.getElementById('tipo-fecha').value;
-    document.getElementById('campo-desde').classList.toggle('d-none', tipo !== 'personalizado');
-    document.getElementById('campo-hasta').classList.toggle('d-none', tipo !== 'personalizado');
-  })();
+      $('#daterange-btn-av').on('cancel.daterangepicker', function () {
+        $(this).find('span').html('<i class="fa fa-calendar"></i> Rango de fecha');
+        $('#av-fecha-inicio').val('');
+        $('#av-fecha-fin').val('');
+        $('#av-tipo').val('todo');
+        document.getElementById('filtro-fechas').dispatchEvent(new Event('submit'));
+      });
+    }
+
+    // Disparar filtro inicial al cargar
+    document.getElementById('filtro-fechas').dispatchEvent(new Event('submit'));
+  });
 
   // Escuchar el envío del formulario
   document.getElementById('filtro-fechas').addEventListener('submit', function (e) {
     e.preventDefault();
 
-    const tipo = document.getElementById('tipo-fecha').value;
-    const fechaInicio = document.getElementById('fecha-desde').value;
-    const fechaFin = document.getElementById('fecha-hasta').value;
+    const tipo = document.getElementById('av-tipo').value;
+    const fechaInicio = document.getElementById('av-fecha-inicio').value;
+    const fechaFin = document.getElementById('av-fecha-fin').value;
 
     // Obtener los nuevos filtros
     const idVendedor = document.getElementById('filtro-vendedor').value;
@@ -301,10 +429,7 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
     formData.append('tipo', tipo);
 
     if (tipo === 'personalizado') {
-      if (!fechaInicio || !fechaFin) {
-        alert("Selecciona ambas fechas para el filtro personalizado.");
-        return;
-      }
+      if (!fechaInicio || !fechaFin) return;
       formData.append('fecha_inicio', fechaInicio);
       formData.append('fecha_fin', fechaFin);
     }
@@ -373,6 +498,27 @@ $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
     })
     .catch(error => {
       console.error("Error al cargar datos:", error);
+    });
+  });
+</script>
+
+<script>
+  // Inicializar Select2 en los filtros de búsqueda
+  $(document).ready(function () {
+    $('#filtro-vendedor').select2({
+      placeholder: 'Mostrar Todos',
+      allowClear: true,
+      language: { noResults: function () { return 'Sin resultados'; } }
+    });
+    $('#filtro-cliente').select2({
+      placeholder: 'Mostrar Todos',
+      allowClear: true,
+      language: { noResults: function () { return 'Sin resultados'; } }
+    });
+    $('#filtro-producto').select2({
+      placeholder: 'Mostrar Todos',
+      allowClear: true,
+      language: { noResults: function () { return 'Sin resultados'; } }
     });
   });
 </script>

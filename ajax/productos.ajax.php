@@ -124,7 +124,22 @@ class AjaxProductos
                     if (isset($prod["tiene_variantes"]) && $prod["tiene_variantes"] == 1) {
                         // Obtener variantes
                         $variantes = ModeloProductos::mdlObtenerVariantesProducto($prod["id"], $idBodega);
-                        if (is_array($variantes)) {
+                        if (is_array($variantes) && count($variantes) > 0) {
+                            // Agregar el producto base como opción deshabilitada
+                            $resultado[] = array(
+                                "id" => $prod["id"],
+                                "descripcion" => $prod["descripcion"],
+                                "tiene_variantes" => 1,
+                                "es_variante" => 0,
+                                "id_variante" => null,
+                                "sku" => $prod["codigo"],
+                                "stock" => 0,
+                                "precio_venta" => 0,
+                                "impuesto_porcentaje" => $impuestoPorcentaje,
+                                "impuesto_nombre" => $impuestoNombre,
+                                "deshabilitar" => 1
+                            );
+
                             foreach ($variantes as $var) {
                                 if ($var["estado"] != 1) continue;
 

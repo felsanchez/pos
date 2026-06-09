@@ -99,7 +99,7 @@ if ($_SESSION["perfil"] == "Especial") {
                         <span class="hidden-xs"><b>Fecha:</b></span>
                         <button type="button" class="btn btn-default" id="daterange-btn-nc">
                             <span>
-                                <i class="fa fa-calendar"></i> Rango de fecha
+                                <i class="fa fa-calendar"></i> Mostrar todas
                             </span>
                             <i class="fa fa-caret-down"></i>
                         </button>
@@ -141,6 +141,7 @@ if ($_SESSION["perfil"] == "Especial") {
                                 <th>Vendedor</th>
                                 <th>Total</th>
                                 <th>Fecha</th>
+                                <th>Observación</th>
                                 <th>Estado DIAN</th>
                                 <th>Acciones</th>
                             </tr>

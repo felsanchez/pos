@@ -37,9 +37,19 @@ $(document).ready(function () {
 
 		// INICIALIZACIÓN DEL RANGO DE FECHAS
 		if (typeof $.fn.daterangepicker !== 'undefined') {
+			const fechaInicialVal = $('#fechaInicial').val();
+			const fechaFinalVal = $('#fechaFinal').val();
+
+			if (fechaInicialVal && fechaFinalVal) {
+				$('#daterange-btn span').html('<i class="fa fa-calendar"></i> ' + moment(fechaInicialVal).format('MMMM D, YYYY') + ' - ' + moment(fechaFinalVal).format('MMMM D, YYYY'));
+			} else {
+				$('#daterange-btn span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+			}
+
 			$('#daterange-btn').daterangepicker(
 				{
 					ranges: {
+						'Mostrar todas': [moment('2000-01-01'), moment()],
 						'Hoy': [moment(), moment()],
 						'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
 						'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
@@ -47,18 +57,22 @@ $(document).ready(function () {
 						'Este mes': [moment().startOf('month'), moment().endOf('month')],
 						'Último mes': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
 					},
-					startDate: moment(),
-					endDate: moment()
+					startDate: fechaInicialVal ? moment(fechaInicialVal) : moment(),
+					endDate: fechaFinalVal ? moment(fechaFinalVal) : moment(),
+					locale: {
+						cancelLabel: 'Limpiar'
+					}
 				},
 				function (start, end) {
-					$('#daterange-btn span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-					var fechaInicial = start.format('YYYY-MM-DD');
-					var fechaFinal = end.format('YYYY-MM-DD');
-
-					$('#fechaInicial').val(fechaInicial);
-					$('#fechaFinal').val(fechaFinal);
-
-					localStorage.setItem("capturarRangoOrdenes", start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+					if (start.format('YYYY-MM-DD') === '2000-01-01') {
+						$('#daterange-btn span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+						$('#fechaInicial').val('');
+						$('#fechaFinal').val('');
+					} else {
+						$('#daterange-btn span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+						$('#fechaInicial').val(start.format('YYYY-MM-DD'));
+						$('#fechaFinal').val(end.format('YYYY-MM-DD'));
+					}
 
 					if (typeof window.recargarTablaOrdenes === 'function') {
 						window.recargarTablaOrdenes();
@@ -66,10 +80,10 @@ $(document).ready(function () {
 				}
 			);
 
-			$('.daterangepicker.opensright .range_inputs .cancelBtn').on('click', function () {
-				localStorage.removeItem("capturarRangoOrdenes");
-				$('#fechaInicial').val("");
-				$('#fechaFinal').val("");
+			$('#daterange-btn').on('cancel.daterangepicker', function () {
+				$(this).find('span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+				$('#fechaInicial').val('');
+				$('#fechaFinal').val('');
 				if (typeof window.recargarTablaOrdenes === 'function') {
 					window.recargarTablaOrdenes();
 				}

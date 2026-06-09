@@ -96,6 +96,7 @@ class ControladorFactus
 				"rango_numeracion_id" => !empty($_POST["rangoNumeracionId"]) ? $_POST["rangoNumeracionId"] : null,
 				// Preserve existing company data if not in POST (configuracion-factus.php doesn't send them)
 				"nombre_empresa" => isset($_POST["nombrefactus"]) ? $_POST["nombrefactus"] : $configConfig['nombre_empresa'],
+				"nombre_comercial" => isset($_POST["nombrecomercialfactus"]) ? $_POST["nombrecomercialfactus"] : (isset($configConfig['nombre_comercial']) ? $configConfig['nombre_comercial'] : ''),
 				"nit_empresa" => isset($_POST["nitfactus"]) ? $_POST["nitfactus"] : $configConfig['nit_empresa'],
 				"direccion_empresa" => isset($_POST["direccionfactus"]) ? $_POST["direccionfactus"] : $configConfig['direccion_empresa'],
 				"telefono_empresa" => isset($_POST["telefonofactus"]) ? $_POST["telefonofactus"] : $configConfig['telefono_empresa'],
@@ -2654,7 +2655,8 @@ class ControladorFactus
 			3 => 'u.nombre',
 			4 => 'nc.monto_total',
 			5 => 'nc.fecha_creacion',
-			6 => 'nc.estado_dian',
+			6 => 'nc.observacion',
+			7 => 'nc.estado_dian',
 		];
 
 		$where = " WHERE 1=1 ";
@@ -2746,10 +2748,17 @@ class ControladorFactus
 			// Col 3: Total
 			$row[] = '$ ' . number_format((float)($value['monto_total'] ?? 0), 2);
 
-			// Col 4: Fecha
+			// Col 5: Fecha
 			$row[] = e($value['fecha_creacion'] ?? '');
 
-			// Col 5: Estado DIAN (Badge)
+			// Col 6: Observación (editable solo si no está firmada)
+			$esFirmadaNC   = in_array($estadoDian, ['enviada', 'aceptada']);
+			$obsEditableNC = $esFirmadaNC ? 'false' : 'true';
+			$obsEstadoNC   = $esFirmadaNC ? 'firmada' : 'borrador';
+			$obsTituloNC   = $esFirmadaNC ? ' title="La observación no se puede editar en notas firmadas"' : '';
+			$row[] = '<div contenteditable="' . $obsEditableNC . '" class="celda-observacion-nc" data-id="' . e($idNota) . '" data-estado="' . $obsEstadoNC . '" data-placeholder="Escribe una observación..."' . $obsTituloNC . '>' . e($value['observacion'] ?? '') . '</div>';
+
+			// Col 7: Estado DIAN (Badge)
 			$badgeClass = ($estadoDian == 'borrador') ? 'label-warning' : (($estadoDian == 'rechazada') ? 'label-danger' : 'label-success');
 			$row[] = '<span class="label ' . $badgeClass . '">' . ucfirst(e($estadoDian)) . '</span>';
 
@@ -2819,6 +2828,14 @@ class ControladorFactus
 	}
 
 	/*=============================================
+	ACTUALIZAR OBSERVACIÓN DE NOTA CRÉDITO
+	=============================================*/
+	static public function ctrActualizarObservacionNC($idNota, $nuevaObservacion)
+	{
+		return ModeloFactus::mdlActualizarObservacionNC($idNota, $nuevaObservacion);
+	}
+
+	/*=============================================
 	MOSTRAR NOTAS DE AJUSTE DS SERVER-SIDE
 	=============================================*/
 	static public function ctrMostrarNotasAjusteDSServerSide($params)
@@ -2841,6 +2858,13 @@ class ControladorFactus
 
 		$where = " WHERE 1=1 ";
 
+		// Filtro por Rango de Fechas
+		if (!empty($params['fechaInicial']) && !empty($params['fechaFinal'])) {
+			$fechaInicial = $params['fechaInicial'];
+			$fechaFinal = $params['fechaFinal'];
+			$where .= " AND IFNULL(na.fecha_envio_dian, na.fecha_registro) BETWEEN '$fechaInicial 00:00:00' AND '$fechaFinal 23:59:59' ";
+		}
+
 		// Filtro por Bodega (Sucursal)
 		if (!empty($params['idBodega']) && is_numeric($params['idBodega'])) {
 			$where .= " AND ds.id_bodega = " . $params['idBodega'];
@@ -2852,6 +2876,7 @@ class ControladorFactus
 				}
 			}
 		}
+
 
 		if (!empty($params['search']['value'])) {
 			$s = $params['search']['value'];
@@ -3256,6 +3281,13 @@ class ControladorFactus
 
 		$where     = " WHERE 1=1 ";
 		$whereBase = " WHERE 1=1 "; // Para recordsTotal (sin filtros de búsqueda)
+
+		// Filtro por Rango de Fechas
+		if (!empty($params['fechaInicial']) && !empty($params['fechaFinal'])) {
+			$fechaInicial = $params['fechaInicial'];
+			$fechaFinal = $params['fechaFinal'];
+			$where .= " AND ds.fecha_emision BETWEEN '$fechaInicial 00:00:00' AND '$fechaFinal 23:59:59' ";
+		}
 
 		$isAdmin = (stripos($_SESSION["perfil"], "Admin") !== false);
 		if (!$isAdmin) {

@@ -149,7 +149,14 @@ if ($xml) {
               <div class="form-group" style="margin-bottom: 0;">
                 <button type="button" class="btn btn-default" id="daterange-btn">
                   <span>
-                    <i class="fa fa-calendar"></i> Rango de fecha
+                    <i class="fa fa-calendar"></i> 
+                    <?php
+                    if (isset($_GET["fechaInicial"]) && isset($_GET["fechaFinal"]) && $_GET["fechaInicial"] != "" && $_GET["fechaFinal"] != "") {
+                      echo $_GET["fechaInicial"] . " - " . $_GET["fechaFinal"];
+                    } else {
+                      echo "Mostrar todas";
+                    }
+                    ?>
                   </span>
                   <i class="fa fa-caret-down"></i>
                 </button>

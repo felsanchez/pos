@@ -72,7 +72,31 @@ if ($ultimaVenta) {
 
         <div class="box box-success">
 
-          <div class="box-header with-border"></div>
+          <div class="box-header with-border">
+            <?php
+              $feNombreEmpresa  = isset($configFactus['nombre_empresa'])   && !empty($configFactus['nombre_empresa'])   ? $configFactus['nombre_empresa']   : ($configuracion['nombre_empresa'] ?? '');
+              $feNombreComercial = isset($configFactus['nombre_comercial']) && !empty($configFactus['nombre_comercial']) ? $configFactus['nombre_comercial'] : '';
+              $feNitEmpresa     = isset($configFactus['nit_empresa'])      && !empty($configFactus['nit_empresa'])      ? $configFactus['nit_empresa']      : ($configuracion['nit'] ?? '');
+              $feDvEmpresa      = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1' && isset($configFactus['dv']) && $configFactus['dv'] !== '') ? ' - ' . $configFactus['dv'] : '';
+              $feNitConDv       = $feNitEmpresa . $feDvEmpresa;
+            ?>
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <?php if (isset($configFactus['logo_empresa']) && !empty($configFactus['logo_empresa']) && file_exists($configFactus['logo_empresa'])): ?>
+                <img src="<?php echo $configFactus['logo_empresa']; ?>" style="max-height:48px; border-radius:4px;">
+              <?php endif; ?>
+              <div>
+                <?php if (!empty($feNombreEmpresa)): ?>
+                  <strong style="font-size:15px;"><?php echo $feNombreEmpresa; ?></strong><br>
+                <?php endif; ?>
+                <?php if (!empty($feNombreComercial)): ?>
+                  <span style="color:#555; font-size:13px;"><i class="fa fa-tag" style="margin-right:4px;"></i><?php echo $feNombreComercial; ?></span><br>
+                <?php endif; ?>
+                <?php if (!empty($feNitConDv)): ?>
+                  <span style="color:#777; font-size:12px;"><strong>NIT:</strong> <?php echo $feNitConDv; ?></span>
+                <?php endif; ?>
+              </div>
+            </div>
+          </div>
 
           <form role="form" method="post" class="formularioVenta">
 
@@ -985,3 +1009,49 @@ $crearFactura = new ControladorVentas();
 $crearFactura->ctrCrearVenta();
 
 ?>
+
+<script>
+/* =============================================
+   VALIDAR DOCUMENTO DUPLICADO - MODAL AGREGAR CLIENTE
+   (crear-factura-electronica)
+   ============================================= */
+$(document).on("submit", "#modalAgregarCliente form", function (e) {
+  e.preventDefault();
+  var form = this;
+  var documento = $(form).find('[name="nuevoDocumentoId"]').val();
+
+  if (!documento || documento.trim() === "") {
+    return; // La validación HTML nativa de "required" se encargará
+  }
+
+  var csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+  $.ajax({
+    url: "ajax/clientes.ajax.php",
+    method: "POST",
+    data: {
+      validarDocumento: documento,
+      csrf_token: csrfToken
+    },
+    dataType: "json",
+    success: function (respuesta) {
+      if (respuesta.existe) {
+        swal({
+          type: "warning",
+          title: "Documento ya registrado",
+          text: respuesta.mensaje,
+          showConfirmButton: true,
+          confirmButtonText: "Entendido"
+        });
+      } else {
+        // No hay duplicado, enviar el formulario normalmente
+        form.submit();
+      }
+    },
+    error: function () {
+      // Si hay error de conexión, permitir envío para no bloquear al usuario
+      form.submit();
+    }
+  });
+});
+</script>

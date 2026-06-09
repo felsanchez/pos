@@ -33,6 +33,7 @@ class ModeloFactus
 				activo = :activo,
 				rango_numeracion_id = :rango_numeracion_id,
 				nombre_empresa = :nombre_empresa,
+				nombre_comercial = :nombre_comercial,
 				nit_empresa = :nit_empresa,
 				direccion_empresa = :direccion_empresa,
 				telefono_empresa = :telefono_empresa,
@@ -58,6 +59,7 @@ class ModeloFactus
         $stmt->bindParam(":activo", $datos["activo"], PDO::PARAM_INT);
         $stmt->bindParam(":rango_numeracion_id", $datos["rango_numeracion_id"], PDO::PARAM_INT);
         $stmt->bindParam(":nombre_empresa", $datos["nombre_empresa"], PDO::PARAM_STR);
+        $stmt->bindParam(":nombre_comercial", $datos["nombre_comercial"], PDO::PARAM_STR);
         $stmt->bindParam(":nit_empresa", $datos["nit_empresa"], PDO::PARAM_STR);
         $stmt->bindParam(":direccion_empresa", $datos["direccion_empresa"], PDO::PARAM_STR);
         $stmt->bindParam(":telefono_empresa", $datos["telefono_empresa"], PDO::PARAM_STR);
@@ -419,7 +421,7 @@ class ModeloFactus
     =============================================*/
     static public function mdlMostrarMunicipioPorId($id)
     {
-        $stmt = Conexion::conectar()->prepare("SELECT nombre FROM factus_municipios WHERE id_factus = :id");
+        $stmt = Conexion::conectar()->prepare("SELECT nombre, departamento FROM factus_municipios WHERE id_factus = :id");
         $stmt->bindParam(":id", $id, PDO::PARAM_STR);
         $stmt->execute();
         return $stmt->fetch();
@@ -2118,6 +2120,24 @@ class ModeloFactus
         if (isset($datos["numero_nota_credito"])) {
             $stmt->bindParam(":numero_nota_credito", $datos["numero_nota_credito"], PDO::PARAM_STR);
         }
+
+        if ($stmt->execute()) {
+            return "ok";
+        } else {
+            return "error";
+        }
+    }
+
+    /*=============================================
+    ACTUALIZAR OBSERVACIÓN DE NOTA CRÉDITO
+    =============================================*/
+    static public function mdlActualizarObservacionNC($idNota, $nuevaObservacion)
+    {
+        $stmt = Conexion::conectar()->prepare(
+            "UPDATE notas_credito SET observacion = :observacion WHERE id = :id"
+        );
+        $stmt->bindParam(":observacion", $nuevaObservacion, PDO::PARAM_STR);
+        $stmt->bindParam(":id", $idNota, PDO::PARAM_INT);
 
         if ($stmt->execute()) {
             return "ok";

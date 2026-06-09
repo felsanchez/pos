@@ -589,6 +589,8 @@ $(document).ready(function () {
                 "data": function (d) {
                     d.csrf_token = $('meta[name="csrf-token"]').attr('content');
                     d.idBodega = $("#sucursal_ds").val();
+                    d.fechaInicial = $("#fechaInicialDS").val();
+                    d.fechaFinal = $("#fechaFinalDS").val();
                 }
             },
             "autoWidth": false,
@@ -1026,6 +1028,68 @@ $(document).ready(function () {
     });
 
     /*=============================================
+    RANGO DE FECHAS DOCUMENTO SOPORTE
+    =============================================*/
+    if ($('#daterange-btn-ds').length > 0 && typeof $.fn.daterangepicker !== 'undefined') {
+        // Inicializar texto del span
+        $('#daterange-btn-ds span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+
+        $('#daterange-btn-ds').daterangepicker(
+            {
+                ranges: {
+                    'Mostrar todas': [moment('2000-01-01'), moment()],
+                    'Hoy': [moment(), moment()],
+                    'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+                    'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
+                    'Este mes': [moment().startOf('month'), moment().endOf('month')],
+                    'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                },
+                startDate: moment(),
+                endDate: moment()
+            },
+            function (start, end) {
+                if (start.format('YYYY-MM-DD') === '2000-01-01') {
+                    $('#daterange-btn-ds span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+                    $('#fechaInicialDS').val('');
+                    $('#fechaFinalDS').val('');
+                } else {
+                    $('#daterange-btn-ds span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                    $('#fechaInicialDS').val(start.format('YYYY-MM-DD'));
+                    $('#fechaFinalDS').val(end.format('YYYY-MM-DD'));
+                }
+                if ($.fn.DataTable.isDataTable('#tablaListadoDocumentoSoporte')) {
+                    $('#tablaListadoDocumentoSoporte').DataTable().ajax.reload();
+                }
+            }
+        );
+
+        $('#daterange-btn-ds').on('cancel.daterangepicker', function () {
+            $(this).find('span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+            $('#fechaInicialDS').val('');
+            $('#fechaFinalDS').val('');
+            if ($.fn.DataTable.isDataTable('#tablaListadoDocumentoSoporte')) {
+                $('#tablaListadoDocumentoSoporte').DataTable().ajax.reload();
+            }
+        });
+    }
+
+    /*=============================================
+    LIMPIAR FILTROS DOCUMENTO SOPORTE
+    =============================================*/
+    $(document).on("click", "#btnLimpiarFiltrosDS", function() {
+        if ($("#sucursal_ds").length > 0) {
+            $("#sucursal_ds").val('').trigger("change.select2");
+        }
+        $("#fechaInicialDS").val("");
+        $("#fechaFinalDS").val("");
+        $('#daterange-btn-ds span').html('<span><i class="fa fa-calendar"></i> Mostrar todas</span>');
+        if ($.fn.DataTable.isDataTable('#tablaListadoDocumentoSoporte')) {
+            $('#tablaListadoDocumentoSoporte').DataTable().ajax.reload();
+        }
+    });
+
+    /*=============================================
     AGREGAR PRODUCTO EN DISPOSITIVOS MÓVILES (DOCUMENTO SOPORTE)
     =============================================*/
     $(".btnAgregarProductoDS").click(function () {
@@ -1054,7 +1118,14 @@ $(document).ready(function () {
                         optionAttrs += ' impuestoPorcentaje="' + (item.impuesto_porcentaje || 0) + '"';
                         optionAttrs += ' impuestoNombre="' + (item.impuesto_nombre || 'Exento') + '"';
 
-                        optionsHtml += '<option ' + optionAttrs + ' value="' + item.descripcion + '">' + item.descripcion + '</option>';
+                        var label = item.descripcion;
+                        if (item.es_variante == 1) {
+                            label = '&nbsp;&nbsp;&nbsp;&nbsp;└─ ' + item.descripcion;
+                        }
+
+                        var disabledAttr = (item.deshabilitar == 1) ? 'disabled' : '';
+
+                        optionsHtml += '<option ' + optionAttrs + ' ' + disabledAttr + ' value="' + item.descripcion + '">' + label + '</option>';
                     });
                 }
 

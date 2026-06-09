@@ -55,7 +55,7 @@ $(document).ready(function () {
 		$('#daterange-btn').daterangepicker(
 			{
 				ranges: {
-					'Todos los documentos': [moment('2000-01-01'), moment()],
+					'Mostrar todas': [moment('2000-01-01'), moment()],
 					'Hoy': [moment(), moment()],
 					'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
 					'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
@@ -66,11 +66,23 @@ $(document).ready(function () {
 				endDate: moment()
 			},
 			function (start, end) {
-				$('#daterange-btn span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-				$('#fechaInicial').val(start.format('YYYY-MM-DD'));
-				$('#fechaFinal').val(end.format('YYYY-MM-DD'));
+				if (start.format('YYYY-MM-DD') === '2000-01-01') {
+					$('#daterange-btn span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+					$('#fechaInicial').val('');
+					$('#fechaFinal').val('');
+				} else {
+					$('#daterange-btn span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+					$('#fechaInicial').val(start.format('YYYY-MM-DD'));
+					$('#fechaFinal').val(end.format('YYYY-MM-DD'));
+				}
 			}
 		);
+
+		$('#daterange-btn').on('cancel.daterangepicker', function () {
+			$(this).find('span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+			$('#fechaInicial').val('');
+			$('#fechaFinal').val('');
+		});
 	}
 });
 
@@ -733,7 +745,14 @@ $(".btnAgregarProducto").click(function () {
 					optionAttrs += ' impuestoPorcentaje="' + (item.impuesto_porcentaje || 0) + '"';
 					optionAttrs += ' impuestoNombre="' + (item.impuesto_nombre || 'Exento') + '"';
 
-					optionsHtml += '<option ' + optionAttrs + ' value="' + item.descripcion + '">' + item.descripcion + '</option>';
+					var label = item.descripcion;
+					if (item.es_variante == 1) {
+						label = '&nbsp;&nbsp;&nbsp;&nbsp;└─ ' + item.descripcion;
+					}
+
+					var disabledAttr = (item.deshabilitar == 1) ? 'disabled' : '';
+
+					optionsHtml += '<option ' + optionAttrs + ' ' + disabledAttr + ' value="' + item.descripcion + '">' + label + '</option>';
 				});
 			}
 
@@ -2246,9 +2265,15 @@ $(document).ready(function () {
 					var fechaInicialUrl = urlParams.get('fechaInicial');
 					var fechaFinalUrl = urlParams.get('fechaFinal');
 
+					if (fechaInicialUrl && fechaFinalUrl) {
+						$('#daterange-btn span').html('<i class="fa fa-calendar"></i> ' + moment(fechaInicialUrl).format('MMMM D, YYYY') + ' - ' + moment(fechaFinalUrl).format('MMMM D, YYYY'));
+					} else {
+						$('#daterange-btn span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+					}
+
 					$('#daterange-btn').daterangepicker({
 						ranges: {
-							'Todos los documentos': [moment('2000-01-01'), moment()],
+							'Mostrar todas': [moment('2000-01-01'), moment()],
 							'Hoy': [moment(), moment()],
 							'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
 							'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
@@ -2258,9 +2283,22 @@ $(document).ready(function () {
 						startDate: fechaInicialUrl ? moment(fechaInicialUrl) : moment(),
 						endDate: fechaFinalUrl ? moment(fechaFinalUrl) : moment()
 					}, function (start, end) {
-						$('#daterange-btn span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-						$('#fechaInicial').val(start.format('YYYY-MM-DD'));
-						$('#fechaFinal').val(end.format('YYYY-MM-DD'));
+						if (start.format('YYYY-MM-DD') === '2000-01-01') {
+							$('#daterange-btn span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+							$('#fechaInicial').val('');
+							$('#fechaFinal').val('');
+						} else {
+							$('#daterange-btn span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+							$('#fechaInicial').val(start.format('YYYY-MM-DD'));
+							$('#fechaFinal').val(end.format('YYYY-MM-DD'));
+						}
+						window.recargarTablaVentas();
+					});
+
+					$('#daterange-btn').on('cancel.daterangepicker', function () {
+						$(this).find('span').html('<i class="fa fa-calendar"></i> Mostrar todas');
+						$('#fechaInicial').val('');
+						$('#fechaFinal').val('');
 						window.recargarTablaVentas();
 					});
 				}

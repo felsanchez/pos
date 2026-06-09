@@ -38,6 +38,8 @@ class ImprimirArqueoCaja
         $telefonoEmisor = isset($configFactus['telefono_empresa']) && !empty($configFactus['telefono_empresa']) ? $configFactus['telefono_empresa'] : ($configuracion["telefono"] ?? '');
         $emailEmisor = isset($configFactus['email_empresa']) && !empty($configFactus['email_empresa']) ? $configFactus['email_empresa'] : ($configuracion["correo"] ?? '');
         $labelNombreEmisor = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1') ? 'Razón Social' : 'Nombre Empresa';
+        $dvEmisor = (isset($configFactus['tipo_persona']) && $configFactus['tipo_persona'] == '1' && isset($configFactus['dv']) && $configFactus['dv'] !== '') ? ' - ' . $configFactus['dv'] : '';
+        $nitConDv = $nitEmisor . $dvEmisor;
         $moneda = !empty($configuracion["moneda"]) ? $configuracion["moneda"] : "$";
 
         // REQUERIMOS LA CLASE TCPDF
@@ -111,7 +113,7 @@ class ImprimirArqueoCaja
                     <div class="meta-content">
                         <span class="meta-title">INFORMACIÓN DE LA EMPRESA</span><br><br>
                         <strong>' . $labelNombreEmisor . ':</strong> ' . $nombreEmpresa . '<br>
-                        <strong>NIT:</strong> ' . $nitEmisor . '<br>
+                        <strong>NIT:</strong> ' . $nitConDv . '<br>
                         <strong>Dirección:</strong> ' . $direccionEmisor . '<br>
                         <strong>Teléfono:</strong> ' . $telefonoEmisor . '<br>
                         <strong>Email:</strong> ' . $emailEmisor . '

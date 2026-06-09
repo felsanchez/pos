@@ -12,7 +12,7 @@ class ModeloClientes
 	static public function mdlIngresarCliente($tabla, $datos)
 	{
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(nombre, documento, email, telefono, departamento, ciudad, direccion, estatus, notas, fecha_nacimiento, tipo_documento_id, digito_verificacion, tipo_persona, regimen_tributario, responsabilidades_fiscales, municipio_id, codigo_postal, nombre_comercial, razon_social) VALUES (:nombre, :documento, :email, :telefono, :departamento, :ciudad, :direccion, :estatus, :notas, :fecha_nacimiento, :tipo_documento_id, :digito_verificacion, :tipo_persona, :regimen_tributario, :responsabilidades_fiscales, :municipio_id, :codigo_postal, :nombre_comercial, :razon_social)");
+		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(nombre, documento, email, telefono, departamento, ciudad, direccion, estatus, notas, fecha_nacimiento, tipo_documento_id, digito_verificacion, tipo_persona, regimen_tributario, responsabilidades_fiscales, responsabilidad_tributaria, municipio_id, codigo_postal, nombre_comercial, razon_social) VALUES (:nombre, :documento, :email, :telefono, :departamento, :ciudad, :direccion, :estatus, :notas, :fecha_nacimiento, :tipo_documento_id, :digito_verificacion, :tipo_persona, :regimen_tributario, :responsabilidades_fiscales, :responsabilidad_tributaria, :municipio_id, :codigo_postal, :nombre_comercial, :razon_social)");
 
 		$stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
 		$stmt->bindParam(":documento", $datos["documento"], PDO::PARAM_STR);
@@ -31,6 +31,7 @@ class ModeloClientes
 		$stmt->bindParam(":tipo_persona", $datos["tipo_persona"], PDO::PARAM_STR);
 		$stmt->bindParam(":regimen_tributario", $datos["regimen_tributario"], PDO::PARAM_STR);
 		$stmt->bindParam(":responsabilidades_fiscales", $datos["responsabilidades_fiscales"], PDO::PARAM_STR);
+		$stmt->bindParam(":responsabilidad_tributaria", $datos["responsabilidad_tributaria"], PDO::PARAM_STR);
 		$stmt->bindParam(":municipio_id", $datos["municipio_id"], PDO::PARAM_STR);
 		$stmt->bindParam(":codigo_postal", $datos["codigo_postal"], PDO::PARAM_STR);
 		$stmt->bindParam(":nombre_comercial", $datos["nombre_comercial"], PDO::PARAM_STR);
@@ -192,7 +193,7 @@ class ModeloClientes
 	static public function mdlEditarCliente($tabla, $datos)
 	{
 
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET nombre = :nombre, documento = :documento, email = :email, telefono = :telefono, departamento = :departamento, ciudad = :ciudad, direccion = :direccion, estatus = :estatus, notas = :notas, fecha_nacimiento = :fecha_nacimiento, tipo_documento_id = :tipo_documento_id, digito_verificacion = :digito_verificacion, tipo_persona = :tipo_persona, regimen_tributario = :regimen_tributario, responsabilidades_fiscales = :responsabilidades_fiscales, municipio_id = :municipio_id, codigo_postal = :codigo_postal, nombre_comercial = :nombre_comercial, razon_social = :razon_social WHERE id = :id");
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET nombre = :nombre, documento = :documento, email = :email, telefono = :telefono, departamento = :departamento, ciudad = :ciudad, direccion = :direccion, estatus = :estatus, notas = :notas, fecha_nacimiento = :fecha_nacimiento, tipo_documento_id = :tipo_documento_id, digito_verificacion = :digito_verificacion, tipo_persona = :tipo_persona, regimen_tributario = :regimen_tributario, responsabilidades_fiscales = :responsabilidades_fiscales, responsabilidad_tributaria = :responsabilidad_tributaria, municipio_id = :municipio_id, codigo_postal = :codigo_postal, nombre_comercial = :nombre_comercial, razon_social = :razon_social WHERE id = :id");
 
 		$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
 		$stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
@@ -212,6 +213,7 @@ class ModeloClientes
 		$stmt->bindParam(":tipo_persona", $datos["tipo_persona"], PDO::PARAM_STR);
 		$stmt->bindParam(":regimen_tributario", $datos["regimen_tributario"], PDO::PARAM_STR);
 		$stmt->bindParam(":responsabilidades_fiscales", $datos["responsabilidades_fiscales"], PDO::PARAM_STR);
+		$stmt->bindParam(":responsabilidad_tributaria", $datos["responsabilidad_tributaria"], PDO::PARAM_STR);
 		$stmt->bindParam(":municipio_id", $datos["municipio_id"], PDO::PARAM_STR);
 		$stmt->bindParam(":codigo_postal", $datos["codigo_postal"], PDO::PARAM_STR);
 		$stmt->bindParam(":nombre_comercial", $datos["nombre_comercial"], PDO::PARAM_STR);

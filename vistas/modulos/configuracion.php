@@ -360,9 +360,24 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                         <label id="labelNombreFactus">Nombre Empresa </label>
                         <div class="input-group">
                           <span class="input-group-addon"><i class="fa fa-building"></i></span>
-                          <input type="text" class="form-control" name="nombrefactus" <?php echo $readonly; ?>
+                           <input type="text" class="form-control" name="nombrefactus" <?php echo $readonly; ?>
                             value="<?php echo isset($configFactus['nombre_empresa']) ? $configFactus['nombre_empresa'] : ''; ?>"
                             placeholder="Nombre registrado en Sandbox">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <!-- Nombre Comercial -->
+                    <div class="col-md-12">
+                      <div class="form-group">
+                        <label>Nombre Comercial</label>
+                        <div class="input-group">
+                          <span class="input-group-addon"><i class="fa fa-tag"></i></span>
+                          <input type="text" class="form-control" name="nombrecomercialfactus" <?php echo $readonly; ?>
+                            value="<?php echo isset($configFactus['nombre_comercial']) ? $configFactus['nombre_comercial'] : ''; ?>"
+                            placeholder="Nombre comercial de la empresa">
                         </div>
                       </div>
                     </div>
@@ -385,10 +400,59 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                     <!-- DV (Digito Verificación) -->
                     <div class="col-md-1">
                       <div class="form-group">
-                        <label>DV</label>
-                        <input type="text" class="form-control" name="dvfactus" <?php echo $readonly; ?>
+                        <label id="labelDvFactus">DV</label>
+                        <input type="text" class="form-control" name="dvfactus" id="dvFactus" <?php echo $readonly; ?>
                           value="<?php echo isset($configFactus['dv']) ? $configFactus['dv'] : ''; ?>" placeholder="0"
                           maxlength="1" style="padding: 6px;">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- NUEVOS CAMPOS: Tributo, Actividad, Registro -->
+                  <div class="row">
+
+                    <!-- Tributo -->
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label>Tributo (Responsabilidad IVA)</label>
+                        <div class="input-group">
+                          <span class="input-group-addon"><i class="fa fa-money"></i></span>
+                          <select class="form-control" name="tributofactus" <?php echo $disabled; ?>>
+                            <?php
+                            $tributoActual = isset($configFactus['tributo_emisor']) ? $configFactus['tributo_emisor'] : 'no_responsable';
+                            ?>
+                            <option value="responsable_iva" <?php echo $tributoActual == 'responsable_iva' ? 'selected' : ''; ?>>Responsable de IVA</option>
+                            <option value="no_responsable" <?php echo $tributoActual == 'no_responsable' ? 'selected' : ''; ?>>No Responsable de IVA</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Registro Mercantil -->
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label>Registro Mercantil</label>
+                        <div class="input-group">
+                          <span class="input-group-addon"><i class="fa fa-registered"></i></span>
+                          <input type="text" class="form-control" name="registrofactus" <?php echo $readonly; ?>
+                            value="<?php echo isset($configFactus['registro_mercantil']) ? $configFactus['registro_mercantil'] : ''; ?>"
+                            placeholder="Número de Registro">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <!-- Actividad Económica -->
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label>Actividad Económica (Código)</label>
+                        <div class="input-group">
+                          <span class="input-group-addon"><i class="fa fa-briefcase"></i></span>
+                          <input type="text" class="form-control" name="actividadfactus" <?php echo $readonly; ?>
+                            value="<?php echo isset($configFactus['actividad_economica']) ? $configFactus['actividad_economica'] : ''; ?>"
+                            placeholder="Ej: 4711">
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -448,55 +512,6 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                             }
                             ?>
                           </select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- NUEVOS CAMPOS: Tributo, Actividad, Registro -->
-                  <div class="row">
-
-                    <!-- Tributo -->
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label>Tributo (Responsabilidad IVA)</label>
-                        <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-money"></i></span>
-                          <select class="form-control" name="tributofactus" <?php echo $disabled; ?>>
-                            <?php
-                            $tributoActual = isset($configFactus['tributo_emisor']) ? $configFactus['tributo_emisor'] : 'no_responsable';
-                            ?>
-                            <option value="responsable_iva" <?php echo $tributoActual == 'responsable_iva' ? 'selected' : ''; ?>>Responsable de IVA</option>
-                            <option value="no_responsable" <?php echo $tributoActual == 'no_responsable' ? 'selected' : ''; ?>>No Responsable de IVA</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Registro Mercantil -->
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label>Registro Mercantil</label>
-                        <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-registered"></i></span>
-                          <input type="text" class="form-control" name="registrofactus" <?php echo $readonly; ?>
-                            value="<?php echo isset($configFactus['registro_mercantil']) ? $configFactus['registro_mercantil'] : ''; ?>"
-                            placeholder="Número de Registro">
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="row">
-                    <!-- Actividad Económica -->
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label>Actividad Económica (Código)</label>
-                        <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-briefcase"></i></span>
-                          <input type="text" class="form-control" name="actividadfactus" <?php echo $readonly; ?>
-                            value="<?php echo isset($configFactus['actividad_economica']) ? $configFactus['actividad_economica'] : ''; ?>"
-                            placeholder="Ej: 4711">
                         </div>
                       </div>
                     </div>
@@ -771,12 +786,27 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
       }
     }
 
+    // Campo DV requerido dinámicamente para Persona Jurídica
+    function toggleDvRequired() {
+      var tipo = $("#tipoPersonaFactus").val();
+      var isEditable = !$("#dvFactus").prop("readonly") && !$("#dvFactus").prop("disabled");
+      if (tipo == "1" && isEditable) {
+        $("#labelDvFactus").html('DV <span class="text-danger">*</span>');
+        $("#dvFactus").prop("required", true);
+      } else {
+        $("#labelDvFactus").html('DV');
+        $("#dvFactus").prop("required", false);
+      }
+    }
+
     $("#tipoPersonaFactus").change(function () {
       toggleLabelName();
+      toggleDvRequired();
     });
 
     // Run on init
     toggleLabelName();
+    toggleDvRequired();
 
     // Al enviar el formulario, habilitar campos deshabilitados para que se envíen
     // Esto es necesario porque los campos disabled no se envían en el POST
