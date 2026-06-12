@@ -507,10 +507,10 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
                          ENTRADA METODO DE PAGO
                          ======================================-->
                 <?php
-                    $metodoPagoActual = $venta["metodo_pago"];
+                    $metodoPagoActual = isset($venta["metodo_pago"]) ? $venta["metodo_pago"] : "";
                     $codigoTransaccionActual = "";
                     
-                    if(strpos($metodoPagoActual, "-") !== false){
+                    if(!empty($metodoPagoActual) && strpos((string)$metodoPagoActual, "-") !== false){
                         $partesMetodo = explode("-", $metodoPagoActual);
                         $metodoPagoActual = $partesMetodo[0];
                         $codigoTransaccionActual = $partesMetodo[1];

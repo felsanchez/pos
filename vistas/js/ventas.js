@@ -1410,7 +1410,8 @@ function listarProductos() {
 			"stock": inputCant.attr("nuevoStock") || 0,
 			"precio": inputPrecio.attr("precioReal") || 0,
 			"total": inputPrecio.val() || 0,
-			"impuesto": inputImpuesto.attr("porcentaje") || 0
+			"impuesto": inputImpuesto.attr("porcentaje") || 0,
+			"impuestoNombre": inputImpuesto.attr("impuestoNombre") || ""
 		};
 
 		// Si es variante, agregar los campos adicionales (Validación estricta)
@@ -1432,13 +1433,14 @@ function listarProductos() {
 
 $(document).on("submit", ".formularioVenta", function (e) {
 
+	e.preventDefault();
+
 	// VALIDACIÓN INICIAL: Verificar si la lista de productos está vacía
 	listarProductos();
 	var listaProductos = $("#listaProductos").val();
 
 	if (!listaProductos || listaProductos.trim() == "" || listaProductos.trim() == "[]") {
 
-		e.preventDefault();
 		e.stopImmediatePropagation();
 
 		swal({
@@ -1451,16 +1453,43 @@ $(document).on("submit", ".formularioVenta", function (e) {
 		return false;
 	}
 
-	var form = this;
+	// VALIDACIÓN DE RETEIVA PARA PRODUCTOS SIN IVA (DIAN/Factus)
+	var inputRetenciones = $("#datosRetenciones").val();
+	if (inputRetenciones && inputRetenciones.trim() !== "" && inputRetenciones.trim() !== "[]") {
+		var retenciones = [];
+		var productosObj = [];
+		try {
+			retenciones = JSON.parse(inputRetenciones);
+			productosObj = JSON.parse(listaProductos);
+		} catch(err) {}
 
-	// Si el formulario ya ha sido confirmado, permitimos el envío
-	if ($(form).data('confirmado')) {
-		return true;
+		var tieneReteIva = retenciones.some(function(r) { return r.tipo === "ReteIVA"; });
+
+		var todosProductosSinIva = false;
+		if (tieneReteIva && productosObj && productosObj.length > 0) {
+			var algunProductoGeneraIva = productosObj.some(function(p) {
+				var tax = parseFloat(p.impuesto);
+				var nombreTax = p.impuestoNombre ? p.impuestoNombre.toUpperCase() : "";
+				return !isNaN(tax) && tax > 0 && nombreTax.indexOf("IVA") !== -1;
+			});
+			todosProductosSinIva = !algunProductoGeneraIva;
+		}
+
+		if (tieneReteIva && todosProductosSinIva) {
+			e.stopImmediatePropagation();
+			swal({
+				title: "Error de Retención",
+				text: "No se puede aplicar ReteIVA si la factura contiene únicamente productos sin IVA (Exentos o Excluidos).",
+				type: "error",
+				confirmButtonText: "Cerrar"
+			});
+			return false;
+		}
 	}
 
-	e.preventDefault();
+	var form = this;
 
-	// Primero listamos productos y métodos para asegurar que los campos ocultos estén listos
+	// Listar productos y métodos para asegurar que los campos ocultos estén listos
 	listarProductos();
 	listarMetodos();
 
@@ -1475,7 +1504,6 @@ $(document).on("submit", ".formularioVenta", function (e) {
 		confirmButtonText: 'Sí, guardar'
 	}).then((result) => {
 		if (result.value) {
-			$(form).data('confirmado', true);
 
 			swal({
 				title: 'Guardando Venta',
@@ -1542,6 +1570,7 @@ $(document).on("submit", ".formularioVenta", function (e) {
 		}
 	});
 });
+
 
 
 /*=============================================
@@ -2303,14 +2332,14 @@ $(document).ready(function () {
 					});
 				}
 			},
-			"order": [[7, "desc"]],
+			"order": [[6, "desc"]],
 			"responsive": {
 				"details": {
 					"type": "inline",
 					"renderer": function (api, rowIdx, columns) {
 						var labels = {
 							2: 'Vendedor', 3: 'Imagen', 4: 'Total',
-							5: 'Notas del cliente', 6: 'Observación', 7: 'Fecha'
+							5: 'Notas del cliente', 6: 'Fecha', 7: 'Observación'
 						};
 						var idVenta = $(api.row(rowIdx).node()).attr('data-venta-id') || '';
 						var finalHtml = '';
@@ -2323,7 +2352,7 @@ $(document).ready(function () {
 							var label = labels[colIdx] || col.title || ('Columna ' + colIdx);
 							var data = col.data || '';
 
-							if (colIdx === 6) {
+							if (colIdx === 7) {
 								var obsTexto = $('<div>').html(data).text().trim();
 								finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
 								finalHtml += '<span class="text-bold" style="block;color:#555;margin-bottom:4px;"> ' + label + ':</span>';

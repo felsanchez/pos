@@ -142,9 +142,9 @@ class ModeloVentas
 			throw new Exception("Error Crítico: Intento de editar venta sin productos en el Modelo.");
 		}
 
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET id_cliente = :id_cliente, numero_factura = :numero_factura, id_vendedor = :id_vendedor, id_bodega = :id_bodega, productos = :productos, impuesto = :impuesto, neto = :neto, total = :total, metodo_pago = :metodo_pago, notas = :notas, observacion = :observacion, estado = :estado, fecha = :fecha, tipo_descuento = :tipo_descuento, valor_descuento = :valor_descuento, monto_descuento = :monto_descuento, recibe = :recibe, extra = :extra, retenciones = :retenciones, resolucion_id = :resolucion_id, fecha_vencimiento = :fecha_vencimiento, orden_compra = :orden_compra, forma_pago_dian = :forma_pago_dian, metodo_pago_dian_id = :metodo_pago_dian_id, estado_dian = :estado_dian, cufe = :cufe, qr_data = :qr_data, xml_dian = :xml_dian, pdf_dian = :pdf_dian, mensaje_dian = :mensaje_dian, fecha_envio_dian = :fecha_envio_dian WHERE codigo = :codigo");
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET id_cliente = :id_cliente, numero_factura = :numero_factura, id_vendedor = :id_vendedor, id_bodega = :id_bodega, productos = :productos, impuesto = :impuesto, neto = :neto, total = :total, metodo_pago = :metodo_pago, notas = :notas, observacion = :observacion, estado = :estado, fecha = :fecha, tipo_descuento = :tipo_descuento, valor_descuento = :valor_descuento, monto_descuento = :monto_descuento, recibe = :recibe, extra = :extra, retenciones = :retenciones, resolucion_id = :resolucion_id, fecha_vencimiento = :fecha_vencimiento, orden_compra = :orden_compra, forma_pago_dian = :forma_pago_dian, metodo_pago_dian_id = :metodo_pago_dian_id, estado_dian = :estado_dian, cufe = :cufe, qr_data = :qr_data, xml_dian = :xml_dian, pdf_dian = :pdf_dian, mensaje_dian = :mensaje_dian, fecha_envio_dian = :fecha_envio_dian WHERE id = :id");
 
-		$stmt->bindParam(":codigo", $datos["codigo"], PDO::PARAM_INT);
+		$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
 		$stmt->bindParam(":numero_factura", $datos["numero_factura"], PDO::PARAM_STR);
 		$stmt->bindParam(":id_cliente", $datos["id_cliente"], PDO::PARAM_STR);
 		$stmt->bindParam(":id_vendedor", $datos["id_vendedor"], PDO::PARAM_STR);

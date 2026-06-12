@@ -214,8 +214,8 @@ if ($xml) {
                 <th>Imagen</th>
                 <th>Total</th>
                 <th><i class="fa fa-magic"></i> Notas del Cliente</th>
-                <th>Observación</th>
                 <th>Fecha</th>
+                <th>Observación</th>
                 <th>Acciones</th>
               </tr>
             </thead>

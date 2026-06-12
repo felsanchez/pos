@@ -81,8 +81,8 @@ $listaProducto = json_decode($nota["productos"], true);
                                 </div>
                             </div>
 
-                            <div class="row invoice-info">
-                                <div class="col-sm-3 invoice-col">
+                            <div class="row row-flex invoice-info">
+                                <div class="col-sm-4 invoice-col">
                                     <span
                                         style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #3c8dbc; display: block; margin-bottom: 10px; width: fit-content;">Emisor (Comprador)</span>
                                     <address>
@@ -118,7 +118,7 @@ $listaProducto = json_decode($nota["productos"], true);
                                     </address>
                                 </div>
 
-                                <div class="col-sm-3 invoice-col">
+                                <div class="col-sm-4 invoice-col">
                                     <span
                                         style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #3c8dbc; display: block; margin-bottom: 10px; width: fit-content;">Proveedor (Vendedor)</span>
                                     <address>
@@ -138,16 +138,12 @@ $listaProducto = json_decode($nota["productos"], true);
                                     </address>
                                 </div>
 
-                                <div class="col-sm-3 invoice-col">
-                                    <span
-                                        style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #3c8dbc; display: block; margin-bottom: 10px; width: fit-content;">Referencia Original</span>
-                                    <b>Doc. Soporte Original:</b> <?php echo $nota["numero_ds_original"]; ?>
-                                </div>
-
-                                <div class="col-sm-3 invoice-col">
+                                <div class="col-sm-4 invoice-col">
                                     <span
                                         style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #3c8dbc; display: block; margin-bottom: 10px; width: fit-content;">Detalles Nota</span>
                                     <b>Nota Ajuste #:</b> <?php echo $nota["numero_nota_ajuste"]; ?><br>
+                                    <b>Doc. Soporte Original:</b> <?php echo $nota["numero_ds_original"]; ?><br>
+                                    <b>Vendedor:</b> <?php echo htmlspecialchars($vendedor["nombre"] ?? 'N/A'); ?><br>
                                     <b>Concepto Ajuste:</b> <?php
                                     $conceptos = [
                                         "1" => "Devolución parcial de los bienes y/o no aceptación parcial del servicio",
@@ -158,7 +154,8 @@ $listaProducto = json_decode($nota["productos"], true);
                                     ];
                                     echo $conceptos[$nota["tipo_nota"]] ?? "No definido";
                                     ?><br>
-                                    <b>Medio de Pago:</b>
+                                    <b>Estado DIAN:</b> <?php echo ucfirst(htmlspecialchars($nota["estado_dian"] ?? 'Pendiente')); ?><br>
+                                    <b>Método de Pago:</b>
                                     <?php echo htmlspecialchars($nota["metodo_pago"] ?? "No definido"); ?>
                                 </div>
                             </div>

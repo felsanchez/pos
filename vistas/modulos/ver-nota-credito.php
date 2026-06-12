@@ -200,6 +200,8 @@ if (empty($cufeFactura) && !empty($venta["qr_data"])) {
                                     </b><br>
                                     <b>Factura Relacionada:</b>
                                     <?php echo $notaCredito["numero_factura_original"]; ?><br>
+                                    <b>Vendedor:</b>
+                                    <?php echo htmlspecialchars($vendedor["nombre"] ?? 'No asignado'); ?><br>
                                     <b>Motivo:</b>
                                     <?php
                                     $motivoNC = $notaCredito["motivo"];

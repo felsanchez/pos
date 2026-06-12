@@ -659,7 +659,8 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 	=============================================*/
 	static public function mdlActualizarStockVarianteBodega($idVariante, $idBodega, $cantidad)
 	{
-		$stmt = Conexion::conectar()->prepare("INSERT INTO productos_variantes_bodegas (id_variante, id_bodega, stock, estado) 
+		$db = Conexion::conectar();
+		$stmt = $db->prepare("INSERT INTO productos_variantes_bodegas (id_variante, id_bodega, stock, estado) 
 											   VALUES (:id_variante, :id_bodega, :stock, 1)
 											   ON DUPLICATE KEY UPDATE stock = :stock, estado = 1");
 
@@ -668,6 +669,37 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 		$stmt->bindParam(":stock", $cantidad, PDO::PARAM_INT);
 
 		if ($stmt->execute()) {
+			// Recalcular el stock del producto base en esta bodega
+			try {
+				$stmtProd = $db->prepare("SELECT id_producto FROM productos_variantes WHERE id = :id_variante");
+				$stmtProd->bindParam(":id_variante", $idVariante, PDO::PARAM_INT);
+				$stmtProd->execute();
+				$resProd = $stmtProd->fetch();
+				$stmtProd = null;
+
+				if ($resProd) {
+					$idProductoBase = $resProd["id_producto"];
+
+					$stmtSum = $db->prepare("
+						SELECT COALESCE(SUM(pvb.stock), 0) as total 
+						FROM productos_variantes_bodegas pvb 
+						INNER JOIN productos_variantes pv ON pvb.id_variante = pv.id 
+						WHERE pv.id_producto = :id_producto AND pvb.id_bodega = :id_bodega AND pv.estado = 1
+					");
+					$stmtSum->bindParam(":id_producto", $idProductoBase, PDO::PARAM_INT);
+					$stmtSum->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
+					$stmtSum->execute();
+					$resSum = $stmtSum->fetch();
+					$stmtSum = null;
+
+					$stockBaseBodega = $resSum ? intval($resSum["total"]) : 0;
+
+					self::mdlActualizarStockBodega($idProductoBase, $idBodega, $stockBaseBodega);
+				}
+			} catch (Exception $e) {
+				error_log("Error in mdlActualizarStockVarianteBodega recalculating base stock: " . $e->getMessage());
+			}
+
 			return "ok";
 		} else {
 			return "error";

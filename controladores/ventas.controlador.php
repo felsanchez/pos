@@ -45,8 +45,8 @@ class ControladorVentas
 			3 => 'v.id', // Imagen
 			4 => 'v.total',
 			5 => 'v.notas',
-			6 => 'v.observacion',
-			7 => 'v.fecha'
+			6 => 'v.fecha',
+			7 => 'v.observacion'
 		);
 
 		// Obtener configuración para moneda y formato
@@ -170,11 +170,11 @@ class ControladorVentas
 			$notasLimpias = str_replace(array(" [Notificado_n8n]", "[Notificado_n8n]", " [Notificado]", "[Notificado]"), "", $value['notas']);
 			$nestedData[] = e(trim($notasLimpias));
 
-			// 7: Observación (Editable)
-			$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . $value['id'] . '">' . $value['observacion'] . '</div>';
-
-			// 8: Fecha
+			// 7: Fecha
 			$nestedData[] = $value["fecha"];
+
+			// 8: Observación (Editable)
+			$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . $value['id'] . '">' . $value['observacion'] . '</div>';
 
 			// 9: Acciones
 			$botonesAcciones = '<div class="btn-group col-acciones">';
@@ -1010,6 +1010,7 @@ class ControladorVentas
 
 				// Actualizar la venta
 				$datos = array(
+					"id" => $idVenta,
 					"codigo" => $venta["codigo"], // WHERE clause
 					"id_cliente" => $_POST["seleccionarCliente"],
 					"id_vendedor" => $_POST["idVendedor"],
@@ -1956,7 +1957,7 @@ class ControladorVentas
 				}
 
 				$datos = array(
-
+					"id" => $traerVenta["id"],
 					"id_vendedor" => $_POST["idVendedor"],
 					"id_cliente" => $_POST["seleccionarCliente"],
 					"id_bodega" => $idBodegaActual,

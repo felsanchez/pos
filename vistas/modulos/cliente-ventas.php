@@ -280,7 +280,7 @@ if($xml){
 =            SCRIPTS           =-->
 <!--=====================================-->
 
-<script src="vistas/js/ventas.js"></script>
+<!-- ventas.js ya cargado por plantilla.php -->
 
 <!-- DateRangePicker -->
 <script src="vistas/bower_components/moment/min/moment.min.js"></script>

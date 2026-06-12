@@ -612,8 +612,8 @@ MODAL AGREGAR CLIENTE
           <!-- Campos ocultos -->
           <input type="hidden" name="activarFacturaElectronica" value="1">
           <input type="hidden" name="nuevoEstatus" value="nuevo">
-          <input type="hidden" name="origen" value="crear-venta">
-          <input type="hidden" name="vistaOrigen" value="crear-venta">
+          <input type="hidden" name="origen" value="crear-factura-electronica">
+          <input type="hidden" name="vistaOrigen" value="crear-factura-electronica">
 
         </div>
       </div>
@@ -654,6 +654,38 @@ MODAL AGREGAR CLIENTE
             confirmButtonText: "Cerrar"
           });
           return false;
+        }
+
+        // VALIDACIÓN DE RETEIVA PARA PRODUCTOS SIN IVA (DIAN/Factus)
+        var inputRetenciones = $("#datosRetenciones").val();
+        if (inputRetenciones && inputRetenciones.trim() !== "" && inputRetenciones.trim() !== "[]") {
+          var retenciones = [];
+          var productosObj = [];
+          try {
+            retenciones = JSON.parse(inputRetenciones);
+            productosObj = JSON.parse(listaProductos);
+          } catch(err) {}
+
+          var tieneReteIva = retenciones.some(function(r) { return r.tipo === "ReteIVA"; });
+          var todosProductosSinIva = false;
+          if (tieneReteIva && productosObj && productosObj.length > 0) {
+            var algunProductoGeneraIva = productosObj.some(function(p) {
+              var tax = parseFloat(p.impuesto);
+              var nombreTax = p.impuestoNombre ? p.impuestoNombre.toUpperCase() : "";
+              return !isNaN(tax) && tax > 0 && nombreTax.indexOf("IVA") !== -1;
+            });
+            todosProductosSinIva = !algunProductoGeneraIva;
+          }
+
+          if (tieneReteIva && todosProductosSinIva) {
+            swal({
+              title: "Error de Retención",
+              text: "No se puede aplicar ReteIVA si la factura contiene únicamente productos sin IVA (Exentos o Excluidos).",
+              type: "error",
+              confirmButtonText: "Cerrar"
+            });
+            return false;
+          }
         }
 
         // 2. Validar cliente

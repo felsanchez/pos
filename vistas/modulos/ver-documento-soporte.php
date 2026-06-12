@@ -156,18 +156,18 @@ $retencionesDS = !empty($documentoSoporte["retenciones"]) ? json_decode($documen
                                     <b>Documento Soporte #
                                         <?php echo $documentoSoporte["numero_ds"]; ?>
                                     </b><br>
+                                    <b>Vendedor:</b>
+                                    <?php echo htmlspecialchars($vendedor["nombre"] ?? 'N/A'); ?><br>
+                                    <b>Estado DIAN:</b>
+                                    <?php echo ucfirst(htmlspecialchars($documentoSoporte["estado_dian"])); ?><br>
                                     <b>Método de Pago:</b>
                                     <?php
                                     $partesMetodo = explode("-", $documentoSoporte["metodo_pago"]);
-                                    echo $partesMetodo[0];
+                                    echo htmlspecialchars($partesMetodo[0]);
                                     if (isset($partesMetodo[1]) && !empty($partesMetodo[1])) {
-                                        echo ' (' . $partesMetodo[1] . ')';
+                                        echo ' (' . htmlspecialchars($partesMetodo[1]) . ')';
                                     }
                                     ?><br>
-                                    <b>Estado DIAN:</b>
-                                    <?php echo ucfirst($documentoSoporte["estado_dian"]); ?><br>
-                                    <b>Vendedor:</b>
-                                    <?php echo $vendedor["nombre"] ?? 'N/A'; ?>
                                 </div>
                             </div>
 

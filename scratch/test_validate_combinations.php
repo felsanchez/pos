@@ -11,7 +11,7 @@ $token = $auth['token'];
 
 // Load sale 12 as base payload
 $db = Conexion::conectar();
-$stmt = $db->prepare("SELECT * FROM ventas WHERE id = 12");
+$stmt = $db->prepare("SELECT * FROM ventas WHERE id = 163");
 $stmt->execute();
 $venta = $stmt->fetch();
 $baseFactura = ControladorFactus::prepararDatosFactura($venta);

@@ -580,7 +580,7 @@ class ControladorFactus
 		// Validar rango activo
 		$rango = ModeloFactus::mdlObtenerRangoActivo();
 		if (!$rango) {
-			$errores[] = "No hay rango de numeración activo configurado en Factus. Vaya a Configuración > Factus y sincronice los rangos.";
+			$errores[] = "No hay rango de numeración activo configurado en Factus. Vaya a Configuración > Datos para la Factura y sincronice los rangos.";
 			return $errores;
 		}
 
@@ -602,14 +602,14 @@ class ControladorFactus
 				// Intentar refrescar token automáticamente
 				$tokenNuevo = ModeloFactus::mdlGarantizarTokenValido();
 				if (!$tokenNuevo) {
-					$errores[] = "El token de Factus ha expirado y no se pudo renovar automáticamente. Vaya a Configuración > Factus y haga clic en 'Autenticar' nuevamente.";
+					$errores[] = "El token de Factus ha expirado y no se pudo renovar automáticamente. Vaya a Configuración > Datos para la Factura y haga clic en 'Autenticar' nuevamente.";
 				}
 			}
 		} else {
 			// Si no hay fecha de expiración, también intentamos obtener/refrescar
 			$tokenNuevo = ModeloFactus::mdlGarantizarTokenValido();
 			if (!$tokenNuevo) {
-				$errores[] = "No hay un token válido de Factus. Vaya a Configuración > Factus y autentíquese.";
+				$errores[] = "No hay un token válido de Factus. Vaya a Configuración > Datos para la Factura y autentíquese.";
 			}
 		}
 
@@ -1005,9 +1005,9 @@ class ControladorFactus
 						fwrite($logRet, "  -> No match, default 06\n");
 					}
 
-					// 🔴 VALIDACIÓN: ReteIVA solo se aplica a items con IVA (código tributo 1)
-					if ($esReteIVA && $codeTributo != 1) {
-						fwrite($logRet, "  -> OMITIDO: ReteIVA solo aplica a IVA (código 1), este item tiene tributo código " . $codeTributo . "\n");
+					// 🔴 VALIDACIÓN: ReteIVA solo se aplica a items con IVA (código tributo 1) y con tasa mayor a 0%
+					if ($esReteIVA && ($codeTributo != 1 || floatval($tasaImpuesto) == 0.00)) {
+						fwrite($logRet, "  -> OMITIDO: ReteIVA solo aplica a IVA (código 1) con tasa > 0%, este item tiene tributo código " . $codeTributo . " y tasa " . $tasaImpuesto . "\n");
 						fclose($logRet);
 						continue; // Saltar esta retención para este item
 					}
@@ -1058,7 +1058,10 @@ class ControladorFactus
 		} else {
 			$metodoPagoDianId = "10"; // Default Efectivo
 		}
-		$fechaVencimiento = isset($venta['fecha_vencimiento']) && !empty($venta['fecha_vencimiento']) ? $venta['fecha_vencimiento'] : date('Y-m-d', strtotime('+30 days'));
+		// Evitar fecha_vencimiento como '0000-00-00'
+		$fechaVencimiento = isset($venta['fecha_vencimiento']) && !empty($venta['fecha_vencimiento']) && $venta['fecha_vencimiento'] !== '0000-00-00'
+			? $venta['fecha_vencimiento']
+			: ($formaPagoDian === "2" ? date('Y-m-d', strtotime('+30 days')) : date('Y-m-d'));
 
 		// Obtener Rango Dinámico
 		$rango = ModeloFactus::mdlObtenerRangoActivo();
@@ -1130,7 +1133,9 @@ class ControladorFactus
 
 			"customer" => (function () use ($cliente, $tipoDocumentoId, $municipioFactusId) {
 				// 1. Procesar Responsabilidades Fiscales primero
-				$inputResp = $cliente['responsabilidades_fiscales'] ?? 'R-99-PN';
+				$inputResp = strtoupper($cliente['responsabilidades_fiscales'] ?? 'R-99-PN');
+				// Convertir errores comunes de digitación (ej: número 0 en lugar de letra O)
+				$inputResp = str_replace(['0-13', '0-15', '0-23', '0-47'], ['O-13', 'O-15', 'O-23', 'O-47'], $inputResp);
 
 				// DEBUG: Registrar input 
 				Logger::debug("Input Cliente ID " . ($cliente['id'] ?? '?') . ": " . $inputResp . "\n", FILE_APPEND);
@@ -1169,8 +1174,17 @@ class ControladorFactus
 				$isJuridica = (trim(strtolower($cliente['tipo_persona'] ?? 'natural')) == 'juridica');
 
 				// 3. Tributo del Cliente
-				$tieneResponsabilidadIVA = !empty(array_intersect($codes, ['O-13', 'O-15', 'O-23', 'O-47']));
-				$tributeIdCliente = $tieneResponsabilidadIVA ? "18" : ($isJuridica && !in_array('ZY', $codes) ? "18" : "21");
+				$respTributaria = $cliente['responsabilidad_tributaria'] ?? null;
+				$tieneObligacionIVA = !empty(array_intersect($codes, ['O-13', 'O-15', 'O-23', 'O-47']));
+
+				if ($tieneObligacionIVA) {
+					// Regla DIAN: Si tiene responsabilidades fiscales como O-13 (Gran Contribuyente), O-15, O-23, O-47, debe reportar tributo 01 - IVA (ID 18)
+					$tributeIdCliente = "18";
+				} elseif (!empty($respTributaria)) {
+					$tributeIdCliente = ($respTributaria === 'responsable') ? "18" : "21";
+				} else {
+					$tributeIdCliente = $isJuridica && !in_array('ZY', $codes) ? "18" : "21";
+				}
 
 				// 4. Calcular DV si aplica (para Jurídicas o NIT)
 				$dv = $cliente['digito_verificacion'] ?? '';
@@ -1719,7 +1733,9 @@ class ControladorFactus
 		$tipoDocCliente = !empty($cliente['tipo_documento_id']) ? intval($cliente['tipo_documento_id']) : 6;
 
 		// Responsabilidades fiscales del cliente
-		$inputRespCliente = $cliente['responsabilidades_fiscales'] ?? 'R-99-PN';
+		$inputRespCliente = strtoupper($cliente['responsabilidades_fiscales'] ?? 'R-99-PN');
+		// Convertir errores comunes de digitación (ej: número 0 en lugar de letra O)
+		$inputRespCliente = str_replace(['0-13', '0-15', '0-23', '0-47'], ['O-13', 'O-15', 'O-23', 'O-47'], $inputRespCliente);
 		preg_match_all('/\b([A-Z]{1,2}(?:-[0-9A-Z]+)*)\b/', $inputRespCliente, $matches);
 		$rawCodesCliente = array_unique($matches[0] ?? []);
 		$codigosValidosCliente = ['O-13', 'O-15', 'O-23', 'O-47', 'R-99-PN', 'ZY'];
@@ -1739,8 +1755,17 @@ class ControladorFactus
 		}
 
 		$isJuridicaCliente = (trim(strtolower($cliente['tipo_persona'] ?? 'natural')) == 'juridica');
-		$tieneResponsabilidadIVA = !empty(array_intersect($codesCliente, ['O-13', 'O-15', 'O-23', 'O-47']));
-		$tributeIdCliente = $tieneResponsabilidadIVA ? "18" : ($isJuridicaCliente && !in_array('ZY', $codesCliente) ? "18" : "21");
+		$respTributariaCliente = $cliente['responsabilidad_tributaria'] ?? null;
+		$tieneObligacionIVACliente = !empty(array_intersect($codesCliente, ['O-13', 'O-15', 'O-23', 'O-47']));
+
+		if ($tieneObligacionIVACliente) {
+			// Regla DIAN: Si tiene responsabilidades fiscales como O-13 (Gran Contribuyente), O-15, O-23, O-47, debe reportar tributo 01 - IVA (ID 18)
+			$tributeIdCliente = "18";
+		} elseif (!empty($respTributariaCliente)) {
+			$tributeIdCliente = ($respTributariaCliente === 'responsable') ? "18" : "21";
+		} else {
+			$tributeIdCliente = $isJuridicaCliente && !in_array('ZY', $codesCliente) ? "18" : "21";
+		}
 
 		$dvCliente = $cliente['digito_verificacion'] ?? '';
 		if ($isJuridicaCliente || $cliente['tipo_documento_id'] == 6) { // 6 is database ID for NIT

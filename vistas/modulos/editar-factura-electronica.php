@@ -151,7 +151,7 @@ $productosVenta = json_decode($venta["productos"], true);
                         // Obtener el siguiente consecutivo de Factus
                         $siguienteNumero = ModeloFactus::mdlObtenerSiguienteConsecutivoFactus();
                         ?>
-                        <input type="text" class="form-control" id="nuevaVenta" name="nuevaVenta"
+                        <input type="text" class="form-control" id="nuevaVenta" name="proximoNumeroFactura"
                           value="<?php echo $siguienteNumero; ?>" readonly>
                       </div>
                     </div>
@@ -403,7 +403,7 @@ $productosVenta = json_decode($venta["productos"], true);
               <input type="hidden" name="activarFacturaElectronica" value="1">
               <!-- Campo hidden garantiza que editarVentaFactus llega al servidor vía AJAX FormData -->
               <input type="hidden" name="editarVentaFactus" value="1">
-              <button type="submit" class="btn btn-primary pull-right">Actualizar Borrador</button>
+              <button type="submit" class="btn btn-primary pull-right" id="btnActualizarBorrador">Actualizar Borrador</button>
             </div>
 
           </form>
@@ -579,8 +579,8 @@ MODAL AGREGAR CLIENTE
           <!-- Campos ocultos -->
           <input type="hidden" name="activarFacturaElectronica" value="1">
           <input type="hidden" name="nuevoEstatus" value="nuevo">
-          <input type="hidden" name="origen" value="crear-venta">
-          <input type="hidden" name="vistaOrigen" value="crear-venta">
+          <input type="hidden" name="origen" value="index.php?ruta=editar-factura-electronica&idVenta=<?php echo $_GET["idVenta"]; ?>">
+          <input type="hidden" name="vistaOrigen" value="index.php?ruta=editar-factura-electronica&idVenta=<?php echo $_GET["idVenta"]; ?>">
 
         </div>
       </div>
@@ -604,9 +604,9 @@ MODAL AGREGAR CLIENTE
 
     <script>
       $(document).on("submit", ".formularioVenta", function (e) {
+        e.preventDefault(); // Siempre bloquear el POST normal — el envío real lo hace ventas.js vía AJAX
         var listaProductos = $("#listaProductos").val();
         if (!listaProductos || listaProductos.trim() == "" || listaProductos.trim() == "[]") {
-          e.preventDefault();
           e.stopImmediatePropagation();
           swal({
             type: "error",
@@ -615,6 +615,39 @@ MODAL AGREGAR CLIENTE
             confirmButtonText: "Cerrar"
           });
           return false;
+        }
+
+        // VALIDACIÓN DE RETEIVA PARA PRODUCTOS SIN IVA (DIAN/Factus)
+        var inputRetenciones = $("#datosRetenciones").val();
+        if (inputRetenciones && inputRetenciones.trim() !== "" && inputRetenciones.trim() !== "[]") {
+          var retenciones = [];
+          var productosObj = [];
+          try {
+            retenciones = JSON.parse(inputRetenciones);
+            productosObj = JSON.parse(listaProductos);
+          } catch(err) {}
+
+          var tieneReteIva = retenciones.some(function(r) { return r.tipo === "ReteIVA"; });
+          var todosProductosSinIva = false;
+          if (tieneReteIva && productosObj && productosObj.length > 0) {
+            var algunProductoGeneraIva = productosObj.some(function(p) {
+              var tax = parseFloat(p.impuesto);
+              var nombreTax = p.impuestoNombre ? p.impuestoNombre.toUpperCase() : "";
+              return !isNaN(tax) && tax > 0 && nombreTax.indexOf("IVA") !== -1;
+            });
+            todosProductosSinIva = !algunProductoGeneraIva;
+          }
+
+          if (tieneReteIva && todosProductosSinIva) {
+            e.stopImmediatePropagation();
+            swal({
+              title: "Error de Retención",
+              text: "No se puede aplicar ReteIVA si la factura contiene únicamente productos sin IVA (Exentos o Excluidos).",
+              type: "error",
+              confirmButtonText: "Cerrar"
+            });
+            return false;
+          }
         }
       });
     </script>
@@ -1047,8 +1080,9 @@ MODAL AGREGAR RETENCION
 </script>
 
 <?php
-
-$crearFactura = new ControladorVentas();
-$crearFactura->ctrCrearVenta();
-
+// Solo procesar el formulario si es un POST real con el campo esperado
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editarVentaFactus'])) {
+    $crearFactura = new ControladorVentas();
+    $crearFactura->ctrCrearVenta();
+}
 ?>

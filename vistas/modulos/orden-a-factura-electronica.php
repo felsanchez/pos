@@ -448,10 +448,10 @@ $totalProductos = 0;
                       MÉTODO DE PAGO
                       ======================================-->
                                  <?php
-                                    $metodoPagoActual = $venta["metodo_pago"];
+                                    $metodoPagoActual = isset($venta["metodo_pago"]) ? $venta["metodo_pago"] : "";
                                     $codigoTransaccionActual = "";
                                     
-                                    if(strpos($metodoPagoActual, "-") !== false){
+                                    if(!empty($metodoPagoActual) && strpos((string)$metodoPagoActual, "-") !== false){
                                         $partesMetodo = explode("-", $metodoPagoActual);
                                         $metodoPagoActual = $partesMetodo[0];
                                         $codigoTransaccionActual = $partesMetodo[1];
@@ -679,8 +679,9 @@ MODAL AGREGAR CLIENTE
 
             <!-- Campos ocultos -->
             <input type="hidden" name="nuevoEstatus" value="nuevo">
-            <input type="hidden" name="origen" value="orden-a-factura-electronica">
-            <input type="hidden" name="vistaOrigen" value="orden-a-factura-electronica">
+            <input type="hidden" name="origen" value="index.php?ruta=orden-a-factura-electronica&idVenta=<?php echo $_GET["idVenta"]; ?>">
+            <input type="hidden" name="vistaOrigen" value="index.php?ruta=orden-a-factura-electronica&idVenta=<?php echo $_GET["idVenta"]; ?>">
+            <input type="hidden" name="urlActual" value="index.php?ruta=orden-a-factura-electronica&idVenta=<?php echo $_GET["idVenta"]; ?>">
 
           </div>
 
@@ -886,6 +887,39 @@ MODAL AGREGAR RETENCION
                 e.preventDefault();
                 swal({ type: 'error', title: 'Sin productos', text: 'Debe agregar al menos un producto.', showConfirmButton: true, confirmButtonText: 'Cerrar' });
                 return false;
+            }
+
+            // VALIDACIÓN DE RETEIVA PARA PRODUCTOS SIN IVA (DIAN/Factus)
+            var inputRetenciones = $("#datosRetenciones").val();
+            if (inputRetenciones && inputRetenciones.trim() !== "" && inputRetenciones.trim() !== "[]") {
+              var retenciones = [];
+              var productosObj = [];
+              try {
+                retenciones = JSON.parse(inputRetenciones);
+                productosObj = JSON.parse(listaProductos);
+              } catch(err) {}
+
+              var tieneReteIva = retenciones.some(function(r) { return r.tipo === "ReteIVA"; });
+              var todosProductosSinIva = false;
+              if (tieneReteIva && productosObj && productosObj.length > 0) {
+                var algunProductoGeneraIva = productosObj.some(function(p) {
+                  var tax = parseFloat(p.impuesto);
+                  var nombreTax = p.impuestoNombre ? p.impuestoNombre.toUpperCase() : "";
+                  return !isNaN(tax) && tax > 0 && nombreTax.indexOf("IVA") !== -1;
+                });
+                todosProductosSinIva = !algunProductoGeneraIva;
+              }
+
+              if (tieneReteIva && todosProductosSinIva) {
+                e.preventDefault();
+                swal({
+                  title: "Error de Retención",
+                  text: "No se puede aplicar ReteIVA si la factura contiene únicamente productos sin IVA (Exentos o Excluidos).",
+                  type: "error",
+                  confirmButtonText: "Cerrar"
+                });
+                return false;
+              }
             }
             if ($('#forma_pago_dian').val() === '2' && !$('#fecha_vencimiento_fe').val()) {
                 e.preventDefault();

@@ -474,7 +474,6 @@ MODAL EDITAR CLIENTE
 
 
 <!--Ruta Clientes.js-->
-<script src="vistas/js/ventas.js"></script>
 <script src="vistas/js/notas-credito.js"></script>
 
 <!-- DateRangePicker -->

@@ -242,6 +242,7 @@ $etiquetaDocumento = "Factura";
           #<?php echo (!empty($venta["numero_factura"]) ? $venta["numero_factura"] : ($venta["codigo"] ?? '')); ?></b><br>
         <br>
         <b>Vendedor:</b> <?php echo $vendedor["nombre"] ?? ''; ?><br>
+        <b>Estado Dian:</b> <?php echo !empty($venta["estado_dian"]) ? ucfirst(htmlspecialchars($venta["estado_dian"])) : 'Pendiente'; ?><br>
         <b>Método de Pago:</b>
         <?php
         $partesMetodo = explode("-", $venta["metodo_pago"] ?? "");
