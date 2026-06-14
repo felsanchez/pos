@@ -200,13 +200,14 @@ if ($xml) {
                   <th>Imagen</th>
 
                   <th>Total</th>
-                  <th>Estado DIAN</th>
                   <th><i class="fa fa-magic"></i> Notas del Cliente</th>
-                  <th>Observación</th>
                   <th>Fecha</th>
+                  <th>Observación</th>
+                  <th>Estado DIAN</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
+              <input type="hidden" id="columnaNotasClienteActiva" value="<?php echo (!isset($configuracion["columna_notas_cliente_activa"]) || $configuracion["columna_notas_cliente_activa"] == 1) ? 1 : 0; ?>">
 
               <tbody>
               </tbody>
@@ -849,7 +850,7 @@ MODAL ENVIAR EMAIL
               "renderer": function (api, rowIdx, columns) {
                 var labels = {
                   2: 'Vendedor', 3: 'Imagen', 4: 'Total',
-                  5: 'Estado DIAN', 6: 'Notas del cliente', 7: 'Observación', 8: 'Fecha'
+                  5: 'Notas del cliente', 6: 'Fecha', 7: 'Observación', 8: 'Estado DIAN'
                 };
                 var idVenta = $(api.row(rowIdx).node()).find('.celda-observacion').attr('data-id') || '';
                 var obsReadonly = $(api.row(rowIdx).node()).find('.celda-observacion').attr('data-readonly') || '0';
@@ -863,7 +864,7 @@ MODAL ENVIAR EMAIL
                   var label = labels[colIdx] || col.title || ('Columna ' + colIdx);
                   var data = col.data || '';
 
-                  if (colIdx === 7) { // Observación
+                  if (colIdx === 7) { // Observación (new index is 7)
                     var obsTexto = $('<div>').html(data).text().trim();
                     var obsEditableAttr = obsReadonly === '1' ? 'false' : 'true';
                     var obsStyleStr = obsReadonly === '1'
@@ -909,19 +910,26 @@ MODAL ENVIAR EMAIL
             $('#wrapperTablaFacturas').fadeIn(200);
             $('#contenedorFiltrosFacturas').removeClass('fe-ui-hidden').css('display', '');
           },
-          "order": [[8, "desc"]], // Fecha
-          "columnDefs": [
-            { "targets": 0, "responsivePriority": 1 },
-            { "targets": 9, "responsivePriority": 2, "orderable": false },
-            { "targets": 1, "responsivePriority": 3 },
-            { "targets": 2, "responsivePriority": 4 },
-            { "targets": 3, "responsivePriority": 5, "orderable": false },
-            { "targets": 4, "responsivePriority": 6 },
-            { "targets": 5, "responsivePriority": 7, "orderable": false },
-            { "targets": 6, "responsivePriority": 8 },
-            { "targets": 7, "responsivePriority": 9, "orderable": false },
-            { "targets": 8, "responsivePriority": 10 }
-          ],
+          "order": [[6, "desc"]], // Fecha (new index is 6)
+          "columnDefs": (function() {
+            var notasActiva = $('#columnaNotasClienteActiva').val();
+            var defs = [
+              { "targets": 0, "responsivePriority": 1 },
+              { "targets": 9, "responsivePriority": 2, "orderable": false },
+              { "targets": 1, "responsivePriority": 3 },
+              { "targets": 2, "responsivePriority": 4 },
+              { "targets": 3, "responsivePriority": 5, "orderable": false },
+              { "targets": 4, "responsivePriority": 6 },
+              { "targets": 5, "responsivePriority": 7 },
+              { "targets": 6, "responsivePriority": 8 }, // Fecha (now index 6, orderable)
+              { "targets": 7, "responsivePriority": 9, "orderable": false }, // Observación (now index 7, orderable: false)
+              { "targets": 8, "responsivePriority": 10, "orderable": false } // Estado DIAN (now index 8, orderable: false)
+            ];
+            if (notasActiva == "0") {
+              defs.push({ "targets": 5, "visible": false });
+            }
+            return defs;
+          })(),
           "language": {
             "sProcessing": "Procesando...",
             "sLengthMenu": "Mostrar _MENU_ registros",
@@ -932,6 +940,7 @@ MODAL ENVIAR EMAIL
             "oPaginate": { "sFirst": "Primero", "sLast": "Último", "sNext": "Siguiente", "sPrevious": "Anterior" }
           }
         });
+
 
         // Inicializar Select2
         $('#filtroClienteFacturas, #filtroUsuarioFacturas, .select-bodega').select2({ allowClear: false, width: '100%' });

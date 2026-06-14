@@ -151,9 +151,9 @@ class imprimirDocumentoSoporte
                 <td style="width:34%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Detalles DS</span><br><br>
                     <strong>Documento Soporte #' . $documentoSoporte["numero_ds"] . '</strong><br>
-                    <strong>Método de Pago:</strong> ' . $metodoPagoTexto . '<br>
+                    <strong>Vendedor:</strong> ' . ($vendedor["nombre"] ?? 'N/A') . '<br>
                     <strong>Estado:</strong> ' . ucfirst($documentoSoporte["estado_dian"]) . '<br>
-                    <strong>Vendedor:</strong> ' . ($vendedor["nombre"] ?? 'N/A') . '
+                    <strong>Método de Pago:</strong> ' . $metodoPagoTexto . '
                 </td>
             </tr>
         </table><br><br>';

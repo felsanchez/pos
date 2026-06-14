@@ -161,11 +161,13 @@ class imprimirNotaAjusteDS
                     <strong>Email:</strong> ' . ($proveedor["correo"] ?? '') . '
                 </td>
                 <td style="width:34%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
-                    <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Detalles Ajuste</span><br><br>
-                    <strong>Nota Ajuste #' . $nota["numero_nota_ajuste"] . '</strong><br>
-                    <strong>Referencia DS:</strong> ' . $nota["numero_ds_original"] . '<br>
-                    <strong>Concepto:</strong> ' . $textoNota . '<br>
-                    <strong>Vendedor:</strong> ' . ($vendedor["nombre"] ?? 'N/A') . '
+                    <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Detalles Nota</span><br><br>
+                    <strong>Nota Ajuste #:</strong> ' . $nota["numero_nota_ajuste"] . '<br>
+                    <strong>Doc. Soporte Original:</strong> ' . $nota["numero_ds_original"] . '<br>
+                    <strong>Vendedor:</strong> ' . ($vendedor["nombre"] ?? 'N/A') . '<br>
+                    <strong>Concepto Ajuste:</strong> ' . $textoNota . '<br>
+                    <strong>Estado DIAN:</strong> ' . ucfirst($nota["estado_dian"] ?? 'Pendiente') . '<br>
+                    <strong>Método de Pago:</strong> ' . ($nota["metodo_pago"] ?? 'No definido') . '
                 </td>
             </tr>
         </table><br><br>';

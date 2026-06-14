@@ -176,7 +176,7 @@ $(document).ready(function () {
         }).then(function (result) {
             if (result.value) {
                 swal({
-                    title: 'Guardando Nota de Ajuste',
+                    title: 'Firmando Nota de Ajuste',
                     text: 'Por favor espere mientras se procesa la información...',
                     type: 'info',
                     allowOutsideClick: false,

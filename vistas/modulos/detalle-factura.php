@@ -118,6 +118,7 @@
 $item = "id";
 $valor = $_GET["idVenta"];
 $venta = ControladorVentas::ctrMostrarVentas($item, $valor);
+$esFirmada = in_array(($venta["estado_dian"] ?? 'pendiente'), ['enviada', 'aceptada']);
 $itemUsuario = "id";
 $valorUsuario = $venta["id_vendedor"];
 $vendedor = ControladorUsuarios::ctrMostrarUsuarios($itemUsuario, $valorUsuario);
@@ -133,31 +134,46 @@ $configFactus = ControladorFactus::ctrObtenerConfiguracion();
 // Identificar tipo de documento
 $tipoDocumento = "Factura Electrónica";
 $etiquetaDocumento = "Factura";
+$codigoFactura = !empty($venta["numero_factura"]) ? $venta["numero_factura"] : ($venta["codigo"] ?? '');
 ?>
 
 <div class="content-wrapper">
   <!-- Content Header (Page header) -->
   <section class="content-header">
     <h1>
-      <?php echo $tipoDocumento; ?>
-      <small>#<?php echo (!empty($venta["numero_factura"]) ? $venta["numero_factura"] : ($venta["codigo"] ?? '')); ?></small>
+      Ver Factura Electrónica
+      <small>Panel de Control</small>
     </h1>
     <ol class="breadcrumb">
       <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-      <li class="active"><?php echo $etiquetaDocumento; ?></li>
+      <li><a href="facturas-electronicas">Facturas Electrónicas</a></li>
+      <li class="active">Ver Factura Electrónica</li>
     </ol>
   </section>
 
-  <div class="pad margin no-print">
-    <div class="callout callout-info" style="margin-bottom: 0!important;">
-      <h4><i class="fa fa-info"></i> Nota:</h4>
-      Esta página es solo para ver detalles de la <?php echo strtolower($etiquetaDocumento); ?>. No se pueden realizar
-      cambios.
-    </div>
-  </div>
-
   <!-- Main content -->
-  <section class="invoice">
+  <section class="content">
+
+    <div class="row">
+      <div class="col-xs-12">
+
+        <div class="box box-primary">
+          <div class="box-header with-border">
+            <h3 class="box-title">Factura Electrónica: 
+              <span class="<?php echo ($esFirmada ? 'text-green' : 'text-yellow'); ?>">
+                #<?php echo $codigoFactura; ?>
+              </span>
+            </h3>
+            <div class="box-tools pull-right">
+              <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+              <a href="facturas-electronicas" class="btn btn-box-tool"><i class="fa fa-times"></i></a>
+            </div>
+          </div>
+
+          <div class="box-body">
+
+            <!-- Invoice Style -->
+            <section class="invoice" style="margin: 0;">
     <!-- title row -->
     <div class="row">
       <div class="col-xs-12">
@@ -238,11 +254,14 @@ $etiquetaDocumento = "Factura";
       <div class="col-sm-4 invoice-col">
         <span
           style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #d2d6de; display: block; margin-bottom: 10px; width: fit-content;">Detalles</span>
-        <b><?php echo $etiquetaDocumento; ?>
-          #<?php echo (!empty($venta["numero_factura"]) ? $venta["numero_factura"] : ($venta["codigo"] ?? '')); ?></b><br>
+        <b><?php echo $etiquetaDocumento; ?>: 
+          <span class="<?php echo ($esFirmada ? 'text-green' : 'text-yellow'); ?>">
+            #<?php echo (!empty($venta["numero_factura"]) ? $venta["numero_factura"] : ($venta["codigo"] ?? '')); ?>
+          </span>
+        </b><br>
         <br>
         <b>Vendedor:</b> <?php echo $vendedor["nombre"] ?? ''; ?><br>
-        <b>Estado Dian:</b> <?php echo !empty($venta["estado_dian"]) ? ucfirst(htmlspecialchars($venta["estado_dian"])) : 'Pendiente'; ?><br>
+        <b>Estado Dian:</b> <?php echo $esFirmada ? 'Enviada' : 'Borrador'; ?><br>
         <b>Método de Pago:</b>
         <?php
         $partesMetodo = explode("-", $venta["metodo_pago"] ?? "");
@@ -631,6 +650,11 @@ $etiquetaDocumento = "Factura";
         </button>
       </div>
     </div>
+            </section>
+          </div> <!-- /.box-body -->
+        </div> <!-- /.box -->
+      </div> <!-- /.col -->
+    </div> <!-- /.row -->
   </section>
   <!-- /.content -->
   <div class="clearfix"></div>

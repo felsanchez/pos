@@ -24,6 +24,21 @@ $vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $documentoSoporte["id_
 $configuracion = ModeloConfiguracion::mdlObtenerConfiguracion();
 $configFactus = ControladorFactus::ctrObtenerConfiguracion();
 
+// Calcular código si es borrador
+if (empty($documentoSoporte["numero_ds"])) {
+    $proximoBase = ModeloFactus::mdlObtenerSiguienteConsecutivoDS();
+    $rangoActivoDS = ModeloFactus::mdlObtenerRangoDS();
+    $prefijoDS = $rangoActivoDS ? $rangoActivoDS["prefijo"] : "DS";
+    $stmt = Conexion::conectar()->prepare("SELECT COUNT(*) FROM documentos_soporte WHERE id < :id AND (numero_ds IS NULL OR numero_ds = '')");
+    $stmt->bindParam(":id", $documentoSoporte["id"], PDO::PARAM_INT);
+    $stmt->execute();
+    $rank = $stmt->fetchColumn();
+    $numSugerido = $proximoBase + intval($rank);
+    $codigoDS = $prefijoDS . $numSugerido;
+} else {
+    $codigoDS = $documentoSoporte["numero_ds"];
+}
+
 // Productos del DS
 $listaProducto = json_decode($documentoSoporte["productos"], true);
 
@@ -53,7 +68,9 @@ $retencionesDS = !empty($documentoSoporte["retenciones"]) ? json_decode($documen
                 <div class="box box-primary">
                     <div class="box-header with-border">
                         <h3 class="box-title">Documento Soporte:
-                            <?php echo $documentoSoporte["numero_ds"]; ?>
+                            <span class="<?php echo (in_array($documentoSoporte["estado_dian"], ['enviada', 'aceptada']) ? 'text-green' : ($documentoSoporte["estado_dian"] == 'borrador' ? 'text-yellow' : '')); ?>">
+                                <?php echo $codigoDS; ?>
+                            </span>
                         </h3>
                         <div class="box-tools pull-right">
                             <button type="button" class="btn btn-box-tool" data-widget="collapse"><i
@@ -153,8 +170,10 @@ $retencionesDS = !empty($documentoSoporte["retenciones"]) ? json_decode($documen
                                     <span
                                         style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #d2d6de; display: block; margin-bottom: 10px; width: fit-content;">Detalles
                                         DS</span>
-                                    <b>Documento Soporte #
-                                        <?php echo $documentoSoporte["numero_ds"]; ?>
+                                    <b>Documento Soporte # 
+                                        <span class="<?php echo (in_array($documentoSoporte["estado_dian"], ['enviada', 'aceptada']) ? 'text-green' : ($documentoSoporte["estado_dian"] == 'borrador' ? 'text-yellow' : '')); ?>">
+                                            <?php echo $codigoDS; ?>
+                                        </span>
                                     </b><br>
                                     <b>Vendedor:</b>
                                     <?php echo htmlspecialchars($vendedor["nombre"] ?? 'N/A'); ?><br>
@@ -202,59 +221,61 @@ $retencionesDS = !empty($documentoSoporte["retenciones"]) ? json_decode($documen
                             <div class="row">
                                 <!-- QR Column -->
                                 <div class="col-xs-6">
-                                    <p class="lead">Código QR DIAN:</p>
-                                    <?php if (!empty($documentoSoporte["qr_data"])):
-                                        $qrData = trim($documentoSoporte["qr_data"]);
-                                        $qrBase64 = "";
+                                    <?php if ($documentoSoporte["estado_dian"] != 'borrador'): ?>
+                                        <p class="lead">Código QR DIAN:</p>
+                                        <?php if (!empty($documentoSoporte["qr_data"])):
+                                            $qrData = trim($documentoSoporte["qr_data"]);
+                                            $qrBase64 = "";
 
-                                        $tcpdfPath = __DIR__ . "/../../extensiones/tcpdf/tcpdf_barcodes_2d.php";
+                                            $tcpdfPath = __DIR__ . "/../../extensiones/tcpdf/tcpdf_barcodes_2d.php";
 
-                                        if (file_exists($tcpdfPath)) {
-                                            require_once($tcpdfPath);
-                                            if (class_exists('TCPDF2DBarcode')) {
-                                                try {
-                                                    $barcodeobj = new TCPDF2DBarcode($qrData, 'QRCODE,H');
-                                                    $svgCode = $barcodeobj->getBarcodeSVGcode(5, 5, 'black');
-                                                    if (!empty($svgCode)) {
-                                                        $qrBase64 = base64_encode($svgCode);
+                                            if (file_exists($tcpdfPath)) {
+                                                require_once($tcpdfPath);
+                                                if (class_exists('TCPDF2DBarcode')) {
+                                                    try {
+                                                        $barcodeobj = new TCPDF2DBarcode($qrData, 'QRCODE,H');
+                                                        $svgCode = $barcodeobj->getBarcodeSVGcode(5, 5, 'black');
+                                                        if (!empty($svgCode)) {
+                                                            $qrBase64 = base64_encode($svgCode);
+                                                        }
+                                                    } catch (Exception $e) {
                                                     }
-                                                } catch (Exception $e) {
                                                 }
                                             }
-                                        }
-                                        ?>
+                                            ?>
 
-                                        <?php if (!empty($qrBase64)): ?>
-                                            <img src="data:image/svg+xml;base64,<?php echo $qrBase64; ?>" width="150"
-                                                height="150" title="QR Documento Soporte" alt="QR Documento Soporte"
-                                                style="display:block; margin-bottom:10px; border:1px solid #ddd;" />
-                                        <?php else: ?>
-                                            <img src="https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=<?php echo rawurlencode($qrData); ?>"
-                                                width="150" height="150" title="QR Documento Soporte (Fallback)"
-                                                alt="QR Documento Soporte" style="display:block; margin-bottom:10px;" />
-                                        <?php endif; ?>
-                                        <br>
+                                            <?php if (!empty($qrBase64)): ?>
+                                                <img src="data:image/svg+xml;base64,<?php echo $qrBase64; ?>" width="150"
+                                                    height="150" title="QR Documento Soporte" alt="QR Documento Soporte"
+                                                    style="display:block; margin-bottom:10px; border:1px solid #ddd;" />
+                                            <?php else: ?>
+                                                <img src="https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=<?php echo rawurlencode($qrData); ?>"
+                                                    width="150" height="150" title="QR Documento Soporte (Fallback)"
+                                                    alt="QR Documento Soporte" style="display:block; margin-bottom:10px;" />
+                                            <?php endif; ?>
+                                            <br>
 
-                                        <small style="color: #666; font-size: 14px; word-break: break-all;">
-                                            <a href="<?php echo $documentoSoporte["qr_data"]; ?>" target="_blank">Ver
-                                                validación DIAN</a>
-                                        </small>
-                                        <br>
+                                            <small style="color: #666; font-size: 14px; word-break: break-all;">
+                                                <a href="<?php echo $documentoSoporte["qr_data"]; ?>" target="_blank">Ver
+                                                    validación DIAN</a>
+                                            </small>
+                                            <br>
 
-                                        <div
-                                            style="margin-top: 10px; border: 1px solid #d2d6de; padding: 10px; border-radius: 5px; background-color: #f9fafc;">
-                                            <div>
-                                                <b style="color: #555;">CUDS (Documento Soporte):</b><br>
-                                                <span
-                                                    style="font-size: 11px; word-break: break-all; display: block; line-height: 1.2; color: #333;">
-                                                    <?php echo $documentoSoporte["cuds"]; ?>
-                                                </span>
+                                            <div
+                                                style="margin-top: 10px; border: 1px solid #d2d6de; padding: 10px; border-radius: 5px; background-color: #f9fafc;">
+                                                <div>
+                                                    <b style="color: #555;">CUDS (Documento Soporte):</b><br>
+                                                    <span
+                                                        style="font-size: 11px; word-break: break-all; display: block; line-height: 1.2; color: #333;">
+                                                        <?php echo $documentoSoporte["cuds"]; ?>
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    <?php else: ?>
-                                        <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
-                                            QR no disponible.
-                                        </p>
+                                        <?php else: ?>
+                                            <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
+                                                QR no disponible.
+                                            </p>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
 

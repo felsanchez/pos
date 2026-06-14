@@ -1,5 +1,13 @@
 <?php
 
+// Cuando este archivo se incluye como librería, solo se carga la clase AjaxFacturacion
+// sin ejecutar el código de entrada (entry-point) del nivel raíz.
+if (!defined('FACTURACION_AJAX_INCLUDED')) {
+    define('FACTURAXION_ENTRY_GUARD_DUMMY', true); // Variable ficticia para evitar nombres colisionados
+    define('FACTURACION_AJAX_ENTRY', true);
+    define('FACTURACION_AJAX_INCLUDED', true);
+}
+
 require_once __DIR__ . "/../controladores/ventas.controlador.php";
 require_once __DIR__ . "/../modelos/ventas.modelo.php";
 require_once __DIR__ . "/../controladores/clientes.controlador.php";
@@ -14,14 +22,16 @@ require_once __DIR__ . "/../controladores/notificaciones.controlador.php";
 require_once __DIR__ . "/../modelos/notificaciones.modelo.php";
 require_once "../modelos/session-manager.php";
 
-SessionManager::startSecure();
+if (defined('FACTURACION_AJAX_ENTRY')) {
+    SessionManager::startSecure();
+}
 
 require_once "../controladores/factus.controlador.php";
 require_once "../modelos/factus.modelo.php";
 require_once "../modelos/csrf.php";
 
 // VALIDAR CSRF para todas las peticiones POST
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (defined('FACTURACION_AJAX_ENTRY') && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!CSRF::validateToken()) {
         http_response_code(403);
         die(json_encode(['error' => 'Token CSRF inválido', 'success' => false]));
@@ -292,9 +302,35 @@ class AjaxFacturacion
         $pdf->Output($rutaCompleta, 'F');
 
         // 2. Enviar Correo
-        $asunto = "Factura Electronica #" . $venta["codigo"] . " - " . $nombreEmpresa;
+
+        // Obtener enlace DIAN (desde qr_data si es una URL, o construido desde cufe)
+        $enlaceDian = '';
+        if (!empty($venta["qr_data"]) && filter_var(trim($venta["qr_data"]), FILTER_VALIDATE_URL)) {
+            $enlaceDian = trim($venta["qr_data"]);
+        } elseif (!empty($venta["cufe"])) {
+            $enlaceDian = 'https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . trim($venta["cufe"]);
+        } elseif (!empty($venta["qr_data"])) {
+            // Intentar extraer el DocumentKey desde el qr_data
+            if (preg_match('/documentkey=([a-zA-Z0-9]+)/i', $venta["qr_data"], $matches)) {
+                $enlaceDian = 'https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . $matches[1];
+            }
+        }
+
+        $nombreEmpresaSubject = isset($configFactus['nombre_empresa']) ? trim($configFactus['nombre_empresa']) : '';
+        $asunto = "Factura Electronica #" . $venta["codigo"] . (!empty($nombreEmpresaSubject) ? " - " . $nombreEmpresaSubject : "");
         $mensaje = "<h3>Estimado(a) " . ($cliente["nombre"] ?? 'Cliente') . "</h3>";
         $mensaje .= "<p>Adjunto encontrará su factura electrónica #" . $venta["codigo"] . " en formato PDF.</p>";
+        if (!empty($enlaceDian)) {
+            $mensaje .= "<p>También puede consultar y validar su factura directamente en el portal de la DIAN haciendo clic en el siguiente enlace:</p>";
+            $mensaje .= "<p style=\"text-align:center;\">";
+            $mensaje .= "<a href=\"" . htmlspecialchars($enlaceDian) . "\" "
+                      . "style=\"background-color:#3c8dbc; color:#ffffff; padding:10px 20px; "
+                      . "text-decoration:none; border-radius:4px; font-weight:bold; display:inline-block;\">"
+                      . "&#128196; Ver Factura en la DIAN"
+                      . "</a>";
+            $mensaje .= "</p>";
+            $mensaje .= "<p style=\"font-size:12px; color:#666; word-break:break-all;\">Enlace directo: <a href=\"" . htmlspecialchars($enlaceDian) . "\">" . htmlspecialchars($enlaceDian) . "</a></p>";
+        }
         $mensaje .= "<p>Gracias por su preferencia.</p>";
         $mensaje .= "<br><hr><small>Este es un correo automático, por favor no responda a este mensaje.</small>";
 
@@ -565,9 +601,32 @@ class AjaxFacturacion
 
         $pdf->Output($rutaCompleta, 'F');
 
-        $asunto = "Nota de Credito #" . $notaCredito["numero_nota_credito"] . " - " . $nombreEmpresa;
+        // Obtener enlace DIAN de la nota crédito
+        $enlaceDianNC = '';
+        if (!empty($notaCredito["qr_data_nc"]) && filter_var(trim($notaCredito["qr_data_nc"]), FILTER_VALIDATE_URL)) {
+            $enlaceDianNC = trim($notaCredito["qr_data_nc"]);
+        } elseif (!empty($notaCredito["cufe_nc"])) {
+            $enlaceDianNC = 'https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . trim($notaCredito["cufe_nc"]);
+        } elseif (!empty($notaCredito["qr_data_nc"])) {
+            if (preg_match('/documentkey=([a-zA-Z0-9]+)/i', $notaCredito["qr_data_nc"], $matchesNC)) {
+                $enlaceDianNC = 'https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . $matchesNC[1];
+            }
+        }
+
+        $nombreEmpresaSubject = isset($configFactus['nombre_empresa']) ? trim($configFactus['nombre_empresa']) : '';
+        $asunto = "Nota de Credito #" . $notaCredito["numero_nota_credito"] . (!empty($nombreEmpresaSubject) ? " - " . $nombreEmpresaSubject : "");
         $mensaje = "<h3>Estimado(a) " . ($cliente["nombre"] ?? 'Cliente') . "</h3>";
         $mensaje .= "<p>Adjunto encontrará su nota de crédito #" . $notaCredito["numero_nota_credito"] . " en formato PDF.</p>";
+        if (!empty($enlaceDianNC)) {
+            $mensaje .= "<p>También puede consultar y validar su nota de crédito directamente en el portal de la DIAN haciendo clic en el siguiente enlace:</p>";
+            $mensaje .= "<p style=\"text-align:center;\">";
+            $mensaje .= "<a href=\"" . htmlspecialchars($enlaceDianNC) . "\" "
+                      . "style=\"background-color:#3c8dbc; color:#ffffff; padding:10px 20px; "
+                      . "text-decoration:none; border-radius:4px; font-weight:bold; display:inline-block;\""
+                      . ">&#128196; Ver Nota Crédito en la DIAN</a>";
+            $mensaje .= "</p>";
+            $mensaje .= "<p style=\"font-size:12px; color:#666; word-break:break-all;\">Enlace directo: <a href=\"" . htmlspecialchars($enlaceDianNC) . "\">" . htmlspecialchars($enlaceDianNC) . "</a></p>";
+        }
         $mensaje .= "<p>Gracias por su preferencia.</p>";
         $mensaje .= "<br><hr><small>Este es un correo automático, por favor no responda a este mensaje.</small>";
 
@@ -797,9 +856,32 @@ class AjaxFacturacion
 
         $pdf->Output($rutaCompleta, 'F');
 
-        $asunto = "Documento Soporte #" . $documentoSoporte["numero_ds"] . " - " . $nombreEmpresa;
+        // Obtener enlace DIAN del documento soporte
+        $enlaceDianDS = '';
+        if (!empty($documentoSoporte["qr_data"]) && filter_var(trim($documentoSoporte["qr_data"]), FILTER_VALIDATE_URL)) {
+            $enlaceDianDS = trim($documentoSoporte["qr_data"]);
+        } elseif (!empty($documentoSoporte["cuds"])) {
+            $enlaceDianDS = 'https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . trim($documentoSoporte["cuds"]);
+        } elseif (!empty($documentoSoporte["qr_data"])) {
+            if (preg_match('/documentkey=([a-zA-Z0-9]+)/i', $documentoSoporte["qr_data"], $matchesDS)) {
+                $enlaceDianDS = 'https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . $matchesDS[1];
+            }
+        }
+
+        $nombreEmpresaSubject = isset($configFactus['nombre_empresa']) ? trim($configFactus['nombre_empresa']) : '';
+        $asunto = "Documento Soporte #" . $documentoSoporte["numero_ds"] . (!empty($nombreEmpresaSubject) ? " - " . $nombreEmpresaSubject : "");
         $mensaje = "<h3>Estimado(a) " . ($proveedor["nombre"] ?? 'Proveedor') . "</h3>";
         $mensaje .= "<p>Adjunto encontrará su documento soporte #" . $documentoSoporte["numero_ds"] . " en formato PDF.</p>";
+        if (!empty($enlaceDianDS)) {
+            $mensaje .= "<p>También puede consultar y validar su documento soporte directamente en el portal de la DIAN haciendo clic en el siguiente enlace:</p>";
+            $mensaje .= "<p style=\"text-align:center;\">";
+            $mensaje .= "<a href=\"" . htmlspecialchars($enlaceDianDS) . "\" "
+                      . "style=\"background-color:#3c8dbc; color:#ffffff; padding:10px 20px; "
+                      . "text-decoration:none; border-radius:4px; font-weight:bold; display:inline-block;\""
+                      . ">&#128196; Ver Documento Soporte en la DIAN</a>";
+            $mensaje .= "</p>";
+            $mensaje .= "<p style=\"font-size:12px; color:#666; word-break:break-all;\">Enlace directo: <a href=\"" . htmlspecialchars($enlaceDianDS) . "\">" . htmlspecialchars($enlaceDianDS) . "</a></p>";
+        }
         $mensaje .= "<p>Gracias por su atención.</p>";
         $mensaje .= "<br><hr><small>Este es un correo automático, por favor no responda a este mensaje.</small>";
 
@@ -1020,9 +1102,32 @@ class AjaxFacturacion
 
         $pdf->Output($rutaCompleta, 'F');
 
-        $asunto = "Nota de Ajuste DS #" . $nota["numero_nota_ajuste"] . " - " . $nombreEmpresa;
+        // Obtener enlace DIAN de la nota de ajuste
+        $enlaceDianNA = '';
+        if (!empty($nota["qr_data"]) && filter_var(trim($nota["qr_data"]), FILTER_VALIDATE_URL)) {
+            $enlaceDianNA = trim($nota["qr_data"]);
+        } elseif (!empty($nota["cuds_ajuste"])) {
+            $enlaceDianNA = 'https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . trim($nota["cuds_ajuste"]);
+        } elseif (!empty($nota["qr_data"])) {
+            if (preg_match('/documentkey=([a-zA-Z0-9]+)/i', $nota["qr_data"], $matchesNA)) {
+                $enlaceDianNA = 'https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . $matchesNA[1];
+            }
+        }
+
+        $nombreEmpresaSubject = isset($configFactus['nombre_empresa']) ? trim($configFactus['nombre_empresa']) : '';
+        $asunto = "Nota de Ajuste DS #" . $nota["numero_nota_ajuste"] . (!empty($nombreEmpresaSubject) ? " - " . $nombreEmpresaSubject : "");
         $mensaje = "<h3>Estimado(a) " . ($proveedor["nombre"] ?? 'Proveedor') . "</h3>";
         $mensaje .= "<p>Adjunto encontrará su nota de ajuste del documento soporte #" . $nota["numero_nota_ajuste"] . " en formato PDF.</p>";
+        if (!empty($enlaceDianNA)) {
+            $mensaje .= "<p>También puede consultar y validar su nota de ajuste directamente en el portal de la DIAN haciendo clic en el siguiente enlace:</p>";
+            $mensaje .= "<p style=\"text-align:center;\">";
+            $mensaje .= "<a href=\"" . htmlspecialchars($enlaceDianNA) . "\" "
+                      . "style=\"background-color:#3c8dbc; color:#ffffff; padding:10px 20px; "
+                      . "text-decoration:none; border-radius:4px; font-weight:bold; display:inline-block;\""
+                      . ">&#128196; Ver Nota de Ajuste en la DIAN</a>";
+            $mensaje .= "</p>";
+            $mensaje .= "<p style=\"font-size:12px; color:#666; word-break:break-all;\">Enlace directo: <a href=\"" . htmlspecialchars($enlaceDianNA) . "\">" . htmlspecialchars($enlaceDianNA) . "</a></p>";
+        }
         $mensaje .= "<p>Gracias por su atención.</p>";
         $mensaje .= "<br><hr><small>Este es un correo automático, por favor no responda a este mensaje.</small>";
 
@@ -1116,67 +1221,71 @@ class AjaxFacturacion
     }
 }
 
-if (isset($_POST["idVenta"])) {
-    $enviar = new AjaxFacturacion();
-    $enviar->idVenta = $_POST["idVenta"];
-    $enviar->emailDestino = $_POST["emailDestino"];
-    $enviar->ajaxEnviarPDFCorreo();
-}
+if (defined('FACTURACION_AJAX_ENTRY')) {
 
-if (isset($_POST["idNota"])) {
-    $enviar = new AjaxFacturacion();
-    $enviar->idNota = $_POST["idNota"];
-    $enviar->emailDestino = $_POST["emailDestino"];
-    $enviar->ajaxEnviarPDFCNCorreo();
-}
+    if (isset($_POST["idVenta"])) {
+        $enviar = new AjaxFacturacion();
+        $enviar->idVenta = $_POST["idVenta"];
+        $enviar->emailDestino = $_POST["emailDestino"];
+        $enviar->ajaxEnviarPDFCorreo();
+    }
 
-if (isset($_POST["idDS"])) {
-    $enviar = new AjaxFacturacion();
-    $enviar->idDS = $_POST["idDS"];
-    $enviar->emailDestino = $_POST["emailDestino"];
-    $enviar->ajaxEnviarPDFDSCorreo();
-}
+    if (isset($_POST["idNota"])) {
+        $enviar = new AjaxFacturacion();
+        $enviar->idNota = $_POST["idNota"];
+        $enviar->emailDestino = $_POST["emailDestino"];
+        $enviar->ajaxEnviarPDFCNCorreo();
+    }
 
-if (isset($_POST["idNA"])) {
-    $enviar = new AjaxFacturacion();
-    $enviar->idNA = $_POST["idNA"];
-    $enviar->emailDestino = $_POST["emailDestino"];
-    $enviar->ajaxEnviarPDFNACorreo();
-}
+    if (isset($_POST["idDS"])) {
+        $enviar = new AjaxFacturacion();
+        $enviar->idDS = $_POST["idDS"];
+        $enviar->emailDestino = $_POST["emailDestino"];
+        $enviar->ajaxEnviarPDFDSCorreo();
+    }
 
-/*=============================================
-OBTENER KPIs PARA REPORTES
-=============================================*/
+    if (isset($_POST["idNA"])) {
+        $enviar = new AjaxFacturacion();
+        $enviar->idNA = $_POST["idNA"];
+        $enviar->emailDestino = $_POST["emailDestino"];
+        $enviar->ajaxEnviarPDFNACorreo();
+    }
 
-if (isset($_POST["accion"]) && $_POST["accion"] == "obtenerKPIsReporte") {
-    $reporte = new AjaxFacturacion();
-    $reporte->fechaInicial = $_POST["fechaInicial"];
-    $reporte->fechaFinal = $_POST["fechaFinal"];
-    $reporte->categoria = $_POST["categoria"] ?? "todos";
-    $reporte->tercero = $_POST["tercero"] ?? "todos";
-    $reporte->idUsuario = $_POST["idUsuario"] ?? "todos";
-    $reporte->idBodega = $_POST["idBodega"] ?? "";
-    $reporte->ajaxObtenerKPIsReporte();
-}
+    /*=============================================
+    OBTENER KPIs PARA REPORTES
+    =============================================*/
 
-if (isset($_POST["accion"]) && $_POST["accion"] == "obtenerVentasGrafico") {
-    $reporte = new AjaxFacturacion();
-    $reporte->fechaInicial = $_POST["fechaInicial"];
-    $reporte->fechaFinal = $_POST["fechaFinal"];
-    $reporte->categoria = $_POST["categoria"] ?? "todos";
-    $reporte->tercero = $_POST["tercero"] ?? "todos";
-    $reporte->idUsuario = $_POST["idUsuario"] ?? "todos";
-    $reporte->idBodega = $_POST["idBodega"] ?? "";
-    $reporte->ajaxObtenerVentasGrafico();
-}
+    if (isset($_POST["accion"]) && $_POST["accion"] == "obtenerKPIsReporte") {
+        $reporte = new AjaxFacturacion();
+        $reporte->fechaInicial = $_POST["fechaInicial"];
+        $reporte->fechaFinal = $_POST["fechaFinal"];
+        $reporte->categoria = $_POST["categoria"] ?? "todos";
+        $reporte->tercero = $_POST["tercero"] ?? "todos";
+        $reporte->idUsuario = $_POST["idUsuario"] ?? "todos";
+        $reporte->idBodega = $_POST["idBodega"] ?? "";
+        $reporte->ajaxObtenerKPIsReporte();
+    }
 
-if (isset($_POST["accion"]) && $_POST["accion"] == "mostrarReporteDetallado") {
-    $reporte = new AjaxFacturacion();
-    $reporte->fechaInicial = $_POST["fechaInicial"];
-    $reporte->fechaFinal = $_POST["fechaFinal"];
-    $reporte->categoria = $_POST["categoria"] ?? "todos";
-    $reporte->tercero = $_POST["tercero"] ?? "todos";
-    $reporte->idUsuario = $_POST["idUsuario"] ?? "todos";
-    $reporte->idBodega = $_POST["idBodega"] ?? "";
-    $reporte->ajaxMostrarReporteDetallado();
+    if (isset($_POST["accion"]) && $_POST["accion"] == "obtenerVentasGrafico") {
+        $reporte = new AjaxFacturacion();
+        $reporte->fechaInicial = $_POST["fechaInicial"];
+        $reporte->fechaFinal = $_POST["fechaFinal"];
+        $reporte->categoria = $_POST["categoria"] ?? "todos";
+        $reporte->tercero = $_POST["tercero"] ?? "todos";
+        $reporte->idUsuario = $_POST["idUsuario"] ?? "todos";
+        $reporte->idBodega = $_POST["idBodega"] ?? "";
+        $reporte->ajaxObtenerVentasGrafico();
+    }
+
+    if (isset($_POST["accion"]) && $_POST["accion"] == "mostrarReporteDetallado") {
+        $reporte = new AjaxFacturacion();
+        $reporte->fechaInicial = $_POST["fechaInicial"];
+        $reporte->fechaFinal = $_POST["fechaFinal"];
+        $reporte->categoria = $_POST["categoria"] ?? "todos";
+        $reporte->tercero = $_POST["tercero"] ?? "todos";
+        $reporte->idUsuario = $_POST["idUsuario"] ?? "todos";
+        $reporte->idBodega = $_POST["idBodega"] ?? "";
+        $reporte->ajaxMostrarReporteDetallado();
+    }
+
 }

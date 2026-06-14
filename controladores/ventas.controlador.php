@@ -225,8 +225,8 @@ class ControladorVentas
 			3 => 'v.id', // Imagen
 			4 => 'v.total',
 			5 => 'v.notas',
-			6 => 'v.observacion',
-			7 => 'v.fecha'
+			6 => 'v.fecha',
+			7 => 'v.observacion'
 		);
 
 		// Obtener configuración para moneda y formato
@@ -610,17 +610,17 @@ class ControladorVentas
 		$tabla = "ventas";
 
 		// Mapeo de columnas para ordenamiento:
-		// 0=Código, 1=Cliente, 2=Vendedor, 3=Imagen, 4=Total, 5=Estado DIAN, 6=Notas, 7=Observación, 8=Fecha, 9=Acciones
+		// 0=Código, 1=Cliente, 2=Vendedor, 3=Imagen, 4=Total, 5=Notas, 6=Fecha, 7=Observación, 8=Estado DIAN, 9=Acciones
 		$columnsMap = array(
 			0 => 'v.numero_factura',
 			1 => 'c.nombre',
 			2 => 'u.nombre',
 			3 => 'v.id', // Imagen
 			4 => 'v.total',
-			5 => 'v.estado_dian',
-			6 => 'v.notas',
+			5 => 'v.notas',
+			6 => 'v.fecha',
 			7 => 'v.observacion',
-			8 => 'v.fecha'
+			8 => 'v.estado_dian'
 		);
 
 		// Obtener configuración
@@ -752,8 +752,23 @@ class ControladorVentas
 			// 5: Total
 			$nestedData[] = e($moneda) . ' ' . e(number_format($value["total"], 2));
 
-			// 6: Estado DIAN
+			// 6: Notas - Limpiar etiquetas de notificación internas
+			$notasLimpias = str_replace(array(" [Notificado_n8n]", "[Notificado_n8n]", " [Notificado]", "[Notificado]"), "", $value['notas'] ?? '');
+			$nestedData[] = e(trim($notasLimpias));
+
+			// 7: Fecha
+			$nestedData[] = e($value["fecha"]);
+
+			// 8: Observación - Solo editable si la factura NO ha sido firmada
 			$estadoDian = isset($value["estado_dian"]) ? $value["estado_dian"] : 'pendiente';
+			$esFirmada = in_array($estadoDian, ['enviada', 'aceptada']);
+			$obsEditable = $esFirmada ? 'false' : 'true';
+			$obsStyle = $esFirmada
+				? ' style="background:#f5f5f5; color:#777; cursor:default; font-style:italic;"'
+				: ' style="min-height:24px;"';
+			$nestedData[] = '<div contenteditable="' . $obsEditable . '" class="celda-observacion" data-id="' . e($value["id"]) . '" data-readonly="' . ($esFirmada ? '1' : '0') . '" data-placeholder="Escribe una observación..."' . $obsStyle . '>' . e($value["observacion"]) . '</div>';
+
+			// 9: Estado DIAN
 			$badgeDian = '';
 			if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
 				$badgeDian = '<button class="btn btn-success btn-xs">Exitosa</button>';
@@ -765,21 +780,6 @@ class ControladorVentas
 				$badgeDian = '<button class="btn btn-danger btn-xs">Pendiente</button>';
 			}
 			$nestedData[] = $badgeDian;
-
-			// 7: Notas - Limpiar etiquetas de notificación internas
-			$notasLimpias = str_replace(array(" [Notificado_n8n]", "[Notificado_n8n]", " [Notificado]", "[Notificado]"), "", $value['notas'] ?? '');
-			$nestedData[] = e(trim($notasLimpias));
-
-			// 8: Observación - Solo editable si la factura NO ha sido firmada
-			$esFirmada = in_array($estadoDian, ['enviada', 'aceptada']);
-			$obsEditable = $esFirmada ? 'false' : 'true';
-			$obsStyle = $esFirmada
-				? ' style="background:#f5f5f5; color:#777; cursor:default; font-style:italic;"'
-				: ' style="min-height:24px;"';
-			$nestedData[] = '<div contenteditable="' . $obsEditable . '" class="celda-observacion" data-id="' . e($value["id"]) . '" data-readonly="' . ($esFirmada ? '1' : '0') . '" data-placeholder="Escribe una observación..."' . $obsStyle . '>' . e($value["observacion"]) . '</div>';
-
-			// 9: Fecha
-			$nestedData[] = e($value["fecha"]);
 
 			// 10: Acciones
 			$botonesAcciones = '<div class="btn-group col-acciones" style="display:flex; gap:2px;">';
@@ -2447,20 +2447,102 @@ class ControladorVentas
 
 			$tabla = "ventas";
 
-			if (isset($_GET["fechaInicial"]) && isset($_GET["fechaFinal"])) {
+			// 1. Obtener valores de la URL (GET)
+			$tipo = $_GET['tipo'] ?? 'todo';
+			$fecha_inicio = $_GET['fechaInicial'] ?? null;
+			$fecha_fin = $_GET['fechaFinal'] ?? null;
+			$id_vendedor = $_GET['vendedor'] ?? $_GET['usuario'] ?? null;
+			$id_cliente = $_GET['cliente'] ?? null;
+			$id_producto = $_GET['producto'] ?? null;
+			$metodo_pago = $_GET['metodoPago'] ?? null;
+			$id_bodega = $_GET['idBodega'] ?? null;
 
-				$ventas = ModeloVentas::mdlRangoFechasVentas($tabla, $_GET["fechaInicial"], $_GET["fechaFinal"]);
+			// Construir la condición de fecha
+			$condicionFecha = "";
+			$fechaParams = [];
 
-			} else {
-
-				$item = null;
-				$valor = null;
-
-				$ventas = ModeloVentas::mdlMostrarVentas($tabla, $item, $valor);
+			switch ($tipo) {
+				case 'todo':
+					$condicionFecha = "1=1";
+					break;
+				case 'hoy':
+					$condicionFecha = "DATE(fecha) = CURDATE()";
+					break;
+				case 'ayer':
+					$condicionFecha = "DATE(fecha) = CURDATE() - INTERVAL 1 DAY";
+					break;
+				case 'mes':
+					$condicionFecha = "MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())";
+					break;
+				case 'personalizado':
+					if (!$fecha_inicio || !$fecha_fin) {
+						$condicionFecha = "1=1";
+					} else {
+						$condicionFecha = "DATE(fecha) BETWEEN ? AND ?";
+						$fechaParams[] = $fecha_inicio;
+						$fechaParams[] = $fecha_fin;
+					}
+					break;
+				default:
+					$condicionFecha = "1=1";
+					break;
 			}
 
+			// Construir filtros comunes
+			$filtrosComunes = "";
+			$filtroParams = [];
 
+			if (!empty($id_vendedor)) {
+				$filtrosComunes .= " AND id_vendedor = ?";
+				$filtroParams[] = $id_vendedor;
+			}
 
+			if (!empty($id_cliente) && $id_cliente !== 'todos') {
+				$filtrosComunes .= " AND id_cliente = ?";
+				$filtroParams[] = $id_cliente;
+			}
+
+			if (!empty($id_bodega) && $id_bodega !== 'todos') {
+				$filtrosComunes .= " AND id_bodega = ?";
+				$filtroParams[] = $id_bodega;
+			}
+
+			if (!empty($id_producto)) {
+				if (strpos($id_producto, 'v_') === 0) {
+					// Es una variante de producto
+					$id_variante = substr($id_producto, 2);
+					$filtrosComunes .= " AND (productos LIKE ? OR productos LIKE ? OR productos LIKE ?)";
+					$filtroParams[] = '%"idVariante":"' . $id_variante . '"%';
+					$filtroParams[] = '%"idVariante":' . $id_variante . ',%';
+					$filtroParams[] = '%"idVariante":' . $id_variante . '}%';
+				} else {
+					// Es un producto base
+					$filtrosComunes .= " AND (productos LIKE ? OR productos LIKE ? OR productos LIKE ?)";
+					$filtroParams[] = '%"id":"' . $id_producto . '"%';
+					$filtroParams[] = '%"id":' . $id_producto . ',%';
+					$filtroParams[] = '%"id":' . $id_producto . '}%';
+				}
+			}
+
+			$filtrosVentasExtra = "";
+			$ventasExtraParams = [];
+			if (!empty($metodo_pago)) {
+				$filtrosVentasExtra .= " AND (metodo_pago = ? OR metodo_pago LIKE ?)";
+				$ventasExtraParams[] = $metodo_pago;
+				$ventasExtraParams[] = $metodo_pago . '-%';
+			}
+
+			$whereVentas = "estado = 'venta' AND ( (resolucion_id IS NULL OR resolucion_id = 0) OR ( resolucion_id IS NOT NULL AND resolucion_id != 0 AND estado_dian IN ('aceptada', 'enviada') ) ) AND $condicionFecha" . $filtrosComunes . $filtrosVentasExtra;
+			$paramsVentas = array_merge($fechaParams, $filtroParams, $ventasExtraParams);
+
+			$sql = "SELECT * FROM $tabla WHERE $whereVentas ORDER BY id ASC";
+			
+			$stmt = Conexion::conectar()->prepare($sql);
+			foreach ($paramsVentas as $i => $val) {
+				$stmt->bindValue($i + 1, $val);
+			}
+			$stmt->execute();
+			$ventas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 			/*=============================================
 			 CREAMOS EL ARCHIVO DE EXCEL
@@ -2493,21 +2575,6 @@ class ControladorVentas
 				</tr>");
 
 			foreach ($ventas as $row => $item) {
-
-				// Filtrar solo ventas con estado = 'venta'
-				if (!isset($item["estado"]) || $item["estado"] != "venta") {
-					continue;
-				}
-
-				// Filtrar por usuario si existe el parámetro
-				if (isset($_GET["usuario"]) && $_GET["usuario"] != "" && (string) $item["id_vendedor"] != (string) $_GET["usuario"]) {
-					continue;
-				}
-
-				// Filtrar por cliente si existe el parámetro
-				if (isset($_GET["cliente"]) && $_GET["cliente"] != "" && $_GET["cliente"] != "todos" && (string) $item["id_cliente"] != (string) $_GET["cliente"]) {
-					continue;
-				}
 
 				$cliente = ControladorClientes::ctrMostrarClientes("id", $item["id_cliente"]);
 				$vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $item["id_vendedor"]);

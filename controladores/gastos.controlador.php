@@ -378,7 +378,9 @@ class ControladorGastos{
 					</script>';
 
 				} catch (Exception $e) {
-					$db->rollBack();
+					if ($db->inTransaction()) {
+						$db->rollBack();
+					}
 					$mensajeError = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
 					echo '<script>
 						swal({
@@ -625,7 +627,9 @@ class ControladorGastos{
 					</script>';
 
 				} catch (Exception $e) {
-					$db->rollBack();
+					if ($db->inTransaction()) {
+						$db->rollBack();
+					}
 					$mensajeError = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
 					echo '<script>
 						swal({
@@ -746,7 +750,9 @@ class ControladorGastos{
 				</script>';
 
 			} catch (Exception $e) {
-				$db->rollBack();
+				if ($db->inTransaction()) {
+					$db->rollBack();
+				}
 				$mensajeError = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
 				if (isset($_POST["idGastoEliminar"])) {
 					return "error";

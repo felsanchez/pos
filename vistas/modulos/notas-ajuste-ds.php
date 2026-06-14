@@ -13,7 +13,7 @@ if ($_SESSION["perfil"] == "Especial") {
 
     <section class="content-header">
         <h1>
-            Administrar Notas de Ajuste DS
+            Administrar Notas de Ajuste
         </h1>
         <ol class="breadcrumb">
             <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>

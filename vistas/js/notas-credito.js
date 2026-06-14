@@ -454,7 +454,7 @@ $(document).ready(function () {
         }).then(function (result) {
             if (result.value) {
                 swal({
-                    title: 'Guardando Nota Crédito',
+                    title: 'Firmando Nota Crédito',
                     text: 'Por favor espere mientras se procesa la información...',
                     type: 'info',
                     allowOutsideClick: false,

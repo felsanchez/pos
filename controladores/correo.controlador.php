@@ -30,8 +30,21 @@ class ControladorCorreo
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Habilitar encriptación TLS implícita
             $mail->Port = 587;                   // Puerto TCP
 
+            // Obtener el nombre de la empresa de la configuración de Factus
+            $fromName = "Comprobante de Facturacion";
+            try {
+                require_once __DIR__ . "/../modelos/conexion.php";
+                require_once __DIR__ . "/../modelos/factus.modelo.php";
+                $configFactus = ModeloFactus::mdlObtenerConfiguracion();
+                if ($configFactus && !empty($configFactus['nombre_empresa'])) {
+                    $fromName = "Comprobante de Facturacion - " . trim($configFactus['nombre_empresa']);
+                }
+            } catch (Throwable $eConfig) {
+                // En caso de error, dejamos el título por defecto
+            }
+
             // Destinatarios
-            $mail->setFrom('kontrolpos01@gmail.com', 'Sistema POS');
+            $mail->setFrom('kontrolpos01@gmail.com', $fromName);
             $mail->addAddress($destinatario);     // Añadir un destinatario
 
             // Adjuntos
@@ -40,6 +53,8 @@ class ControladorCorreo
             }
 
             // Contenido
+            $mail->CharSet  = 'UTF-8';                             // Codificación de caracteres
+            $mail->Encoding = 'base64';                            // Encoding seguro para UTF-8
             $mail->isHTML(true);                                  // Formato de correo HTML
             $mail->Subject = $asunto;
             $mail->Body = $mensaje;

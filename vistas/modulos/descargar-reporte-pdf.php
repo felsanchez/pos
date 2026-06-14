@@ -9,6 +9,10 @@ require_once "../../controladores/clientes.controlador.php";
 require_once "../../modelos/clientes.modelo.php";
 require_once "../../controladores/usuarios.controlador.php";
 require_once "../../modelos/usuarios.modelo.php";
+require_once "../../controladores/productos.controlador.php";
+require_once "../../modelos/productos.modelo.php";
+require_once "../../controladores/bodegas.controlador.php";
+require_once "../../modelos/bodegas.modelo.php";
 
 if (!isset($_GET["reporte"])) {
     die("Parámetro inválido.");
@@ -27,12 +31,102 @@ if ($configFactus && !empty($configFactus["logo_empresa"])) {
 
 $tabla = "ventas";
 
-// Obtener ventas según filtro de fechas
-if (isset($_GET["fechaInicial"]) && isset($_GET["fechaFinal"]) && !empty($_GET["fechaInicial"])) {
-    $ventas = ModeloVentas::mdlRangoFechasVentas($tabla, $_GET["fechaInicial"], $_GET["fechaFinal"]);
-} else {
-    $ventas = ModeloVentas::mdlMostrarVentas($tabla, null, null);
+// 1. Obtener valores de la URL (GET)
+$tipo = $_GET['tipo'] ?? 'todo';
+$fecha_inicio = $_GET['fechaInicial'] ?? null;
+$fecha_fin = $_GET['fechaFinal'] ?? null;
+$id_vendedor = $_GET['vendedor'] ?? $_GET['usuario'] ?? null;
+$id_cliente = $_GET['cliente'] ?? null;
+$id_producto = $_GET['producto'] ?? null;
+$metodo_pago = $_GET['metodoPago'] ?? null;
+$id_bodega = $_GET['idBodega'] ?? null;
+
+// Construir la condición de fecha
+$condicionFecha = "";
+$fechaParams = [];
+
+switch ($tipo) {
+    case 'todo':
+        $condicionFecha = "1=1";
+        break;
+    case 'hoy':
+        $condicionFecha = "DATE(fecha) = CURDATE()";
+        break;
+    case 'ayer':
+        $condicionFecha = "DATE(fecha) = CURDATE() - INTERVAL 1 DAY";
+        break;
+    case 'mes':
+        $condicionFecha = "MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())";
+        break;
+    case 'personalizado':
+        if (!$fecha_inicio || !$fecha_fin) {
+            $condicionFecha = "1=1";
+        } else {
+            $condicionFecha = "DATE(fecha) BETWEEN ? AND ?";
+            $fechaParams[] = $fecha_inicio;
+            $fechaParams[] = $fecha_fin;
+        }
+        break;
+    default:
+        $condicionFecha = "1=1";
+        break;
 }
+
+// Construir filtros comunes
+$filtrosComunes = "";
+$filtroParams = [];
+
+if (!empty($id_vendedor)) {
+    $filtrosComunes .= " AND id_vendedor = ?";
+    $filtroParams[] = $id_vendedor;
+}
+
+if (!empty($id_cliente) && $id_cliente !== 'todos') {
+    $filtrosComunes .= " AND id_cliente = ?";
+    $filtroParams[] = $id_cliente;
+}
+
+if (!empty($id_bodega) && $id_bodega !== 'todos') {
+    $filtrosComunes .= " AND id_bodega = ?";
+    $filtroParams[] = $id_bodega;
+}
+
+if (!empty($id_producto)) {
+    if (strpos($id_producto, 'v_') === 0) {
+        // Es una variante de producto
+        $id_variante = substr($id_producto, 2);
+        $filtrosComunes .= " AND (productos LIKE ? OR productos LIKE ? OR productos LIKE ?)";
+        $filtroParams[] = '%"idVariante":"' . $id_variante . '"%';
+        $filtroParams[] = '%"idVariante":' . $id_variante . ',%';
+        $filtroParams[] = '%"idVariante":' . $id_variante . '}%';
+    } else {
+        // Es un producto base
+        $filtrosComunes .= " AND (productos LIKE ? OR productos LIKE ? OR productos LIKE ?)";
+        $filtroParams[] = '%"id":"' . $id_producto . '"%';
+        $filtroParams[] = '%"id":' . $id_producto . ',%';
+        $filtroParams[] = '%"id":' . $id_producto . '}%';
+    }
+}
+
+$filtrosVentasExtra = "";
+$ventasExtraParams = [];
+if (!empty($metodo_pago)) {
+    $filtrosVentasExtra .= " AND (metodo_pago = ? OR metodo_pago LIKE ?)";
+    $ventasExtraParams[] = $metodo_pago;
+    $ventasExtraParams[] = $metodo_pago . '-%';
+}
+
+$whereVentas = "estado = 'venta' AND ( (resolucion_id IS NULL OR resolucion_id = 0) OR ( resolucion_id IS NOT NULL AND resolucion_id != 0 AND estado_dian IN ('aceptada', 'enviada') ) ) AND $condicionFecha" . $filtrosComunes . $filtrosVentasExtra;
+$paramsVentas = array_merge($fechaParams, $filtroParams, $ventasExtraParams);
+
+$sql = "SELECT * FROM $tabla WHERE $whereVentas ORDER BY id ASC";
+
+$stmt = Conexion::conectar()->prepare($sql);
+foreach ($paramsVentas as $i => $val) {
+    $stmt->bindValue($i + 1, $val);
+}
+$stmt->execute();
+$ventas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Aplicar filtros y construir filas
 $filas = [];
@@ -41,21 +135,15 @@ $totalImpuesto = 0;
 $totalGeneral  = 0;
 
 foreach ($ventas as $item) {
-    if (!isset($item["estado"]) || $item["estado"] != "venta") continue;
-
-    // Filtro usuario
-    if (isset($_GET["usuario"]) && $_GET["usuario"] != "" && (string)$item["id_vendedor"] != (string)$_GET["usuario"]) continue;
-
-    // Filtro cliente
-    if (isset($_GET["cliente"]) && $_GET["cliente"] != "" && $_GET["cliente"] != "todos" && (string)$item["id_cliente"] != (string)$_GET["cliente"]) continue;
-
     $cliente  = ControladorClientes::ctrMostrarClientes("id", $item["id_cliente"]);
     $vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $item["id_vendedor"]);
 
     $productos = json_decode($item["productos"], true);
     $listaProductos = [];
-    foreach ($productos as $p) {
-        $listaProductos[] = $p["cantidad"] . "x " . $p["descripcion"];
+    if (is_array($productos)) {
+        foreach ($productos as $p) {
+            $listaProductos[] = $p["cantidad"] . "x " . $p["descripcion"];
+        }
     }
 
     $totalNeto     += $item["neto"];
@@ -77,20 +165,64 @@ foreach ($ventas as $item) {
 
 // Titulo del período
 $periodo = "Todas las ventas";
-if (!empty($_GET["fechaInicial"]) && !empty($_GET["fechaFinal"])) {
-    $periodo = "Del " . $_GET["fechaInicial"] . " al " . $_GET["fechaFinal"];
+if (!empty($fecha_inicio) && !empty($fecha_fin)) {
+    $periodo = "Del " . $fecha_inicio . " al " . $fecha_fin;
+} elseif ($tipo == "hoy") {
+    $periodo = "Hoy (" . date("d-m-Y") . ")";
+} elseif ($tipo == "ayer") {
+    $periodo = "Ayer (" . date("d-m-Y", strtotime("-1 day")) . ")";
+} elseif ($tipo == "mes") {
+    $periodo = "Mes actual (" . date("m-Y") . ")";
 }
 
 $nombreUsuario = "";
-if (!empty($_GET["usuario"])) {
-    $usr = ControladorUsuarios::ctrMostrarUsuarios("id", $_GET["usuario"]);
-    $nombreUsuario = $usr ? "Usuario: " . $usr["nombre"] : "";
+if (!empty($id_vendedor)) {
+    $usr = ControladorUsuarios::ctrMostrarUsuarios("id", $id_vendedor);
+    $nombreUsuario = $usr ? "Vendedor: " . $usr["nombre"] : "";
 }
 
 $nombreCliente = "";
-if (!empty($_GET["cliente"]) && $_GET["cliente"] != "todos") {
-    $cli = ControladorClientes::ctrMostrarClientes("id", $_GET["cliente"]);
+if (!empty($id_cliente) && $id_cliente !== "todos") {
+    $cli = ControladorClientes::ctrMostrarClientes("id", $id_cliente);
     $nombreCliente = $cli ? "Cliente: " . $cli["nombre"] : "";
+}
+
+$nombreProducto = "";
+if (!empty($id_producto)) {
+    if (strpos($id_producto, 'v_') === 0) {
+        $id_variante = substr($id_producto, 2);
+        $variante = ModeloProductos::mdlObtenerVariantePorId($id_variante);
+        if ($variante) {
+            $prod = ControladorProductos::ctrMostrarProductos("id", $variante["id_producto"], null);
+            // Fetch option values
+            $stmt = Conexion::conectar()->prepare("
+                SELECT ov.nombre 
+                FROM productos_variantes_opciones pvo
+                INNER JOIN opciones_variantes ov ON pvo.id_opcion_variante = ov.id
+                WHERE pvo.id_producto_variante = :id_variante
+            ");
+            $stmt->bindParam(":id_variante", $id_variante, PDO::PARAM_INT);
+            $stmt->execute();
+            $opciones = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            $nombreProducto = "Producto: " . ($prod ? $prod["descripcion"] : "") . " - " . implode(" / ", $opciones);
+        } else {
+            $nombreProducto = "Variante ID: " . $id_variante;
+        }
+    } else {
+        $prod = ControladorProductos::ctrMostrarProductos("id", $id_producto, null);
+        $nombreProducto = $prod ? "Producto: " . $prod["descripcion"] : "";
+    }
+}
+
+$nombreMetodoPago = "";
+if (!empty($metodo_pago)) {
+    $nombreMetodoPago = "Método de Pago: " . htmlspecialchars($metodo_pago);
+}
+
+$nombreBodega = "";
+if (!empty($id_bodega) && $id_bodega !== 'todos') {
+    $bod = ControladorBodegas::ctrMostrarBodegas("id", $id_bodega);
+    $nombreBodega = $bod ? "Sucursal: " . $bod["nombre"] : "";
 }
 
 ?><!DOCTYPE html>
@@ -269,9 +401,9 @@ if (!empty($_GET["cliente"]) && $_GET["cliente"] != "todos") {
       <div>
         <div class="titulo">Reporte de Ventas</div>
         <div class="subtitulo"><?php echo htmlspecialchars($periodo); ?></div>
-      <?php if ($nombreUsuario || $nombreCliente): ?>
+      <?php if ($nombreUsuario || $nombreCliente || $nombreProducto || $nombreMetodoPago || $nombreBodega): ?>
         <div class="subtitulo" style="margin-top:4px; color:#c0392b;">
-          <?php echo htmlspecialchars(implode(" | ", array_filter([$nombreUsuario, $nombreCliente]))); ?>
+          <?php echo htmlspecialchars(implode(" | ", array_filter([$nombreUsuario, $nombreCliente, $nombreProducto, $nombreMetodoPago, $nombreBodega]))); ?>
         </div>
       <?php endif; ?>
       </div>
@@ -303,14 +435,17 @@ if (!empty($_GET["cliente"]) && $_GET["cliente"] != "todos") {
   </div>
 
   <!-- Filtros aplicados -->
-  <?php if ($nombreUsuario || $nombreCliente || !empty($_GET["fechaInicial"])): ?>
+  <?php if ($nombreUsuario || $nombreCliente || $nombreProducto || $nombreMetodoPago || $nombreBodega || !empty($fecha_inicio) || $tipo !== 'todo'): ?>
     <div class="filtros-aplicados">
       <strong>Filtros aplicados:</strong>
       <?php
       $filtros = [];
-      if (!empty($_GET["fechaInicial"])) $filtros[] = "Período: " . $periodo;
+      if ($tipo !== 'todo' || !empty($fecha_inicio)) $filtros[] = "Período: " . $periodo;
       if ($nombreUsuario) $filtros[] = $nombreUsuario;
       if ($nombreCliente) $filtros[] = $nombreCliente;
+      if ($nombreProducto) $filtros[] = $nombreProducto;
+      if ($nombreMetodoPago) $filtros[] = $nombreMetodoPago;
+      if ($nombreBodega) $filtros[] = $nombreBodega;
       echo implode(" &nbsp;|&nbsp; ", $filtros);
       ?>
     </div>

@@ -52,6 +52,9 @@ class imprimirDetalleFactura
             $numeroDocumento = $venta["codigo"] ?? '';
         }
 
+        $esFirmada = in_array(($venta["estado_dian"] ?? 'pendiente'), ['enviada', 'aceptada']);
+        $estadoDianLabel = $esFirmada ? 'Enviada' : 'Borrador';
+
         // Extraer CUFE de la URL si está vacío en la base de datos
         $cufeExtraido = $venta["cufe"] ?? '';
         if (empty($cufeExtraido) && !empty($venta["qr_data"])) {
@@ -169,6 +172,7 @@ class imprimirDetalleFactura
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Detalles</span><br><br>
                     <strong>' . $etiquetaDocumento . ' #' . $numeroDocumento . '</strong><br><br>
                     <strong>Vendedor:</strong> ' . ($vendedor["nombre"] ?? '') . '<br>
+                    <strong>Estado Dian:</strong> ' . $estadoDianLabel . '<br>
                     <strong>Método de Pago:</strong> ' . ($venta["metodo_pago"] ?? '') . '
                 </td>
             </tr>
@@ -294,6 +298,7 @@ class imprimirDetalleFactura
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Detalles</span><br><br>
                     <strong>' . $etiquetaDocumento . ' #' . $numeroDocumento . '</strong><br><br>
                     <strong>Vendedor:</strong> ' . ($vendedor["nombre"] ?? '') . '<br>
+                    <strong>Estado Dian:</strong> ' . $estadoDianLabel . '<br>
                     <strong>Método de Pago:</strong> ' . ($venta["metodo_pago"] ?? '') . '
                 </td>
             </tr>

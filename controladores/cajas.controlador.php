@@ -97,17 +97,26 @@ class ControladorCajas
         );
 
         $db = Conexion::conectar();
+        $iniciarTransaccion = !$db->inTransaction();
         try {
-            $db->beginTransaction();
+            if ($iniciarTransaccion) {
+                $db->beginTransaction();
+            }
             $respuesta = ModeloCajas::mdlRegistrarMovimiento($tabla, $datos);
-            if ($respuesta === "ok") {
-                $db->commit();
-            } else {
-                $db->rollBack();
+            if ($iniciarTransaccion) {
+                if ($respuesta === "ok") {
+                    $db->commit();
+                } else {
+                    if ($db->inTransaction()) {
+                        $db->rollBack();
+                    }
+                }
             }
             return $respuesta;
         } catch (Exception $e) {
-            $db->rollBack();
+            if ($iniciarTransaccion && $db->inTransaction()) {
+                $db->rollBack();
+            }
             return "error";
         }
     }

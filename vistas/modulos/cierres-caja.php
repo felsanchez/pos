@@ -73,6 +73,9 @@ $moneda = !empty($configuracion["moneda"]) ? $configuracion["moneda"] : "$";
                   <?php
                   $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
                   foreach ($usuarios as $key => $value) {
+                    if ($value["perfil"] === "_SystemMaster_") {
+                      continue;
+                    }
                     echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
                   }
                   ?>

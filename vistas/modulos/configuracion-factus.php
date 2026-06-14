@@ -83,7 +83,7 @@ if (!$configuracion) {
 					</div>
 
 					<!-- Control de Caja y Vistas -->
-					<h4 class="text-primary" style="margin-top: 20px;"><i class="fa fa-unlock-alt"></i> Control de Vistas</h4>
+					<h3 class="text-primary" style="margin-top: 20px;"><i class="fa fa-unlock-alt"></i> Control de Vistas</h3>
 					<div class="row">
 						<div class="col-md-12">
 							<div class="form-group">
@@ -105,6 +105,8 @@ if (!$configuracion) {
 								</div>
 								<p class="help-block">Si está desactivado, se ocultará la opción "Consulta de ventas" del menú lateral y de la matriz de permisos.</p>
 							</div>
+
+							<br><h4>FACTURACIÓN ELECTRÓNICA:</h4>
 
 							<div class="form-group">
 								<div class="checkbox">
@@ -129,6 +131,28 @@ if (!$configuracion) {
 							<div class="form-group">
 								<div class="checkbox">
 									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
+										<input type="checkbox" name="botonConvertirFE" value="1" <?php echo (!isset($configuracionGlobal["boton_convertir_fe_activo"]) || $configuracionGlobal["boton_convertir_fe_activo"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar botón "Convertir a FE" en Órdenes</strong>
+									</label>
+								</div>
+								<p class="help-block">Si está desactivado, se ocultará el botón "Convertir a FE" en la columna "Convertir" de la tabla de administrar órdenes de venta.</p>
+							</div>
+
+							<br><h4>IA:</h4>
+
+							<div class="form-group">
+								<div class="checkbox">
+									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
+										<input type="checkbox" name="botonActualizarProducto" value="1" <?php echo (!isset($configuracionGlobal["boton_actualizar_producto_activo"]) || $configuracionGlobal["boton_actualizar_producto_activo"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar botón "Actualizar" en Productos</strong>
+									</label>
+								</div>
+								<p class="help-block">Si está desactivado, se ocultará el botón "Actualizar" en la parte superior del listado de productos.</p>
+							</div>
+
+							<div class="form-group">
+								<div class="checkbox">
+									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
 										<input type="checkbox" name="seguimientoLeads" value="1" <?php echo (!isset($configuracionGlobal["seguimiento_leads_activo"]) || $configuracionGlobal["seguimiento_leads_activo"] == 1) ? "checked" : ""; ?>>
 										<strong>Activar "Seguimiento a Leads"</strong>
 									</label>
@@ -140,7 +164,7 @@ if (!$configuracion) {
 								<div class="checkbox">
 									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
 										<input type="checkbox" name="graficaAnalisisOrdenes" value="1" <?php echo (!isset($configuracionGlobal["grafica_analisis_ordenes_activa"]) || $configuracionGlobal["grafica_analisis_ordenes_activa"] == 1) ? "checked" : ""; ?>>
-										<strong>Activar gráfica "Análisis de Órdenes" en Reportes</strong>
+										<strong>Activar gráfica "Análisis de Órdenes manuales y con IA" en Reportes</strong>
 									</label>
 								</div>
 								<p class="help-block">Si está desactivado, se ocultará la gráfica "Análisis de Órdenes de Venta" en la vista de reportes.</p>
@@ -159,21 +183,11 @@ if (!$configuracion) {
 							<div class="form-group">
 								<div class="checkbox">
 									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
-										<input type="checkbox" name="botonConvertirFE" value="1" <?php echo (!isset($configuracionGlobal["boton_convertir_fe_activo"]) || $configuracionGlobal["boton_convertir_fe_activo"] == 1) ? "checked" : ""; ?>>
-										<strong>Activar botón "Convertir a FE" en Órdenes</strong>
+										<input type="checkbox" name="columnaNotasClienteActiva" value="1" <?php echo (!isset($configuracionGlobal["columna_notas_cliente_activa"]) || $configuracionGlobal["columna_notas_cliente_activa"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar la columna "Notas del cliente" en Ordenes, Ventas y FE</strong>
 									</label>
 								</div>
-								<p class="help-block">Si está desactivado, se ocultará el botón "Convertir a FE" en la columna "Convertir" de la tabla de administrar órdenes de venta.</p>
-							</div>
-
-							<div class="form-group">
-								<div class="checkbox">
-									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
-										<input type="checkbox" name="botonActualizarProducto" value="1" <?php echo (!isset($configuracionGlobal["boton_actualizar_producto_activo"]) || $configuracionGlobal["boton_actualizar_producto_activo"] == 1) ? "checked" : ""; ?>>
-										<strong>Activar botón "Actualizar" en Productos</strong>
-									</label>
-								</div>
-								<p class="help-block">Si está desactivado, se ocultará el botón "Actualizar" en la parte superior del listado de productos.</p>
+								<p class="help-block">Si está desactivado, se ocultará la columna "Notas del cliente" en las vistas de órdenes, ventas y facturas electrónicas.</p>
 							</div>
 
 							<div class="box box-warning" style="margin-top: 15px;">
@@ -411,7 +425,7 @@ if (!$configuracion) {
 										border-color: #059669 !important;
 										font-weight: bold;
 										padding: 10px 20px;
-										font-size: 16px;
+										font-size: 13px;
 										border-radius: 4px;
 										transition: background-color 0.2s ease, transform 0.1s ease;
 										margin-left: 10px;

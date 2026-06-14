@@ -65,8 +65,9 @@ class ControladorFactus
 			$notif_transaccion_bold = isset($_POST["notif_transaccion_bold"]) ? 1 : 0;
 			$notif_solicitud_edicion = isset($_POST["notif_solicitud_edicion"]) ? 1 : 0;
 			$notif_solicitud_eliminacion = isset($_POST["notif_solicitud_eliminacion"]) ? 1 : 0;
+			$columna_notas_cliente_activa = isset($_POST["columnaNotasClienteActiva"]) ? 1 : 0;
 			
-			$stmtCaja = Conexion::conectar()->prepare("UPDATE configuracion SET control_caja = :control_caja, consulta_ventas = :consulta_ventas, documento_soporte_activo = :documento_soporte_activo, facturacion_electronica_activa = :facturacion_electronica_activa, seguimiento_leads_activo = :seguimiento_leads_activo, grafica_analisis_ordenes_activa = :grafica_analisis_ordenes_activa, columna_seguimiento_activa = :columna_seguimiento_activa, boton_convertir_fe_activo = :boton_convertir_fe_activo, boton_actualizar_producto_activo = :boton_actualizar_producto_activo, notif_orden_agente_ia = :notif_orden_agente_ia, notif_transaccion_bold = :notif_transaccion_bold, notif_solicitud_edicion = :notif_solicitud_edicion, notif_solicitud_eliminacion = :notif_solicitud_eliminacion WHERE id = 1");
+			$stmtCaja = Conexion::conectar()->prepare("UPDATE configuracion SET control_caja = :control_caja, consulta_ventas = :consulta_ventas, documento_soporte_activo = :documento_soporte_activo, facturacion_electronica_activa = :facturacion_electronica_activa, seguimiento_leads_activo = :seguimiento_leads_activo, grafica_analisis_ordenes_activa = :grafica_analisis_ordenes_activa, columna_seguimiento_activa = :columna_seguimiento_activa, boton_convertir_fe_activo = :boton_convertir_fe_activo, boton_actualizar_producto_activo = :boton_actualizar_producto_activo, notif_orden_agente_ia = :notif_orden_agente_ia, notif_transaccion_bold = :notif_transaccion_bold, notif_solicitud_edicion = :notif_solicitud_edicion, notif_solicitud_eliminacion = :notif_solicitud_eliminacion, columna_notas_cliente_activa = :columna_notas_cliente_activa WHERE id = 1");
 			$stmtCaja->bindParam(":control_caja", $controlCaja, PDO::PARAM_INT);
 			$stmtCaja->bindParam(":consulta_ventas", $consultaVentas, PDO::PARAM_INT);
 			$stmtCaja->bindParam(":documento_soporte_activo", $documentoSoporte, PDO::PARAM_INT);
@@ -80,6 +81,7 @@ class ControladorFactus
 			$stmtCaja->bindParam(":notif_transaccion_bold", $notif_transaccion_bold, PDO::PARAM_INT);
 			$stmtCaja->bindParam(":notif_solicitud_edicion", $notif_solicitud_edicion, PDO::PARAM_INT);
 			$stmtCaja->bindParam(":notif_solicitud_eliminacion", $notif_solicitud_eliminacion, PDO::PARAM_INT);
+			$stmtCaja->bindParam(":columna_notas_cliente_activa", $columna_notas_cliente_activa, PDO::PARAM_INT);
 			$stmtCaja->execute();
 
 			// 0. Obtener configuración actual para mantener datos de la empresa si no vienen en el POST
@@ -3401,7 +3403,7 @@ class ControladorFactus
 			}
 			if ($eDian == "aceptada" || $eDian == "enviada") {
 				if ($puedoEditar) {
-					$acciones .= '<button class="btn btn-primary btnEnviarEmailDS" idDS="' . e($value["id"]) . '" nombreProveedor="' . e(($value["nombre_proveedor"] ?? "N/A")) . '" emailProveedor="' . e(($value["correo"] ?? "")) . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
+					$acciones .= '<button class="btn btn-primary btnEnviarEmailDS" idDS="' . e($value["id"]) . '" nombreProveedor="' . e(($value["nombre_proveedor"] ?? "N/A")) . '" emailProveedor="' . e(($value["correo_proveedor"] ?? "")) . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
 				} else {
 					$acciones .= '<button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para enviar por correo"><i class="fa fa-envelope"></i></button>';
 				}

@@ -202,9 +202,11 @@ class imprimirNotaCredito
                 <td style="width:34%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Detalles NC</span><br><br>
                     <strong>Nota Crédito #' . $notaCredito["numero_nota_credito"] . '</strong><br>
-                    <strong>Factura Relac:</strong> ' . $notaCredito["numero_factura_original"] . '<br>
+                    <strong>Factura Relacionada:</strong> ' . $notaCredito["numero_factura_original"] . '<br>
+                    <strong>Vendedor:</strong> ' . ($vendedor["nombre"] ?? 'No asignado') . '<br>
                     <strong>Motivo:</strong> ' . $textoMotivo . '<br>
-                    <strong>Estado:</strong> ' . ucfirst($notaCredito["estado_dian"]) . '
+                    <strong>Estado DIAN:</strong> ' . ucfirst($notaCredito["estado_dian"]) . '<br>' .
+                    (!empty($notaCredito["metodo_pago"]) ? '<strong>Método de Pago:</strong> ' . htmlspecialchars($notaCredito["metodo_pago"]) : '') . '
                 </td>
             </tr>
         </table><br><br>';

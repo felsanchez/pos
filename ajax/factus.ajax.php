@@ -22,6 +22,18 @@ require_once __DIR__ . "/../modelos/ventas.modelo.php";
 require_once __DIR__ . "/../controladores/movimientos.controlador.php";
 require_once __DIR__ . "/../modelos/movimientos.modelo.php";
 require_once __DIR__ . "/../modelos/helpers.php";
+require_once __DIR__ . "/../controladores/correo.controlador.php";
+require_once __DIR__ . "/../controladores/usuarios.controlador.php";
+require_once __DIR__ . "/../modelos/usuarios.modelo.php";
+require_once __DIR__ . "/../controladores/proveedores.controlador.php";
+require_once __DIR__ . "/../modelos/proveedores.modelo.php";
+
+// Incluir AjaxFacturacion como librería (sin ejecutar su entry-point)
+// El flag FACTURACION_AJAX_INCLUDED evita que el código raíz de facturacion.ajax.php se ejecute.
+if (!defined('FACTURACION_AJAX_INCLUDED')) {
+    define('FACTURACION_AJAX_INCLUDED', true);
+}
+require_once __DIR__ . "/facturacion.ajax.php";
 
 /*
 
@@ -196,6 +208,30 @@ class AjaxFactus
 
 		$idVenta = $_POST["idVenta"];
 		$resultado = ControladorFactus::ctrGenerarFacturaElectronica($idVenta);
+
+		// Envío automático de correo al cliente si la firma fue exitosa
+		if (!$resultado['error']) {
+			try {
+				$envioAuto = new AjaxFacturacion();
+				$venta   = ControladorVentas::ctrMostrarVentas('id', $idVenta);
+				$emailCliente = '';
+				if (!empty($venta['id_cliente'])) {
+					$cliente = ControladorClientes::ctrMostrarClientes('id', $venta['id_cliente']);
+					$emailCliente = $cliente['email'] ?? '';
+				}
+				if (!empty($emailCliente)) {
+					$envioAuto->idVenta      = $idVenta;
+					$envioAuto->emailDestino = $emailCliente;
+					ob_start();
+					$envioAuto->ajaxEnviarPDFCorreo();
+					ob_end_clean(); // Descartar la salida JSON del método de correo
+				}
+			} catch (Exception $eCorreo) {
+				// El correo falló pero la firma fue exitosa: no interrumpir la respuesta
+				error_log('Error al enviar correo automático tras firma: ' . $eCorreo->getMessage());
+			}
+		}
+
 		echo json_encode($resultado);
 	}
 
@@ -216,6 +252,29 @@ class AjaxFactus
 
 		$idDS = $_POST["idDS"];
 		$resultado = ControladorFactus::ctrFirmarDocumentoSoporte($idDS);
+
+		// Envío automático de correo al proveedor si la firma fue exitosa
+		if (isset($resultado['error']) && !$resultado['error']) {
+			try {
+				$documentoSoporte = ControladorFactus::ctrMostrarDocumentosSoporte("id", $idDS);
+				if ($documentoSoporte && !empty($documentoSoporte["id_proveedor"])) {
+					$proveedor = ControladorProveedores::ctrMostrarProveedores("id", $documentoSoporte["id_proveedor"]);
+					$emailProveedor = $proveedor['correo'] ?? '';
+					if (!empty($emailProveedor)) {
+						$envioAuto = new AjaxFacturacion();
+						$envioAuto->idDS = $idDS;
+						$envioAuto->emailDestino = $emailProveedor;
+						ob_start();
+						$envioAuto->ajaxEnviarPDFDSCorreo();
+						ob_end_clean(); // Descartar la salida JSON del método de correo
+					}
+				}
+			} catch (Exception $eCorreo) {
+				// El correo falló pero la firma fue exitosa: no interrumpir la respuesta
+				error_log('Error al enviar correo automático tras firma de DS: ' . $eCorreo->getMessage());
+			}
+		}
+
 		echo json_encode($resultado);
 	}
 
@@ -256,6 +315,29 @@ class AjaxFactus
 
 		$idNota = $_POST["idNota"];
 		$resultado = ControladorFactus::ctrFirmarNotaAjusteDS($idNota);
+
+		// Envío automático de correo al proveedor si la firma fue exitosa
+		if (isset($resultado['error']) && !$resultado['error']) {
+			try {
+				$nota = ControladorFactus::ctrMostrarNotasAjusteDS("id", $idNota);
+				if ($nota && !empty($nota["id_proveedor"])) {
+					$proveedor = ControladorProveedores::ctrMostrarProveedores("id", $nota["id_proveedor"]);
+					$emailProveedor = $proveedor['correo'] ?? '';
+					if (!empty($emailProveedor)) {
+						$envioAuto = new AjaxFacturacion();
+						$envioAuto->idNA = $idNota;
+						$envioAuto->emailDestino = $emailProveedor;
+						ob_start();
+						$envioAuto->ajaxEnviarPDFNACorreo();
+						ob_end_clean(); // Descartar la salida JSON del método de correo
+					}
+				}
+			} catch (Exception $eCorreo) {
+				// El correo falló pero la firma fue exitosa: no interrumpir la respuesta
+				error_log('Error al enviar correo automático tras firma de NA DS: ' . $eCorreo->getMessage());
+			}
+		}
+
 		echo json_encode($resultado);
 	}
 

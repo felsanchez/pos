@@ -23,6 +23,21 @@ $vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $nota["id_usuario"]);
 $configuracion = ModeloConfiguracion::mdlObtenerConfiguracion();
 $configFactus = ControladorFactus::ctrObtenerConfiguracion();
 
+// Calcular código si es borrador
+if (empty($nota["numero_nota_ajuste"])) {
+    $proximoBase = ModeloFactus::mdlObtenerSiguienteConsecutivoNotaAjusteDS(false);
+    $rangoAjuste = ModeloFactus::mdlObtenerRangoAjusteDS();
+    $prefijoAjuste = $rangoAjuste ? $rangoAjuste["prefijo"] : "NA";
+    $stmt = Conexion::conectar()->prepare("SELECT COUNT(*) FROM notas_ajuste_ds WHERE id < :id AND (numero_nota_ajuste IS NULL OR numero_nota_ajuste = '')");
+    $stmt->bindParam(":id", $nota["id"], PDO::PARAM_INT);
+    $stmt->execute();
+    $rank = $stmt->fetchColumn();
+    $numSugerido = $proximoBase + intval($rank);
+    $codigoNota = $prefijoAjuste . $numSugerido;
+} else {
+    $codigoNota = $nota["numero_nota_ajuste"];
+}
+
 // Productos del Ajuste
 $listaProducto = json_decode($nota["productos"], true);
 
@@ -49,7 +64,9 @@ $listaProducto = json_decode($nota["productos"], true);
                 <div class="box box-primary">
                     <div class="box-header with-border">
                         <h3 class="box-title">Nota de Ajuste:
-                            <?php echo $nota["numero_nota_ajuste"]; ?>
+                            <span class="<?php echo (in_array($nota["estado_dian"], ['enviada', 'aceptada']) ? 'text-green' : ($nota["estado_dian"] == 'borrador' ? 'text-yellow' : '')); ?>">
+                                <?php echo $codigoNota; ?>
+                            </span>
                         </h3>
                         <div class="box-tools pull-right">
                             <button type="button" class="btn btn-box-tool" data-widget="collapse"><i
@@ -141,7 +158,10 @@ $listaProducto = json_decode($nota["productos"], true);
                                 <div class="col-sm-4 invoice-col">
                                     <span
                                         style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #3c8dbc; display: block; margin-bottom: 10px; width: fit-content;">Detalles Nota</span>
-                                    <b>Nota Ajuste #:</b> <?php echo $nota["numero_nota_ajuste"]; ?><br>
+                                    <b>Nota Ajuste #:</b> 
+                                    <span class="<?php echo (in_array($nota["estado_dian"], ['enviada', 'aceptada']) ? 'text-green' : ($nota["estado_dian"] == 'borrador' ? 'text-yellow' : '')); ?>">
+                                        <?php echo $codigoNota; ?>
+                                    </span><br>
                                     <b>Doc. Soporte Original:</b> <?php echo $nota["numero_ds_original"]; ?><br>
                                     <b>Vendedor:</b> <?php echo htmlspecialchars($vendedor["nombre"] ?? 'N/A'); ?><br>
                                     <b>Concepto Ajuste:</b> <?php
@@ -205,6 +225,7 @@ $listaProducto = json_decode($nota["productos"], true);
                                 </div>
                             </div>
 
+                            <?php if ($nota["estado_dian"] != 'borrador'): ?>
                             <div class="row">
 
 
@@ -249,14 +270,11 @@ $listaProducto = json_decode($nota["productos"], true);
                                     </p>
                                 <?php endif; ?>
                             </div>
+                            <?php endif; ?>
 
 
                             <div class="row">
                                 <div class="col-xs-6">
-                                <p class="lead">Observación:</p>
-                                <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
-                                    <?php echo $nota["motivo"] ?: ($nota["observacion"] ?: "Sin observaciones adicionales."); ?>
-                                </p>
 
                                 <!-- Botones externos de Factus -->
                                 <div style="margin-top: 20px;">

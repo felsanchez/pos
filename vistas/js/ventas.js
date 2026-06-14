@@ -2381,17 +2381,24 @@ $(document).ready(function () {
 					}
 				}
 			},
-			"columnDefs": [
-				{ "targets": 0, "responsivePriority": 1 },
-				{ "targets": 8, "responsivePriority": 2, "orderable": false },
-				{ "targets": 1, "responsivePriority": 3 },
-				{ "targets": 2, "responsivePriority": 4 },
-				{ "targets": 3, "responsivePriority": 5 },
-				{ "targets": 4, "responsivePriority": 6 },
-				{ "targets": 5, "responsivePriority": 7 },
-				{ "targets": 6, "responsivePriority": 8 },
-				{ "targets": 7, "responsivePriority": 9 }
-			],
+			"columnDefs": (function() {
+				var notasActiva = $('#columnaNotasClienteActiva').val();
+				var defs = [
+					{ "targets": 0, "responsivePriority": 1 },
+					{ "targets": 8, "responsivePriority": 2, "orderable": false },
+					{ "targets": 1, "responsivePriority": 3 },
+					{ "targets": 2, "responsivePriority": 4 },
+					{ "targets": 3, "responsivePriority": 5 },
+					{ "targets": 4, "responsivePriority": 6 },
+					{ "targets": 5, "responsivePriority": 7 },
+					{ "targets": 6, "responsivePriority": 8 },
+					{ "targets": 7, "responsivePriority": 9 }
+				];
+				if (notasActiva == "0") {
+					defs.push({ "targets": 5, "visible": false });
+				}
+				return defs;
+			})(),
 			"language": {
 				"sProcessing": "Procesando...",
 				"sLengthMenu": "Mostrar _MENU_ registros",

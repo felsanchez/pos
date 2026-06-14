@@ -268,19 +268,8 @@ else: ?>
                             </div>
                         </div>
 
-                        <!-- DESCRIPCIÓN OBSERVACIONES -->
-                        <div class="row">
-                            <div class="col-xs-12">
-                                <div class="form-group">
-                                    <label>Observaciones (Opcional)</label>
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="fa fa-commenting"></i></span>
-                                        <textarea class="form-control" name="motivoDescDS" id="motivoDescDS" rows="3"
-                                            placeholder="Escriba el motivo detallado del ajuste..."></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- OBSERVACIONES REMOVIDAS -->
+                        <input type="hidden" name="motivoDescDS" id="motivoDescDS" value="">
 
                         <hr>
 

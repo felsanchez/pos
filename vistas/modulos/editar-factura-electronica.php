@@ -148,11 +148,11 @@ $productosVenta = json_decode($venta["productos"], true);
                       <div class="input-group">
                         <span class="input-group-addon"><i class="fa fa-key"></i></span>
                         <?php
-                        // Obtener el siguiente consecutivo de Factus
-                        $siguienteNumero = ModeloFactus::mdlObtenerSiguienteConsecutivoFactus();
+                        // Mostrar el consecutivo actual de la venta que se está editando
+                        $codigoVenta = $venta["codigo"];
                         ?>
                         <input type="text" class="form-control" id="nuevaVenta" name="proximoNumeroFactura"
-                          value="<?php echo $siguienteNumero; ?>" readonly>
+                          value="<?php echo $codigoVenta; ?>" readonly>
                       </div>
                     </div>
                   </div>

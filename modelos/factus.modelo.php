@@ -2503,7 +2503,7 @@ class ModeloFactus
     =============================================*/
     static public function mdlMostrarDocumentosSoporteServerSide($where, $order, $limit)
     {
-        $sql = "SELECT ds.*, p.nombre as nombre_proveedor, u.nombre as nombre_vendedor,
+        $sql = "SELECT ds.*, p.nombre as nombre_proveedor, p.correo as correo_proveedor, u.nombre as nombre_vendedor,
                 (SELECT 1 FROM notas_ajuste_ds WHERE id_ds_original = ds.id LIMIT 1) as tiene_nota,
                 (SELECT COUNT(*) FROM documentos_soporte WHERE id < ds.id AND (numero_ds IS NULL OR numero_ds = '')) as rank_borrador
                 FROM documentos_soporte ds

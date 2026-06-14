@@ -93,7 +93,7 @@ if (empty($cufeFactura) && !empty($venta["qr_data"])) {
                     <div class="box-header with-border">
                         <h3 class="box-title">Nota Crédito:
                             <span
-                                class="<?php echo ($notaCredito["estado_dian"] == "borrador" ? 'text-yellow' : ''); ?>">
+                                class="<?php echo (in_array($notaCredito["estado_dian"], ['enviada', 'aceptada']) ? 'text-green' : ($notaCredito["estado_dian"] == "borrador" ? 'text-yellow' : '')); ?>">
                                 <?php echo $notaCredito["numero_nota_credito"]; ?>
                             </span>
                         </h3>
@@ -194,7 +194,7 @@ if (empty($cufeFactura) && !empty($venta["qr_data"])) {
                                         NC</span>
                                     <b>Nota Crédito #
                                         <span
-                                            class="<?php echo ($notaCredito["estado_dian"] == "borrador" ? 'text-yellow' : ''); ?>">
+                                            class="<?php echo (in_array($notaCredito["estado_dian"], ['enviada', 'aceptada']) ? 'text-green' : ($notaCredito["estado_dian"] == "borrador" ? 'text-yellow' : '')); ?>">
                                             <?php echo $notaCredito["numero_nota_credito"]; ?>
                                         </span>
                                     </b><br>
@@ -285,82 +285,84 @@ if (empty($cufeFactura) && !empty($venta["qr_data"])) {
                             <div class="row">
                                 <!-- QR Column -->
                                 <div class="col-xs-6">
-                                    <p class="lead">Código QR DIAN:</p>
-                                    <?php if (!empty($notaCredito["qr_data_nc"])):
-                                        $qrData = trim($notaCredito["qr_data_nc"]);
-                                        $qrBase64 = "";
+                                    <?php if ($notaCredito["estado_dian"] != 'borrador'): ?>
+                                        <p class="lead">Código QR DIAN:</p>
+                                        <?php if (!empty($notaCredito["qr_data_nc"])):
+                                            $qrData = trim($notaCredito["qr_data_nc"]);
+                                            $qrBase64 = "";
 
-                                        // Attempt to generate QR locally
-                                        // Path relative to vistas/modulos/ver-nota-credito.php -> pos root
-                                        $tcpdfPath = __DIR__ . "/../../extensiones/tcpdf/tcpdf_barcodes_2d.php";
+                                            // Attempt to generate QR locally
+                                            // Path relative to vistas/modulos/ver-nota-credito.php -> pos root
+                                            $tcpdfPath = __DIR__ . "/../../extensiones/tcpdf/tcpdf_barcodes_2d.php";
 
-                                        if (file_exists($tcpdfPath)) {
-                                            require_once($tcpdfPath);
-                                            // Check class exists to be safe
-                                            if (class_exists('TCPDF2DBarcode')) {
-                                                // Use SVG which doesn't require GD library
-                                                try {
-                                                    $barcodeobj = new TCPDF2DBarcode($qrData, 'QRCODE,H');
-                                                    // Get SVG code
-                                                    $svgCode = $barcodeobj->getBarcodeSVGcode(5, 5, 'black');
-                                                    if (!empty($svgCode)) {
-                                                        $qrBase64 = base64_encode($svgCode);
+                                            if (file_exists($tcpdfPath)) {
+                                                require_once($tcpdfPath);
+                                                // Check class exists to be safe
+                                                if (class_exists('TCPDF2DBarcode')) {
+                                                    // Use SVG which doesn't require GD library
+                                                    try {
+                                                        $barcodeobj = new TCPDF2DBarcode($qrData, 'QRCODE,H');
+                                                        // Get SVG code
+                                                        $svgCode = $barcodeobj->getBarcodeSVGcode(5, 5, 'black');
+                                                        if (!empty($svgCode)) {
+                                                            $qrBase64 = base64_encode($svgCode);
+                                                        }
+                                                    } catch (Exception $e) {
+                                                        // Silent fail to fallback
                                                     }
-                                                } catch (Exception $e) {
-                                                    // Silent fail to fallback
                                                 }
                                             }
-                                        }
-                                        ?>
+                                            ?>
 
-                                        <?php if (!empty($qrBase64)): ?>
-                                            <img src="data:image/svg+xml;base64,<?php echo $qrBase64; ?>" width="150"
-                                                height="150" title="QR Nota Crédito" alt="QR Nota Crédito"
-                                                style="display:block; margin-bottom:10px; border:1px solid #ddd;" />
-                                        <?php else: ?>
-                                            <!-- Fallback to Google Charts -->
-                                            <img src="https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=<?php echo rawurlencode($qrData); ?>"
-                                                width="150" height="150" title="QR Nota Crédito (Fallback)"
-                                                alt="QR Nota Crédito" style="display:block; margin-bottom:10px;" />
-                                        <?php endif; ?>
-                                        <br>
+                                            <?php if (!empty($qrBase64)): ?>
+                                                <img src="data:image/svg+xml;base64,<?php echo $qrBase64; ?>" width="150"
+                                                    height="150" title="QR Nota Crédito" alt="QR Nota Crédito"
+                                                    style="display:block; margin-bottom:10px; border:1px solid #ddd;" />
+                                            <?php else: ?>
+                                                <!-- Fallback to Google Charts -->
+                                                <img src="https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=<?php echo rawurlencode($qrData); ?>"
+                                                    width="150" height="150" title="QR Nota Crédito (Fallback)"
+                                                    alt="QR Nota Crédito" style="display:block; margin-bottom:10px;" />
+                                            <?php endif; ?>
+                                            <br>
 
-                                        <small style="color: #666; font-size: 14px; word-break: break-all;">
-                                            <a href="<?php echo $notaCredito["qr_data_nc"]; ?>" target="_blank">Ver
-                                                validación DIAN</a>
-                                        </small>
-                                        <br>
+                                            <small style="color: #666; font-size: 14px; word-break: break-all;">
+                                                <a href="<?php echo $notaCredito["qr_data_nc"]; ?>" target="_blank">Ver
+                                                    validación DIAN</a>
+                                            </small>
+                                            <br>
 
-                                        <!-- Box for CUFE (Invoice) & CUDE (Credit Note) -->
-                                        <div
-                                            style="margin-top: 10px; border: 1px solid #d2d6de; padding: 10px; border-radius: 5px; background-color: #f9fafc;">
+                                            <!-- Box for CUFE (Invoice) & CUDE (Credit Note) -->
+                                            <div
+                                                style="margin-top: 10px; border: 1px solid #d2d6de; padding: 10px; border-radius: 5px; background-color: #f9fafc;">
 
-                                            <!-- CUFE Factura -->
-                                            <?php if (!empty($cufeFactura)): ?>
-                                                <div style="margin-bottom: 5px;">
-                                                    <b style="color: #555;">CUFE (Factura):</b><br>
+                                                <!-- CUFE Factura -->
+                                                <?php if (!empty($cufeFactura)): ?>
+                                                    <div style="margin-bottom: 5px;">
+                                                        <b style="color: #555;">CUFE (Factura):</b><br>
+                                                        <span
+                                                            style="font-size: 11px; word-break: break-all; display: block; line-height: 1.2; color: #333;">
+                                                            <?php echo $cufeFactura; ?>
+                                                        </span>
+                                                    </div>
+                                                    <hr style="margin: 5px 0; border: 0; border-top: 1px solid #ddd;">
+                                                <?php endif; ?>
+
+                                                <!-- CUDE Nota Crédito -->
+                                                <div>
+                                                    <b style="color: #555;">CUDE (Nota Crédito):</b><br>
                                                     <span
                                                         style="font-size: 11px; word-break: break-all; display: block; line-height: 1.2; color: #333;">
-                                                        <?php echo $cufeFactura; ?>
+                                                        <?php echo $notaCredito["cufe_nc"]; ?>
                                                     </span>
                                                 </div>
-                                                <hr style="margin: 5px 0; border: 0; border-top: 1px solid #ddd;">
-                                            <?php endif; ?>
 
-                                            <!-- CUDE Nota Crédito -->
-                                            <div>
-                                                <b style="color: #555;">CUDE (Nota Crédito):</b><br>
-                                                <span
-                                                    style="font-size: 11px; word-break: break-all; display: block; line-height: 1.2; color: #333;">
-                                                    <?php echo $notaCredito["cufe_nc"]; ?>
-                                                </span>
                                             </div>
-
-                                        </div>
-                                    <?php else: ?>
-                                        <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
-                                            QR no disponible.
-                                        </p>
+                                        <?php else: ?>
+                                            <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
+                                                QR no disponible.
+                                            </p>
+                                        <?php endif; ?>
                                     <?php endif; ?>
 
                                     <?php if (!empty($notaCredito["observacion"])): ?>

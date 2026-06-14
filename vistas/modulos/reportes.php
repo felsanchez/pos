@@ -141,14 +141,12 @@
         <h3 class="box-title"><i class="fa fa-line-chart"></i> Análisis de Ventas</h3>
         <div class="box-tools pull-right">
           <?php if (puedeAccion('reporte_ventas', 'imprimir')): ?>
-            <button class="btn btn-success btn-sm" style="margin-right: 5px;" data-toggle="modal"
-              data-target="#modalDescargarExcel">
+            <a class="btn btn-success btn-sm" style="margin-right: 5px;" id="btn-descargar-excel-directo" href="#">
               <i class="fa fa-file-excel-o"></i> Descargar Excel
-            </button>
-            <button class="btn btn-danger btn-sm" style="margin-right: 5px;" data-toggle="modal"
-              data-target="#modalDescargarPdf">
+            </a>
+            <a class="btn btn-danger btn-sm" style="margin-right: 5px;" id="btn-descargar-pdf-directo" href="#" target="_blank">
               <i class="fa fa-file-pdf-o"></i> Descargar PDF
-            </button>
+            </a>
           <?php endif; ?>
           <button type="button" class="btn btn-box-tool" data-widget="collapse">
             <i class="fa fa-minus"></i>
@@ -281,8 +279,10 @@
                   <option value="todos">Mostrar Todas</option>
                   <option value="facturas">Facturas Electrónicas</option>
                   <option value="nc">Notas Crédito</option>
-                  <option value="ds">Documentos Soporte</option>
-                  <option value="na">Notas de Ajuste DS</option>
+                  <?php if (!isset($configuracionFE["documento_soporte_activo"]) || $configuracionFE["documento_soporte_activo"] == 1): ?>
+                    <option value="ds">Documentos Soporte</option>
+                    <option value="na">Notas de Ajuste DS</option>
+                  <?php endif; ?>
                 </select>
               </div>
             </div>
@@ -291,7 +291,7 @@
           <!-- 2. Tercero (Cliente/Proveedor) -->
           <div class="col-md-3" style="margin-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Cliente/Proveedor:</b></span>
+              <span class="hidden-xs"><b>Cliente:</b></span>
               <div class="input-group" style="width: 100%;">
                 <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
                     class="fa fa-users"></i></span>
@@ -527,77 +527,7 @@
   </div>
 </div>
 
-<!-- Modal para descargar PDF con filtro de fechas -->
-<div class="modal fade" id="modalDescargarPdf" tabindex="-1" role="dialog" aria-labelledby="modalDescargarPdfLabel">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header" style="background: #c0392b; color: #fff; border-radius: 4px 4px 0 0;">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color:#fff; opacity:1;"><span
-            aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="modalDescargarPdfLabel"><i class="fa fa-file-pdf-o"></i> Descargar Reporte en PDF
-        </h4>
-      </div>
-      <div class="modal-body">
-        <div class="filtro-excel-container">
-          <div class="form-group">
-            <label for="filtro-usuario-pdf">Usuario:</label>
-            <select id="filtro-usuario-pdf" class="form-control">
-              <option value="">Mostrar Todos</option>
-              <?php
-              foreach ($usuarios as $key => $value) {
-                if ($value['perfil'] === '_SystemMaster_') continue;
-                echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-              }
-              ?>
-            </select>
-          </div>
 
-          <div class="form-group">
-            <label for="filtro-cliente-pdf">Cliente:</label>
-            <select id="filtro-cliente-pdf" class="form-control select2-modal" style="width: 100%;">
-              <option value="todos">Mostrar Todos</option>
-              <?php
-              foreach ($clientesA as $key => $value) {
-                echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-              }
-              ?>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="tipo-fecha-pdf">Fecha:</label>
-            <select id="tipo-fecha-pdf" class="form-control">
-              <option value="todo">Mostrar Todas</option>
-              <option value="hoy">Hoy</option>
-              <option value="ayer">Ayer</option>
-              <option value="mes">Mes actual</option>
-              <option value="personalizado">Personalizado</option>
-            </select>
-          </div>
-
-          <div id="campo-desde-pdf" class="form-group" style="display:none;">
-            <label for="fecha-desde-pdf">Desde</label>
-            <input type="date" id="fecha-desde-pdf" class="form-control">
-          </div>
-
-          <div id="campo-hasta-pdf" class="form-group" style="display:none;">
-            <label for="fecha-hasta-pdf">Hasta</label>
-            <input type="date" id="fecha-hasta-pdf" class="form-control">
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-        <?php if (puedeAccion('reporte_ventas', 'imprimir')): ?>
-          <a id="btn-descargar-pdf" href="vistas/modulos/descargar-reporte-pdf.php?reporte=reporte" class="btn btn-danger"
-            target="_blank">
-            <i class="fa fa-download"></i> Descargar PDF
-          </a>
-        <?php endif; ?>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- Modal para descargar Excel Facturación Electrónica con filtro de fechas -->
 <div class="modal fade" id="modalDescargarExcelFacturacion" tabindex="-1" role="dialog"
@@ -684,6 +614,110 @@
 </div>
 
 <script>
+  // ---- BOTON EXCEL DIRECTO CON FILTROS ----
+  $(document).on('click', '#btn-descargar-excel-directo', function (e) {
+    e.preventDefault();
+
+    let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";
+    let url = `${rutaBase}/vistas/modulos/descargar-reporte.php?reporte=reporte`;
+
+    // Filtros de la seccion Análisis de Ventas
+    const tipo = document.getElementById('av-tipo') ? document.getElementById('av-tipo').value : 'todo';
+    const fechaInicio = document.getElementById('av-fecha-inicio') ? document.getElementById('av-fecha-inicio').value : '';
+    const fechaFin = document.getElementById('av-fecha-fin') ? document.getElementById('av-fecha-fin').value : '';
+    const idVendedor = document.getElementById('filtro-vendedor') ? document.getElementById('filtro-vendedor').value : '';
+    const idCliente = document.getElementById('filtro-cliente') ? document.getElementById('filtro-cliente').value : '';
+    const idProducto = document.getElementById('filtro-producto') ? document.getElementById('filtro-producto').value : '';
+    const metodoPago = document.getElementById('filtro-metodo-pago') ? document.getElementById('filtro-metodo-pago').value : '';
+
+    // Obtener sucursal/bodega si existe el filtro maestro
+    const sucursalMaestra = document.getElementById('sucursalReporteMaestro');
+    const idBodega = sucursalMaestra ? sucursalMaestra.value : '';
+
+    if (tipo) {
+      url += `&tipo=${tipo}`;
+    }
+    if (fechaInicio) {
+      url += `&fechaInicial=${fechaInicio}`;
+    }
+    if (fechaFin) {
+      url += `&fechaFinal=${fechaFin}`;
+    }
+    if (idVendedor) {
+      url += `&vendedor=${idVendedor}`;
+    }
+    if (idCliente) {
+      url += `&cliente=${idCliente}`;
+    }
+    if (idProducto) {
+      url += `&producto=${idProducto}`;
+    }
+    if (metodoPago) {
+      url += `&metodoPago=${metodoPago}`;
+    }
+    if (idBodega && idBodega !== 'todos') {
+      url += `&idBodega=${idBodega}`;
+    }
+
+    // Mostrar toast
+    mostrarToast('¡Descarga iniciada! El archivo Excel se está descargando...');
+
+    // Iniciar descarga
+    window.location.href = url;
+  });
+
+  // ---- BOTON PDF DIRECTO CON FILTROS ----
+  $(document).on('click', '#btn-descargar-pdf-directo', function (e) {
+    e.preventDefault();
+
+    let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";
+    let url = `${rutaBase}/vistas/modulos/descargar-reporte-pdf.php?reporte=reporte`;
+
+    // Filtros de la seccion Análisis de Ventas
+    const tipo = document.getElementById('av-tipo') ? document.getElementById('av-tipo').value : 'todo';
+    const fechaInicio = document.getElementById('av-fecha-inicio') ? document.getElementById('av-fecha-inicio').value : '';
+    const fechaFin = document.getElementById('av-fecha-fin') ? document.getElementById('av-fecha-fin').value : '';
+    const idVendedor = document.getElementById('filtro-vendedor') ? document.getElementById('filtro-vendedor').value : '';
+    const idCliente = document.getElementById('filtro-cliente') ? document.getElementById('filtro-cliente').value : '';
+    const idProducto = document.getElementById('filtro-producto') ? document.getElementById('filtro-producto').value : '';
+    const metodoPago = document.getElementById('filtro-metodo-pago') ? document.getElementById('filtro-metodo-pago').value : '';
+
+    // Obtener sucursal/bodega si existe el filtro maestro
+    const sucursalMaestra = document.getElementById('sucursalReporteMaestro');
+    const idBodega = sucursalMaestra ? sucursalMaestra.value : '';
+
+    if (tipo) {
+      url += `&tipo=${tipo}`;
+    }
+    if (fechaInicio) {
+      url += `&fechaInicial=${fechaInicio}`;
+    }
+    if (fechaFin) {
+      url += `&fechaFinal=${fechaFin}`;
+    }
+    if (idVendedor) {
+      url += `&vendedor=${idVendedor}`;
+    }
+    if (idCliente) {
+      url += `&cliente=${idCliente}`;
+    }
+    if (idProducto) {
+      url += `&producto=${idProducto}`;
+    }
+    if (metodoPago) {
+      url += `&metodoPago=${metodoPago}`;
+    }
+    if (idBodega && idBodega !== 'todos') {
+      url += `&idBodega=${idBodega}`;
+    }
+
+    // Mostrar toast
+    mostrarToast('¡Generación iniciada! El archivo PDF se está generando...');
+
+    // Iniciar descarga en pestaña nueva
+    window.open(url, '_blank');
+  });
+
   // ---- MODAL EXCEL: listeners se registran en shown.bs.modal (despues del re-init de select2) ----
   // La funcion actualizarEnlaceExcel se define aqui; los listeners se conectan en shown.bs.modal
 
@@ -714,79 +748,7 @@
     btnDescargar.href = url;
   }
 
-  // --- LOGICA MODAL PDF ---
-  document.getElementById('tipo-fecha-pdf').addEventListener('change', function () {
-    const tipo = this.value;
-    const campoDesde = document.getElementById('campo-desde-pdf');
-    const campoHasta = document.getElementById('campo-hasta-pdf');
 
-    if (tipo === 'personalizado') {
-      campoDesde.style.display = 'block';
-      campoHasta.style.display = 'block';
-    } else {
-      campoDesde.style.display = 'none';
-      campoHasta.style.display = 'none';
-    }
-    actualizarEnlacePdf();
-  });
-
-  document.getElementById('fecha-desde-pdf').addEventListener('change', actualizarEnlacePdf);
-  document.getElementById('fecha-hasta-pdf').addEventListener('change', actualizarEnlacePdf);
-  document.getElementById('filtro-usuario-pdf').addEventListener('change', actualizarEnlacePdf);
-  document.getElementById('filtro-cliente-pdf').addEventListener('change', actualizarEnlacePdf);
-
-  function actualizarEnlacePdf() {
-    const tipo = document.getElementById('tipo-fecha-pdf').value;
-    const btnDescargar = document.getElementById('btn-descargar-pdf');
-    let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";
-    let url = `${rutaBase}/vistas/modulos/descargar-reporte-pdf.php?reporte=reporte`;
-
-    let fechaInicial, fechaFinal;
-    const hoy = new Date();
-
-    switch (tipo) {
-      case 'hoy':
-        fechaInicial = fechaFinal = hoy.toISOString().split('T')[0];
-        break;
-      case 'ayer':
-        const ayer = new Date(hoy);
-        ayer.setDate(ayer.getDate() - 1);
-        fechaInicial = fechaFinal = ayer.toISOString().split('T')[0];
-        break;
-      case 'mes':
-        fechaInicial = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
-        fechaFinal = hoy.toISOString().split('T')[0];
-        break;
-      case 'personalizado':
-        fechaInicial = document.getElementById('fecha-desde-pdf').value;
-        fechaFinal = document.getElementById('fecha-hasta-pdf').value;
-        break;
-      default:
-        break;
-    }
-
-    if (fechaInicial && fechaFinal) {
-      url += `&fechaInicial=${fechaInicial}&fechaFinal=${fechaFinal}`;
-    }
-
-    const usuario = document.getElementById('filtro-usuario-pdf').value;
-    if (usuario) {
-      url += `&usuario=${usuario}`;
-    }
-
-    const cliente = document.getElementById('filtro-cliente-pdf').value;
-    if (cliente && cliente !== "todos") {
-      url += `&cliente=${cliente}`;
-    }
-
-    btnDescargar.href = url;
-  }
-
-  $('#btn-descargar-pdf').on('click', function () {
-    mostrarToast('¡Descarga iniciada! El archivo PDF se está generando...');
-    setTimeout(function () { $('#modalDescargarPdf').modal('hide'); }, 1000);
-  });
-  // --- FIN LOGICA MODAL PDF ---
 
   // --- LOGICA MODAL FACTURACION ELECTRONICA ---
 
@@ -1044,21 +1006,7 @@
       actualizarEnlaceExcelFacturacion();
     });
 
-    // Al abrir el modal de PDF: inicializar Select2 con dropdownParent
-    $('#modalDescargarPdf').on('shown.bs.modal', function () {
-      if ($.fn.select2) {
-        var $selPdf = $('#filtro-cliente-pdf');
-        if ($selPdf.hasClass('select2-hidden-accessible')) {
-          $selPdf.select2('destroy');
-        }
-        $selPdf.select2({
-          width: '100%',
-          dropdownParent: $('#modalDescargarPdf'),
-          placeholder: 'Mostrar Todos'
-        });
-      }
-      actualizarEnlacePdf();
-    });
+
 
     // Al cambiar la sucursal maestra, disparar todos los formularios de filtros
     $('#sucursalReporteMaestro').on('change', function () {

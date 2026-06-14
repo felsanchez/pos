@@ -17,6 +17,13 @@ require_once "../modelos/factus.modelo.php";
 require_once "../modelos/csrf.php";
 require_once "../modelos/helpers.php";
 require_once "../modelos/sanitizer.php";
+require_once "../controladores/clientes.controlador.php";
+require_once "../controladores/usuarios.controlador.php";
+require_once "../controladores/correo.controlador.php";
+if (!defined('FACTURACION_AJAX_INCLUDED')) {
+    define('FACTURACION_AJAX_INCLUDED', true);
+}
+require_once __DIR__ . "/facturacion.ajax.php";
 
 // 2. VALIDAR CSRF para todas las peticiones POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -128,6 +135,34 @@ class AjaxNotasCredito
             $idNota = $_POST["idNota"];
 
             $respuesta = ControladorFactus::ctrFirmarNotaCredito($idNota);
+
+            // Envío automático de correo al cliente si la firma fue exitosa
+            if (isset($respuesta['error']) && !$respuesta['error']) {
+                try {
+                    $notaCredito = ModeloFactus::mdlMostrarNotasCredito("notas_credito", "id", $idNota);
+                    if ($notaCredito) {
+                        require_once __DIR__ . "/../modelos/ventas.modelo.php";
+                        $venta = ModeloVentas::mdlMostrarVentas("ventas", "id", $notaCredito["id_venta_original"]);
+                        $clienteId = !empty($notaCredito["id_cliente"]) ? $notaCredito["id_cliente"] : ($venta["id_cliente"] ?? null);
+                        $emailCliente = '';
+                        if ($clienteId) {
+                            $cliente = ControladorClientes::ctrMostrarClientes("id", $clienteId);
+                            $emailCliente = $cliente['email'] ?? '';
+                        }
+                        if (!empty($emailCliente)) {
+                            $envioAuto = new AjaxFacturacion();
+                            $envioAuto->idNota = $idNota;
+                            $envioAuto->emailDestino = $emailCliente;
+                            ob_start();
+                            $envioAuto->ajaxEnviarPDFCNCorreo();
+                            ob_end_clean(); // Descartar la salida JSON del método de correo
+                        }
+                    }
+                } catch (Throwable $eCorreo) {
+                    // El correo falló pero la firma fue exitosa: no interrumpir la respuesta
+                    error_log('Error al enviar correo automático tras firma de NC: ' . $eCorreo->getMessage());
+                }
+            }
 
             echo json_encode($respuesta);
 
