@@ -343,9 +343,13 @@ class ControladorClientes
 			$botonesAcciones = '<div class="btn-group">';
 			if (puedeAccion('clientes', 'editar')) {
 				$botonesAcciones .= '<a href="cliente-detalle?id=' . $value["id"] . '" class="btn btn-warning" title="Editar cliente"><i class="fa fa-pencil"></i></a>';
+			} else {
+				$botonesAcciones .= '<button class="btn btn-warning" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-pencil"></i></button>';
 			}
 			if (puedeAccion('clientes', 'eliminar')) {
 				$botonesAcciones .= '<button class="btn btn-danger btnEliminarCliente" idCliente="' . $value["id"] . '" title="Eliminar cliente"><i class="fa fa-times"></i></button>';
+			} else {
+				$botonesAcciones .= '<button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para eliminar"><i class="fa fa-times"></i></button>';
 			}
 			$botonesAcciones .= '</div>';
 			$nestedData[] = $botonesAcciones;

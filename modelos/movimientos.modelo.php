@@ -61,7 +61,11 @@ class ModeloMovimientos
 
 		// Aplicar filtros
 		if (!empty($filtros["id_producto"])) {
-			$sql .= " AND m.id_producto = :id_producto";
+			if (strpos($filtros["id_producto"], 'v_') === 0) {
+				$sql .= " AND m.id_variante = :id_variante";
+			} else {
+				$sql .= " AND m.id_producto = :id_producto";
+			}
 		}
 
 		if (!empty($filtros["tipo_movimiento"])) {
@@ -90,7 +94,13 @@ class ModeloMovimientos
 
 		// Bind de parámetros
 		if (!empty($filtros["id_producto"])) {
-			$stmt->bindParam(":id_producto", $filtros["id_producto"], PDO::PARAM_INT);
+			if (strpos($filtros["id_producto"], 'v_') === 0) {
+				$id_variante = intval(substr($filtros["id_producto"], 2));
+				$stmt->bindParam(":id_variante", $id_variante, PDO::PARAM_INT);
+			} else {
+				$id_producto_val = intval($filtros["id_producto"]);
+				$stmt->bindParam(":id_producto", $id_producto_val, PDO::PARAM_INT);
+			}
 		}
 
 		if (!empty($filtros["tipo_movimiento"])) {

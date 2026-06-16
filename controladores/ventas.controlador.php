@@ -178,10 +178,10 @@ class ControladorVentas
 
 			// 9: Acciones
 			$botonesAcciones = '<div class="btn-group col-acciones">';
-			if (puedeAccion('ventas', 'editar')) {
+			if (puedeAccion('ventas', 'ver')) {
 				$botonesAcciones .= '<button class="btn btn-warning btnDetalleVenta" idVenta="' . $value["id"] . '" title="Ver detalle" style="width: auto !important;"><i class="fa fa-eye"></i></button>';
 			} else {
-				$botonesAcciones .= '<button class="btn btn-warning" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-eye"></i></button>';
+				$botonesAcciones .= '<button class="btn btn-warning" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para ver detalle"><i class="fa fa-eye"></i></button>';
 			}
 			if (!isset($value["estado"]) || $value["estado"] != "anulada") {
 				if (puedeAccion('ventas', 'eliminar')) {
@@ -439,32 +439,31 @@ class ControladorVentas
 
 			// 10: Convertir
 			$htmlConvertir = '<div style="white-space:nowrap; text-align:center;">';
-			if (puedeAccion('ordenes', 'editar')) {
-				if (ControladorCajas::ctrValidarCajaAbierta()) {
-					$htmlConvertir .= '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-warning" title="Convertir a Venta" style="width: auto !important;">Convertir a Venta</a>';
-					if ($mostrarBtnFE) {
-						$htmlConvertir .= ' <a href="index.php?ruta=orden-a-factura-electronica&idVenta=' . $value["id"] . '" 
-									class="btn btn-xs btn-primary" 
-									title="Convertir a Factura Electrónica" 
-									style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;">
-									<i class="fa fa-file-text-o"></i> Convertir a FE
-								</a>';
-					}
-				} else {
-					$htmlConvertir .= '<button type="button" class="btn btn-xs btn-warning" title="Convertir a Venta" style="width: auto !important;" onclick="alertaCajaCerradaOrdenes()">Convertir a Venta</button>';
-					if ($mostrarBtnFE) {
-						$htmlConvertir .= ' <button type="button" 
-									class="btn btn-xs btn-primary" 
-									title="Convertir a Factura Electrónica" 
-									style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;" onclick="alertaCajaCerradaOrdenes()">
-									<i class="fa fa-file-text-o"></i> Convertir a FE
-								</button>';
-					}
-				}
+			$puedoCrearVentas = function_exists('puedeAccion') ? puedeAccion('ventas', 'crear') : true;
+			$puedoCrearFE = function_exists('puedeAccion') ? puedeAccion('factura_electronica', 'crear') : true;
+			$puedoEditarOrdenes = function_exists('puedeAccion') ? puedeAccion('ordenes', 'editar') : true;
+
+			// Botón Convertir a Venta
+			if (!$puedoEditarOrdenes) {
+				$htmlConvertir .= '<button type="button" class="btn btn-xs btn-warning" disabled style="width: auto !important; opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar órdenes">Convertir a Venta</button>';
+			} else if (!$puedoCrearVentas) {
+				$htmlConvertir .= '<button type="button" class="btn btn-xs btn-warning" disabled style="width: auto !important; opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear ventas">Convertir a Venta</button>';
+			} else if (!ControladorCajas::ctrValidarCajaAbierta()) {
+				$htmlConvertir .= '<button type="button" class="btn btn-xs btn-warning" title="Convertir a Venta" style="width: auto !important;" onclick="alertaCajaCerradaOrdenes()">Convertir a Venta</button>';
 			} else {
-				$htmlConvertir .= '<button type="button" class="btn btn-xs btn-warning" disabled style="width: auto !important; opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar">Convertir a Venta</button>';
-				if ($mostrarBtnFE) {
-					$htmlConvertir .= ' <button type="button" class="btn btn-xs btn-primary" disabled style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8; opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-file-text-o"></i> Convertir a FE</button>';
+				$htmlConvertir .= '<a href="index.php?ruta=editar-orden&idVenta=' . $value["id"] . '" class="btn btn-xs btn-warning" title="Convertir a Venta" style="width: auto !important;">Convertir a Venta</a>';
+			}
+
+			// Botón Convertir a FE
+			if ($mostrarBtnFE) {
+				if (!$puedoEditarOrdenes) {
+					$htmlConvertir .= ' <button type="button" class="btn btn-xs btn-primary" disabled style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8; opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar órdenes"><i class="fa fa-file-text-o"></i> Convertir a FE</button>';
+				} else if (!$puedoCrearFE) {
+					$htmlConvertir .= ' <button type="button" class="btn btn-xs btn-primary" disabled style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8; opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear facturas electrónicas"><i class="fa fa-file-text-o"></i> Convertir a FE</button>';
+				} else if (!ControladorCajas::ctrValidarCajaAbierta()) {
+					$htmlConvertir .= ' <button type="button" class="btn btn-xs btn-primary" title="Convertir a Factura Electrónica" style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;" onclick="alertaCajaCerradaOrdenes()"><i class="fa fa-file-text-o"></i> Convertir a FE</button>';
+				} else {
+					$htmlConvertir .= ' <a href="index.php?ruta=orden-a-factura-electronica&idVenta=' . $value["id"] . '" class="btn btn-xs btn-primary" title="Convertir a Factura Electrónica" style="width: auto !important; margin-left: 3px; background-color: #605ca8; border-color: #605ca8;"><i class="fa fa-file-text-o"></i> Convertir a FE</a>';
 				}
 			}
 			$htmlConvertir .= '</div>';
@@ -783,6 +782,8 @@ class ControladorVentas
 
 			// 10: Acciones
 			$botonesAcciones = '<div class="btn-group col-acciones" style="display:flex; gap:2px;">';
+			$puedoCrearFE = function_exists('puedeAccion') ? puedeAccion('factura_electronica', 'crear') : true;
+			$puedoEditarFE = function_exists('puedeAccion') ? puedeAccion('factura_electronica', 'editar') : true;
 
 			// Ver Detalle Venta
 			$botonesAcciones .= '<a class="btn btn-info" href="index.php?ruta=detalle-factura&idVenta=' . $value["id"] . '" title="Ver Detalle" style="width: auto !important;"><i class="fa fa-eye"></i></a>';
@@ -795,7 +796,7 @@ class ControladorVentas
 			// Firmar (para borradores)
 			$estadoLimpio = strtolower(trim($estadoDian));
 			if (in_array($estadoLimpio, ["creada", "borrador", "pendiente"])) {
-				if (puedeAccion('factura_electronica', 'crear')) {
+				if ($puedoCrearFE) {
 					$botonesAcciones .= '<button class="btn btnFirmarFactura" style="background-color: black; color: white; width: auto !important;" idVenta="' . $value["id"] . '" title="Firmar y Enviar a DIAN">
 										<i class="fa fa-paper-plane"></i>
 									</button>';
@@ -808,7 +809,7 @@ class ControladorVentas
 
 			// Editar Borrador
 			if (in_array($estadoDian, ['creada', 'pendiente', 'borrador'])) {
-				if (puedeAccion('factura_electronica', 'editar')) {
+				if ($puedoEditarFE) {
 					$botonesAcciones .= '<a class="btn btn-warning" href="index.php?ruta=editar-factura-electronica&idVenta=' . $value["id"] . '" title="Editar Borrador" style="width: auto !important;">
 										<i class="fa fa-pencil"></i>
 									</a>';
@@ -821,7 +822,7 @@ class ControladorVentas
 
 			// Enviar por Correo
 			if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
-				if (puedeAccion('factura_electronica', 'editar')) {
+				if ($puedoEditarFE || $puedoCrearFE) {
 					$botonesAcciones .= ' <button class="btn btn-primary btnEnviarEmail" idVenta="' . $value["id"] . '" nombreCliente="' . e($value["nombre_cliente"]) . '" emailCliente="' . e($value["email_cliente"]) . '" title="Enviar por Correo" style="width: auto !important;">
 								<i class="fa fa-envelope"></i>
 							</button>';

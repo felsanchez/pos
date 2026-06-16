@@ -490,6 +490,7 @@ $(document).ready(function () {
         var subtotalConDesc = Number($("#nuevoSubtotalDS").val().replace(/,/g, "")) || 0;
 
         if (retencionesAplicadasDS.length > 0) {
+            html += '<div class="table-responsive">';
             html += '<table class="table table-condensed">';
             html += '<thead><tr><th>Tipo</th><th>%</th><th>Base</th><th>Monto</th><th></th></tr></thead><tbody>';
 
@@ -512,6 +513,7 @@ $(document).ready(function () {
             html += '<tr class="info"><td><strong>Total Ret.</strong></td><td colspan="4"><strong>$' + Number(totalRetenciones).toFixed(0) + '</strong></td></tr>';
             html += '<tr class="success"><td><strong>Neto a Pagar</strong></td><td colspan="4"><strong>$' + Number(totalPagar).toFixed(0) + '</strong></td></tr>';
             html += '</tbody></table>';
+            html += '</div>';
 
             $("#listaRetencionesDS").html(html);
             $("#seccionRetencionesDS").show();

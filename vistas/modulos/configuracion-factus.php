@@ -106,6 +106,16 @@ if (!$configuracion) {
 								<p class="help-block">Si está desactivado, se ocultará la opción "Consulta de ventas" del menú lateral y de la matriz de permisos.</p>
 							</div>
 
+							<div class="form-group">
+								<div class="checkbox">
+									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
+										<input type="checkbox" name="activarSucursales" value="1" <?php echo (!isset($configuracionGlobal["activar_sucursales"]) || $configuracionGlobal["activar_sucursales"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar Sucursales</strong>
+									</label>
+								</div>
+								<p class="help-block">Si está desactivado, se ocultarán las opciones de "Sucursales" y "Traslados" del menú lateral, el modulo "Traslados" en la matriz de permisos y el filtro en las sgtes vistas: Ventas, Órdenes, Facturación Electrónica, Notas de Crédito/Ajuste, Doc Soporte, Gastos, Reportes e Historial stock.</p>
+							</div>
+
 							<br><h4>FACTURACIÓN ELECTRÓNICA:</h4>
 
 							<div class="form-group">

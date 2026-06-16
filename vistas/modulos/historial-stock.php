@@ -76,6 +76,65 @@
       opacity: 0;
     }
   }
+
+  @media (max-width: 767px) {
+    .box-header .pull-right.contenedor-filtros {
+      float: none !important;
+      width: 100% !important;
+      margin-top: 15px !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+    .form-filtros-stock {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      width: 100% !important;
+      gap: 12px !important;
+    }
+    .form-filtros-stock > div {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      width: 100% !important;
+      gap: 10px !important;
+      margin-bottom: 0 !important;
+    }
+    .form-filtros-stock > div > label,
+    .form-filtros-stock > div > span {
+      min-width: 80px !important;
+      text-align: left !important;
+      margin-bottom: 0 !important;
+    }
+    .form-filtros-stock > div > .input-group,
+    .form-filtros-stock > div > div {
+      flex: 1 !important;
+      width: auto !important;
+    }
+    .form-filtros-stock > div .select2-container {
+      width: 100% !important;
+    }
+    .form-filtros-stock > div > div > #btn-rango-stock {
+      width: 100% !important;
+      text-align: left !important;
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+    }
+    .form-filtros-stock > button {
+      width: 100% !important;
+      text-align: center !important;
+    }
+
+    /* Permitir que Producto y Tipo de Movimiento se muestren juntos en móvil */
+    .tablaHistorialStock tbody td:nth-child(2) {
+      white-space: normal !important;
+      max-width: 140px !important;
+    }
+    .tablaHistorialStock tbody td:nth-child(3) {
+      white-space: normal !important;
+      max-width: 100px !important;
+    }
+  }
 </style>
 
 <?php
@@ -188,7 +247,11 @@ foreach ($pre_resumen as $item) {
     </div>
 
     <!-- FILTRO MAESTRO DE SUCURSAL -->
-    <?php if (stripos($_SESSION["perfil"], "Admin") !== false): ?>
+    <?php 
+    $configuracionGlobal = ControladorConfiguracion::ctrObtenerConfiguracion();
+    $sucursalesActivas = !isset($configuracionGlobal["activar_sucursales"]) || $configuracionGlobal["activar_sucursales"] == 1;
+    if ($sucursalesActivas && stripos($_SESSION["perfil"], "Admin") !== false): 
+    ?>
       <div class="box box-default">
         <div class="box-body" style="padding: 15px 25px;">
           <div class="row" style="display: flex; align-items: center; flex-wrap: wrap; gap: 15px;">
@@ -215,7 +278,7 @@ foreach ($pre_resumen as $item) {
         </div>
       </div>
     <?php else: ?>
-      <input type="hidden" id="sucursalReporteMaestro" value="<?php echo $_SESSION['id_bodega']; ?>">
+      <input type="hidden" id="sucursalReporteMaestro" value="<?php echo !empty($_SESSION['id_bodega']) ? $_SESSION['id_bodega'] : 1; ?>">
     <?php endif; ?>
 
     <!-- TABLA DE MOVIMIENTOS -->
@@ -227,23 +290,62 @@ foreach ($pre_resumen as $item) {
 
         <div class="pull-right contenedor-filtros">
 
-          <div id="formFiltros" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+          <div id="formFiltros" class="form-filtros-stock" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
 
             <!-- Filtro por Producto -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Producto:</label>
+              <label style="margin-bottom: 0;">Producto:</label>
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                     class="fa fa-search text-primary"></i></span>
                 <select class="form-control select2" id="cat_s" style="width: 140px; border-left: 0;">
                   <option value="">Mostrar Todos</option>
                   <?php
-                  $item = null;
-                  $valor = null;
-                  $orden = "descripcion";
-                  $productos = ControladorProductos::ctrMostrarProductos($item, $valor, $orden);
-                  foreach ($productos as $key => $value) {
-                    echo '<option value="' . e($value["id"]) . '">' . e($value["descripcion"]) . '</option>';
+                  $conn = Conexion::conectar();
+                  $stmtProductos = $conn->prepare("SELECT id, descripcion, tiene_variantes FROM productos ORDER BY descripcion ASC");
+                  $stmtProductos->execute();
+                  $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
+
+                  // Obtener todas las variantes activas con sus opciones
+                  $sqlVariantes = "
+                    SELECT pv.id as id_variante, pv.id_producto, ov.nombre as opcion_nombre
+                    FROM productos_variantes pv
+                    INNER JOIN productos_variantes_opciones pvo ON pv.id = pvo.id_producto_variante
+                    INNER JOIN opciones_variantes ov ON pvo.id_opcion_variante = ov.id
+                    INNER JOIN tipos_variantes tv ON ov.id_tipo_variante = tv.id
+                    WHERE pv.estado = 1
+                    ORDER BY pv.id_producto, pv.id, tv.orden, ov.orden
+                  ";
+                  $stmtVariantes = $conn->prepare($sqlVariantes);
+                  $stmtVariantes->execute();
+                  $varianteRows = $stmtVariantes->fetchAll(PDO::FETCH_ASSOC);
+
+                  $variantesAgrupadas = [];
+                  foreach ($varianteRows as $row) {
+                      $idProd = $row['id_producto'];
+                      $idVar = $row['id_variante'];
+                      if (!isset($variantesAgrupadas[$idProd])) {
+                          $variantesAgrupadas[$idProd] = [];
+                      }
+                      if (!isset($variantesAgrupadas[$idProd][$idVar])) {
+                          $variantesAgrupadas[$idProd][$idVar] = [];
+                      }
+                      $variantesAgrupadas[$idProd][$idVar][] = $row['opcion_nombre'];
+                  }
+
+                  foreach ($productos as $producto) {
+                    $hasVariants = (isset($producto['tiene_variantes']) && $producto['tiene_variantes'] == 1 && isset($variantesAgrupadas[$producto['id']]) && count($variantesAgrupadas[$producto['id']]) > 0);
+                    $disabled = $hasVariants ? 'disabled' : '';
+
+                    echo '<option value="' . e($producto['id']) . '" ' . $disabled . '>' . e($producto['descripcion']) . '</option>';
+
+                    if ($hasVariants) {
+                      foreach ($variantesAgrupadas[$producto['id']] as $idVar => $opciones) {
+                        $nombreVarianteStr = implode(" - ", $opciones);
+                        $descripcionCompleta = "└─ " . $producto['descripcion'] . " - " . $nombreVarianteStr;
+                        echo '<option value="v_' . e($idVar) . '">&nbsp;&nbsp;&nbsp;&nbsp;' . e($descripcionCompleta) . '</option>';
+                      }
+                    }
                   }
                   ?>
                 </select>
@@ -252,7 +354,7 @@ foreach ($pre_resumen as $item) {
 
             <!-- Filtro por Movimiento -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Movimiento:</label>
+              <label style="margin-bottom: 0;">Movimiento:</label>
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                     class="fa fa-search text-primary"></i></span>
@@ -275,7 +377,7 @@ foreach ($pre_resumen as $item) {
 
             <!-- Filtro por Usuario -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Usuario:</label>
+              <label style="margin-bottom: 0;">Usuario:</label>
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                     class="fa fa-search text-primary"></i></span>
@@ -296,7 +398,7 @@ foreach ($pre_resumen as $item) {
 
             <!-- Filtro por Rango de Fecha -->
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Fecha:</b></span>
+              <span><b>Fecha:</b></span>
               <div class="form-group" style="margin-bottom: 0;">
                 <button type="button" class="btn btn-default" id="btn-rango-stock">
                   <span id="span-rango-stock">
@@ -314,7 +416,7 @@ foreach ($pre_resumen as $item) {
               <i class="fa fa-refresh"></i>
             </button>
             <?php if (puedeAccion('historial_stock', 'imprimir')): ?>
-              <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalDescargarExcelStock">
+              <button type="button" class="btn btn-success" id="btnDescargarExcelStockDirecto">
                 <i class="fa fa-file-excel-o"></i> Exportar a Excel
               </button>
             <?php endif; ?>
@@ -360,152 +462,3 @@ foreach ($pre_resumen as $item) {
   </section>
 
 </div>
-
-<!-- Modal para descargar Excel con filtro de fechas -->
-<div class="modal fade" id="modalDescargarExcelStock" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-        <h4 class="modal-title"><i class="fa fa-file-excel-o"></i> Descargar Historial de Stock en Excel</h4>
-      </div>
-      <div class="modal-body">
-        <div style="padding: 15px; border-radius: 10px; background-color: #f9f9f9;">
-          <div class="form-group">
-            <label for="tipo-fecha-excel-stock">Fecha</label>
-            <select id="tipo-fecha-excel-stock" class="form-control" style="border-radius: 8px;">
-              <option value="todo">Todo el historial</option>
-              <option value="hoy">Hoy</option>
-              <option value="ayer">Ayer</option>
-              <option value="mes">Mes actual</option>
-              <option value="personalizado">Personalizado</option>
-            </select>
-          </div>
-
-          <div id="campo-desde-excel-stock" class="form-group" style="display:none;">
-            <label for="fecha-desde-excel-stock">Desde</label>
-            <input type="date" id="fecha-desde-excel-stock" class="form-control" style="border-radius: 8px;">
-          </div>
-
-          <div id="campo-hasta-excel-stock" class="form-group" style="display:none;">
-            <label for="fecha-hasta-excel-stock">Hasta</label>
-            <input type="date" id="fecha-hasta-excel-stock" class="form-control" style="border-radius: 8px;">
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-        <?php if (puedeAccion('historial_stock', 'imprimir')): ?>
-          <a id="btn-descargar-excel-stock" href="vistas/modulos/descargar-historial-stock.php" class="btn btn-success">
-            <i class="fa fa-download"></i> Descargar
-          </a>
-        <?php endif; ?>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-  // Mostrar/ocultar campos de fecha personalizada para historial de stock
-  document.getElementById('tipo-fecha-excel-stock').addEventListener('change', function () {
-    const tipo = this.value;
-    const campoDesde = document.getElementById('campo-desde-excel-stock');
-    const campoHasta = document.getElementById('campo-hasta-excel-stock');
-
-    if (tipo === 'personalizado') {
-      campoDesde.style.display = 'block';
-      campoHasta.style.display = 'block';
-    } else {
-      campoDesde.style.display = 'none';
-      campoHasta.style.display = 'none';
-    }
-
-    actualizarEnlaceExcelStock();
-  });
-
-  // Actualizar enlace cuando cambian las fechas
-  document.getElementById('fecha-desde-excel-stock').addEventListener('change', actualizarEnlaceExcelStock);
-  document.getElementById('fecha-hasta-excel-stock').addEventListener('change', actualizarEnlaceExcelStock);
-
-  function actualizarEnlaceExcelStock() {
-    const tipo = document.getElementById('tipo-fecha-excel-stock').value;
-    const btnDescargar = document.getElementById('btn-descargar-excel-stock');
-    let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";
-    let url = `${rutaBase}/vistas/modulos/descargar-historial-stock.php`;
-
-    let fechaInicial, fechaFinal;
-    const hoy = new Date();
-
-    switch (tipo) {
-      case 'hoy':
-        fechaInicial = fechaFinal = hoy.toISOString().split('T')[0];
-        break;
-      case 'ayer':
-        const ayer = new Date(hoy);
-        ayer.setDate(ayer.getDate() - 1);
-        fechaInicial = fechaFinal = ayer.toISOString().split('T')[0];
-        break;
-      case 'mes':
-        fechaInicial = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
-        fechaFinal = hoy.toISOString().split('T')[0];
-        break;
-      case 'personalizado':
-        fechaInicial = document.getElementById('fecha-desde-excel-stock').value;
-        fechaFinal = document.getElementById('fecha-hasta-excel-stock').value;
-        break;
-      case 'todo':
-      default:
-        // Sin filtros de fecha
-        btnDescargar.href = url;
-        return;
-    }
-
-    if (fechaInicial && fechaFinal) {
-      url += `?fechaInicial=${fechaInicial}&fechaFinal=${fechaFinal}`;
-    }
-
-    btnDescargar.href = url;
-  }
-
-  // Inicializar el enlace al cargar
-  document.addEventListener('DOMContentLoaded', function () {
-    actualizarEnlaceExcelStock();
-  });
-
-  // Función para mostrar toast notification
-  function mostrarToast(mensaje) {
-    // Crear elemento toast
-    const toast = document.createElement('div');
-    toast.className = 'toast-notification';
-    toast.innerHTML = '<i class="fa fa-check-circle" style="font-size: 20px;"></i> <span>' + mensaje + '</span>';
-
-    // Agregar al body
-    document.body.appendChild(toast);
-
-    // Remover después de 3 segundos
-    setTimeout(function () {
-      toast.classList.add('toast-hide');
-      setTimeout(function () {
-        document.body.removeChild(toast);
-      }, 300);
-    }, 3000);
-  }
-
-  // Mostrar toast ANTES de que se cierre el modal
-  $('#btn-descargar-excel-stock').on('click', function (e) {
-    // Mostrar toast inmediatamente
-    mostrarToast('¡Descarga iniciada! El archivo Excel se está descargando...');
-  });
-
-  // Limpiar completamente cuando el modal se cierra
-  $('#modalDescargarExcelStock').on('hidden.bs.modal', function () {
-    setTimeout(function () {
-      $('.modal-backdrop').remove();
-      $('body').removeClass('modal-open');
-      $('body').css('padding-right', '');
-      $('body').css('overflow', '');
-    }, 50);
-  });
-</script>

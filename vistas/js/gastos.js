@@ -22,11 +22,12 @@ $(document).ready(function () {
                     $(row).attr('style', data.DT_RowAttr.style);
                 }
             },
-            "order": [[0, "asc"]],
+            "order": [[1, "asc"]],
             "columnDefs": [
-                { "targets": 0, "className": "dtr-control", "responsivePriority": 1 },
+                { "targets": 0, "data": null, "defaultContent": "", "orderable": false, "className": "control dtr-control", "responsivePriority": 1 },
+                { "targets": 1, "responsivePriority": 1 }, // Concepto
                 { "targets": -1, "responsivePriority": 2, "orderable": false }, // Acciones
-                { "targets": 1, "responsivePriority": 3 }, // Monto
+                { "targets": 2, "responsivePriority": 3 }, // Monto
                 { "targets": -3, "responsivePriority": 4 }, // Fecha (3rd from last)
                 { "targets": -2, "responsivePriority": 5 }  // Notas (2nd from last)
             ],

@@ -145,36 +145,117 @@ $totalNoLeidas = ControladorNotificaciones::ctrContarNoLeidas();
 		}
 	}
 
-	/* Optimización de cabecera móvil - Logo pequeño y elegante */
+	/* Optimización de cabecera móvil - Fila única y compacta */
 	@media (max-width: 767px) {
 		.main-header .logo {
-			width: 100% !important;
-			height: 45px !important;
-			line-height: 45px !important;
-			padding: 0 !important;
-			display: flex !important;
-			justify-content: center !important;
-			align-items: center !important;
-		}
-
-		.main-header .logo .logo-lg {
-			display: block !important;
-		}
-
-		.main-header .logo .logo-lg img {
-			max-height: 30px !important;
-			width: auto !important;
-			margin: 0 auto !important;
-			padding: 0 !important;
+			display: none !important;
 		}
 
 		.main-header .navbar {
 			margin: 0 !important;
-			min-height: 45px !important;
+			height: 60px !important;
+			min-height: 60px !important;
+			display: flex !important;
+			justify-content: space-between !important;
+			align-items: center !important;
+			padding: 0 5px !important;
 		}
 
 		.main-header .navbar .sidebar-toggle {
-			padding: 12px 15px !important;
+			padding: 0 12px !important;
+			height: 60px !important;
+			line-height: 60px !important;
+			margin: 0 !important;
+			display: flex !important;
+			align-items: center !important;
+			justify-content: center !important;
+			float: none !important;
+		}
+
+		/* Contenedor central (Sucursal y Caja Chica) - Apilados verticalmente para evitar truncamientos */
+		.navbar-custom-menu.pull-left {
+			margin: 0 !important;
+			padding: 0 !important;
+			height: 60px !important;
+			display: flex !important;
+			flex-direction: column !important;
+			justify-content: center !important;
+			align-items: flex-start !important;
+			gap: 3px !important;
+			flex-wrap: nowrap !important;
+			overflow: visible !important;
+			flex-grow: 1 !important;
+			max-width: calc(100% - 130px) !important;
+		}
+
+		/* Reducir etiquetas y botones para pantallas chicas */
+		.navbar-custom-menu.pull-left .label,
+		.navbar-custom-menu.pull-left .btn {
+			font-size: 11px !important;
+			padding: 3px 8px !important;
+			white-space: nowrap !important;
+			display: inline-flex !important;
+			align-items: center !important;
+			gap: 4px !important;
+		}
+
+		/* Ocultar etiquetas adicionales no indispensables en móvil */
+		.navbar-custom-menu.pull-left .label-success {
+			display: none !important; /* Oculta el estado de Caja Abierta con el balance base */
+		}
+
+		/* Menú de notificaciones y usuario en la derecha */
+		.navbar-custom-menu:not(.pull-left) {
+			margin: 0 !important;
+			float: none !important;
+			display: flex !important;
+			align-items: center !important;
+			height: 60px !important;
+			flex-shrink: 0 !important;
+		}
+
+		.navbar-custom-menu:not(.pull-left) .navbar-nav {
+			margin: 0 !important;
+			display: flex !important;
+			flex-direction: row !important;
+			align-items: center !important;
+			height: 60px !important;
+		}
+
+		.navbar-custom-menu:not(.pull-left) .navbar-nav > li {
+			float: none !important;
+			display: inline-block !important;
+			height: 60px !important;
+		}
+
+		.navbar-custom-menu:not(.pull-left) .navbar-nav > li > a {
+			height: 60px !important;
+			padding: 0 10px !important;
+			display: flex !important;
+			align-items: center !important;
+			justify-content: center !important;
+		}
+
+		.navbar-custom-menu:not(.pull-left) .navbar-nav > li.dropdown.user.user-menu > a {
+			padding: 0 10px !important;
+		}
+
+		.navbar-custom-menu:not(.pull-left) .navbar-nav > li.dropdown.user.user-menu img.user-image {
+			margin: 0 !important;
+			float: none !important;
+		}
+
+		/* Posicionar correctamente los dropdowns de notificaciones en móvil */
+		.navbar-custom-menu:not(.pull-left) .dropdown-menu {
+			position: absolute !important;
+			right: 0 !important;
+			left: auto !important;
+			background: #ffffff !important;
+		}
+
+		/* Evitar que la cabecera tape los botones superiores del menú lateral */
+		.main-sidebar {
+			padding-top: 60px !important;
 		}
 	}
 </style>

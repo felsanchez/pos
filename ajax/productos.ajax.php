@@ -94,8 +94,9 @@ class AjaxProductos
             $item = null;
             $valor = null;
             $orden = "id";
+            $idBodega = (isset($_POST["idBodega"]) && !empty($_POST["idBodega"])) ? intval($_POST["idBodega"]) : (isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1);
 
-            $productos = ControladorProductos::ctrMostrarProductos($item, $valor, $orden);
+            $productos = ControladorProductos::ctrMostrarProductos($item, $valor, $orden, $idBodega);
 
             // Obtener tributos para mapear impuestos de forma eficiente
             require_once "../modelos/factus.modelo.php";
@@ -107,11 +108,15 @@ class AjaxProductos
                 }
             }
 
-            $idBodega = isset($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : 1;
             $resultado = array();
 
             if (is_array($productos)) {
                 foreach ($productos as $prod) {
+                    // Omitir productos desactivados
+                    if (isset($prod["estado"]) && $prod["estado"] == 0) {
+                        continue;
+                    }
+
                     // Obtener impuesto del producto
                     $impuestoPorcentaje = 0;
                     $impuestoNombre = "Exento";
@@ -505,6 +510,26 @@ if (isset($_POST["obtenerVariantesProducto"])) {
     }
 
     echo json_encode($resultado);
+    exit;
+}
+
+/*=============================================
+ACTIVAR/DESACTIVAR PRODUCTO
+=============================================*/
+
+if (isset($_POST["activarId"]) && isset($_POST["activarProducto"])) {
+
+    $tabla = "productos";
+
+    $datos = array(
+        "id" => $_POST["activarId"],
+        "estado" => $_POST["activarProducto"]
+    );
+
+    $respuesta = ModeloProductos::mdlActualizarEstadoProducto($tabla, $datos);
+
+    echo json_encode($respuesta);
+
     exit;
 }
 

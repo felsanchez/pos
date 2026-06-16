@@ -61,16 +61,25 @@ if (!empty($params)) {
             <i class="fa fa-plus"></i> Agregar Actividad
           </button>
         <?php endif; ?>
-        <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
-          <i class="fa fa-flag"></i> Gestionar estados
-        </button>
-        <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarTipos">
-          <i class="fa fa-tags"></i> Gestionar tipos
-        </button>
+        <?php if (puedeAccion('actividades', 'editar')): ?>
+          <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
+            <i class="fa fa-flag"></i> Gestionar estados
+          </button>
+          <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarTipos">
+            <i class="fa fa-tags"></i> Gestionar tipos
+          </button>
+        <?php else: ?>
+          <button class="btn btn-default" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para gestionar estados">
+            <i class="fa fa-flag"></i> Gestionar estados
+          </button>
+          <button class="btn btn-default" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para gestionar tipos">
+            <i class="fa fa-tags"></i> Gestionar tipos
+          </button>
+        <?php endif; ?>
 
         <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="hidden-xs"><b>Tipo:</b></span>
+            <span><b>Tipo:</b></span>
             <div class="input-group" style="width: 200px;">
               <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;"><i
                   class="fa fa-search text-primary"></i></span>
@@ -88,7 +97,7 @@ if (!empty($params)) {
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="hidden-xs"><b>Estado:</b></span>
+            <span><b>Estado:</b></span>
             <div class="input-group" style="width: 200px;">
               <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;"><i
                   class="fa fa-search text-primary"></i></span>

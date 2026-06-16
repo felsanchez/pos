@@ -1725,3 +1725,14 @@
 2026-06-14 06:30:59 | RangoId: 1190 | Prefijo: SETP | Local: 990000429 | NextLocal: 990000430 | ApiLive: 990000430 | Desde: 990000000 | Siguiente: 990000430
 2026-06-14 06:38:03 | RangoId: 1190 | Prefijo: SETP | Local: 990000429 | NextLocal: 990000430 | ApiLive: 990000430 | Desde: 990000000 | Siguiente: 990000430
 2026-06-14 06:40:46 | RangoId: 1190 | Prefijo: SETP | Local: 990000429 | NextLocal: 990000430 | ApiLive: 990000430 | Desde: 990000000 | Siguiente: 990000430
+2026-06-14 23:24:35 | RangoId: 1190 | Prefijo: SETP | Local: 990000430 | NextLocal: 990000431 | ApiLive: 990000430 | Desde: 990000000 | Siguiente: 990000431
+2026-06-14 23:24:55 | RangoId: 1190 | Prefijo: SETP | Local: 990000431 | NextLocal: 990000432 | ApiLive: 990000432 | Desde: 990000000 | Siguiente: 990000432
+2026-06-15 01:38:04 | RangoId: 1190 | Prefijo: SETP | Local: 990000431 | NextLocal: 990000432 | ApiLive: 990000431 | Desde: 990000000 | Siguiente: 990000432
+2026-06-15 01:38:27 | RangoId: 1190 | Prefijo: SETP | Local: 990000431 | NextLocal: 990000432 | ApiLive: 990000431 | Desde: 990000000 | Siguiente: 990000432
+2026-06-15 01:40:08 | RangoId: 1190 | Prefijo: SETP | Local: 990000431 | NextLocal: 990000432 | ApiLive: 990000431 | Desde: 990000000 | Siguiente: 990000432
+2026-06-15 01:40:11 | RangoId: 1190 | Prefijo: SETP | Local: 990000431 | NextLocal: 990000432 | ApiLive: 990000431 | Desde: 990000000 | Siguiente: 990000432
+2026-06-15 23:46:25 | RangoId: 1190 | Prefijo: SETP | Local: 990000432 | NextLocal: 990000433 | ApiLive: 990000433 | Desde: 990000000 | Siguiente: 990000433
+2026-06-15 23:46:46 | RangoId: 1190 | Prefijo: SETP | Local: 990000433 | NextLocal: 990000434 | ApiLive: 990000434 | Desde: 990000000 | Siguiente: 990000434
+2026-06-16 00:36:24 | RangoId: 1190 | Prefijo: SETP | Local: 990000433 | NextLocal: 990000434 | ApiLive: 990000433 | Desde: 990000000 | Siguiente: 990000434
+2026-06-16 00:37:05 | RangoId: 1190 | Prefijo: SETP | Local: 990000433 | NextLocal: 990000434 | ApiLive: 990000433 | Desde: 990000000 | Siguiente: 990000434
+2026-06-16 00:47:29 | RangoId: 1190 | Prefijo: SETP | Local: 990000433 | NextLocal: 990000434 | ApiLive: 990000433 | Desde: 990000000 | Siguiente: 990000434

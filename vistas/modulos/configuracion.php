@@ -1060,6 +1060,9 @@ MODAL: CREAR / EDITAR PERFIL (FUERA DEL FORM)
                 'ordenes'              => ['imprimir'],
                 'ventas'               => ['imprimir'],
                 'cierres-caja'         => ['crear','editar','eliminar'],
+                'documento_soporte'    => ['editar'],
+                'notas_credito'        => ['editar'],
+                'notas_ajuste'         => ['editar'],
                 // factura_electronica, documento_soporte, notas_credito, notas_ajuste conservan 'imprimir' (Descargar)
               ];
               foreach ($modulosMatriz as $slug => $nombreModulo):
@@ -1085,6 +1088,11 @@ MODAL: CREAR / EDITAR PERFIL (FUERA DEL FORM)
 
                 // Ocultar Seguimiento a Leads si está desactivado
                 if ($slug == 'seguimiento_leads' && (!isset($configuracion["seguimiento_leads_activo"]) || $configuracion["seguimiento_leads_activo"] != 1)) {
+                  continue;
+                }
+                
+                // Ocultar Traslados entre Bodegas si Sucursales está desactivado
+                if ($slug == 'traslados' && isset($configuracion["activar_sucursales"]) && $configuracion["activar_sucursales"] == 0) {
                   continue;
                 }
                 

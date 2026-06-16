@@ -2050,6 +2050,7 @@ function actualizarVisualizacionRetenciones() {
 	}
 
 	if (retencionesAplicadas.length > 0) {
+		html += '<div class="table-responsive">';
 		html += '<table class="table table-condensed">';
 		html += '<thead><tr><th>Tipo</th><th>Porcentaje</th><th>Base</th><th>Monto</th><th>Acción</th></tr></thead>';
 		html += '<tbody>';
@@ -2083,6 +2084,7 @@ function actualizarVisualizacionRetenciones() {
 		html += '<tr class="success"><td colspan="3"><strong style="color: #333;">Total a Pagar</strong></td><td colspan="2"><strong style="color: #333;">$' + Number(totalPagar).toFixed(2) + '</strong></td></tr>';
 
 		html += '</tbody></table>';
+		html += '</div>';
 
 		$('#listaRetenciones').html(html);
 		$('#seccionRetenciones').show();
@@ -2533,7 +2535,15 @@ $(document).on("keyup", ".buscarProductoMovil", function() {
 		}
 	});
 	
-	if (select.find("option[value='" + valorSeleccionado + "']").length > 0) {
+	var found = false;
+	select.find("option").each(function() {
+		if ($(this).val() === valorSeleccionado) {
+			found = true;
+			return false; // romper bucle
+		}
+	});
+
+	if (found) {
 		select.val(valorSeleccionado);
 	} else {
 		select.val("");

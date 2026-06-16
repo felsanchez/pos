@@ -141,10 +141,30 @@ class ControladorMovimientos{
 	{
 		$filtros = array();
 
-		// Verificar si hay filtro de fechas
-		if (isset($_GET["fechaInicial"]) && isset($_GET["fechaFinal"])) {
+		// Aplicar filtros activos desde la URL
+		if (!empty($_GET["fechaInicial"])) {
 			$filtros["fecha_desde"] = $_GET["fechaInicial"];
+		}
+		if (!empty($_GET["fechaFinal"])) {
 			$filtros["fecha_hasta"] = $_GET["fechaFinal"];
+		}
+		if (!empty($_GET["id_producto"])) {
+			$filtros["id_producto"] = $_GET["id_producto"];
+		}
+		if (!empty($_GET["tipo_movimiento"])) {
+			$filtros["tipo_movimiento"] = $_GET["tipo_movimiento"];
+		}
+		if (!empty($_GET["usuario"])) {
+			$filtros["usuario"] = $_GET["usuario"];
+		}
+		
+		// Filtro por Sucursal (Seguridad Multi-sucursal y Filtro Admin)
+		if (isset($_SESSION["perfil"]) && $_SESSION["perfil"] == "Administrador") {
+			if (!empty($_GET["id_bodega"]) && $_GET["id_bodega"] !== 'todos') {
+				$filtros["id_bodega"] = $_GET["id_bodega"];
+			}
+		} else {
+			$filtros["id_bodega"] = (isset($_SESSION["id_bodega"]) && !empty($_SESSION["id_bodega"])) ? $_SESSION["id_bodega"] : 1;
 		}
 
 		// Obtener los movimientos
@@ -263,7 +283,12 @@ class ControladorMovimientos{
 
 		// Filtros personalizados
 		if (!empty($params["id_producto"])) {
-			$where .= " AND id_producto = " . intval($params["id_producto"]);
+			if (strpos($params["id_producto"], 'v_') === 0) {
+				$id_variante = intval(substr($params["id_producto"], 2));
+				$where .= " AND id_variante = " . $id_variante;
+			} else {
+				$where .= " AND id_producto = " . intval($params["id_producto"]);
+			}
 		}
 
 		if (!empty($params["tipo_movimiento"])) {

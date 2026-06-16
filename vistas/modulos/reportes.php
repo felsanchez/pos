@@ -83,6 +83,48 @@
       /* Icono de minus */
     }
   }
+
+  @media (max-width: 767px) {
+    .form-filtros-fe {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      width: 100% !important;
+      gap: 12px !important;
+    }
+    .form-filtros-fe > div {
+      width: 100% !important;
+      margin-bottom: 0 !important;
+    }
+    .form-filtros-fe > div > div {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      width: 100% !important;
+      gap: 10px !important;
+    }
+    .form-filtros-fe > div > div > span {
+      min-width: 80px !important;
+      text-align: left !important;
+    }
+    .form-filtros-fe > div > div > .input-group {
+      flex: 1 !important;
+      width: auto !important;
+    }
+    .form-filtros-fe > div .select2-container {
+      width: 100% !important;
+    }
+    .form-filtros-fe > div > div > .input-group > #daterange-btn-reportes {
+      flex: 1 !important;
+      width: auto !important;
+      text-align: left !important;
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+    }
+    .form-filtros-fe > div > .btn-group {
+      width: 100% !important;
+    }
+  }
 </style>
 
 <div class="content-wrapper">
@@ -102,7 +144,11 @@
   <section class="content">
 
     <!-- FILTRO MAESTRO DE SUCURSAL -->
-    <?php if (stripos($_SESSION["perfil"], "Admin") !== false): ?>
+    <?php 
+    $configuracionGlobal = ControladorConfiguracion::ctrObtenerConfiguracion();
+    $sucursalesActivas = !isset($configuracionGlobal["activar_sucursales"]) || $configuracionGlobal["activar_sucursales"] == 1;
+    if ($sucursalesActivas && stripos($_SESSION["perfil"], "Admin") !== false): 
+    ?>
       <div class="box box-default">
         <div class="box-body" style="padding: 15px 25px;">
           <div class="row" style="display: flex; align-items: center; flex-wrap: wrap; gap: 15px;">
@@ -131,7 +177,7 @@
         </div>
       </div>
     <?php else: ?>
-      <input type="hidden" id="sucursalReporteMaestro" value="<?php echo $_SESSION['id_bodega']; ?>">
+      <input type="hidden" id="sucursalReporteMaestro" value="<?php echo !empty($_SESSION['id_bodega']) ? $_SESSION['id_bodega'] : 1; ?>">
     <?php endif; ?>
 
 
@@ -140,14 +186,6 @@
       <div class="box-header with-border">
         <h3 class="box-title"><i class="fa fa-line-chart"></i> Análisis de Ventas</h3>
         <div class="box-tools pull-right">
-          <?php if (puedeAccion('reporte_ventas', 'imprimir')): ?>
-            <a class="btn btn-success btn-sm" style="margin-right: 5px;" id="btn-descargar-excel-directo" href="#">
-              <i class="fa fa-file-excel-o"></i> Descargar Excel
-            </a>
-            <a class="btn btn-danger btn-sm" style="margin-right: 5px;" id="btn-descargar-pdf-directo" href="#" target="_blank">
-              <i class="fa fa-file-pdf-o"></i> Descargar PDF
-            </a>
-          <?php endif; ?>
           <button type="button" class="btn btn-box-tool" data-widget="collapse">
             <i class="fa fa-minus"></i>
           </button>
@@ -268,11 +306,11 @@
         </div>
       </div>
       <div class="box-body" style="display: none;">
-        <div class="row" style="display: flex; align-items: center; flex-wrap: wrap;">
+        <div class="row form-filtros-fe" style="display: flex; align-items: center; flex-wrap: wrap;">
           <!-- 1. Categoría -->
           <div class="col-md-2" style="margin-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Categoría:</b></span>
+              <span><b>Categoría:</b></span>
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f4f4f4;"><i class="fa fa-filter"></i></span>
                 <select class="form-control" id="seleccionarCategoriaReporte">
@@ -291,7 +329,7 @@
           <!-- 2. Tercero (Cliente/Proveedor) -->
           <div class="col-md-3" style="margin-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Cliente:</b></span>
+              <span><b>Cliente:</b></span>
               <div class="input-group" style="width: 100%;">
                 <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
                     class="fa fa-users"></i></span>
@@ -326,7 +364,7 @@
           <!-- 3. Usuario -->
           <div class="col-md-2" style="margin-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Usuario:</b></span>
+              <span><b>Usuario:</b></span>
               <div class="input-group" style="width: 100%;">
                 <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
                     class="fa fa-user"></i></span>
@@ -347,7 +385,7 @@
           <!-- 4. Rango de fecha -->
           <div class="col-md-3" style="margin-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Fecha:</b></span>
+              <span><b>Fecha:</b></span>
               <div class="input-group" style="width: 100%;">
                 <button type="button" class="btn btn-default" id="daterange-btn-reportes" style="width: 100%;">
                   <span><i class="fa fa-calendar"></i> Rango de fecha</span>

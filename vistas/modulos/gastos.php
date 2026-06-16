@@ -13,6 +13,90 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 <!-- Estilos de gastos -->
 <link rel="stylesheet" href="assets/css/gastos.css">
 
+<style>
+  @media (max-width: 767px) {
+    /* Apilar elementos de la cabecera de la caja */
+    .box-header {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+      align-items: stretch !important;
+    }
+
+    .box-header::before,
+    .box-header::after {
+      display: none !important;
+    }
+    
+    /* Botones de acción principal ocupan ancho completo */
+    .box-header > .btn,
+    .box-header > a.btn {
+      width: 100% !important;
+      text-align: center !important;
+      margin-left: 0 !important;
+      margin-bottom: 5px !important;
+    }
+
+    /* Contenedor de filtros ocupa ancho completo */
+    .box-header .contenedor-filtros {
+      float: none !important;
+      width: 100% !important;
+      margin: 0 !important;
+    }
+
+    #formFiltrosGastos {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 12px !important;
+      width: 100% !important;
+    }
+
+    /* Cada grupo de filtro alineado horizontalmente */
+    #formFiltrosGastos .form-group {
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      align-items: center !important;
+      gap: 10px !important;
+      width: 100% !important;
+      margin-bottom: 0 !important;
+    }
+
+    #formFiltrosGastos .form-group > label {
+      white-space: nowrap !important;
+      width: 80px !important;
+      min-width: 80px !important;
+      text-align: left !important;
+      margin-bottom: 0 !important;
+    }
+
+    #formFiltrosGastos .form-group .input-group,
+    #formFiltrosGastos .form-group button#daterange-btn {
+      width: 100% !important;
+    }
+
+    #formFiltrosGastos .form-group button#daterange-btn {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+    }
+
+    /* Forzar ancho del selector de Select2 */
+    #formFiltrosGastos .form-group .input-group .select2-container {
+      width: 100% !important;
+    }
+
+    /* Botón de limpiar */
+    #btnLimpiarGastos {
+      width: 100% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      height: 38px !important;
+    }
+  }
+</style>
+
 
 <div class="content-wrapper">
 
@@ -82,9 +166,9 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
           <div id="formFiltrosGastos" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
 
             <!-- Filtro por Sucursal (Solo Admin) -->
-            <?php if ($_SESSION["perfil"] == "Administrador"): ?>
+            <?php if ((!isset($configuracion["activar_sucursales"]) || $configuracion["activar_sucursales"] == 1) && $_SESSION["perfil"] == "Administrador"): ?>
               <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-                <label class="hidden-xs" style="margin-bottom: 0;">Sucursal:</label>
+                <label style="margin-bottom: 0;">Sucursal:</label>
                 <div class="input-group">
                   <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                       class="fa fa-building text-primary"></i></span>
@@ -103,7 +187,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
             <!-- Filtro por Categoría -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Categoría:</label>
+              <label style="margin-bottom: 0;">Categoría:</label>
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                     class="fa fa-search text-primary"></i></span>
@@ -121,7 +205,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
             <!-- Filtro por Proveedor -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Proveedor:</label>
+              <label style="margin-bottom: 0;">Proveedor:</label>
               <div class="input-group">
                 <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                     class="fa fa-search text-primary"></i></span>
@@ -139,7 +223,7 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
             <!-- Filtro por Fecha -->
             <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
-              <label class="hidden-xs" style="margin-bottom: 0;">Fecha:</label>
+              <label style="margin-bottom: 0;">Fecha:</label>
               <button type="button" class="btn btn-default" id="daterange-btn">
                 <span>
                   <i class="fa fa-calendar"></i> Rango de fecha
@@ -164,11 +248,12 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
 
       <div class="box-body">
 
-        <div class="tabla-gastos table-responsive">
+        <div class="tabla-gastos">
           <table id="tablaGastos" class="table table-bordered table-striped display nowrap" width="100%">
 
             <thead>
               <tr>
+                <th width="10"></th>
                 <th>Concepto</th>
                 <th>Monto</th>
                 <th>Categoría</th>

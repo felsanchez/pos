@@ -38,6 +38,9 @@
 
       <?php
 
+      $configuracionGlobalMenu = ControladorConfiguracion::ctrObtenerConfiguracion();
+      $sucursalesActivas = !isset($configuracionGlobalMenu["activar_sucursales"]) || $configuracionGlobalMenu["activar_sucursales"] == 1;
+
       if (puedeVer('inicio')) {
         echo '<li class="active">
             <a href="inicio">
@@ -56,7 +59,7 @@
           </li>';
       }
 
-      if (puedeVer('bodegas') || puedeVer('traslados') || $_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "_SystemMaster_") {
+      if ($sucursalesActivas && (puedeVer('bodegas') || puedeVer('traslados') || $_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "_SystemMaster_")) {
         echo '<li class="treeview">
                 <a href="#">
                   <i class="fa fa-building"></i>
@@ -94,7 +97,7 @@
 
         echo '</ul>
               </li>';
-      } else if (puedeAccion('traslados', 'crear')) {
+      } else if ($sucursalesActivas && puedeAccion('traslados', 'crear')) {
         echo '<li>
                 <a href="crear-traslado">
                   <i class="fa fa-exchange"></i>
@@ -102,8 +105,6 @@
                 </a>
               </li>';
       }
-
-      $configuracionGlobalMenu = ControladorConfiguracion::ctrObtenerConfiguracion();
 
       if (puedeVer('cierres-caja') && isset($configuracionGlobalMenu["control_caja"]) && $configuracionGlobalMenu["control_caja"] == 1) {
         echo '<li>

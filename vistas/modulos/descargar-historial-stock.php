@@ -1,5 +1,8 @@
 <?php
 
+require_once "../../modelos/session-manager.php";
+SessionManager::startSecure();
+
 require_once "../../controladores/movimientos.controlador.php";
 require_once "../../modelos/movimientos.modelo.php";
 require_once "../../controladores/productos.controlador.php";

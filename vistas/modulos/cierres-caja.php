@@ -49,6 +49,10 @@ $moneda = !empty($configuracion["moneda"]) ? $configuracion["moneda"] : "$";
             </div>
 
             <!-- Filtro Sucursal (Bodega) -->
+            <?php 
+            $sucursalesActivas = !isset($configuracion["activar_sucursales"]) || $configuracion["activar_sucursales"] == 1;
+            if ($sucursalesActivas): 
+            ?>
             <div style="display: flex; align-items: center; gap: 8px;">
               <span><b>Sucursal:</b></span>
               <div style="width: 180px;">
@@ -63,6 +67,7 @@ $moneda = !empty($configuracion["moneda"]) ? $configuracion["moneda"] : "$";
                 </select>
               </div>
             </div>
+            <?php endif; ?>
 
             <!-- Filtro Cajero -->
             <div style="display: flex; align-items: center; gap: 8px;">

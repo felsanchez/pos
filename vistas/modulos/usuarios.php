@@ -1,3 +1,49 @@
+<style>
+  @media (max-width: 767px) {
+    /* Apilar elementos de la cabecera de la caja */
+    .box-header {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+      align-items: stretch !important;
+    }
+
+    .box-header::before,
+    .box-header::after {
+      display: none !important;
+    }
+    
+    .box-header > .btn {
+      width: 100% !important;
+      text-align: center !important;
+    }
+    
+    /* Mantener etiqueta y filtro de Perfil en la misma línea */
+    .box-header .pull-right {
+      float: none !important;
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      align-items: center !important;
+      margin: 0 !important;
+      gap: 10px !important;
+    }
+
+    .box-header .pull-right > span {
+      white-space: nowrap !important;
+    }
+    
+    .box-header .pull-right .input-group {
+      width: 100% !important;
+    }
+
+    /* Forzar al contenedor de Select2 a ocupar el 100% del ancho del input-group */
+    .box-header .pull-right .input-group .select2-container {
+      width: 100% !important;
+    }
+  }
+</style>
 
 <div class="content-wrapper">
   <section class="content-header">
@@ -31,7 +77,7 @@
 
         <!-- Filtro por Perfil Estandarizado -->
         <div class="pull-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <span class="hidden-xs"><b>Perfil:</b></span>
+          <span><b>Perfil:</b></span>
           <div class="input-group" style="width: 200px;">
             <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
               <i class="fa fa-search text-primary"></i>

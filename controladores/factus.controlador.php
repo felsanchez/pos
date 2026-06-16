@@ -54,6 +54,7 @@ class ControladorFactus
 			// Actualizar Control de Caja y Vistas en la tabla configuracion global
 			$controlCaja = isset($_POST["controlCaja"]) ? 1 : 0;
 			$consultaVentas = isset($_POST["consultaVentas"]) ? 1 : 0;
+			$activarSucursales = isset($_POST["activarSucursales"]) ? 1 : 0;
 			$documentoSoporte = isset($_POST["documentoSoporte"]) ? 1 : 0;
 			$facturacionElectronica = isset($_POST["facturacionElectronica"]) ? 1 : 0;
 			$seguimientoLeads = isset($_POST["seguimientoLeads"]) ? 1 : 0;
@@ -67,9 +68,10 @@ class ControladorFactus
 			$notif_solicitud_eliminacion = isset($_POST["notif_solicitud_eliminacion"]) ? 1 : 0;
 			$columna_notas_cliente_activa = isset($_POST["columnaNotasClienteActiva"]) ? 1 : 0;
 			
-			$stmtCaja = Conexion::conectar()->prepare("UPDATE configuracion SET control_caja = :control_caja, consulta_ventas = :consulta_ventas, documento_soporte_activo = :documento_soporte_activo, facturacion_electronica_activa = :facturacion_electronica_activa, seguimiento_leads_activo = :seguimiento_leads_activo, grafica_analisis_ordenes_activa = :grafica_analisis_ordenes_activa, columna_seguimiento_activa = :columna_seguimiento_activa, boton_convertir_fe_activo = :boton_convertir_fe_activo, boton_actualizar_producto_activo = :boton_actualizar_producto_activo, notif_orden_agente_ia = :notif_orden_agente_ia, notif_transaccion_bold = :notif_transaccion_bold, notif_solicitud_edicion = :notif_solicitud_edicion, notif_solicitud_eliminacion = :notif_solicitud_eliminacion, columna_notas_cliente_activa = :columna_notas_cliente_activa WHERE id = 1");
+			$stmtCaja = Conexion::conectar()->prepare("UPDATE configuracion SET control_caja = :control_caja, consulta_ventas = :consulta_ventas, activar_sucursales = :activar_sucursales, documento_soporte_activo = :documento_soporte_activo, facturacion_electronica_activa = :facturacion_electronica_activa, seguimiento_leads_activo = :seguimiento_leads_activo, grafica_analisis_ordenes_activa = :grafica_analisis_ordenes_activa, columna_seguimiento_activa = :columna_seguimiento_activa, boton_convertir_fe_activo = :boton_convertir_fe_activo, boton_actualizar_producto_activo = :boton_actualizar_producto_activo, notif_orden_agente_ia = :notif_orden_agente_ia, notif_transaccion_bold = :notif_transaccion_bold, notif_solicitud_edicion = :notif_solicitud_edicion, notif_solicitud_eliminacion = :notif_solicitud_eliminacion, columna_notas_cliente_activa = :columna_notas_cliente_activa WHERE id = 1");
 			$stmtCaja->bindParam(":control_caja", $controlCaja, PDO::PARAM_INT);
 			$stmtCaja->bindParam(":consulta_ventas", $consultaVentas, PDO::PARAM_INT);
+			$stmtCaja->bindParam(":activar_sucursales", $activarSucursales, PDO::PARAM_INT);
 			$stmtCaja->bindParam(":documento_soporte_activo", $documentoSoporte, PDO::PARAM_INT);
 			$stmtCaja->bindParam(":facturacion_electronica_activa", $facturacionElectronica, PDO::PARAM_INT);
 			$stmtCaja->bindParam(":seguimiento_leads_activo", $seguimientoLeads, PDO::PARAM_INT);
@@ -2801,12 +2803,13 @@ class ControladorFactus
 			}
 
 			// Permisos
+			$puedoCrear = function_exists('puedeAccion') ? puedeAccion('notas_credito', 'crear') : true;
 			$puedoEditar = function_exists('puedeAccion') ? puedeAccion('notas_credito', 'editar') : true;
 			$puedoEliminar = function_exists('puedeAccion') ? puedeAccion('notas_credito', 'eliminar') : true;
 
 			// Firmar (solo si es borrador)
 			if ($estadoDian == 'borrador') {
-				if ($puedoEditar) {
+				if ($puedoEditar || $puedoCrear) {
 					$btns .= '<button class="btn btnFirmarNotaCredito" style="background-color:black; color:white; width: auto !important;" idNota="' . $idNota . '" title="Firmar y Enviar a DIAN"><i class="fa fa-paper-plane"></i></button>';
 				} else {
 					$btns .= '<button class="btn" disabled style="background-color:black; color:white; width: auto !important; opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para firmar y enviar"><i class="fa fa-paper-plane"></i></button>';
@@ -2815,7 +2818,7 @@ class ControladorFactus
 			
 			// Ver XML
 			if (!empty($value['xml_dian_nc'])) {
-				if ($puedoEditar) {
+				if ($puedoEditar || $puedoCrear) {
 					$btns .= '<a href="' . e($value['xml_dian_nc']) . '" target="_blank" class="btn btn-primary" title="Ver XML" style="width: auto !important;"><i class="fa fa-file-code-o"></i></a>';
 				} else {
 					$btns .= '<button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed; width: auto !important;" title="No tiene permisos para ver XML"><i class="fa fa-file-code-o"></i></button>';
@@ -2824,7 +2827,7 @@ class ControladorFactus
 			
 			// Enviar por Correo (solo si está aceptada/enviada)
 			if ($estadoDian == 'aceptada' || $estadoDian == 'enviada') {
-				if ($puedoEditar) {
+				if ($puedoEditar || $puedoCrear) {
 					$btns .= '<button class="btn btn-primary btnEnviarEmailNC" idNota="' . $idNota . '" nombreCliente="' . e($value['cliente_nombre'] ?? 'N/A') . '" emailCliente="' . e($value['cliente_email'] ?? '') . '" title="Enviar por Correo" style="width: auto !important;"><i class="fa fa-envelope"></i></button>';
 				} else {
 					$btns .= '<button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed; width: auto !important;" title="No tiene permisos para enviar por correo"><i class="fa fa-envelope"></i></button>';
@@ -2986,12 +2989,13 @@ class ControladorFactus
 				$btns .= '<a href="https://catalogo-vpfe-hab.dian.gov.co/User/SearchDocument?DocumentKey=' . e($value["cuds_ajuste"]) . '" target="_blank" class="btn btn-success" title="Ver en DIAN"><i class="fa fa-external-link"></i></a>';
 			}
 
+			$puedoCrear = function_exists('puedeAccion') ? puedeAccion('notas_ajuste', 'crear') : true;
 			$puedoEditar = function_exists('puedeAccion') ? puedeAccion('notas_ajuste', 'editar') : true;
 			$puedoEliminar = function_exists('puedeAccion') ? puedeAccion('notas_ajuste', 'eliminar') : true;
 
 			// Firmar
 			if ($estadoDian == "borrador") {
-				if ($puedoEditar) {
+				if ($puedoEditar || $puedoCrear) {
 					$btns .= '<button class="btn btnFirmarNotaAjusteDS" style="background-color: black; color: white;" idNota="' . $idNota . '" title="Firmar y Enviar a DIAN"><i class="fa fa-paper-plane"></i></button>';
 				} else {
 					$btns .= '<button class="btn" disabled style="background-color: black; color: white; opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para firmar y enviar"><i class="fa fa-paper-plane"></i></button>';
@@ -3000,7 +3004,7 @@ class ControladorFactus
 
 			// PDF
 			if (!empty($value["pdf_dian"])) {
-				if ($puedoEditar) {
+				if ($puedoEditar || $puedoCrear) {
 					$btns .= '<a href="' . e($value["pdf_dian"]) . '" target="_blank" class="btn btn-danger" title="Ver PDF Factus"><i class="fa fa-file-pdf-o"></i></a>';
 				} else {
 					$btns .= '<button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para ver PDF"><i class="fa fa-file-pdf-o"></i></button>';
@@ -3009,7 +3013,7 @@ class ControladorFactus
 
 			// XML
 			if (!empty($value["xml_dian"])) {
-				if ($puedoEditar) {
+				if ($puedoEditar || $puedoCrear) {
 					$btns .= '<a href="' . e($value["xml_dian"]) . '" target="_blank" class="btn btn-primary" title="Ver XML Factus"><i class="fa fa-file-code-o"></i></a>';
 				} else {
 					$btns .= '<button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para ver XML"><i class="fa fa-file-code-o"></i></button>';
@@ -3018,7 +3022,7 @@ class ControladorFactus
 
 			// Enviar por correo
 			if ($estadoDian == "aceptada" || $estadoDian == "enviada") {
-				if ($puedoEditar) {
+				if ($puedoEditar || $puedoCrear) {
 					$btns .= '<button class="btn btn-primary btnEnviarEmailNA" idNA="' . $idNota . '" nombreProveedor="' . e(($value["nombre_proveedor"] ?? "N/A")) . '" emailProveedor="' . e(($value["correo_proveedor"] ?? '')) . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
 				} else {
 					$btns .= '<button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para enviar por correo"><i class="fa fa-envelope"></i></button>';
@@ -3384,6 +3388,7 @@ class ControladorFactus
 			}
 
 			// 3. ACCIONES
+			$puedoCrear = function_exists('puedeAccion') ? puedeAccion('documento_soporte', 'crear') : true;
 			$puedoEditar = function_exists('puedeAccion') ? puedeAccion('documento_soporte', 'editar') : true;
 			$puedoEliminar = function_exists('puedeAccion') ? puedeAccion('documento_soporte', 'eliminar') : true;
 
@@ -3395,14 +3400,14 @@ class ControladorFactus
 			}
 
 			if ($eDian == "borrador") {
-				if ($puedoEditar) {
+				if ($puedoEditar || $puedoCrear) {
 					$acciones .= '<button class="btn btnFirmarDS" style="background-color: black; color: white;" idDS="' . e($value["id"]) . '" title="Firmar y Enviar a Factus"><i class="fa fa-paper-plane"></i></button>';
 				} else {
 					$acciones .= '<button class="btn" disabled style="background-color: black; color: white; opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para firmar y enviar"><i class="fa fa-paper-plane"></i></button>';
 				}
 			}
 			if ($eDian == "aceptada" || $eDian == "enviada") {
-				if ($puedoEditar) {
+				if ($puedoEditar || $puedoCrear) {
 					$acciones .= '<button class="btn btn-primary btnEnviarEmailDS" idDS="' . e($value["id"]) . '" nombreProveedor="' . e(($value["nombre_proveedor"] ?? "N/A")) . '" emailProveedor="' . e(($value["correo_proveedor"] ?? "")) . '" title="Enviar por Correo"><i class="fa fa-envelope"></i></button>';
 				} else {
 					$acciones .= '<button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para enviar por correo"><i class="fa fa-envelope"></i></button>';
@@ -3410,7 +3415,7 @@ class ControladorFactus
 			}
 			// Usamos el campo optimizado en SQL
 			if ($value["tiene_nota"]) {
-				if ($puedoEditar) {
+				if ($puedoEditar || $puedoCrear) {
 					$acciones .= ' <button class="btn btn-warning btnVerNotasAjusteDS" idDS="' . e($value["id"]) . '" data-toggle="modal" data-target="#modalNotasAjusteDS" title="Ver Notas de Ajuste"><i class="fa fa-list"></i></button>';
 				} else {
 					$acciones .= ' <button class="btn btn-warning" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para ver notas de ajuste"><i class="fa fa-list"></i></button>';

@@ -87,13 +87,6 @@ var table = $("table.tablaProductos").DataTable({
 			"render": function (data, type, row) { return row[3]; }
 		},
 		{
-			"targets": 7, // Acciones
-			"data": null,
-			"responsivePriority": 2,
-			"orderable": false,
-			"render": function (data, type, row) { return row[10]; }
-		},
-		{
 			"targets": 3, // Categoria
 			"responsivePriority": 5,
 			"render": function (data, type, row) { return row[4]; }
@@ -114,6 +107,18 @@ var table = $("table.tablaProductos").DataTable({
 			"targets": 6, // Proveedor
 			"responsivePriority": 9,
 			"render": function (data, type, row) { return row[8]; }
+		},
+		{
+			"targets": 7, // Estado
+			"responsivePriority": 8,
+			"render": function (data, type, row) { return row[11]; }
+		},
+		{
+			"targets": 8, // Acciones
+			"data": null,
+			"responsivePriority": 2,
+			"orderable": false,
+			"render": function (data, type, row) { return row[10]; }
 		}
 	],
 
@@ -1248,6 +1253,8 @@ function formatearTablaVariantes(variantes) {
 
 	html += '<th width="80px">Stock</th>';
 
+	html += '<th width="80px">Estado</th>';
+
 	html += '<th width="80px">Acciones</th>';
 
 	html += '</tr>';
@@ -1278,10 +1285,18 @@ function formatearTablaVariantes(variantes) {
 		var botonesAcciones = '';
 
 		// Botón de editar
-		botonesAcciones += '<button class="btn btn-warning btn-xs btnEditarVariante" idVariante="' + variante.id + '" precioAdicional="' + variante.precio_adicional + '" stock="' + variante.stock + '"><i class="fa fa-pencil"></i></button>';
+		if (typeof permisoEditarProductos !== 'undefined' && permisoEditarProductos) {
+			botonesAcciones += '<button class="btn btn-warning btn-xs btnEditarVariante" idVariante="' + variante.id + '" precioAdicional="' + variante.precio_adicional + '" stock="' + variante.stock + '"><i class="fa fa-pencil"></i></button>';
+		} else {
+			botonesAcciones += '<button class="btn btn-warning btn-xs" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-pencil"></i></button>';
+		}
 
 		// Botón de eliminar
-		botonesAcciones += ' <button class="btn btn-danger btn-xs btnEliminarVariante" idVariante="' + variante.id + '" idProducto="' + variante.id_producto + '"><i class="fa fa-trash"></i></button>';
+		if (typeof permisoEliminarProductos !== 'undefined' && permisoEliminarProductos) {
+			botonesAcciones += ' <button class="btn btn-danger btn-xs btnEliminarVariante" idVariante="' + variante.id + '" idProducto="' + variante.id_producto + '"><i class="fa fa-trash"></i></button>';
+		} else {
+			botonesAcciones += ' <button class="btn btn-danger btn-xs" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para eliminar"><i class="fa fa-trash"></i></button>';
+		}
 
 		// Stock con colores
 		var stockBadge = '';
@@ -1296,12 +1311,29 @@ function formatearTablaVariantes(variantes) {
 			stockBadge = '<span class="badge bg-green">' + variante.stock + '</span>';
 		}
 
+		// Botón de Estado de la variante
+		var botonEstado = '';
+		if (typeof permisoEditarProductos !== 'undefined' && permisoEditarProductos) {
+			if (variante.estado != 0) {
+				botonEstado = '<button class="btn btn-success btn-xs btnActivarVariante" idVariante="' + variante.id + '" estadoVariante="1"><i class="fa fa-check"></i> Activado</button>';
+			} else {
+				botonEstado = '<button class="btn btn-danger btn-xs btnActivarVariante" idVariante="' + variante.id + '" estadoVariante="0"><i class="fa fa-times"></i> Desactivado</button>';
+			}
+		} else {
+			if (variante.estado != 0) {
+				botonEstado = '<button class="btn btn-success btn-xs" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-check"></i> Activado</button>';
+			} else {
+				botonEstado = '<button class="btn btn-danger btn-xs" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-times"></i> Desactivado</button>';
+			}
+		}
+
 		html += '<tr>';
 		html += '<td><code>' + variante.sku + '</code></td>';
 		html += '<td>' + variante.nombre + '</td>';
 		html += '<td>' + precioAdicionalStr + '</td>';
 		html += '<td><strong>$' + formatearPrecio(variante.precio_final) + '</strong></td>';
 		html += '<td class="text-center">' + stockBadge + '</td>';
+		html += '<td class="text-center">' + botonEstado + '</td>';
 		html += '<td class="text-center">' + botonesAcciones + '</td>';
 		html += '</tr>';
 	}
@@ -1408,6 +1440,79 @@ $(document).on('click', '.btnExpandirVariantes', function () {
 
 	});
 
+
+});
+
+
+/*=============================================
+ACTIVAR/DESACTIVAR PRODUCTO
+=============================================*/
+
+$(document).on('click', '.btnActivarProducto', function () {
+
+	var idProducto = $(this).attr("idProducto");
+	var estadoProducto = $(this).attr("estadoProducto");
+	var boton = $(this);
+
+	var datos = new FormData();
+	datos.append("activarId", idProducto);
+	datos.append("activarProducto", estadoProducto);
+
+	$.ajax({
+
+		url: "ajax/productos.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+
+			if (respuesta == "ok") {
+
+				// Cambiar visualmente el botón
+				if (estadoProducto == 0) {
+					boton.removeClass('btn-success').addClass('btn-danger');
+					boton.html('Desactivado');
+					boton.attr('estadoProducto', 1);
+				} else {
+					boton.removeClass('btn-danger').addClass('btn-success');
+					boton.html('Activado');
+					boton.attr('estadoProducto', 0);
+				}
+
+				swal({
+					type: "success",
+					title: "Estado actualizado correctamente",
+					showConfirmButton: false,
+					timer: 1500
+				});
+
+			} else {
+
+				swal({
+					type: "error",
+					title: "Error al actualizar el estado",
+					text: "Por favor, intenta nuevamente"
+				});
+			}
+
+		},
+
+		error: function (jqXHR, textStatus, errorThrown) {
+
+			console.error("Error al activar/desactivar producto:", textStatus, errorThrown);
+
+			swal({
+				type: "error",
+				title: "Error de servidor",
+				text: "Por favor, intenta nuevamente"
+			});
+
+		}
+
+	});
 
 });
 

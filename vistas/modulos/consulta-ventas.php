@@ -211,6 +211,23 @@ if ($xml) {
 .estado-vacio p { font-size: 14px; margin: 0; }
 .estado-error { color: #e74c3c; }
 .estado-error i { color: #e74c3c; }
+
+@media (max-width: 767px) {
+    .search-box-card {
+        padding: 20px 16px !important;
+    }
+    .search-input-group {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+    .search-input-group .btn-buscar {
+        width: 100% !important;
+        padding: 12px 20px !important;
+        height: auto !important;
+        text-align: center !important;
+        display: block !important;
+    }
+}
 </style>
 
 <div class="content-wrapper">

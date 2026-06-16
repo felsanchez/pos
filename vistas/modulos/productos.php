@@ -13,9 +13,45 @@ $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
 $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configuracion["tipo_codigo_producto"] : "automatico";
 ?>
 
+<style>
+@media (max-width: 767px) {
+  .box-header .pull-right.contenedor-filtros {
+    float: none !important;
+    width: 100% !important;
+    margin-top: 15px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .contenedor-filtros > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+  .contenedor-filtros > div > span {
+    min-width: 80px !important;
+    text-align: left !important;
+  }
+  .contenedor-filtros > div > .input-group {
+    flex: 1 !important;
+    width: auto !important;
+  }
+  .contenedor-filtros > div .select2-container {
+    width: 100% !important;
+  }
+}
+</style>
+
 <script>
   // Variable global con la configuración del tipo de código de producto
   var tipoCodigoProducto = "<?php echo $tipoCodigoProducto; ?>";
+  var permisoEditarProductos = <?php echo puedeAccion('productos', 'editar') ? 'true' : 'false'; ?>;
+  var permisoEliminarProductos = <?php echo puedeAccion('productos', 'eliminar') ? 'true' : 'false'; ?>;
 </script>
 
 <div class="content-wrapper">
@@ -61,7 +97,7 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
 
           <!-- Filtro Proveedor -->
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="hidden-xs"><b>Proveedor:</b></span>
+            <span><b>Proveedor:</b></span>
             <div class="input-group" style="width: 200px;">
               <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
                 <i class="fa fa-search text-primary"></i>
@@ -80,7 +116,7 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
 
           <!-- Filtro Categoría -->
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="hidden-xs"><b>Categoría:</b></span>
+            <span><b>Categoría:</b></span>
             <div class="input-group" style="width: 200px;">
               <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
                 <i class="fa fa-search text-primary"></i>
@@ -133,6 +169,7 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
                 <th>Stock</th>
                 <th>Precio de Venta</th>
                 <th>Proveedor</th>
+                <th>Estado</th>
                 <th>Acciones</th>
               </tr>
             </thead>

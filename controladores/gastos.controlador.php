@@ -34,16 +34,17 @@ class ControladorGastos{
 	{
 		$tabla = "gastos";
 
-		// Mapeo de columnas para ordenamiento dinámico
+		// Mapeo de columnas para ordenamiento dinámico (con columna 0 vacía para responsivo)
 		$columnsMap = array(
-			0 => 'g.concepto',
-			1 => 'g.monto',
-			2 => 'c.nombre',
-			3 => 'g.estado',
-			4 => 'p.nombre',
-			5 => 'g.id',     // Imagen
-			6 => 'g.fecha',
-			7 => 'g.notas'
+			0 => 'g.id',     // Columna de control responsivo (vacía)
+			1 => 'g.concepto',
+			2 => 'g.monto',
+			3 => 'c.nombre',
+			4 => 'g.estado',
+			5 => 'p.nombre',
+			6 => 'g.id',     // Imagen
+			7 => 'g.fecha',
+			8 => 'g.notas'
 		);
 
 		$where = " WHERE 1=1 ";
@@ -117,6 +118,9 @@ class ControladorGastos{
 		foreach ($gastos as $key => $value) {
 			
 			$nestedData = array();
+
+			// Columna 0: Vacía para control responsivo DataTable
+			$nestedData[] = "";
 
 			// Columna 1: Concepto
 			$nestedData[] = e($value["concepto"]);

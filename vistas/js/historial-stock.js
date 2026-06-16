@@ -29,7 +29,7 @@ $(document).ready(function () {
                 }
             },
             "columns": [
-                { "data": null, "defaultContent": "", "orderable": false, "className": "dtr-control" },
+                { "data": null, "defaultContent": "", "orderable": false, "className": "control dtr-control" },
                 { "data": 0 }, // Producto
                 { "data": 1 }, // Tipo Movimiento
                 { "data": 2 }, // Tipo
@@ -203,5 +203,42 @@ $(document).ready(function () {
             }
         });
     });
+
+    // 8. Exportar a Excel Directo (con Filtros aplicados)
+    $(document).on("click", "#btnDescargarExcelStockDirecto", function () {
+        var fechaInicial = $("#fi_s").val() || "";
+        var fechaFinal = $("#ff_s").val() || "";
+        var id_producto = $("#cat_s").val() || "";
+        var tipo_movimiento = $("#tipo_s").val() || "";
+        var usuario = $("#user_s").val() || "";
+        var id_bodega = $("#sucursalReporteMaestro").val() || "";
+
+        var url = "vistas/modulos/descargar-historial-stock.php" + 
+                  "?fechaInicial=" + encodeURIComponent(fechaInicial) +
+                  "&fechaFinal=" + encodeURIComponent(fechaFinal) +
+                  "&id_producto=" + encodeURIComponent(id_producto) +
+                  "&tipo_movimiento=" + encodeURIComponent(tipo_movimiento) +
+                  "&usuario=" + encodeURIComponent(usuario) +
+                  "&id_bodega=" + encodeURIComponent(id_bodega);
+
+        mostrarToast('¡Descarga iniciada! El archivo Excel se está descargando...');
+        window.location.href = url;
+    });
+
+    function mostrarToast(mensaje) {
+        // Crear elemento toast
+        var toast = $('<div class="toast-notification"><i class="fa fa-check-circle" style="font-size: 20px;"></i> <span>' + mensaje + '</span></div>');
+
+        // Agregar al body
+        $('body').append(toast);
+
+        // Remover después de 3 segundos
+        setTimeout(function () {
+            toast.addClass('toast-hide');
+            setTimeout(function () {
+                toast.remove();
+            }, 300);
+        }, 3000);
+    }
 
 });

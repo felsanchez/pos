@@ -213,20 +213,28 @@ function listarProductosTraslado(){
 
 	var listaProductos = [];
 
-	var descripcion = $(".nuevaDescripcionProducto");
-	var cantidad = $(".nuevaCantidadProducto");
-    var esVariante = $(".esVariante");
-    var idVariante = $(".idVariante");
+	var rows = $(".formularioTraslado .nuevoProducto .row");
 
-	for(var i = 0; i < descripcion.length; i++){
+	rows.each(function() {
+		var row = $(this);
+		var descEl = row.find(".nuevaDescripcionProducto");
+		var cantEl = row.find(".nuevaCantidadProducto");
+		var esVarEl = row.find(".esVariante");
+		var idVarEl = row.find(".idVariante");
 
-		listaProductos.push({ "id" : $(descripcion[i]).attr("idProducto"), 
-							  "descripcion" : $(descripcion[i]).val(),
-							  "cantidad" : $(cantidad[i]).val(),
-                              "esVariante" : $(esVariante[i]).val(),
-                              "idVariante" : $(idVariante[i]).val()
-                            })
-	}
+		if (descEl.length) {
+			var idProducto = descEl.attr("idProducto");
+			if (idProducto) {
+				listaProductos.push({
+					"id" : idProducto, 
+					"descripcion" : descEl.val(),
+					"cantidad" : cantEl.val(),
+					"esVariante" : esVarEl.val() || "0",
+					"idVariante" : idVarEl.val() || ""
+				});
+			}
+		}
+	});
 
 	$("#listaProductos").val(JSON.stringify(listaProductos));
 }
@@ -243,6 +251,9 @@ $("#nuevaBodegaOrigen").change(function(){
     if(idBodega != ""){
         $("#nuevaBodegaDestino option[value='"+idBodega+"']").prop("disabled", true);
     }
+
+    // Actualizar los selects móviles con los productos de la nueva bodega
+    actualizarOpcionesProductosMobiles(idBodega);
 });
 
 /*=============================================
@@ -566,4 +577,198 @@ $(document).ready(function() {
         $('#daterange-btn-traslados span').html('<i class="fa fa-calendar"></i> ' + start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
     }
 });
+
+/*==========================================================================================
+AGREGANDO PRODUCTO DESDE EL BOTON PARA DISPOSITIVOS MOVILES
+==========================================================================================*/
+$(".btnAgregarProductoTraslado").click(function () {
+	var datos = new FormData();
+	datos.append("traerProductos", "ok");
+	var idBodega = $("#nuevaBodegaOrigen").val();
+	if (idBodega) {
+		datos.append("idBodega", idBodega);
+	}
+
+	$.ajax({
+		url: "ajax/productos.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			var optionsHtml = '<option value="">Seleccione el producto</option>';
+			if (respuesta && respuesta.length > 0) {
+				respuesta.forEach(function(item) {
+					var optionAttrs = 'idProducto="' + item.id + '"';
+					optionAttrs += ' esVariante="' + (item.es_variante || 0) + '"';
+					if (item.es_variante == 1) {
+						optionAttrs += ' idVariante="' + item.id_variante + '" skuVariante="' + item.sku + '"';
+					}
+					optionAttrs += ' stock="' + item.stock + '"';
+
+					var label = item.descripcion;
+					if (item.es_variante == 1) {
+						label = '&nbsp;&nbsp;&nbsp;&nbsp;└─ ' + item.descripcion;
+					}
+
+					var disabledAttr = (item.deshabilitar == 1) ? 'disabled' : '';
+
+					optionsHtml += '<option ' + optionAttrs + ' ' + disabledAttr + ' value="' + item.descripcion + '">' + label + '</option>';
+				});
+			}
+
+			$(".nuevoProducto").append(
+				'<div class="row" style="padding:5px 15px">' +
+				'<!-- Descripción del producto -->' +
+				'<div class="col-xs-6" style="padding-right:0px">' +
+				'<input type="text" class="form-control buscarProductoMovil" placeholder="🔍 Buscar..." style="margin-bottom: 4px; padding: 4px 8px; height: 28px; font-size: 11px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">' +
+				'<div class="input-group">' +
+				'<span class="input-group-addon"><button type="button" class="btn btn-danger btn-xs quitarProducto" idProducto idVariante><i class="fa fa-times"></i></button></span>' +
+				'<select class="form-control nuevaDescripcionProducto" idProducto name="nuevaDescripcionProducto" required>' +
+				optionsHtml +
+				'</select>' +
+				'</div>' +
+				'</div>' +
+				'<!-- Cantidad del producto -->' +
+				'<div class="col-xs-3">' +
+				'<input type="number" class="form-control nuevaCantidadProducto" name="nuevaCantidadProducto" min="1" value="1" stock="0" nuevoStock="0" required>' +
+				'</div>' +
+				'<!-- Stock disponible -->' +
+				'<div class="col-xs-3" style="padding-left:0px">' +
+				'<div class="input-group">' +
+				'<span class="input-group-addon"><i class="fa fa-check"></i></span>' +
+				'<input type="text" class="form-control nuevoStock" value="0" readonly>' +
+				'</div>' +
+				'</div>' +
+				'<input type="hidden" class="esVariante" value="0">' +
+				'<input type="hidden" class="idVariante" value="">' +
+				'</div>'
+			);
+		}
+	});
+});
+
+/*=============================================
+SELECCIONAR PRODUCTO EN DISPOSITIVOS MÓVILES
+=============================================*/
+$(document).on("change", ".formularioTraslado select.nuevaDescripcionProducto", function () {
+	var select = $(this);
+	var optionSelected = select.find("option:selected");
+	var row = select.closest(".row");
+
+	if (!optionSelected.length || !optionSelected.attr("idProducto")) {
+		select.removeAttr("idProducto");
+		select.removeAttr("esVariante");
+		select.removeAttr("idVariante");
+		row.find(".quitarProducto").removeAttr("idProducto").removeAttr("idVariante");
+		row.find(".nuevaCantidadProducto").val(1).attr("stock", 0).attr("nuevoStock", 0);
+		row.find(".nuevoStock").val(0);
+		row.find(".esVariante").val(0);
+		row.find(".idVariante").val("");
+		listarProductosTraslado();
+		return;
+	}
+
+	var idProducto = optionSelected.attr("idProducto");
+	var esVariante = optionSelected.attr("esVariante") || "0";
+	var idVariante = optionSelected.attr("idVariante") || "";
+	var stock = Number(optionSelected.attr("stock") || 0);
+
+	select.attr("idProducto", idProducto);
+	select.attr("esVariante", esVariante);
+	select.attr("idVariante", idVariante);
+	
+	row.find(".quitarProducto").attr("idProducto", idProducto).attr("idVariante", idVariante);
+	row.find(".nuevaCantidadProducto").val(1).attr("stock", stock).attr("nuevoStock", stock - 1);
+	row.find(".nuevoStock").val(stock);
+	row.find(".esVariante").val(esVariante);
+	row.find(".idVariante").val(idVariante);
+
+	listarProductosTraslado();
+});
+
+/*=============================================
+ACTUALIZAR OPCIONES DE PRODUCTOS MÓVILES AL CAMBIAR BODEGA
+=============================================*/
+function actualizarOpcionesProductosMobiles(idBodega) {
+	var selects = $(".formularioTraslado select.nuevaDescripcionProducto");
+	if (selects.length === 0) return;
+
+	var datos = new FormData();
+	datos.append("traerProductos", "ok");
+	if (idBodega) {
+		datos.append("idBodega", idBodega);
+	}
+
+	$.ajax({
+		url: "ajax/productos.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			var optionsHtml = '<option value="">Seleccione el producto</option>';
+			if (respuesta && respuesta.length > 0) {
+				respuesta.forEach(function(item) {
+					var optionAttrs = 'idProducto="' + item.id + '"';
+					optionAttrs += ' esVariante="' + (item.es_variante || 0) + '"';
+					if (item.es_variante == 1) {
+						optionAttrs += ' idVariante="' + item.id_variante + '" skuVariante="' + item.sku + '"';
+					}
+					optionAttrs += ' stock="' + item.stock + '"';
+
+					var label = item.descripcion;
+					if (item.es_variante == 1) {
+						label = '&nbsp;&nbsp;&nbsp;&nbsp;└─ ' + item.descripcion;
+					}
+
+					var disabledAttr = (item.deshabilitar == 1) ? 'disabled' : '';
+
+					optionsHtml += '<option ' + optionAttrs + ' ' + disabledAttr + ' value="' + item.descripcion + '">' + label + '</option>';
+				});
+			}
+
+			selects.each(function() {
+				var select = $(this);
+				var prevIdProducto = select.attr("idProducto");
+				var prevIdVariante = select.attr("idVariante") || "";
+				var prevEsVariante = select.attr("esVariante") || "0";
+				
+				// Limpiar caché de filtrado anterior
+				select.removeData("original-options");
+
+				select.html(optionsHtml);
+
+				// Intentar re-seleccionar el producto previo si existía
+				if (prevIdProducto) {
+					var optionToSelect = null;
+					select.find("option").each(function() {
+						var opt = $(this);
+						var optId = opt.attr("idProducto");
+						var optIdVar = opt.attr("idVariante") || "";
+						var optEsVar = opt.attr("esVariante") || "0";
+
+						if (optId == prevIdProducto && optIdVar == prevIdVariante && optEsVar == prevEsVariante) {
+							optionToSelect = opt;
+							return false; // break loop
+						}
+					});
+
+					if (optionToSelect && !optionToSelect.prop("disabled")) {
+						optionToSelect.prop("selected", true);
+						select.trigger("change");
+					} else {
+						// Si ya no existe o está deshabilitado, limpiar la fila
+						select.val("");
+						select.trigger("change");
+					}
+				}
+			});
+		}
+	});
+}
 

@@ -287,6 +287,18 @@ foreach ($varianteRows as $row) {
                       </a>
                     </div>
 
+                    <!-- Botones de descarga -->
+                    <?php if (puedeAccion('reporte_ventas', 'imprimir')): ?>
+                      <div class="filtro-grupo" style="display: flex; flex-direction: column; gap: 8px; align-items: stretch; margin-bottom: 12px;">
+                        <a class="btn btn-success w-100" style="height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; margin: 0;" id="btn-descargar-excel-directo" href="#">
+                          <i class="fa fa-file-excel-o" style="margin-right: 5px;"></i> Descargar Excel
+                        </a>
+                        <a class="btn btn-danger w-100" style="height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; margin: 0;" id="btn-descargar-pdf-directo" href="#" target="_blank">
+                          <i class="fa fa-file-pdf-o" style="margin-right: 5px;"></i> Descargar PDF
+                        </a>
+                      </div>
+                    <?php endif; ?>
+
                   </div>
                 </form>
               </div>

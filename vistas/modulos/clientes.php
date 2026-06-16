@@ -22,6 +22,31 @@ if (!puedeVer('clientes')) {
   tr.shown td.details-control {
     background: url('https://cdn.datatables.net/1.13.6/images/details_close.png') no-repeat center center;
   }
+
+  @media (max-width: 767px) {
+    .box-header .pull-right.form-filtros-clientes {
+      float: none !important;
+      width: 100% !important;
+      margin-top: 15px !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+    }
+    .form-filtros-clientes > span {
+      min-width: 80px !important;
+      text-align: left !important;
+    }
+    .form-filtros-clientes > .input-group {
+      flex: 1 !important;
+      width: auto !important;
+    }
+    .form-filtros-clientes .select2-container {
+      width: 100% !important;
+    }
+  }
 </style>
 
 
@@ -146,31 +171,35 @@ $editarCliente->ctrEditarCliente();
           <a href="cliente-detalle" class="btn btn-primary">
             <i class="fa fa-plus"></i> Agregar Cliente
           </a>
-
-          <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
-            <i class="fa fa-flag"></i> Gestionar estados
-          </button>
-
-          <button class="btn btn-success" data-toggle="modal" data-target="#modalImportarClientes">
-            <i class="fa fa-upload"></i> Exportar / Importar Clientes
-          </button>
         <?php else: ?>
           <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear clientes">
             <i class="fa fa-plus"></i> Agregar Cliente
           </button>
+        <?php endif; ?>
 
-          <button class="btn btn-default" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para gestionar estados">
-            <i class="fa fa-flag"></i> Gestionar estados
+        <?php if (puedeAccion('clientes', 'crear')): ?>
+          <button class="btn btn-success" data-toggle="modal" data-target="#modalImportarClientes">
+            <i class="fa fa-upload"></i> Exportar / Importar Clientes
           </button>
-
+        <?php else: ?>
           <button class="btn btn-success" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para importar/exportar">
             <i class="fa fa-upload"></i> Exportar / Importar Clientes
           </button>
         <?php endif; ?>
 
+        <?php if (puedeAccion('clientes', 'editar')): ?>
+          <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
+            <i class="fa fa-flag"></i> Gestionar estados
+          </button>
+        <?php else: ?>
+          <button class="btn btn-default" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para gestionar estados">
+            <i class="fa fa-flag"></i> Gestionar estados
+          </button>
+        <?php endif; ?>
+
         <!-- Filtro por Estado Estandarizado en el Header -->
-        <div class="pull-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <span class="hidden-xs"><b>Estado:</b></span>
+        <div class="pull-right form-filtros-clientes" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span><b>Estado:</b></span>
           <div class="input-group" style="width: 220px;">
             <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
               <i class="fa fa-search text-primary"></i>

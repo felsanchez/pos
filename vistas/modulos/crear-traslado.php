@@ -155,7 +155,7 @@ if (!puedeAccion("traslados", "crear")) {
                 BOTÓN PARA AGREGAR PRODUCTO (MÓVIL)
                 ======================================-->
 
-                <button type="button" class="btn btn-default hidden-lg btnAgregarProducto">Agregar producto</button>
+                <button type="button" class="btn btn-default hidden-lg btnAgregarProductoTraslado">Agregar producto</button>
 
                 <hr>
 

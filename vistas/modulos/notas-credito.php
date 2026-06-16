@@ -60,15 +60,19 @@ if ($_SESSION["perfil"] == "Especial") {
                     </button>
                 <?php endif; ?>
 
-                <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <div class="pull-right form-filtros-nc" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                     
                     <input type="hidden" id="fechaInicialNC" value="">
                     <input type="hidden" id="fechaFinalNC" value="">
 
                     <!-- Filtro por Bodega (Administradores) -->
-                    <?php if (stripos($_SESSION["perfil"], "Admin") !== false): ?>
+                    <?php 
+                    $configuracionGlobal = ControladorConfiguracion::ctrObtenerConfiguracion();
+                    $sucursalesActivas = !isset($configuracionGlobal["activar_sucursales"]) || $configuracionGlobal["activar_sucursales"] == 1;
+                    if ($sucursalesActivas && stripos($_SESSION["perfil"], "Admin") !== false): 
+                    ?>
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span class="hidden-xs"><b>Sucursal:</b></span>
+                            <span><b>Sucursal:</b></span>
                             <div class="input-group" style="width: 180px;">
                                 <span class="input-group-addon"><i class="fa fa-building text-primary"></i></span>
                                 <select id="selectBodegaNC" class="form-control select2"
@@ -96,7 +100,7 @@ if ($_SESSION["perfil"] == "Especial") {
 
                     <!-- Botón Rango de Fecha -->
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span class="hidden-xs"><b>Fecha:</b></span>
+                        <span><b>Fecha:</b></span>
                         <button type="button" class="btn btn-default" id="daterange-btn-nc">
                             <span>
                                 <i class="fa fa-calendar"></i> Mostrar todas
@@ -124,6 +128,48 @@ if ($_SESSION["perfil"] == "Especial") {
                     .tablaNotasCredito td:last-child .btn-group {
                         display: flex;
                         gap: 2px;
+                    }
+
+                    .form-filtros-nc {
+                        float: none !important;
+                        width: 100% !important;
+                        margin-top: 15px !important;
+                        padding-left: 0 !important;
+                        padding-right: 0 !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        align-items: stretch !important;
+                        gap: 12px !important;
+                    }
+                    .form-filtros-nc > div {
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: space-between !important;
+                        width: 100% !important;
+                        gap: 10px !important;
+                    }
+                    .form-filtros-nc > div > span {
+                        min-width: 80px !important;
+                        text-align: left !important;
+                    }
+                    .form-filtros-nc > div > .input-group {
+                        flex: 1 !important;
+                        width: auto !important;
+                    }
+                    .form-filtros-nc > div .select2-container {
+                        width: 100% !important;
+                    }
+                    .form-filtros-nc > div > #daterange-btn-nc {
+                        flex: 1 !important;
+                        width: auto !important;
+                        text-align: left !important;
+                        display: flex !important;
+                        justify-content: space-between !important;
+                        align-items: center !important;
+                    }
+                    .form-filtros-nc > button {
+                        width: 100% !important;
+                        text-align: center !important;
                     }
                 }
             </style>

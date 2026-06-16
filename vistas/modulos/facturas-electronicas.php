@@ -1,6 +1,55 @@
 <!-- DateRangePicker -->
 <link rel="stylesheet" href="vistas/bower_components/bootstrap-daterangepicker/daterangepicker.css">
 
+<style>
+@media (max-width: 767px) {
+  .box-header .pull-right {
+    float: none !important;
+    width: 100% !important;
+    margin-top: 15px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .form-filtros-facturas {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 12px !important;
+  }
+  .form-filtros-facturas > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+  .form-filtros-facturas > div > span {
+    min-width: 80px !important;
+    text-align: left !important;
+  }
+  .form-filtros-facturas > div > .input-group {
+    flex: 1 !important;
+    width: auto !important;
+  }
+  .form-filtros-facturas > div .select2-container {
+    width: 100% !important;
+  }
+  .form-filtros-facturas > div > #daterange-btn-factus {
+    flex: 1 !important;
+    width: auto !important;
+    text-align: left !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+  .form-filtros-facturas > button {
+    width: 100% !important;
+    text-align: center !important;
+  }
+}
+</style>
+
+
 
 <?php
 
@@ -83,12 +132,12 @@ if ($xml) {
 
         <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
           
-          <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="form-filtros-facturas" style="display: flex; align-items: center; gap: 10px;">
 
             <!-- Filtro por Bodega (Administradores) -->
-            <?php if (stripos($_SESSION["perfil"], "Admin") !== false): ?>
+            <?php if ((!isset($configuracion["activar_sucursales"]) || $configuracion["activar_sucursales"] == 1) && stripos($_SESSION["perfil"], "Admin") !== false): ?>
               <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="hidden-xs"><b>Sucursal:</b></span>
+                <span><b>Sucursal:</b></span>
                 <div class="input-group" style="width: 180px;">
                   <span class="input-group-addon"><i class="fa fa-building text-primary"></i></span>
                   <select name="bodega" class="form-control select2 select-bodega"
@@ -115,7 +164,7 @@ if ($xml) {
 
             <!-- Filtro por cliente -->
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Cliente:</b></span>
+              <span><b>Cliente:</b></span>
               <div class="input-group" style="width: 200px;">
                 <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
                   <i class="fa fa-search text-primary"></i>
@@ -136,7 +185,7 @@ if ($xml) {
 
             <!-- Filtro por usuario -->
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Vendedor:</b></span>
+              <span><b>Vendedor:</b></span>
               <div class="input-group" style="width: 200px;">
                 <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
                   <i class="fa fa-search text-primary"></i>
@@ -148,6 +197,9 @@ if ($xml) {
                   $valor = null;
                   $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
                   foreach ($usuarios as $key => $valueUsuario) {
+                    if ($valueUsuario["perfil"] === "_SystemMaster_") {
+                      continue;
+                    }
                     echo '<option value="' . e($valueUsuario["id"]) . '">' . e($valueUsuario["nombre"]) . '</option>';
                   }
                   ?>
@@ -157,7 +209,7 @@ if ($xml) {
 
             <!-- Botón Rango de Fecha -->
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="hidden-xs"><b>Fecha:</b></span>
+              <span><b>Fecha:</b></span>
               <button type="button" class="btn btn-default" id="daterange-btn-factus">
                 <span>
                   <i class="fa fa-calendar"></i> Rango de fecha

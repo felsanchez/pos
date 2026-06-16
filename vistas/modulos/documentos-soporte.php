@@ -1,3 +1,52 @@
+<style>
+@media (max-width: 767px) {
+  .box-header .pull-right {
+    float: none !important;
+    width: 100% !important;
+    margin-top: 15px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .form-filtros-ds {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 12px !important;
+  }
+  .form-filtros-ds > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+  .form-filtros-ds > div > span {
+    min-width: 80px !important;
+    text-align: left !important;
+  }
+  .form-filtros-ds > div > .input-group {
+    flex: 1 !important;
+    width: auto !important;
+  }
+  .form-filtros-ds > div .select2-container {
+    width: 100% !important;
+  }
+  .form-filtros-ds > div > #daterange-btn-ds {
+    flex: 1 !important;
+    width: auto !important;
+    text-align: left !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+  .form-filtros-ds > button {
+    width: 100% !important;
+    text-align: center !important;
+  }
+}
+</style>
+
 <div class="content-wrapper">
 
     <section class="content-header">
@@ -56,15 +105,19 @@
                     </button>
                 <?php endif; ?>
 
-                <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 5px;">
+                <div class="pull-right form-filtros-ds" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 5px;">
                     
                     <input type="hidden" id="fechaInicialDS" value="">
                     <input type="hidden" id="fechaFinalDS" value="">
 
                     <!-- Filtro por Sucursal (Administradores) -->
-                    <?php if (stripos($_SESSION["perfil"], "Admin") !== false): ?>
+                    <?php 
+                    $configuracionGlobal = ControladorConfiguracion::ctrObtenerConfiguracion();
+                    $sucursalesActivas = !isset($configuracionGlobal["activar_sucursales"]) || $configuracionGlobal["activar_sucursales"] == 1;
+                    if ($sucursalesActivas && stripos($_SESSION["perfil"], "Admin") !== false): 
+                    ?>
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span class="hidden-xs"><b>Sucursal:</b></span>
+                            <span><b>Sucursal:</b></span>
                             <div class="input-group" style="width: 200px;">
                                 <span class="input-group-addon"><i class="fa fa-building text-primary"></i></span>
                                 <select class="form-control select2" id="sucursal_ds" name="sucursal_ds">
@@ -91,7 +144,7 @@
 
                     <!-- Botón Rango de Fecha -->
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span class="hidden-xs"><b>Fecha:</b></span>
+                        <span><b>Fecha:</b></span>
                         <button type="button" class="btn btn-default" id="daterange-btn-ds">
                             <span>
                                 <i class="fa fa-calendar"></i> Mostrar todas

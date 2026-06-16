@@ -37,7 +37,8 @@ class ControladorProductos
 			4 => 'p.stock',
 			5 => 'p.precio_venta',
 			6 => 'prov.nombre',
-			7 => 'p.id'
+			7 => 'p.estado',
+			8 => 'p.id'
 		);
 
 		$where = " WHERE 1=1 ";
@@ -172,7 +173,7 @@ class ControladorProductos
 				$botonesAcciones .= '<button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para eliminar"><i class="fa fa-times"></i></button>';
 			}
 			if ($value["tiene_variantes"] == 1) {
-				if (puedeAccion('variantes', 'editar')) {
+				if (puedeAccion('productos', 'ver')) {
 					$botonesAcciones .= '<button class="btn btn-info btnExpandirVariantes" data-id-producto="' . $value["id"] . '" title="Ver variantes"><i class="fa fa-plus"></i></button>';
 				} else {
 					$botonesAcciones .= '<button class="btn btn-info" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para ver variantes"><i class="fa fa-plus"></i></button>';
@@ -180,6 +181,23 @@ class ControladorProductos
 			}
 			$botonesAcciones .= '</div>';
 			$nestedData[] = $botonesAcciones;
+
+			// 11: Estado
+			$estadoHtml = "";
+			if (puedeAccion('productos', 'editar')) {
+				if ($value["estado"] != 0) {
+					$estadoHtml = '<button class="btn btn-success btn-xs btnActivarProducto" idProducto="' . $value["id"] . '" estadoProducto="0">Activado</button>';
+				} else {
+					$estadoHtml = '<button class="btn btn-danger btn-xs btnActivarProducto" idProducto="' . $value["id"] . '" estadoProducto="1">Desactivado</button>';
+				}
+			} else {
+				if ($value["estado"] != 0) {
+					$estadoHtml = '<button class="btn btn-success btn-xs" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar">Activado</button>';
+				} else {
+					$estadoHtml = '<button class="btn btn-danger btn-xs" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar">Desactivado</button>';
+				}
+			}
+			$nestedData[] = $estadoHtml;
 
 			$data[] = $nestedData;
 		}
@@ -211,7 +229,7 @@ class ControladorProductos
 			5 => 'p.id'  // Acciones
 		);
 
-		$where = " WHERE 1=1 ";
+		$where = " WHERE p.estado = 1 ";
 
 		// Filtro de búsqueda (DataTables)
 		if (!empty($params['search']['value'])) {

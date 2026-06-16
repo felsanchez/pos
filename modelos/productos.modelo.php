@@ -15,7 +15,7 @@ class ModeloProductos
 		$join = "";
 
 		if ($idBodega != null) {
-			$select = "p.id, p.id_categoria, p.codigo, p.descripcion, p.imagen, COALESCE(pb.stock, 0) as stock, p.precio_compra, p.precio_venta, p.ventas, p.fecha, p.id_proveedor, p.tiene_variantes, p.unidad_medida_id, p.codigo_estandar_id, p.es_excluido, p.tributo_id, p.tasa_impuesto, p.notas_facturacion, p.scheme_id";
+			$select = "p.id, p.id_categoria, p.codigo, p.descripcion, p.imagen, COALESCE(pb.stock, 0) as stock, p.precio_compra, p.precio_venta, p.ventas, p.fecha, p.id_proveedor, p.tiene_variantes, p.unidad_medida_id, p.codigo_estandar_id, p.es_excluido, p.tributo_id, p.tasa_impuesto, p.notas_facturacion, p.scheme_id, p.estado";
 			$join = "LEFT JOIN productos_bodegas pb ON p.id = pb.id_producto AND pb.id_bodega = :id_bodega";
 		}
 
@@ -77,7 +77,7 @@ class ModeloProductos
 		$stmt = Conexion::conectar()->prepare("
 			SELECT p.id, p.codigo, p.descripcion, p.imagen, p.id_categoria, p.id_proveedor, 
 				   COALESCE(pb.stock, 0) as stock, p.precio_compra, p.precio_venta, p.ventas, 
-				   p.fecha, p.tiene_variantes, p.tributo_id,
+				   p.fecha, p.tiene_variantes, p.tributo_id, p.estado,
 				   c.categoria AS nombre_categoria, prov.nombre AS nombre_proveedor, t.nombre AS nombre_tributo
 			FROM $tabla p
 			LEFT JOIN productos_bodegas pb ON p.id = pb.id_producto AND pb.id_bodega = :id_bodega
@@ -563,6 +563,30 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 
 		$stmt = null;
 
+	}
+
+
+	/*=============================================
+	ACTUALIZAR ESTADO DE PRODUCTO
+	=============================================*/
+
+	static public function mdlActualizarEstadoProducto($tabla, $datos)
+	{
+
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET estado = :estado WHERE id = :id");
+
+		$stmt->bindParam(":estado", $datos["estado"], PDO::PARAM_INT);
+		$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
+
+		if ($stmt->execute()) {
+			return "ok";
+
+		} else {
+			return "error";
+		}
+
+		$stmt->close();
+		$stmt = null;
 	}
 
 
