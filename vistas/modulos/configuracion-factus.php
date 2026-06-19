@@ -113,7 +113,7 @@ if (!$configuracion) {
 										<strong>Activar Sucursales</strong>
 									</label>
 								</div>
-								<p class="help-block">Si está desactivado, se ocultarán las opciones de "Sucursales" y "Traslados" del menú lateral, el modulo "Traslados" en la matriz de permisos y el filtro en las sgtes vistas: Ventas, Órdenes, Facturación Electrónica, Notas de Crédito/Ajuste, Doc Soporte, Gastos, Reportes e Historial stock.</p>
+								<p class="help-block">Si está desactivado, se ocultarán las opciones de "Sucursales" y "Traslados" del menú lateral, -El modulo "Traslados" en la matriz de permisos. -El filtro en las sgtes vistas: Ventas, Órdenes, Facturación Electrónica, Notas de Crédito/Ajuste, Doc Soporte, Gastos, Reportes e Historial stock. -La columna "Sucursal" en la vista Usuarios.</p>
 							</div>
 
 							<br><h4>FACTURACIÓN ELECTRÓNICA:</h4>

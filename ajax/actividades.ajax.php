@@ -53,8 +53,27 @@ class AjaxActividades{
 
 	/*==============CUADRO ACTIVIDADES===============================*/
 	public function ajaxListarActividades() {
+    // Obtener filtros del GET
+    $filtroTipo = isset($_GET["filtroTipo"]) ? $_GET["filtroTipo"] : null;
+    $filtroEstado = isset($_GET["filtroEstado"]) ? $_GET["filtroEstado"] : null;
+
     // Obtener actividades
     $actividades = ControladorActividades::ctrMostrarActividadesConCliente(null, null);
+
+    // Filtrar actividades si aplica
+    if (!empty($filtroTipo) || !empty($filtroEstado)) {
+        $actividadesFiltradas = [];
+        foreach ($actividades as $actividad) {
+            if (!empty($filtroTipo) && strtolower($actividad["tipo"]) !== strtolower($filtroTipo)) {
+                continue;
+            }
+            if (!empty($filtroEstado) && strtolower($actividad["estado"]) !== strtolower($filtroEstado)) {
+                continue;
+            }
+            $actividadesFiltradas[] = $actividad;
+        }
+        $actividades = $actividadesFiltradas;
+    }
     
     // Obtener estados para el mapeo de colores
     $estados = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
@@ -84,8 +103,8 @@ class AjaxActividades{
             "title"          => $tituloConEstado,
             "descripcion_original" => $actividad["descripcion"],
             "fecha_full"     => $actividad["fecha"],
-            "start"          => $actividad["fecha"],
-            "end"            => $actividad["fecha"],
+            "start"          => str_replace(" ", "T", $actividad["fecha"]),
+            "end"            => str_replace(" ", "T", date("Y-m-d H:i:s", strtotime($actividad["fecha"] . " +1 minute"))),
             "backgroundColor"=> $color,
             "borderColor"    => $color,
             "textColor"      => "#fff", // Asegurar legibilidad
@@ -144,10 +163,28 @@ if (isset($_GET["action"]) && $_GET["action"] == "listar") {
 /*=============================================
   BUSCAR ACTIVIDADES POR FECHA
 =============================================*/
-if (isset($_POST["fecha"]) && !isset($_POST["idActividad"])) {
+if (isset($_POST["fecha"]) && !isset($_POST["idActividad"]) && (!isset($_POST["accion"]) || $_POST["accion"] !== "actualizarFecha")) {
     $item = "fecha";
     $valor = $_POST["fecha"];
     $respuesta = ControladorActividades::ctrMostrarActividadesConCliente($item, $valor);
+
+    // Filtrar actividades por tipo/estado si se especificaron
+    $filtroTipo = isset($_POST["filtroTipo"]) ? $_POST["filtroTipo"] : null;
+    $filtroEstado = isset($_POST["filtroEstado"]) ? $_POST["filtroEstado"] : null;
+
+    if (!empty($filtroTipo) || !empty($filtroEstado)) {
+        $filtrado = [];
+        foreach ($respuesta as $actividad) {
+            if (!empty($filtroTipo) && strtolower($actividad["tipo"]) !== strtolower($filtroTipo)) {
+                continue;
+            }
+            if (!empty($filtroEstado) && strtolower($actividad["estado"]) !== strtolower($filtroEstado)) {
+                continue;
+            }
+            $filtrado[] = $actividad;
+        }
+        $respuesta = $filtrado;
+    }
     
     echo json_encode($respuesta);
     exit;
@@ -246,14 +283,25 @@ if (isset($_GET["action"]) && $_GET["action"] == "usuarios") {
 		=============================================*/
 		
 		if (isset($_POST["accion"]) && $_POST["accion"] == "actualizarObservacion") {
-	$tabla = "actividades";
-	$datos = array(
-	"id" => $_POST["id"],
-	"observacion" => $_POST["observacion"]
-	);
-	$respuesta = ModeloActividades::mdlActualizarObservacion("actividades", $_POST["id"], $_POST["observacion"]);
-	echo json_encode($respuesta);
-}
+			$tabla = "actividades";
+			$datos = array(
+			"id" => $_POST["id"],
+			"observacion" => $_POST["observacion"]
+			);
+			$respuesta = ModeloActividades::mdlActualizarObservacion("actividades", $_POST["id"], $_POST["observacion"]);
+			echo json_encode($respuesta);
+			exit;
+		}
+
+		/*=============================================
+		PERMITE EDITAR Fecha (Drag & Drop)
+		=============================================*/
+		if (isset($_POST["accion"]) && $_POST["accion"] == "actualizarFecha") {
+			$tabla = "actividades";
+			$respuesta = ModeloActividades::mdlActualizarActividad($tabla, "fecha", $_POST["fecha"], $_POST["id"]);
+			echo json_encode($respuesta);
+			exit;
+		}
 
 /*=============================================
 ELIMINAR ACTIVIDAD

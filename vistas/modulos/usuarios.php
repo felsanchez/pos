@@ -101,6 +101,13 @@
         <input type="hidden" id="puedeEditarUsuarios"
           value="<?php echo puedeAccion('usuarios', 'editar') ? '1' : '0'; ?>">
 
+        <!-- Variable oculta para saber si las sucursales están activas -->
+        <?php
+        $configuracionGlobal = ControladorConfiguracion::ctrObtenerConfiguracion();
+        $sucursalesActivas = !isset($configuracionGlobal["activar_sucursales"]) || $configuracionGlobal["activar_sucursales"] == 1;
+        ?>
+        <input type="hidden" id="activarSucursales" value="<?php echo $sucursalesActivas ? '1' : '0'; ?>">
+
         <div class="tabla-usuarios tablaUsuarios table-responsive">
           <table id="tablaListaUsuarios" class="table table-bordered table-striped tablaUsuariosListado display nowrap"
             style="width: 100%">

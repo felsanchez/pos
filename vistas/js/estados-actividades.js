@@ -121,6 +121,8 @@ $(document).on("click", ".btnEliminarEstadoActividad", function () {
 
 	if(rutaActual.indexOf("actividades") !== -1 && rutaActual.indexOf("estados-actividades") === -1) {
 		origen = "actividades";
+	} else if(rutaActual.indexOf("calendario") !== -1) {
+		origen = "calendario";
 	}
 
 	// Mostrar SweetAlert directamente SIN cerrar modales primero

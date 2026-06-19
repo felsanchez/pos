@@ -216,7 +216,6 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "facturas-electronicas" ||
         $_GET["ruta"] == "detalle-venta" ||
         $_GET["ruta"] == "reportes" ||
-        $_GET["ruta"] == "actividades" ||
         $_GET["ruta"] == "clientes" ||
         $_GET["ruta"] == "contactos" ||
         $_GET["ruta"] == "cliente-detalle" ||
@@ -225,7 +224,7 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "editar-orden" ||
         $_GET["ruta"] == "orden-a-factura-electronica" ||
         $_GET["ruta"] == "cliente-ventas" ||
-        $_GET["ruta"] == "actividades-cuadro" ||
+        $_GET["ruta"] == "calendario" ||
         $_GET["ruta"] == "consulta-ventas" ||
         $_GET["ruta"] == "editarordenes-visita" ||
         $_GET["ruta"] == "proveedores" ||
@@ -301,7 +300,6 @@ CUERPO DOCUMENTO
   <?php endif; ?>
 
   <script src="vistas/js/ventas.js?v=<?php echo time(); ?>"></script>
-  <script src="vistas/js/actividades.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/proveedores.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/variantes.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/documentos-soporte.js?v=<?php echo time(); ?>"></script>

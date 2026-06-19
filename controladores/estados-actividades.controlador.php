@@ -22,8 +22,14 @@ class ControladorEstadosActividades{
 
 		if(isset($_POST["nuevoEstadoNombre"])){
 
-			// Detectar desde dónde se llamó el modal
-			$redireccion = isset($_POST["origenModal"]) && $_POST["origenModal"] == "actividades" ? "actividades" : "estados-actividades";
+			$redireccion = "estados-actividades";
+			if (isset($_POST["origenModal"])) {
+				if ($_POST["origenModal"] == "actividades") {
+					$redireccion = "actividades";
+				} else if ($_POST["origenModal"] == "calendario") {
+					$redireccion = "calendario";
+				}
+			}
 
 			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoEstadoNombre"])){
 
@@ -124,8 +130,14 @@ class ControladorEstadosActividades{
 
 		if(isset($_POST["editarEstadoNombre"])){
 
-			// Detectar desde dónde se llamó el modal
-			$redireccion = isset($_POST["origenModal"]) && $_POST["origenModal"] == "actividades" ? "actividades" : "estados-actividades";
+			$redireccion = "estados-actividades";
+			if (isset($_POST["origenModal"])) {
+				if ($_POST["origenModal"] == "actividades") {
+					$redireccion = "actividades";
+				} else if ($_POST["origenModal"] == "calendario") {
+					$redireccion = "calendario";
+				}
+			}
 
 			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarEstadoNombre"])){
 

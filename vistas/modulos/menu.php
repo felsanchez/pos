@@ -199,28 +199,11 @@
       }
 
       if (puedeVer('actividades')) {
-        echo '<li class="treeview">
-                <a href="">
+        echo '<li>
+                <a href="calendario">
                     <i class="fa fa-calendar"></i>
-                    <span>Actividades</span>
-                    <span class="pull-right-container">
-                    <i class="fa fa-angle-left pull-right"></i>
-                    </span>
+                    <span>Calendario</span>
                 </a>
-                <ul class="treeview-menu">
-                  <li>
-                    <a href="actividades">
-                      <i class="fa fa-circle-o"></i>
-                      <span>Actividades</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="actividades-cuadro">
-                      <i class="fa fa-circle-o"></i>
-                      <span>Calendario</span>
-                    </a>
-                  </li>
-                </ul>
               </li>';
       }
 

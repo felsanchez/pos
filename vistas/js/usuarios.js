@@ -48,8 +48,12 @@ $(document).ready(function () {
 						$.each(columns, function (i, col) {
 							if (!col.hidden) return;
 
-							hasHidden = true;
 							var colIdx = col.columnIndex;
+							if (colIdx === 5 && $("#activarSucursales").val() !== "1") {
+								return;
+							}
+
+							hasHidden = true;
 							var label  = labels[colIdx] || col.title || ('Columna ' + colIdx);
 							var data   = col.data || '';
 
@@ -75,7 +79,11 @@ $(document).ready(function () {
 				{ "targets": 1, "responsivePriority": 2 },
 				{ "targets": 3, "responsivePriority": 3, "orderable": false },
 				{ "targets": 4, "responsivePriority": 4 },
-				{ "targets": 5, "responsivePriority": 5 },
+				{ 
+					"targets": 5, 
+					"responsivePriority": 5,
+					"visible": $("#activarSucursales").val() == "1"
+				},
 				{ "targets": 2, "responsivePriority": 6 },
 				{
 					"targets": 6,

@@ -289,6 +289,10 @@ class ModeloActividades{
     $bodegaFiltro = ($idBodega !== null) ? " AND a.id_bodega = " . intval($idBodega) : "";
     
     if($item != null){
+        $whereClause = "WHERE a.$item = :$item $bodegaFiltro";
+        if ($item == "fecha") {
+            $whereClause = "WHERE DATE(a.fecha) = DATE(:$item) $bodegaFiltro";
+        }
         $stmt = Conexion::conectar()->prepare("
             SELECT 
                 a.*, 
@@ -297,7 +301,7 @@ class ModeloActividades{
             FROM $tabla a
             LEFT JOIN clientes c ON a.id_cliente = c.id
             LEFT JOIN usuarios u ON a.id_user = u.id
-            WHERE a.$item = :$item $bodegaFiltro
+            $whereClause
         ");
         $stmt->bindParam(":".$item, $valor, PDO::PARAM_STR);
         $stmt->execute();
