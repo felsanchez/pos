@@ -10,6 +10,11 @@ if (!class_exists("ModeloCajas")) {
 		require_once __DIR__ . "/../modelos/cajas.modelo.php";
 	}
 }
+if (!class_exists("ModeloCRM")) {
+	if (file_exists(__DIR__ . "/../modelos/crm.modelo.php")) {
+		require_once __DIR__ . "/../modelos/crm.modelo.php";
+	}
+}
 
 //date_default_timezone_set('America/Bogota');
 
@@ -1350,6 +1355,23 @@ class ControladorVentas
 
 				if ($_POST["estado"] == "orden") {
 					ControladorNotificaciones::ctrVerificarOrdenAgenteIA($codigoVenta);
+
+					// Hook CRM: Registrar orden automáticamente en el Pipeline
+					ModeloCRM::mdlDesplazarLeadsEnEtapa("crm_leads", "Cotizado");
+
+					$datosCRM = array(
+						"id_cliente" => $_POST["seleccionarCliente"],
+						"titulo" => "Orden #" . $codigoVenta,
+						"valor_estimado" => $_POST["totalVenta"],
+						"prioridad" => "tibio",
+						"etapa" => "Cotizado",
+						"id_vendedor" => $_POST["idVendedor"],
+						"fecha_cierre" => null,
+						"notas" => "Orden registrada automáticamente desde el módulo de Órdenes.",
+						"codigo_orden" => $codigoVenta,
+						"orden" => 1
+					);
+					ModeloCRM::mdlCrearLead("crm_leads", $datosCRM);
 				}
 
 				/*=============================================
@@ -2014,6 +2036,20 @@ class ControladorVentas
 
 				$db->commit();
 
+				// Hook CRM: Si la venta original era una orden, mantener sincronizado el lead en el CRM
+				if ($traerVenta["estado"] == "orden") {
+					$datosCRM = array(
+						"valor_estimado" => $_POST["totalVenta"],
+						"id_cliente" => $_POST["seleccionarCliente"]
+					);
+					if ($_POST["estado"] == "venta") {
+						ModeloCRM::mdlDesplazarLeadsEnEtapa("crm_leads", "Facturado");
+						$datosCRM["etapa"] = "Facturado";
+						$datosCRM["orden"] = 1;
+					}
+					ModeloCRM::mdlActualizarDatosLeadPorCodigoOrden("crm_leads", $_POST["editarVenta"], $datosCRM);
+				}
+
 				//**************************************************
 				// ENVIAR WEBHOOK A N8N
 				//************************************************ */
@@ -2335,6 +2371,39 @@ class ControladorVentas
 
 				if ($respuesta !== "ok") {
 					throw new Exception("Error al eliminar de la base de datos.");
+				}
+
+				// Hook CRM: Gestión de lead al eliminar orden, venta o factura
+				if ($esOrden) {
+					if (!class_exists("ModeloCRM")) {
+						if (file_exists(__DIR__ . "/../modelos/crm.modelo.php")) {
+							require_once __DIR__ . "/../modelos/crm.modelo.php";
+						}
+					}
+					if (class_exists("ModeloCRM")) {
+						ModeloCRM::mdlEliminarLeadPorCodigoOrden("crm_leads", $traerVenta["codigo"]);
+					}
+				} else {
+					if (!empty($traerVenta["orden_compra"])) {
+						if (!class_exists("ModeloCRM")) {
+							if (file_exists(__DIR__ . "/../modelos/crm.modelo.php")) {
+								require_once __DIR__ . "/../modelos/crm.modelo.php";
+							}
+						}
+						if (class_exists("ModeloCRM")) {
+							$lead = ModeloCRM::mdlMostrarLeads("crm_leads", "codigo_orden", $traerVenta["orden_compra"]);
+							if ($lead) {
+								$notaEliminacion = "\n- [Sistema]: Venta/Factura #" . $traerVenta["codigo"] . " eliminada desde el módulo de ventas.";
+								$nuevasNotas = $lead["notas"] . $notaEliminacion;
+								ModeloCRM::mdlDesplazarLeadsEnEtapa("crm_leads", "Perdido");
+								ModeloCRM::mdlActualizarDatosLeadPorCodigoOrden("crm_leads", $traerVenta["orden_compra"], array(
+									"etapa" => "Perdido",
+									"notas" => $nuevasNotas,
+									"orden" => 1
+								));
+							}
+						}
+					}
 				}
 
 				$db->commit();
@@ -3049,6 +3118,15 @@ class ControladorVentas
 
 				$db->commit();
 
+				// Hook CRM: Si es conversión de orden a factura electrónica, sincronizar el lead en el CRM (valor y cliente, sin cambiar la etapa)
+				if (isset($_POST["editarVenta"]) && !empty($_POST["editarVenta"])) {
+					$datosCRM = array(
+						"valor_estimado" => $_POST["totalVenta"],
+						"id_cliente" => $_POST["seleccionarCliente"]
+					);
+					ModeloCRM::mdlActualizarDatosLeadPorCodigoOrden("crm_leads", $_POST["editarVenta"], $datosCRM);
+				}
+
 				/*=============================================
 				 4. ENVIAR A FACTUS (Refactorizado para usar lógica unificada)
 				 =============================================*/
@@ -3068,7 +3146,7 @@ class ControladorVentas
 						echo json_encode([
 							"status" => "success",
 							"titulo" => "Factura Guardada",
-							"mensaje" => "La factura electrónica ha sido guardada correctamente en borrador. Aún no ha sido enviada a Factus.",
+							"mensaje" => "La factura electrónica ha sido guardada correctamente en borrador.",
 							"ruta" => "facturas-electronicas"
 						]);
 						return;
@@ -3077,7 +3155,7 @@ class ControladorVentas
 					echo '<script>
 					swal({
 						  type: "success",
-						  title: "La factura electrónica ha sido guardada correctamente en borrador. Aún no ha sido enviada a Factus.",
+						  title: "La factura electrónica ha sido guardada correctamente en borrador.",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
 						  }).then((result) => {

@@ -32,6 +32,12 @@ $(document).ready(function () {
                 { "data": 8 }, // Diferencia
                 { "data": 9, "orderable": false } // Acciones
             ],
+            "columnDefs": [
+                {
+                    "targets": 0,
+                    "visible": $("#activarSucursales").val() == "1"
+                }
+            ],
             "order": [[2, "desc"]],
             "language": {
                 "sProcessing": "Procesando...",

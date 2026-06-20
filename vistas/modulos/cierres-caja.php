@@ -6,9 +6,11 @@ if (!puedeVer('cierres-caja')) {
 
 $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
 $moneda = !empty($configuracion["moneda"]) ? $configuracion["moneda"] : "$";
+$sucursalesActivas = !isset($configuracion["activar_sucursales"]) || $configuracion["activar_sucursales"] == 1;
 ?>
 
 <div class="content-wrapper">
+  <input type="hidden" id="activarSucursales" value="<?php echo $sucursalesActivas ? 1 : 0; ?>">
   <section class="content-header">
     <h1>
       Historial de Cajas
@@ -50,7 +52,6 @@ $moneda = !empty($configuracion["moneda"]) ? $configuracion["moneda"] : "$";
 
             <!-- Filtro Sucursal (Bodega) -->
             <?php 
-            $sucursalesActivas = !isset($configuracion["activar_sucursales"]) || $configuracion["activar_sucursales"] == 1;
             if ($sucursalesActivas): 
             ?>
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -145,7 +146,7 @@ MODAL VER DETALLE DE CIERRE DE CAJA
                 <td style="font-weight: bold; width: 40%">Turno #</td>
                 <td id="detTurno"></td>
               </tr>
-              <tr>
+              <tr style="<?php echo $sucursalesActivas ? '' : 'display: none;'; ?>">
                 <td style="font-weight: bold">Sucursal (Bodega)</td>
                 <td id="detSucursal"></td>
               </tr>

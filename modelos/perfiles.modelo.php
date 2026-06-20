@@ -18,6 +18,7 @@ class ModeloPerfiles
         'notas_ajuste'         => 'Notas de Ajuste DS',
         'reporte_ventas'       => 'Reporte de Ventas',
         'seguimiento_leads'    => 'Seguimiento a Leads',
+        'crm'                  => 'CRM',
         'historial_stock'      => 'Historial de Stock',
         'traslados'            => 'Traslados entre Bodegas',
         'gastos'               => 'Gastos',

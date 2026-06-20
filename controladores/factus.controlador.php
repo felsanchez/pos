@@ -783,6 +783,22 @@ class ControladorFactus
 
 			ModeloFactus::mdlActualizarDatosFactura($idVenta, $datosActualizar);
 
+			// Hook CRM: Si la venta original provenía de una orden, mover el lead en el CRM a "Facturado" (Solo cuando la factura sea firmada exitosamente)
+			if (!empty($venta["orden_compra"])) {
+				if (!class_exists("ModeloCRM")) {
+					if (file_exists(__DIR__ . "/../modelos/crm.modelo.php")) {
+						require_once __DIR__ . "/../modelos/crm.modelo.php";
+					}
+				}
+				if (class_exists("ModeloCRM")) {
+					ModeloCRM::mdlDesplazarLeadsEnEtapa("crm_leads", "Facturado");
+					ModeloCRM::mdlActualizarDatosLeadPorCodigoOrden("crm_leads", $venta["orden_compra"], array(
+						"etapa" => "Facturado",
+						"orden" => 1
+					));
+				}
+			}
+
 			// 🟢 LOGUEAR RESPUESTA COMPLETA PARA DEBUG (TEMPORAL)
 			Logger::debug(print_r($respuestaFactus, true));
 

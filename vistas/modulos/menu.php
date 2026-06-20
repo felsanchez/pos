@@ -207,6 +207,15 @@
               </li>';
       }
 
+      if (puedeVer('crm') && (!isset($configuracionGlobalMenu["seguimiento_leads_activo"]) || $configuracionGlobalMenu["seguimiento_leads_activo"] == 1)) {
+        echo '<li>
+                <a href="crm">
+                    <i class="fa fa-filter"></i>
+                    <span>CRM / Pipeline</span>
+                </a>
+              </li>';
+      }
+
       if (puedeVer('ordenes')) {
         echo '<li>
             <a href="ordenes">
