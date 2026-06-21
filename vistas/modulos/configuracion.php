@@ -1086,8 +1086,13 @@ MODAL: CREAR / EDITAR PERFIL (FUERA DEL FORM)
                   continue;
                 }
 
-                // Ocultar Seguimiento a Leads y CRM si está desactivado
-                if (($slug == 'seguimiento_leads' || $slug == 'crm') && (!isset($configuracion["seguimiento_leads_activo"]) || $configuracion["seguimiento_leads_activo"] != 1)) {
+                // Ocultar Seguimiento a Leads si está desactivado
+                if ($slug == 'seguimiento_leads' && (!isset($configuracion["seguimiento_leads_activo"]) || $configuracion["seguimiento_leads_activo"] != 1)) {
+                  continue;
+                }
+
+                // Ocultar CRM si está desactivado
+                if ($slug == 'crm' && isset($configuracion["crm_activo"]) && $configuracion["crm_activo"] == 0) {
                   continue;
                 }
                 

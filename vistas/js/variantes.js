@@ -55,7 +55,11 @@ $(document).ready(function () {
         "ajax": {
             "url": "ajax/variantes.ajax.php",
             "type": "POST"
-        }
+        },
+        "columnDefs": [
+            { "targets": 0, "responsivePriority": 1 },
+            { "targets": 1, "responsivePriority": 2, "orderable": false }
+        ]
     });
 
     $("#tablaTiposVariantes").DataTable(dtTiposOptions);
@@ -140,12 +144,11 @@ $(document).on("click", ".btnVerOpciones", function () {
                 '<tr>' +
                     '<th>Nombre</th>' +
                     '<th>Productos</th>' +
-                    '<th>Estado</th>' +
                     '<th>Acciones</th>' +
                 '</tr>' +
             '</thead>' +
             '<tbody id="' + bodyId + '">' +
-                '<tr><td colspan="4" class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando...</td></tr>' +
+                '<tr><td colspan="3" class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando...</td></tr>' +
             '</tbody>' +
         '</table>'
     );
@@ -175,21 +178,9 @@ $(document).on("click", ".btnVerOpciones", function () {
 
                 for (var i = 0; i < respuesta.length; i++) {
 
-                    var estadoHTML = "";
-                    if (puedeEditar) {
-                        estadoHTML = (respuesta[i].estado == 1) 
-                            ? '<button class="btn btn-success btn-xs btnActivarOpcion" idOpcion="' + respuesta[i].id + '" estadoOpcion="0">Activado</button>'
-                            : '<button class="btn btn-danger btn-xs btnActivarOpcion" idOpcion="' + respuesta[i].id + '" estadoOpcion="1">Desactivado</button>';
-                    } else {
-                        estadoHTML = (respuesta[i].estado == 1) 
-                            ? '<button class="btn btn-success btn-xs" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para cambiar estado">Activado</button>'
-                            : '<button class="btn btn-danger btn-xs" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para cambiar estado">Desactivado</button>';
-                    }
-
                     html += '<tr>' +
                             '<td>' + respuesta[i].nombre + '</td>' +
                             '<td><span class="badge bg-blue">' + (respuesta[i].productos_asociados || 0) + '</span></td>' +
-                            '<td>' + estadoHTML + '</td>' +
                             '<td>' +
                                 '<div class="btn-group">';
                     
@@ -210,7 +201,7 @@ $(document).on("click", ".btnVerOpciones", function () {
                 }
 
             } else {
-                html = '<tr><td colspan="4" class="text-center">No hay opciones registradas</td></tr>';
+                html = '<tr><td colspan="3" class="text-center">No hay opciones registradas</td></tr>';
             }
 
             // 3. Inyectar en el body específico y reinicializar tabla específica
@@ -220,7 +211,7 @@ $(document).on("click", ".btnVerOpciones", function () {
             $("#" + tablaId).DataTable(localOptions);
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            $("#" + bodyId).html('<tr><td colspan="4" class="text-center text-danger">Error de conexión</td></tr>');
+            $("#" + bodyId).html('<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>');
         }
     });
 
@@ -487,66 +478,129 @@ $(document).on("click", ".btnEliminarTipo", function () {
 
     var nombreTipo = $(this).attr("nombreTipo");
 
-    swal({
+    // Primero verificar si tiene uso
+    var datosVerificacion = new FormData();
+    datosVerificacion.append("idTipoVerificarUso", idTipo);
 
-        title: '¿Está seguro de eliminar el tipo "' + nombreTipo + '"?',
-        text: "¡Si no lo está puede cancelar la acción!",
-        type: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        cancelButtonText: 'Cancelar',
-        confirmButtonText: 'Sí, eliminar tipo!'
-    }).then(function (result) {
+    $.ajax({
+        url: "ajax/variantes.ajax.php",
+        method: "POST",
+        data: datosVerificacion,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function (respuesta) {
+            if (respuesta.status === "success" && respuesta.tieneUso) {
+                swal({
+                    type: "error",
+                    title: "¡No se puede eliminar!",
+                    text: "Este tipo de variante tiene opciones o está siendo usado en productos",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+                return;
+            }
 
-        if (result.value) {
+            // Proceder con la confirmación de borrado
+            swal({
+                title: '¿Está seguro de eliminar el tipo "' + nombreTipo + '"?',
+                text: "¡Si no lo está puede cancelar la acción!",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                cancelButtonText: 'Cancelar',
+                confirmButtonText: 'Sí, eliminar tipo!'
+            }).then(function (result) {
+                if (result.value) {
+                    var datos = new FormData();
+                    datos.append("idEliminarTipo", idTipo);
 
-            var datos = new FormData();
-
-            datos.append("idEliminarTipo", idTipo);
-            // csrf_token removido - manejado por csrf-helper.js
-
-            $.ajax({
-
-                url: "ajax/variantes.ajax.php",
-                method: "POST",
-                data: datos,
-                cache: false,
-                contentType: false,
-                processData: false,
-                dataType: "json",
-                success: function (respuesta) {
-
-                    if (respuesta == "ok") {
-
-                        swal({
-                            type: "success",
-                            title: "¡El tipo de variante ha sido eliminado correctamente!",
-                            showConfirmButton: true,
-                            confirmButtonText: "Cerrar"
-                        }).then(function (result) {
-                            if (result.value) {
-                                window.location = "variantes";
+                    $.ajax({
+                        url: "ajax/variantes.ajax.php",
+                        method: "POST",
+                        data: datos,
+                        cache: false,
+                        contentType: false,
+                        processData: false,
+                        dataType: "json",
+                        success: function (respuesta) {
+                            if (respuesta == "ok") {
+                                swal({
+                                    type: "success",
+                                    title: "¡El tipo de variante ha sido eliminado correctamente!",
+                                    showConfirmButton: true,
+                                    confirmButtonText: "Cerrar"
+                                }).then(function (result) {
+                                    if (result.value) {
+                                        window.location = "variantes";
+                                    }
+                                });
+                            } else {
+                                swal({
+                                    type: "error",
+                                    title: "¡No se puede eliminar!",
+                                    text: "Este tipo de variante tiene opciones o está siendo usado en productos",
+                                    showConfirmButton: true,
+                                    confirmButtonText: "Cerrar"
+                                });
                             }
-                        });
-
-                    } else {
-                        swal({
-                            type: "error",
-                            title: "¡No se puede eliminar!",
-                            text: "Este tipo de variante tiene opciones o está siendo usado en productos",
-                            showConfirmButton: true,
-                            confirmButtonText: "Cerrar"
-                        });
-
-                    }
-
+                        }
+                    });
                 }
-
             });
+        },
+        error: function () {
+            // Fallback si la verificación falla
+            swal({
+                title: '¿Está seguro de eliminar el tipo "' + nombreTipo + '"?',
+                text: "¡Si no lo está puede cancelar la acción!",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                cancelButtonText: 'Cancelar',
+                confirmButtonText: 'Sí, eliminar tipo!'
+            }).then(function (result) {
+                if (result.value) {
+                    var datos = new FormData();
+                    datos.append("idEliminarTipo", idTipo);
 
+                    $.ajax({
+                        url: "ajax/variantes.ajax.php",
+                        method: "POST",
+                        data: datos,
+                        cache: false,
+                        contentType: false,
+                        processData: false,
+                        dataType: "json",
+                        success: function (respuesta) {
+                            if (respuesta == "ok") {
+                                swal({
+                                    type: "success",
+                                    title: "¡El tipo de variante ha sido eliminado correctamente!",
+                                    showConfirmButton: true,
+                                    confirmButtonText: "Cerrar"
+                                }).then(function (result) {
+                                    if (result.value) {
+                                        window.location = "variantes";
+                                    }
+                                });
+                            } else {
+                                swal({
+                                    type: "error",
+                                    title: "¡No se puede eliminar!",
+                                    text: "Este tipo de variante tiene opciones o está siendo usado en productos",
+                                    showConfirmButton: true,
+                                    confirmButtonText: "Cerrar"
+                                });
+                            }
+                        }
+                    });
+                }
+            });
         }
-
     });
 
 });
@@ -562,82 +616,157 @@ $(document).on("click", ".btnEliminarOpcion", function () {
 
     var nombreOpcion = $(this).attr("nombreOpcion");
 
-    swal({
+    // Primero verificar si tiene uso
+    var datosVerificacion = new FormData();
+    datosVerificacion.append("idOpcionVerificarUso", idOpcion);
 
-        title: '¿Está seguro de eliminar la opción "' + nombreOpcion + '"?',
-        text: "¡Si no lo está puede cancelar la acción!",
-        type: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        cancelButtonText: 'Cancelar',
-        confirmButtonText: 'Sí, eliminar opción!'
-    }).then(function (result) {
+    $.ajax({
+        url: "ajax/variantes.ajax.php",
+        method: "POST",
+        data: datosVerificacion,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function (respuesta) {
+            if (respuesta.status === "success" && respuesta.tieneUso) {
+                if (respuesta.tipo === "otra_sucursal") {
+                    swal({
+                        type: "error",
+                        title: "¡No se puede eliminar!",
+                        text: "No se puede eliminar porque tiene productos asociados en otra sucursal.",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                } else {
+                    swal({
+                        type: "error",
+                        title: "¡No se puede eliminar!",
+                        text: "Esta opción está siendo usada en productos existentes",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                }
+                return;
+            }
 
-        if (result.value) {
+            // Proceder con la confirmación de borrado
+            swal({
+                title: '¿Está seguro de eliminar la opción "' + nombreOpcion + '"?',
+                text: "¡Si no lo está puede cancelar la acción!",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                cancelButtonText: 'Cancelar',
+                confirmButtonText: 'Sí, eliminar opción!'
+            }).then(function (result) {
+                if (result.value) {
+                    var datos = new FormData();
+                    datos.append("idEliminarOpcion", idOpcion);
 
-            var datos = new FormData();
-
-            datos.append("idEliminarOpcion", idOpcion);
-            // csrf_token removido - manejado por csrf-helper.js
-
-            $.ajax({
-
-                url: "ajax/variantes.ajax.php",
-                method: "POST",
-                data: datos,
-                cache: false,
-                contentType: false,
-                processData: false,
-                dataType: "json",
-                success: function (respuesta) {
-
-                    if (respuesta == "ok") {
-                        swal({
-                            type: "success",
-                            title: "¡La opción ha sido eliminada correctamente!",
-                            showConfirmButton: true,
-                            confirmButtonText: "Cerrar"
-                        }).then(function (result) {
-
-                            if (result.value) {
-
-                                // Recargar las opciones del tipo actual
-
-                                var idTipo = $("#idTipoVarianteActual").val();
-
-                                $(".btnVerOpciones[idTipo='" + idTipo + "']").click();
-
+                    $.ajax({
+                        url: "ajax/variantes.ajax.php",
+                        method: "POST",
+                        data: datos,
+                        cache: false,
+                        contentType: false,
+                        processData: false,
+                        dataType: "json",
+                        success: function (respuesta) {
+                            if (respuesta == "ok") {
+                                swal({
+                                    type: "success",
+                                    title: "¡La opción ha sido eliminada correctamente!",
+                                    showConfirmButton: true,
+                                    confirmButtonText: "Cerrar"
+                                }).then(function (result) {
+                                    if (result.value) {
+                                        var idTipo = $("#idTipoVarianteActual").val();
+                                        $(".btnVerOpciones[idTipo='" + idTipo + "']").click();
+                                    }
+                                });
+                            } else if (respuesta == "error_productos_asociados_otra_sucursal") {
+                                swal({
+                                    type: "error",
+                                    title: "¡No se puede eliminar!",
+                                    text: "No se puede eliminar porque tiene productos asociados en otra sucursal.",
+                                    showConfirmButton: true,
+                                    confirmButtonText: "Cerrar"
+                                });
+                            } else {
+                                swal({
+                                    type: "error",
+                                    title: "¡No se puede eliminar!",
+                                    text: "Esta opción está siendo usada en productos existentes",
+                                    showConfirmButton: true,
+                                    confirmButtonText: "Cerrar"
+                                });
                             }
-
-                        });
-
-                    } else if (respuesta == "error_productos_asociados_otra_sucursal") {
-                        swal({
-                            type: "error",
-                            title: "¡No se puede eliminar!",
-                            text: "No se puede eliminar porque tiene productos asociados en otra sucursal.",
-                            showConfirmButton: true,
-                            confirmButtonText: "Cerrar"
-                        });
-                    } else {
-
-                        swal({
-                            type: "error",
-                            title: "¡No se puede eliminar!",
-                            text: "Esta opción está siendo usada en productos existentes",
-                            showConfirmButton: true,
-                            confirmButtonText: "Cerrar"
-                        });
-
-                    }
-
+                        }
+                    });
                 }
             });
+        },
+        error: function () {
+            // Fallback si la verificación falla
+            swal({
+                title: '¿Está seguro de eliminar la opción "' + nombreOpcion + '"?',
+                text: "¡Si no lo está puede cancelar la acción!",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                cancelButtonText: 'Cancelar',
+                confirmButtonText: 'Sí, eliminar opción!'
+            }).then(function (result) {
+                if (result.value) {
+                    var datos = new FormData();
+                    datos.append("idEliminarOpcion", idOpcion);
 
+                    $.ajax({
+                        url: "ajax/variantes.ajax.php",
+                        method: "POST",
+                        data: datos,
+                        cache: false,
+                        contentType: false,
+                        processData: false,
+                        dataType: "json",
+                        success: function (respuesta) {
+                            if (respuesta == "ok") {
+                                swal({
+                                    type: "success",
+                                    title: "¡La opción ha sido eliminada correctamente!",
+                                    showConfirmButton: true,
+                                    confirmButtonText: "Cerrar"
+                                }).then(function (result) {
+                                    if (result.value) {
+                                        var idTipo = $("#idTipoVarianteActual").val();
+                                        $(".btnVerOpciones[idTipo='" + idTipo + "']").click();
+                                    }
+                                });
+                            } else if (respuesta == "error_productos_asociados_otra_sucursal") {
+                                swal({
+                                    type: "error",
+                                    title: "¡No se puede eliminar!",
+                                    text: "No se puede eliminar porque tiene productos asociados en otra sucursal.",
+                                    showConfirmButton: true,
+                                    confirmButtonText: "Cerrar"
+                                });
+                            } else {
+                                swal({
+                                    type: "error",
+                                    title: "¡No se puede eliminar!",
+                                    text: "Esta opción está siendo usada en productos existentes",
+                                    showConfirmButton: true,
+                                    confirmButtonText: "Cerrar"
+                                });
+                            }
+                        }
+                    });
+                }
+            });
         }
-
     });
-
 
 });

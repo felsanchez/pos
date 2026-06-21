@@ -207,7 +207,7 @@
               </li>';
       }
 
-      if (puedeVer('crm') && (!isset($configuracionGlobalMenu["seguimiento_leads_activo"]) || $configuracionGlobalMenu["seguimiento_leads_activo"] == 1)) {
+      if (puedeVer('crm') && (!isset($configuracionGlobalMenu["crm_activo"]) || $configuracionGlobalMenu["crm_activo"] == 1)) {
         echo '<li>
                 <a href="crm">
                     <i class="fa fa-filter"></i>

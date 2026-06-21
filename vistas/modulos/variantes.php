@@ -59,7 +59,6 @@ if (!puedeVer('variantes')) {
             <thead>
               <tr>
                 <th>Nombre</th>
-                <th>Estado</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -103,7 +102,6 @@ if (!puedeVer('variantes')) {
               <tr>
                 <th>Nombre</th>
                 <th>Productos</th>
-                <th>Estado</th>
                 <th>Acciones</th>
               </tr>
             </thead>

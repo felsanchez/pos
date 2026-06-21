@@ -292,6 +292,10 @@ BARRA DE NAVEGACION
 
 		<!-- Sucursal Activa y Módulo de Caja Chica -->
 		<div class="navbar-custom-menu pull-left" style="margin-left: 10px; margin-top: 10px; color: white; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+			<?php 
+			$sucursalesActivas = !isset($configuracion["activar_sucursales"]) || $configuracion["activar_sucursales"] == 1;
+			if ($sucursalesActivas): 
+			?>
 			<span class="label label-primary" style="font-size: 13px; padding: 5px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-block;">
 				<i class="fa fa-building"></i> 
 				<span class="hidden-xs">Sucursal:</span> 
@@ -308,6 +312,7 @@ BARRA DE NAVEGACION
 					echo e($_SESSION["nombre_bodega"]);
 				?>
 			</span>
+			<?php endif; ?>
 
 			<?php 
 			if (class_exists("ControladorCajas") && isset($configuracion["control_caja"]) && intval($configuracion["control_caja"]) === 1): 

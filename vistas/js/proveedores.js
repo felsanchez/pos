@@ -190,6 +190,17 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 		processData: false,
 		dataType: "json",
 		success: function (respuesta) {
+			if (respuesta.status === "success" && respuesta.tieneProductosActivos) {
+				swal({
+					type: "error",
+					title: "¡No se puede eliminar!",
+					text: "Este proveedor tiene productos activos asociados. Por favor, reubícalos o elimínalos primero.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				});
+				return;
+			}
+
 			var warningText = "¡Si no lo está puede cancelar la acción!";
 			
 			if (respuesta.status === "success" && respuesta.relaciones.length > 0) {
@@ -197,8 +208,9 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 				if (respuesta.relaciones.length === 1) {
 					listaRelaciones = respuesta.relaciones[0];
 				} else {
-					var ultima = respuesta.relaciones.pop();
-					listaRelaciones = respuesta.relaciones.join(", ") + " y " + ultima;
+					var javaArray = respuesta.relaciones;
+					var ultima = javaArray.pop();
+					listaRelaciones = javaArray.join(", ") + " y " + ultima;
 				}
 				warningText = "El proveedor tiene " + listaRelaciones + " asociadas. ¿Esta seguro de borrar el proveedor?\n¡Si no lo está puede cancelar la acción!";
 			}
@@ -236,6 +248,14 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 									if (result.value) {
 										window.location.reload();
 									}
+								});
+							} else if (respuesta == "error_productos") {
+								swal({
+									type: "error",
+									title: "¡No se puede eliminar!",
+									text: "Este proveedor tiene productos activos asociados. Por favor, reubícalos o elimínalos primero.",
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
 								});
 							} else {
 								swal({

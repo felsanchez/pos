@@ -269,7 +269,7 @@ MODAL AGREGAR USUARIO
 
             <!-- Fila 3: Contraseña y Sucursal -->
             <div class="row">
-              <div class="col-md-6">
+              <div class="<?php echo $sucursalesActivas ? 'col-md-6' : 'col-md-12'; ?>">
                 <div class="form-group">
                   <label>Contraseña:</label>
                   <div class="input-group">
@@ -280,7 +280,7 @@ MODAL AGREGAR USUARIO
                 </div>
               </div>
 
-              <div class="col-md-6">
+              <div class="col-md-6" <?php if (!$sucursalesActivas) { echo 'style="display: none;"'; } ?>>
                 <div class="form-group">
                   <label>Sucursal / Bodega:</label>
                   <div class="input-group">
@@ -440,7 +440,7 @@ MODAL EDITAR USUARIO
               </div>
             </div>
             <!-- Fila 3: Sucursal -->
-            <div class="row">
+            <div class="row" <?php if (!$sucursalesActivas) { echo 'style="display: none;"'; } ?>>
               <div class="col-md-12">
                 <div class="form-group">
                   <label>Sucursal / Bodega:</label>

@@ -377,6 +377,29 @@ class ControladorProveedores
 
 
 			$db = Conexion::conectar();
+
+			// Verificar si tiene productos activos asociados
+			$checkProd = $db->prepare("SELECT COUNT(*) FROM productos WHERE id_proveedor = :id AND eliminado = 0");
+			$checkProd->bindParam(":id", $idProveedor, PDO::PARAM_INT);
+			$checkProd->execute();
+			if ($checkProd->fetchColumn() > 0) {
+				if (isset($_POST["idProveedorEliminar"])) {
+					return "error_productos";
+				}
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡No se puede eliminar!",
+						text: "Este proveedor tiene productos activos asociados.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then(() => {
+						window.location = "proveedores";
+					});
+				</script>';
+				return;
+			}
+
 			try {
 				$db->beginTransaction();
 

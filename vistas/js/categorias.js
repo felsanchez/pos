@@ -37,74 +37,172 @@ $(".tablas").on("click", ".btnEliminarCategoria", function () {
 
 	var idCategoria = $(this).attr("idCategoria");
 
-	swal({
+	// Primero verificar si tiene productos activos asociados
+	var datosVerificacion = new FormData();
+	datosVerificacion.append("idCategoriaVerificarRelaciones", idCategoria);
 
-		title: '¿Esta seguro de borrar la categoría?',
-		text: "¡Si no lo está puede cancelar la acción!",
-		type: 'warning',
-		showCancelButton: true,
-		confirmButtonColor: '#3085d6',
-		cancelButtonColor: '#d33',
-		cancelButtonText: 'Cancelar',
-		confirmButtonText: 'Si, borrar categoría!'
-	}).then((result) => {
-
-		if (result.value) {
-
-			var datos = new FormData();
-			datos.append("idCategoriaEliminar", idCategoria);
-			// csrf_token removido - manejado por csrf-helper.js
-
-			$.ajax({
-				url: "ajax/categorias.ajax.php",
-				method: "POST",
-				data: datos,
-				cache: false,
-				contentType: false,
-				processData: false,
-				success: function (respuesta) {
-					if (respuesta == "ok") {
-						swal({
-							type: "success",
-							title: "¡Borrado correctamente!",
-							text: "La categoría ha sido borrada correctamente.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						}).then((result) => {
-							if (result.value) {
-								window.location.reload();
-							}
-						});
-					} else if (respuesta == "error_productos_asociados_otra_sucursal") {
-						swal({
-							type: "error",
-							title: "¡No se puede eliminar!",
-							text: "No se puede eliminar porque tiene productos asociados en otra sucursal.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					} else if (respuesta == "error_productos_asociados") {
-						swal({
-							type: "error",
-							title: "¡No se puede eliminar!",
-							text: "La categoría tiene productos asociados.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					} else {
-						swal({
-							type: "error",
-							title: "Error",
-							text: "No se pudo eliminar. " + respuesta,
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					}
+	$.ajax({
+		url: "ajax/categorias.ajax.php",
+		method: "POST",
+		data: datosVerificacion,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			if (respuesta.status === "success" && respuesta.tieneProductosActivos) {
+				if (respuesta.tipo === "otra_sucursal") {
+					swal({
+						type: "error",
+						title: "¡No se puede eliminar!",
+						text: "No se puede eliminar porque tiene productos asociados en otra sucursal.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					});
+				} else {
+					swal({
+						type: "error",
+						title: "¡No se puede eliminar!",
+						text: "La categoría tiene productos asociados.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					});
 				}
-			})
-		}
+				return;
+			}
 
-	})
+			// Proceder con la confirmación de borrado
+			swal({
+				title: '¿Esta seguro de borrar la categoría?',
+				text: "¡Si no lo está puede cancelar la acción!",
+				type: 'warning',
+				showCancelButton: true,
+				confirmButtonColor: '#3085d6',
+				cancelButtonColor: '#d33',
+				cancelButtonText: 'Cancelar',
+				confirmButtonText: 'Si, borrar categoría!'
+			}).then((result) => {
+				if (result.value) {
+					var datos = new FormData();
+					datos.append("idCategoriaEliminar", idCategoria);
+
+					$.ajax({
+						url: "ajax/categorias.ajax.php",
+						method: "POST",
+						data: datos,
+						cache: false,
+						contentType: false,
+						processData: false,
+						success: function (respuesta) {
+							if (respuesta == "ok") {
+								swal({
+									type: "success",
+									title: "¡Borrado correctamente!",
+									text: "La categoría ha sido borrada correctamente.",
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								}).then((result) => {
+									if (result.value) {
+										window.location.reload();
+									}
+								});
+							} else if (respuesta == "error_productos_asociados_otra_sucursal") {
+								swal({
+									type: "error",
+									title: "¡No se puede eliminar!",
+									text: "No se puede eliminar porque tiene productos asociados en otra sucursal.",
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								});
+							} else if (respuesta == "error_productos_asociados") {
+								swal({
+									type: "error",
+									title: "¡No se puede eliminar!",
+									text: "La categoría tiene productos asociados.",
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								});
+							} else {
+								swal({
+									type: "error",
+									title: "Error",
+									text: "No se pudo eliminar. " + respuesta,
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								});
+							}
+						}
+					});
+				}
+			});
+		},
+		error: function () {
+			// Fallback si la verificación falla
+			swal({
+				title: '¿Esta seguro de borrar la categoría?',
+				text: "¡Si no lo está puede cancelar la acción!",
+				type: 'warning',
+				showCancelButton: true,
+				confirmButtonColor: '#3085d6',
+				cancelButtonColor: '#d33',
+				cancelButtonText: 'Cancelar',
+				confirmButtonText: 'Si, borrar categoría!'
+			}).then((result) => {
+				if (result.value) {
+					var datos = new FormData();
+					datos.append("idCategoriaEliminar", idCategoria);
+
+					$.ajax({
+						url: "ajax/categorias.ajax.php",
+						method: "POST",
+						data: datos,
+						cache: false,
+						contentType: false,
+						processData: false,
+						success: function (respuesta) {
+							if (respuesta == "ok") {
+								swal({
+									type: "success",
+									title: "¡Borrado correctamente!",
+									text: "La categoría ha sido borrada correctamente.",
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								}).then((result) => {
+									if (result.value) {
+										window.location.reload();
+									}
+								});
+							} else if (respuesta == "error_productos_asociados_otra_sucursal") {
+								swal({
+									type: "error",
+									title: "¡No se puede eliminar!",
+									text: "No se puede eliminar porque tiene productos asociados en otra sucursal.",
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								});
+							} else if (respuesta == "error_productos_asociados") {
+								swal({
+									type: "error",
+									title: "¡No se puede eliminar!",
+									text: "La categoría tiene productos asociados.",
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								});
+							} else {
+								swal({
+									type: "error",
+									title: "Error",
+									text: "No se pudo eliminar. " + respuesta,
+									showConfirmButton: true,
+									confirmButtonText: "Cerrar"
+								});
+							}
+						}
+					});
+				}
+			});
+		}
+	});
 
 })
 

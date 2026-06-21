@@ -1549,12 +1549,12 @@ $(document).on('click', '.btnActivarVariante', function () {
 				// Cambiar visualmente el botón
 				if (nuevoEstado == 1) {
 					boton.removeClass('btn-danger').addClass('btn-success');
-					boton.html('<i class="fa fa-check"></i> Activo');
+					boton.html('<i class="fa fa-check"></i> Activado');
 					boton.attr('estadoVariante', 1);
 				} else {
 
 					boton.removeClass('btn-success').addClass('btn-danger');
-					boton.html('<i class="fa fa-times"></i> Inactivo');
+					boton.html('<i class="fa fa-times"></i> Desactivado');
 					boton.attr('estadoVariante', 0);
 				}
 

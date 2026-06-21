@@ -84,6 +84,27 @@ class AjaxCategorias{
 }
 
 /*=============================================
+VERIFICAR RELACIONES DE LA CATEGORIA ANTES DE ELIMINAR
+=============================================*/
+if (isset($_POST["idCategoriaVerificarRelaciones"])) {
+	$idCategoria = $_POST["idCategoriaVerificarRelaciones"];
+	
+	$totalProductosGlobales = ModeloCategorias::mdlContarProductosActivosGlobales($idCategoria);
+	
+	if ($totalProductosGlobales > 0) {
+		$productosLocal = ModeloCategorias::mdlContarProductosPorCategoria($idCategoria);
+		if ($productosLocal == 0) {
+			echo json_encode(["status" => "success", "tieneProductosActivos" => true, "tipo" => "otra_sucursal"]);
+		} else {
+			echo json_encode(["status" => "success", "tieneProductosActivos" => true, "tipo" => "local"]);
+		}
+	} else {
+		echo json_encode(["status" => "success", "tieneProductosActivos" => false]);
+	}
+	exit;
+}
+
+/*=============================================
 ELIMINAR CATEGORIA
 =============================================*/
 if (isset($_POST["idCategoriaEliminar"])) {

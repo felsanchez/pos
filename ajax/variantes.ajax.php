@@ -247,6 +247,38 @@ if(isset($_POST["validarOrdenOpcion"])){
  }
 
 /*=============================================
+VERIFICAR USO DE TIPO DE VARIANTE ANTES DE ELIMINAR
+=============================================*/
+if (isset($_POST["idTipoVerificarUso"])) {
+	require_once "../modelos/variantes.modelo.php";
+	$idTipo = $_POST["idTipoVerificarUso"];
+	$checkUso = ModeloVariantes::mdlVerificarUsoTipoVariante($idTipo);
+	echo json_encode(["status" => "success", "tieneUso" => ($checkUso > 0)]);
+	exit;
+}
+
+/*=============================================
+VERIFICAR USO DE OPCION DE VARIANTE ANTES DE ELIMINAR
+=============================================*/
+if (isset($_POST["idOpcionVerificarUso"])) {
+	require_once "../modelos/variantes.modelo.php";
+	$idOpcion = $_POST["idOpcionVerificarUso"];
+	$usoGlobal = ModeloVariantes::mdlContarUsoGlobalOpcion($idOpcion);
+	
+	if ($usoGlobal > 0) {
+		$usoLocal = ModeloVariantes::mdlContarUsoLocalOpcion($idOpcion);
+		if ($usoLocal == 0) {
+			echo json_encode(["status" => "success", "tieneUso" => true, "tipo" => "otra_sucursal"]);
+		} else {
+			echo json_encode(["status" => "success", "tieneUso" => true, "tipo" => "local"]);
+		}
+	} else {
+		echo json_encode(["status" => "success", "tieneUso" => false]);
+	}
+	exit;
+}
+
+/*=============================================
 ELIMINAR TIPO DE VARIANTE
 =============================================*/
 

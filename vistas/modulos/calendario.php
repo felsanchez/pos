@@ -354,7 +354,7 @@ MODAL EDITAR ACTIVIDAD
                       <?php
                       $usuariosEditar = ControladorUsuarios::ctrMostrarUsuarios(null, null);
                       foreach ($usuariosEditar as $key => $value) {
-                          if ($value["perfil"] == "_SystemMaster_") {
+                          if ($value["perfil"] == "_SystemMaster_" || $value["estado"] == 0) {
                               continue;
                           }
                           echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
@@ -566,7 +566,7 @@ MODAL AGREGAR actividad
 
                                 foreach ($usuarios as $key => $value) {
 
-                                    if ($value["perfil"] == "_SystemMaster_") {
+                                    if ($value["perfil"] == "_SystemMaster_" || $value["estado"] == 0) {
                                         continue;
                                     }
 

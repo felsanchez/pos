@@ -26,8 +26,7 @@ class ControladorVariantes{
 		// Columnas para ordenar
 		$columnsMap = array(
 			0 => 'nombre',
-			1 => 'estado',
-			2 => 'id' // Acciones
+			1 => 'id' // Acciones
 		);
 
 		$where = " WHERE 1=1 ";
@@ -68,24 +67,7 @@ class ControladorVariantes{
 			// 0: Nombre
 			$nestedData[] = e($value["nombre"]);
 
-			// 1: Estado
-			$estadoHtml = "";
-			if (puedeAccion('variantes', 'editar')) {
-				if ($value["estado"] != 0) {
-					$estadoHtml = '<button class="btn btn-success btn-xs btnActivarTipo" idTipo="' . $value["id"] . '" estadoTipo="0">Activado</button>';
-				} else {
-					$estadoHtml = '<button class="btn btn-danger btn-xs btnActivarTipo" idTipo="' . $value["id"] . '" estadoTipo="1">Desactivado</button>';
-				}
-			} else {
-				if ($value["estado"] != 0) {
-					$estadoHtml = '<button class="btn btn-success btn-xs" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar">Activado</button>';
-				} else {
-					$estadoHtml = '<button class="btn btn-danger btn-xs" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar">Desactivado</button>';
-				}
-			}
-			$nestedData[] = $estadoHtml;
-
-			// 2: Acciones
+			// 1: Acciones
 			$botonesAcciones = '<div class="btn-group">';
 			if (puedeAccion('variantes', 'editar')) {
 				$botonesAcciones .= '<button class="btn btn-warning btnEditarTipoVariante" idTipo="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarTipoVariante" title="Editar tipo"><i class="fa fa-pencil"></i></button>';
@@ -373,28 +355,14 @@ class ControladorVariantes{
 
     static public function ctrEliminarTipoVariante($idTipo){ 
 
-        // Verificar si el tipo tiene opciones asociadas
-        $tabla = "opciones_variantes";
-        $item = "id_tipo_variante";
-        $valor = $idTipo;
-
-        $opciones = ModeloVariantes::mdlMostrarOpcionesVariantes($tabla, $item, $valor); 
-
-        if(count($opciones) > 0){
-            return "error_opciones";
-
-        } 
-
-        // Verificar si el tipo está siendo usado en productos
-        $tabla2 = "productos_variantes_opciones";
+        // Verificar si el tipo está siendo usado en productos activos
         $checkUso = ModeloVariantes::mdlVerificarUsoTipoVariante($idTipo);
 
-         if($checkUso > 0){
+        if($checkUso > 0){
             return "error_uso";
-
         }
 
-         // Si no tiene opciones ni está en uso, eliminar
+         // Si no está en uso en productos activos, eliminar (MariaDB/MySQL eliminará las opciones en cascada)
         $tabla3 = "tipos_variantes";
         $respuesta = ModeloVariantes::mdlEliminarTipoVariante($tabla3, $idTipo);
 

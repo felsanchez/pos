@@ -113,8 +113,30 @@ if (!$configuracion) {
 										<strong>Activar Sucursales</strong>
 									</label>
 								</div>
-								<p class="help-block">Si está desactivado, se ocultarán las opciones de "Sucursales" y "Traslados" del menú lateral, -El modulo "Traslados" en la matriz de permisos. -El filtro en las sgtes vistas: Ventas, Órdenes, Facturación Electrónica, Notas de Crédito/Ajuste, Doc Soporte, Gastos, Reportes e Historial stock. -La columna "Sucursal" en la vista Usuarios.</p>
+								<p class="help-block">Si está desactivado, se ocultarán las opciones de "Sucursales" y "Traslados" del menú lateral, -El modulo "Traslados" en la matriz de permisos. -El filtro en las sgtes vistas: Ventas, Órdenes, Facturación Electrónica, Notas de Crédito/Ajuste, Doc Soporte, Gastos, Reportes e Historial stock. -La columna "Sucursal" en la vista Usuarios. -En el campo sucursal del modal para agregar y editar usuarios.</p>
 							</div>
+
+							<div class="form-group">
+								<div class="checkbox">
+									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
+										<input type="checkbox" name="crmActivo" value="1" <?php echo (!isset($configuracionGlobal["crm_activo"]) || $configuracionGlobal["crm_activo"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar CRM</strong>
+									</label>
+								</div>
+								<p class="help-block">Si está desactivado, se ocultará el módulo "CRM / Pipeline" del menú lateral y de la matriz de permisos.</p>
+							</div>
+
+
+							<div class="form-group">
+								<div class="checkbox">
+									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
+										<input type="checkbox" name="graficaOrdenesManuales" value="1" <?php echo (!isset($configuracionGlobal["grafica_ordenes_manuales_activa"]) || $configuracionGlobal["grafica_ordenes_manuales_activa"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar gráfica de Órdenes manuales en Reportes</strong>
+									</label>
+								</div>
+								<p class="help-block">Si está desactivado, se ocultará la gráfica "Análisis de Órdenes de Venta" en la vista de reportes.</p>
+							</div>
+
 
 							<br><h4>FACTURACIÓN ELECTRÓNICA:</h4>
 

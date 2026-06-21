@@ -56,11 +56,13 @@ if (isset($_POST["idProveedorVerificarRelaciones"])) {
 	$db = Conexion::conectar();
 	$relaciones = [];
 
-	// 1. Verificar productos
-	$stmt = $db->prepare("SELECT COUNT(*) FROM productos WHERE id_proveedor = :id");
+	// 1. Verificar productos activos (no eliminados)
+	$stmt = $db->prepare("SELECT COUNT(*) FROM productos WHERE id_proveedor = :id AND eliminado = 0");
 	$stmt->bindParam(":id", $idProveedor, PDO::PARAM_INT);
 	$stmt->execute();
-	if ($stmt->fetchColumn() > 0) {
+	$totalProductosActivos = $stmt->fetchColumn();
+	$tieneProductosActivos = $totalProductosActivos > 0;
+	if ($tieneProductosActivos) {
 		$relaciones[] = "productos";
 	}
 
@@ -88,7 +90,7 @@ if (isset($_POST["idProveedorVerificarRelaciones"])) {
 		$relaciones[] = "notas de ajuste";
 	}
 
-	echo json_encode(["status" => "success", "relaciones" => $relaciones]);
+	echo json_encode(["status" => "success", "relaciones" => $relaciones, "tieneProductosActivos" => $tieneProductosActivos]);
 	exit;
 }
 

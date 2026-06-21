@@ -261,7 +261,7 @@
     <!-- SECCIÓN 4: REPORTE DE ÓRDENES -->
     <div class="box box-warning" id="seccion-analisis-ordenes">
       <div class="box-header with-border">
-        <h3 class="box-title"><i class="fa fa-shopping-cart"></i> Análisis de Órdenes</h3>
+        <h3 class="box-title"><i class="fa fa-shopping-cart"></i> Análisis de Órdenes con IA</h3>
         <div class="box-tools pull-right">
           <button type="button" class="btn btn-box-tool" data-widget="collapse">
             <i class="fa fa-plus"></i>
@@ -275,6 +275,10 @@
     </div>
     <?php endif; ?>
 
+    <?php
+    $configuracionReportesManuales = ControladorConfiguracion::ctrObtenerConfiguracion();
+    if (!isset($configuracionReportesManuales["grafica_ordenes_manuales_activa"]) || $configuracionReportesManuales["grafica_ordenes_manuales_activa"] == 1):
+    ?>
     <!-- SECCIÓN 4.1: REPORTE DE ÓRDENES DE VENTA -->
     <div class="box box-primary collapsed-box" id="seccion-analisis-ordenes-venta">
       <div class="box-header with-border">
@@ -290,6 +294,7 @@
         <?php include "reportes/ordenes-reporte-ventas.php"; ?>
       </div>
     </div>
+    <?php endif; ?>
 
     <?php
     $configuracionFE = ControladorConfiguracion::ctrObtenerConfiguracion();

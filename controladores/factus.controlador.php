@@ -55,6 +55,8 @@ class ControladorFactus
 			$controlCaja = isset($_POST["controlCaja"]) ? 1 : 0;
 			$consultaVentas = isset($_POST["consultaVentas"]) ? 1 : 0;
 			$activarSucursales = isset($_POST["activarSucursales"]) ? 1 : 0;
+			$crmActivo = isset($_POST["crmActivo"]) ? 1 : 0;
+			$graficaOrdenesManuales = isset($_POST["graficaOrdenesManuales"]) ? 1 : 0;
 			$documentoSoporte = isset($_POST["documentoSoporte"]) ? 1 : 0;
 			$facturacionElectronica = isset($_POST["facturacionElectronica"]) ? 1 : 0;
 			$seguimientoLeads = isset($_POST["seguimientoLeads"]) ? 1 : 0;
@@ -68,10 +70,12 @@ class ControladorFactus
 			$notif_solicitud_eliminacion = isset($_POST["notif_solicitud_eliminacion"]) ? 1 : 0;
 			$columna_notas_cliente_activa = isset($_POST["columnaNotasClienteActiva"]) ? 1 : 0;
 			
-			$stmtCaja = Conexion::conectar()->prepare("UPDATE configuracion SET control_caja = :control_caja, consulta_ventas = :consulta_ventas, activar_sucursales = :activar_sucursales, documento_soporte_activo = :documento_soporte_activo, facturacion_electronica_activa = :facturacion_electronica_activa, seguimiento_leads_activo = :seguimiento_leads_activo, grafica_analisis_ordenes_activa = :grafica_analisis_ordenes_activa, columna_seguimiento_activa = :columna_seguimiento_activa, boton_convertir_fe_activo = :boton_convertir_fe_activo, boton_actualizar_producto_activo = :boton_actualizar_producto_activo, notif_orden_agente_ia = :notif_orden_agente_ia, notif_transaccion_bold = :notif_transaccion_bold, notif_solicitud_edicion = :notif_solicitud_edicion, notif_solicitud_eliminacion = :notif_solicitud_eliminacion, columna_notas_cliente_activa = :columna_notas_cliente_activa WHERE id = 1");
+			$stmtCaja = Conexion::conectar()->prepare("UPDATE configuracion SET control_caja = :control_caja, consulta_ventas = :consulta_ventas, activar_sucursales = :activar_sucursales, crm_activo = :crm_activo, grafica_ordenes_manuales_activa = :grafica_ordenes_manuales_activa, documento_soporte_activo = :documento_soporte_activo, facturacion_electronica_activa = :facturacion_electronica_activa, seguimiento_leads_activo = :seguimiento_leads_activo, grafica_analisis_ordenes_activa = :grafica_analisis_ordenes_activa, columna_seguimiento_activa = :columna_seguimiento_activa, boton_convertir_fe_activo = :boton_convertir_fe_activo, boton_actualizar_producto_activo = :boton_actualizar_producto_activo, notif_orden_agente_ia = :notif_orden_agente_ia, notif_transaccion_bold = :notif_transaccion_bold, notif_solicitud_edicion = :notif_solicitud_edicion, notif_solicitud_eliminacion = :notif_solicitud_eliminacion, columna_notas_cliente_activa = :columna_notas_cliente_activa WHERE id = 1");
 			$stmtCaja->bindParam(":control_caja", $controlCaja, PDO::PARAM_INT);
 			$stmtCaja->bindParam(":consulta_ventas", $consultaVentas, PDO::PARAM_INT);
 			$stmtCaja->bindParam(":activar_sucursales", $activarSucursales, PDO::PARAM_INT);
+			$stmtCaja->bindParam(":crm_activo", $crmActivo, PDO::PARAM_INT);
+			$stmtCaja->bindParam(":grafica_ordenes_manuales_activa", $graficaOrdenesManuales, PDO::PARAM_INT);
 			$stmtCaja->bindParam(":documento_soporte_activo", $documentoSoporte, PDO::PARAM_INT);
 			$stmtCaja->bindParam(":facturacion_electronica_activa", $facturacionElectronica, PDO::PARAM_INT);
 			$stmtCaja->bindParam(":seguimiento_leads_activo", $seguimientoLeads, PDO::PARAM_INT);
