@@ -104,7 +104,7 @@ class ControladorVariantes{
 
 		if(isset($_POST["nuevoTipoVariante"])){
 
-			if(preg_match('/^[a-zA-ZñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoTipoVariante"])){
+			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoTipoVariante"])){
 
 				$tabla = "tipos_variantes";
 
@@ -238,7 +238,7 @@ class ControladorVariantes{
 
         if(isset($_POST["editarTipoVariante"])){
 
-            if(preg_match('/^[a-zA-ZñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarTipoVariante"])){
+            if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarTipoVariante"])){
 
                 $tabla = "tipos_variantes";
 

@@ -163,6 +163,12 @@
 
                     $stockAntiguo = $respuesta["stock"] + $value["cantidad"];
 
+                    $esVarianteAttr = (isset($value["esVariante"]) && $value["esVariante"] == "1") ? ' esVariante="1" idVariante="' . $value["idVariante"] . '" skuVariante="' . $value["skuVariante"] . '"' : '';
+                    $camposVariante = (isset($value["esVariante"]) && $value["esVariante"] == "1") ? 
+                      '<input type="hidden" class="esVariante" value="1">
+                       <input type="hidden" class="idVarianteProducto" value="' . $value["idVariante"] . '">
+                       <input type="hidden" class="skuVariante" value="' . $value["skuVariante"] . '">' : '';
+
                     echo '<div class="row" style="padding:5px 15px">
 
                           
@@ -172,7 +178,8 @@
 
                                  <span class="input-group-addon"><button type="button" class="btn btn-danger btn-xs quitarProducto" idProducto="' . $value["id"] . '"><i class="fa fa-times"></i></button></span>
 
-                                 <input type="text" class="form-control nuevaDescripcionProducto" idProducto="' . $value["id"] . '" name="agregarProducto" value="' . $value["descripcion"] . '" readonly required>
+                                 <input type="text" class="form-control nuevaDescripcionProducto" idProducto="' . $value["id"] . '"' . $esVarianteAttr . ' name="agregarProducto" value="' . $value["descripcion"] . '" readonly required>
+                                 ' . $camposVariante . '
                                           
                               </div>
 

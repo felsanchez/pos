@@ -12,14 +12,15 @@ class ModeloNotificaciones
 	static public function mdlCrearNotificacion($datos)
 	{
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO notificaciones(tipo, titulo, mensaje, referencia_tipo, referencia_id)
-												VALUES (:tipo, :titulo, :mensaje, :referencia_tipo, :referencia_id)");
+		$stmt = Conexion::conectar()->prepare("INSERT INTO notificaciones(tipo, titulo, mensaje, referencia_tipo, referencia_id, id_bodega)
+												VALUES (:tipo, :titulo, :mensaje, :referencia_tipo, :referencia_id, :id_bodega)");
 
 		$stmt->bindParam(":tipo", $datos["tipo"], PDO::PARAM_STR);
 		$stmt->bindParam(":titulo", $datos["titulo"], PDO::PARAM_STR);
 		$stmt->bindParam(":mensaje", $datos["mensaje"], PDO::PARAM_STR);
 		$stmt->bindParam(":referencia_tipo", $datos["referencia_tipo"], PDO::PARAM_STR);
 		$stmt->bindParam(":referencia_id", $datos["referencia_id"], PDO::PARAM_INT);
+		$stmt->bindParam(":id_bodega", $datos["id_bodega"], PDO::PARAM_INT);
 
 		if ($stmt->execute()) {
 			return "ok";
@@ -44,11 +45,13 @@ class ModeloNotificaciones
                 FROM notificaciones n
                 CROSS JOIN configuracion c
                 LEFT JOIN notificaciones_leidas nl ON n.id = nl.id_notificacion AND nl.id_usuario = :id_usuario
+                LEFT JOIN usuarios u_viewer ON u_viewer.id = :id_usuario_viewer
                 WHERE n.eliminada = 0
                   AND (n.tipo NOT IN ('orden_agente_ia', 'orden_creada') OR c.notif_orden_agente_ia = 1)
-                  AND (n.referencia_tipo != 'pago_bold' OR c.notif_transaccion_bold = 1)
-                  AND (n.referencia_tipo != 'solicitud_edicion' OR c.notif_solicitud_edicion = 1)
-                  AND (n.referencia_tipo != 'solicitud_eliminacion' OR c.notif_solicitud_eliminacion = 1)";
+                  AND (n.referencia_tipo IS NULL OR n.referencia_tipo != 'pago_bold' OR c.notif_transaccion_bold = 1)
+                  AND (n.referencia_tipo IS NULL OR n.referencia_tipo != 'solicitud_edicion' OR c.notif_solicitud_edicion = 1)
+                  AND (n.referencia_tipo IS NULL OR n.referencia_tipo != 'solicitud_eliminacion' OR c.notif_solicitud_eliminacion = 1)
+                  AND (n.tipo NOT IN ('stock_bajo', 'stock_agotado') OR n.id_bodega IS NULL OR u_viewer.id_bodega = n.id_bodega)";
 
 		if ($soloNoLeidas) {
 			// Si solo queremos no leídas, filtramos donde NO haya registro en la tabla de lectura
@@ -66,6 +69,7 @@ class ModeloNotificaciones
 		// Asignar el ID de usuario (si es null, usamos 0 para que no coincida con nada)
 		$idUsuario = $idUsuario ? $idUsuario : 0;
 		$stmt->bindParam(":id_usuario", $idUsuario, PDO::PARAM_INT);
+		$stmt->bindParam(":id_usuario_viewer", $idUsuario, PDO::PARAM_INT);
 
 		if ($cantidad) {
 			$stmt->bindParam(":cantidad", $cantidad, PDO::PARAM_INT);
@@ -95,14 +99,17 @@ class ModeloNotificaciones
                                                FROM notificaciones n
                                                CROSS JOIN configuracion c
                                                LEFT JOIN notificaciones_leidas nl ON n.id = nl.id_notificacion AND nl.id_usuario = :id_usuario
+                                               LEFT JOIN usuarios u_viewer ON u_viewer.id = :id_usuario_viewer
                                                WHERE n.eliminada = 0
                                                  AND nl.id_usuario IS NULL
                                                  AND (n.tipo NOT IN ('orden_agente_ia', 'orden_creada') OR c.notif_orden_agente_ia = 1)
-                                                 AND (n.referencia_tipo != 'pago_bold' OR c.notif_transaccion_bold = 1)
-                                                 AND (n.referencia_tipo != 'solicitud_edicion' OR c.notif_solicitud_edicion = 1)
-                                                 AND (n.referencia_tipo != 'solicitud_eliminacion' OR c.notif_solicitud_eliminacion = 1)");
+                                                 AND (n.referencia_tipo IS NULL OR n.referencia_tipo != 'pago_bold' OR c.notif_transaccion_bold = 1)
+                                                 AND (n.referencia_tipo IS NULL OR n.referencia_tipo != 'solicitud_edicion' OR c.notif_solicitud_edicion = 1)
+                                                 AND (n.referencia_tipo IS NULL OR n.referencia_tipo != 'solicitud_eliminacion' OR c.notif_solicitud_eliminacion = 1)
+                                                 AND (n.tipo NOT IN ('stock_bajo', 'stock_agotado') OR n.id_bodega IS NULL OR u_viewer.id_bodega = n.id_bodega)");
 
 		$stmt->bindParam(":id_usuario", $idUsuario, PDO::PARAM_INT);
+		$stmt->bindParam(":id_usuario_viewer", $idUsuario, PDO::PARAM_INT);
 		$stmt->execute();
 
 		$resultado = $stmt->fetch();
@@ -296,20 +303,27 @@ class ModeloNotificaciones
 	VERIFICAR SI YA EXISTE NOTIFICACIÓN DE STOCK
 	=============================================*/
 
-	static public function mdlExisteNotificacionStock($tipo, $idProducto)
+	static public function mdlExisteNotificacionStock($tipo, $idProducto, $idBodega = null, $referenciaTipo = 'producto')
 	{
 
 		// Verificar si existe la notificación independientemente de si está leída o no
 		// Esto evita duplicar notificaciones de stock bajo/agotado aunque se marquen como leídas
 
+		$condicionBodega = $idBodega !== null ? "AND id_bodega = :id_bodega" : "AND id_bodega IS NULL";
+
 		$stmt = Conexion::conectar()->prepare("SELECT id FROM notificaciones
 												WHERE tipo = :tipo
-												AND referencia_tipo = 'producto'
+												AND referencia_tipo = :referencia_tipo
 												AND referencia_id = :referencia_id
+												$condicionBodega
 												LIMIT 1");
 
 		$stmt->bindParam(":tipo", $tipo, PDO::PARAM_STR);
+		$stmt->bindParam(":referencia_tipo", $referenciaTipo, PDO::PARAM_STR);
 		$stmt->bindParam(":referencia_id", $idProducto, PDO::PARAM_INT);
+		if ($idBodega !== null) {
+			$stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
+		}
 
 		$stmt->execute();
 

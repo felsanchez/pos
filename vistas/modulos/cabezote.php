@@ -376,6 +376,9 @@ BARRA DE NAVEGACION
 										} else if ($notif["tipo"] == "actividad_proxima") {
 											$icono = "fa-calendar";
 											$color = "text-blue";
+										} else if ($notif["tipo"] == "registro_usuario") {
+											$icono = "fa-user-plus";
+											$color = "text-green";
 										} else if ($notif["tipo"] == "gasto_proximo") {
 											$icono = "fa-money";
 											$color = "text-orange";

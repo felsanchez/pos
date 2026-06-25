@@ -143,6 +143,7 @@
                   <option value="">Mostrar Todas</option>
                   <option value="Stock Agotado">Stock Agotado</option>
                   <option value="Actividad Próxima">Actividad Próxima</option>
+                  <option value="Registro de Usuario">Registro de Usuario</option>
                   <?php 
                   $configNotif = ControladorConfiguracion::ctrObtenerConfiguracion(); 
                   ?>
@@ -202,7 +203,6 @@
 
                           <th style="width: 50px"></th>
                           <th>Tipo</th>
-                          <th>Título</th>
                           <th>Mensaje</th>
                           <th>Fecha</th>
                           <th style="width: 100px">Verificar</th>
@@ -227,6 +227,10 @@
               $icono = "fa-calendar";
               $color = "text-blue";
               $tipoTexto = "Actividad Próxima";
+            } else if ($notif["tipo"] == "registro_usuario") {
+              $icono = "fa-user-plus";
+              $color = "text-green";
+              $tipoTexto = "Registro de Usuario";
             } else if ($notif["tipo"] == "gasto_proximo") {
               $icono = "fa-money";
               $color = "text-orange";
@@ -264,7 +268,6 @@
 
                     <td><i class="fa ' . $icono . ' ' . $color . ' fa-2x"></i></td>
                     <td>' . $tipoTexto . '</td>
-                    <td>' . $notif["titulo"] . '</td>
                     <td>' . $notif["mensaje"] . '</td>
                     <td>' . date("d/m/Y H:i", strtotime($notif["fecha"])) . '</td>
                     <td>';
@@ -309,6 +312,10 @@
               $icono = "fa-calendar";
               $color = "text-blue";
               $tipoTexto = "Actividad Próxima";
+            } else if ($notif["tipo"] == "registro_usuario") {
+              $icono = "fa-user-plus";
+              $color = "text-green";
+              $tipoTexto = "Registro de Usuario";
             } else if ($notif["tipo"] == "gasto_proximo") {
               $icono = "fa-money";
               $color = "text-orange";
@@ -346,8 +353,7 @@
                         <i class="fa ' . $icono . ' ' . $color . '"></i>
                       </div>
                       <div class="card-notificacion-info">
-                        <div class="card-notificacion-tipo">' . $tipoTexto . '</div>
-                        <div class="card-notificacion-titulo">' . $notif["titulo"] . '</div>
+                        <div class="card-notificacion-titulo">' . $tipoTexto . '</div>
                       </div>
                     </div>
 

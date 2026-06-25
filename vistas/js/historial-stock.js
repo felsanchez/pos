@@ -92,9 +92,10 @@ $(document).ready(function () {
     if (typeof $.fn.select2 !== 'undefined') {
         $('.select2').select2({ width: '100%' });
         
-        // Forzar reset de sucursal al cargar para que siempre inicie en "Vista Global" (Solo administradores)
-        if($("#sucursalReporteMaestro").is("select")){
-            $("#sucursalReporteMaestro").val("todos").trigger("change.select2");
+        // Forzar reset de sucursal al cargar para que siempre inicie en la sucursal por defecto (Solo administradores y si estamos en la página de historial stock)
+        if($("#sucursalReporteMaestro").is("select") && $(".tablaHistorialStock").length > 0){
+            var defaultSucursal = typeof defaultSucursalHistorial !== 'undefined' ? defaultSucursalHistorial : 'todos';
+            $("#sucursalReporteMaestro").val(defaultSucursal).trigger("change.select2");
             // Limpiar cualquier rastro previo en localStorage
             localStorage.removeItem("sucursalReporteMaestro");
         }
@@ -119,7 +120,8 @@ $(document).ready(function () {
         $("#span-rango-stock").html('<i class="fa fa-calendar"></i> Rango de fecha');
         
         if($("#sucursalReporteMaestro").is("select")){
-            $("#sucursalReporteMaestro").val("todos").trigger("change.select2");
+            var defaultSucursal = typeof defaultSucursalHistorial !== 'undefined' ? defaultSucursalHistorial : 'todos';
+            $("#sucursalReporteMaestro").val(defaultSucursal).trigger("change.select2");
         }
         
         reloadStockTable();

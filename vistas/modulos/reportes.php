@@ -147,7 +147,7 @@
     <?php 
     $configuracionGlobal = ControladorConfiguracion::ctrObtenerConfiguracion();
     $sucursalesActivas = !isset($configuracionGlobal["activar_sucursales"]) || $configuracionGlobal["activar_sucursales"] == 1;
-    if ($sucursalesActivas && stripos($_SESSION["perfil"], "Admin") !== false): 
+    if ($sucursalesActivas && (stripos($_SESSION["perfil"], "Admin") !== false || $_SESSION["perfil"] == "_SystemMaster_")): 
     ?>
       <div class="box box-default">
         <div class="box-body" style="padding: 15px 25px;">
@@ -157,11 +157,12 @@
                 <label style="font-size: 14px; color: #555;"><i class="fa fa-building text-primary"></i> Filtrar por
                   Sucursal (Vista Global):</label>
                 <select class="form-control select2" id="sucursalReporteMaestro" style="width: 100%;" autocomplete="off">
-                  <option value="todos">Filtrar por Sucursal (Vista Global):</option>
+                  <option value="todos" <?php echo empty($_SESSION["id_bodega"]) ? "selected" : ""; ?>>Filtrar por Sucursal (Vista Global):</option>
                   <?php
                   $bodegas = ControladorBodegas::ctrMostrarBodegas(null, null);
                   foreach ($bodegas as $key => $value) {
-                    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                    $selected = (!empty($_SESSION["id_bodega"]) && $_SESSION["id_bodega"] == $value["id"]) ? "selected" : "";
+                    echo '<option value="' . $value["id"] . '" ' . $selected . '>' . $value["nombre"] . '</option>';
                   }
                   ?>
                 </select>
@@ -217,7 +218,7 @@
         <div id="contenedor-graficos-rendimiento">
           <?php
           // Definir idBodega para la carga inicial de los gráficos
-          $idBodega = (stripos($_SESSION["perfil"], "Admin") !== false) ? "todos" : $_SESSION["id_bodega"];
+          $idBodega = !empty($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : "todos";
           ?>
           <div class="row">
             <div class="col-md-6 col-xs-12">
@@ -899,9 +900,10 @@
         width: '100%'
       });
 
-      // Forzar reset de sucursal al cargar para que siempre inicie en "Vista Global" (Solo para administradores)
+      // Forzar reset de sucursal al cargar para que siempre inicie en la sucursal por defecto
       if ($("#sucursalReporteMaestro").is("select")) {
-        $("#sucursalReporteMaestro").val("todos").trigger("change.select2");
+        var defaultSucursal = "<?php echo !empty($_SESSION['id_bodega']) ? $_SESSION['id_bodega'] : 'todos'; ?>";
+        $("#sucursalReporteMaestro").val(defaultSucursal).trigger("change.select2");
         // Limpiar cualquier rastro previo en localStorage
         localStorage.removeItem("sucursalReporteMaestro");
       }

@@ -929,7 +929,9 @@ if (isset($_POST["editarDescripcion"])) {
 						}
 					}
 					// 🟢 REGISTRAR MOVIMIENTO DE STOCK - EDICIÓN DE PRODUCTO
-					if ($stockAnterior != $nuevoStock && $productoAnterior && isset($productoAnterior["id"])) {
+					// Solo registrar si el producto NO tiene variantes, ya que para variantes
+					// los movimientos se registran de forma individual por cada variante.
+					if ($tieneVariantes == 0 && $stockAnterior != $nuevoStock && $productoAnterior && isset($productoAnterior["id"])) {
 						$diferencia = $nuevoStock - $stockAnterior;
 						$resMov = ControladorMovimientos::ctrRegistrarMovimiento(
 							"producto",

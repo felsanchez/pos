@@ -1000,7 +1000,6 @@ MODAL AGREGAR RETENCION
     }
   });
 
-  // Función para agregar un producto existente al formulario
   function agregarProductoExistente(producto) {
     var datos = new FormData();
     datos.append("idProducto", producto.id);
@@ -1014,8 +1013,7 @@ MODAL AGREGAR RETENCION
       processData: false,
       dataType: "json",
       success: function(respuesta) {
-        var descripcion = respuesta["descripcion"];
-        var descripcion = respuesta["descripcion"];
+        var descripcion = producto.descripcion ? producto.descripcion : respuesta["descripcion"];
         var stock = Number(respuesta["stock"]);
         var precioUnitario = Number(producto.precio);
         var cantidad = Number(producto.cantidad);
@@ -1027,6 +1025,13 @@ MODAL AGREGAR RETENCION
         
         // Limpiar nombre del impuesto
         var nombreCorto = impuestoNombre.split(/[0-9]/)[0].trim();
+
+        // Si es una variante, agregar atributos de variante al input y campos hidden de soporte
+        var esVarianteAttr = (producto.esVariante && producto.esVariante == "1") ? ' esVariante="1" idVariante="' + producto.idVariante + '" skuVariante="' + producto.skuVariante + '"' : '';
+        var camposVariante = (producto.esVariante && producto.esVariante == "1") ? 
+          '<input type="hidden" class="esVariante" value="1">' +
+          '<input type="hidden" class="idVarianteProducto" value="' + producto.idVariante + '">' +
+          '<input type="hidden" class="skuVariante" value="' + producto.skuVariante + '">' : '';
       
         // Agregar el producto a la interfaz
         $(".nuevoProducto").append(
@@ -1036,7 +1041,8 @@ MODAL AGREGAR RETENCION
             '<div class="col-xs-5" style="padding-right:0px">' +
               '<div class="input-group">' +
                 '<span class="input-group-addon"><button type="button" class="btn btn-danger btn-xs quitarProducto" idProducto="' + producto.id + '"><i class="fa fa-times"></i></button></span>' +
-                '<input type="text" class="form-control nuevaDescripcionProducto" idProducto="' + producto.id + '" name="agregarProducto" value="' + descripcion + '" readonly required>' +
+                '<input type="text" class="form-control nuevaDescripcionProducto" idProducto="' + producto.id + '"' + esVarianteAttr + ' name="agregarProducto" value="' + descripcion + '" readonly required>' +
+                camposVariante +
               '</div>' +
             '</div>' +
 

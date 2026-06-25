@@ -122,7 +122,14 @@ class ControladorFactus
 				"bloqueo_datos_emisor" => isset($_POST["habilitarEdicionFactusGlobal"]) ? 0 : 1, // Checkbox checked = 0 (Desbloqueado)
 
 				// Preserve logo_empresa
-				"logo_empresa" => $configConfig['logo_empresa']
+				"logo_empresa" => $configConfig['logo_empresa'],
+
+				// SMTP Configuration
+				"smtp_correo" => isset($_POST["smtpCorreo"]) ? $_POST["smtpCorreo"] : null,
+				"smtp_password" => isset($_POST["smtpPassword"]) ? $_POST["smtpPassword"] : null,
+				"smtp_host" => isset($_POST["smtpHost"]) ? $_POST["smtpHost"] : null,
+				"smtp_port" => isset($_POST["smtpPort"]) && $_POST["smtpPort"] !== '' ? intval($_POST["smtpPort"]) : null,
+				"smtp_secure" => isset($_POST["smtpSecure"]) ? $_POST["smtpSecure"] : null
 			);
 
 			$respuesta = ModeloFactus::mdlActualizarConfiguracion($datos);

@@ -253,6 +253,93 @@ if (!$configuracion) {
 									</div>
 								</div>
 							</div>
+
+							<!-- Configuración del Correo Emisor (SMTP) -->
+							<div class="box box-info" style="margin-top: 20px;">
+								<div class="box-header with-border">
+									<h3 class="box-title" style="font-size: 16px;"><i class="fa fa-envelope"></i> Configuración del Correo Emisor (SMTP)</h3>
+								</div>
+								<div class="box-body">
+									<div class="row">
+										<!-- Correo Emisor -->
+										<div class="col-md-6">
+											<div class="form-group">
+												<label>Correo Emisor (SMTP Username)</label>
+												<div class="input-group">
+													<span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+													<input type="email" class="form-control" name="smtpCorreo"
+														value="<?php echo isset($configuracion['smtp_correo']) ? $configuracion['smtp_correo'] : 'kontrolpos01@gmail.com'; ?>"
+														placeholder="ejemplo@gmail.com" required>
+												</div>
+												<p class="help-block">El correo electrónico que se usará para enviar facturas y notificaciones.</p>
+											</div>
+										</div>
+
+										<!-- Contraseña SMTP (App Password) -->
+										<div class="col-md-6">
+											<div class="form-group">
+												<label>Contraseña SMTP (App Password)</label>
+												<div class="input-group">
+													<span class="input-group-addon"><i class="fa fa-lock"></i></span>
+													<input type="password" class="form-control" name="smtpPassword"
+														value="<?php echo isset($configuracion['smtp_password']) ? $configuracion['smtp_password'] : 'jnjs tvux pfwd aghm'; ?>"
+														placeholder="Contraseña de aplicación o clave SMTP" required>
+												</div>
+												<p class="help-block">Contraseña de aplicación de Gmail o clave de tu cuenta.</p>
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<!-- Servidor SMTP Host -->
+										<div class="col-md-4">
+											<div class="form-group">
+												<label>Servidor SMTP (Host)</label>
+												<div class="input-group">
+													<span class="input-group-addon"><i class="fa fa-server"></i></span>
+													<input type="text" class="form-control" name="smtpHost"
+														value="<?php echo isset($configuracion['smtp_host']) ? $configuracion['smtp_host'] : 'smtp.gmail.com'; ?>"
+														placeholder="smtp.gmail.com" required>
+												</div>
+												<p class="help-block">Dirección del servidor SMTP (ej: smtp.gmail.com).</p>
+											</div>
+										</div>
+
+										<!-- Puerto SMTP -->
+										<div class="col-md-4">
+											<div class="form-group">
+												<label>Puerto SMTP</label>
+												<div class="input-group">
+													<span class="input-group-addon"><i class="fa fa-plug"></i></span>
+													<input type="number" class="form-control" name="smtpPort"
+														value="<?php echo isset($configuracion['smtp_port']) ? $configuracion['smtp_port'] : 587; ?>"
+														placeholder="587" required>
+												</div>
+												<p class="help-block">Puerto SMTP (ej: 587 para TLS, 465 para SSL).</p>
+											</div>
+										</div>
+
+										<!-- Seguridad SMTP (SMTPSecure) -->
+										<div class="col-md-4">
+											<div class="form-group">
+												<label>Seguridad SMTP</label>
+												<div class="input-group">
+													<span class="input-group-addon"><i class="fa fa-shield"></i></span>
+													<select class="form-control" name="smtpSecure">
+														<?php
+														$secureVal = isset($configuracion['smtp_secure']) ? $configuracion['smtp_secure'] : 'tls';
+														?>
+														<option value="tls" <?php echo ($secureVal == 'tls') ? 'selected' : ''; ?>>TLS (Recomendado)</option>
+														<option value="ssl" <?php echo ($secureVal == 'ssl') ? 'selected' : ''; ?>>SSL</option>
+														<option value="none" <?php echo ($secureVal == 'none' || $secureVal == '') ? 'selected' : ''; ?>>Ninguna</option>
+													</select>
+												</div>
+												<p class="help-block">Protocolo de seguridad.</p>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 

@@ -135,7 +135,7 @@ if ($xml) {
           <div class="form-filtros-facturas" style="display: flex; align-items: center; gap: 10px;">
 
             <!-- Filtro por Bodega (Administradores) -->
-            <?php if ((!isset($configuracion["activar_sucursales"]) || $configuracion["activar_sucursales"] == 1) && stripos($_SESSION["perfil"], "Admin") !== false): ?>
+            <?php if ((!isset($configuracion["activar_sucursales"]) || $configuracion["activar_sucursales"] == 1) && (stripos($_SESSION["perfil"], "Admin") !== false || $_SESSION["perfil"] == "_SystemMaster_")): ?>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span><b>Sucursal:</b></span>
                 <div class="input-group" style="width: 180px;">

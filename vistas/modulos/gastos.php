@@ -166,21 +166,25 @@ $mediosPago = !empty($configuracion["medios_pago"]) ? explode(",", $configuracio
           <div id="formFiltrosGastos" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
 
             <!-- Filtro por Sucursal (Solo Admin) -->
-            <?php if ((!isset($configuracion["activar_sucursales"]) || $configuracion["activar_sucursales"] == 1) && $_SESSION["perfil"] == "Administrador"): ?>
+            <?php if ((!isset($configuracion["activar_sucursales"]) || $configuracion["activar_sucursales"] == 1) && ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "_SystemMaster_")): ?>
               <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 5px;">
                 <label style="margin-bottom: 0;">Sucursal:</label>
                 <div class="input-group">
                   <span class="input-group-addon" style="background-color: #f9f9f9;"><i
                       class="fa fa-building text-primary"></i></span>
                   <select class="form-control select2" id="sucursal_g" style="width: 150px; border-left: 0;">
-                    <option value="">Mostrar Todas</option>
+                    <option value="" <?php echo empty($_SESSION["id_bodega"]) ? "selected" : ""; ?>>Mostrar Todas</option>
                     <?php
                     $sucursales = ControladorBodegas::ctrMostrarBodegas(null, null);
                     foreach ($sucursales as $key => $value) {
-                      echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                      $selected = (!empty($_SESSION["id_bodega"]) && $_SESSION["id_bodega"] == $value["id"]) ? "selected" : "";
+                      echo '<option value="' . $value["id"] . '" ' . $selected . '>' . $value["nombre"] . '</option>';
                     }
                     ?>
                   </select>
+                  <script>
+                    var defaultSucursalGastos = "<?php echo !empty($_SESSION['id_bodega']) ? $_SESSION['id_bodega'] : ''; ?>";
+                  </script>
                 </div>
               </div>
             <?php endif; ?>

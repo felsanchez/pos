@@ -170,8 +170,8 @@
       </div>
 
       <div class="form-group has-feedback" style="margin-bottom: 25px;">
-        <input type="password" class="form-control" placeholder="Contraseña" name="ingPassword" required>
-        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+        <input type="password" class="form-control" placeholder="Contraseña" id="ingPassword" name="ingPassword" required>
+        <span class="fa fa-eye-slash form-control-feedback toggle-password" style="cursor: pointer; pointer-events: auto;" data-target="#ingPassword"></span>
       </div>
 
       <div class="row">
@@ -280,16 +280,14 @@ MODAL REGISTRO
             <!-- ENTRADA PARA LA CONTRASEÑA -->
 
             <div class="form-group">
-
               <div class="input-group">
-
                 <span class="input-group-addon"><i class="fa fa-lock"></i></span>
-
-                <input type="password" class="form-control input-lg" name="registroPassword"
+                <input type="password" class="form-control input-lg" id="registroPassword" name="registroPassword"
                   placeholder="Ingresar contraseña" required>
-
+                <span class="input-group-addon toggle-password" style="cursor: pointer;" data-target="#registroPassword">
+                  <i class="fa fa-eye-slash"></i>
+                </span>
               </div>
-
             </div>
 
           </div>
@@ -404,3 +402,21 @@ MODAL RECUPERAR CONTRASEÑA
   </div>
 
 </div>
+
+<script>
+  $(document).ready(function () {
+    $(document).on("click", ".toggle-password", function () {
+      var targetSelector = $(this).attr("data-target");
+      var targetInput = $(targetSelector);
+      var icon = $(this).find("i").length ? $(this).find("i") : $(this);
+      
+      if (targetInput.attr("type") === "password") {
+        targetInput.attr("type", "text");
+        icon.removeClass("fa-eye-slash").addClass("fa-eye");
+      } else {
+        targetInput.attr("type", "password");
+        icon.removeClass("fa-eye").addClass("fa-eye-slash");
+      }
+    });
+  });
+</script>

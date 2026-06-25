@@ -15,7 +15,8 @@ class ControladorNotificaciones
 			"titulo" => $titulo,
 			"mensaje" => $mensaje,
 			"referencia_tipo" => $referenciaTipo,
-			"referencia_id" => $referenciaId
+			"referencia_id" => $referenciaId,
+			"id_bodega" => isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : null
 		);
 
 		$respuesta = ModeloNotificaciones::mdlCrearNotificacion($datos);
@@ -114,39 +115,112 @@ class ControladorNotificaciones
 
 		foreach ($productos as $producto) {
 
-			// Verificar stock agotado
-			if ($alertaStockAgotado && $producto["stock"] == 0) {
+			$idBodegaActiva = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : null;
 
-				// Verificar si ya existe una notificación no leída para este producto
-				$existe = ModeloNotificaciones::mdlExisteNotificacionStock("stock_agotado", $producto["id"]);
+			// Verificar si el producto tiene variantes
+			if (isset($producto["tiene_variantes"]) && $producto["tiene_variantes"] == 1) {
 
-				if (!$existe) {
-					// Crear notificación
-					ControladorNotificaciones::ctrCrearNotificacion(
-						"stock_agotado",
-						"Stock Agotado",
-						"El producto \"" . $producto["descripcion"] . "\" (Código: " . $producto["codigo"] . ") se ha agotado.",
-						"producto",
-						$producto["id"]
-					);
+				$stmt = Conexion::conectar()->prepare("
+					SELECT 
+						pv.id,
+						pv.sku,
+						COALESCE(pvb.stock, 0) as stock,
+						(SELECT GROUP_CONCAT(ov.nombre ORDER BY ov.id SEPARATOR ' - ') 
+						 FROM productos_variantes_opciones pvo
+						 INNER JOIN opciones_variantes ov ON pvo.id_opcion_variante = ov.id
+						 WHERE pvo.id_producto_variante = pv.id) as nombre_variante
+					FROM productos_variantes pv
+					LEFT JOIN productos_variantes_bodegas pvb ON pv.id = pvb.id_variante AND pvb.id_bodega = :id_bodega
+					WHERE pv.id_producto = :id_producto AND pv.estado = 1
+				");
+
+				$stmt->bindParam(":id_bodega", $idBodegaActiva, PDO::PARAM_INT);
+				$stmt->bindParam(":id_producto", $producto["id"], PDO::PARAM_INT);
+				$stmt->execute();
+				$variantes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+				foreach ($variantes as $variante) {
+
+					$nombreCompleto = $producto["descripcion"] . "-" . ($variante["nombre_variante"] ?? "");
+					$codigoVariante = !empty($variante["sku"]) ? $variante["sku"] : $producto["codigo"];
+
+					// Verificar stock agotado
+					if ($alertaStockAgotado && $variante["stock"] == 0) {
+
+						// Verificar si ya existe una notificación no leída para esta variante en esta bodega
+						$existe = ModeloNotificaciones::mdlExisteNotificacionStock("stock_agotado", $variante["id"], $idBodegaActiva, "variante");
+
+						if (!$existe) {
+							// Crear notificación
+							ControladorNotificaciones::ctrCrearNotificacion(
+								"stock_agotado",
+								"Stock Agotado",
+								"El producto \"" . $nombreCompleto . "\" (Código: " . $codigoVariante . ") se ha agotado.",
+								"variante",
+								$variante["id"]
+							);
+						}
+
+					}
+					// Verificar stock bajo (pero no agotado)
+					else if ($alertaStockBajo && $variante["stock"] > 0 && $variante["stock"] <= $umbralStockMinimo) {
+
+						// Verificar si ya existe una notificación no leída para esta variante en esta bodega
+						$existe = ModeloNotificaciones::mdlExisteNotificacionStock("stock_bajo", $variante["id"], $idBodegaActiva, "variante");
+
+						if (!$existe) {
+							// Crear notificación
+							ControladorNotificaciones::ctrCrearNotificacion(
+								"stock_bajo",
+								"Stock Bajo",
+								"El producto \"" . $nombreCompleto . "\" (Código: " . $codigoVariante . ") tiene stock bajo: " . $variante["stock"] . " unidades.",
+								"variante",
+								$variante["id"]
+							);
+						}
+
+					}
+
 				}
 
-			}
-			// Verificar stock bajo (pero no agotado)
-			else if ($alertaStockBajo && $producto["stock"] > 0 && $producto["stock"] <= $umbralStockMinimo) {
+			} else {
 
-				// Verificar si ya existe una notificación no leída para este producto
-				$existe = ModeloNotificaciones::mdlExisteNotificacionStock("stock_bajo", $producto["id"]);
+				// Producto estándar sin variantes
+				// Verificar stock agotado
+				if ($alertaStockAgotado && $producto["stock"] == 0) {
 
-				if (!$existe) {
-					// Crear notificación
-					ControladorNotificaciones::ctrCrearNotificacion(
-						"stock_bajo",
-						"Stock Bajo",
-						"El producto \"" . $producto["descripcion"] . "\" (Código: " . $producto["codigo"] . ") tiene stock bajo: " . $producto["stock"] . " unidades.",
-						"producto",
-						$producto["id"]
-					);
+					// Verificar si ya existe una notificación no leída para este producto en esta bodega
+					$existe = ModeloNotificaciones::mdlExisteNotificacionStock("stock_agotado", $producto["id"], $idBodegaActiva);
+
+					if (!$existe) {
+						// Crear notificación
+						ControladorNotificaciones::ctrCrearNotificacion(
+							"stock_agotado",
+							"Stock Agotado",
+							"El producto \"" . $producto["descripcion"] . "\" (Código: " . $producto["codigo"] . ") se ha agotado.",
+							"producto",
+							$producto["id"]
+						);
+					}
+
+				}
+				// Verificar stock bajo (pero no agotado)
+				else if ($alertaStockBajo && $producto["stock"] > 0 && $producto["stock"] <= $umbralStockMinimo) {
+
+					// Verificar si ya existe una notificación no leída para este producto en esta bodega
+					$existe = ModeloNotificaciones::mdlExisteNotificacionStock("stock_bajo", $producto["id"], $idBodegaActiva);
+
+					if (!$existe) {
+						// Crear notificación
+						ControladorNotificaciones::ctrCrearNotificacion(
+							"stock_bajo",
+							"Stock Bajo",
+							"El producto \"" . $producto["descripcion"] . "\" (Código: " . $producto["codigo"] . ") tiene stock bajo: " . $producto["stock"] . " unidades.",
+							"producto",
+							$producto["id"]
+						);
+					}
+
 				}
 
 			}
@@ -178,10 +252,8 @@ class ControladorNotificaciones
 		$fechaHoy = date('Y-m-d');
 
 
-		// Obtener actividades que vencen dentro del rango
-		// Filtrar por bodega activa para evitar notificaciones cruzadas entre sucursales
-		$idBodegaActiva = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
-		$actividades = ModeloActividades::mdlMostrarActividadesConCliente("actividades", null, null, $idBodegaActiva);
+		// Obtener todas las actividades que vencen dentro del rango
+		$actividades = ModeloActividades::mdlMostrarActividadesConCliente("actividades", null, null, null);
 
 		if (!$actividades) {
 			return;

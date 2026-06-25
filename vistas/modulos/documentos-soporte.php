@@ -114,7 +114,7 @@
                     <?php 
                     $configuracionGlobal = ControladorConfiguracion::ctrObtenerConfiguracion();
                     $sucursalesActivas = !isset($configuracionGlobal["activar_sucursales"]) || $configuracionGlobal["activar_sucursales"] == 1;
-                    if ($sucursalesActivas && stripos($_SESSION["perfil"], "Admin") !== false): 
+                    if ($sucursalesActivas && (stripos($_SESSION["perfil"], "Admin") !== false || $_SESSION["perfil"] == "_SystemMaster_")): 
                     ?>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <span><b>Sucursal:</b></span>

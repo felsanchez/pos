@@ -77,8 +77,13 @@ $(document).ready(function () {
         });
     }
 
-    // 2. Inicialización de Select2
     $('.select2').select2({ width: '100%' });
+
+    // Forzar reset de sucursal al cargar para que siempre inicie en la sucursal por defecto
+    if ($("#sucursal_g").is("select")) {
+        var defaultSucursal = typeof defaultSucursalGastos !== 'undefined' ? defaultSucursalGastos : '';
+        $("#sucursal_g").val(defaultSucursal).trigger("change.select2");
+    }
 
     // 3. Función de Recarga (La que arregló el problema)
     function reloadTable() {
@@ -92,9 +97,10 @@ $(document).ready(function () {
         reloadTable();
     });
 
-    // 5. Botón Limpiar
     $("#btnLimpiarGastos").on("click", function () {
-        $("#filtroFechaInicio, #filtroFechaFin, #cat_g, #prov_g, #sucursal_g").val("").trigger('change');
+        var defaultSucursal = typeof defaultSucursalGastos !== 'undefined' ? defaultSucursalGastos : '';
+        $("#filtroFechaInicio, #filtroFechaFin, #cat_g, #prov_g").val("").trigger('change');
+        $("#sucursal_g").val(defaultSucursal).trigger('change');
         $("#daterange-btn span").html('<i class="fa fa-calendar"></i> Rango de fecha');
         reloadTable();
     });

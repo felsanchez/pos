@@ -1027,6 +1027,12 @@ class ControladorUsuarios
 
 			if ($respuesta == "ok") {
 
+				// Crear notificación de nuevo usuario registrado
+				$tipo = "registro_usuario";
+				$titulo = "Nuevo Registro";
+				$mensaje = "El usuario " . $_POST["registroNombre"] . " (Login: " . $_POST["registroUsuario"] . ") se ha registrado desde la pantalla de login.";
+				ControladorNotificaciones::ctrCrearNotificacion($tipo, $titulo, $mensaje);
+
 				echo '<script>
 					swal({
 						type: "success",

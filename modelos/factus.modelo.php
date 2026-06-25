@@ -46,7 +46,12 @@ class ModeloFactus
 				responsabilidades_fiscales = :responsabilidades_fiscales,
 				tipo_persona = :tipo_persona,
 				bloqueo_datos_emisor = :bloqueo_datos_emisor,
-				logo_empresa = :logo_empresa
+				logo_empresa = :logo_empresa,
+				smtp_correo = :smtp_correo,
+				smtp_password = :smtp_password,
+				smtp_host = :smtp_host,
+				smtp_port = :smtp_port,
+				smtp_secure = :smtp_secure
 			WHERE id = 1"
         );
 
@@ -73,6 +78,11 @@ class ModeloFactus
         $stmt->bindParam(":tipo_persona", $datos["tipo_persona"], PDO::PARAM_STR);
         $stmt->bindParam(":bloqueo_datos_emisor", $datos["bloqueo_datos_emisor"], PDO::PARAM_INT);
         $stmt->bindParam(":logo_empresa", $datos["logo_empresa"], PDO::PARAM_STR);
+        $stmt->bindParam(":smtp_correo", $datos["smtp_correo"], PDO::PARAM_STR);
+        $stmt->bindParam(":smtp_password", $datos["smtp_password"], PDO::PARAM_STR);
+        $stmt->bindParam(":smtp_host", $datos["smtp_host"], PDO::PARAM_STR);
+        $stmt->bindParam(":smtp_port", $datos["smtp_port"], PDO::PARAM_INT);
+        $stmt->bindParam(":smtp_secure", $datos["smtp_secure"], PDO::PARAM_STR);
 
         if ($stmt->execute()) {
             return "ok";

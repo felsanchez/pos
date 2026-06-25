@@ -143,7 +143,7 @@ require_once "controladores/movimientos.controlador.php";
 require_once "modelos/movimientos.modelo.php";
 
 // Definir idBodega para la carga inicial de los gráficos
-$idBodegaInicial = (stripos($_SESSION["perfil"], "Admin") !== false) ? "todos" : $_SESSION["id_bodega"];
+$idBodegaInicial = (stripos($_SESSION["perfil"], "Admin") !== false || $_SESSION["perfil"] == "_SystemMaster_") ? (!empty($_SESSION["id_bodega"]) ? $_SESSION["id_bodega"] : "todos") : $_SESSION["id_bodega"];
 
 // Pre-cargar solo el resumen para aparición inmediata (Las tarjetas)
 $pre_resumen = ControladorMovimientos::ctrObtenerResumen($idBodegaInicial);
@@ -250,7 +250,7 @@ foreach ($pre_resumen as $item) {
     <?php 
     $configuracionGlobal = ControladorConfiguracion::ctrObtenerConfiguracion();
     $sucursalesActivas = !isset($configuracionGlobal["activar_sucursales"]) || $configuracionGlobal["activar_sucursales"] == 1;
-    if ($sucursalesActivas && stripos($_SESSION["perfil"], "Admin") !== false): 
+    if ($sucursalesActivas && (stripos($_SESSION["perfil"], "Admin") !== false || $_SESSION["perfil"] == "_SystemMaster_")): 
     ?>
       <div class="box box-default">
         <div class="box-body" style="padding: 15px 25px;">
@@ -259,14 +259,18 @@ foreach ($pre_resumen as $item) {
               <div class="form-group" style="margin-bottom: 0;">
                 <label style="font-size: 14px; color: #555;"><i class="fa fa-building text-primary"></i> Filtrar por Sucursal (Vista Global):</label>
                 <select class="form-control select2" id="sucursalReporteMaestro" style="width: 100%;" autocomplete="off">
-                  <option value="todos">Filtrar por Sucursal (Vista Global):</option>
+                  <option value="todos" <?php echo empty($_SESSION["id_bodega"]) ? "selected" : ""; ?>>Filtrar por Sucursal (Vista Global):</option>
                   <?php
                   $bodegas = ControladorBodegas::ctrMostrarBodegas(null, null);
                   foreach ($bodegas as $key => $value) {
-                    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                    $selected = (!empty($_SESSION["id_bodega"]) && $_SESSION["id_bodega"] == $value["id"]) ? "selected" : "";
+                    echo '<option value="' . $value["id"] . '" ' . $selected . '>' . $value["nombre"] . '</option>';
                   }
                   ?>
                 </select>
+                <script>
+                  var defaultSucursalHistorial = "<?php echo !empty($_SESSION['id_bodega']) ? $_SESSION['id_bodega'] : 'todos'; ?>";
+                </script>
               </div>
             </div>
             <div class="col-md-8 col-sm-6 hidden-xs">
