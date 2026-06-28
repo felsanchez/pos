@@ -5,6 +5,13 @@
 debug*.txt
 debug*.php
 diagnostico*.php 
+test*.php
+test*.js
+test*.py
+scratch*.php
+fix*.php
+check*.php
+
 
 # Archivos temporales de PHP
 *.log

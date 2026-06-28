@@ -23,6 +23,10 @@ echo [2/4] Copiando archivos esenciales...
 copy /Y "%ORIGEN%index.php" "%DESTINO%\" > nul
 if exist "%ORIGEN%config.php" copy /Y "%ORIGEN%config.php" "%DESTINO%\" > nul
 if exist "%ORIGEN%.htaccess" copy /Y "%ORIGEN%.htaccess" "%DESTINO%\" > nul
+if exist "%ORIGEN%descargar-xml.php" copy /Y "%ORIGEN%descargar-xml.php" "%DESTINO%\" > nul
+if exist "%ORIGEN%descargar-xml-ds.php" copy /Y "%ORIGEN%descargar-xml-ds.php" "%DESTINO%\" > nul
+if exist "%ORIGEN%descargar-xml-na.php" copy /Y "%ORIGEN%descargar-xml-na.php" "%DESTINO%\" > nul
+if exist "%ORIGEN%descargar-xml-nc.php" copy /Y "%ORIGEN%descargar-xml-nc.php" "%DESTINO%\" > nul
 
 :: Copiar carpetas esenciales usando robocopy (el /E es recursivo, los otros flags silencian la salida)
 robocopy "%ORIGEN%controladores" "%DESTINO%\controladores" /E /NFL /NDL /NJH /NJS
