@@ -24,8 +24,15 @@ $nombreEmpresa = !empty($configuracionGeneral["nombre_empresa"]) ? $configuracio
   <title><?php echo htmlspecialchars($nombreEmpresa); ?></title>
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-
-  <base href="/pos/">
+  <?php
+  // Obtener la ruta base del proyecto de forma dinámica para que funcione tanto en local como en producción
+  $baseHref = dirname($_SERVER['SCRIPT_NAME']);
+  $baseHref = str_replace('\\', '/', $baseHref);
+  if (substr($baseHref, -1) !== '/') {
+      $baseHref .= '/';
+  }
+  ?>
+  <base href="<?php echo $baseHref; ?>">
 
   <?php echo CSRF::getMetaTag(); // Token CSRF para JavaScript ?>
 

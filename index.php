@@ -1,5 +1,4 @@
 <?php
-file_put_contents("debug_global.txt", date("Y-m-d H:i:s") . " - RUTA: " . (isset($_GET['ruta']) ? $_GET['ruta'] : 'inicio') . " - METHOD: " . $_SERVER['REQUEST_METHOD'] . "\n", FILE_APPEND);
 
 // Mostrar errores en pantalla (solo para desarrollo)
 ini_set('display_errors', 1);
