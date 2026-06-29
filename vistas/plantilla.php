@@ -267,6 +267,7 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "traslados" ||
         $_GET["ruta"] == "crear-traslado" ||
         $_GET["ruta"] == "crm" ||
+        ($_GET["ruta"] == "inquilinos" && $_SESSION["perfil"] === "_SystemMaster_") ||
         $_GET["ruta"] == "salir"
       ) {
 

@@ -395,6 +395,12 @@
             <span>Informacion</span>
           </a>
         </li>';
+        echo '<li>
+          <a href="inquilinos">
+            <i class="fa fa-server"></i>
+            <span>Administrar Inquilinos</span>
+          </a>
+        </li>';
       }
 
       ?>
