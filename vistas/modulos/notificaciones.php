@@ -231,6 +231,10 @@
               $icono = "fa-user-plus";
               $color = "text-green";
               $tipoTexto = "Registro de Usuario";
+            } else if ($notif["tipo"] == "registro_usuario_visitante") {
+              $icono = "fa-user-plus";
+              $color = "text-green";
+              $tipoTexto = "Registro de Usuario - Visitante";
             } else if ($notif["tipo"] == "gasto_proximo") {
               $icono = "fa-money";
               $color = "text-orange";
@@ -316,6 +320,10 @@
               $icono = "fa-user-plus";
               $color = "text-green";
               $tipoTexto = "Registro de Usuario";
+            } else if ($notif["tipo"] == "registro_usuario_visitante") {
+              $icono = "fa-user-plus";
+              $color = "text-green";
+              $tipoTexto = "Registro de Usuario - Visitante";
             } else if ($notif["tipo"] == "gasto_proximo") {
               $icono = "fa-money";
               $color = "text-orange";

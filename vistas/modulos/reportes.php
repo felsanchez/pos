@@ -379,7 +379,7 @@
                   <?php
                   $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
                   foreach ($usuarios as $key => $value) {
-                    if ($value['perfil'] === '_SystemMaster_') continue;
+                    if ($value['perfil'] === '_SystemMaster_' || $value['perfil'] === 'Visitante') continue;
                     echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
                   }
                   ?>
@@ -528,7 +528,7 @@
               $valor = null;
               $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
               foreach ($usuarios as $key => $value) {
-                if ($value['perfil'] === '_SystemMaster_') continue;
+                if ($value['perfil'] === '_SystemMaster_' || $value['perfil'] === 'Visitante') continue;
                 echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
               }
               ?>

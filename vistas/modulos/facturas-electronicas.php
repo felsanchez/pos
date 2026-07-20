@@ -197,7 +197,7 @@ if ($xml) {
                   $valor = null;
                   $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
                   foreach ($usuarios as $key => $valueUsuario) {
-                    if ($valueUsuario["perfil"] === "_SystemMaster_") {
+                    if ($valueUsuario["perfil"] === "_SystemMaster_" || $valueUsuario["perfil"] === "Visitante") {
                       continue;
                     }
                     echo '<option value="' . e($valueUsuario["id"]) . '">' . e($valueUsuario["nombre"]) . '</option>';

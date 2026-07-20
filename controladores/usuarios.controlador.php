@@ -107,7 +107,11 @@ class ControladorUsuarios
 
 							ModeloUsuarios::mdlActualizarUsuario($tabla, "ultimo_login", $fechaActual, "id", $respuesta["id"]);
 
-							echo '<script>window.location = "inicio";</script>';
+							if ($_SESSION["perfil"] === "Visitante") {
+								echo '<script>window.location = "consulta-ventas";</script>';
+							} else {
+								echo '<script>window.location = "inicio";</script>';
+							}
 						} else {
 							echo '<br><div class="alert alert-danger">El usuario aún no está activado</div>';
 						}
@@ -430,6 +434,12 @@ class ControladorUsuarios
 			$where .= " AND u.perfil = '$perfilFiltro' ";
 		}
 
+		// Filtro Mostrar/Ocultar Visitantes (Personalizado)
+		$mostrarVisitantes = isset($params['mostrarVisitantes']) ? intval($params['mostrarVisitantes']) : 0;
+		if ($mostrarVisitantes === 0) {
+			$where .= " AND u.perfil != 'Visitante' ";
+		}
+
 		// Ordenar
 		$order = "";
 		if (isset($params['order'][0]['column'])) {
@@ -446,7 +456,7 @@ class ControladorUsuarios
 
 		// Obtener datos
 		$usuarios = ModeloUsuarios::mdlMostrarUsuariosServerSide($tabla, $where, $order, $limit);
-		$totalData = ModeloUsuarios::mdlGetTotalUsuarios($tabla, " WHERE 1=1 " . (isset($_SESSION["usuario"]) ? " AND u.usuario != '".$_SESSION["usuario"]."' " : ""));
+		$totalData = ModeloUsuarios::mdlGetTotalUsuarios($tabla, " WHERE 1=1 " . (isset($_SESSION["usuario"]) ? " AND u.usuario != '".$_SESSION["usuario"]."' " : "") . ($mostrarVisitantes === 0 ? " AND u.perfil != 'Visitante' " : ""));
 		$totalFiltered = ModeloUsuarios::mdlGetTotalUsuarios($tabla, $where);
 
 		$data = array();
@@ -1011,16 +1021,50 @@ class ControladorUsuarios
 			// Usar password_hash con bcrypt y factor de costo 12 (seguro)
 			$encriptar = password_hash($_POST["registroPassword"], PASSWORD_BCRYPT, ['cost' => 12]);
 
+			// Determinar perfil y estado según selección
+			$perfil = "Administrador";
+			$estado = 0;
+
+			if (isset($_POST["registroPerfil"]) && $_POST["registroPerfil"] === "Visitante") {
+				$perfil = "Visitante";
+				$estado = 1;
+
+				// Verificar si el perfil "Visitante" ya existe en la base de datos
+				$db = Conexion::conectar();
+				$stmtCheckPerfil = $db->prepare("SELECT id FROM perfiles WHERE nombre = :nombre LIMIT 1");
+				$stmtCheckPerfil->bindValue(":nombre", $perfil, PDO::PARAM_STR);
+				$stmtCheckPerfil->execute();
+				$existePerfil = $stmtCheckPerfil->fetch();
+				$stmtCheckPerfil = null;
+
+				if (!$existePerfil) {
+					// Crear el perfil "Visitante" con permisos mínimos exclusivos
+					$modulos = ModeloPerfiles::mdlObtenerModulos();
+					$permisosVisitante = array();
+					foreach ($modulos as $slug => $nombreMod) {
+						$permisosVisitante[$slug] = array(
+							"ver" => ($slug === "ordenes-visita" || $slug === "consulta-ventas") ? 1 : 0,
+							"crear" => 0,
+							"editar" => 0,
+							"eliminar" => 0,
+							"imprimir" => ($slug === "ordenes-visita" || $slug === "consulta-ventas") ? 1 : 0,
+							"exportar" => ($slug === "ordenes-visita" || $slug === "consulta-ventas") ? 1 : 0
+						);
+					}
+					ModeloPerfiles::mdlCrearPerfil("Visitante", "Acceso exclusivo para consultas de ventas", $permisosVisitante);
+				}
+			}
+
 			// Datos del nuevo usuario
 			$datos = array(
 				"nombre" => $_POST["registroNombre"],
 				"usuario" => $_POST["registroUsuario"],
 				"password" => $encriptar,
-				"perfil" => "Administrador",
+				"perfil" => $perfil,
 				"foto" => "",
 				"email" => $_POST["registroEmail"],
 				"id_bodega" => 1,
-				"estado" => 0
+				"estado" => $estado
 			);
 
 			$respuesta = ModeloUsuarios::mdlIngresarUsuario($tabla, $datos);
@@ -1028,7 +1072,7 @@ class ControladorUsuarios
 			if ($respuesta == "ok") {
 
 				// Crear notificación de nuevo usuario registrado
-				$tipo = "registro_usuario";
+				$tipo = ($perfil === "Visitante") ? "registro_usuario_visitante" : "registro_usuario";
 				$titulo = "Nuevo Registro";
 				$mensaje = "El usuario " . $_POST["registroNombre"] . " (Login: " . $_POST["registroUsuario"] . ") se ha registrado desde la pantalla de login.";
 				ControladorNotificaciones::ctrCrearNotificacion($tipo, $titulo, $mensaje);

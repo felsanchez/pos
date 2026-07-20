@@ -354,7 +354,7 @@ MODAL EDITAR ACTIVIDAD
                       <?php
                       $usuariosEditar = ControladorUsuarios::ctrMostrarUsuarios(null, null);
                       foreach ($usuariosEditar as $key => $value) {
-                          if ($value["perfil"] == "_SystemMaster_" || $value["estado"] == 0) {
+                          if ($value["perfil"] == "_SystemMaster_" || $value["perfil"] == "Visitante" || $value["estado"] == 0) {
                               continue;
                           }
                           echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
@@ -566,7 +566,7 @@ MODAL AGREGAR actividad
 
                                 foreach ($usuarios as $key => $value) {
 
-                                    if ($value["perfil"] == "_SystemMaster_" || $value["estado"] == 0) {
+                                    if ($value["perfil"] == "_SystemMaster_" || $value["perfil"] == "Visitante" || $value["estado"] == 0) {
                                         continue;
                                     }
 
@@ -1373,7 +1373,7 @@ MODAL GESTIONAR ESTADOS
 MODAL EDITAR ESTADO
 ======================================-->
 
-<div id="modalEditarEstadoActividad" class="modal fade" role="dialog" data-backdrop="true" data-keyboard="true">
+<div id="modalEditarEstadoActividad" class="modal fade" role="dialog" data-backdrop="true" data-keyboard="true" style="z-index: 1060 !important;">
 
   <div class="modal-dialog">
 
@@ -1545,7 +1545,7 @@ MODAL GESTIONAR TIPOS
 MODAL EDITAR TIPO
 ======================================-->
 
-<div id="modalEditarTipoActividad" class="modal fade" role="dialog" data-backdrop="true" data-keyboard="true">
+<div id="modalEditarTipoActividad" class="modal fade" role="dialog" data-backdrop="true" data-keyboard="true" style="z-index: 1060 !important;">
 
   <div class="modal-dialog">
 
@@ -1621,6 +1621,22 @@ $(document).ready(function() {
 		setTimeout(function() {
 			$('#modalEditarActividad').modal('show');
 		}, 300);
+	});
+
+	// Corrección de z-index para modales anidados
+	$(document).on('show.bs.modal', '.modal', function () {
+		var zIndex = 1040 + (10 * $('.modal:visible').length);
+		$(this).css('z-index', zIndex);
+		setTimeout(function() {
+			$('.modal-backdrop').not('.modal-stack').css('z-index', zIndex - 1).addClass('modal-stack');
+		}, 0);
+	});
+
+	// Mantener el scrollbar del body cuando hay modales aún abiertos
+	$(document).on('hidden.bs.modal', '.modal', function () {
+		if ($('.modal:visible').length > 0) {
+			$('body').addClass('modal-open');
+		}
 	});
 });
 </script>

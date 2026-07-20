@@ -23,9 +23,11 @@ function puedeVer(string $modulo): bool
         return true;
     }
 
-    // Unificar Categorías y Variantes con Productos
+    // Unificar Categorías y Variantes con Productos, y consulta-ventas con ordenes-visita
     if ($modulo === 'categorias' || $modulo === 'variantes') {
         $modulo = 'productos';
+    } elseif ($modulo === 'consulta-ventas') {
+        $modulo = 'ordenes-visita';
     }
 
     return !empty($_SESSION['permisos'][$modulo]['ver']);
@@ -45,9 +47,11 @@ function puedeAccion(string $modulo, string $accion): bool
         return true;
     }
 
-    // Unificar Categorías y Variantes con Productos
+    // Unificar Categorías y Variantes con Productos, y consulta-ventas con ordenes-visita
     if ($modulo === 'categorias' || $modulo === 'variantes') {
         $modulo = 'productos';
+    } elseif ($modulo === 'consulta-ventas') {
+        $modulo = 'ordenes-visita';
     }
 
     return !empty($_SESSION['permisos'][$modulo][$accion]);

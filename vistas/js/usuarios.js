@@ -24,6 +24,7 @@ $(document).ready(function () {
 				"data": function(d) {
 					d.csrf_token = $('meta[name="csrf-token"]').attr('content');
 					d.perfilFiltro = $("#seleccionarPerfilFiltro").val();
+					d.mostrarVisitantes = $("#mostrarVisitantesCheck").is(":checked") ? 1 : 0;
 				}
 			},
 			"responsive": {
@@ -125,6 +126,11 @@ $(document).ready(function () {
 		=============================================*/
 		$("#seleccionarPerfilFiltro").on("change", function () {
 			console.log("Recargando tabla por cambio de perfil...");
+			tablaUsuarios.ajax.reload();
+		});
+
+		$("#mostrarVisitantesCheck").on("change", function () {
+			console.log("Recargando tabla por cambio de opción Mostrar Visitantes...");
 			tablaUsuarios.ajax.reload();
 		});
 	}

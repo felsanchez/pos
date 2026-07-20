@@ -291,6 +291,7 @@ BARRA DE NAVEGACION
 		</a>
 
 		<!-- Sucursal Activa y Módulo de Caja Chica -->
+		<?php if ($_SESSION["perfil"] !== "Visitante"): ?>
 		<div class="navbar-custom-menu pull-left" style="margin-left: 10px; margin-top: 10px; color: white; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
 			<?php 
 			$sucursalesActivas = !isset($configuracion["activar_sucursales"]) || $configuracion["activar_sucursales"] == 1;
@@ -338,6 +339,7 @@ BARRA DE NAVEGACION
 				</div>
 			<?php endif; ?>
 		</div>
+		<?php endif; ?>
 
 
 		<!-- perfi de usuario -->
@@ -346,6 +348,7 @@ BARRA DE NAVEGACION
 			<ul class="nav navbar-nav">
 
 				<!-- Notificaciones -->
+				<?php if ($_SESSION["perfil"] !== "Visitante"): ?>
 				<li class="dropdown notifications-menu">
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown">
 						<i class="fa fa-bell-o"></i>
@@ -376,7 +379,7 @@ BARRA DE NAVEGACION
 										} else if ($notif["tipo"] == "actividad_proxima") {
 											$icono = "fa-calendar";
 											$color = "text-blue";
-										} else if ($notif["tipo"] == "registro_usuario") {
+										} else if ($notif["tipo"] == "registro_usuario" || $notif["tipo"] == "registro_usuario_visitante") {
 											$icono = "fa-user-plus";
 											$color = "text-green";
 										} else if ($notif["tipo"] == "gasto_proximo") {
@@ -412,6 +415,7 @@ BARRA DE NAVEGACION
 						<li class="footer"><a href="notificaciones">Ver todas las notificaciones</a></li>
 					</ul>
 				</li>
+				<?php endif; ?>
 
 				<li class="dropdown user user-menu">
 

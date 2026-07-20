@@ -79,7 +79,7 @@ $sucursalesActivas = !isset($configuracion["activar_sucursales"]) || $configurac
                   <?php
                   $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
                   foreach ($usuarios as $key => $value) {
-                    if ($value["perfil"] === "_SystemMaster_") {
+                    if ($value["perfil"] === "_SystemMaster_" || $value["perfil"] === "Visitante") {
                       continue;
                     }
                     echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';

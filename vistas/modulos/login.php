@@ -290,6 +290,21 @@ MODAL REGISTRO
               </div>
             </div>
 
+            <!-- TIPO DE CUENTA -->
+            <div class="form-group" style="margin-top: 15px;">
+              <label style="font-weight: 600; color: #495057; display: block; margin-bottom: 8px;">Tipo de Cuenta:</label>
+              <div style="display: flex; gap: 20px; align-items: center; background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid #e9ecef;">
+                <label class="radio-inline" style="margin: 0; font-weight: 500; cursor: pointer; color: #495057;">
+                  <input type="radio" name="registroPerfil" value="Administrador" checked style="margin-top: 3px; margin-right: 6px;">
+                  Administrador <span style="font-weight: normal; color: #868e96; font-size: 0.9em;">(Requiere activación)</span>
+                </label>
+                <label class="radio-inline" style="margin: 0; font-weight: 500; cursor: pointer; color: #495057;">
+                  <input type="radio" name="registroPerfil" value="Visitante" style="margin-top: 3px; margin-right: 6px;">
+                  Visitante / Consulta <span style="font-weight: normal; color: #868e96; font-size: 0.9em;">(Acceso directo a consultas)</span>
+                </label>
+              </div>
+            </div>
+
           </div>
 
         </div>

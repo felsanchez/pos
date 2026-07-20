@@ -76,20 +76,27 @@
         <?php endif; ?>
 
         <!-- Filtro por Perfil Estandarizado -->
-        <div class="pull-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <span><b>Perfil:</b></span>
-          <div class="input-group" style="width: 200px;">
-            <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
-              <i class="fa fa-search text-primary"></i>
-            </span>
-            <select class="form-control select2" id="seleccionarPerfilFiltro" style="width: 100%;">
-              <option value="">Mostrar Todos</option>
-              <?php foreach (ModeloPerfiles::mdlObtenerPerfiles() as $p): ?>
-                <option value="<?php echo htmlspecialchars($p['nombre']); ?>">
-                  <?php echo htmlspecialchars($p['nombre']); ?>
-                </option>
-              <?php endforeach; ?>
-            </select>
+        <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <input type="checkbox" id="mostrarVisitantesCheck" style="margin: 0; width: 16px; height: 16px; cursor: pointer;">
+            <label for="mostrarVisitantesCheck" style="margin-bottom: 0; font-weight: 500; cursor: pointer; color: #333; font-size: 13px;">Mostrar Visitantes</label>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span><b>Perfil:</b></span>
+            <div class="input-group" style="width: 180px;">
+              <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+                <i class="fa fa-search text-primary"></i>
+              </span>
+              <select class="form-control select2" id="seleccionarPerfilFiltro" style="width: 100%;">
+                <option value="">Mostrar Todos</option>
+                <?php foreach (ModeloPerfiles::mdlObtenerPerfiles() as $p): ?>
+                  <?php if ($p['nombre'] === 'Visitante') continue; ?>
+                  <option value="<?php echo htmlspecialchars($p['nombre']); ?>">
+                    <?php echo htmlspecialchars($p['nombre']); ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
           </div>
         </div>
       </div>

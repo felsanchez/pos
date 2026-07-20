@@ -390,7 +390,7 @@ foreach ($pre_resumen as $item) {
                   <?php
                   $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
                   foreach ($usuarios as $key => $value) {
-                    if ($value["perfil"] === "SystemMaster" || $value["perfil"] === "_SystemMaster_") {
+                    if ($value["perfil"] === "SystemMaster" || $value["perfil"] === "_SystemMaster_" || $value["perfil"] === "Visitante") {
                       continue;
                     }
                     echo '<option value="' . e($value["id"]) . '">' . e($value["nombre"]) . '</option>';

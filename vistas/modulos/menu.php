@@ -388,6 +388,15 @@
         </li>';
       }
 
+      if ($_SESSION["perfil"] === "Administrador" || $_SESSION["perfil"] === "_SystemMaster_") {
+        echo '<li>
+          <a href="conocimiento">
+            <i class="fa fa-book"></i>
+            <span>Base de Conocimiento</span>
+          </a>
+        </li>';
+      }
+
       if (isset($_SESSION["perfil"]) && $_SESSION["perfil"] === '_SystemMaster_') {
         echo '<li>
           <a href="configuracion-factus">

@@ -184,7 +184,7 @@ if ($xml) {
                   <?php
                   $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
                   foreach ($usuarios as $key => $valueUsuario) {
-                    if ($valueUsuario["perfil"] === "_SystemMaster_") {
+                    if ($valueUsuario["perfil"] === "_SystemMaster_" || $valueUsuario["perfil"] === "Visitante") {
                       continue;
                     }
                     $selected = (isset($_GET['usuario']) && $_GET['usuario'] == $valueUsuario["id"]) ? 'selected' : '';

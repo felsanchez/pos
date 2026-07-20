@@ -189,6 +189,11 @@ CUERPO DOCUMENTO
 
     if (isset($_GET["ruta"])) {
 
+      // Restricción para perfil Visitante: solo puede acceder a consulta-ventas y salir
+      if ($_SESSION["perfil"] === "Visitante" && $_GET["ruta"] !== "consulta-ventas" && $_GET["ruta"] !== "salir") {
+          $_GET["ruta"] = "consulta-ventas";
+      }
+
       $rutasProtegidas = [
           "crear-venta", 
           "crear-factura-electronica", 
@@ -268,6 +273,7 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "crear-traslado" ||
         $_GET["ruta"] == "crm" ||
         ($_GET["ruta"] == "inquilinos" && $_SESSION["perfil"] === "_SystemMaster_") ||
+        ($_GET["ruta"] == "conocimiento" && ($_SESSION["perfil"] === "Administrador" || $_SESSION["perfil"] === "_SystemMaster_")) ||
         $_GET["ruta"] == "salir"
       ) {
 
@@ -276,7 +282,11 @@ CUERPO DOCUMENTO
         include "modulos/404.php";
       }
     } else {
-      include "modulos/inicio.php";
+      if ($_SESSION["perfil"] === "Visitante") {
+        include "modulos/consulta-ventas.php";
+      } else {
+        include "modulos/inicio.php";
+      }
     }
 
     /*=============================================
@@ -321,6 +331,7 @@ CUERPO DOCUMENTO
   <script src="vistas/js/logs.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/seguimiento-leads.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/traslados.js?v=<?php echo time(); ?>"></script>
+  <script src="vistas/js/conocimiento.js?v=<?php echo time(); ?>"></script>
 
   <?php if (isset($_SESSION["iniciarSesion"]) && $_SESSION["iniciarSesion"] == "ok" && isset($configuracionGeneral["control_caja"]) && intval($configuracionGeneral["control_caja"]) === 1): ?>
   <script src="vistas/js/cajas.js?v=<?php echo time(); ?>"></script>

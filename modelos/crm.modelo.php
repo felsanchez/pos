@@ -15,7 +15,7 @@ class ModeloCRM {
 				SELECT l.*, c.nombre as nombre_cliente, c.telefono as telefono_cliente, c.email as email_cliente, u.nombre as nombre_vendedor 
 				FROM $tabla l
 				INNER JOIN clientes c ON l.id_cliente = c.id
-				INNER JOIN usuarios u ON l.id_vendedor = u.id
+				LEFT JOIN usuarios u ON l.id_vendedor = u.id
 				WHERE l.$item = :$item
 				ORDER BY l.orden ASC, l.fecha_creacion DESC
 			");
@@ -30,7 +30,7 @@ class ModeloCRM {
 				SELECT l.*, c.nombre as nombre_cliente, c.telefono as telefono_cliente, c.email as email_cliente, u.nombre as nombre_vendedor 
 				FROM $tabla l
 				INNER JOIN clientes c ON l.id_cliente = c.id
-				INNER JOIN usuarios u ON l.id_vendedor = u.id
+				LEFT JOIN usuarios u ON l.id_vendedor = u.id
 				ORDER BY l.orden ASC, l.fecha_creacion DESC
 			");
 

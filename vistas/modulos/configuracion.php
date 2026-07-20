@@ -709,7 +709,7 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                       <td><?php echo htmlspecialchars($perfil['descripcion'] ?? ''); ?></td>
                       <td><span class="badge bg-blue"><?php echo $perfil['total_usuarios']; ?></span></td>
                       <td>
-                        <?php if (!$perfil['es_sistema']): ?>
+                        <?php if (!$perfil['es_sistema'] && $perfil['nombre'] !== 'Visitante'): ?>
                           <button type="button" class="btn btn-xs btn-primary btn-editar-perfil"
                             data-id="<?php echo $perfil['id']; ?>"
                             data-nombre="<?php echo htmlspecialchars($perfil['nombre']); ?>"
@@ -728,10 +728,19 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                           </button>
                           <?php endif; ?>
                         <?php else: ?>
-                          <button type="button" class="btn btn-xs btn-default btn-ver-permisos-admin"
-                            data-id="<?php echo $perfil['id']; ?>">
-                            <i class="fa fa-eye"></i> Ver Permisos
-                          </button>
+                          <?php if ($perfil['nombre'] === 'Administrador'): ?>
+                            <button type="button" class="btn btn-xs btn-default btn-ver-permisos-admin"
+                              data-id="<?php echo $perfil['id']; ?>">
+                              <i class="fa fa-eye"></i> Ver Permisos
+                            </button>
+                          <?php else: ?>
+                            <button type="button" class="btn btn-xs btn-default btn-ver-permisos-visitante"
+                              data-id="<?php echo $perfil['id']; ?>"
+                              data-nombre="<?php echo htmlspecialchars($perfil['nombre']); ?>"
+                              data-descripcion="<?php echo htmlspecialchars($perfil['descripcion'] ?? ''); ?>">
+                              <i class="fa fa-eye"></i> Ver Permisos
+                            </button>
+                          <?php endif; ?>
                         <?php endif; ?>
                       </td>
                     </tr>
@@ -1191,11 +1200,38 @@ $(document).ready(function() {
     $('#perfilEsSistema').val('1');
     $('#modalPerfilTitulo').text('Perfil: Administrador (Solo lectura)');
     $('#perfilNombre').val('Administrador').prop('readonly', true);
-    $('#perfilDescripcion').val('Acceso total al sistema. Permisos no editables.');
+    $('#perfilDescripcion').val('Acceso total al sistema. Permisos no editables.').prop('readonly', true);
     $('#adminFullAccessAlert').show();
     $('#btnGuardarPerfil').hide();
     $('#tablaMatrizPermisos input[type=checkbox]').prop('checked', true).prop('disabled', true);
     $('#modalPerfil').modal('show');
+  }
+
+  function abrirModalVerPermisosReadOnly(id, nombre, descripcion) {
+    console.log("Abriendo modal para ver permisos (solo lectura) del perfil:", id);
+    $('#perfilId').val(id);
+    $('#perfilEsSistema').val('1');
+    $('#modalPerfilTitulo').text('Ver Perfil: ' + nombre + ' (Solo lectura)');
+    $('#perfilNombre').val(nombre).prop('readonly', true);
+    $('#perfilDescripcion').val(descripcion).prop('readonly', true);
+    $('#adminFullAccessAlert').hide();
+    $('#btnGuardarPerfil').hide();
+    
+    // Desmarcar todo y deshabilitar todos los checks
+    $('#tablaMatrizPermisos input[type=checkbox]').prop('checked', false).prop('disabled', true);
+
+    $.post(ajaxUrl, {accion: 'obtenerPermisos', id_perfil: id}, function(res) {
+      if (res.permisos) {
+        $.each(res.permisos, function(modulo, acciones) {
+          $.each(acciones, function(accion, val) {
+            if (val) {
+              $('[data-modulo="' + modulo + '"][data-accion="' + accion + '"]').prop('checked', true);
+            }
+          });
+        });
+      }
+      $('#modalPerfil').modal('show');
+    }, 'json');
   }
 
   // --- EVENTOS (DELEGADOS) ---
@@ -1208,6 +1244,10 @@ $(document).ready(function() {
 
   $(document).on('click', '.btn-ver-permisos-admin', function() {
     abrirModalAdmin($(this).data('id'));
+  });
+
+  $(document).on('click', '.btn-ver-permisos-visitante', function() {
+    abrirModalVerPermisosReadOnly($(this).data('id'), $(this).data('nombre'), $(this).data('descripcion'));
   });
 
   $(document).on('change', '.perm-ver', function() {
@@ -1324,6 +1364,7 @@ $(document).ready(function() {
     desmarcarTodo();
     $('#perfilId').val('');
     $('#perfilNombre').prop('readonly', false);
+    $('#perfilDescripcion').prop('readonly', false);
     $('#btnGuardarPerfil').show();
     $('#adminFullAccessAlert').hide();
   });

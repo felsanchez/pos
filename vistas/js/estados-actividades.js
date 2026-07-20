@@ -42,6 +42,9 @@ EDITAR ESTADO ACTIVIDAD - Usando evento show.bs.modal de Bootstrap
 =============================================*/
 
 $('#modalEditarEstadoActividad').off('show.bs.modal').on('show.bs.modal', function (event) {
+	// Re-apend to body immediately before opening to guarantee it's the last element in the DOM
+	$(this).appendTo('body');
+
 	var button = $(event.relatedTarget); // Botón que abrió el modal
 
 	// Obtener datos del botón usando attr() en lugar de data()
@@ -64,13 +67,16 @@ $('#modalEditarEstadoActividad').off('show.bs.modal').on('show.bs.modal', functi
 $('#modalEditarEstadoActividad').off('shown.bs.modal').on('shown.bs.modal', function () {
 	console.log("✅ Modal editar estado actividad mostrado completamente");
 
+	// Forzar z-index
+	$(this).css('z-index', 1060);
+
 	// Ajustar z-index de backdrops
 	var backdrops = $('.modal-backdrop');
 	console.log("Backdrops presentes:", backdrops.length);
 
-	if (backdrops.length === 2) {
+	if (backdrops.length >= 2) {
 		$(backdrops[0]).css('z-index', 1040);
-		$(backdrops[1]).css('z-index', 1055);
+		$(backdrops[backdrops.length - 1]).css('z-index', 1055);
 	}
 
 	// Forzar focus en el campo de nombre

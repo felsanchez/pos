@@ -443,25 +443,8 @@ $crmController->ctrEliminarEtapa();
       <div class="crm-filters-bar">
         <div class="crm-filters-left">
           
-          <!-- Filtro por Vendedor -->
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span><b>Vendedor:</b></span>
-            <div class="input-group" style="width: 200px;">
-              <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
-                <i class="fa fa-user text-primary"></i>
-              </span>
-              <select class="form-control select2" id="filtroVendedorCRM" style="width: 100%;">
-                <option value="">Mostrar Todos</option>
-                <?php
-                $usuariosList = ControladorUsuarios::ctrMostrarUsuarios(null, null);
-                foreach ($usuariosList as $u) {
-                    if ($u["perfil"] == "_SystemMaster_") continue;
-                    echo '<option value="' . e($u["nombre"]) . '">' . e($u["nombre"]) . '</option>';
-                }
-                ?>
-              </select>
-            </div>
-          </div>
+          <!-- Filtro por Vendedor (Oculto) -->
+          <input type="hidden" id="filtroVendedorCRM" value="">
 
           <!-- Filtro por Temperatura -->
           <div style="display: flex; align-items: center; gap: 8px;">
@@ -688,20 +671,12 @@ MODAL AGREGAR LEAD
               </div>
             </div>
 
-            <div class="row">
-              <!-- Valor Estimado -->
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label>Monto Estimado ($) *</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-money"></i></span>
-                    <input type="number" class="form-control" name="nuevoLeadValor" min="0" step="0.01" value="0.00" required>
-                  </div>
-                </div>
-              </div>
+            <!-- Valor Estimado (Oculto) -->
+            <input type="hidden" name="nuevoLeadValor" value="0.00">
 
+            <div class="row">
               <!-- Prioridad -->
-              <div class="col-md-6">
+              <div class="col-md-12">
                 <div class="form-group">
                   <label>Temperatura (Prioridad) *</label>
                   <div class="input-group">
@@ -716,28 +691,12 @@ MODAL AGREGAR LEAD
               </div>
             </div>
 
-            <div class="row">
-              <!-- Vendedor Responsable -->
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label>Vendedor Responsable *</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-user-plus"></i></span>
-                    <select class="form-control" name="nuevoLeadVendedor" required>
-                      <?php
-                      foreach ($usuariosList as $u) {
-                          if ($u["perfil"] == "_SystemMaster_") continue;
-                          $selected = ($u["id"] == $_SESSION["id"]) ? "selected" : "";
-                          echo '<option value="' . $u["id"] . '" ' . $selected . '>' . $u["nombre"] . '</option>';
-                      }
-                      ?>
-                    </select>
-                  </div>
-                </div>
-              </div>
+            <!-- Vendedor Responsable (Oculto) -->
+            <input type="hidden" name="nuevoLeadVendedor" value="<?php echo $_SESSION['id']; ?>">
 
+            <div class="row">
               <!-- Fecha Cierre -->
-              <div class="col-md-6">
+              <div class="col-md-12">
                 <div class="form-group">
                   <label>Cierre Estimado</label>
                   <div class="input-group">
@@ -824,20 +783,12 @@ MODAL EDITAR LEAD
               </div>
             </div>
 
-            <div class="row">
-              <!-- Valor Estimado -->
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label>Monto ($) *</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-money"></i></span>
-                    <input type="number" class="form-control" name="editarLeadValor" id="editarLeadValor" min="0" step="0.01" required>
-                  </div>
-                </div>
-              </div>
+            <!-- Valor Estimado (Oculto) -->
+            <input type="hidden" name="editarLeadValor" id="editarLeadValor">
 
+            <div class="row">
               <!-- Prioridad -->
-              <div class="col-md-6">
+              <div class="col-md-12">
                 <div class="form-group">
                   <label>Temperatura *</label>
                   <div class="input-group">
@@ -852,27 +803,12 @@ MODAL EDITAR LEAD
               </div>
             </div>
 
-            <div class="row">
-              <!-- Vendedor Responsable -->
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label>Vendedor Responsable *</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-user-plus"></i></span>
-                    <select class="form-control" name="editarLeadVendedor" id="editarLeadVendedor" required>
-                      <?php
-                      foreach ($usuariosList as $u) {
-                          if ($u["perfil"] == "_SystemMaster_") continue;
-                          echo '<option value="' . $u["id"] . '">' . $u["nombre"] . '</option>';
-                      }
-                      ?>
-                    </select>
-                  </div>
-                </div>
-              </div>
+            <!-- Vendedor Responsable (Oculto) -->
+            <input type="hidden" name="editarLeadVendedor" id="editarLeadVendedor">
 
+            <div class="row">
               <!-- Fecha Cierre -->
-              <div class="col-md-6">
+              <div class="col-md-12">
                 <div class="form-group">
                   <label>Cierre Estimado</label>
                   <div class="input-group">

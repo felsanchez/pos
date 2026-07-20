@@ -227,7 +227,7 @@ foreach ($varianteRows as $row) {
                       <select id="filtro-vendedor" name="id_vendedor" class="form-control select2">
                         <option value="">Mostrar Todos</option>
                         <?php foreach($usuarios as $usuario): ?>
-                          <?php if ($usuario['perfil'] === '_SystemMaster_') continue; ?>
+                          <?php if ($usuario['perfil'] === '_SystemMaster_' || $usuario['perfil'] === 'Visitante') continue; ?>
                           <option value="<?php echo $usuario['id']; ?>"><?php echo htmlspecialchars($usuario['nombre']); ?></option>
                         <?php endforeach; ?>
                       </select>
