@@ -32,6 +32,9 @@ ControladorNotificaciones::ctrVerificarSolicitudesAgenteIA();
 // Verificar pagos de Bold (Sincronización)
 ControladorNotificaciones::ctrVerificarPagosBold();
 
+// Verificar leads de WhatsApp CRM
+ControladorNotificaciones::ctrVerificarLeadsWhatsApp();
+
 // Contar notificaciones no leídas
 $totalNoLeidas = ControladorNotificaciones::ctrContarNoLeidas();
 ?>

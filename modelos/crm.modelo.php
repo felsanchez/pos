@@ -88,7 +88,11 @@ class ModeloCRM {
 				etapa = :etapa, 
 				id_vendedor = :id_vendedor, 
 				fecha_cierre = :fecha_cierre, 
-				notas = :notes 
+				notas = :notes,
+				origen = :origen,
+				resumen_ia = :resumen_ia,
+				productos_interes = :productos_interes,
+				fecha_ultima_interaccion = :fecha_ultima_interaccion
 			WHERE id = :id
 		");
 
@@ -100,6 +104,10 @@ class ModeloCRM {
 		$stmt->bindParam(":id_vendedor", $datos["id_vendedor"], PDO::PARAM_INT);
 		$stmt->bindParam(":fecha_cierre", $datos["fecha_cierre"], PDO::PARAM_STR);
 		$stmt->bindParam(":notes", $datos["notas"], PDO::PARAM_STR);
+		$stmt->bindParam(":origen", $datos["origen"], PDO::PARAM_STR);
+		$stmt->bindParam(":resumen_ia", $datos["resumen_ia"], PDO::PARAM_STR);
+		$stmt->bindParam(":productos_interes", $datos["productos_interes"], PDO::PARAM_STR);
+		$stmt->bindParam(":fecha_ultima_interaccion", $datos["fecha_ultima_interaccion"], PDO::PARAM_STR);
 		$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
 
 		if($stmt->execute()) {

@@ -47,7 +47,8 @@ class AjaxNotificaciones
     public function ajaxEliminarNotificacion()
     {
 
-        $respuesta = ModeloNotificaciones::mdlEliminarNotificacion($this->idEliminarNotificacion);
+        $idUsuario = $_SESSION["id"];
+        $respuesta = ModeloNotificaciones::mdlEliminarNotificacion($this->idEliminarNotificacion, $idUsuario);
 
         echo $respuesta;
 
@@ -62,7 +63,8 @@ class AjaxNotificaciones
     public function ajaxEliminarNotificaciones()
     {
 
-        $respuesta = ModeloNotificaciones::mdlEliminarNotificaciones($this->idsEliminarNotificaciones);
+        $idUsuario = $_SESSION["id"];
+        $respuesta = ModeloNotificaciones::mdlEliminarNotificaciones($this->idsEliminarNotificaciones, $idUsuario);
 
         echo $respuesta;
 

@@ -138,11 +138,23 @@ if (isset($_POST["activarCategoria"])) {
 ELIMINAR ARTICULO
 =============================================*/
 if (isset($_POST["idArticuloEliminar"])) {
-	$id = $_POST["idArticuloEliminar"];
-	$tabla = "empresa_conocimiento";
-	$respuesta = ModeloConocimiento::mdlEliminarArticulo($tabla, $id);
-	echo json_encode($respuesta);
-	exit;
+
+    $id = $_POST["idArticuloEliminar"];
+
+    $tabla = "empresa_conocimiento";
+
+    $respuesta = ModeloConocimiento::mdlEliminarArticulo($tabla, $id);
+
+    // Si se eliminó correctamente, sincronizar con Qdrant
+    if ($respuesta == "ok") {
+
+        ControladorConocimiento::sincronizarQdrant("eliminar", $id);
+
+    }
+
+    echo json_encode($respuesta);
+
+    exit;
 }
 
 /*=============================================

@@ -68,9 +68,8 @@ $(document).ready(function () {
       { "targets": 0, "responsivePriority": 1 }, // Título
       { "targets": 1, "responsivePriority": 4 }, // Categoría
       { "targets": 2, "responsivePriority": 5 }, // Palabras Clave
-      { "targets": 3, "responsivePriority": 3 }, // Estado
-      { "targets": 4, "responsivePriority": 6 }, // Fecha Creación
-      { "targets": 5, "responsivePriority": 2, "orderable": false } // Acciones
+      { "targets": 3, "responsivePriority": 6 }, // Fecha Creación
+      { "targets": 4, "responsivePriority": 2, "orderable": false } // Acciones
     ],
     "language": {
       "sProcessing": "Procesando...",

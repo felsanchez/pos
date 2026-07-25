@@ -1759,3 +1759,14 @@
 2026-06-25 03:09:15 | RangoId: 1190 | Prefijo: SETP | Local: 990000444 | NextLocal: 990000445 | ApiLive: 990000438 | Desde: 990000000 | Siguiente: 990000445
 2026-06-25 03:10:36 | RangoId: 1190 | Prefijo: SETP | Local: 990000444 | NextLocal: 990000445 | ApiLive: 990000438 | Desde: 990000000 | Siguiente: 990000445
 2026-06-25 03:10:53 | RangoId: 1190 | Prefijo: SETP | Local: 990000444 | NextLocal: 990000445 | ApiLive: 990000438 | Desde: 990000000 | Siguiente: 990000445
+2026-07-24 23:05:38 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000445 | Desde: 990000000 | Siguiente: 990000445
+2026-07-24 23:10:39 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000445 | Desde: 990000000 | Siguiente: 990000445
+2026-07-24 23:27:02 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000445 | Desde: 990000000 | Siguiente: 990000445
+2026-07-24 23:27:07 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000445 | Desde: 990000000 | Siguiente: 990000445
+2026-07-24 23:27:28 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000445 | Desde: 990000000 | Siguiente: 990000445
+2026-07-24 23:31:35 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000445 | Desde: 990000000 | Siguiente: 990000445
+2026-07-24 23:31:53 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000445 | Desde: 990000000 | Siguiente: 990000445
+2026-07-24 23:35:02 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000445 | Desde: 990000000 | Siguiente: 990000445
+2026-07-24 23:35:28 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000445 | Desde: 990000000 | Siguiente: 990000445
+2026-07-24 23:56:45 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000446 | Desde: 990000000 | Siguiente: 990000446
+2026-07-25 00:26:18 | RangoId: 1190 | Prefijo: SETP | Local: 990000446 | NextLocal: 990000447 | ApiLive: 990000447 | Desde: 990000000 | Siguiente: 990000447

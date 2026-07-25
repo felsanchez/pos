@@ -40,6 +40,7 @@
 
       $configuracionGlobalMenu = ControladorConfiguracion::ctrObtenerConfiguracion();
       $sucursalesActivas = !isset($configuracionGlobalMenu["activar_sucursales"]) || $configuracionGlobalMenu["activar_sucursales"] == 1;
+      $conocimientoActivo = !isset($configuracionGlobalMenu["base_conocimiento_activa"]) || $configuracionGlobalMenu["base_conocimiento_activa"] == 1;
 
       if (puedeVer('inicio')) {
         echo '<li class="active">
@@ -335,14 +336,7 @@
               </li>';
       }
 
-      if (puedeVer('seguimiento_leads') && (!isset($configuracionGlobalMenu["seguimiento_leads_activo"]) || $configuracionGlobalMenu["seguimiento_leads_activo"] == 1)) {
-        echo '<li>
-            <a href="seguimiento-leads">
-                <i class="fa fa-eye"></i>
-                <span>Seguimiento a leads</span>
-            </a>
-        </li>';
-      }
+
 
       if (puedeVer('historial_stock')) {
         echo '<li>
@@ -388,7 +382,7 @@
         </li>';
       }
 
-      if ($_SESSION["perfil"] === "Administrador" || $_SESSION["perfil"] === "_SystemMaster_") {
+      if ($conocimientoActivo && ($_SESSION["perfil"] === "Administrador" || $_SESSION["perfil"] === "_SystemMaster_")) {
         echo '<li>
           <a href="conocimiento">
             <i class="fa fa-book"></i>

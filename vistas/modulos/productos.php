@@ -137,19 +137,7 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
       </div>
 
 
-      <!--CODIGO PARA LLAMAR AL WEBHOOK DE n8n -->
-      <?php if (!isset($configuracion["boton_actualizar_producto_activo"]) || $configuracion["boton_actualizar_producto_activo"] == 1): ?>
-      <div class="content-header">
-        <form id="formN8N"
-          action="https://demo-ppal-n8n.lhs6l6.easypanel.host/webhook/ed25e621-dcc5-45c0-918c-5ec3c9ecbdc3"
-          method="POST">
 
-          <?php CSRF::insertToken(); ?>
-          <input type="hidden" name="origen" value="productos">
-          <button type="submit" class="btn btn-success">Actualizar</button>
-        </form>
-      </div>
-      <?php endif; ?>
 
 
 
@@ -1428,88 +1416,7 @@ MODAL AJUSTE DE STOCK
   </div>
 </div>
 
-<!-- Mensaje al actualizar productos a n8n -->
-<!--<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script>
-document.getElementById('formN8N').addEventListener('submit', function(e) {
-  e.preventDefault(); // Evitar el envío tradicional del formulario
-  
-  // Obtener los datos del formulario
-  const formData = new FormData(this);
-  
-  // Enviar con fetch
-  fetch('https://6eddcbd9ed49.ngrok-free.app/webhook/mipos', {
-    method: 'POST',
-    body: formData
-  })
-  .then(response => response.json())
-  .then(data => {
-    alert('Productos actualizados correctamente');
-  })
-  .catch(error => {
-    alert('Error al actualizar productos');
-    console.error('Error:', error);
-  });
-});
-</script>
--->
-
-<!-- Actualizar productos a n8n con SweetAlert -->
-<script>
-  document.getElementById('formN8N').addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    // URL Webhook explícita
-    const webhookUrl = "https://demo-ppal-n8n.lhs6l6.easypanel.host/webhook/ed25e621-dcc5-45c0-918c-5ec3c9ecbdc3";
-
-    // Usar URLSearchParams es más seguro para peticiones simples
-    const formData = new FormData(this);
-    const dataToSend = new URLSearchParams(formData);
-
-    console.log("Intentando enviar a:", webhookUrl);
-
-    // Mostrar loading
-    swal({
-      title: 'Actualizando productos...',
-      text: 'Conectando con n8n...',
-      type: 'info',
-      showConfirmButton: false,
-      allowOutsideClick: false
-    });
-
-    fetch(webhookUrl, {
-      method: 'POST',
-      mode: 'no-cors', // Necesario si el servidor no devuelve headers CORS
-      cache: 'no-cache',
-      credentials: 'omit', // No enviar cookies
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: dataToSend
-    })
-      .then(response => {
-        // En modo no-cors SIEMPRE entra aquí si la red funciona,
-        // aunque el servidor de error 500 o 404.
-        console.log('Petición finalizada (respuesta opaca)');
-
-        swal({
-          title: '¡Enviado!',
-          text: 'La solicitud se ha enviado a n8n correctamente.',
-          type: 'success',
-          timer: 2000
-        });
-      })
-      .catch(error => {
-        console.error('Error FETCH:', error);
-        swal({
-          title: 'Error de Conexión',
-          text: 'No se pudo contactar con el servidor. Revisa tu conexión a internet o si la URL es accesible.',
-          type: 'error'
-        });
-      });
-  });
-</script>
 
 
 

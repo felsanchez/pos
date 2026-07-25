@@ -88,7 +88,6 @@ if ($_SESSION["perfil"] !== "Administrador" && $_SESSION["perfil"] !== "_SystemM
                 <th>Título</th>
                 <th>Categoría</th>
                 <th>Palabras Clave</th>
-                <th>Estado</th>
                 <th>Fecha de Creación</th>
                 <th style="width: 120px">Acciones</th>
               </tr>

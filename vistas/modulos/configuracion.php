@@ -107,59 +107,7 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                 </div>
               </div>
 
-              <?php if (!isset($configuracion["columna_seguimiento_activa"]) || $configuracion["columna_seguimiento_activa"] == 1): ?>
-              <!-- Mensajes de Seguimiento de Pedidos -->
-              <div class="row">
 
-                <!-- Mensaje Pedido Recibido -->
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label>Mensaje Pedido Recibido</label>
-                    <div class="input-group">
-                      <span class="input-group-addon"><i class="fa fa-check-circle"></i></span>
-                      <input type="text" class="form-control" name="mensajeRecibido"
-                        value="<?php echo !empty($configuracion["mensaje_recibido"]) ? $configuracion["mensaje_recibido"] : 'Su pedido ha sido recibido'; ?>"
-                        placeholder="Su pedido ha sido recibido">
-                    </div>
-                    <p class="help-block">Mensaje al enviar confirmación de pedido recibido</p>
-                  </div>
-                </div>
-
-                <!-- Mensaje Pedido Procesado -->
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label>Mensaje Pedido Procesado</label>
-                    <div class="input-group">
-                      <span class="input-group-addon"><i class="fa fa-cog"></i></span>
-                      <input type="text" class="form-control" name="mensajeProcesado"
-                        value="<?php echo !empty($configuracion["mensaje_procesado"]) ? $configuracion["mensaje_procesado"] : 'Su pedido ha sido procesado'; ?>"
-                        placeholder="Su pedido ha sido procesado">
-                    </div>
-                    <p class="help-block">Mensaje al enviar confirmación de pedido procesado</p>
-                  </div>
-                </div>
-
-              </div>
-
-              <!-- Nueva fila para el tercer mensaje -->
-              <div class="row">
-
-                <!-- Mensaje Pedido Confirmado -->
-                <div class="col-md-12">
-                  <div class="form-group">
-                    <label>Mensaje Pedido Confirmado</label>
-                    <div class="input-group">
-                      <span class="input-group-addon"><i class="fa fa-thumbs-up"></i></span>
-                      <input type="text" class="form-control" name="mensajeConfirmado"
-                        value="<?php echo !empty($configuracion["mensaje_confirmado"]) ? $configuracion["mensaje_confirmado"] : 'Su pedido ha sido confirmado'; ?>"
-                        placeholder="Su pedido ha sido confirmado">
-                    </div>
-                    <p class="help-block">Mensaje al confirmar el pedido (tercer botón de seguimiento)</p>
-                  </div>
-                </div>
-
-              </div>
-              <?php endif; ?>
 
             </div>
           </div>
@@ -1058,7 +1006,6 @@ MODAL: CREAR / EDITAR PERFIL (FUERA DEL FORM)
                 'proveedores'          => ['imprimir'],
                 'clientes'             => ['imprimir'],
                 'actividades'          => ['imprimir'],
-                'seguimiento_leads'    => ['crear', 'editar', 'imprimir'],
                 'gastos'               => ['imprimir'],
                 'notificaciones'       => ['crear','editar','eliminar','imprimir'],
                 'configuracion'        => ['crear','editar','eliminar','imprimir'],
@@ -1095,10 +1042,6 @@ MODAL: CREAR / EDITAR PERFIL (FUERA DEL FORM)
                   continue;
                 }
 
-                // Ocultar Seguimiento a Leads si está desactivado
-                if ($slug == 'seguimiento_leads' && (!isset($configuracion["seguimiento_leads_activo"]) || $configuracion["seguimiento_leads_activo"] != 1)) {
-                  continue;
-                }
 
                 // Ocultar CRM si está desactivado
                 if ($slug == 'crm' && isset($configuracion["crm_activo"]) && $configuracion["crm_activo"] == 0) {

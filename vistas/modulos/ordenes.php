@@ -236,16 +236,12 @@ if ($xml) {
                 <th>Vendedor</th>
                 <th>Imagen</th>
                 <th>Total</th>
-                <th><i class="fa fa-magic"></i> Notas del Cliente</th>
                 <th>Fecha</th>
                 <th>Observación</th>
-                <th>Seguimiento</th>
                 <th>Convertir</th>
                 <th>Acciones</th>
               </tr>
             </thead>
-            <input type="hidden" id="columnaSeguimientoActiva" value="<?php echo (!isset($configuracion["columna_seguimiento_activa"]) || $configuracion["columna_seguimiento_activa"] == 1) ? 1 : 0; ?>">
-            <input type="hidden" id="columnaNotasClienteActiva" value="<?php echo (!isset($configuracion["columna_notas_cliente_activa"]) || $configuracion["columna_notas_cliente_activa"] == 1) ? 1 : 0; ?>">
 
             <tbody>
               <!-- Datos cargados por DataTables Server-Side -->

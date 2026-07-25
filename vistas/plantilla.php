@@ -255,7 +255,6 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "configuracion-factus" ||
         $_GET["ruta"] == "notificaciones" ||
         $_GET["ruta"] == "logs" ||
-        $_GET["ruta"] == "seguimiento-leads" ||
         $_GET["ruta"] == "notas-credito" ||
         $_GET["ruta"] == "ver-nota-credito" ||
         $_GET["ruta"] == "crear-nota-credito" ||
@@ -273,7 +272,7 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "crear-traslado" ||
         $_GET["ruta"] == "crm" ||
         ($_GET["ruta"] == "inquilinos" && $_SESSION["perfil"] === "_SystemMaster_") ||
-        ($_GET["ruta"] == "conocimiento" && ($_SESSION["perfil"] === "Administrador" || $_SESSION["perfil"] === "_SystemMaster_")) ||
+        ($_GET["ruta"] == "conocimiento" && ($_SESSION["perfil"] === "Administrador" || $_SESSION["perfil"] === "_SystemMaster_") && (!isset($configuracionGeneral["base_conocimiento_activa"]) || $configuracionGeneral["base_conocimiento_activa"] == 1)) ||
         $_GET["ruta"] == "salir"
       ) {
 
@@ -329,7 +328,6 @@ CUERPO DOCUMENTO
   <script src="vistas/js/bodegas.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/gastos.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/logs.js?v=<?php echo time(); ?>"></script>
-  <script src="vistas/js/seguimiento-leads.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/traslados.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/conocimiento.js?v=<?php echo time(); ?>"></script>
 

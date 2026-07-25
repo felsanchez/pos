@@ -255,26 +255,7 @@
       </div>
     </div>
 
-    <?php
-    $configuracionReportes = ControladorConfiguracion::ctrObtenerConfiguracion();
-    if (!isset($configuracionReportes["grafica_analisis_ordenes_activa"]) || $configuracionReportes["grafica_analisis_ordenes_activa"] == 1):
-    ?>
-    <!-- SECCIÓN 4: REPORTE DE ÓRDENES -->
-    <div class="box box-warning" id="seccion-analisis-ordenes">
-      <div class="box-header with-border">
-        <h3 class="box-title"><i class="fa fa-shopping-cart"></i> Análisis de Órdenes con IA</h3>
-        <div class="box-tools pull-right">
-          <button type="button" class="btn btn-box-tool" data-widget="collapse">
-            <i class="fa fa-plus"></i>
-          </button>
-        </div>
-      </div>
 
-      <div class="box-body">
-        <?php include "reportes/ordenes-reporte.php"; ?>
-      </div>
-    </div>
-    <?php endif; ?>
 
     <?php
     $configuracionReportesManuales = ControladorConfiguracion::ctrObtenerConfiguracion();
@@ -1108,7 +1089,6 @@
       // En desktop: colapsar solo las secciones 2, 3, 4 y 5 (dejar la 1ra expandida)
       $('#seccion-graficos-rendimiento').addClass('collapsed-box');
       $('#seccion-estado-resultados').addClass('collapsed-box');
-      $('#seccion-analisis-ordenes').addClass('collapsed-box');
       $('#seccion-reportes-facturacion').addClass('collapsed-box');
     }
 
@@ -1135,9 +1115,6 @@
         }
         if (!$('#seccion-estado-resultados').hasClass('manually-expanded')) {
           $('#seccion-estado-resultados').addClass('collapsed-box');
-        }
-        if (!$('#seccion-analisis-ordenes').hasClass('manually-expanded')) {
-          $('#seccion-analisis-ordenes').addClass('collapsed-box');
         }
         if (!$('#seccion-reportes-facturacion').hasClass('manually-expanded')) {
           $('#seccion-reportes-facturacion').addClass('collapsed-box');

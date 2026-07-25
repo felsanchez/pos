@@ -168,7 +168,11 @@ class ControladorCRM {
 					"etapa" => $_POST["editarLeadEtapa"],
 					"id_vendedor" => $_POST["editarLeadVendedor"],
 					"fecha_cierre" => !empty($_POST["editarLeadFechaCierre"]) ? $_POST["editarLeadFechaCierre"] : null,
-					"notas" => $_POST["editarLeadNotas"]
+					"notas" => $_POST["editarLeadNotas"],
+					"origen" => isset($_POST["editarLeadOrigen"]) ? $_POST["editarLeadOrigen"] : null,
+					"resumen_ia" => isset($_POST["editarLeadResumenIA"]) ? $_POST["editarLeadResumenIA"] : null,
+					"productos_interes" => isset($_POST["editarLeadProductosInteres"]) ? $_POST["editarLeadProductosInteres"] : null,
+					"fecha_ultima_interaccion" => !empty($_POST["editarLeadFechaUltimaInteraccion"]) ? $_POST["editarLeadFechaUltimaInteraccion"] : null
 				);
 
 				$respuesta = ModeloCRM::mdlEditarLead($tabla, $datos);

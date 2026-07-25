@@ -146,9 +146,9 @@ class ControladorConfiguracion
 				"mensaje_ticket" => $_POST["mensajeTicket"],
 				"color_principal" => $_POST["colorPrincipal"],
 				"color_secundario" => $_POST["colorSecundario"],
-				"mensaje_recibido" => $_POST["mensajeRecibido"],
-				"mensaje_procesado" => $_POST["mensajeProcesado"],
-				"mensaje_confirmado" => $_POST["mensajeConfirmado"]
+				"mensaje_recibido" => isset($_POST["mensajeRecibido"]) ? $_POST["mensajeRecibido"] : "",
+				"mensaje_procesado" => isset($_POST["mensajeProcesado"]) ? $_POST["mensajeProcesado"] : "",
+				"mensaje_confirmado" => isset($_POST["mensajeConfirmado"]) ? $_POST["mensajeConfirmado"] : ""
 			);
 
 			/*=============================================

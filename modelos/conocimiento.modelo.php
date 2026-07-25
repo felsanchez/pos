@@ -154,7 +154,9 @@ class ModeloConocimiento
 	=============================================*/
 	static public function mdlIngresarArticulo($tabla, $datos)
 	{
-		$stmt = Conexion::conectar()->prepare("
+		$pdo = Conexion::conectar();
+
+		$stmt = $pdo->prepare("
 			INSERT INTO $tabla(id_categoria, titulo, contenido, palabras_clave, estado) 
 			VALUES (:id_categoria, :titulo, :contenido, :palabras_clave, 1)
 		");
@@ -164,10 +166,19 @@ class ModeloConocimiento
 		$stmt->bindParam(":palabras_clave", $datos["palabras_clave"], PDO::PARAM_STR);
 
 		if ($stmt->execute()) {
-			return "ok";
-		} else {
-			return "error";
-		}
+
+		return array(
+			"ok" => true,
+			"id" => $pdo->lastInsertId()
+		);
+
+	} else {
+
+		return array(
+			"ok" => false
+		);
+
+	}
 		$stmt = null;
 	}
 

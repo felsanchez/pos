@@ -376,6 +376,8 @@ $crmController->ctrEliminarEtapa();
       <!-- MÉTIRCAS CLAVE -->
       <div class="crm-metrics-container">
         <?php
+        $configuracionCRM = ControladorConfiguracion::ctrObtenerConfiguracion();
+        $mostrarEtiquetaOrigen = (!isset($configuracionCRM["leads_whatsapp_activos"]) || $configuracionCRM["leads_whatsapp_activos"] == 1);
         $leadsMétricas = ControladorCRM::ctrMostrarLeads(null, null);
         $totalNegociacion = 0;
         $montoNegociacion = 0;
@@ -383,6 +385,7 @@ $crmController->ctrEliminarEtapa();
         $montoGanados = 0;
         $totalPerdidos = 0;
         $montoPerdidos = 0;
+        $totalCalientes = 0;
 
         foreach ($leadsMétricas as $l) {
             if ($l["etapa"] == "Facturado") {
@@ -394,6 +397,9 @@ $crmController->ctrEliminarEtapa();
             } else {
                 $totalNegociacion++;
                 $montoNegociacion += $l["valor_estimado"];
+                if ($l["prioridad"] == "caliente") {
+                    $totalCalientes++;
+                }
             }
         }
         ?>
@@ -405,12 +411,12 @@ $crmController->ctrEliminarEtapa();
           <i class="fa fa-folder-open fa-2x text-muted" style="opacity: 0.4;"></i>
         </div>
 
-        <div class="crm-metric-card" style="border-left-color: #00c0ef;">
+        <div class="crm-metric-card" style="border-left-color: #ff851b;">
           <div>
-            <div class="crm-metric-title">Monto Estimado en Trámite</div>
-            <div class="crm-metric-value" id="metricMontoSeguimiento">$ <?php echo number_format($montoNegociacion, 2); ?></div>
+            <div class="crm-metric-title">Leads Calientes</div>
+            <div class="crm-metric-value" id="metricTotalCalientes">🔥 <?php echo $totalCalientes; ?> Calientes</div>
           </div>
-          <i class="fa fa-money fa-2x text-muted" style="opacity: 0.4;"></i>
+          <i class="fa fa-fire fa-2x" style="opacity: 0.8; color: #ff851b !important;"></i>
         </div>
 
         <div class="crm-metric-card" style="border-left-color: #00a65a;">
@@ -419,14 +425,6 @@ $crmController->ctrEliminarEtapa();
             <div class="crm-metric-value" id="metricTotalFacturado"><?php echo $totalGanados; ?> Ganados</div>
           </div>
           <i class="fa fa-trophy fa-2x text-muted" style="opacity: 0.4;"></i>
-        </div>
-
-        <div class="crm-metric-card" style="border-left-color: #f39c12;">
-          <div>
-            <div class="crm-metric-title">Monto Facturado</div>
-            <div class="crm-metric-value" id="metricMontoFacturado">$ <?php echo number_format($montoGanados, 2); ?></div>
-          </div>
-          <i class="fa fa-shopping-bag fa-2x text-muted" style="opacity: 0.4;"></i>
         </div>
 
         <div class="crm-metric-card" style="border-left-color: #dd4b39;">
@@ -443,8 +441,22 @@ $crmController->ctrEliminarEtapa();
       <div class="crm-filters-bar">
         <div class="crm-filters-left">
           
-          <!-- Filtro por Vendedor (Oculto) -->
-          <input type="hidden" id="filtroVendedorCRM" value="">
+          <?php if ($mostrarEtiquetaOrigen): ?>
+          <!-- Filtro por Origen -->
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span><b>Origen:</b></span>
+            <div class="input-group" style="width: 170px;">
+              <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+                <i class="fa fa-filter text-primary"></i>
+              </span>
+              <select class="form-control" id="filtroOrigenCRM" style="width: 100%;">
+                <option value="">Mostrar Todos</option>
+                <option value="whatsapp">💬 WhatsApp</option>
+                <option value="manual">👤 Manual</option>
+              </select>
+            </div>
+          </div>
+          <?php endif; ?>
 
           <!-- Filtro por Temperatura -->
           <div style="display: flex; align-items: center; gap: 8px;">
@@ -555,6 +567,8 @@ $crmController->ctrEliminarEtapa();
                      data-prioridad="<?php echo $lead["prioridad"]; ?>"
                      data-cliente="<?php echo htmlspecialchars($lead["nombre_cliente"]); ?>"
                      data-titulo="<?php echo htmlspecialchars($lead["titulo"]); ?>"
+                     data-valor="<?php echo $lead["valor_estimado"]; ?>"
+                     data-origen="<?php echo htmlspecialchars($lead["origen"]); ?>"
                      draggable="<?php echo puedeAccion('crm', 'editar') ? 'true' : 'false'; ?>"
                      <?php
                      $estilosCard = [];
@@ -597,7 +611,20 @@ $crmController->ctrEliminarEtapa();
                         </span>
                       <?php endif; ?>
                     </div>
-                    <span class="crm-lead-value">$ <?php echo number_format($lead["valor_estimado"], 2); ?></span>
+                    <?php if ($mostrarEtiquetaOrigen): ?>
+                      <?php 
+                        $esWhatsApp = !empty($lead["origen"]) && stripos($lead["origen"], "whatsapp") !== false;
+                      ?>
+                      <?php if ($esWhatsApp): ?>
+                        <span class="crm-lead-origin-badge" style="color: #25D366; font-weight: bold; font-size: 12px; display: inline-flex; align-items: center; gap: 3px;">
+                          <i class="fa fa-whatsapp"></i> Whatsapp
+                        </span>
+                      <?php else: ?>
+                        <span class="crm-lead-origin-badge" style="color: #0073b7; font-weight: bold; font-size: 12px; display: inline-flex; align-items: center; gap: 3px;">
+                          <i class="fa fa-user"></i> Manual
+                        </span>
+                      <?php endif; ?>
+                    <?php endif; ?>
                   </div>
 
                 </div>
@@ -627,113 +654,133 @@ $crmController->ctrEliminarEtapa();
 <!--=====================================
 MODAL AGREGAR LEAD
 ======================================-->
+<!--=====================================
+MODAL AGREGAR LEAD
+======================================-->
 <div id="modalAgregarLead" class="modal fade" role="dialog">
-  <div class="modal-dialog">
-    <div class="modal-content">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="border-radius: 10px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
       <form role="form" method="post">
         <?php CSRF::insertToken(); ?>
 
-        <div class="modal-header" style="background:#3c8dbc; color: white">
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title" style="color: white !important;"><i class="fa fa-plus"></i> Registrar Lead Comercial</h4>
+        <div class="modal-header" style="background: linear-gradient(135deg, #3c8dbc 0%, #2980b9 100%); color: white; padding: 15px 20px;">
+          <button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 0.9; font-size: 24px;">&times;</button>
+          <h4 class="modal-title" style="color: white !important; font-weight: bold; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i class="fa fa-plus-circle"></i> Registrar Lead Comercial
+          </h4>
         </div>
 
-        <div class="modal-body">
-          <div class="box-body">
+        <div class="modal-body" style="padding: 20px; background: #fdfdfd;">
+          <div class="box-body" style="padding: 0;">
             
-            <!-- Título de Oportunidad -->
-            <div class="form-group">
-              <label>Título del Negocio *</label>
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-tasks"></i></span>
-                <input type="text" class="form-control" name="nuevoLeadTitulo" placeholder="Ej: Venta de Equipos Oficina" required>
-              </div>
-            </div>
-
-            <!-- Cliente -->
-            <div class="form-group">
-              <label>Cliente *</label>
-              <div class="input-group" style="display: flex; width: 100%;">
-                <span class="input-group-addon" style="width: 40px;"><i class="fa fa-user"></i></span>
-                <select class="form-control" name="nuevoLeadCliente" id="selectLeadCliente" required style="width: 100%;">
-                  <option value="">Seleccionar cliente</option>
-                  <?php
-                  $clientes = ControladorClientes::ctrMostrarClientes(null, null);
-                  foreach ($clientes as $c) {
-                      echo '<option value="' . $c["id"] . '">' . $c["nombre"] . '</option>';
-                  }
-                  ?>
-                </select>
-                <!-- Botón rápido para agregar cliente -->
-                <span class="input-group-btn" style="width: auto;">
-                  <button type="button" class="btn btn-default" data-toggle="modal" data-target="#modalAgregarCliente" data-dismiss="modal" title="Registrar nuevo cliente" style="border-radius: 0 4px 4px 0;"><i class="fa fa-plus"></i></button>
-                </span>
-              </div>
-            </div>
-
-            <!-- Valor Estimado (Oculto) -->
             <input type="hidden" name="nuevoLeadValor" value="0.00">
-
-            <div class="row">
-              <!-- Prioridad -->
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label>Temperatura (Prioridad) *</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-thermometer-half"></i></span>
-                    <select class="form-control" name="nuevoLeadPrioridad" required>
-                      <option value="frio">❄️ Frío</option>
-                      <option value="tibio" selected>☀️ Tibio</option>
-                      <option value="caliente">🔥 Caliente</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Vendedor Responsable (Oculto) -->
             <input type="hidden" name="nuevoLeadVendedor" value="<?php echo $_SESSION['id']; ?>">
 
-            <div class="row">
-              <!-- Fecha Cierre -->
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label>Cierre Estimado</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-                    <input type="date" class="form-control" name="nuevoLeadFechaCierre">
+            <!-- SECCIÓN 1: Información General del Negocio -->
+            <div class="panel panel-default" style="border-radius: 8px; border: 1px solid #e1e8ed; box-shadow: none; margin-bottom: 20px;">
+              <div class="panel-heading" style="background: #f8fafc; border-bottom: 1px solid #e1e8ed; padding: 10px 15px; font-weight: bold; color: #334155;">
+                <i class="fa fa-briefcase text-primary"></i> Información General del Negocio
+              </div>
+              <div class="panel-body" style="padding: 15px;">
+                <div class="row">
+                  <!-- Título de Oportunidad -->
+                  <div class="col-md-8 col-sm-12">
+                    <div class="form-group">
+                      <label style="font-weight: 600; color: #475569;">Título del Negocio *</label>
+                      <div class="input-group">
+                        <span class="input-group-addon" style="background: #f1f5f9;"><i class="fa fa-tasks text-muted"></i></span>
+                        <input type="text" class="form-control" name="nuevoLeadTitulo" placeholder="Ej: Venta de Equipos Oficina" required style="border-radius: 0 4px 4px 0;">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Temperatura / Prioridad -->
+                  <div class="col-md-4 col-sm-12">
+                    <div class="form-group">
+                      <label style="font-weight: 600; color: #475569;">Temperatura *</label>
+                      <div class="input-group">
+                        <span class="input-group-addon" style="background: #f1f5f9;"><i class="fa fa-thermometer-half text-muted"></i></span>
+                        <select class="form-control" name="nuevoLeadPrioridad" required style="border-radius: 0 4px 4px 0;">
+                          <option value="frio">❄️ Frío</option>
+                          <option value="tibio" selected>☀️ Tibio</option>
+                          <option value="caliente">🔥 Caliente</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <!-- Cliente -->
+                  <div class="col-md-6 col-sm-12">
+                    <div class="form-group">
+                      <label style="font-weight: 600; color: #475569;">Cliente *</label>
+                      <div class="input-group" style="display: flex; width: 100%;">
+                        <span class="input-group-addon" style="width: 40px; background: #f1f5f9;"><i class="fa fa-user text-muted"></i></span>
+                        <select class="form-control" name="nuevoLeadCliente" id="selectLeadCliente" required style="width: 100%;">
+                          <option value="">Seleccionar cliente</option>
+                          <?php
+                          $clientes = ControladorClientes::ctrMostrarClientes(null, null);
+                          foreach ($clientes as $c) {
+                              echo '<option value="' . $c["id"] . '">' . $c["nombre"] . '</option>';
+                          }
+                          ?>
+                        </select>
+                        <!-- Botón rápido para agregar cliente -->
+                        <span class="input-group-btn" style="width: auto;">
+                          <button type="button" class="btn btn-default" data-toggle="modal" data-target="#modalAgregarCliente" data-dismiss="modal" title="Registrar nuevo cliente" style="border-radius: 0 4px 4px 0;"><i class="fa fa-plus"></i></button>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Etapa del Pipeline -->
+                  <div class="col-md-6 col-sm-12">
+                    <div class="form-group">
+                      <label style="font-weight: 600; color: #475569;">Etapa del Pipeline *</label>
+                      <div class="input-group">
+                        <span class="input-group-addon" style="background: #f1f5f9;"><i class="fa fa-arrow-right text-muted"></i></span>
+                        <select class="form-control" name="nuevoLeadEtapa" id="nuevoLeadEtapa" required style="border-radius: 0 4px 4px 0;">
+                          <?php
+                          foreach ($etapas as $et) {
+                              echo '<option value="' . $et["nombre"] . '">' . $et["nombre"] . '</option>';
+                          }
+                          ?>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <!-- Fecha Cierre Estimado -->
+                  <div class="col-md-6 col-sm-12">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label style="font-weight: 600; color: #475569;">Cierre Estimado</label>
+                      <div class="input-group">
+                        <span class="input-group-addon" style="background: #f1f5f9;"><i class="fa fa-calendar text-muted"></i></span>
+                        <input type="date" class="form-control" name="nuevoLeadFechaCierre" style="border-radius: 0 4px 4px 0;">
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Etapa del Pipeline -->
-            <div class="form-group">
-              <label>Etapa del Pipeline *</label>
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-arrow-right"></i></span>
-                <select class="form-control" name="nuevoLeadEtapa" id="nuevoLeadEtapa" required>
-                  <?php
-                  foreach ($etapas as $et) {
-                      echo '<option value="' . $et["nombre"] . '">' . $et["nombre"] . '</option>';
-                  }
-                  ?>
-                </select>
-              </div>
-            </div>
-
-            <!-- Notas -->
-            <div class="form-group">
-              <label>Observaciones / Bitácora de seguimiento</label>
-              <textarea class="form-control" name="nuevoLeadNotas" rows="3" placeholder="Escribe notas sobre el primer contacto o estado del negocio..."></textarea>
+            <!-- SECCIÓN 2: Bitácora & Observaciones -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-weight: 600; color: #475569;"><i class="fa fa-commenting-o text-muted"></i> Observaciones / Bitácora de seguimiento</label>
+              <textarea class="form-control" name="nuevoLeadNotas" rows="3" style="border-radius: 4px;" placeholder="Escribe notas sobre el primer contacto o estado del negocio..."></textarea>
             </div>
 
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
-          <button type="submit" class="btn btn-primary">Registrar Lead</button>
+        <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 12px 20px;">
+          <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 6px; font-weight: 500;">Salir</button>
+          <button type="submit" class="btn btn-primary" style="font-weight: 600; border-radius: 6px;">
+            <i class="fa fa-save"></i> Registrar Lead
+          </button>
         </div>
       </form>
     </div>
@@ -743,120 +790,188 @@ MODAL AGREGAR LEAD
 <!--=====================================
 MODAL EDITAR LEAD
 ======================================-->
+<!--=====================================
+MODAL EDITAR LEAD
+======================================-->
 <div id="modalEditarLead" class="modal fade" role="dialog">
-  <div class="modal-dialog">
-    <div class="modal-content">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="border-radius: 10px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
       <form role="form" method="post">
         <?php CSRF::insertToken(); ?>
 
-        <div class="modal-header" style="background:#f39c12; color: white">
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title" style="color: white !important;"><i class="fa fa-pencil"></i> Editar Oportunidad Comercial</h4>
+        <div class="modal-header" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; padding: 15px 20px;">
+          <button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 0.9; font-size: 24px;">&times;</button>
+          <h4 class="modal-title" style="color: white !important; font-weight: bold; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i class="fa fa-pencil-square-o"></i> Editar Oportunidad Comercial
+          </h4>
         </div>
 
-        <div class="modal-body">
-          <div class="box-body">
+        <div class="modal-body" style="padding: 20px; background: #fdfdfd;">
+          <div class="box-body" style="padding: 0;">
             
             <input type="hidden" name="editarLeadId" id="editarLeadId">
-
-            <!-- Título de Oportunidad -->
-            <div class="form-group">
-              <label>Título del Negocio *</label>
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-tasks"></i></span>
-                <input type="text" class="form-control" name="editarLeadTitulo" id="editarLeadTitulo" required>
-              </div>
-            </div>
-
-            <!-- Cliente -->
-            <div class="form-group">
-              <label>Cliente *</label>
-              <div class="input-group" style="display: flex; width: 100%;">
-                <span class="input-group-addon" style="width: 40px;"><i class="fa fa-user"></i></span>
-                <select class="form-control" name="editarLeadCliente" id="editarLeadCliente" required style="width: 100%;">
-                  <?php
-                  foreach ($clientes as $c) {
-                      echo '<option value="' . $c["id"] . '">' . $c["nombre"] . '</option>';
-                  }
-                  ?>
-                </select>
-              </div>
-            </div>
-
-            <!-- Valor Estimado (Oculto) -->
             <input type="hidden" name="editarLeadValor" id="editarLeadValor">
-
-            <div class="row">
-              <!-- Prioridad -->
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label>Temperatura *</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-thermometer-half"></i></span>
-                    <select class="form-control" name="editarLeadPrioridad" id="editarLeadPrioridad" required>
-                      <option value="frio">❄️ Frío</option>
-                      <option value="tibio">☀️ Tibio</option>
-                      <option value="caliente">🔥 Caliente</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Vendedor Responsable (Oculto) -->
             <input type="hidden" name="editarLeadVendedor" id="editarLeadVendedor">
 
-            <div class="row">
-              <!-- Fecha Cierre -->
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label>Cierre Estimado</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-                    <input type="date" class="form-control" name="editarLeadFechaCierre" id="editarLeadFechaCierre">
+            <!-- SECCIÓN 1: Información General del Negocio -->
+            <div class="panel panel-default" style="border-radius: 8px; border: 1px solid #e1e8ed; box-shadow: none; margin-bottom: 20px;">
+              <div class="panel-heading" style="background: #f8fafc; border-bottom: 1px solid #e1e8ed; padding: 10px 15px; font-weight: bold; color: #334155;">
+                <i class="fa fa-briefcase text-warning"></i> Información General del Negocio
+              </div>
+              <div class="panel-body" style="padding: 15px;">
+                <div class="row">
+                  <!-- Título de Oportunidad -->
+                  <div class="col-md-8 col-sm-12">
+                    <div class="form-group">
+                      <label style="font-weight: 600; color: #475569;">Título del Negocio *</label>
+                      <div class="input-group">
+                        <span class="input-group-addon" style="background: #f1f5f9;"><i class="fa fa-tasks text-muted"></i></span>
+                        <input type="text" class="form-control" name="editarLeadTitulo" id="editarLeadTitulo" required style="border-radius: 0 4px 4px 0;">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Temperatura / Prioridad -->
+                  <div class="col-md-4 col-sm-12">
+                    <div class="form-group">
+                      <label style="font-weight: 600; color: #475569;">Temperatura *</label>
+                      <div class="input-group">
+                        <span class="input-group-addon" style="background: #f1f5f9;"><i class="fa fa-thermometer-half text-muted"></i></span>
+                        <select class="form-control" name="editarLeadPrioridad" id="editarLeadPrioridad" required style="border-radius: 0 4px 4px 0;">
+                          <option value="frio">❄️ Frío</option>
+                          <option value="tibio">☀️ Tibio</option>
+                          <option value="caliente">🔥 Caliente</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <!-- Cliente -->
+                  <div class="col-md-6 col-sm-12">
+                    <div class="form-group">
+                      <label style="font-weight: 600; color: #475569;">Cliente *</label>
+                      <div class="input-group" style="display: flex; width: 100%;">
+                        <span class="input-group-addon" style="width: 40px; background: #f1f5f9;"><i class="fa fa-user text-muted"></i></span>
+                        <select class="form-control" name="editarLeadCliente" id="editarLeadCliente" required style="width: 100%;">
+                          <?php
+                          foreach ($clientes as $c) {
+                              echo '<option value="' . $c["id"] . '">' . $c["nombre"] . '</option>';
+                          }
+                          ?>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Etapa del Pipeline -->
+                  <div class="col-md-6 col-sm-12">
+                    <div class="form-group">
+                      <label style="font-weight: 600; color: #475569;">Etapa del Pipeline *</label>
+                      <div class="input-group">
+                        <span class="input-group-addon" style="background: #f1f5f9;"><i class="fa fa-arrow-right text-muted"></i></span>
+                        <select class="form-control" name="editarLeadEtapa" id="editarLeadEtapa" required style="border-radius: 0 4px 4px 0;">
+                          <?php
+                          foreach ($etapas as $et) {
+                              echo '<option value="' . $et["nombre"] . '">' . $et["nombre"] . '</option>';
+                          }
+                          ?>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <!-- Fecha Cierre Estimado -->
+                  <div class="col-md-6 col-sm-12">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label style="font-weight: 600; color: #475569;">Cierre Estimado</label>
+                      <div class="input-group">
+                        <span class="input-group-addon" style="background: #f1f5f9;"><i class="fa fa-calendar text-muted"></i></span>
+                        <input type="date" class="form-control" name="editarLeadFechaCierre" id="editarLeadFechaCierre" style="border-radius: 0 4px 4px 0;">
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Etapa -->
-            <div class="form-group">
-              <label>Etapa del Pipeline *</label>
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-arrow-right"></i></span>
-                <select class="form-control" name="editarLeadEtapa" id="editarLeadEtapa" required>
-                  <?php
-                  foreach ($etapas as $et) {
-                      echo '<option value="' . $et["nombre"] . '">' . $et["nombre"] . '</option>';
-                  }
-                  ?>
-                </select>
+            <!-- SECCIÓN 2: Detalles de Inteligencia Artificial & WhatsApp (Condicional) -->
+            <div id="secWhatsAppLeadIA" class="panel panel-success" style="border-radius: 8px; border: 1px solid #c8e6c9; background-color: #f1f8e9; box-shadow: none; margin-bottom: 20px; display: none;">
+              <div class="panel-heading" style="background: #e8f5e9; border-bottom: 1px solid #c8e6c9; padding: 10px 15px; font-weight: bold; color: #2e7d32; display: flex; justify-content: space-between; align-items: center;">
+                <span><i class="fa fa-whatsapp" style="font-size: 1.2em; color: #25D366;"></i> Información Agente IA & WhatsApp</span>
+                <span class="badge" style="background-color: #25D366; color: white; font-weight: 600; font-size: 11px;">WhatsApp IA Lead</span>
+              </div>
+              <div class="panel-body" style="padding: 15px;">
+                <div class="row">
+                  <!-- Origen -->
+                  <div class="col-md-6 col-sm-12">
+                    <div class="form-group">
+                      <label style="font-weight: 600; color: #2e7d32;">Origen de la Consulta</label>
+                      <div class="input-group">
+                        <span class="input-group-addon" style="background: #e8f5e9; color: #2e7d32;"><i class="fa fa-sign-in"></i></span>
+                        <input type="text" class="form-control" name="editarLeadOrigen" id="editarLeadOrigen" readonly style="background-color: #ffffff; font-weight: 600; color: #1b5e20;">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Fecha Última Interacción -->
+                  <div class="col-md-6 col-sm-12">
+                    <div class="form-group">
+                      <label style="font-weight: 600; color: #2e7d32;">Última Interacción</label>
+                      <div class="input-group">
+                        <span class="input-group-addon" style="background: #e8f5e9; color: #2e7d32;"><i class="fa fa-clock-o"></i></span>
+                        <input type="text" class="form-control" name="editarLeadFechaUltimaInteraccion" id="editarLeadFechaUltimaInteraccion" readonly style="background-color: #ffffff; color: #333;">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Resumen de Conversación IA -->
+                <div class="form-group">
+                  <label style="font-weight: 600; color: #2e7d32;"><i class="fa fa-magic text-success"></i> Resumen de Conversación (IA)</label>
+                  <textarea class="form-control" name="editarLeadResumenIA" id="editarLeadResumenIA" rows="3" style="background-color: #ffffff; border: 1px solid #a5d6a7; border-left: 4px solid #25D366; border-radius: 4px;" placeholder="Resumen generado por el Agente IA..."></textarea>
+                </div>
+
+                <!-- Productos de Interés -->
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-weight: 600; color: #2e7d32;"><i class="fa fa-shopping-cart text-success"></i> Productos de Interés</label>
+                  <textarea class="form-control" name="editarLeadProductosInteres" id="editarLeadProductosInteres" rows="3" style="background-color: #ffffff; border: 1px solid #a5d6a7; border-left: 4px solid #25D366; border-radius: 4px;" placeholder="Productos solicitados o consultados por el cliente..."></textarea>
+                </div>
               </div>
             </div>
 
-            <!-- Notas -->
-            <div class="form-group">
-              <label>Observaciones / Bitácora de seguimiento</label>
-              <textarea class="form-control" name="editarLeadNotas" id="editarLeadNotas" rows="4"></textarea>
+            <!-- SECCIÓN 3: Bitácora & Observaciones -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-weight: 600; color: #475569;"><i class="fa fa-commenting-o text-muted"></i> Observaciones / Bitácora de seguimiento</label>
+              <textarea class="form-control" name="editarLeadNotas" id="editarLeadNotas" rows="3" style="border-radius: 4px;" placeholder="Escriba notas de seguimiento manual..."></textarea>
             </div>
 
           </div>
         </div>
 
-        <div class="modal-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Salir</button>
-          <?php if(puedeAccion('crm', 'editar')): ?>
-            <button type="submit" class="btn btn-warning" style="color: white !important;">Guardar Cambios</button>
-          <?php else: ?>
-            <button type="submit" class="btn btn-warning" style="color: white !important;" disabled title="No tienes permisos para editar leads">Guardar Cambios</button>
-          <?php endif; ?>
+        <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 12px 20px;">
           <?php if(puedeAccion('crm', 'eliminar')): ?>
-            <button type="button" class="btn btn-danger btnEliminarLeadCRM" style="font-weight: 500; border-radius: 6px;">
-              <i class="fa fa-trash mr-1"></i> Eliminar Lead
+            <button type="button" class="btn btn-danger btnEliminarLeadCRM" style="font-weight: 600; border-radius: 6px;">
+              <i class="fa fa-trash"></i> Eliminar Lead
             </button>
           <?php else: ?>
-            <button type="button" class="btn btn-danger" style="font-weight: 500; border-radius: 6px;" disabled title="No tienes permisos para eliminar leads">
-              <i class="fa fa-trash mr-1"></i> Eliminar Lead
+            <button type="button" class="btn btn-danger" style="font-weight: 600; border-radius: 6px;" disabled title="No tienes permisos para eliminar leads">
+              <i class="fa fa-trash"></i> Eliminar Lead
+            </button>
+          <?php endif; ?>
+
+          <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 6px; font-weight: 500;">Salir</button>
+
+          <?php if(puedeAccion('crm', 'editar')): ?>
+            <button type="submit" class="btn btn-warning" style="color: white !important; font-weight: 600; border-radius: 6px;">
+              <i class="fa fa-save"></i> Guardar Cambios
+            </button>
+          <?php else: ?>
+            <button type="submit" class="btn btn-warning" style="color: white !important; font-weight: 600; border-radius: 6px;" disabled title="No tienes permisos para editar leads">
+              <i class="fa fa-save"></i> Guardar Cambios
             </button>
           <?php endif; ?>
         </div>

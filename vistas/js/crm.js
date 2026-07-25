@@ -13,13 +13,6 @@ $(document).ready(function() {
     $('#modalGestionarEtapas').appendTo("body");
     $('#modalEditarEtapaCRM').appendTo("body");
 
-    // Inicializar Select2 en los selectores correspondientes
-    if ($.fn.select2) {
-        $('#filtroVendedorCRM').select2({
-            width: '100%'
-        });
-    }
-
     // Ejecutar filtrado inicial
     filtrarTablero();
 
@@ -184,7 +177,7 @@ $(document).ready(function() {
             $(columna).find('.crm-lead-card:visible').each(function() {
                 var card = this;
                 // Obtener valor limpio del footer o del atributo si lo tuviéramos
-                var valorTexto = $(card).find('.crm-lead-value').text().replace(/[^0-9\.]/g, '');
+                var valorTexto = $(card).attr('data-valor') || $(card).find('.crm-lead-value').text().replace(/[^0-9\.]/g, '');
                 var valor = parseFloat(valorTexto) || 0;
                 totalDinero += valor;
                 conteo++;
@@ -195,33 +188,41 @@ $(document).ready(function() {
             $(columna).find('.crm-column-value-total strong').text('$ ' + totalDinero.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
         });
 
-        // Calcular y actualizar las 5 métricas superiores de forma dinámica
+        // Calcular y actualizar las métricas superiores de forma dinámica
         var totalNegociacion = 0;
         var montoNegociacion = 0;
         var totalGanados = 0;
         var montoGanados = 0;
         var totalPerdidos = 0;
         var montoPerdidos = 0;
+        var totalCalientes = 0;
 
         var textoBusqueda = $('#buscadorCRM').val().toLowerCase();
-        var vendedorSeleccionado = $('#filtroVendedorCRM').val();
+        var origenSeleccionado = $('#filtroOrigenCRM').val();
         var prioridadSeleccionada = $('#filtroPrioridadCRM').val();
 
         $('.crm-lead-card').each(function() {
             var card = this;
             var cliente = $(card).attr('data-cliente').toLowerCase();
             var titulo = $(card).attr('data-titulo').toLowerCase();
-            var vendedor = $(card).attr('data-vendedor');
             var prioridad = $(card).attr('data-prioridad');
+            var origen = ($(card).attr('data-origen') || '').toLowerCase();
             var etapa = $(card).parent().attr('data-etapa');
 
             // Filtrado del lead para métricas (excluyendo el filtro de archivados de la visualización)
             var coincideTexto = cliente.includes(textoBusqueda) || titulo.includes(textoBusqueda);
-            var coincideVendedor = !vendedorSeleccionado || vendedor === vendedorSeleccionado;
             var coincidePrioridad = !prioridadSeleccionada || prioridad === prioridadSeleccionada;
+            
+            var esWhatsApp = origen.includes('whatsapp');
+            var coincideOrigen = true;
+            if (origenSeleccionado === 'whatsapp') {
+                coincideOrigen = esWhatsApp;
+            } else if (origenSeleccionado === 'manual') {
+                coincideOrigen = !esWhatsApp;
+            }
 
-            if (coincideTexto && coincideVendedor && coincidePrioridad) {
-                var valorTexto = $(card).find('.crm-lead-value').text().replace(/[^0-9\.]/g, '');
+            if (coincideTexto && coincidePrioridad && coincideOrigen) {
+                var valorTexto = $(card).attr('data-valor') || $(card).find('.crm-lead-value').text().replace(/[^0-9\.]/g, '');
                 var valor = parseFloat(valorTexto) || 0;
 
                 if (etapa === "Facturado") {
@@ -233,15 +234,17 @@ $(document).ready(function() {
                 } else {
                     totalNegociacion++;
                     montoNegociacion += valor;
+                    if (prioridad === "caliente") {
+                        totalCalientes++;
+                    }
                 }
             }
         });
 
         // Actualizar elementos en el DOM
         $('#metricTotalSeguimiento').text(totalNegociacion + ' Oportunidades');
-        $('#metricMontoSeguimiento').text('$ ' + montoNegociacion.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
         $('#metricTotalFacturado').text(totalGanados + ' Ganados');
-        $('#metricMontoFacturado').text('$ ' + montoGanados.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        $('#metricTotalCalientes').text('🔥 ' + totalCalientes + ' Calientes');
         $('#metricTotalPerdidos').text(totalPerdidos + ' Perdidos');
         $('#metricMontoPerdidos').text('$ ' + montoPerdidos.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     }
@@ -250,13 +253,13 @@ $(document).ready(function() {
     // FILTROS EN TIEMPO REAL
     // =============================================
 
-    $('#buscadorCRM, #filtroVendedorCRM, #filtroPrioridadCRM, #toggleArchivadosCRM').on('input change', function() {
+    $('#buscadorCRM, #filtroOrigenCRM, #filtroPrioridadCRM, #toggleArchivadosCRM').on('input change', function() {
         filtrarTablero();
     });
 
     function filtrarTablero() {
         var textoBusqueda = $('#buscadorCRM').val().toLowerCase();
-        var vendedorSeleccionado = $('#filtroVendedorCRM').val();
+        var origenSeleccionado = $('#filtroOrigenCRM').val();
         var prioridadSeleccionada = $('#filtroPrioridadCRM').val();
         var mostrarArchivados = $('#toggleArchivadosCRM').is(':checked');
 
@@ -264,17 +267,24 @@ $(document).ready(function() {
             var card = this;
             var cliente = $(card).attr('data-cliente').toLowerCase();
             var titulo = $(card).attr('data-titulo').toLowerCase();
-            var vendedor = $(card).attr('data-vendedor');
             var prioridad = $(card).attr('data-prioridad');
+            var origen = ($(card).attr('data-origen') || '').toLowerCase();
             var estaArchivado = $(card).parent().attr('data-etapa') === "Facturado" || $(card).parent().attr('data-etapa') === "Perdido";
 
             // Condiciones
             var coincideTexto = cliente.includes(textoBusqueda) || titulo.includes(textoBusqueda);
-            var coincideVendedor = !vendedorSeleccionado || vendedor === vendedorSeleccionado;
             var coincidePrioridad = !prioridadSeleccionada || prioridad === prioridadSeleccionada;
             var coincideArchivo = !estaArchivado || mostrarArchivados;
 
-            if (coincideTexto && coincideVendedor && coincidePrioridad && coincideArchivo) {
+            var esWhatsApp = origen.includes('whatsapp');
+            var coincideOrigen = true;
+            if (origenSeleccionado === 'whatsapp') {
+                coincideOrigen = esWhatsApp;
+            } else if (origenSeleccionado === 'manual') {
+                coincideOrigen = !esWhatsApp;
+            }
+
+            if (coincideTexto && coincidePrioridad && coincideOrigen && coincideArchivo) {
                 $(card).show();
             } else {
                 $(card).hide();
@@ -342,6 +352,24 @@ $(document).ready(function() {
                         $('#editarLeadCliente').val(respuesta.id_cliente).trigger('change');
                     } else {
                         $('#editarLeadCliente').val(respuesta.id_cliente);
+                    }
+
+                    // Condición: Verificar si el campo origen contiene 'WhatsApp' (case-insensitive)
+                    var origenTexto = respuesta.origen || '';
+                    var esWhatsApp = /whatsapp/i.test(origenTexto);
+
+                    if (esWhatsApp) {
+                        $('#editarLeadOrigen').val(origenTexto);
+                        $('#editarLeadResumenIA').val(respuesta.resumen_ia || '');
+                        $('#editarLeadProductosInteres').val(respuesta.productos_interes || '');
+                        $('#editarLeadFechaUltimaInteraccion').val(respuesta.fecha_ultima_interaccion || '');
+                        $('#secWhatsAppLeadIA').slideDown(200);
+                    } else {
+                        $('#secWhatsAppLeadIA').hide();
+                        $('#editarLeadOrigen').val(origenTexto);
+                        $('#editarLeadResumenIA').val('');
+                        $('#editarLeadProductosInteres').val('');
+                        $('#editarLeadFechaUltimaInteraccion').val('');
                     }
 
                     $('#modalEditarLead').modal('show');

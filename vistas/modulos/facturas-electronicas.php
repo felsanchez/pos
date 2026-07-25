@@ -252,14 +252,12 @@ if ($xml) {
                   <th>Imagen</th>
 
                   <th>Total</th>
-                  <th><i class="fa fa-magic"></i> Notas del Cliente</th>
                   <th>Fecha</th>
                   <th>Observación</th>
                   <th>Estado DIAN</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
-              <input type="hidden" id="columnaNotasClienteActiva" value="<?php echo (!isset($configuracion["columna_notas_cliente_activa"]) || $configuracion["columna_notas_cliente_activa"] == 1) ? 1 : 0; ?>">
 
               <tbody>
               </tbody>
@@ -586,18 +584,26 @@ MODAL EDITAR CLIENTE
   $(document).on('blur', '.celda-observacion', function () {
     // No guardar si la factura ya fue firmada (campo readonly)
     if ($(this).attr('data-readonly') === '1' || $(this).attr('contenteditable') === 'false') return;
-    const idVenta = $(this).attr('data-id'); // .attr() para elementos dinámicos
-    const nuevaObservacion = $(this).text().trim();
+    const elemento = $(this);
+    const idVenta = elemento.attr('data-id'); // .attr() para elementos dinámicos
+    const nuevaObservacion = elemento.text().trim();
+    if (!idVenta) return;
     console.log("Guardando observación:", nuevaObservacion, "para ID:", idVenta);
     $.ajax({
       url: "ajax/datatable-ventas.ajax.php",
       method: "POST",
       data: {
+        csrf_token: $('meta[name="csrf-token"]').attr('content'),
         idVentaObservacion: idVenta,
         nuevaObservacion: nuevaObservacion
       },
       success: function (respuesta) {
         console.log("Respuesta del servidor:", respuesta);
+        // Feedback visual (destello verde)
+        elemento.css('background-color', '#dff0d8');
+        setTimeout(function () {
+          elemento.css('background-color', '');
+        }, 500);
       },
       error: function () {
         alert("Hubo un error al guardar la observación.");
@@ -902,7 +908,7 @@ MODAL ENVIAR EMAIL
               "renderer": function (api, rowIdx, columns) {
                 var labels = {
                   2: 'Vendedor', 3: 'Imagen', 4: 'Total',
-                  5: 'Notas del cliente', 6: 'Fecha', 7: 'Observación', 8: 'Estado DIAN'
+                  5: 'Fecha', 6: 'Observación', 7: 'Estado DIAN'
                 };
                 var idVenta = $(api.row(rowIdx).node()).find('.celda-observacion').attr('data-id') || '';
                 var obsReadonly = $(api.row(rowIdx).node()).find('.celda-observacion').attr('data-readonly') || '0';
@@ -916,7 +922,7 @@ MODAL ENVIAR EMAIL
                   var label = labels[colIdx] || col.title || ('Columna ' + colIdx);
                   var data = col.data || '';
 
-                  if (colIdx === 7) { // Observación (new index is 7)
+                  if (colIdx === 6) { // Observación
                     var obsTexto = $('<div>').html(data).text().trim();
                     var obsEditableAttr = obsReadonly === '1' ? 'false' : 'true';
                     var obsStyleStr = obsReadonly === '1'
@@ -962,26 +968,18 @@ MODAL ENVIAR EMAIL
             $('#wrapperTablaFacturas').fadeIn(200);
             $('#contenedorFiltrosFacturas').removeClass('fe-ui-hidden').css('display', '');
           },
-          "order": [[6, "desc"]], // Fecha (new index is 6)
-          "columnDefs": (function() {
-            var notasActiva = $('#columnaNotasClienteActiva').val();
-            var defs = [
-              { "targets": 0, "responsivePriority": 1 },
-              { "targets": 9, "responsivePriority": 2, "orderable": false },
-              { "targets": 1, "responsivePriority": 3 },
-              { "targets": 2, "responsivePriority": 4 },
-              { "targets": 3, "responsivePriority": 5, "orderable": false },
-              { "targets": 4, "responsivePriority": 6 },
-              { "targets": 5, "responsivePriority": 7 },
-              { "targets": 6, "responsivePriority": 8 }, // Fecha (now index 6, orderable)
-              { "targets": 7, "responsivePriority": 9, "orderable": false }, // Observación (now index 7, orderable: false)
-              { "targets": 8, "responsivePriority": 10, "orderable": false } // Estado DIAN (now index 8, orderable: false)
-            ];
-            if (notasActiva == "0") {
-              defs.push({ "targets": 5, "visible": false });
-            }
-            return defs;
-          })(),
+          "order": [[5, "desc"]], // Fecha
+          "columnDefs": [
+            { "targets": 0, "responsivePriority": 1 },
+            { "targets": 1, "responsivePriority": 3 },
+            { "targets": 2, "responsivePriority": 4 },
+            { "targets": 3, "responsivePriority": 5, "orderable": false },
+            { "targets": 4, "responsivePriority": 6 },
+            { "targets": 5, "responsivePriority": 7, "render": function (data, type, row) { return row[6]; } }, // Fecha (row[6])
+            { "targets": 6, "responsivePriority": 8, "orderable": false, "render": function (data, type, row) { return row[7]; } }, // Observación (row[7])
+            { "targets": 7, "responsivePriority": 9, "orderable": false, "render": function (data, type, row) { return row[8]; } }, // Estado DIAN (row[8])
+            { "targets": 8, "responsivePriority": 2, "orderable": false, "render": function (data, type, row) { return row[9]; } } // Acciones (row[9])
+          ],
           "language": {
             "sProcessing": "Procesando...",
             "sLengthMenu": "Mostrar _MENU_ registros",

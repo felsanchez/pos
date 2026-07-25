@@ -1355,23 +1355,6 @@ class ControladorVentas
 
 				if ($_POST["estado"] == "orden") {
 					ControladorNotificaciones::ctrVerificarOrdenAgenteIA($codigoVenta);
-
-					// Hook CRM: Registrar orden automáticamente en el Pipeline
-					ModeloCRM::mdlDesplazarLeadsEnEtapa("crm_leads", "Cotizado");
-
-					$datosCRM = array(
-						"id_cliente" => $_POST["seleccionarCliente"],
-						"titulo" => "Orden #" . $codigoVenta,
-						"valor_estimado" => $_POST["totalVenta"],
-						"prioridad" => "tibio",
-						"etapa" => "Cotizado",
-						"id_vendedor" => $_POST["idVendedor"],
-						"fecha_cierre" => null,
-						"notas" => "Orden registrada automáticamente desde el módulo de Órdenes.",
-						"codigo_orden" => $codigoVenta,
-						"orden" => 1
-					);
-					ModeloCRM::mdlCrearLead("crm_leads", $datosCRM);
 				}
 
 				/*=============================================
@@ -1475,6 +1458,76 @@ class ControladorVentas
 						"titulo" => "Error al guardar la venta",
 						"mensaje" => $mensajeError
 					]);
+					return;
+				}
+
+				$esErrorToken = (bool)preg_match('/token|expirado|autenticar/i', $mensajeError);
+
+				if ($esErrorToken) {
+					echo '<script>
+						swal({
+							type: "warning",
+							title: "Token de Factus Expirado",
+							html: "<p style=\'font-size: 14px; color: #555; text-align: left; background: #fff8e1; padding: 10px; border-radius: 4px; border-left: 4px solid #ffc107;\'>" + ' . json_encode($mensajeError) . ' + "</p><p style=\'margin-top: 15px; font-weight: bold; color: #3c8dbc;\'>¿Desea autenticar y renovar los tokens en este momento sin salir de la página?</p>",
+							showCancelButton: true,
+							confirmButtonColor: "#3c8dbc",
+							cancelButtonColor: "#d33",
+							confirmButtonText: "<i class=\'fa fa-key\'></i> Autenticar y obtener tokens",
+							cancelButtonText: "Cerrar",
+							allowOutsideClick: false
+						}).then(function(resAuthModal) {
+							if (resAuthModal.value) {
+								swal({
+									title: "Autenticando con Factus...",
+									text: "Obteniendo nuevos tokens de acceso...",
+									type: "info",
+									showConfirmButton: false,
+									allowOutsideClick: false,
+									onBeforeOpen: function() {
+										swal.showLoading();
+									}
+								});
+
+								$.ajax({
+									url: "ajax/factus.ajax.php",
+									method: "POST",
+									data: {
+										accion: "autenticar",
+										csrf_token: $("meta[name=\'csrf-token\']").attr("content")
+									},
+									dataType: "json",
+									success: function(resAuth) {
+										if (!resAuth.error) {
+											swal({
+												type: "success",
+												title: "¡Autenticación Exitosa!",
+												text: "Los tokens de Factus han sido renovados correctamente. Ya puede intentar guardar la factura nuevamente.",
+												showConfirmButton: true,
+												confirmButtonText: "Entendido"
+											});
+										} else {
+											swal({
+												type: "error",
+												title: "Error al Autenticar",
+												text: resAuth.mensaje || "No se pudieron renovar los tokens automáticamente. Verifique las credenciales en Configuración.",
+												showConfirmButton: true,
+												confirmButtonText: "Cerrar"
+											});
+										}
+									},
+									error: function() {
+										swal({
+											type: "error",
+											title: "Error de Conexión",
+											text: "Ocurrió un error al intentar comunicar con el servidor para renovar los tokens.",
+											showConfirmButton: true,
+											confirmButtonText: "Cerrar"
+										});
+									}
+								});
+							}
+						});
+					</script>';
 					return;
 				}
 
@@ -2146,6 +2199,76 @@ class ControladorVentas
 						"mensaje" => $mensajeError,
 						"ruta" => (isset($_POST["origen"]) ? $_POST["origen"] : "ordenes")
 					]);
+					return;
+				}
+
+				$esErrorToken = (bool)preg_match('/token|expirado|autenticar/i', $mensajeError);
+
+				if ($esErrorToken) {
+					echo '<script>
+						swal({
+							type: "warning",
+							title: "Token de Factus Expirado",
+							html: "<p style=\'font-size: 14px; color: #555; text-align: left; background: #fff8e1; padding: 10px; border-radius: 4px; border-left: 4px solid #ffc107;\'>" + ' . json_encode($mensajeError) . ' + "</p><p style=\'margin-top: 15px; font-weight: bold; color: #3c8dbc;\'>¿Desea autenticar y renovar los tokens en este momento sin salir de la página?</p>",
+							showCancelButton: true,
+							confirmButtonColor: "#3c8dbc",
+							cancelButtonColor: "#d33",
+							confirmButtonText: "<i class=\'fa fa-key\'></i> Autenticar y obtener tokens",
+							cancelButtonText: "Cerrar",
+							allowOutsideClick: false
+						}).then(function(resAuthModal) {
+							if (resAuthModal.value) {
+								swal({
+									title: "Autenticando con Factus...",
+									text: "Obteniendo nuevos tokens de acceso...",
+									type: "info",
+									showConfirmButton: false,
+									allowOutsideClick: false,
+									onBeforeOpen: function() {
+										swal.showLoading();
+									}
+								});
+
+								$.ajax({
+									url: "ajax/factus.ajax.php",
+									method: "POST",
+									data: {
+										accion: "autenticar",
+										csrf_token: $("meta[name=\'csrf-token\']").attr("content")
+									},
+									dataType: "json",
+									success: function(resAuth) {
+										if (!resAuth.error) {
+											swal({
+												type: "success",
+												title: "¡Autenticación Exitosa!",
+												text: "Los tokens de Factus han sido renovados correctamente. Ya puede intentar guardar la factura nuevamente.",
+												showConfirmButton: true,
+												confirmButtonText: "Entendido"
+											});
+										} else {
+											swal({
+												type: "error",
+												title: "Error al Autenticar",
+												text: resAuth.mensaje || "No se pudieron renovar los tokens automáticamente. Verifique las credenciales en Configuración.",
+												showConfirmButton: true,
+												confirmButtonText: "Cerrar"
+											});
+										}
+									},
+									error: function() {
+										swal({
+											type: "error",
+											title: "Error de Conexión",
+											text: "Ocurrió un error al intentar comunicar con el servidor para renovar los tokens.",
+											showConfirmButton: true,
+											confirmButtonText: "Cerrar"
+										});
+									}
+								});
+							}
+						});
+					</script>';
 					return;
 				}
 

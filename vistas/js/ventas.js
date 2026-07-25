@@ -1545,13 +1545,82 @@ $(document).on("submit", ".formularioVenta", function (e) {
 							}
 						});
 					} else {
-						swal({
-							type: "error",
-							title: respuesta.titulo || "Error",
-							html: respuesta.mensaje || "Ocurrió un error al guardar",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
+						var msjError = respuesta.mensaje || "Ocurrió un error al guardar";
+						var esErrorToken = /token|expirado|autenticar/i.test(msjError);
+
+						if (esErrorToken) {
+							swal({
+								type: "warning",
+								title: "Token de Factus Expirado",
+								html: '<p style="font-size: 14px; color: #555; text-align: left; background: #fff8e1; padding: 10px; border-radius: 4px; border-left: 4px solid #ffc107;">' + msjError + '</p>' +
+									'<p style="margin-top: 15px; font-weight: bold; color: #3c8dbc;">¿Desea autenticar y renovar los tokens en este momento sin salir de la página?</p>',
+								showCancelButton: true,
+								confirmButtonColor: "#3c8dbc",
+								cancelButtonColor: "#d33",
+								confirmButtonText: '<i class="fa fa-key"></i> Autenticar y obtener tokens',
+								cancelButtonText: "Cerrar",
+								allowOutsideClick: false
+							}).then(function (resAuthModal) {
+								if (resAuthModal.value) {
+									swal({
+										title: 'Autenticando con Factus...',
+										text: 'Obteniendo nuevos tokens de acceso...',
+										type: 'info',
+										showConfirmButton: false,
+										allowOutsideClick: false,
+										onBeforeOpen: function () {
+											swal.showLoading();
+										}
+									});
+
+									$.ajax({
+										url: 'ajax/factus.ajax.php',
+										method: 'POST',
+										data: {
+											accion: 'autenticar',
+											csrf_token: $('meta[name="csrf-token"]').attr('content')
+										},
+										dataType: 'json',
+										success: function (resAuth) {
+											if (!resAuth.error) {
+												swal({
+													type: 'success',
+													title: '¡Autenticación Exitosa!',
+													text: 'Los tokens de Factus han sido renovados correctamente. Ya puede presionar el botón para guardar el documento.',
+													showConfirmButton: true,
+													confirmButtonText: 'Entendido'
+												});
+											} else {
+												swal({
+													type: 'error',
+													title: 'Error al Autenticar',
+													text: resAuth.mensaje || 'No se pudieron renovar los tokens automáticamente. Verifique las credenciales en Configuración.',
+													showConfirmButton: true,
+													confirmButtonText: 'Cerrar'
+												});
+											}
+										},
+										error: function () {
+											swal({
+												type: 'error',
+												title: 'Error de Conexión',
+												text: 'Ocurrió un error al intentar comunicar con el servidor para renovar los tokens.',
+												showConfirmButton: true,
+												confirmButtonText: 'Cerrar'
+											});
+										}
+									});
+								}
+							});
+						} else {
+							swal({
+								type: "error",
+								title: respuesta.titulo || "Error",
+								html: msjError,
+								showConfirmButton: true,
+								confirmButtonText: "Cerrar"
+							});
+						}
 					}
 				},
 				error: function (jqXHR, textStatus, errorThrown) {
@@ -2334,14 +2403,14 @@ $(document).ready(function () {
 					});
 				}
 			},
-			"order": [[6, "desc"]],
+			"order": [[5, "desc"]],
 			"responsive": {
 				"details": {
 					"type": "inline",
 					"renderer": function (api, rowIdx, columns) {
 						var labels = {
 							2: 'Vendedor', 3: 'Imagen', 4: 'Total',
-							5: 'Notas del cliente', 6: 'Fecha', 7: 'Observación'
+							5: 'Fecha', 6: 'Observación'
 						};
 						var idVenta = $(api.row(rowIdx).node()).attr('data-venta-id') || '';
 						var finalHtml = '';
@@ -2354,20 +2423,11 @@ $(document).ready(function () {
 							var label = labels[colIdx] || col.title || ('Columna ' + colIdx);
 							var data = col.data || '';
 
-							if (colIdx === 7) {
+							if (colIdx === 6) {
 								var obsTexto = $('<div>').html(data).text().trim();
 								finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
 								finalHtml += '<span class="text-bold" style="block;color:#555;margin-bottom:4px;"> ' + label + ':</span>';
 								finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:24px;">' + obsTexto + '</div>';
-								finalHtml += '</div>';
-								return;
-							}
-
-							if (colIdx === 5) {
-								var notasTexto = $('<div>').html(data).text().trim();
-								finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
-								finalHtml += '<span class="text-bold" style="color:#555;"><i class="fa fa-magic"></i> ' + label + ': </span>';
-								finalHtml += '<span style="color:#333;">' + (notasTexto || '<em style="color:#999;">Sin notas</em>') + '</span>';
 								finalHtml += '</div>';
 								return;
 							}
@@ -2383,24 +2443,16 @@ $(document).ready(function () {
 					}
 				}
 			},
-			"columnDefs": (function() {
-				var notasActiva = $('#columnaNotasClienteActiva').val();
-				var defs = [
-					{ "targets": 0, "responsivePriority": 1 },
-					{ "targets": 8, "responsivePriority": 2, "orderable": false },
-					{ "targets": 1, "responsivePriority": 3 },
-					{ "targets": 2, "responsivePriority": 4 },
-					{ "targets": 3, "responsivePriority": 5 },
-					{ "targets": 4, "responsivePriority": 6 },
-					{ "targets": 5, "responsivePriority": 7 },
-					{ "targets": 6, "responsivePriority": 8 },
-					{ "targets": 7, "responsivePriority": 9 }
-				];
-				if (notasActiva == "0") {
-					defs.push({ "targets": 5, "visible": false });
-				}
-				return defs;
-			})(),
+			"columnDefs": [
+				{ "targets": 0, "responsivePriority": 1 },
+				{ "targets": 1, "responsivePriority": 3 },
+				{ "targets": 2, "responsivePriority": 4 },
+				{ "targets": 3, "responsivePriority": 5, "render": function (data, type, row) { return row[3]; } }, // Imagen (row[3])
+				{ "targets": 4, "responsivePriority": 6, "render": function (data, type, row) { return row[4]; } }, // Total (row[4])
+				{ "targets": 5, "responsivePriority": 7, "render": function (data, type, row) { return row[6]; } }, // Fecha (row[6])
+				{ "targets": 6, "responsivePriority": 8, "render": function (data, type, row) { return row[7]; } }, // Observación (row[7])
+				{ "targets": 7, "responsivePriority": 2, "orderable": false, "render": function (data, type, row) { return row[8]; } } // Acciones (row[8])
+			],
 			"language": {
 				"sProcessing": "Procesando...",
 				"sLengthMenu": "Mostrar _MENU_ registros",
@@ -2419,8 +2471,11 @@ $(document).ready(function () {
 GUARDAR OBSERVACIONES (VENTAS)
 =============================================*/
 $(document).on('blur', '.celda-observacion', function () {
-	const idVenta = $(this).attr('data-id');
-	const nuevaObservacion = $(this).text().trim();
+	const elemento = $(this);
+	const idVenta = elemento.attr('data-id');
+	const nuevaObservacion = elemento.text().trim();
+
+	if (!idVenta) return;
 
 	$.ajax({
 		url: "ajax/datatable-ventas.ajax.php",
@@ -2432,6 +2487,11 @@ $(document).on('blur', '.celda-observacion', function () {
 		},
 		success: function (respuesta) {
 			console.log("Observación guardada:", respuesta);
+			// Feedback visual (destello verde)
+			elemento.css('background-color', '#dff0d8');
+			setTimeout(function () {
+				elemento.css('background-color', '');
+			}, 500);
 		}
 	});
 });

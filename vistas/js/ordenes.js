@@ -132,7 +132,7 @@ $(document).ready(function () {
 
 							var label = col.title || ('Columna ' + col.columnIndex);
 
-							if (col.columnIndex === 5 || col.columnIndex === 7) {
+							if (col.columnIndex === 6) {
 								finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
 								finalHtml += '<span class="text-bold" style="display:block; color:#555; margin-bottom:5px;">' + label + ':</span>';
 							} else {
@@ -140,7 +140,7 @@ $(document).ready(function () {
 								finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
 							}
 
-							if (col.columnIndex === 7) {
+							if (col.columnIndex === 6) {
 								var rowNode = api.row(rowIdx).node();
 								var idOrden = $(rowNode).attr('data-orden-id') || "";
 								var observacionText = $(rowNode).find('.celda-observacion').text().trim();
@@ -159,32 +159,17 @@ $(document).ready(function () {
 					}
 				}
 			},
-			"columnDefs": (function() {
-				var seguimientoActivo = $('#columnaSeguimientoActiva').val();
-				var notasActiva = $('#columnaNotasClienteActiva').val();
-				var defs = [
-					{ "targets": 0, "responsivePriority": 1 },
-					{ "targets": 1, "responsivePriority": 2 },
-					{ "targets": 10, "responsivePriority": 3, "orderable": false, "render": function (data, type, row) { return row[11]; } }, // Acciones
-					{ "targets": 2, "responsivePriority": 4 },
-					{ "targets": 3, "responsivePriority": 6, "render": function (data, type, row) { return row[4]; } }, // Imagen
-					{ "targets": 4, "responsivePriority": 7, "render": function (data, type, row) { return row[5]; } }, // Total
-					{ "targets": 5, "responsivePriority": 8, "render": function (data, type, row) { return row[6]; } }, // Notas
-					{ "targets": 6, "responsivePriority": 10, "render": function (data, type, row) { return row[8]; } }, // Fecha
-					{ "targets": 7, "responsivePriority": 9, "render": function (data, type, row) { return row[7]; } }, // Observación
-					{ "targets": 8, "responsivePriority": 11, "orderable": false, "render": function (data, type, row) { return row[9]; } }, // Seguimiento
-					{ "targets": 9, "responsivePriority": 12, "orderable": false, "render": function (data, type, row) { return row[10]; } } // Convertir
-				];
-
-				if (seguimientoActivo == "0") {
-					defs.push({ "targets": 8, "visible": false });
-				}
-				if (notasActiva == "0") {
-					defs.push({ "targets": 5, "visible": false });
-				}
-
-				return defs;
-			})(),
+			"columnDefs": [
+				{ "targets": 0, "responsivePriority": 1 },
+				{ "targets": 1, "responsivePriority": 2 },
+				{ "targets": 8, "responsivePriority": 3, "orderable": false, "render": function (data, type, row) { return row[11]; } }, // Acciones
+				{ "targets": 2, "responsivePriority": 4 },
+				{ "targets": 3, "responsivePriority": 6, "render": function (data, type, row) { return row[4]; } }, // Imagen
+				{ "targets": 4, "responsivePriority": 7, "render": function (data, type, row) { return row[5]; } }, // Total
+				{ "targets": 5, "responsivePriority": 10, "render": function (data, type, row) { return row[8]; } }, // Fecha
+				{ "targets": 6, "responsivePriority": 9, "render": function (data, type, row) { return row[7]; } }, // Observación
+				{ "targets": 7, "responsivePriority": 12, "orderable": false, "render": function (data, type, row) { return row[10]; } } // Convertir
+			],
 			"language": {
 				"sProcessing": "Procesando...",
 				"sLengthMenu": "Mostrar _MENU_ registros",
@@ -231,9 +216,12 @@ $(document).on('blur', '.celda-nota', function () {
 });
 
 $(document).on('blur', '.celda-observacion', function () {
-	const idVenta = $(this).attr('data-id');
-	const nuevaObservacion = $(this).text().trim();
+	const elemento = $(this);
+	const idVenta = elemento.attr('data-id');
+	const nuevaObservacion = elemento.text().trim();
 	
+	if (!idVenta) return;
+
 	$.ajax({
 		url: "ajax/datatable-ventas.ajax.php",
 		method: "POST",
@@ -244,6 +232,11 @@ $(document).on('blur', '.celda-observacion', function () {
 		},
 		success: function (respuesta) {
 			console.log("Observación guardada");
+			// Feedback visual (destello verde)
+			elemento.css('background-color', '#dff0d8');
+			setTimeout(function () {
+				elemento.css('background-color', '');
+			}, 500);
 		}
 	});
 });

@@ -40,13 +40,17 @@ class ModeloNotificaciones
 	static public function mdlObtenerNotificaciones($cantidad = null, $soloNoLeidas = false, $idUsuario = null)
 	{
 
+		$idUsuario = $idUsuario ? intval($idUsuario) : 0;
+
 		$sql = "SELECT n.*, 
                 CASE WHEN nl.id_usuario IS NOT NULL THEN 1 ELSE 0 END as leida
                 FROM notificaciones n
                 CROSS JOIN configuracion c
                 LEFT JOIN notificaciones_leidas nl ON n.id = nl.id_notificacion AND nl.id_usuario = :id_usuario
+                LEFT JOIN notificaciones_eliminadas ne ON n.id = ne.id_notificacion AND ne.id_usuario = :id_usuario_elim
                 LEFT JOIN usuarios u_viewer ON u_viewer.id = :id_usuario_viewer
                 WHERE n.eliminada = 0
+                  AND ne.id_usuario IS NULL
                   AND (n.tipo NOT IN ('orden_agente_ia', 'orden_creada') OR c.notif_orden_agente_ia = 1)
                   AND (n.referencia_tipo IS NULL OR n.referencia_tipo != 'pago_bold' OR c.notif_transaccion_bold = 1)
                   AND (n.referencia_tipo IS NULL OR n.referencia_tipo != 'solicitud_edicion' OR c.notif_solicitud_edicion = 1)
@@ -66,9 +70,8 @@ class ModeloNotificaciones
 
 		$stmt = Conexion::conectar()->prepare($sql);
 
-		// Asignar el ID de usuario (si es null, usamos 0 para que no coincida con nada)
-		$idUsuario = $idUsuario ? $idUsuario : 0;
 		$stmt->bindParam(":id_usuario", $idUsuario, PDO::PARAM_INT);
+		$stmt->bindParam(":id_usuario_elim", $idUsuario, PDO::PARAM_INT);
 		$stmt->bindParam(":id_usuario_viewer", $idUsuario, PDO::PARAM_INT);
 
 		if ($cantidad) {
@@ -95,12 +98,16 @@ class ModeloNotificaciones
 	static public function mdlContarNoLeidas($idUsuario)
 	{
 
+		$idUsuario = intval($idUsuario);
+
 		$stmt = Conexion::conectar()->prepare("SELECT COUNT(*) as total 
                                                FROM notificaciones n
                                                CROSS JOIN configuracion c
                                                LEFT JOIN notificaciones_leidas nl ON n.id = nl.id_notificacion AND nl.id_usuario = :id_usuario
+                                               LEFT JOIN notificaciones_eliminadas ne ON n.id = ne.id_notificacion AND ne.id_usuario = :id_usuario_elim
                                                LEFT JOIN usuarios u_viewer ON u_viewer.id = :id_usuario_viewer
                                                WHERE n.eliminada = 0
+                                                 AND ne.id_usuario IS NULL
                                                  AND nl.id_usuario IS NULL
                                                  AND (n.tipo NOT IN ('orden_agente_ia', 'orden_creada') OR c.notif_orden_agente_ia = 1)
                                                  AND (n.referencia_tipo IS NULL OR n.referencia_tipo != 'pago_bold' OR c.notif_transaccion_bold = 1)
@@ -109,6 +116,7 @@ class ModeloNotificaciones
                                                  AND (n.tipo NOT IN ('stock_bajo', 'stock_agotado') OR n.id_bodega IS NULL OR u_viewer.id_bodega = n.id_bodega)");
 
 		$stmt->bindParam(":id_usuario", $idUsuario, PDO::PARAM_INT);
+		$stmt->bindParam(":id_usuario_elim", $idUsuario, PDO::PARAM_INT);
 		$stmt->bindParam(":id_usuario_viewer", $idUsuario, PDO::PARAM_INT);
 		$stmt->execute();
 
@@ -170,51 +178,25 @@ class ModeloNotificaciones
 	}
 
 	/*=============================================
-	ELIMINAR NOTIFICACIÓN
+	ELIMINAR NOTIFICACIÓN (POR USUARIO)
 	=============================================*/
 
-	/*=============================================
-	ELIMINAR NOTIFICACIÓN
-	=============================================*/
-
-	static public function mdlEliminarNotificacion($id)
+	static public function mdlEliminarNotificacion($id, $idUsuario = null)
 	{
-
-		// 1. Obtener datos de la notificación antes de eliminarla para borrado en cascada
-		$stmtConsulta = Conexion::conectar()->prepare("SELECT referencia_tipo, referencia_id FROM notificaciones WHERE id = :id");
-		$stmtConsulta->bindParam(":id", $id, PDO::PARAM_INT);
-		$stmtConsulta->execute();
-		$notificacion = $stmtConsulta->fetch();
-
-		if ($notificacion) {
-			if ($notificacion["referencia_tipo"] == "solicitud_edicion") {
-				// Eliminar de edicion_pedido
-				$stmtBorrarOrigen = Conexion::conectar()->prepare("DELETE FROM edicion_pedido WHERE id = :id_origen");
-				$stmtBorrarOrigen->bindParam(":id_origen", $notificacion["referencia_id"], PDO::PARAM_INT);
-				$stmtBorrarOrigen->execute();
-			} else if ($notificacion["referencia_tipo"] == "solicitud_eliminacion") {
-				// Eliminar de eliminacion_pedido
-				$stmtBorrarOrigen = Conexion::conectar()->prepare("DELETE FROM eliminacion_pedido WHERE id = :id_origen");
-				$stmtBorrarOrigen->bindParam(":id_origen", $notificacion["referencia_id"], PDO::PARAM_INT);
-				$stmtBorrarOrigen->execute();
-			} else if ($notificacion["referencia_tipo"] == "pago_bold") {
-				// Eliminar de pagos_bold
-				$stmtBorrarOrigen = Conexion::conectar()->prepare("DELETE FROM pagos_bold WHERE id = :id_origen");
-				$stmtBorrarOrigen->bindParam(":id_origen", $notificacion["referencia_id"], PDO::PARAM_INT);
-				$stmtBorrarOrigen->execute();
-			}
+		if (!$idUsuario && isset($_SESSION["id"])) {
+			$idUsuario = $_SESSION["id"];
 		}
 
-		// Primero eliminamos de la tabla de leídas
-		$stmt = Conexion::conectar()->prepare("DELETE FROM notificaciones_leidas WHERE id_notificacion = :id");
-		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
-		$stmt->execute();
+		if (!$idUsuario) {
+			return "error";
+		}
 
-		$stmt = Conexion::conectar()->prepare("UPDATE notificaciones SET eliminada = 1 WHERE id = :id");
-
+		$stmt = Conexion::conectar()->prepare("INSERT IGNORE INTO notificaciones_eliminadas (id_notificacion, id_usuario) VALUES (:id, :id_usuario)");
 		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
+		$stmt->bindParam(":id_usuario", $idUsuario, PDO::PARAM_INT);
 
 		if ($stmt->execute()) {
+			self::mdlMarcarComoLeida($id, $idUsuario);
 			return "ok";
 		} else {
 			return "error";
@@ -222,80 +204,42 @@ class ModeloNotificaciones
 
 		$stmt->close();
 		$stmt = null;
-
 	}
 
 
 	/*=============================================
-	ELIMINAR MÚLTIPLES NOTIFICACIONES
+	ELIMINAR MÚLTIPLES NOTIFICACIONES (POR USUARIO)
 	=============================================*/
 
-	/*=============================================
-	ELIMINAR MÚLTIPLES NOTIFICACIONES
-	=============================================*/
-
-	static public function mdlEliminarNotificaciones($idsJson)
+	static public function mdlEliminarNotificaciones($idsJson, $idUsuario = null)
 	{
+		if (!$idUsuario && isset($_SESSION["id"])) {
+			$idUsuario = $_SESSION["id"];
+		}
 
-		$ids = json_decode($idsJson, true);
+		if (!$idUsuario) {
+			return "error";
+		}
+
+		$ids = is_array($idsJson) ? $idsJson : json_decode($idsJson, true);
 
 		if (empty($ids) || !is_array($ids)) {
 			return "error";
 		}
 
-		// Crear placeholders para el query
-		$placeholders = implode(',', array_fill(0, count($ids), '?'));
+		$db = Conexion::conectar();
+		$stmt = $db->prepare("INSERT IGNORE INTO notificaciones_eliminadas (id_notificacion, id_usuario) VALUES (:id, :id_usuario)");
 
-		// 1. Borrado en Cascada: Obtener referencias antes de eliminar
-		$stmtConsulta = Conexion::conectar()->prepare("SELECT referencia_tipo, referencia_id FROM notificaciones WHERE id IN ($placeholders)");
-		foreach ($ids as $index => $id) {
-			$stmtConsulta->bindValue($index + 1, $id, PDO::PARAM_INT);
-		}
-		$stmtConsulta->execute();
-		$notificaciones = $stmtConsulta->fetchAll();
+		foreach ($ids as $id) {
+			$idInt = intval($id);
+			$stmt->bindParam(":id", $idInt, PDO::PARAM_INT);
+			$stmt->bindParam(":id_usuario", $idUsuario, PDO::PARAM_INT);
+			$stmt->execute();
 
-		foreach ($notificaciones as $notif) {
-			if ($notif["referencia_tipo"] == "solicitud_edicion") {
-				// Eliminar de edicion_pedido
-				$stmtBorrarOrigen = Conexion::conectar()->prepare("DELETE FROM edicion_pedido WHERE id = :id_origen");
-				$stmtBorrarOrigen->bindParam(":id_origen", $notif["referencia_id"], PDO::PARAM_INT);
-				$stmtBorrarOrigen->execute();
-			} else if ($notif["referencia_tipo"] == "solicitud_eliminacion") {
-				// Eliminar de eliminacion_pedido
-				$stmtBorrarOrigen = Conexion::conectar()->prepare("DELETE FROM eliminacion_pedido WHERE id = :id_origen");
-				$stmtBorrarOrigen->bindParam(":id_origen", $notif["referencia_id"], PDO::PARAM_INT);
-				$stmtBorrarOrigen->execute();
-			} else if ($notif["referencia_tipo"] == "pago_bold") {
-				// Eliminar de pagos_bold
-				$stmtBorrarOrigen = Conexion::conectar()->prepare("DELETE FROM pagos_bold WHERE id = :id_origen");
-				$stmtBorrarOrigen->bindParam(":id_origen", $notif["referencia_id"], PDO::PARAM_INT);
-				$stmtBorrarOrigen->execute();
-			}
+			self::mdlMarcarComoLeida($idInt, $idUsuario);
 		}
 
-		// Primero eliminamos de leídas
-		$stmt = Conexion::conectar()->prepare("DELETE FROM notificaciones_leidas WHERE id_notificacion IN ($placeholders)");
-		foreach ($ids as $index => $id) {
-			$stmt->bindValue($index + 1, $id, PDO::PARAM_INT);
-		}
-		$stmt->execute();
-
-		$stmt = Conexion::conectar()->prepare("UPDATE notificaciones SET eliminada = 1 WHERE id IN ($placeholders)");
-
-		// Bind de cada ID
-		foreach ($ids as $index => $id) {
-			$stmt->bindValue($index + 1, $id, PDO::PARAM_INT);
-		}
-
-		if ($stmt->execute()) {
-			return "ok";
-
-		} else {
-			return "error";
-		}
-
-		$stmt->close();
-		$stmt = null;
+		return "ok";
 	}
 
 
@@ -431,6 +375,50 @@ class ModeloNotificaciones
 
 		$stmt->close();
 		$stmt = null;
+	}
+
+	/*=============================================
+	SINCRONIZAR NOTIFICACIONES DE LEADS WHATSAPP
+	=============================================*/
+	static public function mdlSincronizarLeadsWhatsApp()
+	{
+		$stmt = Conexion::conectar()->prepare("
+			SELECT l.id, l.titulo, l.origen, l.etapa, c.nombre as nombre_cliente 
+			FROM crm_leads l 
+			LEFT JOIN clientes c ON l.id_cliente = c.id 
+			WHERE l.origen LIKE '%whatsapp%'
+		");
+		$stmt->execute();
+		$leads = $stmt->fetchAll();
+
+		if ($leads) {
+			foreach ($leads as $lead) {
+				$idLead = $lead["id"];
+				$tipo = "lead_whatsapp";
+				$referenciaTipo = "crm_lead";
+
+				$existe = self::mdlExisteNotificacion($tipo, $idLead, $referenciaTipo);
+
+				if (!$existe) {
+					$nombreCliente = !empty($lead["nombre_cliente"]) ? $lead["nombre_cliente"] : "Cliente sin registrar";
+					$tituloLead = !empty($lead["titulo"]) ? $lead["titulo"] : "Oportunidad Comercial";
+					$mensaje = "Se ha registrado la oportunidad CRM: '" . $tituloLead . "' (" . $nombreCliente . ") desde WhatsApp.";
+
+					$datosNotif = array(
+						"tipo" => $tipo,
+						"titulo" => "Nuevo Lead WhatsApp",
+						"mensaje" => $mensaje,
+						"referencia_tipo" => $referenciaTipo,
+						"referencia_id" => $idLead,
+						"id_bodega" => null
+					);
+
+					self::mdlCrearNotificacion($datosNotif);
+				}
+			}
+		}
+
+		return "ok";
 	}
 
 }

@@ -235,9 +235,8 @@ class ControladorConocimiento
 			0 => 'a.titulo',
 			1 => 'c.nombre',
 			2 => 'a.palabras_clave',
-			3 => 'a.estado',
-			4 => 'a.created_at',
-			5 => 'a.id'
+			3 => 'a.created_at',
+			4 => 'a.id'
 		);
 
 		$where = " WHERE 1=1 ";
@@ -281,23 +280,6 @@ class ControladorConocimiento
 			$nestedData[] = e($value["titulo"]);
 			$nestedData[] = e($value["nombre_categoria"]);
 			$nestedData[] = e($value["palabras_clave"] ?? '');
-
-			// Estado
-			$estadoBtn = "";
-			if (puedeAccion('conocimiento', 'editar')) {
-				if ($value["estado"] == 1) {
-					$estadoBtn = '<button class="btn btn-success btn-xs btnActivarArticulo" idArticulo="' . $value["id"] . '" estadoArticulo="0">Activo</button>';
-				} else {
-					$estadoBtn = '<button class="btn btn-danger btn-xs btnActivarArticulo" idArticulo="' . $value["id"] . '" estadoArticulo="1">Inactivo</button>';
-				}
-			} else {
-				if ($value["estado"] == 1) {
-					$estadoBtn = '<span class="label label-success">Activo</span>';
-				} else {
-					$estadoBtn = '<span class="label label-danger">Inactivo</span>';
-				}
-			}
-			$nestedData[] = $estadoBtn;
 			$nestedData[] = date("d-m-Y H:i:s", strtotime($value["created_at"]));
 
 			// Acciones
@@ -327,145 +309,170 @@ class ControladorConocimiento
 	}
 
 	/*=============================================
-	CREAR ARTICULO
-	=============================================*/
-	static public function ctrCrearArticulo()
-	{
-		if (isset($_POST["nuevoArticuloTitulo"])) {
+    CREAR ARTICULO
+    =============================================*/
+    static public function ctrCrearArticulo()
+    {
+    	if (isset($_POST["nuevoArticuloTitulo"])) {
+    
+    		if (!CSRF::validateToken()) {
+    			echo '<script>
+    				swal({
+    					type: "error",
+    					title: "Error de seguridad",
+    					text: "Token CSRF inválido. Recarga la página.",
+    					showConfirmButton: true,
+    					confirmButtonText: "Cerrar"
+    				}).then(() => {
+    					window.location = "conocimiento";
+    				});
+    			</script>';
+    			return;
+    		}
+    
+    		if (preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\.\,\#\-\_\(\) ]+$/', $_POST["nuevoArticuloTitulo"])) {
+    
+    			$tabla = "empresa_conocimiento";
+    
+    			$datos = array(
+    				"id_categoria"   => $_POST["nuevoArticuloCategoria"],
+    				"titulo"         => $_POST["nuevoArticuloTitulo"],
+    				"contenido"      => $_POST["nuevoArticuloContenido"],
+    				"palabras_clave" => !empty($_POST["nuevoArticuloKeywords"]) ? $_POST["nuevoArticuloKeywords"] : null
+    			);
+    
+    			$respuesta = ModeloConocimiento::mdlIngresarArticulo($tabla, $datos);
+    
+    			if ($respuesta["ok"]) {
+    
+    				$idArticulo = $respuesta["id"];
 
-			if (!CSRF::validateToken()) {
-				echo '<script>
-					swal({
-						type: "error",
-						title: "Error de seguridad",
-						text: "Token CSRF inválido. Recarga la página.",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					}).then(() => {
-						window.location = "conocimiento";
-					});
-				</script>';
-				return;
-			}
-
-			if (preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\.\,\#\-\_\(\) ]+$/', $_POST["nuevoArticuloTitulo"])) {
-
-				$tabla = "empresa_conocimiento";
-				$datos = array(
-					"id_categoria" => $_POST["nuevoArticuloCategoria"],
-					"titulo" => $_POST["nuevoArticuloTitulo"],
-					"contenido" => $_POST["nuevoArticuloContenido"],
-					"palabras_clave" => !empty($_POST["nuevoArticuloKeywords"]) ? $_POST["nuevoArticuloKeywords"] : null
-				);
-
-				$respuesta = ModeloConocimiento::mdlIngresarArticulo($tabla, $datos);
-
-				if ($respuesta == "ok") {
-					echo '<script>
-						swal({
-							type: "success",
-							title: "¡El artículo ha sido guardado correctamente!",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						}).then(() => {
-							window.location = "conocimiento";
-						});
-					</script>';
-				} else {
-					echo '<script>
-						swal({
-							type: "error",
-							title: "¡Error!",
-							text: "No se pudo guardar el artículo.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					</script>';
-				}
-			} else {
-				echo '<script>
-					swal({
-						type: "error",
-						title: "¡Error!",
-						text: "El título no puede llevar caracteres especiales.",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					});
-				</script>';
-			}
-		}
-	}
+                    self::sincronizarQdrant("crear", $idArticulo);
+    
+    				echo '<script>
+    					swal({
+    						type: "success",
+    						title: "¡El artículo ha sido guardado correctamente!",
+    						showConfirmButton: true,
+    						confirmButtonText: "Cerrar"
+    					}).then(() => {
+    						window.location = "conocimiento";
+    					});
+    				</script>';
+    
+    			} else {
+    
+    				echo '<script>
+    					swal({
+    						type: "error",
+    						title: "¡Error!",
+    						text: "No se pudo guardar el artículo.",
+    						showConfirmButton: true,
+    						confirmButtonText: "Cerrar"
+    					});
+    				</script>';
+    
+    			}
+    
+    		} else {
+    
+    			echo '<script>
+    				swal({
+    					type: "error",
+    					title: "¡Error!",
+    					text: "El título no puede llevar caracteres especiales.",
+    					showConfirmButton: true,
+    					confirmButtonText: "Cerrar"
+    				});
+    			</script>';
+    
+    		}
+    
+    	}
+    }
 
 	/*=============================================
-	EDITAR ARTICULO
-	=============================================*/
-	static public function ctrEditarArticulo()
-	{
-		if (isset($_POST["editarArticuloTitulo"])) {
-
-			if (!CSRF::validateToken()) {
-				echo '<script>
-					swal({
-						type: "error",
-						title: "Error de seguridad",
-						text: "Token CSRF inválido. Recarga la página.",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					}).then(() => {
-						window.location = "conocimiento";
-					});
-				</script>';
-				return;
-			}
-
-			if (preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\.\,\#\-\_\(\) ]+$/', $_POST["editarArticuloTitulo"])) {
-
-				$tabla = "empresa_conocimiento";
-				$datos = array(
-					"id" => $_POST["idArticulo"],
-					"id_categoria" => $_POST["editarArticuloCategoria"],
-					"titulo" => $_POST["editarArticuloTitulo"],
-					"contenido" => $_POST["editarArticuloContenido"],
-					"palabras_clave" => !empty($_POST["editarArticuloKeywords"]) ? $_POST["editarArticuloKeywords"] : null
-				);
-
-				$respuesta = ModeloConocimiento::mdlEditarArticulo($tabla, $datos);
-
-				if ($respuesta == "ok") {
-					echo '<script>
-						swal({
-							type: "success",
-							title: "¡El artículo ha sido editado correctamente!",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						}).then(() => {
-							window.location = "conocimiento";
-						});
-					</script>';
-				} else {
-					echo '<script>
-						swal({
-							type: "error",
-							title: "¡Error!",
-							text: "No se pudo actualizar el artículo.",
-							showConfirmButton: true,
-							confirmButtonText: "Cerrar"
-						});
-					</script>';
-				}
-			} else {
-				echo '<script>
-					swal({
-						type: "error",
-						title: "¡Error!",
-						text: "El título no puede llevar caracteres especiales.",
-						showConfirmButton: true,
-						confirmButtonText: "Cerrar"
-					});
-				</script>';
-			}
-		}
-	}
+    EDITAR ARTICULO
+    =============================================*/
+    static public function ctrEditarArticulo()
+    {
+    	if (isset($_POST["editarArticuloTitulo"])) {
+    
+    		if (!CSRF::validateToken()) {
+    			echo '<script>
+    				swal({
+    					type: "error",
+    					title: "Error de seguridad",
+    					text: "Token CSRF inválido. Recarga la página.",
+    					showConfirmButton: true,
+    					confirmButtonText: "Cerrar"
+    				}).then(() => {
+    					window.location = "conocimiento";
+    				});
+    			</script>';
+    			return;
+    		}
+    
+    		if (preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\.\,\#\-\_\(\) ]+$/', $_POST["editarArticuloTitulo"])) {
+    
+    			$tabla = "empresa_conocimiento";
+    
+    			$datos = array(
+    				"id"              => $_POST["idArticulo"],
+    				"id_categoria"    => $_POST["editarArticuloCategoria"],
+    				"titulo"          => $_POST["editarArticuloTitulo"],
+    				"contenido"       => $_POST["editarArticuloContenido"],
+    				"palabras_clave"  => !empty($_POST["editarArticuloKeywords"]) ? $_POST["editarArticuloKeywords"] : null
+    			);
+    
+    			$respuesta = ModeloConocimiento::mdlEditarArticulo($tabla, $datos);
+    
+    			if ($respuesta == "ok") {
+    
+    				// Sincronizar el artículo actualizado con Qdrant
+    				self::sincronizarQdrant("actualizar", $_POST["idArticulo"]);
+    
+    				echo '<script>
+    					swal({
+    						type: "success",
+    						title: "¡El artículo ha sido editado correctamente!",
+    						showConfirmButton: true,
+    						confirmButtonText: "Cerrar"
+    					}).then(() => {
+    						window.location = "conocimiento";
+    					});
+    				</script>';
+    
+    			} else {
+    
+    				echo '<script>
+    					swal({
+    						type: "error",
+    						title: "¡Error!",
+    						text: "No se pudo actualizar el artículo.",
+    						showConfirmButton: true,
+    						confirmButtonText: "Cerrar"
+    					});
+    				</script>';
+    
+    			}
+    
+    		} else {
+    
+    			echo '<script>
+    				swal({
+    					type: "error",
+    					title: "¡Error!",
+    					text: "El título no puede llevar caracteres especiales.",
+    					showConfirmButton: true,
+    					confirmButtonText: "Cerrar"
+    				});
+    			</script>';
+    
+    		}
+    
+    	}
+    }
 
 	/*=============================================
 	ELIMINAR ARTICULO
@@ -495,6 +502,8 @@ class ControladorConocimiento
 			$respuesta = ModeloConocimiento::mdlEliminarArticulo($tabla, $id);
 
 			if ($respuesta == "ok") {
+			    
+			    self::sincronizarQdrant("eliminar", $id);
 				echo '<script>
 					swal({
 						type: "success",
@@ -518,4 +527,67 @@ class ControladorConocimiento
 			}
 		}
 	}
+	
+	
+    /*=============================================
+    SINCRONIZAR CON QDRANT (N8N)
+    =============================================*/
+    public static function sincronizarQdrant($accion, $idArticulo)
+    {
+    
+        // Si es eliminar, solo enviamos el ID
+        if ($accion == "eliminar") {
+    
+            $datos = array(
+                "accion" => "eliminar",
+                "registro" => array(
+                    "id" => (int)$idArticulo
+                )
+            );
+    
+        } else {
+    
+            // Obtener el artículo completo desde la BD
+            $articulo = ModeloConocimiento::mdlMostrarArticulos(
+                "empresa_conocimiento",
+                "id",
+                $idArticulo
+            );
+    
+            if (!$articulo) {
+                return;
+            }
+    
+            $datos = array(
+                "accion" => $accion,
+                "registro" => array(
+                    "id" => (int)$articulo["id"],
+                    "categoria" => $articulo["nombre_categoria"],
+                    "titulo" => $articulo["titulo"],
+                    "contenido" => $articulo["contenido"],
+                    "palabras_clave" => $articulo["palabras_clave"],
+                    "estado" => $articulo["estado"]
+                )
+            );
+        }
+    
+        $url = "https://master-n8n.la6x8e.easypanel.host/webhook/qdrant-sync";
+    
+        $curl = curl_init($url);
+    
+        curl_setopt_array($curl, array(
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($datos, JSON_UNESCAPED_UNICODE),
+            CURLOPT_HTTPHEADER => array(
+                "Content-Type: application/json"
+            ),
+            CURLOPT_TIMEOUT => 2
+        ));
+    
+        curl_exec($curl);
+        curl_close($curl);
+    }
+    
+    
 }

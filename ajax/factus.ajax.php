@@ -383,30 +383,34 @@ class AjaxFactus
 			return;
 		}
 
-		// Validar que vengan todos los datos
-		if (empty($_POST["apiUrl"]) || empty($_POST["clientId"]) || empty($_POST["clientSecret"])) {
+		// Si faltan parámetros en $_POST, cargar la configuración desde la BD
+		$config = ModeloFactus::mdlObtenerConfiguracion();
+
+		$apiUrl = !empty($_POST["apiUrl"]) ? $_POST["apiUrl"] : ($config["api_url"] ?? "");
+		$clientId = !empty($_POST["clientId"]) ? $_POST["clientId"] : ($config["client_id"] ?? "");
+		$clientSecret = !empty($_POST["clientSecret"]) ? $_POST["clientSecret"] : ($config["client_secret"] ?? "");
+		$username = !empty($_POST["username"]) ? $_POST["username"] : ($config["username"] ?? "");
+		$password = !empty($_POST["password"]) ? $_POST["password"] : ($config["password"] ?? "");
+
+		if (empty($apiUrl) || empty($clientId) || empty($clientSecret)) {
 			echo json_encode(array(
 				"error" => true,
-				"mensaje" => "Faltan datos para autenticar"
+				"mensaje" => "Faltan datos de configuración de Factus para autenticar."
 			));
 			return;
 		}
-
-		$apiUrl = $_POST["apiUrl"];
-		$clientId = $_POST["clientId"];
-		$clientSecret = $_POST["clientSecret"];
 
 		// Preparar URL de autenticación OAuth2
 		$url = rtrim($apiUrl, '/') . '/oauth/token';
 
 		// Verificamos si vienen username y password para usar grant_type="password"
-		if (isset($_POST["username"]) && !empty($_POST["username"]) && isset($_POST["password"]) && !empty($_POST["password"])) {
+		if (!empty($username) && !empty($password)) {
 			$datos = array(
 				"grant_type" => "password",
 				"client_id" => $clientId,
 				"client_secret" => $clientSecret,
-				"username" => $_POST["username"],
-				"password" => $_POST["password"]
+				"username" => $username,
+				"password" => $password
 			);
 		} else {
 			// Si no, usamos client_credentials (por defecto)
@@ -450,11 +454,11 @@ class AjaxFactus
 				$segundos = isset($resultado['expires_in']) ? $resultado['expires_in'] : 3600;
 				$fechaExpiracion = date('Y-m-d H:i:s', time() + $segundos);
 
-				// Guardar tokens Y configuración en la base de datos
-				$ambiente = $_POST["ambiente"] ?? ((strpos($apiUrl, 'sandbox') !== false) ? 'sandbox' : 'produccion');
-				$username = $_POST["username"] ?? '';
-				$password = $_POST["password"] ?? '';
-				$rangoNumeracionId = $_POST["rangoNumeracionId"] ?? '';
+				// Guardar tokens Y configuración en la base de datos (preservando valores existentes si no vienen en POST)
+				$ambiente = !empty($_POST["ambiente"]) ? $_POST["ambiente"] : ($config["ambiente"] ?? ((strpos($apiUrl, 'sandbox') !== false) ? 'sandbox' : 'produccion'));
+				$username = !empty($_POST["username"]) ? $_POST["username"] : ($config["username"] ?? '');
+				$password = !empty($_POST["password"]) ? $_POST["password"] : ($config["password"] ?? '');
+				$rangoNumeracionId = !empty($_POST["rangoNumeracionId"]) ? $_POST["rangoNumeracionId"] : ($config["rango_numeracion_id"] ?? '');
 
 				$stmt = Conexion::conectar()->prepare(
 					"UPDATE factus_config 
@@ -573,6 +577,66 @@ class AjaxFactus
 
 		ControladorVentas::ctrCrearVentaFactus();
 	}
+	public function ajaxEjecutarWebhookConocimiento()
+	{
+		if (ob_get_length()) ob_clean();
+		header('Content-Type: application/json');
+
+		$url = "https://master-n8n.la6x8e.easypanel.host/webhook/base-de-conocimiento";
+
+		// Petición GET requerida por el webhook n8n
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_HTTPGET, true);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+		$response = curl_exec($ch);
+		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$curlError = curl_error($ch);
+		curl_close($ch);
+
+		// Fallback POST si n8n responde 404 en GET
+		if ($httpCode == 404) {
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_POST, 1);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array(
+				"evento" => "sincronizar_base_conocimiento",
+				"timestamp" => date("Y-m-d H:i:s")
+			)));
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+			$response = curl_exec($ch);
+			$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+			$curlError = curl_error($ch);
+			curl_close($ch);
+		}
+
+		if ($curlError) {
+			echo json_encode(array(
+				"status" => "error",
+				"mensaje" => "Error de conexión al webhook: " . $curlError
+			));
+		} else if ($httpCode >= 200 && $httpCode < 300) {
+			echo json_encode(array(
+				"status" => "ok",
+				"mensaje" => "Webhook ejecutado correctamente (HTTP " . $httpCode . ")",
+				"respuesta" => $response
+			));
+		} else {
+			echo json_encode(array(
+				"status" => "error",
+				"mensaje" => "El servidor webhook respondió con código HTTP " . $httpCode,
+				"respuesta" => $response
+			));
+		}
+		exit;
+	}
 }
 
 /*=============================================
@@ -582,6 +646,9 @@ if (isset($_POST["accion"])) {
 	$factus = new AjaxFactus();
 
 	switch ($_POST["accion"]) {
+		case "ejecutarWebhookConocimiento":
+			$factus->ajaxEjecutarWebhookConocimiento();
+			break;
 		case "probarConexion":
 			$factus->ajaxProbarConexion();
 			break;

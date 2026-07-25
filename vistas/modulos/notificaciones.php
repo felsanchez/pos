@@ -147,17 +147,13 @@
                   <?php 
                   $configNotif = ControladorConfiguracion::ctrObtenerConfiguracion(); 
                   ?>
-                  <?php if (!isset($configNotif["notif_orden_agente_ia"]) || $configNotif["notif_orden_agente_ia"] == 1): ?>
-                  <option value="Orden creada">Orden creada</option>
+
+                  <?php if (!isset($configNotif["leads_whatsapp_activos"]) || $configNotif["leads_whatsapp_activos"] == 1): ?>
+                  <option value="Lead WhatsApp">Lead WhatsApp</option>
                   <?php endif; ?>
+
                   <?php if (!isset($configNotif["notif_transaccion_bold"]) || $configNotif["notif_transaccion_bold"] == 1): ?>
                   <option value="Transacción Bold">Transacción de Bold</option>
-                  <?php endif; ?>
-                  <?php if (!isset($configNotif["notif_solicitud_edicion"]) || $configNotif["notif_solicitud_edicion"] == 1): ?>
-                  <option value="Edicion de pedido">Solicitud Edición de pedido</option>
-                  <?php endif; ?>
-                  <?php if (!isset($configNotif["notif_solicitud_eliminacion"]) || $configNotif["notif_solicitud_eliminacion"] == 1): ?>
-                  <option value="Eliminacion de pedido">Solicitud Eliminación de pedido</option>
                   <?php endif; ?>
                 </select>
               </div>
@@ -169,12 +165,10 @@
                 <i class="fa fa-check"></i> <span class="hidden-xs">Marcar todas leídas</span>
               </button>
 
-              <?php if (puedeAccion('notificaciones', 'eliminar')): ?>
-                <button class="btn btn-danger" id="btnBorrarSeleccionadas" style="display:none;"
-                  title="Borrar seleccionadas">
-                  <i class="fa fa-trash"></i> <span class="hidden-xs">Borrar</span>
-                </button>
-              <?php endif; ?>
+              <button class="btn btn-danger" id="btnBorrarSeleccionadas" style="display:none;"
+                title="Borrar seleccionadas">
+                <i class="fa fa-trash"></i> <span class="hidden-xs">Borrar</span>
+              </button>
             </div>
 
           </div>
@@ -259,6 +253,10 @@
               $icono = "fa-credit-card";
               $color = "text-purple";
               $tipoTexto = "Transacción Bold";
+            } else if ($notif["tipo"] == "lead_whatsapp" || strpos(strtolower($notif["tipo"]), "whatsapp") !== false) {
+              $icono = "fa-whatsapp";
+              $color = "text-green";
+              $tipoTexto = "Lead WhatsApp";
             }
 
             // Determinar estilo de fila según si está leída
@@ -348,6 +346,10 @@
               $icono = "fa-credit-card";
               $color = "text-purple";
               $tipoTexto = "Transacción Bold";
+            } else if ($notif["tipo"] == "lead_whatsapp" || strpos(strtolower($notif["tipo"]), "whatsapp") !== false) {
+              $icono = "fa-whatsapp";
+              $color = "text-green";
+              $tipoTexto = "Lead WhatsApp";
             }
 
             $claseNoLeida = $notif["leida"] == 0 ? ' no-leida' : '';

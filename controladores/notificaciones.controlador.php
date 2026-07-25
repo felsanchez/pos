@@ -617,4 +617,18 @@ class ControladorNotificaciones
 		return $respuesta;
 	}
 
+	/*=============================================
+	VERIFICAR LEADS DE WHATSAPP (CRM)
+	=============================================*/
+	static public function ctrVerificarLeadsWhatsApp()
+	{
+		$configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
+		if (isset($configuracion["leads_whatsapp_activos"]) && $configuracion["leads_whatsapp_activos"] == 0) {
+			return;
+		}
+
+		$respuesta = ModeloNotificaciones::mdlSincronizarLeadsWhatsApp();
+		return $respuesta;
+	}
+
 }

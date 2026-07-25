@@ -769,13 +769,82 @@ MODAL AGREGAR CLIENTE
                     }
                   });
                 } else {
-                  swal({
-                    type: "error",
-                    title: respuesta.titulo || "Error",
-                    text: respuesta.mensaje || "No se pudo guardar la factura.",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                  });
+                  var msjError = respuesta.mensaje || "No se pudo guardar la factura.";
+                  var esErrorToken = /token|expirado|autenticar/i.test(msjError);
+
+                  if (esErrorToken) {
+                    swal({
+                      type: "warning",
+                      title: "Token de Factus Expirado",
+                      html: '<p style="font-size: 14px; color: #555; text-align: left; background: #fff8e1; padding: 10px; border-radius: 4px; border-left: 4px solid #ffc107;">' + msjError + '</p>' +
+                            '<p style="margin-top: 15px; font-weight: bold; color: #3c8dbc;">¿Desea autenticar y renovar el token en este momento sin salir de la página?</p>',
+                      showCancelButton: true,
+                      confirmButtonColor: "#3c8dbc",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: '<i class="fa fa-key"></i> Autenticar y obtener tokens',
+                      cancelButtonText: "Cerrar",
+                      allowOutsideClick: false
+                    }).then(function (resAuthModal) {
+                      if (resAuthModal.value) {
+                        swal({
+                          title: 'Autenticando con Factus...',
+                          text: 'Obteniendo nuevos tokens de acceso...',
+                          type: 'info',
+                          showConfirmButton: false,
+                          allowOutsideClick: false,
+                          onBeforeOpen: () => {
+                            swal.showLoading()
+                          }
+                        });
+
+                        $.ajax({
+                          url: 'ajax/factus.ajax.php',
+                          method: 'POST',
+                          data: {
+                            accion: 'autenticar',
+                            csrf_token: $('meta[name="csrf-token"]').attr('content')
+                          },
+                          dataType: 'json',
+                          success: function (resAuth) {
+                            if (!resAuth.error) {
+                              swal({
+                                type: 'success',
+                                title: '¡Autenticación Exitosa!',
+                                text: 'Los tokens de Factus han sido renovados correctamente. Ya puede presionar nuevamente el botón para guardar la factura.',
+                                showConfirmButton: true,
+                                confirmButtonText: 'Entendido'
+                              });
+                            } else {
+                              swal({
+                                type: 'error',
+                                title: 'Error al Autenticar',
+                                text: resAuth.mensaje || 'No se pudieron renovar los tokens automáticamente. Verifique las credenciales en Configuración.',
+                                showConfirmButton: true,
+                                confirmButtonText: 'Cerrar'
+                              });
+                            }
+                          },
+                          error: function () {
+                            swal({
+                              type: 'error',
+                              title: 'Error de Conexión',
+                              text: 'Ocurrió un error al intentar comunicar con el servidor para renovar los tokens.',
+                              showConfirmButton: true,
+                              confirmButtonText: 'Cerrar'
+                            });
+                          }
+                        });
+                      }
+                    });
+                  } else {
+                    swal({
+                      type: "error",
+                      title: respuesta.titulo || "Error al guardar la factura",
+                      html: msjError,
+                      showConfirmButton: true,
+                      confirmButtonText: "Cerrar"
+                    });
+                  }
                   boton.prop('disabled', false);
                   boton.html(htmlOriginal);
                 }

@@ -126,16 +126,28 @@ if (!$configuracion) {
 								<p class="help-block">Si está desactivado, se ocultará el módulo "CRM / Pipeline" del menú lateral y de la matriz de permisos.</p>
 							</div>
 
+							<div class="form-group">
+								<div class="checkbox">
+									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
+										<input type="checkbox" name="baseConocimientoActiva" value="1" <?php echo (!isset($configuracionGlobal["base_conocimiento_activa"]) || $configuracionGlobal["base_conocimiento_activa"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar Base de conocimiento</strong>
+									</label>
+								</div>
+								<p class="help-block">Si está desactivado, se ocultará el módulo "Base de Conocimiento" del menú lateral.</p>
+							</div>
 
 							<div class="form-group">
 								<div class="checkbox">
 									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
-										<input type="checkbox" name="graficaOrdenesManuales" value="1" <?php echo (!isset($configuracionGlobal["grafica_ordenes_manuales_activa"]) || $configuracionGlobal["grafica_ordenes_manuales_activa"] == 1) ? "checked" : ""; ?>>
-										<strong>Activar gráfica de Órdenes manuales en Reportes</strong>
+										<input type="checkbox" name="leadsWhatsappActivos" value="1" <?php echo (!isset($configuracionGlobal["leads_whatsapp_activos"]) || $configuracionGlobal["leads_whatsapp_activos"] == 1) ? "checked" : ""; ?>>
+										<strong>Activar Leads Whatsapp por Agente IA (CRM)</strong>
 									</label>
 								</div>
-								<p class="help-block">Si está desactivado, se ocultará la gráfica "Análisis de Órdenes de Venta" en la vista de reportes.</p>
+								<p class="help-block">Si está desactivado, se ocultará la opción "Lead WhatsApp" del filtro por tipo en el módulo de notificaciones.</p>
 							</div>
+
+
+
 
 
 							<br><h4>FACTURACIÓN ELECTRÓNICA:</h4>
@@ -170,58 +182,6 @@ if (!$configuracion) {
 								<p class="help-block">Si está desactivado, se ocultará el botón "Convertir a FE" en la columna "Convertir" de la tabla de administrar órdenes de venta.</p>
 							</div>
 
-							<br><h4>IA:</h4>
-
-							<div class="form-group">
-								<div class="checkbox">
-									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
-										<input type="checkbox" name="botonActualizarProducto" value="1" <?php echo (!isset($configuracionGlobal["boton_actualizar_producto_activo"]) || $configuracionGlobal["boton_actualizar_producto_activo"] == 1) ? "checked" : ""; ?>>
-										<strong>Activar botón "Actualizar" en Productos</strong>
-									</label>
-								</div>
-								<p class="help-block">Si está desactivado, se ocultará el botón "Actualizar" en la parte superior del listado de productos.</p>
-							</div>
-
-							<div class="form-group">
-								<div class="checkbox">
-									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
-										<input type="checkbox" name="seguimientoLeads" value="1" <?php echo (!isset($configuracionGlobal["seguimiento_leads_activo"]) || $configuracionGlobal["seguimiento_leads_activo"] == 1) ? "checked" : ""; ?>>
-										<strong>Activar "Seguimiento a Leads"</strong>
-									</label>
-								</div>
-								<p class="help-block">Si está desactivado, se ocultará la opción "Seguimiento a leads" del menú lateral y de la matriz de permisos.</p>
-							</div>
-
-							<div class="form-group">
-								<div class="checkbox">
-									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
-										<input type="checkbox" name="graficaAnalisisOrdenes" value="1" <?php echo (!isset($configuracionGlobal["grafica_analisis_ordenes_activa"]) || $configuracionGlobal["grafica_analisis_ordenes_activa"] == 1) ? "checked" : ""; ?>>
-										<strong>Activar gráfica "Análisis de Órdenes manuales y con IA" en Reportes</strong>
-									</label>
-								</div>
-								<p class="help-block">Si está desactivado, se ocultará la gráfica "Análisis de Órdenes de Venta" en la vista de reportes.</p>
-							</div>
-
-							<div class="form-group">
-								<div class="checkbox">
-									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
-										<input type="checkbox" name="columnaSeguimiento" value="1" <?php echo (!isset($configuracionGlobal["columna_seguimiento_activa"]) || $configuracionGlobal["columna_seguimiento_activa"] == 1) ? "checked" : ""; ?>>
-										<strong>Activar columna "Seguimiento" en Órdenes</strong>
-									</label>
-								</div>
-								<p class="help-block">Si está desactivado, se ocultará la columna de seguimiento en la tabla de administrar órdenes de venta.</p>
-							</div>
-
-							<div class="form-group">
-								<div class="checkbox">
-									<label style="font-weight: normal; cursor: pointer; font-size: 16px;">
-										<input type="checkbox" name="columnaNotasClienteActiva" value="1" <?php echo (!isset($configuracionGlobal["columna_notas_cliente_activa"]) || $configuracionGlobal["columna_notas_cliente_activa"] == 1) ? "checked" : ""; ?>>
-										<strong>Activar la columna "Notas del cliente" en Ordenes, Ventas y FE</strong>
-									</label>
-								</div>
-								<p class="help-block">Si está desactivado, se ocultará la columna "Notas del cliente" en las vistas de órdenes, ventas y facturas electrónicas.</p>
-							</div>
-
 							<div class="box box-warning" style="margin-top: 15px;">
 								<div class="box-header with-border">
 									<h3 class="box-title" style="font-size: 16px;"><i class="fa fa-bell"></i> Visibilidad de Notificaciones</h3>
@@ -229,28 +189,23 @@ if (!$configuracion) {
 								<div class="box-body">
 									<div class="checkbox">
 										<label style="font-weight: normal; cursor: pointer;">
-											<input type="checkbox" name="notif_orden_agente_ia" value="1" <?php echo (!isset($configuracionGlobal["notif_orden_agente_ia"]) || $configuracionGlobal["notif_orden_agente_ia"] == 1) ? "checked" : ""; ?>>
-											<strong>Mostrar notificación: "Orden Agente IA"</strong>
-										</label>
-									</div>
-									<div class="checkbox">
-										<label style="font-weight: normal; cursor: pointer;">
 											<input type="checkbox" name="notif_transaccion_bold" value="1" <?php echo (!isset($configuracionGlobal["notif_transaccion_bold"]) || $configuracionGlobal["notif_transaccion_bold"] == 1) ? "checked" : ""; ?>>
 											<strong>Mostrar notificación: "Transacción Bold"</strong>
 										</label>
 									</div>
-									<div class="checkbox">
-										<label style="font-weight: normal; cursor: pointer;">
-											<input type="checkbox" name="notif_solicitud_edicion" value="1" <?php echo (!isset($configuracionGlobal["notif_solicitud_edicion"]) || $configuracionGlobal["notif_solicitud_edicion"] == 1) ? "checked" : ""; ?>>
-											<strong>Mostrar notificación: "Solicitud edición de pedido"</strong>
-										</label>
-									</div>
-									<div class="checkbox">
-										<label style="font-weight: normal; cursor: pointer;">
-											<input type="checkbox" name="notif_solicitud_eliminacion" value="1" <?php echo (!isset($configuracionGlobal["notif_solicitud_eliminacion"]) || $configuracionGlobal["notif_solicitud_eliminacion"] == 1) ? "checked" : ""; ?>>
-											<strong>Mostrar notificación: "Solicitud eliminación de pedido"</strong>
-										</label>
-									</div>
+								</div>
+							</div>
+
+							<!-- Agente IA: Base de Conocimiento Webhook -->
+							<div class="box box-primary" style="margin-top: 15px; border-top-color: #0073b7;">
+								<div class="box-header with-border">
+									<h3 class="box-title" style="font-size: 16px;"><i class="fa fa-robot"></i> Sincronización Agente IA</h3>
+								</div>
+								<div class="box-body" style="padding: 15px;">
+									<p class="help-block" style="margin-bottom: 15px;">Presione el siguiente botón para sincronizar los artículos de la Base de Conocimiento con el Agente de Inteligencia Artificial.</p>
+									<button type="button" class="btn btn-primary btn-lg btn-block btnEjecutarWebhookConocimiento" id="btnEjecutarWebhookConocimiento" style="font-weight: bold; background-color: #0073b7; border-color: #00639e; white-space: normal;">
+										<i class="fa fa-cloud-upload"></i> Montar articulos de la Base de conocimiento para el Agente IA
+									</button>
 								</div>
 							</div>
 
@@ -1224,6 +1179,75 @@ $(document).ready(function() {
 				});
 			}
 		});
+	});
+
+	/*=============================================
+	EJECUTAR WEBHOOK BASE DE CONOCIMIENTO (AGENTE IA)
+	=============================================*/
+	$(document).on("click", "#btnEjecutarWebhookConocimiento", function (e) {
+		e.preventDefault();
+		var btn = $(this);
+		var originalHtml = btn.html();
+
+		function ejecutarProcesoWebhook() {
+			btn.prop("disabled", true).html('<i class="fa fa-spinner fa-spin"></i> Sincronizando con Agente IA...');
+			
+			$.ajax({
+				url: "ajax/factus.ajax.php",
+				method: "POST",
+				data: {
+					accion: "ejecutarWebhookConocimiento",
+					csrf_token: $('meta[name="csrf-token"]').attr('content')
+				},
+				dataType: "json",
+				success: function (respuesta) {
+					btn.prop("disabled", false).html(originalHtml);
+					if (respuesta.status === "ok") {
+						swal({
+							title: "¡Sincronización Exitosa!",
+							text: "Se han montado los artículos de la Base de conocimiento para el Agente IA correctamente.",
+							type: "success"
+						});
+					} else {
+						swal({
+							title: "Atención",
+							text: respuesta.mensaje || "Ocurrió un inconveniente al conectar con el webhook.",
+							type: "warning"
+						});
+					}
+				},
+				error: function (xhr, status, error) {
+					btn.prop("disabled", false).html(originalHtml);
+					swal({
+						title: "Error de conexión",
+						text: "No se pudo comunicar con el servidor para activar el webhook.",
+						type: "error"
+					});
+				}
+			});
+		}
+
+		var swalRes = swal({
+			title: "¿Desea sincronizar la Base de Conocimiento?",
+			text: "Se activará el webhook para enviar los artículos al Agente IA.",
+			type: "info",
+			showCancelButton: true,
+			confirmButtonColor: "#0073b7",
+			cancelButtonText: "Cancelar",
+			confirmButtonText: "Sí, montar artículos"
+		}, function (isConfirm) {
+			if (isConfirm) {
+				ejecutarProcesoWebhook();
+			}
+		});
+
+		if (swalRes && typeof swalRes.then === "function") {
+			swalRes.then(function (result) {
+				if (result && (result.value || result === true)) {
+					ejecutarProcesoWebhook();
+				}
+			});
+		}
 	});
 
 });
