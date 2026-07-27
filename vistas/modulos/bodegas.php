@@ -117,7 +117,8 @@ MODAL AGREGAR BODEGA
 
     <div class="modal-content">
 
-      <form role="form" method="post">
+      <form role="form" method="post" id="formAgregarBodega">
+        <?php CSRF::insertToken(); ?>
 
         <!--=====================================
         CABEZA DEL MODAL
@@ -229,7 +230,8 @@ MODAL EDITAR BODEGA
 
     <div class="modal-content">
 
-      <form role="form" method="post">
+      <form role="form" method="post" id="formEditarBodega">
+        <?php CSRF::insertToken(); ?>
 
         <!--=====================================
         CABEZA DEL MODAL

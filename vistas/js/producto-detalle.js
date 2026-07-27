@@ -158,11 +158,11 @@ $(document).ready(function () {
         var file = this.files[0];
 
         if (file) {
-            // Validar tamaño (2MB)
-            if (file.size > 2000000) {
+            // Validar tamaño (10MB)
+            if (file.size > 10000000) {
                 swal({
                     title: "Error",
-                    text: "La imagen no debe pesar más de 2MB",
+                    text: "La imagen no debe pesar más de 10MB",
                     type: "error",
                     confirmButtonText: "¡Cerrar!"
                 });
@@ -171,10 +171,11 @@ $(document).ready(function () {
             }
 
             // Validar tipo
-            if (file.type != "image/jpeg" && file.type != "image/png") {
+            var allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/pjpeg", "image/webp", "image/gif"];
+            if (allowedTypes.indexOf(file.type.toLowerCase()) === -1) {
                 swal({
                     title: "Error",
-                    text: "La imagen debe estar en formato JPG o PNG",
+                    text: "La imagen debe estar en formato JPG, PNG o WEBP",
                     type: "error",
                     confirmButtonText: "¡Cerrar!"
                 });
@@ -182,11 +183,10 @@ $(document).ready(function () {
                 return;
             }
 
-            // Preview (opcional - puedes agregar un elemento img para mostrar preview)
+            // Preview
             var reader = new FileReader();
             reader.onload = function (e) {
-                // Aquí puedes mostrar un preview si lo deseas
-                console.log('Imagen cargada correctamente');
+                $('.img-thumbnail').attr('src', e.target.result);
             }
             reader.readAsDataURL(file);
         }

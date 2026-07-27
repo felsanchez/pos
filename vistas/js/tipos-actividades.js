@@ -42,7 +42,7 @@ EDITAR TIPO ACTIVIDAD
 
 $(".tablaTiposActividades").on("click", ".btnEditarTipoActividad", function () {
 
-	var idTipo = $(this).attr("idTipo");
+	var idTipo = $(this).attr("idTipo") || $(this).attr("data-id");
 	var datos = new FormData();
 	datos.append("idTipo", idTipo);
 	datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
@@ -134,4 +134,147 @@ $(".tablaTiposActividades").on("click", ".btnEliminarTipoActividad", function ()
 		}
 	});
 
+});
+
+/*=============================================
+GUARDAR CREAR TIPO DE ACTIVIDAD VÍA AJAX
+=============================================*/
+$(document).on("submit", "#formAgregarTipoActividad", function (e) {
+	e.preventDefault();
+	e.stopImmediatePropagation();
+
+	var form = this;
+	var boton = $(form).find("button[type='submit']");
+	boton.prop('disabled', true);
+	var htmlOriginal = boton.html();
+	boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+	swal({
+		title: 'Guardando tipo',
+		text: 'Por favor espere mientras se procesa la información...',
+		type: 'info',
+		allowOutsideClick: false,
+		showConfirmButton: false,
+		onBeforeOpen: () => {
+			swal.showLoading()
+		}
+	});
+
+	var datos = new FormData(form);
+	datos.append("guardarCrearTipoActividad", "ok");
+
+	$.ajax({
+		url: "ajax/tipos-actividades.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			boton.prop('disabled', false).html(htmlOriginal);
+
+			if (respuesta.status === "ok") {
+				swal({
+					type: "success",
+					title: "¡Éxito!",
+					text: respuesta.mensaje,
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then((result) => {
+					window.location.href = window.location.pathname;
+				});
+			} else {
+				swal({
+					type: "error",
+					title: "¡Error!",
+					text: respuesta.mensaje || "No se pudo guardar el tipo.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				});
+			}
+		},
+		error: function () {
+			boton.prop('disabled', false).html(htmlOriginal);
+			swal({
+				type: "error",
+				title: "¡Error!",
+				text: "Ocurrió un problema de conexión al guardar el tipo.",
+				showConfirmButton: true,
+				confirmButtonText: "Cerrar"
+			});
+		}
+	});
+});
+
+/*=============================================
+GUARDAR EDITAR TIPO DE ACTIVIDAD VÍA AJAX
+=============================================*/
+$(document).on("submit", "#formEditarTipoActividad, #modalEditarTipoActividad form", function (e) {
+	e.preventDefault();
+	e.stopImmediatePropagation();
+
+	var form = this;
+	var boton = $(form).find("button[type='submit']");
+	boton.prop('disabled', true);
+	var htmlOriginal = boton.html();
+	boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+	swal({
+		title: 'Actualizando tipo',
+		text: 'Por favor espere mientras se procesa la información...',
+		type: 'info',
+		allowOutsideClick: false,
+		showConfirmButton: false,
+		onBeforeOpen: () => {
+			swal.showLoading()
+		}
+	});
+
+	var datos = new FormData(form);
+	datos.append("guardarEditarTipoActividad", "ok");
+
+	$.ajax({
+		url: "ajax/tipos-actividades.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			boton.prop('disabled', false).html(htmlOriginal);
+
+			if (respuesta.status === "ok") {
+				swal({
+					type: "success",
+					title: "¡Éxito!",
+					text: respuesta.mensaje,
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then((result) => {
+					$("#modalEditarTipoActividad").modal("hide");
+					window.location.href = window.location.pathname;
+				});
+			} else {
+				swal({
+					type: "error",
+					title: "¡Error!",
+					text: respuesta.mensaje || "No se pudo actualizar el tipo.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				});
+			}
+		},
+		error: function () {
+			boton.prop('disabled', false).html(htmlOriginal);
+			swal({
+				type: "error",
+				title: "¡Error!",
+				text: "Ocurrió un problema de conexión al actualizar el tipo.",
+				showConfirmButton: true,
+				confirmButtonText: "Cerrar"
+			});
+		}
+	});
 });

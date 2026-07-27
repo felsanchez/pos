@@ -490,8 +490,10 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 									showConfirmButton: true,
 									confirmButtonText: "Cerrar"
 								}).then((result) => {
-									if (result.value) {
-										window.location = "usuarios";
+									if ($.fn.DataTable.isDataTable('#tablaListaUsuarios')) {
+										$('#tablaListaUsuarios').DataTable().ajax.reload(null, false);
+									} else {
+										window.location.reload();
 									}
 								});
 							} else if (respuesta == "error_auto_eliminacion") {
@@ -547,8 +549,10 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 									showConfirmButton: true,
 									confirmButtonText: "Cerrar"
 								}).then((result) => {
-									if (result.value) {
-										window.location = "usuarios";
+									if ($.fn.DataTable.isDataTable('#tablaListaUsuarios')) {
+										$('#tablaListaUsuarios').DataTable().ajax.reload(null, false);
+									} else {
+										window.location.reload();
 									}
 								});
 							} else if (respuesta == "error_auto_eliminacion") {
@@ -574,4 +578,155 @@ $(".tablaUsuarios").on("click", ".btnEliminarUsuario", function () {
 			})
 		}
 	});
-})
+});
+
+/*=============================================
+GUARDAR CREAR USUARIO VÍA AJAX
+=============================================*/
+$(document).on("submit", "#formAgregarUsuario", function (e) {
+	e.preventDefault();
+
+	var form = this;
+	var boton = $(form).find("button[type='submit']");
+	boton.prop('disabled', true);
+	var htmlOriginal = boton.html();
+	boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+	swal({
+		title: 'Guardando usuario',
+		text: 'Por favor espere mientras se procesa la información...',
+		type: 'info',
+		allowOutsideClick: false,
+		showConfirmButton: false,
+		onBeforeOpen: () => {
+			swal.showLoading()
+		}
+	});
+
+	var datos = new FormData(form);
+	datos.append("guardarCrearUsuario", "ok");
+
+	$.ajax({
+		url: "ajax/usuarios.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			boton.prop('disabled', false).html(htmlOriginal);
+
+			if (respuesta.status === "ok") {
+				swal({
+					type: "success",
+					title: "¡Éxito!",
+					text: respuesta.mensaje,
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then((result) => {
+					$("#modalAgregarUsuario").modal("hide");
+					form.reset();
+					if ($.fn.DataTable.isDataTable('#tablaListaUsuarios')) {
+						$('#tablaListaUsuarios').DataTable().ajax.reload(null, false);
+					} else {
+						window.location.reload();
+					}
+				});
+			} else {
+				swal({
+					type: "error",
+					title: "¡Error!",
+					text: respuesta.mensaje || "No se pudo guardar el usuario.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				});
+			}
+		},
+		error: function () {
+			boton.prop('disabled', false).html(htmlOriginal);
+			swal({
+				type: "error",
+				title: "¡Error!",
+				text: "Ocurrió un problema de conexión al guardar el usuario.",
+				showConfirmButton: true,
+				confirmButtonText: "Cerrar"
+			});
+		}
+	});
+});
+
+/*=============================================
+GUARDAR EDITAR USUARIO VÍA AJAX
+=============================================*/
+$(document).on("submit", "#formEditarUsuario", function (e) {
+	e.preventDefault();
+
+	var form = this;
+	var boton = $(form).find("button[type='submit']");
+	boton.prop('disabled', true);
+	var htmlOriginal = boton.html();
+	boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+	swal({
+		title: 'Actualizando usuario',
+		text: 'Por favor espere mientras se procesa la información...',
+		type: 'info',
+		allowOutsideClick: false,
+		showConfirmButton: false,
+		onBeforeOpen: () => {
+			swal.showLoading()
+		}
+	});
+
+	var datos = new FormData(form);
+	datos.append("guardarEditarUsuario", "ok");
+
+	$.ajax({
+		url: "ajax/usuarios.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			boton.prop('disabled', false).html(htmlOriginal);
+
+			if (respuesta.status === "ok") {
+				swal({
+					type: "success",
+					title: "¡Éxito!",
+					text: respuesta.mensaje,
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then((result) => {
+					$("#modalEditarUsuario").modal("hide");
+					if ($.fn.DataTable.isDataTable('#tablaListaUsuarios')) {
+						$('#tablaListaUsuarios').DataTable().ajax.reload(null, false);
+					} else {
+						window.location.reload();
+					}
+				});
+			} else {
+				swal({
+					type: "error",
+					title: "¡Error!",
+					text: respuesta.mensaje || "No se pudo actualizar el usuario.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				});
+			}
+		},
+		error: function () {
+			boton.prop('disabled', false).html(htmlOriginal);
+			swal({
+				type: "error",
+				title: "¡Error!",
+				text: "Ocurrió un problema de conexión al actualizar el usuario.",
+				showConfirmButton: true,
+				confirmButtonText: "Cerrar"
+			});
+		}
+	});
+});

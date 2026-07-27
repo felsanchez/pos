@@ -94,5 +94,119 @@ if(isset($_POST["accion"]) && $_POST["accion"] == "obtenerLead") {
 	$obtener = new AjaxCRM();
 	$obtener->idLead = $_POST["idLead"];
 	$obtener->ajaxObtenerLead();
+	exit;
+}
 
+/*=============================================
+GUARDAR CREAR LEAD
+=============================================*/
+if (isset($_POST["guardarCrearLead"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["nuevoLeadTitulo"])) {
+		$tabla = "crm_leads";
+		$datos = array(
+			"id_cliente" => $_POST["nuevoLeadCliente"],
+			"titulo" => $_POST["nuevoLeadTitulo"],
+			"valor_estimado" => $_POST["nuevoLeadValor"],
+			"prioridad" => $_POST["nuevoLeadPrioridad"],
+			"etapa" => $_POST["nuevoLeadEtapa"],
+			"id_vendedor" => $_POST["nuevoLeadVendedor"],
+			"fecha_cierre" => !empty($_POST["nuevoLeadFechaCierre"]) ? $_POST["nuevoLeadFechaCierre"] : null,
+			"notas" => $_POST["nuevoLeadNotas"],
+			"codigo_orden" => null,
+			"orden" => 1
+		);
+
+		$db = Conexion::conectar();
+		try {
+			$db->beginTransaction();
+			ModeloCRM::mdlDesplazarLeadsEnEtapa($tabla, $_POST["nuevoLeadEtapa"]);
+			$respuesta = ModeloCRM::mdlCrearLead($tabla, $datos);
+			if ($respuesta != "ok") {
+				throw new Exception("Error al registrar el lead.");
+			}
+			$db->commit();
+			echo json_encode(["status" => "ok", "mensaje" => "¡El lead ha sido guardado correctamente!"]);
+		} catch (Exception $e) {
+			$db->rollBack();
+			echo json_encode(["status" => "error", "mensaje" => $e->getMessage()]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "El título del negocio es obligatorio."]);
+	}
+	exit;
+}
+
+/*=============================================
+GUARDAR EDITAR LEAD
+=============================================*/
+if (isset($_POST["guardarEditarLead"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["editarLeadTitulo"])) {
+		$tabla = "crm_leads";
+		$datos = array(
+			"id" => $_POST["editarLeadId"],
+			"titulo" => $_POST["editarLeadTitulo"],
+			"id_cliente" => $_POST["editarLeadCliente"],
+			"valor" => floatval($_POST["editarLeadValor"]),
+			"prioridad" => $_POST["editarLeadPrioridad"],
+			"etapa" => $_POST["editarLeadEtapa"],
+			"id_vendedor" => $_POST["editarLeadVendedor"],
+			"fecha_cierre_estimado" => $_POST["editarLeadFechaCierre"],
+			"notas" => $_POST["editarLeadNotas"]
+		);
+
+		$db = Conexion::conectar();
+		try {
+			$db->beginTransaction();
+			$respuesta = ModeloCRM::mdlEditarLead($tabla, $datos);
+			if ($respuesta != "ok") {
+				throw new Exception("Error al actualizar el lead.");
+			}
+			$db->commit();
+			echo json_encode(["status" => "ok", "mensaje" => "¡El lead ha sido editado correctamente!"]);
+		} catch (Exception $e) {
+			$db->rollBack();
+			echo json_encode(["status" => "error", "mensaje" => $e->getMessage()]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "El título del negocio es obligatorio."]);
+	}
+	exit;
+}
+
+/*=============================================
+GUARDAR ELIMINAR LEAD
+=============================================*/
+if (isset($_POST["guardarEliminarLead"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	$tabla = "crm_leads";
+	$idLead = $_POST["idLeadEliminar"];
+
+	$db = Conexion::conectar();
+	try {
+		$db->beginTransaction();
+		$respuesta = ModeloCRM::mdlEliminarLead($tabla, $idLead);
+		if ($respuesta != "ok") {
+			throw new Exception("Error al eliminar el lead.");
+		}
+		$db->commit();
+		echo json_encode(["status" => "ok", "mensaje" => "¡El lead ha sido eliminado correctamente!"]);
+	} catch (Exception $e) {
+		$db->rollBack();
+		echo json_encode(["status" => "error", "mensaje" => $e->getMessage()]);
+	}
+	exit;
 }

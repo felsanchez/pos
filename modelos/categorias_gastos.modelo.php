@@ -42,7 +42,16 @@ class ModeloCategoriasGastos {
 
 	static public function mdlIngresarCategoriaGasto($tabla, $datos){
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(nombre, color, descripcion) VALUES (:nombre, :color, :descripcion)");
+		// Verificar si el nombre ya existe en registros activos
+		$stmtNombre = Conexion::conectar()->prepare("SELECT id FROM $tabla WHERE LOWER(nombre) = LOWER(:nombre) AND activo = 1");
+		$stmtNombre->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
+		$stmtNombre->execute();
+		$nombreExiste = $stmtNombre->fetch();
+		if ($nombreExiste) {
+			return "duplicado";
+		}
+
+		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(nombre, color, descripcion, activo) VALUES (:nombre, :color, :descripcion, 1)");
 
 		$stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
 		$stmt->bindParam(":color", $datos["color"], PDO::PARAM_STR);
@@ -68,6 +77,16 @@ class ModeloCategoriasGastos {
 	=============================================*/
 
 	static public function mdlEditarCategoriaGasto($tabla, $datos){
+
+		// Verificar si el nombre ya existe en otro registro activo
+		$stmtNombre = Conexion::conectar()->prepare("SELECT id FROM $tabla WHERE LOWER(nombre) = LOWER(:nombre) AND id != :id AND activo = 1");
+		$stmtNombre->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
+		$stmtNombre->bindParam(":id", $datos["id"], PDO::PARAM_INT);
+		$stmtNombre->execute();
+		$nombreExiste = $stmtNombre->fetch();
+		if ($nombreExiste) {
+			return "duplicado";
+		}
 
 		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET nombre = :nombre, color = :color, descripcion = :descripcion WHERE id = :id");
 
@@ -97,7 +116,7 @@ class ModeloCategoriasGastos {
 
 	static public function mdlEliminarCategoriaGasto($tabla, $datos){
 
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET activo = 0 WHERE id = :id");
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET activo = 0, nombre = CONCAT(nombre, '_deleted_', id) WHERE id = :id");
 
 		$stmt -> bindParam(":id", $datos, PDO::PARAM_INT);
 

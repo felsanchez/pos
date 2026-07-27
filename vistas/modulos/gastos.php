@@ -323,13 +323,13 @@ MODAL GESTIONAR CATEGORÍAS
             <h3 class="panel-title">Agregar Nueva Categoría</h3>
           </div>
           <div class="panel-body">
-            <form role="form" method="post" id="formAgregarCategoria">
+            <form role="form" method="post" id="formAgregarCategoriaGasto">
 
               <?php CSRF::insertToken(); ?>
               <div class="row">
                 <div class="col-md-5">
                   <div class="form-group">
-                    <input type="text" class="form-control" name="nombreCategoriaGasto"
+                    <input type="text" class="form-control" name="nombreCategoriaGasto" id="nombreCategoriaGasto"
                       placeholder="Nombre de la categoría *" required>
                   </div>
                 </div>
@@ -353,10 +353,7 @@ MODAL GESTIONAR CATEGORÍAS
                 </div>
               </div>
 
-              <?php
-              $crearCategoria = new ControladorCategoriasGastos();
-              $crearCategoria->ctrCrearCategoriaGasto();
-              ?>
+
 
             </form>
           </div>
@@ -389,7 +386,7 @@ MODAL GESTIONAR CATEGORÍAS
                       <td><input type="color" value="' . $value["color"] . '" disabled style="width: 50px;"></td>
                       <td>' . $value["descripcion"] . '</td>
                       <td>
-                        <button class="btn btn-warning btn-xs btnEditarCategoriaGasto" idCategoria="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarCategoria"><i class="fa fa-pencil"></i></button>
+                        <button class="btn btn-warning btn-xs btnEditarCategoriaGasto" idCategoria="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarCategoriaGasto"><i class="fa fa-pencil"></i></button>
                         <button class="btn btn-danger btn-xs btnEliminarCategoriaGasto" idCategoria="' . $value["id"] . '" nombreCategoria="' . $value["nombre"] . '"><i class="fa fa-times"></i></button>
                       </td>
                     </tr>';
@@ -421,13 +418,13 @@ MODAL GESTIONAR CATEGORÍAS
 MODAL EDITAR CATEGORÍA
 ======================================-->
 
-<div id="modalEditarCategoria" class="modal fade" role="dialog">
+<div id="modalEditarCategoriaGasto" class="modal fade" role="dialog">
 
   <div class="modal-dialog">
 
     <div class="modal-content">
 
-      <form role="form" method="post">
+      <form role="form" method="post" id="formEditarCategoriaGasto">
 
         <?php CSRF::insertToken(); ?>
 
@@ -535,8 +532,5 @@ MODAL AMPLIAR Y EDITAR IMAGEN COMPROBANTE
 
 $borrarGasto = new ControladorGastos();
 $borrarGasto->ctrEliminarGasto();
-
-$borrarCategoria = new ControladorCategoriasGastos();
-$borrarCategoria->ctrEliminarCategoriaGasto();
 
 ?>

@@ -207,4 +207,147 @@ $(document).on("click", ".btnEliminarEstadoActividad", function () {
 
 });
 
+/*=============================================
+GUARDAR CREAR ESTADO DE ACTIVIDAD VÍA AJAX
+=============================================*/
+$(document).on("submit", "#formAgregarEstadoActividad", function (e) {
+	e.preventDefault();
+	e.stopImmediatePropagation();
+
+	var form = this;
+	var boton = $(form).find("button[type='submit']");
+	boton.prop('disabled', true);
+	var htmlOriginal = boton.html();
+	boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+	swal({
+		title: 'Guardando estado',
+		text: 'Por favor espere mientras se procesa la información...',
+		type: 'info',
+		allowOutsideClick: false,
+		showConfirmButton: false,
+		onBeforeOpen: () => {
+			swal.showLoading()
+		}
+	});
+
+	var datos = new FormData(form);
+	datos.append("guardarCrearEstadoActividad", "ok");
+
+	$.ajax({
+		url: "ajax/estados-actividades.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			boton.prop('disabled', false).html(htmlOriginal);
+
+			if (respuesta.status === "ok") {
+				swal({
+					type: "success",
+					title: "¡Éxito!",
+					text: respuesta.mensaje,
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then((result) => {
+					window.location.href = window.location.pathname;
+				});
+			} else {
+				swal({
+					type: "error",
+					title: "¡Error!",
+					text: respuesta.mensaje || "No se pudo guardar el estado.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				});
+			}
+		},
+		error: function () {
+			boton.prop('disabled', false).html(htmlOriginal);
+			swal({
+				type: "error",
+				title: "¡Error!",
+				text: "Ocurrió un problema de conexión al guardar el estado.",
+				showConfirmButton: true,
+				confirmButtonText: "Cerrar"
+			});
+		}
+	});
+});
+
+/*=============================================
+GUARDAR EDITAR ESTADO DE ACTIVIDAD VÍA AJAX
+=============================================*/
+$(document).on("submit", "#modalEditarEstadoActividad form", function (e) {
+	e.preventDefault();
+	e.stopImmediatePropagation();
+
+	var form = this;
+	var boton = $(form).find("button[type='submit']");
+	boton.prop('disabled', true);
+	var htmlOriginal = boton.html();
+	boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+	swal({
+		title: 'Actualizando estado',
+		text: 'Por favor espere mientras se procesa la información...',
+		type: 'info',
+		allowOutsideClick: false,
+		showConfirmButton: false,
+		onBeforeOpen: () => {
+			swal.showLoading()
+		}
+	});
+
+	var datos = new FormData(form);
+	datos.append("guardarEditarEstadoActividad", "ok");
+
+	$.ajax({
+		url: "ajax/estados-actividades.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			boton.prop('disabled', false).html(htmlOriginal);
+
+			if (respuesta.status === "ok") {
+				swal({
+					type: "success",
+					title: "¡Éxito!",
+					text: respuesta.mensaje,
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then((result) => {
+					$("#modalEditarEstadoActividad").modal("hide");
+					window.location.href = window.location.pathname;
+				});
+			} else {
+				swal({
+					type: "error",
+					title: "¡Error!",
+					text: respuesta.mensaje || "No se pudo actualizar el estado.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				});
+			}
+		},
+		error: function () {
+			boton.prop('disabled', false).html(htmlOriginal);
+			swal({
+				type: "error",
+				title: "¡Error!",
+				text: "Ocurrió un problema de conexión al actualizar el estado.",
+				showConfirmButton: true,
+				confirmButtonText: "Cerrar"
+			});
+		}
+	});
+});
+
 } // Fin de prevención de ejecución múltiple

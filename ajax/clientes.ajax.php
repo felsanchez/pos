@@ -178,13 +178,102 @@ if (isset($_POST["accion"]) && $_POST["accion"] == "actualizarNota") {
 
 
 /*=============================================
-PERMITE Mostrar el modal de clients desde Ventas
+PERMITE Mostrar el modal de clientes desde Ventas
 =============================================*/
-if (isset($_POST["idCliente"])) {
+if (isset($_POST["idCliente"]) && !isset($_POST["nuevoEstatus"]) && !isset($_POST["guardarEditarCliente"])) {
   $cliente = new AjaxClientes();
   $cliente->idCliente = $_POST["idCliente"];
   $cliente->ajaxEditarCliente();
   exit; // IMPORTANTE: salir después de enviar el JSON
+}
+
+/*=============================================
+GUARDAR CREAR CLIENTE
+=============================================*/
+if (isset($_POST["guardarCrearCliente"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["nuevoCliente"]) && !empty($_POST["nuevoDocumentoId"])) {
+		$tabla = "clientes";
+		$datos = array(
+			"nombre" => $_POST["nuevoCliente"],
+			"documento" => $_POST["nuevoDocumentoId"],
+			"email" => $_POST["nuevoEmail"],
+			"telefono" => $_POST["nuevoTelefono"],
+			"departamento" => $_POST["nuevoDepartamento"],
+			"ciudad" => $_POST["nuevoCiudad"],
+			"direccion" => $_POST["nuevaDireccion"],
+			"fecha_nacimiento" => isset($_POST["nuevaFechaNacimiento"]) ? $_POST["nuevaFechaNacimiento"] : "",
+			"estatus" => isset($_POST["nuevoEstatus"]) ? $_POST["nuevoEstatus"] : "nuevo",
+			"tipo_documento" => isset($_POST["nuevoTipoDocumento"]) ? $_POST["nuevoTipoDocumento"] : "3",
+			"municipio_id" => isset($_POST["nuevoMunicipio"]) ? $_POST["nuevoMunicipio"] : "11001",
+			"notas" => isset($_POST["nuevaNota"]) ? $_POST["nuevaNota"] : ""
+		);
+
+		$db = Conexion::conectar();
+		try {
+			$db->beginTransaction();
+			$respuesta = ModeloClientes::mdlIngresarCliente($tabla, $datos);
+			if ($respuesta != "ok") {
+				throw new Exception("Error al guardar el cliente.");
+			}
+			$db->commit();
+			echo json_encode(["status" => "ok", "mensaje" => "¡El cliente ha sido guardado correctamente!"]);
+		} catch (Exception $e) {
+			$db->rollBack();
+			echo json_encode(["status" => "error", "mensaje" => $e->getMessage()]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "El nombre y documento son obligatorios."]);
+	}
+	exit;
+}
+
+/*=============================================
+GUARDAR EDITAR CLIENTE
+=============================================*/
+if (isset($_POST["guardarEditarCliente"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["editarCliente"]) && !empty($_POST["editarDocumentoId"])) {
+		$tabla = "clientes";
+		$datos = array(
+			"id" => $_POST["idCliente"],
+			"nombre" => $_POST["editarCliente"],
+			"documento" => $_POST["editarDocumentoId"],
+			"email" => $_POST["editarEmail"],
+			"telefono" => $_POST["editarTelefono"],
+			"departamento" => $_POST["editarDepartamento"],
+			"ciudad" => $_POST["editarCiudad"],
+			"direccion" => $_POST["editarDireccion"],
+			"fecha_nacimiento" => isset($_POST["editarFechaNacimiento"]) ? $_POST["editarFechaNacimiento"] : "",
+			"tipo_documento" => isset($_POST["editarTipoDocumento"]) ? $_POST["editarTipoDocumento"] : "3",
+			"municipio_id" => isset($_POST["editarMunicipio"]) ? $_POST["editarMunicipio"] : "11001"
+		);
+
+		$db = Conexion::conectar();
+		try {
+			$db->beginTransaction();
+			$respuesta = ModeloClientes::mdlEditarCliente($tabla, $datos);
+			if ($respuesta != "ok") {
+				throw new Exception("Error al actualizar el cliente.");
+			}
+			$db->commit();
+			echo json_encode(["status" => "ok", "mensaje" => "¡El cliente ha sido editado correctamente!"]);
+		} catch (Exception $e) {
+			$db->rollBack();
+			echo json_encode(["status" => "error", "mensaje" => $e->getMessage()]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "El nombre y documento son obligatorios."]);
+	}
+	exit;
 }
 
 /*=============================================

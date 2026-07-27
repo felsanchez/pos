@@ -33,8 +33,8 @@ class ModeloTiposActividades{
 
 	static public function mdlCrearTipo($tabla, $datos){
 
-        // Verificar si el nombre ya existe
-		$stmtNombre = Conexion::conectar()->prepare("SELECT id FROM $tabla WHERE nombre = :nombre AND activo = 1");
+        // Verificar si el nombre ya existe en registros activos
+		$stmtNombre = Conexion::conectar()->prepare("SELECT id FROM $tabla WHERE LOWER(nombre) = LOWER(:nombre) AND activo = 1");
 		$stmtNombre -> bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
 		$stmtNombre -> execute();
 		$nombreExiste = $stmtNombre -> fetch();
@@ -55,8 +55,8 @@ class ModeloTiposActividades{
 			$stmtUpdate -> execute();
 		}
 
-		// Insertar el nuevo registro (SIN color)
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(nombre, orden) VALUES (:nombre, :orden)");
+		// Insertar el nuevo registro
+		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(nombre, orden, activo) VALUES (:nombre, :orden, 1)");
 
 		$stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
 		$stmt->bindParam(":orden", $datos["orden"], PDO::PARAM_INT);
@@ -84,8 +84,8 @@ class ModeloTiposActividades{
 		$tipoActual = $stmtActual -> fetch();
 		$nombreAntiguo = $tipoActual["nombre"];
 
-        // Verificar si el nombre ya existe en otro registro
-		$stmtNombre = Conexion::conectar()->prepare("SELECT id FROM $tabla WHERE nombre = :nombre AND id != :id AND activo = 1");
+        // Verificar si el nombre ya existe en otro registro activo
+		$stmtNombre = Conexion::conectar()->prepare("SELECT id FROM $tabla WHERE LOWER(nombre) = LOWER(:nombre) AND id != :id AND activo = 1");
 		$stmtNombre -> bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
 		$stmtNombre -> bindParam(":id", $datos["id"], PDO::PARAM_INT);
 		$stmtNombre -> execute();
@@ -141,7 +141,7 @@ class ModeloTiposActividades{
 
 	static public function mdlEliminarTipo($tabla, $datos){
 
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET activo = 0 WHERE id = :id");
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET activo = 0, nombre = CONCAT(nombre, '_deleted_', id) WHERE id = :id");
 
 		$stmt -> bindParam(":id", $datos, PDO::PARAM_INT);
 

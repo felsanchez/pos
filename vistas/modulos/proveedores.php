@@ -116,7 +116,7 @@ MODAL AGREGAR Proveedor
 
     <div class="modal-content">
 
-      <form role="form" method="post" enctype="multipart/form-data">
+      <form role="form" method="post" enctype="multipart/form-data" id="formAgregarProveedor">
 
         <?php CSRF::insertToken(); ?>
 
@@ -316,7 +316,7 @@ MODAL EDITAR Proveedor
 
     <div class="modal-content">
 
-      <form role="form" method="post" enctype="multipart/form-data">
+      <form role="form" method="post" enctype="multipart/form-data" id="formEditarProveedor">
 
         <?php CSRF::insertToken(); ?>
 

@@ -399,8 +399,61 @@ $(document).ready(function() {
             confirmButtonText: 'Sí, eliminar'
         }).then((result) => {
             if (result.value) {
-                // Redirigir al controlador para procesar la eliminación
-                window.location = "index.php?ruta=crm&idLeadEliminar=" + idLead;
+                swal({
+                    title: 'Eliminando oportunidad',
+                    text: 'Por favor espere mientras se procesa la información...',
+                    type: 'info',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    onBeforeOpen: () => {
+                        swal.showLoading()
+                    }
+                });
+
+                var datos = new FormData();
+                datos.append("guardarEliminarLead", "ok");
+                datos.append("idLeadEliminar", idLead);
+
+                $.ajax({
+                    url: "ajax/crm.ajax.php",
+                    method: "POST",
+                    data: datos,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    dataType: "json",
+                    success: function (respuesta) {
+                        if (respuesta.status === "ok") {
+                            swal({
+                                type: "success",
+                                title: "¡Éxito!",
+                                text: respuesta.mensaje,
+                                showConfirmButton: true,
+                                confirmButtonText: "Cerrar"
+                            }).then((result) => {
+                                $("#modalEditarLead").modal("hide");
+                                window.location.reload();
+                            });
+                        } else {
+                            swal({
+                                type: "error",
+                                title: "¡Error!",
+                                text: respuesta.mensaje || "No se pudo eliminar la oportunidad.",
+                                showConfirmButton: true,
+                                confirmButtonText: "Cerrar"
+                            });
+                        }
+                    },
+                    error: function () {
+                        swal({
+                            type: "error",
+                            title: "¡Error!",
+                            text: "Ocurrió un problema de conexión al eliminar la oportunidad.",
+                            showConfirmButton: true,
+                            confirmButtonText: "Cerrar"
+                        });
+                    }
+                });
             }
         });
     });
@@ -456,6 +509,149 @@ $(document).ready(function() {
             if (result.value) {
                 // Redirigir al controlador
                 window.location = "index.php?ruta=crm&idEtapaEliminar=" + idEtapa;
+            }
+        });
+    });
+
+    /*=============================================
+    GUARDAR CREAR LEAD VÍA AJAX
+    =============================================*/
+    $(document).on("submit", "#formAgregarLead", function (e) {
+        e.preventDefault();
+
+        var form = this;
+        var boton = $(form).find("button[type='submit']");
+        boton.prop('disabled', true);
+        var htmlOriginal = boton.html();
+        boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+        swal({
+            title: 'Guardando oportunidad',
+            text: 'Por favor espere mientras se procesa la información...',
+            type: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            onBeforeOpen: () => {
+                swal.showLoading()
+            }
+        });
+
+        var datos = new FormData(form);
+        datos.append("guardarCrearLead", "ok");
+
+        $.ajax({
+            url: "ajax/crm.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function (respuesta) {
+                boton.prop('disabled', false).html(htmlOriginal);
+
+                if (respuesta.status === "ok") {
+                    swal({
+                        type: "success",
+                        title: "¡Éxito!",
+                        text: respuesta.mensaje,
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    }).then((result) => {
+                        $("#modalAgregarLead").modal("hide");
+                        form.reset();
+                        window.location.reload();
+                    });
+                } else {
+                    swal({
+                        type: "error",
+                        title: "¡Error!",
+                        text: respuesta.mensaje || "No se pudo guardar la oportunidad.",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                }
+            },
+            error: function () {
+                boton.prop('disabled', false).html(htmlOriginal);
+                swal({
+                    type: "error",
+                    title: "¡Error!",
+                    text: "Ocurrió un problema de conexión al guardar la oportunidad.",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        });
+    });
+
+    /*=============================================
+    GUARDAR EDITAR LEAD VÍA AJAX
+    =============================================*/
+    $(document).on("submit", "#formEditarLead", function (e) {
+        e.preventDefault();
+
+        var form = this;
+        var boton = $(form).find("button[type='submit']");
+        boton.prop('disabled', true);
+        var htmlOriginal = boton.html();
+        boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+        swal({
+            title: 'Actualizando oportunidad',
+            text: 'Por favor espere mientras se procesa la información...',
+            type: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            onBeforeOpen: () => {
+                swal.showLoading()
+            }
+        });
+
+        var datos = new FormData(form);
+        datos.append("guardarEditarLead", "ok");
+
+        $.ajax({
+            url: "ajax/crm.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function (respuesta) {
+                boton.prop('disabled', false).html(htmlOriginal);
+
+                if (respuesta.status === "ok") {
+                    swal({
+                        type: "success",
+                        title: "¡Éxito!",
+                        text: respuesta.mensaje,
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    }).then((result) => {
+                        $("#modalEditarLead").modal("hide");
+                        window.location.reload();
+                    });
+                } else {
+                    swal({
+                        type: "error",
+                        title: "¡Error!",
+                        text: respuesta.mensaje || "No se pudo actualizar la oportunidad.",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                }
+            },
+            error: function () {
+                boton.prop('disabled', false).html(htmlOriginal);
+                swal({
+                    type: "error",
+                    title: "¡Error!",
+                    text: "Ocurrió un problema de conexión al actualizar la oportunidad.",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
             }
         });
     });

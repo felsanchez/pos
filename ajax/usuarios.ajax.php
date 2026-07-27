@@ -189,14 +189,163 @@ if (isset($_POST["idUsuarioEliminar"])) {
 }
 
 /*=============================================
-EDITAR USUARIO
+OBTENER USUARIO PARA MODAL EDITAR
 =============================================*/
-if (isset($_POST["idUsuario"])) {
-
+if (isset($_POST["idUsuario"]) && !isset($_POST["guardarEditarUsuario"])) {
 	$editar = new AjaxUsuarios();
 	$editar->idUsuario = $_POST["idUsuario"];
 	$editar->ajaxEditarUsuario();
+	exit;
+}
 
+/*=============================================
+GUARDAR CREAR USUARIO
+=============================================*/
+if (isset($_POST["guardarCrearUsuario"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["nuevoUsuario"]) && !empty($_POST["nuevoNombre"]) && !empty($_POST["nuevoPassword"])) {
+		if (!preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoNombre"])) {
+			echo json_encode(["status" => "error", "mensaje" => "El nombre no puede llevar caracteres especiales."]);
+			exit;
+		}
+
+		if (!preg_match('/^[a-zA-Z0-9]+$/', $_POST["nuevoUsuario"])) {
+			echo json_encode(["status" => "error", "mensaje" => "El usuario no puede llevar espacios ni caracteres especiales."]);
+			exit;
+		}
+
+		$tabla = "usuarios";
+		$encriptar = password_hash($_POST["nuevoPassword"], PASSWORD_BCRYPT, ['cost' => 12]);
+
+		$ruta = "";
+		if (isset($_FILES["nuevaFoto"]["tmp_name"]) && !empty($_FILES["nuevaFoto"]["tmp_name"])) {
+			list($ancho, $alto) = getimagesize($_FILES["nuevaFoto"]["tmp_name"]);
+			$nuevoAncho = 500;
+			$nuevoAlto = 500;
+			$directorio = "../vistas/img/usuarios/" . $_POST["nuevoUsuario"];
+			if (!file_exists($directorio)) {
+				mkdir($directorio, 0755, true);
+			}
+			$aleatorio = mt_rand(100, 999);
+			if ($_FILES["nuevaFoto"]["type"] == "image/jpeg") {
+				$ruta = "vistas/img/usuarios/" . $_POST["nuevoUsuario"] . "/" . $aleatorio . ".jpeg";
+				$origen = imagecreatefromjpeg($_FILES["nuevaFoto"]["tmp_name"]);
+				$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+				imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
+				imagejpeg($destino, "../" . $ruta);
+			} else if ($_FILES["nuevaFoto"]["type"] == "image/png") {
+				$ruta = "vistas/img/usuarios/" . $_POST["nuevoUsuario"] . "/" . $aleatorio . ".png";
+				$origen = imagecreatefrompng($_FILES["nuevaFoto"]["tmp_name"]);
+				$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+				imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
+				imagepng($destino, "../" . $ruta);
+			}
+		}
+
+		$datos = array(
+			"nombre" => $_POST["nuevoNombre"],
+			"usuario" => $_POST["nuevoUsuario"],
+			"password" => $encriptar,
+			"perfil" => $_POST["nuevoPerfil"],
+			"foto" => $ruta,
+			"email" => $_POST["nuevoEmail"],
+			"id_bodega" => (!empty($_POST["nuevoIdBodega"]) && is_numeric($_POST["nuevoIdBodega"])) ? intval($_POST["nuevoIdBodega"]) : 1,
+			"estado" => 1
+		);
+
+		$db = Conexion::conectar();
+		try {
+			$db->beginTransaction();
+			$respuesta = ModeloUsuarios::mdlIngresarUsuario($tabla, $datos);
+			if ($respuesta != "ok") {
+				throw new Exception("Error al guardar el usuario.");
+			}
+			$db->commit();
+			echo json_encode(["status" => "ok", "mensaje" => "¡El usuario ha sido guardado correctamente!"]);
+		} catch (Exception $e) {
+			$db->rollBack();
+			echo json_encode(["status" => "error", "mensaje" => $e->getMessage()]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "Todos los campos obligatorios deben ser completados."]);
+	}
+	exit;
+}
+
+/*=============================================
+GUARDAR EDITAR USUARIO
+=============================================*/
+if (isset($_POST["guardarEditarUsuario"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["editarNombre"])) {
+		$tabla = "usuarios";
+		$usuarioActual = ModeloUsuarios::mdlMostrarUsuarios($tabla, "id", $_POST["idUsuario"]);
+		$password = $usuarioActual["password"];
+		if (!empty($_POST["editarPassword"])) {
+			$password = password_hash($_POST["editarPassword"], PASSWORD_BCRYPT, ['cost' => 12]);
+		}
+
+		$ruta = isset($_POST["fotoActual"]) ? $_POST["fotoActual"] : "";
+		if (isset($_FILES["editarFoto"]["tmp_name"]) && !empty($_FILES["editarFoto"]["tmp_name"])) {
+			list($ancho, $alto) = getimagesize($_FILES["editarFoto"]["tmp_name"]);
+			$nuevoAncho = 500;
+			$nuevoAlto = 500;
+			$directorio = "../vistas/img/usuarios/" . $_POST["editarUsuario"];
+			if (!file_exists($directorio)) {
+				mkdir($directorio, 0755, true);
+			}
+			$aleatorio = mt_rand(100, 999);
+			if ($_FILES["editarFoto"]["type"] == "image/jpeg") {
+				$ruta = "vistas/img/usuarios/" . $_POST["editarUsuario"] . "/" . $aleatorio . ".jpeg";
+				$origen = imagecreatefromjpeg($_FILES["editarFoto"]["tmp_name"]);
+				$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+				imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
+				imagejpeg($destino, "../" . $ruta);
+			} else if ($_FILES["editarFoto"]["type"] == "image/png") {
+				$ruta = "vistas/img/usuarios/" . $_POST["editarUsuario"] . "/" . $aleatorio . ".png";
+				$origen = imagecreatefrompng($_FILES["editarFoto"]["tmp_name"]);
+				$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+				imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
+				imagepng($destino, "../" . $ruta);
+			}
+		}
+
+		$datos = array(
+			"id" => $_POST["idUsuario"],
+			"nombre" => $_POST["editarNombre"],
+			"usuario" => $_POST["editarUsuario"],
+			"password" => $password,
+			"perfil" => $_POST["editarPerfil"],
+			"foto" => $ruta,
+			"email" => $_POST["editarEmail"],
+			"id_bodega" => (!empty($_POST["editarIdBodega"]) && is_numeric($_POST["editarIdBodega"])) ? intval($_POST["editarIdBodega"]) : 1
+		);
+
+		$db = Conexion::conectar();
+		try {
+			$db->beginTransaction();
+			$respuesta = ModeloUsuarios::mdlEditarUsuario($tabla, $datos);
+			if ($respuesta != "ok") {
+				throw new Exception("Error al actualizar el usuario.");
+			}
+			$db->commit();
+			echo json_encode(["status" => "ok", "mensaje" => "¡El usuario ha sido editado correctamente!"]);
+		} catch (Exception $e) {
+			$db->rollBack();
+			echo json_encode(["status" => "error", "mensaje" => $e->getMessage()]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "El nombre del usuario es obligatorio."]);
+	}
+	exit;
 }
 
 /*=============================================

@@ -314,7 +314,7 @@ MODAL GESTIONAR CATEGORIAS
       <div class="modal-body">
         
         <!-- Formulario para agregar una nueva categoría -->
-        <form role="form" method="post" id="formAgregarCategoria">
+        <form role="form" method="post" id="formAgregarCategoriaConocimiento">
           <?php CSRF::insertToken(); ?>
           <div class="row" style="margin-bottom: 20px;">
             <div class="col-xs-8">
@@ -388,7 +388,7 @@ MODAL GESTIONAR CATEGORIAS
 <!--=====================================
 MODAL EDITAR CATEGORIA
 ======================================-->
-<div id="modalEditarCategoria" class="modal fade" role="dialog" data-backdrop="true" data-keyboard="true" style="z-index: 1060 !important;">
+<div id="modalEditarCategoriaConocimiento" class="modal fade" role="dialog" data-backdrop="true" data-keyboard="true" style="z-index: 1060 !important;">
   <div class="modal-dialog">
     <div class="modal-content">
       <form role="form" method="post">

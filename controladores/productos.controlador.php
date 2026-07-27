@@ -383,50 +383,7 @@ class ControladorProductos
 				$ruta = "vistas/img/productos/default/anonymous.png";
 
 				if (isset($_FILES["nuevaImagen"]["tmp_name"]) && !empty($_FILES["nuevaImagen"]["tmp_name"])) {
-
-					list($ancho, $alto) = getimagesize($_FILES["nuevaImagen"]["tmp_name"]);
-
-					$nuevoAncho = 500;
-
-					$nuevoAlto = 500;
-
-					$directorio = "vistas/img/productos/" . $_POST["nuevoCodigo"];
-
-					mkdir($directorio, 0755);
-
-					if ($_FILES["nuevaImagen"]["type"] == "image/jpeg") {
-
-						$aleatorio = mt_rand(100, 999);
-
-						$ruta = "vistas/img/productos/" . $_POST["nuevoCodigo"] . "/" . $aleatorio . ".jpeg";
-
-						$origen = imagecreatefromjpeg($_FILES["nuevaImagen"]["tmp_name"]);
-
-						$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
-
-						imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
-
-						imagejpeg($destino, $ruta);
-
-					}
-
-					if ($_FILES["nuevaImagen"]["type"] == "image/png") {
-
-						$aleatorio = mt_rand(100, 999);
-
-						$ruta = "vistas/img/productos/" . $_POST["nuevoCodigo"] . "/" . $aleatorio . ".png";
-
-						$origen = imagecreatefrompng($_FILES["nuevaImagen"]["tmp_name"]);
-
-						$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
-
-						imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
-
-						imagepng($destino, $ruta);
-
-
-					}
-
+					$ruta = self::procesarYGuardarImagenProducto($_FILES["nuevaImagen"], $_POST["nuevoCodigo"], $ruta);
 				}
 
 				$tabla = "productos";
@@ -739,10 +696,8 @@ class ControladorProductos
 
 	static public function ctrEditarProducto()
 	{
-
-		
-			Logger::debug("=== CTR EDITAR (ID: " . (isset($_POST['idProducto']) ? $_POST['idProducto'] : 'none') . ") ===\n" . print_r($_POST, true) . "\n", FILE_APPEND);
-if (isset($_POST["editarDescripcion"])) {
+		if (isset($_POST["editarDescripcion"])) {
+			Logger::debug("=== CTR EDITAR (ID: " . (isset($_POST['idProducto']) ? $_POST['idProducto'] : 'none') . ") ===");
 
 			/*=============================================
 			VALIDAR CSRF
@@ -763,90 +718,27 @@ if (isset($_POST["editarDescripcion"])) {
 				return;
 			}
 
+			$tieneVariantes = isset($_POST["tieneVariantes"]) ? 1 : 0;
+			if (!isset($_POST["editarStock"]) && isset($_POST["totalCombinacionesEditar"])) {
+				$tieneVariantes = 1;
+			}
+
+			$validarStock = ($tieneVariantes || !isset($_POST["editarStock"]) || is_numeric($_POST["editarStock"]));
+			$validarPrecioCompra = ($tieneVariantes || !isset($_POST["editarPrecioCompra"]) || is_numeric($_POST["editarPrecioCompra"]));
+			$validarPrecioVenta = ($tieneVariantes || !isset($_POST["editarPrecioVenta"]) || is_numeric($_POST["editarPrecioVenta"]));
+
 			if (
-				preg_match('/^[^<>]+$/', $_POST["editarDescripcion"]) &&
-				preg_match('/^[0-9]+$/', $_POST["editarStock"]) &&
-				preg_match('/^[0-9]+$/', $_POST["editarPrecioCompra"]) &&
-				preg_match('/^[0-9]+$/', $_POST["editarPrecioVenta"])
+				!empty($_POST["editarDescripcion"]) &&
+				preg_match('/^[^<>]+$/u', $_POST["editarDescripcion"]) &&
+				$validarStock && $validarPrecioCompra && $validarPrecioVenta
 			) {
-
-
-				/*=============================================
-				VALIDAR IMAGEN
-				=============================================*/
-
-				$ruta = $_POST["imagenActual"];
-
-				if (isset($_FILES["editarImagen"]["tmp_name"]) && !empty($_FILES["editarImagen"]["tmp_name"])) {
-
-					list($ancho, $alto) = getimagesize($_FILES["editarImagen"]["tmp_name"]);
-
-					$nuevoAncho = 500;
-					$nuevoAlto = 500;
-
-					//CREAMOS DIRECTORIO DE LAS FOTOS DEL USUARIO
-
-					$directorio = "vistas/img/productos/" . $_POST["editarCodigo"];
-
-					//PRIMERO PREGUNTAMOS SI EXISTE OTRA IMAGEN EN LA BD
-
-					if (!empty($_POST["imagenActual"]) && $_POST["imagenActual"] != "vistas/img/productos/default/anonymous.png") {
-
-						unlink($_POST["imagenActual"]);
-					} else {
-
-						mkdir($directorio, 0755);
-					}
-
-
-					//DE A CUERDO AL TIPO DE IMAGEN APLICAMOS LAS FUNCIONES PHP, 1ro EN JPEG
-
-					if ($_FILES["editarImagen"]["type"] == "image/jpeg") {
-
-						//GUARDAMOS LA IMAGEN EN EL DIRECTORIO
-
-						$aleatorio = mt_rand(100, 999);
-
-						$ruta = "vistas/img/productos/" . $_POST["editarCodigo"] . "/" . $aleatorio . ".jpeg";
-
-						$origen = imagecreatefromjpeg($_FILES["editarImagen"]["tmp_name"]);
-
-						$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
-
-						imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
-
-						imagejpeg($destino, $ruta);
-
-					}
-
-					//FUNCIONES PARA PNG
-
-					if ($_FILES["editarImagen"]["type"] == "image/png") {
-
-						//GUARDAMOS LA IMAGEN EN EL DIRECTORIO
-
-						$aleatorio = mt_rand(100, 999);
-
-						$ruta = "vistas/img/productos/" . $_POST["editarCodigo"] . "/" . $aleatorio . ".png";
-
-						$origen = imagecreatefrompng($_FILES["editarImagen"]["tmp_name"]);
-
-						$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
-
-						imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
-
-						imagepng($destino, $ruta);
-
-					}
-				}
-
 
 				$db = Conexion::conectar();
 
 				try {
 					$db->beginTransaction();
 
-					$idProveedor = $_POST["editarProveedor"];
+					$idProveedor = isset($_POST["editarProveedor"]) ? $_POST["editarProveedor"] : null;
 
 					// Si viene vacío, "0" o es 0, convertirlo a NULL
 					if (empty($idProveedor) || $idProveedor == "0" || $idProveedor == 0) {
@@ -855,8 +747,7 @@ if (isset($_POST["editarDescripcion"])) {
 
 					$tabla = "productos";
 
-					// 🔹 OBTENER STOCK ANTERIOR antes de editar
-					// Buscar por ID si existe, sino por código
+					// 🔹 OBTENER STOCK Y DATOS ANTERIORES antes de editar
 					if (isset($_POST["idProducto"]) && !empty($_POST["idProducto"])) {
 						$productoAnterior = ModeloProductos::mdlMostrarProductos($tabla, "id", $_POST["idProducto"], "id");
 					} else {
@@ -866,6 +757,21 @@ if (isset($_POST["editarDescripcion"])) {
 					// Validar que el producto existe
 					if (!$productoAnterior) {
 						throw new Exception("No se pudo encontrar el producto en la base de datos.");
+					}
+
+					$codigoProducto = !empty($_POST["editarCodigo"]) ? $_POST["editarCodigo"] : $productoAnterior["codigo"];
+
+					/*=============================================
+					VALIDAR Y PROCESAR IMAGEN
+					=============================================*/
+					$ruta = isset($_POST["imagenActual"]) && !empty($_POST["imagenActual"]) ? $_POST["imagenActual"] : $productoAnterior["imagen"];
+
+					if (isset($_FILES["editarImagen"]["tmp_name"]) && !empty($_FILES["editarImagen"]["tmp_name"])) {
+						$ruta = self::procesarYGuardarImagenProducto($_FILES["editarImagen"], $codigoProducto, $ruta);
+					} else if (isset($_FILES["nuevaImagen"]["tmp_name"]) && !empty($_FILES["nuevaImagen"]["tmp_name"])) {
+						$ruta = self::procesarYGuardarImagenProducto($_FILES["nuevaImagen"], $codigoProducto, $ruta);
+					} else if (isset($_FILES["nuevaImagenProducto"]["tmp_name"]) && !empty($_FILES["nuevaImagenProducto"]["tmp_name"])) {
+						$ruta = self::procesarYGuardarImagenProducto($_FILES["nuevaImagenProducto"], $codigoProducto, $ruta);
 					}
 
 					$stockAnterior = $productoAnterior["stock"];
@@ -1280,8 +1186,7 @@ if (isset($_POST["editarDescripcion"])) {
 			$idBodega = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
 
 			// Log temporal de diagnóstico
-			Logger::debug(date('Y-m-d H:i:s') . " | IdProducto=$idProducto | IdBodega=$idBodega | Method=" . $_SERVER['REQUEST_METHOD'] . "\n",
-				FILE_APPEND);
+			Logger::debug("EliminarProducto | IdProducto=$idProducto | IdBodega=$idBodega | Method=" . $_SERVER['REQUEST_METHOD']);
 
 			// NOTA: No borramos imagen/directorio porque la eliminación es siempre por bodega (soft-delete).
 			// El producto sigue existiendo en otras bodegas y necesita su imagen.
@@ -1870,55 +1775,7 @@ if (isset($_POST["editarDescripcion"])) {
 				list($ancho, $alto) = getimagesize($archivoImagen["tmp_name"]);
 				$nuevoAncho = 500;
 				$nuevoAlto = 500;
-				// CORRECCIÓN DE RUTA: Las rutas de sistema de archivos son relativas al script que se ejecuta (ajax/productos.ajax.php)
-				$directorio = "../vistas/img/productos/" . $codigoProducto;
-
-				// Borrar imagen anterior si existe y no es la por defecto
-				if (!empty($imagenActual) && $imagenActual != "vistas/img/productos/default/anonymous.png" && file_exists("../" . $imagenActual)) {
-					unlink("../" . $imagenActual);
-				}
-
-				// Crear directorio si no existe
-				if (!file_exists($directorio)) {
-					mkdir($directorio, 0755, true);
-				}
-
-				// Generar nueva ruta para la base de datos (sin ../)
-				$aleatorio = mt_rand(100, 999);
-				$nombreArchivo = "";
-				if ($archivoImagen["type"] == "image/jpeg") {
-					$nombreArchivo = $aleatorio . ".jpeg";
-				} else if ($archivoImagen["type"] == "image/png") {
-					$nombreArchivo = $aleatorio . ".png";
-				} else {
-					throw new Exception("Formato de imagen no válido. Solo se permite JPG o PNG.");
-				}
-				$ruta_db = "vistas/img/productos/" . $codigoProducto . "/" . $nombreArchivo;
-				// Ruta para el sistema de archivos (con ../)
-				$ruta_fs = "../" . $ruta_db;
-
-				// Crear imagen desde temporal
-				$origen = null;
-				if ($archivoImagen["type"] == "image/jpeg") {
-					$origen = imagecreatefromjpeg($archivoImagen["tmp_name"]);
-				} else if ($archivoImagen["type"] == "image/png") {
-					$origen = imagecreatefrompng($archivoImagen["tmp_name"]);
-				}
-
-				$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
-				imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
-
-				// Guardar la nueva imagen en el sistema de archivos
-				if ($archivoImagen["type"] == "image/jpeg") {
-					imagejpeg($destino, $ruta_fs);
-				} else if ($archivoImagen["type"] == "image/png") {
-					imagepng($destino, $ruta_fs);
-				}
-
-				imagedestroy($origen);
-				imagedestroy($destino);
-
-				$ruta = $ruta_db; // Actualizar la variable $ruta con la nueva ruta para la BD
+				$ruta = self::procesarYGuardarImagenProducto($archivoImagen, $codigoProducto, $imagenActual, "../");
 			}
 
 			// 4. Actualizar la base de datos
@@ -2059,6 +1916,117 @@ if (isset($_POST["editarDescripcion"])) {
 				}
 			}
 		}
+	}
+
+	/*=============================================
+	PROCESAR Y GUARDAR IMAGEN DE PRODUCTO ROBUSTO
+	=============================================*/
+	static public function procesarYGuardarImagenProducto($fileArray, $codigoProducto, $rutaActual = null, $prefixPath = "")
+	{
+		if (!isset($fileArray) || !is_array($fileArray)) {
+			return $rutaActual;
+		}
+
+		if (isset($fileArray["error"]) && $fileArray["error"] !== UPLOAD_ERR_OK) {
+			if ($fileArray["error"] === UPLOAD_ERR_NO_FILE) {
+				return $rutaActual;
+			}
+			if ($fileArray["error"] === UPLOAD_ERR_INI_SIZE || $fileArray["error"] === UPLOAD_ERR_FORM_SIZE) {
+				throw new Exception("La imagen excede el límite de peso permitido por el servidor PHP (upload_max_filesize).");
+			}
+			throw new Exception("Error al cargar el archivo de imagen (código de error PHP: " . $fileArray["error"] . ").");
+		}
+
+		if (!isset($fileArray["tmp_name"]) || empty($fileArray["tmp_name"]) || !file_exists($fileArray["tmp_name"])) {
+			return $rutaActual;
+		}
+
+		// Aumentar temporalmente el límite de memoria para procesamiento de fotos de alta resolución
+		@ini_set('memory_limit', '256M');
+
+		$imgInfo = @getimagesize($fileArray["tmp_name"]);
+		if (!$imgInfo) {
+			throw new Exception("El archivo subido no es una imagen válida o está dañado.");
+		}
+
+		$mime = strtolower($imgInfo['mime']);
+		$ancho = $imgInfo[0];
+		$alto = $imgInfo[1];
+		$nuevoAncho = 500;
+		$nuevoAlto = 500;
+		$aleatorio = mt_rand(100, 999);
+
+		// Sanitizar el código para evitar caracteres no válidos en nombres de directorios
+		$codigoLimpio = preg_replace('/[^a-zA-Z0-9_\-]/', '_', (string)$codigoProducto);
+		if (empty($codigoLimpio)) {
+			$codigoLimpio = "prod_" . $aleatorio;
+		}
+
+		$relDir = "vistas/img/productos/" . $codigoLimpio;
+		$fullDir = $prefixPath . $relDir;
+
+		if (!file_exists($fullDir)) {
+			mkdir($fullDir, 0755, true);
+		}
+
+		$extension = "";
+		$origen = null;
+
+		if (in_array($mime, ["image/jpeg", "image/jpg", "image/pjpeg"])) {
+			$extension = "jpeg";
+			$origen = @imagecreatefromjpeg($fileArray["tmp_name"]);
+		} else if (in_array($mime, ["image/png", "image/x-png"])) {
+			$extension = "png";
+			$origen = @imagecreatefrompng($fileArray["tmp_name"]);
+		} else if ($mime == "image/webp" && function_exists("imagecreatefromwebp")) {
+			$extension = "webp";
+			$origen = @imagecreatefromwebp($fileArray["tmp_name"]);
+		} else if ($mime == "image/gif") {
+			$extension = "gif";
+			$origen = @imagecreatefromgif($fileArray["tmp_name"]);
+		}
+
+		if (!$origen) {
+			throw new Exception("No se pudo procesar la imagen (" . $mime . "). Asegúrese de subir un archivo JPG, PNG o WEBP válido.");
+		}
+
+		$relPath = $relDir . "/" . $aleatorio . "." . $extension;
+		$fullPath = $prefixPath . $relPath;
+
+		$destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+		if ($extension == "png") {
+			imagealphablending($destino, false);
+			imagesavealpha($destino, true);
+		} else if ($extension == "webp" && function_exists("imagesavealpha")) {
+			imagealphablending($destino, false);
+			imagesavealpha($destino, true);
+		}
+
+		// Usar imagecopyresampled para máxima calidad de escalado
+		imagecopyresampled($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
+
+		if ($extension == "png") {
+			imagepng($destino, $fullPath);
+		} else if ($extension == "webp" && function_exists("imagewebp")) {
+			imagewebp($destino, $fullPath);
+		} else if ($extension == "gif") {
+			imagegif($destino, $fullPath);
+		} else {
+			imagejpeg($destino, $fullPath, 90);
+		}
+
+		imagedestroy($origen);
+		imagedestroy($destino);
+
+		// Borrar imagen anterior si existía y no es la por defecto
+		if (!empty($rutaActual) && $rutaActual != "vistas/img/productos/default/anonymous.png" && $rutaActual != $relPath) {
+			$oldFullPath = $prefixPath . $rutaActual;
+			if (file_exists($oldFullPath) && is_file($oldFullPath)) {
+				@unlink($oldFullPath);
+			}
+		}
+
+		return $relPath;
 	}
 
 }

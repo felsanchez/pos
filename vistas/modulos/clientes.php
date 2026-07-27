@@ -291,7 +291,7 @@ MODAL AGREGAR CLIENTE
 
     <div class="modal-content">
 
-      <form role="form" method="post">
+      <form role="form" method="post" id="formAgregarCliente">
 
         <?php CSRF::insertToken(); ?>
         <!--=====================================
@@ -569,7 +569,7 @@ MODAL EDITAR CLIENTE
 
     <div class="modal-content">
 
-      <form role="form" method="post">
+      <form role="form" method="post" id="formEditarCliente">
 
         <?php CSRF::insertToken(); ?>
 

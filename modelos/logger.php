@@ -48,6 +48,9 @@ class Logger {
      * Método principal de logging
      */
     private static function log($level, $message, $context = []) {
+        if (!is_array($context)) {
+            $context = [];
+        }
         try {
             // Asegurar que el directorio existe
             if (!file_exists(self::$logDir)) {

@@ -245,7 +245,9 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 									showConfirmButton: true,
 									confirmButtonText: "Cerrar"
 								}).then((result) => {
-									if (result.value) {
+									if ($.fn.DataTable.isDataTable('table.tablaProveedores')) {
+										$('table.tablaProveedores').DataTable().ajax.reload(null, false);
+									} else {
 										window.location.reload();
 									}
 								});
@@ -303,7 +305,9 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 									showConfirmButton: true,
 									confirmButtonText: "Cerrar"
 								}).then((result) => {
-									if (result.value) {
+									if ($.fn.DataTable.isDataTable('table.tablaProveedores')) {
+										$('table.tablaProveedores').DataTable().ajax.reload(null, false);
+									} else {
 										window.location.reload();
 									}
 								});
@@ -327,3 +331,154 @@ $(".tablaProveedores").on("click", ".btnEliminarProveedor", function () {
 
 // La lógica de guardado de notas se ha movido directamente a proveedores.php 
 // para asegurar la carga y evitar problemas de caché.
+
+/*=============================================
+GUARDAR CREAR PROVEEDOR VÍA AJAX
+=============================================*/
+$(document).on("submit", "#formAgregarProveedor", function (e) {
+	e.preventDefault();
+
+	var form = this;
+	var boton = $(form).find("button[type='submit']");
+	boton.prop('disabled', true);
+	var htmlOriginal = boton.html();
+	boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+	swal({
+		title: 'Guardando proveedor',
+		text: 'Por favor espere mientras se procesa la información...',
+		type: 'info',
+		allowOutsideClick: false,
+		showConfirmButton: false,
+		onBeforeOpen: () => {
+			swal.showLoading()
+		}
+	});
+
+	var datos = new FormData(form);
+	datos.append("guardarCrearProveedor", "ok");
+
+	$.ajax({
+		url: "ajax/proveedores.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			boton.prop('disabled', false).html(htmlOriginal);
+
+			if (respuesta.status === "ok") {
+				swal({
+					type: "success",
+					title: "¡Éxito!",
+					text: respuesta.mensaje,
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then((result) => {
+					$("#modalAgregarProveedor").modal("hide");
+					form.reset();
+					if ($.fn.DataTable.isDataTable('table.tablaProveedores')) {
+						$('table.tablaProveedores').DataTable().ajax.reload(null, false);
+					} else {
+						window.location.reload();
+					}
+				});
+			} else {
+				swal({
+					type: "error",
+					title: "¡Error!",
+					text: respuesta.mensaje || "No se pudo guardar el proveedor.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				});
+			}
+		},
+		error: function () {
+			boton.prop('disabled', false).html(htmlOriginal);
+			swal({
+				type: "error",
+				title: "¡Error!",
+				text: "Ocurrió un problema de conexión al guardar el proveedor.",
+				showConfirmButton: true,
+				confirmButtonText: "Cerrar"
+			});
+		}
+	});
+});
+
+/*=============================================
+GUARDAR EDITAR PROVEEDOR VÍA AJAX
+=============================================*/
+$(document).on("submit", "#formEditarProveedor", function (e) {
+	e.preventDefault();
+
+	var form = this;
+	var boton = $(form).find("button[type='submit']");
+	boton.prop('disabled', true);
+	var htmlOriginal = boton.html();
+	boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+	swal({
+		title: 'Actualizando proveedor',
+		text: 'Por favor espere mientras se procesa la información...',
+		type: 'info',
+		allowOutsideClick: false,
+		showConfirmButton: false,
+		onBeforeOpen: () => {
+			swal.showLoading()
+		}
+	});
+
+	var datos = new FormData(form);
+	datos.append("guardarEditarProveedor", "ok");
+
+	$.ajax({
+		url: "ajax/proveedores.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			boton.prop('disabled', false).html(htmlOriginal);
+
+			if (respuesta.status === "ok") {
+				swal({
+					type: "success",
+					title: "¡Éxito!",
+					text: respuesta.mensaje,
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then((result) => {
+					$("#modalEditarProveedor").modal("hide");
+					if ($.fn.DataTable.isDataTable('table.tablaProveedores')) {
+						$('table.tablaProveedores').DataTable().ajax.reload(null, false);
+					} else {
+						window.location.reload();
+					}
+				});
+			} else {
+				swal({
+					type: "error",
+					title: "¡Error!",
+					text: respuesta.mensaje || "No se pudo actualizar el proveedor.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				});
+			}
+		},
+		error: function () {
+			boton.prop('disabled', false).html(htmlOriginal);
+			swal({
+				type: "error",
+				title: "¡Error!",
+				text: "Ocurrió un problema de conexión al actualizar el proveedor.",
+				showConfirmButton: true,
+				confirmButtonText: "Cerrar"
+			});
+		}
+	});
+});

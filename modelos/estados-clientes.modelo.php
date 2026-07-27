@@ -36,14 +36,27 @@ class ModeloEstadosClientes
 	static public function mdlCrearEstado($tabla, $datos)
 	{
 
-		// Verificar si el nombre ya existe
-		$stmtNombre = Conexion::conectar()->prepare("SELECT id FROM $tabla WHERE nombre = :nombre AND activo = 1");
+		// Verificar si el nombre ya existe (activo o inactivo por la restricción UNIQUE key)
+		$stmtNombre = Conexion::conectar()->prepare("SELECT id, activo FROM $tabla WHERE LOWER(nombre) = LOWER(:nombre)");
 		$stmtNombre->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
 		$stmtNombre->execute();
 		$nombreExiste = $stmtNombre->fetch();
 
 		if ($nombreExiste) {
-			return "duplicado";
+			if ($nombreExiste["activo"] == 1) {
+				return "duplicado";
+			} else {
+				// Reactivar registro inactivo existente para no violar UNIQUE key
+				$stmtReactivar = Conexion::conectar()->prepare("UPDATE $tabla SET activo = 1, color = :color, orden = :orden WHERE id = :id");
+				$stmtReactivar->bindParam(":color", $datos["color"], PDO::PARAM_STR);
+				$stmtReactivar->bindParam(":orden", $datos["orden"], PDO::PARAM_INT);
+				$stmtReactivar->bindParam(":id", $nombreExiste["id"], PDO::PARAM_INT);
+				if ($stmtReactivar->execute()) {
+					return "ok";
+				} else {
+					return "error";
+				}
+			}
 		}
 
 		// Verificar si el orden ya existe
@@ -60,7 +73,7 @@ class ModeloEstadosClientes
 		}
 
 		// Insertar el nuevo registro
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(nombre, color, orden) VALUES (:nombre, :color, :orden)");
+		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(nombre, color, orden, activo) VALUES (:nombre, :color, :orden, 1)");
 		$stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
 		$stmt->bindParam(":color", $datos["color"], PDO::PARAM_STR);
 		$stmt->bindParam(":orden", $datos["orden"], PDO::PARAM_INT);
@@ -85,9 +98,8 @@ class ModeloEstadosClientes
 	static public function mdlEditarEstado($tabla, $datos)
 	{
 
-		// Verificar si el nombre ya existe en otro registro
-
-		$stmtNombre = Conexion::conectar()->prepare("SELECT id FROM $tabla WHERE nombre = :nombre AND id != :id AND activo = 1");
+		// Verificar si el nombre ya existe en otro registro (activo o inactivo por UNIQUE key)
+		$stmtNombre = Conexion::conectar()->prepare("SELECT id FROM $tabla WHERE LOWER(nombre) = LOWER(:nombre) AND id != :id");
 		$stmtNombre->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
 		$stmtNombre->bindParam(":id", $datos["id"], PDO::PARAM_INT);
 		$stmtNombre->execute();
@@ -139,8 +151,8 @@ class ModeloEstadosClientes
 	static public function mdlEliminarEstado($tabla, $id)
 	{
 
-		// No eliminar físicamente, solo desactivar
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET activo = 0 WHERE id = :id");
+		// No eliminar físicamente, solo desactivar y liberar el nombre único
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET activo = 0, nombre = CONCAT(nombre, '_deleted_', id) WHERE id = :id");
 
 
 		$stmt->bindParam(":id", $id, PDO::PARAM_INT);

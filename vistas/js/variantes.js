@@ -89,6 +89,37 @@ $(document).on("click", ".btnAbrirModalTipo", function () {
 
 });
 
+/*=============================================
+REVISAR SI EL TIPO DE VARIANTE YA ESTÁ REGISTRADO
+=============================================*/
+$(document).on("change", "#nuevoTipoVariante", function () {
+
+    $(".alert").remove();
+
+    var tipoVariante = $(this).val();
+
+    if (tipoVariante.trim() === "") return;
+
+    var datos = new FormData();
+    datos.append("validarTipoVariante", tipoVariante);
+
+    $.ajax({
+        url: "ajax/variantes.ajax.php",
+        method: "POST",
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function (respuesta) {
+            if (respuesta) {
+                $("#nuevoTipoVariante").parent().after('<div class="alert alert-warning">¡Este tipo de variante ya existe en la base de datos!</div>');
+                $("#nuevoTipoVariante").val("");
+            }
+        }
+    });
+});
+
 
 /*=============================================
 AUTOCOMPLETAR ORDEN AL ABRIR MODAL DE OPCIÓN
@@ -122,41 +153,41 @@ $(document).on("click", "[data-target='#modalAgregarOpcion']", function () {
 
 
 /*=============================================
-VER OPCIONES DE UN TIPO DE VARIANTE
+RECARGAR OPCIONES DE UN TIPO DE VARIANTE
 =============================================*/
-$(document).on("click", ".btnVerOpciones", function () {
+function recargarOpcionesVariante(idTipo, nombreTipo, silencioso) {
+    if (!idTipo) return;
 
-    var idTipo = $(this).attr("idTipo");
-    var nombreTipo = $(this).attr("nombreTipo");
+    if (nombreTipo) {
+        $("#nombreTipoVariante").text(nombreTipo);
+    }
+    $("#idTipoVarianteActual").val(idTipo);
+    $("#idTipoVarianteOpcion").val(idTipo);
+    $("#boxOpciones").show();
+
     var tablaId = "tablaOpciones_" + idTipo;
     var bodyId = "bodyOpciones_" + idTipo;
 
-    console.log("Iniciando carga de opciones para:", nombreTipo, "(ID: " + idTipo + ")");
+    if (!silencioso || $("#" + tablaId).length === 0) {
+        if ($.fn.DataTable.isDataTable("#" + tablaId)) {
+            $("#" + tablaId).DataTable().destroy();
+        }
+        $(".tabla-opciones").html(
+            '<table id="' + tablaId + '" class="table table-bordered table-striped display nowrap" style="width: 100%;">' +
+                '<thead>' +
+                    '<tr>' +
+                        '<th>Nombre</th>' +
+                        '<th>Productos</th>' +
+                        '<th>Acciones</th>' +
+                    '</tr>' +
+                '</thead>' +
+                '<tbody id="' + bodyId + '">' +
+                    '<tr><td colspan="3" class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando...</td></tr>' +
+                '</tbody>' +
+            '</table>'
+        );
+    }
 
-    $("#nombreTipoVariante").text(nombreTipo);
-    $("#idTipoVarianteActual").val(idTipo);
-    $("#idTipoVarianteOpcion").val(idTipo);
-
-    // 1. Limpieza total y creación de tabla con ID ÚNICO
-    $(".tabla-opciones").html(
-        '<table id="' + tablaId + '" class="table table-bordered table-striped display nowrap" style="width: 100%;">' +
-            '<thead>' +
-                '<tr>' +
-                    '<th>Nombre</th>' +
-                    '<th>Productos</th>' +
-                    '<th>Acciones</th>' +
-                '</tr>' +
-            '</thead>' +
-            '<tbody id="' + bodyId + '">' +
-                '<tr><td colspan="3" class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando...</td></tr>' +
-            '</tbody>' +
-        '</table>'
-    );
-
-    // Mostrar el box de opciones
-    $("#boxOpciones").show();
-
-    // 2. Cargar opciones con AJAX
     $.ajax({
         url: "ajax/variantes.ajax.php",
         method: "POST",
@@ -166,24 +197,19 @@ $(document).on("click", ".btnVerOpciones", function () {
         },
         dataType: "json",
         success: function (respuesta) {
-
-            console.log("Datos recibidos para " + idTipo + ":", respuesta);
-
             var html = "";
 
             if (respuesta && Array.isArray(respuesta) && respuesta.length > 0) {
-
                 var puedeEditar = $("#puedeEditarVariante").val() == "1";
                 var puedeEliminar = $("#puedeEliminarVariante").val() == "1";
 
                 for (var i = 0; i < respuesta.length; i++) {
-
                     html += '<tr>' +
                             '<td>' + respuesta[i].nombre + '</td>' +
                             '<td><span class="badge bg-blue">' + (respuesta[i].productos_asociados || 0) + '</span></td>' +
                             '<td>' +
                                 '<div class="btn-group">';
-                    
+
                     if (puedeEditar) {
                         html += '<button class="btn btn-warning btnEditarOpcion" idOpcion="' + respuesta[i].id + '" data-toggle="modal" data-target="#modalEditarOpcion" title="Editar opción"><i class="fa fa-pencil"></i></button>';
                     } else {
@@ -194,27 +220,33 @@ $(document).on("click", ".btnVerOpciones", function () {
                     } else {
                         html += '<button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para eliminar"><i class="fa fa-times"></i></button>';
                     }
-                    
+
                     html += '</div>' +
                             '</td>' +
                             '</tr>';
                 }
-
             } else {
                 html = '<tr><td colspan="3" class="text-center">No hay opciones registradas</td></tr>';
             }
 
-            // 3. Inyectar en el body específico y reinicializar tabla específica
+            if ($.fn.DataTable.isDataTable("#" + tablaId)) {
+                $("#" + tablaId).DataTable().destroy();
+            }
             $("#" + bodyId).html(html);
-            
+
             var localOptions = $.extend(true, {}, dtVariantesOptions);
             $("#" + tablaId).DataTable(localOptions);
         },
-        error: function (jqXHR, textStatus, errorThrown) {
+        error: function () {
             $("#" + bodyId).html('<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>');
         }
     });
+}
 
+$(document).on("click", ".btnVerOpciones", function () {
+    var idTipo = $(this).attr("idTipo");
+    var nombreTipo = $(this).attr("nombreTipo");
+    recargarOpcionesVariante(idTipo, nombreTipo, false);
 });
 
 
@@ -533,8 +565,10 @@ $(document).on("click", ".btnEliminarTipo", function () {
                                     showConfirmButton: true,
                                     confirmButtonText: "Cerrar"
                                 }).then(function (result) {
-                                    if (result.value) {
-                                        window.location = "variantes";
+                                    if ($.fn.DataTable.isDataTable('#tablaTiposVariantes')) {
+                                        $('#tablaTiposVariantes').DataTable().ajax.reload(null, false);
+                                    } else if ($.fn.DataTable.isDataTable('.tablaTiposVariantes')) {
+                                        $('.tablaTiposVariantes').DataTable().ajax.reload(null, false);
                                     }
                                 });
                             } else {
@@ -583,8 +617,10 @@ $(document).on("click", ".btnEliminarTipo", function () {
                                     showConfirmButton: true,
                                     confirmButtonText: "Cerrar"
                                 }).then(function (result) {
-                                    if (result.value) {
-                                        window.location = "variantes";
+                                    if ($.fn.DataTable.isDataTable('#tablaTiposVariantes')) {
+                                        $('#tablaTiposVariantes').DataTable().ajax.reload(null, false);
+                                    } else if ($.fn.DataTable.isDataTable('.tablaTiposVariantes')) {
+                                        $('.tablaTiposVariantes').DataTable().ajax.reload(null, false);
                                     }
                                 });
                             } else {
@@ -681,9 +717,9 @@ $(document).on("click", ".btnEliminarOpcion", function () {
                                     showConfirmButton: true,
                                     confirmButtonText: "Cerrar"
                                 }).then(function (result) {
-                                    if (result.value) {
-                                        var idTipo = $("#idTipoVarianteActual").val();
-                                        $(".btnVerOpciones[idTipo='" + idTipo + "']").click();
+                                    var idTipo = $("#idTipoVarianteActual").val();
+                                    if (idTipo) {
+                                        recargarOpcionesVariante(idTipo, null, true);
                                     }
                                 });
                             } else if (respuesta == "error_productos_asociados_otra_sucursal") {
@@ -740,9 +776,9 @@ $(document).on("click", ".btnEliminarOpcion", function () {
                                     showConfirmButton: true,
                                     confirmButtonText: "Cerrar"
                                 }).then(function (result) {
-                                    if (result.value) {
-                                        var idTipo = $("#idTipoVarianteActual").val();
-                                        $(".btnVerOpciones[idTipo='" + idTipo + "']").click();
+                                    var idTipo = $("#idTipoVarianteActual").val();
+                                    if (idTipo) {
+                                        recargarOpcionesVariante(idTipo, null, true);
                                     }
                                 });
                             } else if (respuesta == "error_productos_asociados_otra_sucursal") {
@@ -768,5 +804,304 @@ $(document).on("click", ".btnEliminarOpcion", function () {
             });
         }
     });
+});
 
+/*=============================================
+GUARDAR CREAR TIPO DE VARIANTE VÍA AJAX
+=============================================*/
+$(document).on("submit", "#formAgregarTipoVariante", function (e) {
+    e.preventDefault();
+
+    var form = this;
+    var boton = $(form).find("button[type='submit']");
+    boton.prop('disabled', true);
+    var htmlOriginal = boton.html();
+    boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+    swal({
+        title: 'Guardando tipo de variante',
+        text: 'Por favor espere mientras se procesa la información...',
+        type: 'info',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        onBeforeOpen: () => {
+            swal.showLoading()
+        }
+    });
+
+    var datos = new FormData(form);
+    datos.append("guardarCrearTipoVariante", "ok");
+
+    $.ajax({
+        url: "ajax/variantes.ajax.php",
+        method: "POST",
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function (respuesta) {
+            boton.prop('disabled', false).html(htmlOriginal);
+
+            if (respuesta.status === "ok") {
+                swal({
+                    type: "success",
+                    title: "¡Éxito!",
+                    text: respuesta.mensaje,
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                }).then((result) => {
+                    $("#modalAgregarTipoVariante").modal("hide");
+                    form.reset();
+                    if ($.fn.DataTable.isDataTable('#tablaTiposVariantes')) {
+                        $('#tablaTiposVariantes').DataTable().ajax.reload(null, false);
+                    } else if ($.fn.DataTable.isDataTable('.tablaTiposVariantes')) {
+                        $('.tablaTiposVariantes').DataTable().ajax.reload(null, false);
+                    }
+                });
+            } else {
+                swal({
+                    type: "error",
+                    title: "¡Error!",
+                    text: respuesta.mensaje || "No se pudo guardar el tipo de variante.",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        },
+        error: function () {
+            boton.prop('disabled', false).html(htmlOriginal);
+            swal({
+                type: "error",
+                title: "¡Error!",
+                text: "Ocurrió un problema de conexión al guardar el tipo de variante.",
+                showConfirmButton: true,
+                confirmButtonText: "Cerrar"
+            });
+        }
+    });
+});
+
+/*=============================================
+GUARDAR EDITAR TIPO DE VARIANTE VÍA AJAX
+=============================================*/
+$(document).on("submit", "#formEditarTipoVariante", function (e) {
+    e.preventDefault();
+
+    var form = this;
+    var boton = $(form).find("button[type='submit']");
+    boton.prop('disabled', true);
+    var htmlOriginal = boton.html();
+    boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+    swal({
+        title: 'Actualizando tipo de variante',
+        text: 'Por favor espere mientras se procesa la información...',
+        type: 'info',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        onBeforeOpen: () => {
+            swal.showLoading()
+        }
+    });
+
+    var datos = new FormData(form);
+    datos.append("guardarEditarTipoVariante", "ok");
+
+    $.ajax({
+        url: "ajax/variantes.ajax.php",
+        method: "POST",
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function (respuesta) {
+            boton.prop('disabled', false).html(htmlOriginal);
+
+            if (respuesta.status === "ok") {
+                swal({
+                    type: "success",
+                    title: "¡Éxito!",
+                    text: respuesta.mensaje,
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                }).then((result) => {
+                    $("#modalEditarTipoVariante").modal("hide");
+                    if ($.fn.DataTable.isDataTable('#tablaTiposVariantes')) {
+                        $('#tablaTiposVariantes').DataTable().ajax.reload(null, false);
+                    } else if ($.fn.DataTable.isDataTable('.tablaTiposVariantes')) {
+                        $('.tablaTiposVariantes').DataTable().ajax.reload(null, false);
+                    }
+                });
+            } else {
+                swal({
+                    type: "error",
+                    title: "¡Error!",
+                    text: respuesta.mensaje || "No se pudo actualizar el tipo de variante.",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        },
+        error: function () {
+            boton.prop('disabled', false).html(htmlOriginal);
+            swal({
+                type: "error",
+                title: "¡Error!",
+                text: "Ocurrió un problema de conexión al actualizar el tipo de variante.",
+                showConfirmButton: true,
+                confirmButtonText: "Cerrar"
+            });
+        }
+    });
+});
+
+/*=============================================
+GUARDAR CREAR OPCIÓN VÍA AJAX
+=============================================*/
+$(document).on("submit", "#formAgregarOpcion", function (e) {
+    e.preventDefault();
+
+    var form = this;
+    var boton = $(form).find("button[type='submit']");
+    boton.prop('disabled', true);
+    var htmlOriginal = boton.html();
+    boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+    swal({
+        title: 'Guardando opción',
+        text: 'Por favor espere mientras se procesa la información...',
+        type: 'info',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        onBeforeOpen: () => {
+            swal.showLoading()
+        }
+    });
+
+    var datos = new FormData(form);
+    datos.append("guardarCrearOpcion", "ok");
+
+    $.ajax({
+        url: "ajax/variantes.ajax.php",
+        method: "POST",
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function (respuesta) {
+            boton.prop('disabled', false).html(htmlOriginal);
+
+            if (respuesta.status === "ok") {
+                swal({
+                    type: "success",
+                    title: "¡Éxito!",
+                    text: respuesta.mensaje,
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                }).then((result) => {
+                    $("#modalAgregarOpcion").modal("hide");
+                    form.reset();
+                    var idTipo = $("#idTipoVarianteActual").val();
+                    if (idTipo) {
+                        recargarOpcionesVariante(idTipo, null, true);
+                    }
+                });
+            } else {
+                swal({
+                    type: "error",
+                    title: "¡Error!",
+                    text: respuesta.mensaje || "No se pudo guardar la opción.",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        },
+        error: function () {
+            boton.prop('disabled', false).html(htmlOriginal);
+            swal({
+                type: "error",
+                title: "¡Error!",
+                text: "Ocurrió un problema de conexión al guardar la opción.",
+                showConfirmButton: true,
+                confirmButtonText: "Cerrar"
+            });
+        }
+    });
+});
+
+/*=============================================
+GUARDAR EDITAR OPCIÓN VÍA AJAX
+=============================================*/
+$(document).on("submit", "#formEditarOpcion", function (e) {
+    e.preventDefault();
+
+    var form = this;
+    var boton = $(form).find("button[type='submit']");
+    boton.prop('disabled', true);
+    var htmlOriginal = boton.html();
+    boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+    swal({
+        title: 'Actualizando opción',
+        text: 'Por favor espere mientras se procesa la información...',
+        type: 'info',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        onBeforeOpen: () => {
+            swal.showLoading()
+        }
+    });
+
+    var datos = new FormData(form);
+    datos.append("guardarEditarOpcion", "ok");
+
+    $.ajax({
+        url: "ajax/variantes.ajax.php",
+        method: "POST",
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function (respuesta) {
+            boton.prop('disabled', false).html(htmlOriginal);
+
+            if (respuesta.status === "ok") {
+                swal({
+                    type: "success",
+                    title: "¡Éxito!",
+                    text: respuesta.mensaje,
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                }).then((result) => {
+                    $("#modalEditarOpcion").modal("hide");
+                    var idTipo = $("#idTipoVarianteActual").val();
+                    if (idTipo) {
+                        recargarOpcionesVariante(idTipo, null, true);
+                    }
+                });
+            } else {
+                swal({
+                    type: "error",
+                    title: "¡Error!",
+                    text: respuesta.mensaje || "No se pudo actualizar la opción.",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        },
+        error: function () {
+            boton.prop('disabled', false).html(htmlOriginal);
+            swal({
+                type: "error",
+                title: "¡Error!",
+                text: "Ocurrió un problema de conexión al actualizar la opción.",
+                showConfirmButton: true,
+                confirmButtonText: "Cerrar"
+            });
+        }
+    });
 });

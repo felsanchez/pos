@@ -128,7 +128,7 @@ MODAL AGREGAR TIPO DE VARIANTE
 
     <div class="modal-content">
 
-      <form role="form" method="post">
+      <form role="form" method="post" id="formAgregarTipoVariante">
 
         <?php CSRF::insertToken(); ?>
 
@@ -147,7 +147,7 @@ MODAL AGREGAR TIPO DE VARIANTE
             <div class="form-group">
               <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-th"></i></span>
-                <input type="text" class="form-control input-lg" name="nuevoTipoVariante"
+                <input type="text" class="form-control input-lg" name="nuevoTipoVariante" id="nuevoTipoVariante"
                   placeholder="Ingresar nombre (ej: Color, Talla, Material)" required>
               </div>
             </div>
@@ -166,12 +166,7 @@ MODAL AGREGAR TIPO DE VARIANTE
           <button type="submit" class="btn btn-primary">Guardar</button>
         </div>
 
-        <?php
 
-        $crearTipo = new ControladorVariantes();
-        $crearTipo->ctrCrearTipoVariante();
-
-        ?>
 
       </form>
 
@@ -191,7 +186,7 @@ MODAL AGREGAR OPCIÓN
 
     <div class="modal-content">
 
-      <form role="form" method="post">
+      <form role="form" method="post" id="formAgregarOpcion">
 
         <?php CSRF::insertToken(); ?>
 
@@ -232,12 +227,7 @@ MODAL AGREGAR OPCIÓN
           <button type="submit" class="btn btn-primary">Guardar</button>
         </div>
 
-        <?php
 
-        $crearOpcion = new ControladorVariantes();
-        $crearOpcion->ctrCrearOpcionVariante();
-
-        ?>
 
       </form>
 
@@ -260,7 +250,7 @@ MODAL EDITAR TIPO DE VARIANTE
 
     <div class="modal-content">
 
-      <form role="form" method="post">
+      <form role="form" method="post" id="formEditarTipoVariante">
 
         <?php CSRF::insertToken(); ?>
 
@@ -298,12 +288,7 @@ MODAL EDITAR TIPO DE VARIANTE
           <button type="submit" class="btn btn-primary">Guardar cambios</button>
         </div>
 
-        <?php
 
-        $editarTipo = new ControladorVariantes();
-        $editarTipo->ctrEditarTipoVariante();
-
-        ?>
 
       </form>
 
@@ -324,7 +309,7 @@ MODAL EDITAR OPCIÓN
 
     <div class="modal-content">
 
-      <form role="form" method="post">
+      <form role="form" method="post" id="formEditarOpcion">
 
         <?php CSRF::insertToken(); ?>
 
@@ -363,12 +348,7 @@ MODAL EDITAR OPCIÓN
           <button type="submit" class="btn btn-primary">Guardar cambios</button>
         </div>
 
-        <?php
 
-        $editarOpcion = new ControladorVariantes();
-        $editarOpcion->ctrEditarOpcionVariante();
-
-        ?>
 
       </form>
 

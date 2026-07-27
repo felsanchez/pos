@@ -98,12 +98,12 @@ if(isset($_POST["idTipoVariante"])){
 EDITAR TIPO
 =============================================*/
 
-if(isset($_POST["idTipo"])){
+if(isset($_POST["idTipo"]) && !isset($_POST["guardarEditarTipoVariante"])){
 
 	$editarTipo = new AjaxVariantes();
 	$editarTipo -> idTipo = $_POST["idTipo"];
 	$editarTipo -> ajaxEditarTipo();
-
+	exit;
 }
 
 /*=============================================
@@ -310,5 +310,171 @@ if(isset($_POST["idEliminarOpcion"])){
 	$respuesta = ControladorVariantes::ctrEliminarOpcionVariante($idOpcion);
 
 	echo json_encode($respuesta);
+	exit;
 
+}
+
+/*=============================================
+VALIDAR NO REPETIR TIPO DE VARIANTE
+=============================================*/
+if (isset($_POST["validarTipoVariante"])) {
+	$tabla = "tipos_variantes";
+	$item = "nombre";
+	$valor = trim($_POST["validarTipoVariante"]);
+
+	$respuesta = ModeloVariantes::mdlMostrarTiposVariantes($tabla, $item, $valor);
+
+	echo json_encode($respuesta);
+	exit;
+}
+
+/*=============================================
+GUARDAR CREAR TIPO DE VARIANTE
+=============================================*/
+if (isset($_POST["guardarCrearTipoVariante"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["nuevoTipoVariante"])) {
+		$tabla = "tipos_variantes";
+		$nombre = trim($_POST["nuevoTipoVariante"]);
+
+		$tipoExistente = ModeloVariantes::mdlMostrarTiposVariantes($tabla, "nombre", $nombre);
+		if ($tipoExistente) {
+			echo json_encode(["status" => "error", "mensaje" => "¡El tipo de variante ya existe en la base de datos!"]);
+			exit;
+		}
+
+		$datos = array(
+			"nombre" => $nombre,
+			"orden" => isset($_POST["nuevoOrdenTipo"]) ? $_POST["nuevoOrdenTipo"] : 1
+		);
+
+		$db = Conexion::conectar();
+		try {
+			$db->beginTransaction();
+			$respuesta = ModeloVariantes::mdlIngresarTipoVariante($tabla, $datos);
+			if ($respuesta != "ok") {
+				throw new Exception("Error al guardar el tipo de variante.");
+			}
+			$db->commit();
+			echo json_encode(["status" => "ok", "mensaje" => "¡El tipo de variante ha sido guardado correctamente!"]);
+		} catch (Exception $e) {
+			$db->rollBack();
+			echo json_encode(["status" => "error", "mensaje" => $e->getMessage()]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "El nombre del tipo es obligatorio."]);
+	}
+	exit;
+}
+
+/*=============================================
+GUARDAR EDITAR TIPO DE VARIANTE
+=============================================*/
+if (isset($_POST["guardarEditarTipoVariante"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["editarTipoVariante"])) {
+		$tabla = "tipos_variantes";
+		$datos = array(
+			"id" => $_POST["idTipo"],
+			"nombre" => $_POST["editarTipoVariante"],
+			"orden" => $_POST["editarOrdenTipo"]
+		);
+
+		$db = Conexion::conectar();
+		try {
+			$db->beginTransaction();
+			$respuesta = ModeloVariantes::mdlEditarTipoVariante($tabla, $datos);
+			if ($respuesta != "ok") {
+				throw new Exception("Error al actualizar el tipo de variante.");
+			}
+			$db->commit();
+			echo json_encode(["status" => "ok", "mensaje" => "¡El tipo de variante ha sido editado correctamente!"]);
+		} catch (Exception $e) {
+			$db->rollBack();
+			echo json_encode(["status" => "error", "mensaje" => $e->getMessage()]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "El nombre del tipo es obligatorio."]);
+	}
+	exit;
+}
+
+/*=============================================
+GUARDAR CREAR OPCIÓN DE VARIANTE
+=============================================*/
+if (isset($_POST["guardarCrearOpcion"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["nuevaOpcion"])) {
+		$tabla = "opciones_variantes";
+		$datos = array(
+			"id_tipo_variante" => $_POST["idTipoVarianteOpcion"],
+			"nombre" => $_POST["nuevaOpcion"],
+			"orden" => isset($_POST["nuevoOrdenOpcion"]) ? $_POST["nuevoOrdenOpcion"] : 1
+		);
+
+		$db = Conexion::conectar();
+		try {
+			$db->beginTransaction();
+			$respuesta = ModeloVariantes::mdlIngresarOpcionVariante($tabla, $datos);
+			if ($respuesta != "ok") {
+				throw new Exception("Error al guardar la opción de variante.");
+			}
+			$db->commit();
+			echo json_encode(["status" => "ok", "mensaje" => "¡La opción de variante ha sido guardada correctamente!"]);
+		} catch (Exception $e) {
+			$db->rollBack();
+			echo json_encode(["status" => "error", "mensaje" => $e->getMessage()]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "El nombre de la opción es obligatorio."]);
+	}
+	exit;
+}
+
+/*=============================================
+GUARDAR EDITAR OPCIÓN DE VARIANTE
+=============================================*/
+if (isset($_POST["guardarEditarOpcion"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["editarOpcion"])) {
+		$tabla = "opciones_variantes";
+		$datos = array(
+			"id" => $_POST["idOpcion"],
+			"nombre" => $_POST["editarOpcion"],
+			"orden" => $_POST["editarOrdenOpcion"]
+		);
+
+		$db = Conexion::conectar();
+		try {
+			$db->beginTransaction();
+			$respuesta = ModeloVariantes::mdlEditarOpcionVariante($tabla, $datos);
+			if ($respuesta != "ok") {
+				throw new Exception("Error al actualizar la opción de variante.");
+			}
+			$db->commit();
+			echo json_encode(["status" => "ok", "mensaje" => "¡La opción de variante ha sido editada correctamente!"]);
+		} catch (Exception $e) {
+			$db->rollBack();
+			echo json_encode(["status" => "error", "mensaje" => $e->getMessage()]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "El nombre de la opción es obligatorio."]);
+	}
+	exit;
 }

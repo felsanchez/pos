@@ -1,14 +1,14 @@
 $(document).ready(function () {
 
   // Mover modal al body para evitar conflictos de z-index
-  $('#modalEditarCategoria').appendTo("body");
+  $('#modalEditarCategoriaConocimiento').appendTo("body");
 
-  // Corrección de z-index y backdrops para modalEditarCategoria
-  $('#modalEditarCategoria').off('show.bs.modal').on('show.bs.modal', function () {
+  // Corrección de z-index y backdrops para modalEditarCategoriaConocimiento
+  $('#modalEditarCategoriaConocimiento').off('show.bs.modal').on('show.bs.modal', function () {
     $(this).appendTo('body');
   });
 
-  $('#modalEditarCategoria').off('shown.bs.modal').on('shown.bs.modal', function () {
+  $('#modalEditarCategoriaConocimiento').off('shown.bs.modal').on('shown.bs.modal', function () {
     $(this).css('z-index', 1060);
     var backdrops = $('.modal-backdrop');
     if (backdrops.length >= 2) {
@@ -17,7 +17,7 @@ $(document).ready(function () {
     }
   });
 
-  $('#modalEditarCategoria').off('hidden.bs.modal').on('hidden.bs.modal', function () {
+  $('#modalEditarCategoriaConocimiento').off('hidden.bs.modal').on('hidden.bs.modal', function () {
     if ($('#modalGestionarCategorias').hasClass('in')) {
       $('body').addClass('modal-open');
     }
@@ -161,6 +161,160 @@ $(document).ready(function () {
         $("#editarArticuloKeywords").val(respuesta.palabras_clave);
 
         $("#editarArticuloContenido").val(respuesta.contenido);
+      }
+    });
+  });
+
+  /*=============================================
+  GUARDAR EDITAR ARTÍCULO VÍA AJAX (CON LOADER FLUIDO)
+  =============================================*/
+  $('#formEditarArticulo').on('submit', function (e) {
+    e.preventDefault();
+
+    var form = this;
+    var boton = $(form).find("button[type='submit']");
+    boton.prop('disabled', true);
+    var htmlOriginal = boton.html();
+    boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+    swal({
+      title: 'Actualizando artículo',
+      text: 'Por favor espere mientras se procesa la información...',
+      type: 'info',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      onBeforeOpen: () => {
+        swal.showLoading()
+      }
+    });
+
+    var datos = new FormData(form);
+    datos.append("guardarEditarArticulo", "ok");
+
+    $.ajax({
+      url: "ajax/conocimiento.ajax.php",
+      method: "POST",
+      data: datos,
+      cache: false,
+      contentType: false,
+      processData: false,
+      dataType: "json",
+      success: function (respuesta) {
+        boton.prop('disabled', false).html(htmlOriginal);
+
+        if (respuesta.status === "ok") {
+          swal({
+            type: "success",
+            title: "¡Éxito!",
+            text: respuesta.mensaje,
+            showConfirmButton: true,
+            confirmButtonText: "Cerrar"
+          }).then((result) => {
+            $("#modalEditarArticulo").modal("hide");
+            if (typeof tablaArticulos !== 'undefined') {
+              tablaArticulos.ajax.reload(null, false);
+            } else {
+              window.location.reload();
+            }
+          });
+        } else {
+          swal({
+            type: "error",
+            title: "¡Error!",
+            text: respuesta.mensaje || "No se pudo actualizar el artículo.",
+            showConfirmButton: true,
+            confirmButtonText: "Cerrar"
+          });
+        }
+      },
+      error: function () {
+        boton.prop('disabled', false).html(htmlOriginal);
+        swal({
+          type: "error",
+          title: "¡Error!",
+          text: "Ocurrió un problema de conexión al guardar el artículo.",
+          showConfirmButton: true,
+          confirmButtonText: "Cerrar"
+        });
+      }
+    });
+  });
+
+  /*=============================================
+  GUARDAR CREAR ARTÍCULO VÍA AJAX (CON LOADER FLUIDO)
+  =============================================*/
+  $('#formAgregarArticulo').on('submit', function (e) {
+    e.preventDefault();
+
+    var form = this;
+    var boton = $(form).find("button[type='submit']");
+    boton.prop('disabled', true);
+    var htmlOriginal = boton.html();
+    boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+    swal({
+      title: 'Creando artículo',
+      text: 'Por favor espere mientras se procesa la información...',
+      type: 'info',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      onBeforeOpen: () => {
+        swal.showLoading()
+      }
+    });
+
+    var datos = new FormData(form);
+    datos.append("guardarCrearArticulo", "ok");
+
+    $.ajax({
+      url: "ajax/conocimiento.ajax.php",
+      method: "POST",
+      data: datos,
+      cache: false,
+      contentType: false,
+      processData: false,
+      dataType: "json",
+      success: function (respuesta) {
+        boton.prop('disabled', false).html(htmlOriginal);
+
+        if (respuesta.status === "ok") {
+          swal({
+            type: "success",
+            title: "¡Éxito!",
+            text: respuesta.mensaje,
+            showConfirmButton: true,
+            confirmButtonText: "Cerrar"
+          }).then((result) => {
+            $("#modalAgregarArticulo").modal("hide");
+            form.reset();
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.nuevoArticuloContenido) {
+              CKEDITOR.instances.nuevoArticuloContenido.setData('');
+            }
+            if (typeof tablaArticulos !== 'undefined') {
+              tablaArticulos.ajax.reload(null, false);
+            } else {
+              window.location.reload();
+            }
+          });
+        } else {
+          swal({
+            type: "error",
+            title: "¡Error!",
+            text: respuesta.mensaje || "No se pudo guardar el artículo.",
+            showConfirmButton: true,
+            confirmButtonText: "Cerrar"
+          });
+        }
+      },
+      error: function () {
+        boton.prop('disabled', false).html(htmlOriginal);
+        swal({
+          type: "error",
+          title: "¡Error!",
+          text: "Ocurrió un problema de conexión al crear el artículo.",
+          showConfirmButton: true,
+          confirmButtonText: "Cerrar"
+        });
       }
     });
   });
@@ -318,9 +472,9 @@ $(document).ready(function () {
     var idCat = $(this).attr("idCat");
     var nombreCat = $(this).attr("nombreCat");
 
-    $("#modalEditarCategoria #idCategoria").val(idCat);
-    $("#modalEditarCategoria #editarCategoriaNombre").val(nombreCat);
-    $("#modalEditarCategoria").modal("show");
+    $("#modalEditarCategoriaConocimiento #idCategoria").val(idCat);
+    $("#modalEditarCategoriaConocimiento #editarCategoriaNombre").val(nombreCat);
+    $("#modalEditarCategoriaConocimiento").modal("show");
   });
 
   /*=============================================

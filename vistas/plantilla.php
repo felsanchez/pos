@@ -325,6 +325,7 @@ CUERPO DOCUMENTO
   <script src="vistas/js/reportes.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/historial-stock.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/tipos-actividades.js"></script>
+  <script src="vistas/js/estados-actividades.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/bodegas.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/gastos.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/logs.js?v=<?php echo time(); ?>"></script>

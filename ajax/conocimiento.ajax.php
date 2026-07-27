@@ -103,15 +103,17 @@ if (isset($_POST["idCategoria"])) {
 	$valCat = new AjaxConocimiento();
 	$valCat->idCategoria = $_POST["idCategoria"];
 	$valCat->ajaxEditarCategoria();
+	exit;
 }
 
 /*=============================================
-EDITAR ARTICULO
+OBTENER ARTICULO PARA MOSTRAR EN MODAL
 =============================================*/
-if (isset($_POST["idArticulo"])) {
+if (isset($_POST["idArticulo"]) && !isset($_POST["guardarEditarArticulo"])) {
 	$valArt = new AjaxConocimiento();
 	$valArt->idArticulo = $_POST["idArticulo"];
 	$valArt->ajaxEditarArticulo();
+	exit;
 }
 
 /*=============================================
@@ -122,6 +124,7 @@ if (isset($_POST["activarArticulo"])) {
 	$actArt->activarArticulo = $_POST["activarArticulo"];
 	$actArt->activarId = $_POST["activarId"];
 	$actArt->ajaxActivarArticulo();
+	exit;
 }
 
 /*=============================================
@@ -132,6 +135,7 @@ if (isset($_POST["activarCategoria"])) {
 	$actCat->activarCategoria = $_POST["activarCategoria"];
 	$actCat->activarCatId = $_POST["activarCatId"];
 	$actCat->ajaxActivarCategoria();
+	exit;
 }
 
 /*=============================================
@@ -173,5 +177,71 @@ if (isset($_POST["idCategoriaEliminar"])) {
 	$tabla = "empresa_conocimiento_categorias";
 	$respuesta = ModeloConocimiento::mdlEliminarCategoria($tabla, $id);
 	echo json_encode($respuesta);
+	exit;
+}
+
+/*=============================================
+GUARDAR EDITAR ARTICULO
+=============================================*/
+if (isset($_POST["guardarEditarArticulo"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["editarArticuloTitulo"])) {
+		$tabla = "empresa_conocimiento";
+		$datos = array(
+			"id"              => $_POST["idArticulo"],
+			"id_categoria"    => $_POST["editarArticuloCategoria"],
+			"titulo"          => $_POST["editarArticuloTitulo"],
+			"contenido"       => $_POST["editarArticuloContenido"],
+			"palabras_clave"  => !empty($_POST["editarArticuloKeywords"]) ? $_POST["editarArticuloKeywords"] : null
+		);
+
+		$respuesta = ModeloConocimiento::mdlEditarArticulo($tabla, $datos);
+
+		if ($respuesta == "ok") {
+			ControladorConocimiento::sincronizarQdrant("actualizar", $_POST["idArticulo"]);
+			echo json_encode(["status" => "ok", "mensaje" => "¡El artículo ha sido editado correctamente!"]);
+		} else {
+			echo json_encode(["status" => "error", "mensaje" => "No se pudo actualizar el artículo."]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "El título no puede ir vacío."]);
+	}
+	exit;
+}
+
+/*=============================================
+GUARDAR CREAR ARTICULO
+=============================================*/
+if (isset($_POST["guardarCrearArticulo"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["nuevoArticuloTitulo"])) {
+		$tabla = "empresa_conocimiento";
+		$datos = array(
+			"id_categoria"   => $_POST["nuevoArticuloCategoria"],
+			"titulo"         => $_POST["nuevoArticuloTitulo"],
+			"contenido"      => $_POST["nuevoArticuloContenido"],
+			"palabras_clave" => !empty($_POST["nuevoArticuloKeywords"]) ? $_POST["nuevoArticuloKeywords"] : null
+		);
+
+		$respuesta = ModeloConocimiento::mdlIngresarArticulo($tabla, $datos);
+
+		if (isset($respuesta["ok"]) && $respuesta["ok"]) {
+			$idArticulo = $respuesta["id"];
+			ControladorConocimiento::sincronizarQdrant("crear", $idArticulo);
+			echo json_encode(["status" => "ok", "mensaje" => "¡El artículo ha sido guardado correctamente!"]);
+		} else {
+			echo json_encode(["status" => "error", "mensaje" => "No se pudo guardar el artículo."]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "El título no puede ir vacío."]);
+	}
 	exit;
 }

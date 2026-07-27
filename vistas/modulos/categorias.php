@@ -60,7 +60,7 @@ MODAL AGREGAR CATEGORIA
 
     <div class="modal-content">
 
-      <form role="form" method="post">
+      <form role="form" method="post" id="formAgregarCategoria">
 
         <?php CSRF::insertToken(); ?>
 
@@ -159,7 +159,7 @@ MODAL EDITAR CATEGORIA
 
     <div class="modal-content">
 
-      <form role="form" method="post">
+      <form role="form" method="post" id="formEditarCategoria">
 
         <?php CSRF::insertToken(); ?>
 

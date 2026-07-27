@@ -660,7 +660,7 @@ MODAL AGREGAR LEAD
 <div id="modalAgregarLead" class="modal fade" role="dialog">
   <div class="modal-dialog modal-lg">
     <div class="modal-content" style="border-radius: 10px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-      <form role="form" method="post">
+      <form role="form" method="post" id="formAgregarLead">
         <?php CSRF::insertToken(); ?>
 
         <div class="modal-header" style="background: linear-gradient(135deg, #3c8dbc 0%, #2980b9 100%); color: white; padding: 15px 20px;">
@@ -796,7 +796,7 @@ MODAL EDITAR LEAD
 <div id="modalEditarLead" class="modal fade" role="dialog">
   <div class="modal-dialog modal-lg">
     <div class="modal-content" style="border-radius: 10px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-      <form role="form" method="post">
+      <form role="form" method="post" id="formEditarLead">
         <?php CSRF::insertToken(); ?>
 
         <div class="modal-header" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; padding: 15px 20px;">
@@ -930,15 +930,9 @@ MODAL EDITAR LEAD
                 </div>
 
                 <!-- Resumen de Conversación IA -->
-                <div class="form-group">
+                <div class="form-group" style="margin-bottom: 0;">
                   <label style="font-weight: 600; color: #2e7d32;"><i class="fa fa-magic text-success"></i> Resumen de Conversación (IA)</label>
                   <textarea class="form-control" name="editarLeadResumenIA" id="editarLeadResumenIA" rows="3" style="background-color: #ffffff; border: 1px solid #a5d6a7; border-left: 4px solid #25D366; border-radius: 4px;" placeholder="Resumen generado por el Agente IA..."></textarea>
-                </div>
-
-                <!-- Productos de Interés -->
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label style="font-weight: 600; color: #2e7d32;"><i class="fa fa-shopping-cart text-success"></i> Productos de Interés</label>
-                  <textarea class="form-control" name="editarLeadProductosInteres" id="editarLeadProductosInteres" rows="3" style="background-color: #ffffff; border: 1px solid #a5d6a7; border-left: 4px solid #25D366; border-radius: 4px;" placeholder="Productos solicitados o consultados por el cliente..."></textarea>
                 </div>
               </div>
             </div>

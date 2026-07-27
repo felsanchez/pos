@@ -381,31 +381,33 @@ SUBIENDO FOTO DEL PRODUCTO
 $(".nuevaImagen").change(function () {
 
 	var imagen = this.files[0];
-
+	if (!imagen) return;
 
 	/*=============================================
-	VALIDAMOS EL FORMATO DE LA IMAGEN QUE SEA JPG O PNG
+	VALIDAMOS EL FORMATO Y TAMAÑO DE LA IMAGEN
 	=============================================*/
+	var allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/pjpeg", "image/webp", "image/gif", "image/x-png"];
+	var fileType = imagen["type"] ? imagen["type"].toLowerCase() : "";
 
-	if (imagen["type"] != "image/jpeg" && imagen["type"] != "image/png") {
+	if (allowedTypes.indexOf(fileType) === -1) {
 
-		$(".nuevaImagen").val("");
+		$(this).val("");
 
 		swal({
-			title: "Error al subir la imagenn",
-			text: "¡La imagen debe estar en formato jpg o png!",
+			title: "Error al subir la imagen",
+			text: "¡La imagen debe estar en formato JPG, PNG o WEBP!",
 			type: "error",
 			confirmButtonText: "¡Cerrar!"
 		});
 	}
 
-	else if (imagen["size"] > 2000000) {
+	else if (imagen["size"] > 10000000) {
 
-		$(".nuevaImagen").val("");
+		$(this).val("");
 
 		swal({
 			title: "Error al subir la imagen",
-			text: "¡La imagen no debe pesar mas de 2MB!",
+			text: "¡La imagen no debe pesar más de 10MB!",
 			type: "error",
 			confirmButtonText: "¡Cerrar!"
 		});

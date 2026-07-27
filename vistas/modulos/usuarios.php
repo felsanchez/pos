@@ -196,7 +196,7 @@ MODAL AGREGAR USUARIO
 
     <div class="modal-content">
 
-      <form role="form" method="post" enctype="multipart/form-data">
+      <form role="form" method="post" enctype="multipart/form-data" id="formAgregarUsuario">
 
         <?php CSRF::insertToken(); // Token CSRF ?>
 
@@ -368,7 +368,7 @@ MODAL EDITAR USUARIO
 
     <div class="modal-content">
 
-      <form role="form" method="post" enctype="multipart/form-data">
+      <form role="form" method="post" enctype="multipart/form-data" id="formEditarUsuario">
 
         <?php CSRF::insertToken(); // Token CSRF ?>
 

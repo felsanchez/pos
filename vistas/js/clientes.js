@@ -324,8 +324,10 @@ $(document).on("click", ".btnEliminarCliente", function () {
                   showConfirmButton: true,
                   confirmButtonText: "Cerrar"
                 }).then(function (r) {
-                  if (r.value) {
-                    window.location = "clientes";
+                  if ($.fn.DataTable.isDataTable('.tablas1')) {
+                    $('.tablas1').DataTable().ajax.reload(null, false);
+                  } else {
+                    window.location.reload();
                   }
                 });
               } else {
@@ -382,8 +384,10 @@ $(document).on("click", ".btnEliminarCliente", function () {
                   showConfirmButton: true,
                   confirmButtonText: "Cerrar"
                 }).then(function (r) {
-                  if (r.value) {
-                    window.location = "clientes";
+                  if ($.fn.DataTable.isDataTable('.tablas1')) {
+                    $('.tablas1').DataTable().ajax.reload(null, false);
+                  } else {
+                    window.location.reload();
                   }
                 });
               } else {
@@ -426,4 +430,155 @@ $(document).on("change", "#nuevoCliente", function () {
       }
     }
   });
+});
+
+/*=============================================
+GUARDAR CREAR CLIENTE VÍA AJAX
+=============================================*/
+$(document).on("submit", "#formAgregarCliente", function (e) {
+	e.preventDefault();
+
+	var form = this;
+	var boton = $(form).find("button[type='submit']");
+	boton.prop('disabled', true);
+	var htmlOriginal = boton.html();
+	boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+	swal({
+		title: 'Guardando cliente',
+		text: 'Por favor espere mientras se procesa la información...',
+		type: 'info',
+		allowOutsideClick: false,
+		showConfirmButton: false,
+		onBeforeOpen: () => {
+			swal.showLoading()
+		}
+	});
+
+	var datos = new FormData(form);
+	datos.append("guardarCrearCliente", "ok");
+
+	$.ajax({
+		url: "ajax/clientes.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			boton.prop('disabled', false).html(htmlOriginal);
+
+			if (respuesta.status === "ok") {
+				swal({
+					type: "success",
+					title: "¡Éxito!",
+					text: respuesta.mensaje,
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then((result) => {
+					$("#modalAgregarCliente").modal("hide");
+					form.reset();
+					if ($.fn.DataTable.isDataTable('.tablas1')) {
+						$('.tablas1').DataTable().ajax.reload(null, false);
+					} else {
+						window.location.reload();
+					}
+				});
+			} else {
+				swal({
+					type: "error",
+					title: "¡Error!",
+					text: respuesta.mensaje || "No se pudo guardar el cliente.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				});
+			}
+		},
+		error: function () {
+			boton.prop('disabled', false).html(htmlOriginal);
+			swal({
+				type: "error",
+				title: "¡Error!",
+				text: "Ocurrió un problema de conexión al guardar el cliente.",
+				showConfirmButton: true,
+				confirmButtonText: "Cerrar"
+			});
+		}
+	});
+});
+
+/*=============================================
+GUARDAR EDITAR CLIENTE VÍA AJAX
+=============================================*/
+$(document).on("submit", "#formEditarCliente", function (e) {
+	e.preventDefault();
+
+	var form = this;
+	var boton = $(form).find("button[type='submit']");
+	boton.prop('disabled', true);
+	var htmlOriginal = boton.html();
+	boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+	swal({
+		title: 'Actualizando cliente',
+		text: 'Por favor espere mientras se procesa la información...',
+		type: 'info',
+		allowOutsideClick: false,
+		showConfirmButton: false,
+		onBeforeOpen: () => {
+			swal.showLoading()
+		}
+	});
+
+	var datos = new FormData(form);
+	datos.append("guardarEditarCliente", "ok");
+
+	$.ajax({
+		url: "ajax/clientes.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			boton.prop('disabled', false).html(htmlOriginal);
+
+			if (respuesta.status === "ok") {
+				swal({
+					type: "success",
+					title: "¡Éxito!",
+					text: respuesta.mensaje,
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then((result) => {
+					$("#modalEditarCliente").modal("hide");
+					if ($.fn.DataTable.isDataTable('.tablas1')) {
+						$('.tablas1').DataTable().ajax.reload(null, false);
+					} else {
+						window.location.reload();
+					}
+				});
+			} else {
+				swal({
+					type: "error",
+					title: "¡Error!",
+					text: respuesta.mensaje || "No se pudo actualizar el cliente.",
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				});
+			}
+		},
+		error: function () {
+			boton.prop('disabled', false).html(htmlOriginal);
+			swal({
+				type: "error",
+				title: "¡Error!",
+				text: "Ocurrió un problema de conexión al actualizar el cliente.",
+				showConfirmButton: true,
+				confirmButtonText: "Cerrar"
+			});
+		}
+	});
 });

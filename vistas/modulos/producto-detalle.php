@@ -208,11 +208,9 @@ if ($modoEdicion) {
                                         <input type="file" class="form-control" id="imagen" name="<?php echo $modoEdicion ? 'editarImagen' : 'nuevaImagen'; ?>"
                                             accept="image/*">
                                         <p class="help-block">Peso máximo: 2MB</p>
-                                        <?php if ($modoEdicion && !empty($producto['imagen'])): ?>
-                                            <img src="<?php echo $producto['imagen']; ?>" class="img-thumbnail"
-                                                style="max-width: 100px; margin-top: 10px;">
-                                            <input type="hidden" name="imagenActual" value="<?php echo $producto['imagen']; ?>">
-                                        <?php endif; ?>
+                                        <img src="<?php echo ($modoEdicion && !empty($producto['imagen'])) ? $producto['imagen'] : 'vistas/img/productos/default/anonymous.png'; ?>" class="img-thumbnail"
+                                            style="max-width: 100px; margin-top: 10px;">
+                                        <input type="hidden" name="imagenActual" value="<?php echo ($modoEdicion && !empty($producto['imagen'])) ? $producto['imagen'] : 'vistas/img/productos/default/anonymous.png'; ?>">
                                     </div>
                                 </div>
                             </div>

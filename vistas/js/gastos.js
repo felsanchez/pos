@@ -243,7 +243,9 @@ $(document).ready(function () {
                                 showConfirmButton: true,
                                 confirmButtonText: "Cerrar"
                             }).then((result) => {
-                                if (result.value) {
+                                if ($.fn.DataTable.isDataTable('#tablaGastos')) {
+                                    $('#tablaGastos').DataTable().ajax.reload(null, false);
+                                } else {
                                     window.location.reload();
                                 }
                             });
@@ -351,11 +353,11 @@ $(document).ready(function () {
     });
 
     // Fijar z-index del modal Editar Categoría para que no se superponga incorrectamente con Gestionar Categorías
-    $('#modalEditarCategoria').off('show.bs.modal').on('show.bs.modal', function (event) {
+    $('#modalEditarCategoriaGasto').off('show.bs.modal').on('show.bs.modal', function (event) {
         $(this).appendTo('body');
     });
 
-    $('#modalEditarCategoria').off('shown.bs.modal').on('shown.bs.modal', function () {
+    $('#modalEditarCategoriaGasto').off('shown.bs.modal').on('shown.bs.modal', function () {
         $(this).css('z-index', 1060);
         var backdrops = $('.modal-backdrop');
         if (backdrops.length >= 2) {
@@ -365,10 +367,258 @@ $(document).ready(function () {
         $('#editarNombreCategoriaGasto').focus();
     });
 
-    $('#modalEditarCategoria').off('hidden.bs.modal').on('hidden.bs.modal', function () {
+    $('#modalEditarCategoriaGasto').off('hidden.bs.modal').on('hidden.bs.modal', function () {
         if ($('#modalGestionarCategorias').hasClass('in')) {
             $('body').addClass('modal-open');
         }
+    });
+
+    /*=============================================
+    REVISAR SI LA CATEGORÍA DE GASTO YA EXISTE
+    =============================================*/
+    $(document).on("change", "#nombreCategoriaGasto, input[name='nombreCategoriaGasto']", function () {
+        $(".alert").remove();
+        var categoria = $(this).val();
+
+        if (categoria.trim() === "") return;
+
+        var datos = new FormData();
+        datos.append("validarCategoriaGasto", categoria);
+
+        $.ajax({
+            url: "ajax/categorias_gastos.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function (respuesta) {
+                if (respuesta) {
+                    $("#nombreCategoriaGasto").parent().after('<div class="alert alert-warning">¡Esta categoría de gasto ya existe en la base de datos!</div>');
+                    $("#nombreCategoriaGasto").val("");
+                }
+            }
+        });
+    });
+
+    /*=============================================
+    GUARDAR CREAR CATEGORÍA DE GASTO VÍA AJAX
+    =============================================*/
+    $(document).on("submit", "#formAgregarCategoriaGasto", function (e) {
+        e.preventDefault();
+
+        var form = this;
+        var boton = $(form).find("button[type='submit']");
+        boton.prop('disabled', true);
+        var htmlOriginal = boton.html();
+        boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+        swal({
+            title: 'Guardando categoría',
+            text: 'Por favor espere mientras se procesa la información...',
+            type: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            onBeforeOpen: () => {
+                swal.showLoading()
+            }
+        });
+
+        var datos = new FormData(form);
+        datos.append("guardarCrearCategoriaGasto", "ok");
+
+        $.ajax({
+            url: "ajax/categorias_gastos.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function (respuesta) {
+                boton.prop('disabled', false).html(htmlOriginal);
+
+                if (respuesta.status === "ok") {
+                    swal({
+                        type: "success",
+                        title: "¡Éxito!",
+                        text: respuesta.mensaje,
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    }).then((result) => {
+                        window.location.reload();
+                    });
+                } else {
+                    swal({
+                        type: "error",
+                        title: "¡Error!",
+                        text: respuesta.mensaje || "No se pudo guardar la categoría.",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                }
+            },
+            error: function () {
+                boton.prop('disabled', false).html(htmlOriginal);
+                swal({
+                    type: "error",
+                    title: "¡Error!",
+                    text: "Ocurrió un problema de conexión al guardar la categoría.",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        });
+    });
+
+    /*=============================================
+    GUARDAR EDITAR CATEGORÍA DE GASTO VÍA AJAX
+    =============================================*/
+    $(document).on("submit", "#formEditarCategoriaGasto", function (e) {
+        e.preventDefault();
+
+        var form = this;
+        var boton = $(form).find("button[type='submit']");
+        boton.prop('disabled', true);
+        var htmlOriginal = boton.html();
+        boton.html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+        swal({
+            title: 'Actualizando categoría',
+            text: 'Por favor espere mientras se procesa la información...',
+            type: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            onBeforeOpen: () => {
+                swal.showLoading()
+            }
+        });
+
+        var datos = new FormData(form);
+        datos.append("guardarEditarCategoriaGasto", "ok");
+
+        $.ajax({
+            url: "ajax/categorias_gastos.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function (respuesta) {
+                boton.prop('disabled', false).html(htmlOriginal);
+
+                if (respuesta.status === "ok") {
+                    swal({
+                        type: "success",
+                        title: "¡Éxito!",
+                        text: respuesta.mensaje,
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    }).then((result) => {
+                        $("#modalEditarCategoriaGasto").modal("hide");
+                        window.location.reload();
+                    });
+                } else {
+                    swal({
+                        type: "error",
+                        title: "¡Error!",
+                        text: respuesta.mensaje || "No se pudo actualizar la categoría.",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                }
+            },
+            error: function () {
+                boton.prop('disabled', false).html(htmlOriginal);
+                swal({
+                    type: "error",
+                    title: "¡Error!",
+                    text: "Ocurrió un problema de conexión al actualizar la categoría.",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        });
+    });
+
+    /*=============================================
+    GESTIÓN DE IMÁGENES DE COMPROBANTE DE GASTO
+    =============================================*/
+    $(document).on("click", ".img-comprobante-clickeable, .img-ampliar-gasto, .btnVerFotoGasto", function () {
+        var rutaImagen = $(this).attr("data-imagen") || $(this).attr("src");
+        var idGasto = $(this).attr("data-idgasto") || $(this).attr("data-id");
+
+        if (!rutaImagen) return;
+
+        $("#imagenComprobanteAmpliada").attr("src", rutaImagen);
+        $("#idGastoImagen").val(idGasto);
+        $(".nuevaImagenComprobante").val("");
+        $("#modalAmpliarComprobanteGasto").modal("show");
+    });
+
+    $(document).on("change", ".nuevaImagenComprobante", function () {
+        var imagen = this.files[0];
+        if (imagen) {
+            if (imagen["type"] != "image/jpeg" && imagen["type"] != "image/png") {
+                $(".nuevaImagenComprobante").val("");
+                swal({ title: "Error", text: "¡La imagen debe ser JPG o PNG!", type: "error" });
+            } else if (imagen["size"] > 2000000) {
+                $(".nuevaImagenComprobante").val("");
+                swal({ title: "Error", text: "¡La imagen no debe pesar más de 2MB!", type: "error" });
+            } else {
+                var datosImagen = new FileReader;
+                datosImagen.readAsDataURL(imagen);
+                $(datosImagen).on("load", function (event) {
+                    $("#imagenComprobanteAmpliada").attr("src", event.target.result);
+                });
+            }
+        }
+    });
+
+    $(document).on("click", ".btnGuardarImagenComprobante", function () {
+        var idGasto = $("#idGastoImagen").val();
+        var imagen = $(".nuevaImagenComprobante")[0].files[0];
+
+        if (!imagen) {
+            swal({ title: "Advertencia", text: "Seleccione una nueva imagen", type: "warning" });
+            return;
+        }
+
+        var datos = new FormData();
+        datos.append("idGastoImagen", idGasto);
+        datos.append("nuevaImagenComprobante", imagen);
+        datos.append("csrf_token", $('meta[name="csrf-token"]').attr('content'));
+
+        swal({ title: 'Cargando...', allowOutsideClick: false, onBeforeOpen: () => { swal.showLoading() } });
+
+        $.ajax({
+            url: "ajax/gastos.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function (respuesta) {
+                if (respuesta == "ok" || (typeof respuesta === "object" && respuesta.status === "ok")) {
+                    swal({ type: "success", title: "¡Imagen actualizada!", text: "La imagen del comprobante ha sido actualizada correctamente.", showConfirmButton: true }).then(() => {
+                        $("#modalAmpliarComprobanteGasto").modal("hide");
+                        if ($.fn.DataTable.isDataTable('#tablaGastos')) {
+                            $('#tablaGastos').DataTable().ajax.reload(null, false);
+                        } else {
+                            window.location.reload();
+                        }
+                    });
+                } else {
+                    swal({ type: "error", title: "Error", text: (typeof respuesta === "object" && respuesta.mensaje) ? respuesta.mensaje : "No se pudo actualizar la imagen.", showConfirmButton: true });
+                }
+            },
+            error: function () {
+                swal({ type: "error", title: "Error", text: "Ocurrió un problema de conexión al guardar la imagen.", showConfirmButton: true });
+            }
+        });
     });
 
 });

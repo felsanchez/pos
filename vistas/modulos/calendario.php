@@ -1278,7 +1278,7 @@ MODAL GESTIONAR ESTADOS
             <h3 class="panel-title">Agregar Nuevo Estado</h3>
           </div>
           <div class="panel-body">
-            <form role="form" method="post" id="formAgregarEstado">
+            <form role="form" method="post" id="formAgregarEstadoActividad">
 
               <?php CSRF::insertToken(); ?>
               <input type="hidden" name="urlActual" value="<?php echo $urlActual; ?>">
@@ -1467,7 +1467,7 @@ MODAL GESTIONAR TIPOS
             <h3 class="panel-title">Agregar Nuevo Tipo</h3>
           </div>
           <div class="panel-body">
-            <form role="form" method="post" id="formAgregarTipo">
+            <form role="form" method="post" id="formAgregarTipoActividad">
 
               <?php CSRF::insertToken(); ?>
               <input type="hidden" name="urlActual" value="<?php echo $urlActual; ?>">
@@ -1551,7 +1551,7 @@ MODAL EDITAR TIPO
 
     <div class="modal-content">
 
-      <form role="form" method="post">
+      <form role="form" method="post" id="formEditarTipoActividad">
 
         <?php CSRF::insertToken(); ?>
         <input type="hidden" name="urlActual" value="<?php echo $urlActual; ?>">
@@ -1602,9 +1602,7 @@ MODAL EDITAR TIPO
 
 </div>
 
-<!-- Scripts ya cargados en plantilla.php, no duplicar aquí -->
-<script src="vistas/js/estados-actividades.js?v=<?php echo time(); ?>"></script>
-<script src="vistas/js/tipos-actividades.js"></script>
+
 
 <script>
 $(document).ready(function() {
@@ -1647,22 +1645,4 @@ $editarActividad->ctrEditarActividad();
 
 $eliminarActividad = new ControladorActividades();
 $eliminarActividad->ctrEliminarActividad();
-
-$eliminarEstado = new ControladorEstadosActividades();
-$eliminarEstado->ctrEliminarEstado();
-
-$crearEstado = new ControladorEstadosActividades();
-$crearEstado->ctrCrearEstado();
-
-$editarEstado = new ControladorEstadosActividades();
-$editarEstado->ctrEditarEstado();
-
-$eliminarTipo = new ControladorTiposActividades();
-$eliminarTipo->ctrEliminarTipo();
-
-$crearTipo = new ControladorTiposActividades();
-$crearTipo->ctrCrearTipo();
-
-$editarTipo = new ControladorTiposActividades();
-$editarTipo->ctrEditarTipo();
 ?>

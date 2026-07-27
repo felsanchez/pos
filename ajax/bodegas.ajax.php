@@ -74,13 +74,16 @@ class AjaxBodegas
 	}
 }
 
+require_once "../modelos/csrf.php";
+
 /*=============================================
-EDITAR BODEGA
+OBTENER BODEGA PARA MODAL EDITAR
 =============================================*/
-if (isset($_POST["idBodega"])) {
+if (isset($_POST["idBodega"]) && !isset($_POST["guardarEditarBodega"])) {
 	$bodega = new AjaxBodegas();
 	$bodega->idBodega = $_POST["idBodega"];
 	$bodega->ajaxEditarBodega();
+	exit;
 }
 
 /*=============================================
@@ -90,6 +93,7 @@ if (isset($_POST["ingresarId"])) {
 	$ingresar = new AjaxBodegas();
 	$ingresar->ingresarId = $_POST["ingresarId"];
 	$ingresar->ajaxIngresarSucursal();
+	exit;
 }
 
 /*=============================================
@@ -100,4 +104,79 @@ if (isset($_POST["activarId"])) {
 	$activar->activarId = $_POST["activarId"];
 	$activar->activarBodega = $_POST["activarBodega"];
 	$activar->ajaxActivarBodega();
+	exit;
+}
+
+/*=============================================
+GUARDAR CREAR BODEGA
+=============================================*/
+if (isset($_POST["guardarCrearBodega"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["nuevaBodega"])) {
+		$tabla = "bodegas";
+		$datos = array(
+			"nombre" => $_POST["nuevaBodega"],
+			"direccion" => $_POST["nuevaDireccionBodega"],
+			"telefono" => $_POST["nuevoTelefonoBodega"],
+			"estado" => 1
+		);
+
+		$db = Conexion::conectar();
+		try {
+			$db->beginTransaction();
+			$respuesta = ModeloBodegas::mdlIngresarBodega($tabla, $datos);
+			if ($respuesta != "ok") {
+				throw new Exception("Error al guardar la sucursal.");
+			}
+			$db->commit();
+			echo json_encode(["status" => "ok", "mensaje" => "¡La sucursal ha sido guardada correctamente!"]);
+		} catch (Exception $e) {
+			$db->rollBack();
+			echo json_encode(["status" => "error", "mensaje" => $e->getMessage()]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "El nombre de la sucursal es obligatorio."]);
+	}
+	exit;
+}
+
+/*=============================================
+GUARDAR EDITAR BODEGA
+=============================================*/
+if (isset($_POST["guardarEditarBodega"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["editarBodega"])) {
+		$tabla = "bodegas";
+		$datos = array(
+			"nombre" => $_POST["editarBodega"],
+			"direccion" => $_POST["editarDireccionBodega"],
+			"telefono" => $_POST["editarTelefonoBodega"],
+			"id" => $_POST["idBodega"]
+		);
+
+		$db = Conexion::conectar();
+		try {
+			$db->beginTransaction();
+			$respuesta = ModeloBodegas::mdlEditarBodega($tabla, $datos);
+			if ($respuesta != "ok") {
+				throw new Exception("Error al editar la sucursal.");
+			}
+			$db->commit();
+			echo json_encode(["status" => "ok", "mensaje" => "¡La sucursal ha sido editada correctamente!"]);
+		} catch (Exception $e) {
+			$db->rollBack();
+			echo json_encode(["status" => "error", "mensaje" => $e->getMessage()]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "El nombre de la sucursal es obligatorio."]);
+	}
+	exit;
 }

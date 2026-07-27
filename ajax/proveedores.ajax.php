@@ -105,20 +105,103 @@ if (isset($_POST["idProveedorEliminar"])) {
 }
 
 /*=============================================
-EDITAR PROVEEDORES
+OBTENER PROVEEDOR PARA MODAL EDITAR
 =============================================*/
-if(isset($_POST["idProveedor"])){
-
+if (isset($_POST["idProveedor"]) && !isset($_POST["guardarEditarProveedor"])) {
 	$proveedor = new AjaxProveedores();
-	$proveedor -> idProveedor = $_POST["idProveedor"];
-	$proveedor -> ajaxEditarProveedor();
+	$proveedor->idProveedor = $_POST["idProveedor"];
+	$proveedor->ajaxEditarProveedor();
+	exit;
 }
 
+/*=============================================
+GUARDAR CREAR PROVEEDOR
+=============================================*/
+if (isset($_POST["guardarCrearProveedor"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["nuevoProveedor"])) {
+		$tabla = "proveedores";
+		$datos = array(
+			"nombre" => $_POST["nuevoProveedor"],
+			"documento" => $_POST["nuevoDocumento"],
+			"tipo_documento_id" => $_POST["nuevoTipoDocumento"],
+			"marca" => $_POST["nuevaMarca"],
+			"celular" => $_POST["nuevoCelular"],
+			"correo" => $_POST["nuevoCorreo"],
+			"direccion" => $_POST["nuevaDireccion"],
+			"municipio_id" => $_POST["nuevoMunicipio"],
+			"organizacion_id" => $_POST["nuevaOrganizacion"]
+		);
+
+		$db = Conexion::conectar();
+		try {
+			$db->beginTransaction();
+			$respuesta = ModeloProveedores::mdlIngresarProveedor($tabla, $datos);
+			if ($respuesta != "ok") {
+				throw new Exception("Error al guardar el proveedor.");
+			}
+			$db->commit();
+			echo json_encode(["status" => "ok", "mensaje" => "¡El proveedor ha sido guardado correctamente!"]);
+		} catch (Exception $e) {
+			$db->rollBack();
+			echo json_encode(["status" => "error", "mensaje" => $e->getMessage()]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "El nombre del proveedor es obligatorio."]);
+	}
+	exit;
+}
+
+/*=============================================
+GUARDAR EDITAR PROVEEDOR
+=============================================*/
+if (isset($_POST["guardarEditarProveedor"])) {
+	if (!CSRF::validateToken()) {
+		echo json_encode(["status" => "error", "mensaje" => "Token CSRF inválido. Recarga la página."]);
+		exit;
+	}
+
+	if (!empty($_POST["editarProveedor"])) {
+		$tabla = "proveedores";
+		$datos = array(
+			"id" => $_POST["idProveedor"],
+			"nombre" => $_POST["editarProveedor"],
+			"documento" => $_POST["editarDocumento"],
+			"tipo_documento_id" => $_POST["editarTipoDocumento"],
+			"marca" => $_POST["editarMarca"],
+			"celular" => $_POST["editarCelular"],
+			"correo" => $_POST["editarCorreo"],
+			"direccion" => $_POST["editarDireccion"],
+			"municipio_id" => $_POST["editarMunicipio"],
+			"organizacion_id" => $_POST["editarOrganizacion"]
+		);
+
+		$db = Conexion::conectar();
+		try {
+			$db->beginTransaction();
+			$respuesta = ModeloProveedores::mdlEditarProveedor($tabla, $datos);
+			if ($respuesta != "ok") {
+				throw new Exception("Error al actualizar el proveedor.");
+			}
+			$db->commit();
+			echo json_encode(["status" => "ok", "mensaje" => "¡El proveedor ha sido editado correctamente!"]);
+		} catch (Exception $e) {
+			$db->rollBack();
+			echo json_encode(["status" => "error", "mensaje" => $e->getMessage()]);
+		}
+	} else {
+		echo json_encode(["status" => "error", "mensaje" => "El nombre del proveedor es obligatorio."]);
+	}
+	exit;
+}
 
 /*=============================================
 ACTUALIZAR NOTAS DEL PROVEEDOR
 =============================================*/ 
-
 if (isset($_POST["accion"]) && $_POST["accion"] == "actualizarNotas") {
 	$tabla = "proveedores";
 	$datos = array(
@@ -128,4 +211,5 @@ if (isset($_POST["accion"]) && $_POST["accion"] == "actualizarNotas") {
 
 	$respuesta = ModeloProveedores::mdlActualizarNotas("proveedores", $_POST["id"], $_POST["notas"]);
 	echo json_encode($respuesta);
+	exit;
 }
