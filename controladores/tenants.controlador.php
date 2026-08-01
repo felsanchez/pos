@@ -43,6 +43,7 @@ class ControladorTenants {
 					"db_name" => $_POST["nuevaDbName"],
 					"db_user" => $_POST["nuevoDbUser"],
 					"db_pass" => $_POST["nuevoDbPass"],
+					"celular" => isset($_POST["nuevoCelular"]) ? trim($_POST["nuevoCelular"]) : "",
 					"db_host" => !empty($_POST["nuevoDbHost"]) ? $_POST["nuevoDbHost"] : "127.0.0.1",
 					"estado" => $_POST["nuevoEstado"]
 				);
@@ -112,6 +113,7 @@ class ControladorTenants {
 					"db_name" => $_POST["editarDbName"],
 					"db_user" => $_POST["editarDbUser"],
 					"db_pass" => $_POST["editarDbPass"],
+					"celular" => isset($_POST["editarCelular"]) ? trim($_POST["editarCelular"]) : "",
 					"db_host" => !empty($_POST["editarDbHost"]) ? $_POST["editarDbHost"] : "127.0.0.1",
 					"estado" => $_POST["editarEstado"]
 				);

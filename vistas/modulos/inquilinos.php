@@ -32,8 +32,8 @@ if ($_SESSION["perfil"] !== "_SystemMaster_") {
         <li style="margin-bottom: 5px;"><strong>Paso 1:</strong> Crea la BD en Hostinger (incluyendo el nombre, usuario y clave).</li>
         <li><strong>Paso 2:</strong> Crea la MISMA BD en este módulo (Para llenar la tabla "clientes_tenants" en la BD Master).</li>
         <li><strong>Paso 3:</strong> Ingresa a la BD creada en Hostinger e IMPORTAMOS su contenido (Completo y limpio).</li>
-        <li><strong>Paso 4:</strong> Crea el respectivo SUBDOMINIO en Hostinger configurando la ruta hacia <strong><code>/public_html/gestion</code></strong>.</li>
-        <li><strong>Paso 5:</strong> En esta vista puedes editar o eliminar los inquilinos existentes y ACTIVAR o DESACTIVAR sus cuentas.</li>
+        <li><strong>Paso 4:</strong> En Hostinger ingresa a "gestion.kontrolpos.com/Panel/Dominios/Subdominios" para crear el respectivo SUBDOMINIO configurando la ruta hacia <strong><code>/public_html/gestion</code></strong>.</li>
+        <li><strong>Paso 5:</strong> Aca puedes editar o eliminar los inquilinos existentes. Puedes colocar y "activo" o "suspendido" en sus estados.</li>
       </ul>
     </div>
 
@@ -62,6 +62,7 @@ if ($_SESSION["perfil"] !== "_SystemMaster_") {
            <th>Base de Datos</th>
            <th>Host</th>
            <th>Usuario</th>
+           <th>Celular</th>
            <th>Estado</th>
            <th>Acciones</th>
 
@@ -85,7 +86,8 @@ if ($_SESSION["perfil"] !== "_SystemMaster_") {
                   <td><strong>'.$value["subdominio"].'</strong>.kontrolpos.com</td>
                   <td>'.$value["db_name"].'</td>
                   <td>'.$value["db_host"].'</td>
-                  <td>'.$value["db_user"].'</td>';
+                  <td>'.$value["db_user"].'</td>
+                  <td>'.(!empty($value["celular"]) ? $value["celular"] : '-').'</td>';
 
                   if($value["estado"] == "activo"){
                     echo '<td><span class="label label-success">Activo</span></td>';
@@ -194,6 +196,15 @@ MODAL AGREGAR INQUILINO
               <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-key"></i></span> 
                 <input type="password" class="form-control input-lg" name="nuevoDbPass" placeholder="Contraseña de BD">
+              </div>
+            </div>
+
+            <!-- ENTRADA PARA EL CELULAR -->
+            <div class="form-group">
+              <label for="nuevoCelular">Celular</label>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-phone"></i></span> 
+                <input type="text" class="form-control input-lg" name="nuevoCelular" id="nuevoCelular" placeholder="ej: +57 300 123 4567">
               </div>
             </div>
 
@@ -317,6 +328,15 @@ MODAL EDITAR INQUILINO
               </div>
             </div>
 
+            <!-- ENTRADA PARA EL CELULAR -->
+            <div class="form-group">
+              <label for="editarCelular">Celular</label>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-phone"></i></span> 
+                <input type="text" class="form-control input-lg" id="editarCelular" name="editarCelular" placeholder="ej: +57 300 123 4567">
+              </div>
+            </div>
+
             <!-- ENTRADA PARA EL ESTADO -->
             <div class="form-group">
               <label for="editarEstado">Estado de Cuenta</label>
@@ -401,6 +421,7 @@ $(document).ready(function() {
         $("#editarDbHost").val(respuesta["db_host"]);
         $("#editarDbUser").val(respuesta["db_user"]);
         $("#editarDbPass").val(respuesta["db_pass"]);
+        $("#editarCelular").val(respuesta["celular"]);
         $("#editarEstado").val(respuesta["estado"]);
       },
       error: function(xhr, status, error) {

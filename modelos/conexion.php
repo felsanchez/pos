@@ -66,7 +66,7 @@ class Conexion{
 
 					if ($tenant['estado'] !== 'activo') {
 						header('HTTP/1.1 403 Forbidden');
-						die("Error: El acceso para el subdominio '" . htmlspecialchars($subdominio) . "' se encuentra suspendido.");
+						die("Error: El acceso para la plataforma '" . htmlspecialchars($subdominio) . "' se encuentra suspendido. Contacta al administrador para más información.");
 					}
 
 					// Si todo está bien, cargamos los datos de conexión del inquilino

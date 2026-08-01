@@ -1,0 +1,6 @@
+{
+    "tool": "buscar_producto",
+    "params": {
+        "consulta": "todos"
+    }
+}

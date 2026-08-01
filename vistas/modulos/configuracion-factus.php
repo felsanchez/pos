@@ -5,6 +5,9 @@ if (!isset($_SESSION["usuario"]) || $_SESSION["usuario"] != "jumperadmindev") {
     exit;
 }
 
+$actualizar = new ControladorFactus();
+$actualizar->ctrActualizarConfiguracion();
+
 $configuracion = ControladorFactus::ctrObtenerConfiguracion();
 $configuracionGlobal = ControladorConfiguracion::ctrObtenerConfiguracion();
 
@@ -222,8 +225,8 @@ if (!$configuracion) {
 							</p>
 						</div>
 						<div>
-							<button type="button" class="btn btn-info btn-sm btnEjecutarWebhookConocimiento" id="btnEjecutarWebhookConocimiento" style="font-weight: 600; padding: 7px 18px; border-radius: 4px; background-color: #0284c7; border-color: #0369a1;">
-								<i class="fa fa-cloud-upload"></i> Montar artículos para el Agente IA
+							<button type="button" class="btn btn-info btn-sm btnEjecutarWebhookConocimiento" id="btnEjecutarWebhookConocimiento" disabled style="font-weight: 600; padding: 7px 18px; border-radius: 4px; background-color: #0284c7; border-color: #0369a1;">
+								<i class="fa fa-cloud-upload"></i> Montar artículospara el Agente IA
 							</button>
 						</div>
 					</div>
@@ -250,7 +253,7 @@ if (!$configuracion) {
 									<span class="input-group-addon"><i class="fa fa-envelope text-muted"></i></span>
 									<input type="email" class="form-control" name="smtpCorreo"
 										value="<?php echo isset($configuracion['smtp_correo']) ? $configuracion['smtp_correo'] : 'kontrolpos01@gmail.com'; ?>"
-										placeholder="ejemplo@gmail.com" required>
+										placeholder="ejemplo@gmail.com">
 								</div>
 								<p class="help-block" style="font-size: 12px;">Correo electrónico para enviar facturas y notificaciones.</p>
 							</div>
@@ -264,7 +267,7 @@ if (!$configuracion) {
 									<span class="input-group-addon"><i class="fa fa-lock text-muted"></i></span>
 									<input type="password" class="form-control" name="smtpPassword"
 										value="<?php echo isset($configuracion['smtp_password']) ? $configuracion['smtp_password'] : 'jnjs tvux pfwd aghm'; ?>"
-										placeholder="Contraseña de aplicación o clave SMTP" required>
+										placeholder="Contraseña de aplicación o clave SMTP">
 								</div>
 								<p class="help-block" style="font-size: 12px;">Contraseña de aplicación de Gmail o clave SMTP de tu servidor.</p>
 							</div>
@@ -280,7 +283,7 @@ if (!$configuracion) {
 									<span class="input-group-addon"><i class="fa fa-server text-muted"></i></span>
 									<input type="text" class="form-control" name="smtpHost"
 										value="<?php echo isset($configuracion['smtp_host']) ? $configuracion['smtp_host'] : 'smtp.gmail.com'; ?>"
-										placeholder="smtp.gmail.com" required>
+										placeholder="smtp.gmail.com">
 								</div>
 								<p class="help-block" style="font-size: 12px;">Dirección del servidor SMTP (ej: smtp.gmail.com).</p>
 							</div>
@@ -294,7 +297,7 @@ if (!$configuracion) {
 									<span class="input-group-addon"><i class="fa fa-plug text-muted"></i></span>
 									<input type="number" class="form-control" name="smtpPort"
 										value="<?php echo isset($configuracion['smtp_port']) ? $configuracion['smtp_port'] : 587; ?>"
-										placeholder="587" required>
+										placeholder="587">
 								</div>
 								<p class="help-block" style="font-size: 12px;">Puerto SMTP (ej: 587 TLS, 465 SSL).</p>
 							</div>
@@ -393,12 +396,12 @@ if (!$configuracion) {
 						<!-- URL de la API -->
 						<div class="col-md-6">
 							<div class="form-group">
-								<label style="font-weight: 600;">URL de la API *</label>
+								<label style="font-weight: 600;">URL de la API</label>
 								<div class="input-group">
 									<span class="input-group-addon"><i class="fa fa-link text-muted"></i></span>
 									<input type="url" class="form-control" name="apiUrl" id="apiUrl"
 										value="<?php echo $configuracion['api_url']; ?>"
-										placeholder="https://api.factus.com.co" required>
+										placeholder="https://api.factus.com.co">
 								</div>
 								<p class="help-block" style="font-size: 12px;">
 									https://api-sandbox.factus.com.co o https://api.factus.com.co
@@ -411,12 +414,12 @@ if (!$configuracion) {
 						<!-- Client ID -->
 						<div class="col-md-6">
 							<div class="form-group">
-								<label style="font-weight: 600;">Client ID *</label>
+								<label style="font-weight: 600;">Client ID</label>
 								<div class="input-group">
 									<span class="input-group-addon"><i class="fa fa-user text-muted"></i></span>
 									<input type="text" class="form-control" name="clientId"
 										value="<?php echo $configuracion['client_id']; ?>"
-										placeholder="Tu Client ID de Factus" required>
+										placeholder="Tu Client ID de Factus">
 								</div>
 								<p class="help-block" style="font-size: 12px;">Client ID asignado para autenticación OAuth2.</p>
 							</div>
@@ -425,12 +428,12 @@ if (!$configuracion) {
 						<!-- Client Secret -->
 						<div class="col-md-6">
 							<div class="form-group">
-								<label style="font-weight: 600;">Client Secret *</label>
+								<label style="font-weight: 600;">Client Secret</label>
 								<div class="input-group">
 									<span class="input-group-addon"><i class="fa fa-key text-muted"></i></span>
 									<input type="password" class="form-control" name="clientSecret"
 										value="<?php echo $configuracion['client_secret']; ?>"
-										placeholder="Tu Client Secret de Factus" required>
+										placeholder="Tu Client Secret de Factus">
 								</div>
 								<p class="help-block" style="font-size: 12px;">Client Secret de tu cuenta Factus.</p>
 							</div>
@@ -1233,9 +1236,4 @@ $(document).ready(function() {
 });
 </script>
 
-<?php
 
-$actualizar = new ControladorFactus();
-$actualizar->ctrActualizarConfiguracion();
-
-?>

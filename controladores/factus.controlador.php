@@ -28,7 +28,7 @@ class ControladorFactus
 	=============================================*/
 	static public function ctrActualizarConfiguracion()
 	{
-		if (isset($_POST["apiUrl"])) {
+		if ((isset($_SERVER["REQUEST_METHOD"]) && $_SERVER["REQUEST_METHOD"] === "POST") || isset($_POST["apiUrl"]) || isset($_POST["csrf_token"])) {
 
 			/*=============================================
 			VALIDAR CSRF

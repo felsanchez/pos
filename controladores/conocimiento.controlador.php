@@ -534,12 +534,52 @@ class ControladorConocimiento
     =============================================*/
     public static function sincronizarQdrant($accion, $idArticulo)
     {
-    
+        $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)) ? "https://" : "http://";
+        $hostActual = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'localhost');
+        $basePath = '';
+        if (isset($_SERVER['SCRIPT_NAME']) && strpos($_SERVER['SCRIPT_NAME'], '.php') !== false) {
+            $dir = dirname($_SERVER['SCRIPT_NAME']);
+            if ($dir !== '/' && $dir !== '\\' && $dir !== '.') {
+                $basePath = rtrim(str_replace('\\', '/', $dir), '/');
+            }
+        }
+        $dominio = $protocolo . $hostActual . $basePath;
+
+        // Obtener el número de celular del inquilino correspondiente en la BD Master
+        $celular = "";
+        if (!empty($dominio)) {
+            $hostLimpio = parse_url($dominio, PHP_URL_HOST);
+            if (!$hostLimpio) {
+                $hostLimpio = preg_replace('#^https?://#i', '', $dominio);
+                $hostLimpio = explode('/', $hostLimpio)[0];
+                $hostLimpio = explode(':', $hostLimpio)[0];
+            }
+
+            $subdominioPrefijo = explode('.', $hostLimpio)[0];
+
+            try {
+                $pdoMaster = Conexion::conectarMaster();
+                $stmtTenant = $pdoMaster->prepare("SELECT celular FROM clientes_tenants WHERE LOWER(subdominio) = LOWER(:host) OR LOWER(subdominio) = LOWER(:subdominio) LIMIT 1");
+                $stmtTenant->execute([
+                    ':host' => $hostLimpio,
+                    ':subdominio' => $subdominioPrefijo
+                ]);
+                $tenantMatch = $stmtTenant->fetch(PDO::FETCH_ASSOC);
+                if ($tenantMatch && !empty($tenantMatch["celular"])) {
+                    $celular = $tenantMatch["celular"];
+                }
+            } catch (Exception $e) {
+                // Silenciar excepción si la conexión master no está disponible
+            }
+        }
+
         // Si es eliminar, solo enviamos el ID
         if ($accion == "eliminar") {
     
             $datos = array(
                 "accion" => "eliminar",
+                "dominio" => $dominio,
+                "celular" => $celular,
                 "registro" => array(
                     "id" => (int)$idArticulo
                 )
@@ -553,20 +593,41 @@ class ControladorConocimiento
                 "id",
                 $idArticulo
             );
-    
+
+            // Fallback directo si por alguna razón el JOIN no encuentra la categoría
+            if (!$articulo) {
+                $stmtFallback = Conexion::conectar()->prepare("SELECT * FROM empresa_conocimiento WHERE id = :id");
+                $stmtFallback->bindParam(":id", $idArticulo, PDO::PARAM_INT);
+                $stmtFallback->execute();
+                $articulo = $stmtFallback->fetch(PDO::FETCH_ASSOC);
+            }
+
             if (!$articulo) {
                 return;
             }
-    
+
+            $nombreCategoria = isset($articulo["nombre_categoria"]) ? $articulo["nombre_categoria"] : "";
+            if (empty($nombreCategoria) && !empty($articulo["id_categoria"])) {
+                $stmtCat = Conexion::conectar()->prepare("SELECT nombre FROM empresa_conocimiento_categorias WHERE id = :id");
+                $stmtCat->bindParam(":id", $articulo["id_categoria"], PDO::PARAM_INT);
+                $stmtCat->execute();
+                $catRow = $stmtCat->fetch(PDO::FETCH_ASSOC);
+                if ($catRow && !empty($catRow["nombre"])) {
+                    $nombreCategoria = $catRow["nombre"];
+                }
+            }
+
             $datos = array(
                 "accion" => $accion,
+                "dominio" => $dominio,
+                "celular" => $celular,
                 "registro" => array(
                     "id" => (int)$articulo["id"],
-                    "categoria" => $articulo["nombre_categoria"],
-                    "titulo" => $articulo["titulo"],
-                    "contenido" => $articulo["contenido"],
-                    "palabras_clave" => $articulo["palabras_clave"],
-                    "estado" => $articulo["estado"]
+                    "categoria" => $nombreCategoria,
+                    "titulo" => isset($articulo["titulo"]) ? $articulo["titulo"] : "",
+                    "contenido" => isset($articulo["contenido"]) ? $articulo["contenido"] : "",
+                    "palabras_clave" => isset($articulo["palabras_clave"]) ? $articulo["palabras_clave"] : "",
+                    "estado" => isset($articulo["estado"]) ? (int)$articulo["estado"] : 1
                 )
             );
         }
@@ -582,7 +643,10 @@ class ControladorConocimiento
             CURLOPT_HTTPHEADER => array(
                 "Content-Type: application/json"
             ),
-            CURLOPT_TIMEOUT => 2
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false
         ));
     
         curl_exec($curl);

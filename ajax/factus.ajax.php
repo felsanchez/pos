@@ -582,15 +582,57 @@ class AjaxFactus
 		if (ob_get_length()) ob_clean();
 		header('Content-Type: application/json');
 
-		$url = "https://master-n8n.la6x8e.easypanel.host/webhook/base-de-conocimiento";
+		// 1. Obtener la URL/dominio actual
+		$protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)) ? "https://" : "http://";
+		$hostActual = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'localhost');
+		$basePath = '';
+		if (isset($_SERVER['SCRIPT_NAME']) && strpos($_SERVER['SCRIPT_NAME'], '.php') !== false) {
+			$dir = dirname($_SERVER['SCRIPT_NAME']);
+			if ($dir !== '/' && $dir !== '\\' && $dir !== '.') {
+				$basePath = rtrim(str_replace('\\', '/', $dir), '/');
+			}
+		}
+		$dominio = $protocolo . $hostActual . $basePath;
+
+		// 2. Obtener el número de celular del inquilino coincidente en la BD Master
+		$celular = "";
+		if (!empty($dominio)) {
+			$hostLimpio = parse_url($dominio, PHP_URL_HOST);
+			if (!$hostLimpio) {
+				$hostLimpio = preg_replace('#^https?://#i', '', $dominio);
+				$hostLimpio = explode('/', $hostLimpio)[0];
+				$hostLimpio = explode(':', $hostLimpio)[0];
+			}
+
+			$subdominioPrefijo = explode('.', $hostLimpio)[0];
+
+			try {
+				$pdoMaster = Conexion::conectarMaster();
+				$stmtTenant = $pdoMaster->prepare("SELECT celular FROM clientes_tenants WHERE LOWER(subdominio) = LOWER(:host) OR LOWER(subdominio) = LOWER(:subdominio) LIMIT 1");
+				$stmtTenant->execute([
+					':host' => $hostLimpio,
+					':subdominio' => $subdominioPrefijo
+				]);
+				$tenantMatch = $stmtTenant->fetch(PDO::FETCH_ASSOC);
+				if ($tenantMatch && !empty($tenantMatch["celular"])) {
+					$celular = $tenantMatch["celular"];
+				}
+			} catch (Exception $e) {
+				// Silenciar si la conexión master no está disponible
+			}
+		}
+
+		$baseUrl = "https://master-n8n.la6x8e.easypanel.host/webhook/base-de-conocimiento";
+		$urlWithParams = $baseUrl . "?dominio=" . urlencode($dominio) . "&celular=" . urlencode($celular);
 
 		// Petición GET requerida por el webhook n8n
 		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_URL, $urlWithParams);
 		curl_setopt($ch, CURLOPT_HTTPGET, true);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
 		$response = curl_exec($ch);
 		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -600,16 +642,19 @@ class AjaxFactus
 		// Fallback POST si n8n responde 404 en GET
 		if ($httpCode == 404) {
 			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_URL, $baseUrl);
 			curl_setopt($ch, CURLOPT_POST, 1);
 			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array(
 				"evento" => "sincronizar_base_conocimiento",
+				"dominio" => $dominio,
+				"celular" => $celular,
 				"timestamp" => date("Y-m-d H:i:s")
-			)));
+			), JSON_UNESCAPED_UNICODE));
 			curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
 			$response = curl_exec($ch);
 			$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);

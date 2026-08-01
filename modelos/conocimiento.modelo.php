@@ -97,7 +97,7 @@ class ModeloConocimiento
 			$stmt = Conexion::conectar()->prepare("
 				SELECT a.*, c.nombre as nombre_categoria 
 				FROM $tabla a
-				INNER JOIN empresa_conocimiento_categorias c ON a.id_categoria = c.id
+				LEFT JOIN empresa_conocimiento_categorias c ON a.id_categoria = c.id
 				WHERE a.$item = :$item
 				ORDER BY a.id DESC
 			");
@@ -108,7 +108,7 @@ class ModeloConocimiento
 			$stmt = Conexion::conectar()->prepare("
 				SELECT a.*, c.nombre as nombre_categoria 
 				FROM $tabla a
-				INNER JOIN empresa_conocimiento_categorias c ON a.id_categoria = c.id
+				LEFT JOIN empresa_conocimiento_categorias c ON a.id_categoria = c.id
 				ORDER BY a.id DESC
 			");
 			$stmt->execute();
@@ -125,7 +125,7 @@ class ModeloConocimiento
 		$stmt = Conexion::conectar()->prepare("
 			SELECT a.*, c.nombre as nombre_categoria 
 			FROM $tabla a
-			INNER JOIN empresa_conocimiento_categorias c ON a.id_categoria = c.id 
+			LEFT JOIN empresa_conocimiento_categorias c ON a.id_categoria = c.id 
 			$where 
 			$order 
 			$limit
@@ -142,7 +142,7 @@ class ModeloConocimiento
 		$stmt = Conexion::conectar()->prepare("
 			SELECT COUNT(*) 
 			FROM $tabla a
-			INNER JOIN empresa_conocimiento_categorias c ON a.id_categoria = c.id
+			LEFT JOIN empresa_conocimiento_categorias c ON a.id_categoria = c.id
 			$where
 		");
 		$stmt->execute();
@@ -150,7 +150,7 @@ class ModeloConocimiento
 	}
 
 	/*=============================================
-	INGRESAR ARTICULO
+	CREAR ARTICULO
 	=============================================*/
 	static public function mdlIngresarArticulo($tabla, $datos)
 	{
@@ -166,19 +166,25 @@ class ModeloConocimiento
 		$stmt->bindParam(":palabras_clave", $datos["palabras_clave"], PDO::PARAM_STR);
 
 		if ($stmt->execute()) {
+			$lastId = $pdo->lastInsertId();
+			if (!$lastId || intval($lastId) === 0) {
+				$stmtMax = $pdo->prepare("SELECT MAX(id) FROM $tabla");
+				$stmtMax->execute();
+				$lastId = $stmtMax->fetchColumn();
+			}
 
-		return array(
-			"ok" => true,
-			"id" => $pdo->lastInsertId()
-		);
+			return array(
+				"ok" => true,
+				"id" => (int)$lastId
+			);
 
-	} else {
+		} else {
 
-		return array(
-			"ok" => false
-		);
+			return array(
+				"ok" => false
+			);
 
-	}
+		}
 		$stmt = null;
 	}
 
