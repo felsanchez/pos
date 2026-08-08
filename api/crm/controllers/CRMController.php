@@ -40,6 +40,8 @@ class CRMController
         $leadData = [
 
             "id_cliente" => $cliente["id"],
+            
+            "telefono" => $datos["telefono"] ?? "",
 
             "etapa" => $datos["etapa"] ?? "Contactado",
 

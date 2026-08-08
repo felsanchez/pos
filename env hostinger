@@ -1,0 +1,23 @@
+# Configuración de Base de Datos
+
+# IMPORTANTE: No subir este archivo a Git
+
+DB_HOST=127.0.0.1
+
+DB_NAME=u933614678_master
+
+DB_USER=u933614678_root_master
+
+DB_PASS=h1$n1ECTJ^
+
+ 
+
+# Configuración de la Aplicación
+APP_ENV=development
+APP_DEBUG=true
+ 
+
+# Zona Horaria
+# Opciones comunes: America/Guatemala, America/El_Salvador, America/Mexico_City, America/Bogota
+
+APP_TIMEZONE=America/Bogota

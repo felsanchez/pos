@@ -1,6 +1,7 @@
 {
-    "tool": "buscar_producto",
+    "tool": "procesar_cliente",
+    "owner_phone": "+573017508241",
     "params": {
-        "consulta": "todos"
+        "telefono": "+573013142899"
     }
 }

@@ -11,45 +11,42 @@ class Database
 
     public static function setOwnerPhone($phone)
     {
-        self::$ownerPhone = preg_replace('/\D/', '', $phone);
+        self::$ownerPhone = preg_replace('/\D/', '', trim($phone));
     }
 
-   public static function conectar()
+    public static function conectar()
     {
         if (self::$conexion === null) {
-    
+
             // ==========================================================
-            // Datos por defecto (Base de datos por defecto)
+            // Datos por defecto (Base de datos principal)
             // ==========================================================
             $host   = DB_HOST;
             $user   = DB_USER;
             $pass   = DB_PASS;
             $dbname = DB_NAME;
-    
+
             // ==========================================================
-            // Si se recibió owner_phone, buscar el tenant
+            // Buscar el tenant según el owner_phone
             // ==========================================================
             if (!empty(self::$ownerPhone)) {
-    
-                // Conexión temporal a la Base Master
+
                 $master = new mysqli(
                     MASTER_DB_HOST,
                     MASTER_DB_USER,
                     MASTER_DB_PASS,
                     MASTER_DB_NAME
                 );
-    
+
                 if ($master->connect_error) {
-    
                     errorResponse(
                         'Error conectando a la Base Master: ' . $master->connect_error,
                         500
                     );
-    
                 }
-    
+
                 $master->set_charset(DB_CHARSET);
-    
+
                 $sql = "
                     SELECT
                         id,
@@ -63,64 +60,61 @@ class Database
                     WHERE celular = ?
                     LIMIT 1
                 ";
-    
+
                 $stmt = $master->prepare($sql);
-    
+
                 if (!$stmt) {
-    
+
                     $master->close();
-    
+
                     errorResponse(
                         'Error preparando la consulta del tenant.',
                         500
                     );
-    
                 }
-    
+
                 $stmt->bind_param("s", self::$ownerPhone);
-    
+
                 $stmt->execute();
-    
+
                 $resultado = $stmt->get_result();
-    
-                if (!$tenant = $resultado->fetch_assoc()) {
-    
+
+                $tenant = $resultado->fetch_assoc();
+
+                if (!$tenant) {
+
                     $stmt->close();
                     $master->close();
-    
+
                     errorResponse(
                         "No existe ningún tenant asociado al número: " . self::$ownerPhone,
                         404
                     );
-    
                 }
-    
-                // Validar estado del tenant
+
                 if (strtolower(trim($tenant["estado"])) !== "activo") {
-    
+
                     $stmt->close();
                     $master->close();
-    
+
                     errorResponse(
                         "La cuenta del cliente está suspendida.",
                         403
                     );
-    
                 }
-    
-                // Reemplazar los datos de conexión con los del tenant
+
+                // Usar la base de datos del tenant
                 $host   = $tenant["db_host"];
                 $user   = $tenant["db_user"];
                 $pass   = $tenant["db_pass"];
                 $dbname = $tenant["db_name"];
-    
+                
                 $stmt->close();
                 $master->close();
-    
             }
-    
+
             // ==========================================================
-            // Conexión final (Cliente o Base por defecto)
+            // Conexión final
             // ==========================================================
             self::$conexion = new mysqli(
                 $host,
@@ -128,21 +122,17 @@ class Database
                 $pass,
                 $dbname
             );
-    
+
             if (self::$conexion->connect_error) {
-    
                 errorResponse(
                     'Error de conexión: ' . self::$conexion->connect_error,
                     500
                 );
-    
             }
-    
+
             self::$conexion->set_charset(DB_CHARSET);
-    
         }
-    
+
         return self::$conexion;
     }
-
 }

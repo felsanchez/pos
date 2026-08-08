@@ -19,7 +19,6 @@ if ($apiKey !== CRM_API_KEY) {
     ]);
 
     exit;
-
 }
 
 try {
@@ -31,6 +30,13 @@ try {
 
     if (!is_array($datos)) {
         throw new Exception("JSON inválido.");
+    }
+
+    // Guardar el teléfono del propietario para seleccionar el tenant
+   if (!empty($datos["owner_phone"])) {
+
+        Database::setOwnerPhone($datos["owner_phone"]);
+    
     }
 
     // Procesar CRM
@@ -46,10 +52,7 @@ try {
     http_response_code(400);
 
     echo json_encode([
-
         "success" => false,
         "error" => $e->getMessage()
-
     ]);
-
 }

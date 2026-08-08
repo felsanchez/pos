@@ -480,3 +480,46 @@ MODAL EDITAR CLIENTE
   </div>
 </div>
 
+
+<!--=====================================
+MODAL ENVIAR EMAIL
+======================================-->
+
+<div id="modalEnviarEmail" class="modal-custom">
+  <div class="modal-custom-backdrop" data-dismiss="modal"></div>
+  <div class="modal-custom-container" style="max-width: 500px;">
+    <form role="form" method="post" id="formEnviarEmail" style="display: flex; flex-direction: column; height: 100%;">
+      <div class="modal-custom-header">
+        <h4 class="modal-title">Enviar Venta por Correo</h4>
+        <button type="button" class="close" data-dismiss="modal"
+          style="color: white; opacity: 0.8; margin-top: -2px;">&times;</button>
+      </div>
+      <div class="modal-custom-body" style="text-align: left;">
+        <div class="box-body">
+          <div class="form-group">
+            <label>Cliente</label>
+            <div class="input-group">
+              <span class="input-group-addon"><i class="fa fa-user"></i></span>
+              <input type="text" class="form-control input-lg" id="emailNombreCliente" readonly>
+              <input type="hidden" id="emailIdVenta">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Correo Electrónico</label>
+            <div class="input-group">
+              <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+              <input type="email" class="form-control input-lg" id="emailDestino" placeholder="Ingresar correo"
+                required>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-custom-footer">
+        <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
+        <button type="submit" class="btn btn-primary">Enviar PDF</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+

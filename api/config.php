@@ -21,8 +21,8 @@ define('API_KEY', 'mi_api_key_secreta_2024');
 
 define('MASTER_DB_HOST', 'localhost');
 define('MASTER_DB_NAME', 'u933614678_master');
-define('MASTER_DB_USER', 'u933614678_root_gestion');
-define('MASTER_DB_PASS', 'Ur6lnD~*U2l&');
+define('MASTER_DB_USER', 'u933614678_root_master');
+define('MASTER_DB_PASS', 'h1$n1ECTJ^');
 
 // ============================================================
 // Base de Datos por defecto

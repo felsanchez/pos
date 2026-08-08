@@ -486,7 +486,7 @@ $crmController->ctrEliminarEtapa();
           <!-- Toggle Archivados -->
           <div class="checkbox" style="margin: 0px;">
             <label style="font-weight: 600;">
-              <input type="checkbox" id="toggleArchivadosCRM"> Mostrar Historial/Archivados
+              <input type="checkbox" id="toggleArchivadosCRM"> Mostrar Archivados: Facturado / Perdido
             </label>
           </div>
 

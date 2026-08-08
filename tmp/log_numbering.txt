@@ -1775,3 +1775,7 @@
 2026-07-26 20:36:20 | RangoId: 1190 | Prefijo: SETP | Local: 990000446 | NextLocal: 990000447 | ApiLive: 990000446 | Desde: 990000000 | Siguiente: 990000447
 2026-07-26 20:36:24 | RangoId: 1190 | Prefijo: SETP | Local: 990000446 | NextLocal: 990000447 | ApiLive: 990000446 | Desde: 990000000 | Siguiente: 990000447
 2026-07-26 20:43:28 | RangoId: 1190 | Prefijo: SETP | Local: 990000447 | NextLocal: 990000448 | ApiLive: 990000448 | Desde: 990000000 | Siguiente: 990000448
+2026-08-03 03:43:47 | RangoId: 1040 | Prefijo: FEFG | Local: 0 | NextLocal: 1 | ApiLive: 80 | Desde: 1 | Siguiente: 80
+2026-08-03 03:46:42 | RangoId: 1040 | Prefijo: FEFG | Local: 0 | NextLocal: 1 | ApiLive: 80 | Desde: 1 | Siguiente: 80
+2026-08-03 03:54:32 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000447 | Desde: 990000000 | Siguiente: 990000447
+2026-08-03 03:56:14 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000449 | Desde: 990000000 | Siguiente: 990000449

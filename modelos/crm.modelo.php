@@ -79,6 +79,17 @@ class ModeloCRM {
 	=============================================*/
 	static public function mdlEditarLead($tabla, $datos) {
 
+		// Preservar metadatos de WhatsApp / IA si no vienen especificados en $datos
+		$stmtPrev = Conexion::conectar()->prepare("SELECT origen, resumen_ia, productos_interes, fecha_ultima_interaccion FROM $tabla WHERE id = :id");
+		$stmtPrev->bindParam(":id", $datos["id"], PDO::PARAM_INT);
+		$stmtPrev->execute();
+		$prev = $stmtPrev->fetch(PDO::FETCH_ASSOC);
+
+		$origen = (!empty($datos["origen"])) ? $datos["origen"] : ($prev["origen"] ?? null);
+		$resumen_ia = (!empty($datos["resumen_ia"])) ? $datos["resumen_ia"] : ($prev["resumen_ia"] ?? null);
+		$productos_interes = (!empty($datos["productos_interes"])) ? $datos["productos_interes"] : ($prev["productos_interes"] ?? null);
+		$fecha_ultima_interaccion = (!empty($datos["fecha_ultima_interaccion"])) ? $datos["fecha_ultima_interaccion"] : ($prev["fecha_ultima_interaccion"] ?? null);
+
 		$stmt = Conexion::conectar()->prepare("
 			UPDATE $tabla 
 			SET id_cliente = :id_cliente, 
@@ -104,10 +115,10 @@ class ModeloCRM {
 		$stmt->bindParam(":id_vendedor", $datos["id_vendedor"], PDO::PARAM_INT);
 		$stmt->bindParam(":fecha_cierre", $datos["fecha_cierre"], PDO::PARAM_STR);
 		$stmt->bindParam(":notes", $datos["notas"], PDO::PARAM_STR);
-		$stmt->bindParam(":origen", $datos["origen"], PDO::PARAM_STR);
-		$stmt->bindParam(":resumen_ia", $datos["resumen_ia"], PDO::PARAM_STR);
-		$stmt->bindParam(":productos_interes", $datos["productos_interes"], PDO::PARAM_STR);
-		$stmt->bindParam(":fecha_ultima_interaccion", $datos["fecha_ultima_interaccion"], PDO::PARAM_STR);
+		$stmt->bindParam(":origen", $origen, PDO::PARAM_STR);
+		$stmt->bindParam(":resumen_ia", $resumen_ia, PDO::PARAM_STR);
+		$stmt->bindParam(":productos_interes", $productos_interes, PDO::PARAM_STR);
+		$stmt->bindParam(":fecha_ultima_interaccion", $fecha_ultima_interaccion, PDO::PARAM_STR);
 		$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
 
 		if($stmt->execute()) {

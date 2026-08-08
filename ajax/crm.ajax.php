@@ -156,12 +156,16 @@ if (isset($_POST["guardarEditarLead"])) {
 			"id" => $_POST["editarLeadId"],
 			"titulo" => $_POST["editarLeadTitulo"],
 			"id_cliente" => $_POST["editarLeadCliente"],
-			"valor" => floatval($_POST["editarLeadValor"]),
+			"valor_estimado" => floatval($_POST["editarLeadValor"]),
 			"prioridad" => $_POST["editarLeadPrioridad"],
 			"etapa" => $_POST["editarLeadEtapa"],
 			"id_vendedor" => $_POST["editarLeadVendedor"],
-			"fecha_cierre_estimado" => $_POST["editarLeadFechaCierre"],
-			"notas" => $_POST["editarLeadNotas"]
+			"fecha_cierre" => !empty($_POST["editarLeadFechaCierre"]) ? $_POST["editarLeadFechaCierre"] : null,
+			"notas" => $_POST["editarLeadNotas"],
+			"origen" => isset($_POST["editarLeadOrigen"]) && $_POST["editarLeadOrigen"] !== "" ? $_POST["editarLeadOrigen"] : null,
+			"resumen_ia" => isset($_POST["editarLeadResumenIA"]) ? $_POST["editarLeadResumenIA"] : null,
+			"productos_interes" => isset($_POST["editarLeadProductosInteres"]) ? $_POST["editarLeadProductosInteres"] : null,
+			"fecha_ultima_interaccion" => !empty($_POST["editarLeadFechaUltimaInteraccion"]) ? $_POST["editarLeadFechaUltimaInteraccion"] : null
 		);
 
 		$db = Conexion::conectar();

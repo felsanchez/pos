@@ -188,11 +188,19 @@ class ControladorVentas
 			} else {
 				$botonesAcciones .= '<button class="btn btn-warning" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para ver detalle"><i class="fa fa-eye"></i></button>';
 			}
+
+			// Enviar por Correo
+			if (puedeAccion('ventas', 'ver') || puedeAccion('ventas', 'crear')) {
+				$botonesAcciones .= ' <button class="btn btn-primary btnEnviarEmail" idVenta="' . $value["id"] . '" nombreCliente="' . e($value["nombre_cliente"]) . '" emailCliente="' . e($value["email_cliente"]) . '" title="Enviar por Correo" style="width: auto !important;"><i class="fa fa-envelope"></i></button>';
+			} else {
+				$botonesAcciones .= ' <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed; width: auto !important;" title="No tiene permisos para enviar por correo"><i class="fa fa-envelope"></i></button>';
+			}
+
 			if (!isset($value["estado"]) || $value["estado"] != "anulada") {
 				if (puedeAccion('ventas', 'eliminar')) {
-					$botonesAcciones .= '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Anular venta"><i class="fa fa-ban"></i></button>';
+					$botonesAcciones .= ' <button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Anular venta"><i class="fa fa-ban"></i></button>';
 				} else {
-					$botonesAcciones .= '<button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para eliminar"><i class="fa fa-ban"></i></button>';
+					$botonesAcciones .= ' <button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para eliminar"><i class="fa fa-ban"></i></button>';
 				}
 			}
 			$botonesAcciones .= '</div>';

@@ -89,7 +89,9 @@ class ClienteCRMModel
                 documento,
                 estatus,
                 notas,
-                compras
+                compras,
+                eliminado
+                
             FROM clientes
             WHERE
                 REPLACE(
@@ -122,6 +124,54 @@ class ClienteCRMModel
     
     }
     
+    
+    /**
+     * Busca un cliente por su ID.
+     *
+     * Retorna:
+     * - Array con los datos del cliente.
+     * - null si no existe.
+     */
+    private static function buscarClientePorId($idCliente)
+    {
+    
+        $db = Database::conectar();
+    
+        $sql = "
+            SELECT
+                id,
+                nombre,
+                direccion,
+                telefono,
+                documento,
+                estatus,
+                notas,
+                compras
+            FROM clientes
+            WHERE id = ?
+            LIMIT 1
+        ";
+    
+        $stmt = $db->prepare($sql);
+    
+        if (!$stmt) {
+            throw new Exception("Error preparando la consulta.");
+        }
+    
+        $stmt->bind_param("i", $idCliente);
+    
+        $stmt->execute();
+    
+        $resultado = $stmt->get_result();
+    
+        if ($resultado->num_rows === 0) {
+            return null;
+        }
+    
+        return $resultado->fetch_assoc();
+    
+    }
+        
     
     /**
      * Crea un nuevo cliente.
@@ -186,8 +236,51 @@ class ClienteCRMModel
         if (!$stmt->execute()) {
             throw new Exception("No fue posible crear el cliente.");
         }
+        
+        $idCliente = $db->insert_id;
+        
+        // Retornar toda la información del cliente recién creado
+        return [
+            "id" => $idCliente,
+            "nombre" => $nombre,
+            "direccion" => $direccion,
+            "telefono" => $telefonoFormateado,
+            "documento" => $documento,
+            "estatus" => $estatus,
+            "notas" => $notas,
+            "compras" => $compras
+        ];
     
-        return $db->insert_id;
+    }
+    
+    
+    /**
+     * Reactiva un cliente eliminado.
+     */
+    private static function reactivarCliente($idCliente)
+    {
+    
+        $db = Database::conectar();
+    
+        $sql = "
+            UPDATE clientes
+            SET eliminado = 0
+            WHERE id = ?
+        ";
+    
+        $stmt = $db->prepare($sql);
+    
+        if (!$stmt) {
+            throw new Exception("Error preparando la actualización.");
+        }
+    
+        $stmt->bind_param("i", $idCliente);
+    
+        if (!$stmt->execute()) {
+            throw new Exception("No fue posible reactivar el cliente.");
+        }
+    
+        return true;
     
     }
 
@@ -304,21 +397,40 @@ class ClienteCRMModel
     {
     
         $cliente = self::buscarCliente($telefono);
+        
+        // El cliente existe pero está eliminado
+        if ($cliente && (int)$cliente["eliminado"] === 1) {
+        
+            self::reactivarCliente($cliente["id"]);
+        
+            // Actualizar únicamente la información faltante
+            self::actualizarCliente(
+                $cliente["id"],
+                $nombre,
+                $direccion
+            );
+        
+            // Reflejar el nuevo estado en la respuesta
+            $cliente["eliminado"] = 0;
+            $cliente["nuevo"] = true;
+        
+            return $cliente;
+        
+        }
     
         // No existe
         if (!$cliente) {
-    
-            $idCliente = self::crearCliente(
+        
+            $cliente = self::crearCliente(
                 $telefono,
                 $nombre,
                 $direccion
             );
-    
-            return [
-                "id" => (int)$idCliente,
-                "nuevo" => true
-            ];
-    
+        
+            $cliente["nuevo"] = true;
+        
+            return $cliente;
+        
         }
     
         // Existe
@@ -328,10 +440,9 @@ class ClienteCRMModel
             $direccion
         );
     
-        return [
-            "id" => (int)$cliente["id"],
-            "nuevo" => false
-        ];
+       $cliente["nuevo"] = false;
+
+        return $cliente;
     
     }
 

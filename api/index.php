@@ -1,56 +1,63 @@
 <?php
 
 header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, X-API-Key');
 
-// API Key del CRM
-define('CRM_API_KEY', 'kontrolpos_2026');
-
-require_once __DIR__ . '/controllers/CRMController.php';
-
-$apiKey = $_SERVER["HTTP_X_API_KEY"] ?? "";
-
-if ($apiKey !== CRM_API_KEY) {
-
-    http_response_code(401);
-
-    echo json_encode([
-        "success" => false,
-        "error" => "API Key inválida."
-    ]);
-
-    exit;
+// Preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
 }
 
-try {
+require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/response.php';
+require_once __DIR__ . '/database.php';
 
-    // Leer el JSON enviado por n8n
-    $json = file_get_contents("php://input");
-
-    $datos = json_decode($json, true);
-
-    if (!is_array($datos)) {
-        throw new Exception("JSON inválido.");
-    }
-
-    // Guardar el teléfono del propietario para seleccionar el tenant
-    if (!empty($datos["owner_phone"])) {
-        Database::setOwnerPhone($datos["owner_phone"]);
-    }
-
-    // Procesar CRM
-    $respuesta = CRMController::procesar($datos);
-
-    echo json_encode(
-        $respuesta,
-        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-    );
-
-} catch (Exception $e) {
-
-    http_response_code(400);
-
-    echo json_encode([
-        "success" => false,
-        "error" => $e->getMessage()
-    ]);
+// Solo POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    errorResponse('Solo se permiten peticiones POST.', 405);
 }
+
+// Leer JSON
+$input = json_decode(file_get_contents('php://input'), true);
+
+if (!$input) {
+    errorResponse('JSON inválido.');
+}
+
+// Debug (opcional)
+file_put_contents(
+    __DIR__ . '/debug.json',
+    json_encode($input, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+);
+
+// Tool solicitada
+$tool = $input['tool'] ?? '';
+
+if ($tool === '') {
+    errorResponse('No se especificó la Tool.');
+}
+
+// ==========================================================
+// Seleccionar automáticamente el tenant
+// ==========================================================
+$ownerPhone = $input['owner_phone'] ?? '';
+
+if (!empty($ownerPhone)) {
+    Database::setOwnerPhone($ownerPhone);
+}
+
+// Parámetros
+$params = $input['params'] ?? [];
+
+// Ruta del archivo Tool
+$toolFile = __DIR__ . '/tools/' . $tool . '.php';
+
+if (!file_exists($toolFile)) {
+    errorResponse("La Tool '{$tool}' no existe.", 404);
+}
+
+// Ejecutar Tool
+require_once $toolFile;

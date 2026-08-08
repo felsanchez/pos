@@ -153,7 +153,16 @@ class LeadModel
             throw new Exception("Error preparando la creación del Lead.");
         }
     
+        $telefono = preg_replace('/\D/', '', $datos["telefono"] ?? "");
+
         $origen = "WhatsApp";
+        
+        if (!empty($telefono)) {
+        
+            $origen .= ": " . $telefono;
+        
+        }
+
         $fechaUltimaInteraccion = date("Y-m-d H:i:s");
         
         $stmt->bind_param(
@@ -233,7 +242,16 @@ class LeadModel
             throw new Exception("Error preparando la actualización del Lead.");
         }
     
+        $telefono = preg_replace('/\D/', '', $datos["telefono"] ?? "");
+
         $origen = "WhatsApp";
+        
+        if (!empty($telefono)) {
+        
+            $origen .= ": " . $telefono;
+        
+        }
+
         $fechaUltimaInteraccion = date("Y-m-d H:i:s");
         
         $stmt->bind_param(
