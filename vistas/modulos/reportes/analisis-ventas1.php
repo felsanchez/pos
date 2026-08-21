@@ -288,7 +288,7 @@ foreach ($varianteRows as $row) {
                     </div>
 
                     <!-- Botones de descarga -->
-                    <?php if (puedeAccion('reporte_ventas', 'imprimir')): ?>
+                    <?php if (puedeAccion('reporte_ventas', 'imprimir') || puedeAccion('inicio', 'ver')): ?>
                       <div class="filtro-grupo" style="display: flex; flex-direction: column; gap: 8px; align-items: stretch; margin-bottom: 12px;">
                         <a class="btn btn-success w-100" style="height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; margin: 0;" id="btn-descargar-excel-directo" href="#">
                           <i class="fa fa-file-excel-o" style="margin-right: 5px;"></i> Descargar Excel
@@ -532,5 +532,132 @@ foreach ($varianteRows as $row) {
       allowClear: true,
       language: { noResults: function () { return 'Sin resultados'; } }
     });
+  });
+</script>
+
+<style>
+  /* Toast notification para Análisis de Ventas */
+  .toast-notification {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: #00a65a;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 5px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideInRight 0.3s ease-out;
+    font-size: 15px;
+  }
+
+  .toast-notification.toast-hide {
+    animation: slideOutRight 0.3s ease-out;
+  }
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideOutRight {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  if (typeof window.mostrarToast !== 'function') {
+    window.mostrarToast = function (mensaje) {
+      const toast = document.createElement('div');
+      toast.className = 'toast-notification';
+      toast.innerHTML = '<i class="fa fa-check-circle" style="font-size: 20px;"></i> <span>' + mensaje + '</span>';
+      document.body.appendChild(toast);
+      setTimeout(function () {
+        toast.classList.add('toast-hide');
+        setTimeout(function () {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
+        }, 300);
+      }, 3000);
+    };
+  }
+
+  // ---- BOTON EXCEL DIRECTO CON FILTROS ----
+  $(document).off('click', '#btn-descargar-excel-directo').on('click', '#btn-descargar-excel-directo', function (e) {
+    e.preventDefault();
+
+    let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";
+    let url = `${rutaBase}/vistas/modulos/descargar-reporte.php?reporte=reporte`;
+
+    const tipo = document.getElementById('av-tipo') ? document.getElementById('av-tipo').value : 'todo';
+    const fechaInicio = document.getElementById('av-fecha-inicio') ? document.getElementById('av-fecha-inicio').value : '';
+    const fechaFin = document.getElementById('av-fecha-fin') ? document.getElementById('av-fecha-fin').value : '';
+    const idVendedor = document.getElementById('filtro-vendedor') ? document.getElementById('filtro-vendedor').value : '';
+    const idCliente = document.getElementById('filtro-cliente') ? document.getElementById('filtro-cliente').value : '';
+    const idProducto = document.getElementById('filtro-producto') ? document.getElementById('filtro-producto').value : '';
+    const metodoPago = document.getElementById('filtro-metodo-pago') ? document.getElementById('filtro-metodo-pago').value : '';
+
+    const sucursalMaestra = document.getElementById('sucursalReporteMaestro');
+    const idBodega = sucursalMaestra ? sucursalMaestra.value : '';
+
+    if (tipo) url += `&tipo=${tipo}`;
+    if (fechaInicio) url += `&fechaInicial=${fechaInicio}`;
+    if (fechaFin) url += `&fechaFinal=${fechaFin}`;
+    if (idVendedor) url += `&vendedor=${idVendedor}`;
+    if (idCliente) url += `&cliente=${idCliente}`;
+    if (idProducto) url += `&producto=${idProducto}`;
+    if (metodoPago) url += `&metodoPago=${metodoPago}`;
+    if (idBodega && idBodega !== 'todos') url += `&idBodega=${idBodega}`;
+
+    mostrarToast('¡Descarga iniciada! El archivo Excel se está descargando...');
+    window.location.href = url;
+  });
+
+  // ---- BOTON PDF DIRECTO CON FILTROS ----
+  $(document).off('click', '#btn-descargar-pdf-directo').on('click', '#btn-descargar-pdf-directo', function (e) {
+    e.preventDefault();
+
+    let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";
+    let url = `${rutaBase}/vistas/modulos/descargar-reporte-pdf.php?reporte=reporte`;
+
+    const tipo = document.getElementById('av-tipo') ? document.getElementById('av-tipo').value : 'todo';
+    const fechaInicio = document.getElementById('av-fecha-inicio') ? document.getElementById('av-fecha-inicio').value : '';
+    const fechaFin = document.getElementById('av-fecha-fin') ? document.getElementById('av-fecha-fin').value : '';
+    const idVendedor = document.getElementById('filtro-vendedor') ? document.getElementById('filtro-vendedor').value : '';
+    const idCliente = document.getElementById('filtro-cliente') ? document.getElementById('filtro-cliente').value : '';
+    const idProducto = document.getElementById('filtro-producto') ? document.getElementById('filtro-producto').value : '';
+    const metodoPago = document.getElementById('filtro-metodo-pago') ? document.getElementById('filtro-metodo-pago').value : '';
+
+    const sucursalMaestra = document.getElementById('sucursalReporteMaestro');
+    const idBodega = sucursalMaestra ? sucursalMaestra.value : '';
+
+    if (tipo) url += `&tipo=${tipo}`;
+    if (fechaInicio) url += `&fechaInicial=${fechaInicio}`;
+    if (fechaFin) url += `&fechaFinal=${fechaFin}`;
+    if (idVendedor) url += `&vendedor=${idVendedor}`;
+    if (idCliente) url += `&cliente=${idCliente}`;
+    if (idProducto) url += `&producto=${idProducto}`;
+    if (metodoPago) url += `&metodoPago=${metodoPago}`;
+    if (idBodega && idBodega !== 'todos') url += `&idBodega=${idBodega}`;
+
+    mostrarToast('¡Generación iniciada! El archivo PDF se está generando...');
+    window.open(url, '_blank');
   });
 </script>
