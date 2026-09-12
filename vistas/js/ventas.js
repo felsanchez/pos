@@ -1155,13 +1155,34 @@ FUNCION APLICAR DESCUENTO
 function aplicarDescuento() {
 
 	var tipoDescuento = $("#tipoDescuento").val();
-	var valorDescuento = Number($("#valorDescuento").val());
-	var precioTotal = $("#nuevoTotalVenta").attr("total"); // Total sin descuento
+	var valorDescuento = Number($("#valorDescuento").val()) || 0;
+	var precioTotal = Number($("#nuevoTotalVenta").attr("total")) || 0; // Total sin descuento
 	var montoDescuento = 0;
-	var totalConDescuento = Number(precioTotal);
+	var totalConDescuento = precioTotal;
+
+	// Evitar valores negativos
+	if (valorDescuento < 0) {
+		valorDescuento = 0;
+		$("#valorDescuento").val(0);
+	}
 
 	// Solo aplicar descuento si hay un tipo de descuento activo
 	if (tipoDescuento === "porcentaje") {
+		// Validar que el porcentaje no sobrepase 100
+		if (valorDescuento > 100) {
+			valorDescuento = 100;
+			$("#valorDescuento").val(100);
+			if (typeof swal === 'function') {
+				swal({
+					type: "warning",
+					title: "Descuento Máximo",
+					text: "El porcentaje de descuento no puede ser superior al 100%.",
+					timer: 2000,
+					showConfirmButton: false
+				});
+			}
+		}
+
 		// Calcular descuento por porcentaje
 		montoDescuento = Number(precioTotal * valorDescuento / 100);
 		totalConDescuento = Number(precioTotal) - montoDescuento;
@@ -1180,6 +1201,21 @@ function aplicarDescuento() {
 		calcularSubtotal();
 
 	} else if (tipoDescuento === "fijo") {
+		// Validar que el descuento fijo no sobrepase el total de la venta
+		if (valorDescuento > precioTotal && precioTotal > 0) {
+			valorDescuento = precioTotal;
+			$("#valorDescuento").val(precioTotal);
+			if (typeof swal === 'function') {
+				swal({
+					type: "warning",
+					title: "Descuento Máximo",
+					text: "El descuento por valor fijo no puede sobrepasar el total de la venta ($" + precioTotal.toLocaleString('es-CO') + ").",
+					timer: 2500,
+					showConfirmButton: false
+				});
+			}
+		}
+
 		// Aplicar descuento fijo
 		montoDescuento = valorDescuento;
 		totalConDescuento = Number(precioTotal) - montoDescuento;
@@ -1204,7 +1240,6 @@ function aplicarDescuento() {
 		calcularSubtotal();
 	} else {
 		// No hay descuento activo, solo asegurar que el total esté sincronizado
-		// El total ya fue calculado por sumarTotalPrecios()
 		$("#montoDescuento").val(0);
 
 		// Recalcular el subtotal sin descuento (igual a valor bruto)
@@ -1312,7 +1347,7 @@ $("#nuevoMetodoPago").change(function () {
 
 			'<div class="input-group">' +
 
-			'<input type="text" class="form-control" id="nuevoCodigoTransaccion" name="nuevoCodigoTransaccion" placeholder="Ingrese el valor o código de transacción">' +
+			'<input type="text" class="form-control" id="nuevoCodigoTransaccion" name="nuevoCodigoTransaccion" placeholder="Ingrese el valor o código (Opcional)">' +
 
 			'<span class="input-group-addon"><i class="fa fa-lock"></i></span>' +
 
@@ -2314,6 +2349,8 @@ ADMINISTRAR VENTAS - LISTADO SERVER-SIDE
 $(document).ready(function () {
 	if ($("#tablaListaVentas").length > 0) {
 
+		$.fn.dataTable.ext.errMode = 'none';
+
 		if ($.fn.DataTable.isDataTable('#tablaListaVentas')) {
 			$('#tablaListaVentas').DataTable().destroy();
 		}
@@ -2321,6 +2358,20 @@ $(document).ready(function () {
 		var table = $("#tablaListaVentas").DataTable({
 			"processing": true,
 			"serverSide": true,
+			"order": [[0, "desc"]],
+			"columns": [
+				{ "data": 0 },
+				{ "data": 1 },
+				{ "data": 2 },
+				{ "data": 3 },
+				{ "data": 4 },
+				{ "data": 5 },
+				{ "data": 6 },
+				{ "data": 7 }
+			],
+			"columnDefs": [
+				{ "defaultContent": "", "targets": "_all" }
+			],
 			"ajax": {
 				"url": "ajax/ventas-listado.ajax.php",
 				"type": "POST",
@@ -2334,8 +2385,16 @@ $(document).ready(function () {
 				}
 			},
 			"createdRow": function (row, data, dataIndex) {
+				var idVenta = null;
 				if (data.DT_RowAttr && data.DT_RowAttr['data-venta-id']) {
-					$(row).attr('data-venta-id', data.DT_RowAttr['data-venta-id']);
+					idVenta = data.DT_RowAttr['data-venta-id'];
+				} else if (data[7]) {
+					idVenta = $(data[7]).find('.btnDetalleVenta, .btnEnviarEmail, .btnEliminarVenta').first().attr('idVenta');
+				} else if (data[3]) {
+					idVenta = $(data[3]).attr('data-idventa');
+				}
+				if (idVenta) {
+					$(row).attr('data-venta-id', idVenta);
 				}
 			},
 			"initComplete": function (settings, json) {

@@ -17,15 +17,7 @@ $(document).ready(function () {
     /*=============================================
     VARIABLE LOCAL STORAGE PARA RANGOS
     =============================================*/
-    if (localStorage.getItem("capturarRangoReportes") != null) {
-        $("#daterange-btn-reportes span").html(localStorage.getItem("capturarRangoReportes"));
-
-        // Intentar recuperar las fechas del texto guardado si es posible, 
-        // pero es mejor inicializar con las fechas por defecto para evitar errores de parseo
-        // ya que el span es localizado.
-    } else {
-        $("#daterange-btn-reportes span").html('<i class="fa fa-calendar"></i> Rango de fecha');
-    }
+    $("#daterange-btn-reportes span").html('<i class="fa fa-calendar"></i> Rango de fecha');
 
     /*=============================================
     DATERANGE PICKER
@@ -65,9 +57,11 @@ $(document).ready(function () {
         if (categoria == "ds" || categoria == "na") {
             $("#divClienteReporte").hide();
             $("#divProveedorReporte").show();
+            $("#labelTerceroReporte").text("Proveedor:");
         } else {
             $("#divProveedorReporte").hide();
             $("#divClienteReporte").show();
+            $("#labelTerceroReporte").text("Cliente:");
         }
     });
 

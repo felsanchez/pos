@@ -1048,21 +1048,19 @@ function generarCombinaciones() {
 	// Generar HTML para cada combinación
 
 	var html = '<table class="table table-bordered table-condensed">';
-
 	html += '<thead>';
-
 	html += '<tr>';
-
-	html += '<th width="50px"><input type="checkbox" id="checkTodasCombinaciones"></th>';
-
-	html += '<th>Variante</th>';
-
-	html += '<th width="150px">Precio Adicional (+/-)</th>';
-
-	html += '<th width="100px">Stock</th>';
-
+	html += '<th width="50px" style="vertical-align: top;"><input type="checkbox" id="checkTodasCombinaciones"></th>';
+	html += '<th style="vertical-align: top;">Variante</th>';
+	html += '<th width="250px" style="vertical-align: top;">';
+	html += '  Precio Adicional (+/-)';
+	html += '  <small class="text-muted" style="display: block; font-weight: normal; font-size: 11px; margin-top: 3px; line-height: 1.3;">Indica cuánto deseas aumentar o disminuir el precio base del producto. Usa un valor positivo (+) para aumentar y uno negativo (-) para disminuir</small>';
+	html += '</th>';
+	html += '<th width="180px" style="vertical-align: top;">';
+	html += '  Stock';
+	html += '  <small class="text-muted" style="display: block; font-weight: normal; font-size: 11px; margin-top: 3px; line-height: 1.3;">Indica la cantidad total disponible de esta variante</small>';
+	html += '</th>';
 	html += '</tr>';
-
 	html += '</thead>';
 
 	html += '<tbody>';
@@ -2148,10 +2146,16 @@ function generarCombinacionesEditar() {
 	var html = '<table class="table table-bordered table-condensed">';
 	html += '<thead>';
 	html += '<tr>';
-	html += '<th width="50px"><input type="checkbox" id="checkTodasCombinacionesEditar"></th>';
-	html += '<th>Variante</th>';
-	html += '<th width="150px">Precio Adicional (+/-)</th>';
-	html += '<th width="100px">Stock</th>';
+	html += '<th width="50px" style="vertical-align: top;"><input type="checkbox" id="checkTodasCombinacionesEditar"></th>';
+	html += '<th style="vertical-align: top;">Variante</th>';
+	html += '<th width="250px" style="vertical-align: top;">';
+	html += '  Precio Adicional (+/-)';
+	html += '  <small class="text-muted" style="display: block; font-weight: normal; font-size: 11px; margin-top: 3px; line-height: 1.3;">Indica cuánto deseas aumentar o disminuir el precio base del producto. Usa un valor positivo (+) para aumentar y uno negativo (-) para disminuir</small>';
+	html += '</th>';
+	html += '<th width="180px" style="vertical-align: top;">';
+	html += '  Stock';
+	html += '  <small class="text-muted" style="display: block; font-weight: normal; font-size: 11px; margin-top: 3px; line-height: 1.3;">Indica la cantidad total disponible de esta variante</small>';
+	html += '</th>';
 	html += '</tr>';
 	html += '</thead>';
 	html += '<tbody>';

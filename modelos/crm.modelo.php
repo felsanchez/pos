@@ -9,14 +9,22 @@ class ModeloCRM {
 	=============================================*/
 	static public function mdlMostrarLeads($tabla, $item, $valor) {
 
+		$db = Conexion::conectar();
+		try {
+			$check1 = $db->query("SHOW COLUMNS FROM crm_leads LIKE 'estado'");
+			if ($check1->rowCount() == 0) {
+				$db->exec("ALTER TABLE crm_leads ADD COLUMN estado VARCHAR(20) NOT NULL DEFAULT 'activo'");
+			}
+		} catch (Exception $e) {}
+
 		if($item != null) {
 
-			$stmt = Conexion::conectar()->prepare("
+			$stmt = $db->prepare("
 				SELECT l.*, c.nombre as nombre_cliente, c.telefono as telefono_cliente, c.email as email_cliente, u.nombre as nombre_vendedor 
 				FROM $tabla l
 				INNER JOIN clientes c ON l.id_cliente = c.id
 				LEFT JOIN usuarios u ON l.id_vendedor = u.id
-				WHERE l.$item = :$item
+				WHERE l.$item = :$item AND (l.estado IS NULL OR l.estado != 'eliminado')
 				ORDER BY l.orden ASC, l.fecha_creacion DESC
 			");
 
@@ -26,11 +34,12 @@ class ModeloCRM {
 
 		} else {
 
-			$stmt = Conexion::conectar()->prepare("
+			$stmt = $db->prepare("
 				SELECT l.*, c.nombre as nombre_cliente, c.telefono as telefono_cliente, c.email as email_cliente, u.nombre as nombre_vendedor 
 				FROM $tabla l
 				INNER JOIN clientes c ON l.id_cliente = c.id
 				LEFT JOIN usuarios u ON l.id_vendedor = u.id
+				WHERE (l.estado IS NULL OR l.estado != 'eliminado')
 				ORDER BY l.orden ASC, l.fecha_creacion DESC
 			");
 
@@ -40,6 +49,60 @@ class ModeloCRM {
 		}
 
 		$stmt = null;
+
+	}
+
+	/*=============================================
+	MOSTRAR LEADS DE WHATSAPP
+	=============================================*/
+	static public function mdlMostrarLeadsWhatsApp() {
+
+		$db = Conexion::conectar();
+		try {
+			$check1 = $db->query("SHOW COLUMNS FROM crm_leads LIKE 'estado'");
+			if ($check1->rowCount() == 0) {
+				$db->exec("ALTER TABLE crm_leads ADD COLUMN estado VARCHAR(20) NOT NULL DEFAULT 'activo'");
+			}
+			$check2 = $db->query("SHOW COLUMNS FROM crm_leads LIKE 'oculto_tabla_whatsapp'");
+			if ($check2->rowCount() == 0) {
+				$db->exec("ALTER TABLE crm_leads ADD COLUMN oculto_tabla_whatsapp INT(1) NOT NULL DEFAULT 0");
+			}
+		} catch (Exception $e) {}
+
+		$stmt = $db->prepare("
+			SELECT l.*, c.nombre as nombre_cliente, c.telefono as telefono_cliente, c.email as email_cliente
+			FROM crm_leads l
+			LEFT JOIN clientes c ON l.id_cliente = c.id
+			WHERE l.origen LIKE '%whatsapp%' AND (l.oculto_tabla_whatsapp IS NULL OR l.oculto_tabla_whatsapp = 0)
+			ORDER BY COALESCE(l.fecha_ultima_interaccion, l.fecha_creacion) DESC, l.id DESC
+		");
+
+		$stmt->execute();
+		return $stmt->fetchAll();
+
+	}
+
+	/*=============================================
+	ELIMINAR LEAD DE LA TABLA DE WHATSAPP (SOLO CONFIGURACIÓN)
+	=============================================*/
+	static public function mdlEliminarLeadWhatsApp($id) {
+
+		$db = Conexion::conectar();
+		try {
+			$check = $db->query("SHOW COLUMNS FROM crm_leads LIKE 'oculto_tabla_whatsapp'");
+			if ($check->rowCount() == 0) {
+				$db->exec("ALTER TABLE crm_leads ADD COLUMN oculto_tabla_whatsapp INT(1) NOT NULL DEFAULT 0");
+			}
+		} catch (Exception $e) {}
+
+		$stmt = $db->prepare("UPDATE crm_leads SET oculto_tabla_whatsapp = 1 WHERE id = :id");
+		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
+
+		if ($stmt->execute()) {
+			return "ok";
+		} else {
+			return "error";
+		}
 
 	}
 
@@ -237,11 +300,19 @@ class ModeloCRM {
 	}
 
 	/*=============================================
-	ELIMINAR LEAD
+	ELIMINAR LEAD DESDE EL MÓDULO CRM (CAMBIA ESTADO A ELIMINADO)
 	=============================================*/
 	static public function mdlEliminarLead($tabla, $id) {
 
-		$stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE id = :id");
+		$db = Conexion::conectar();
+		try {
+			$check = $db->query("SHOW COLUMNS FROM crm_leads LIKE 'estado'");
+			if ($check->rowCount() == 0) {
+				$db->exec("ALTER TABLE crm_leads ADD COLUMN estado VARCHAR(20) NOT NULL DEFAULT 'activo'");
+			}
+		} catch (Exception $e) {}
+
+		$stmt = $db->prepare("UPDATE $tabla SET estado = 'eliminado' WHERE id = :id");
 		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
 
 		if($stmt->execute()) {
@@ -255,11 +326,19 @@ class ModeloCRM {
 	}
 
 	/*=============================================
-	ELIMINAR LEAD POR CODIGO ORDEN
+	ELIMINAR LEAD POR CODIGO ORDEN DESDE EL MÓDULO CRM
 	=============================================*/
 	static public function mdlEliminarLeadPorCodigoOrden($tabla, $codigoOrden) {
 
-		$stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE codigo_orden = :codigo_orden");
+		$db = Conexion::conectar();
+		try {
+			$check = $db->query("SHOW COLUMNS FROM crm_leads LIKE 'estado'");
+			if ($check->rowCount() == 0) {
+				$db->exec("ALTER TABLE crm_leads ADD COLUMN estado VARCHAR(20) NOT NULL DEFAULT 'activo'");
+			}
+		} catch (Exception $e) {}
+
+		$stmt = $db->prepare("UPDATE $tabla SET estado = 'eliminado' WHERE codigo_orden = :codigo_orden");
 		$stmt->bindParam(":codigo_orden", $codigoOrden, PDO::PARAM_STR);
 
 		if($stmt->execute()) {

@@ -1,5 +1,6 @@
 <?php
 // Los controladores ya están cargados desde index.php
+$configuracionFE = ControladorConfiguracion::ctrObtenerConfiguracion();
 ?>
 
 <style>
@@ -91,6 +92,7 @@
         </select>
       </div>
 
+      <?php if (!isset($configuracionFE["facturacion_electronica_activa"]) || $configuracionFE["facturacion_electronica_activa"] == 1): ?>
       <!-- Filtro por tipo de ingresos -->
       <div class="filtro-grupo-fin">
         <label for="filtro-tipo-ingreso">Tipo de Ingreso:</label>
@@ -100,6 +102,7 @@
           <option value="fe">Solo Facturas Electrónicas</option>
         </select>
       </div>
+      <?php endif; ?>
 
       <!-- Botón de filtrar -->
       <div class="filtro-grupo-fin">
@@ -324,7 +327,8 @@
     const fechaInicio = document.getElementById('fin-fecha-inicio').value;
     const fechaFin = document.getElementById('fin-fecha-fin').value;
     const idCategoria = document.getElementById('filtro-categoria-gasto').value;
-    const tipoIngreso = document.getElementById('filtro-tipo-ingreso').value;
+    const elemTipoIngreso = document.getElementById('filtro-tipo-ingreso');
+    const tipoIngreso = elemTipoIngreso ? elemTipoIngreso.value : 'todas';
 
     const formData = new FormData();
     formData.append('tipo', tipo);

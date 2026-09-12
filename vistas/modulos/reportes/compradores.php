@@ -49,29 +49,28 @@ $noRepetirNombres = array_unique($arrayClientes);
 
 
 <!--=====================================
-VENDEDORES
+MEJORES COMPRADORES
 ======================================-->
 
-<div class="box box-primary">
-	
-	<div class="box-header with-border">
-    
-    	<h3 class="box-title">Mejores Compradores</h3>
-  
-  	</div>
+<div class="box box-default" style="border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); overflow: hidden; margin-bottom: 20px;">
+  <div class="box-header with-border" style="background-color: #fafafa; padding: 15px 20px;">
+    <h3 class="box-title" style="font-weight: 700; color: #333;"><i class="fa fa-users" style="margin-right: 8px; color: #fe8c00;"></i>Mejores Compradores</h3>
+  </div>
 
-  	<div class="box-body">
-  		
-		<div class="chart-responsive">
-			
-			<div class="chart" id="bar-chart2" style="height: 300px;"></div>
-
-		</div>
-
-  	</div>
-
+  <div class="box-body" style="padding: 20px;">
+    <?php if (empty($noRepetirNombres)): ?>
+      <div class="text-center text-muted" style="padding: 60px 15px; font-weight: 600; font-size: 14px;">
+        <i class="fa fa-info-circle" style="margin-right: 5px; font-size: 18px;"></i> Sin ventas registradas
+      </div>
+    <?php else: ?>
+      <div class="chart-responsive">
+        <div class="chart" id="bar-chart2" style="height: 300px;"></div>
+      </div>
+    <?php endif; ?>
+  </div>
 </div>
 
+<?php if (!empty($noRepetirNombres)): ?>
 <script>
 
 	//BAR CHART
@@ -98,5 +97,6 @@ VENDEDORES
     });
 	
 </script>
+<?php endif; ?>
 
 

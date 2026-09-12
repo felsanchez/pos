@@ -71,27 +71,22 @@ foreach ($varianteRows as $row) {
   <style>
     .formulario-filtros-container {
       max-width: 100%;
-      padding: 20px;
-      border-radius: 12px;
-      background-color: #ffffff;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-      margin-bottom: 25px;
-      border: 1px solid #f0f0f0;
+      padding: 15px;
+      border-radius: 10px;
+      background-color: #f9f9f9;
+      margin-bottom: 20px;
     }
     .formulario-filtros label {
       font-weight: 600;
-      margin-top: 5px;
-      margin-bottom: 8px;
-      font-size: 11px;
-      color: #666;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: #333;
     }
     .formulario-filtros select,
     .formulario-filtros input[type="date"] {
       border-radius: 8px;
-      margin-bottom: 12px;
-      border: 1px solid #dcdcdc;
+      margin-bottom: 10px;
+      border: 1px solid #d2d6de;
       padding: 8px 12px;
       height: auto;
       box-shadow: none;
@@ -99,41 +94,38 @@ foreach ($varianteRows as $row) {
     }
     .formulario-filtros select:focus,
     .formulario-filtros input[type="date"]:focus {
-      border-color: #0072ff;
+      border-color: #3c8dbc;
     }
     .d-none {
       display: none !important;
     }
     .filtros-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 15px;
-      align-items: end;
     }
     .filtro-grupo {
       min-width: 0;
     }
     .btn-filtrar {
-      margin-top: 0;
-      margin-bottom: 12px;
-      padding: 10px 20px;
+      margin-top: 25px;
+      width: 100%;
       border-radius: 8px;
       font-weight: 600;
-      background: linear-gradient(135deg, #0072ff, #00c6ff);
-      border: none;
+      background-color: #3c8dbc;
+      border-color: #367fa9;
       color: #fff;
-      transition: opacity 0.2s, transform 0.2s;
+      transition: background-color 0.2s;
     }
     .btn-filtrar:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
+      background-color: #367fa9;
+      border-color: #204d74;
       color: #fff;
     }
     .btn-daterange-av {
       width: 100%;
-      margin-bottom: 12px;
       border-radius: 8px;
-      border: 1px solid #dcdcdc;
+      border: 1px solid #d2d6de;
       background: #fff;
       color: #555;
       text-align: left;
@@ -141,45 +133,43 @@ foreach ($varianteRows as $row) {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color 0.2s;
+      margin-bottom: 10px;
     }
     .btn-daterange-av:hover, .btn-daterange-av:focus {
-      border-color: #0072ff;
+      border-color: #3c8dbc;
       outline: none;
-      box-shadow: none;
       color: #333;
     }
     .btn-daterange-av span { flex: 1; }
     .btn-limpiar {
-      margin-top: 0;
-      margin-bottom: 12px;
-      height: 40px;
-      width: 40px;
+      margin-top: 25px;
+      height: 38px;
+      width: 38px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       border-radius: 8px;
-      border: 1px solid #dcdcdc;
+      border: 1px solid #d2d6de;
       color: #666;
       background: #fff;
-      transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+      transition: background-color 0.2s, border-color 0.2s;
     }
     .btn-limpiar:hover {
       background-color: #f5f5f5;
       border-color: #ccc;
       color: #333;
-      transform: translateY(-1px);
     }
     /* Normalizar Select2 para que coincida en altura y alineación con los selects nativos */
     .formulario-filtros .select2-container {
       display: block;
       width: 100% !important;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .formulario-filtros .select2-container .select2-selection--single {
       height: 38px;
       border-radius: 8px;
-      border: 1px solid #dcdcdc;
+      border: 1px solid #d2d6de;
       padding: 4px 12px;
       box-shadow: none;
       transition: border-color 0.2s;
@@ -196,7 +186,7 @@ foreach ($varianteRows as $row) {
     }
     .formulario-filtros .select2-container--default.select2-container--focus .select2-selection--single,
     .formulario-filtros .select2-container--default.select2-container--open .select2-selection--single {
-      border-color: #0072ff;
+      border-color: #3c8dbc;
       outline: none;
     }
   </style>
@@ -211,7 +201,7 @@ foreach ($varianteRows as $row) {
 
                     <!-- Filtro de fecha -->
                     <div class="filtro-grupo">
-                      <label>Rango de Fecha</label>
+                      <label>Fecha:</label>
                       <button type="button" class="btn btn-default btn-daterange-av" id="daterange-btn-av">
                         <span><i class="fa fa-calendar"></i> Rango de fecha</span>
                         <i class="fa fa-caret-down"></i>
@@ -223,7 +213,7 @@ foreach ($varianteRows as $row) {
 
                     <!-- Filtro por vendedor -->
                     <div class="filtro-grupo">
-                      <label for="filtro-vendedor">Vendedor</label>
+                      <label for="filtro-vendedor">Vendedor:</label>
                       <select id="filtro-vendedor" name="id_vendedor" class="form-control select2">
                         <option value="">Mostrar Todos</option>
                         <?php foreach($usuarios as $usuario): ?>
@@ -235,7 +225,7 @@ foreach ($varianteRows as $row) {
 
                     <!-- Filtro por cliente -->
                     <div class="filtro-grupo">
-                      <label for="filtro-cliente">Cliente</label>
+                      <label for="filtro-cliente">Cliente:</label>
                       <select id="filtro-cliente" name="id_cliente" class="form-control select2">
                         <option value="">Mostrar Todos</option>
                         <?php foreach($clientes as $cliente): ?>
@@ -246,7 +236,7 @@ foreach ($varianteRows as $row) {
 
                     <!-- Filtro por producto -->
                     <div class="filtro-grupo">
-                      <label for="filtro-producto">Producto</label>
+                      <label for="filtro-producto">Producto:</label>
                       <select id="filtro-producto" name="id_producto" class="form-control select2">
                         <option value="">Mostrar Todos</option>
                         <?php foreach($productos as $producto): ?>
@@ -270,7 +260,7 @@ foreach ($varianteRows as $row) {
 
                     <!-- Filtro por método de pago -->
                     <div class="filtro-grupo">
-                      <label for="filtro-metodo-pago">Método de pago</label>
+                      <label for="filtro-metodo-pago">Método de Pago:</label>
                       <select id="filtro-metodo-pago" name="metodo_pago" class="form-control">
                         <option value="">Mostrar Todos</option>
                         <?php foreach($metodosPago as $metodo): ?>
@@ -289,11 +279,11 @@ foreach ($varianteRows as $row) {
 
                     <!-- Botones de descarga -->
                     <?php if (puedeAccion('reporte_ventas', 'imprimir') || puedeAccion('inicio', 'ver')): ?>
-                      <div class="filtro-grupo" style="display: flex; flex-direction: column; gap: 8px; align-items: stretch; margin-bottom: 12px;">
-                        <a class="btn btn-success w-100" style="height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; margin: 0;" id="btn-descargar-excel-directo" href="#">
+                      <div class="filtro-grupo" style="display: flex; flex-direction: column; gap: 6px; align-items: stretch; margin-top: 10px;">
+                        <a class="btn btn-success w-100" style="height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; margin: 0; padding: 4px 10px; font-size: 12px;" id="btn-descargar-excel-directo" href="#">
                           <i class="fa fa-file-excel-o" style="margin-right: 5px;"></i> Descargar Excel
                         </a>
-                        <a class="btn btn-danger w-100" style="height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; margin: 0;" id="btn-descargar-pdf-directo" href="#" target="_blank">
+                        <a class="btn btn-danger w-100" style="height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; margin: 0; padding: 4px 10px; font-size: 12px;" id="btn-descargar-pdf-directo" href="#" target="_blank">
                           <i class="fa fa-file-pdf-o" style="margin-right: 5px;"></i> Descargar PDF
                         </a>
                       </div>
@@ -386,7 +376,7 @@ foreach ($varianteRows as $row) {
     $('#av-fecha-inicio').val(avFechaInicio);
     $('#av-fecha-fin').val(avFechaFin);
     $('#av-tipo').val('personalizado');
-    $('#daterange-btn-av span').html('<i class="fa fa-calendar"></i> ' + moment().startOf('month').format('MMMM D, YYYY') + ' - ' + moment().endOf('month').format('MMMM D, YYYY'));
+    $('#daterange-btn-av span').html('<i class="fa fa-calendar"></i> Rango de fecha');
 
     if (typeof $.fn.daterangepicker !== 'undefined') {
       $('#daterange-btn-av').daterangepicker({

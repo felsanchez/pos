@@ -598,6 +598,20 @@ $crmController->ctrEliminarEtapa();
                     <?php echo $lead["titulo"]; ?>
                   </div>
 
+                  <?php 
+                    $esWhatsApp = !empty($lead["origen"]) && stripos($lead["origen"], "whatsapp") !== false;
+                    if ($esWhatsApp): 
+                      $fechaInteraccionRaw = (!empty($lead["fecha_ultima_interaccion"]) && $lead["fecha_ultima_interaccion"] != "0000-00-00 00:00:00") 
+                          ? $lead["fecha_ultima_interaccion"] 
+                          : ((!empty($lead["fecha_creacion"]) && $lead["fecha_creacion"] != "0000-00-00 00:00:00") ? $lead["fecha_creacion"] : "");
+                      $fechaInteraccionFormateada = !empty($fechaInteraccionRaw) ? date("d/m/Y g:i a", strtotime($fechaInteraccionRaw)) : "Sin registro";
+                  ?>
+                    <div class="crm-lead-last-interaction" style="font-size: 11px; color: #1e293b; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; background: #f0fdf4; padding: 4px 8px; border-radius: 4px; border: 1px solid #dcfce7;" title="Fecha de Última Interacción vía WhatsApp">
+                      <i class="fa fa-clock-o" style="color: #25D366; font-size: 12px;"></i>
+                      <span><strong>Última Interacción:</strong> <?php echo $fechaInteraccionFormateada; ?></span>
+                    </div>
+                  <?php endif; ?>
+
                   <!-- Footer con Metadatos -->
                   <div class="crm-lead-card-footer">
                     <div>
@@ -612,9 +626,6 @@ $crmController->ctrEliminarEtapa();
                       <?php endif; ?>
                     </div>
                     <?php if ($mostrarEtiquetaOrigen): ?>
-                      <?php 
-                        $esWhatsApp = !empty($lead["origen"]) && stripos($lead["origen"], "whatsapp") !== false;
-                      ?>
                       <?php if ($esWhatsApp): ?>
                         <span class="crm-lead-origin-badge" style="color: #25D366; font-weight: bold; font-size: 12px; display: inline-flex; align-items: center; gap: 3px;">
                           <i class="fa fa-whatsapp"></i> Whatsapp

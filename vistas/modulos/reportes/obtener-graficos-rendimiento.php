@@ -25,6 +25,8 @@ $fechaFinal = isset($_POST["fechaFinal"]) ? $_POST["fechaFinal"] : null;
     <div class="col-md-6 col-xs-12">
         <?php include "productos-mas-vendidos.php"; ?>
     </div>
+</div>
+<div class="row" style="margin-top: 15px;">
     <div class="col-md-6 col-xs-12">
         <?php include "vendedores.php"; ?>
     </div>

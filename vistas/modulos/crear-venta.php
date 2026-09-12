@@ -645,10 +645,15 @@ MODAL AGREGAR CLIENTE
             $('#campoDescuento').slideDown();
 
             // Cambiar icono y texto a valor fijo
+            var totalVentaOriginal = Number($('#nuevoTotalVenta').attr('total')) || 0;
             $('#iconoDescuento').html('<i class="fa fa-money"></i>');
             $('#labelDescuento').text('Valor Descuento');
-            $('#textoAyudaDescuento').text('Ingrese el valor fijo del descuento');
-            $('#valorDescuento').removeAttr('max');
+            $('#textoAyudaDescuento').text('Ingrese el valor fijo del descuento (Máx: $' + totalVentaOriginal.toLocaleString('es-CO') + ')');
+            if (totalVentaOriginal > 0) {
+              $('#valorDescuento').attr('max', totalVentaOriginal);
+            } else {
+              $('#valorDescuento').removeAttr('max');
+            }
             $('#valorDescuento').attr('placeholder', '0');
             $('#valorDescuento').val('0');
 
@@ -679,10 +684,15 @@ MODAL AGREGAR CLIENTE
           $('#campoDescuento').slideDown();
 
           // Cambiar icono y texto a valor fijo
+          var totalVentaOriginal = Number($('#nuevoTotalVenta').attr('total')) || 0;
           $('#iconoDescuento').html('<i class="fa fa-money"></i>');
           $('#labelDescuento').text('Valor Descuento');
-          $('#textoAyudaDescuento').text('Ingrese el valor fijo del descuento');
-          $('#valorDescuento').removeAttr('max');
+          $('#textoAyudaDescuento').text('Ingrese el valor fijo del descuento (Máx: $' + totalVentaOriginal.toLocaleString('es-CO') + ')');
+          if (totalVentaOriginal > 0) {
+            $('#valorDescuento').attr('max', totalVentaOriginal);
+          } else {
+            $('#valorDescuento').removeAttr('max');
+          }
           $('#valorDescuento').attr('placeholder', '0');
           $('#valorDescuento').val('0');
 

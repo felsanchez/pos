@@ -746,6 +746,136 @@ if (!$configuracion) {
 		</div>
 		<?php endif; ?>
 
+		<!-- ===================================================
+		SECCIÓN 6: LEADS DE WHATSAPP REGISTRADOS EN EL CRM
+		=================================================== -->
+		<div class="box box-success" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid #25D366; margin-top: 30px;">
+			<div class="box-header with-border" style="background-color: #f0fdf4; border-bottom: 1px solid #bbf7d0; padding: 15px 20px; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+				<h3 class="box-title" style="font-weight: 700; color: #166534; font-size: 17px; display: flex; align-items: center; gap: 8px; margin: 0;">
+					<i class="fa fa-whatsapp" style="color: #25D366; font-size: 20px;"></i> Leads de WhatsApp Registrados en el CRM
+				</h3>
+				<button type="button" class="btn btn-danger btn-sm" id="btnEliminarSeleccionadosLeadsWA" disabled style="font-weight: 600; border-radius: 6px;">
+					<i class="fa fa-trash"></i> Eliminar Seleccionados (<span id="cantSeleccionadosLeadsWA">0</span>)
+				</button>
+			</div>
+
+			<div class="box-body" style="padding: 20px;">
+				<p style="font-size: 13px; color: #475569; margin-bottom: 15px;">
+					Listado de oportunidades comerciales creadas automáticamente desde conversaciones de WhatsApp procesadas en el CRM.
+				</p>
+
+				<!-- FILTROS DE BÚSQUEDA Y CONTADOR -->
+				<div class="row" style="margin-bottom: 15px; background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0;">
+					<div class="col-md-4">
+						<label style="font-size: 12px; font-weight: 700; color: #475569;"><i class="fa fa-calendar text-primary"></i> Fecha Última Interacción:</label>
+						<div style="display: flex; gap: 5px;">
+							<input type="date" id="filtroFechaInicioLeadWA" class="form-control input-sm" placeholder="Desde">
+							<input type="date" id="filtroFechaFinLeadWA" class="form-control input-sm" placeholder="Hasta">
+						</div>
+					</div>
+					<div class="col-md-3">
+						<label style="font-size: 12px; font-weight: 700; color: #475569;"><i class="fa fa-filter text-info"></i> Estado:</label>
+						<select id="filtroEstadoLeadWA" class="form-control input-sm">
+							<option value="todos">Todos los Estados</option>
+							<option value="activo">Activo</option>
+							<option value="eliminado">Eliminado</option>
+						</select>
+					</div>
+					<div class="col-md-5" style="display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+						<button type="button" class="btn btn-default btn-sm" id="btnLimpiarFiltrosLeadWA" title="Limpiar Filtros" style="font-weight: 600;">
+							<i class="fa fa-refresh"></i> Limpiar Filtros
+						</button>
+						<span class="badge" id="contadorResultadosLeadsWA" style="font-size: 13px; padding: 8px 14px; border-radius: 20px; background-color: #059669; color: white; font-weight: 700; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+							<i class="fa fa-list-alt"></i> <span id="numResultadosLeadsWA">0</span> leads encontrados
+						</span>
+					</div>
+				</div>
+
+				<div class="table-responsive">
+					<table class="table table-bordered table-striped" style="font-size: 13px; width: 100%;">
+						<thead>
+							<tr style="background: #f1f5f9; color: #334155;">
+								<th style="width: 40px; text-align: center;">
+									<input type="checkbox" id="checkTodosLeadsWhatsApp" style="cursor: pointer;" title="Seleccionar Todos">
+								</th>
+								<th style="width: 50px;">#</th>
+								<th>Cliente</th>
+								<th>Número de WhatsApp</th>
+								<th>Etapa del Lead</th>
+								<th>Última Interacción</th>
+								<th>Estado</th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php
+							if (!class_exists("ModeloCRM")) {
+								if (file_exists(__DIR__ . "/../../modelos/crm.modelo.php")) {
+									require_once __DIR__ . "/../../modelos/crm.modelo.php";
+								}
+							}
+
+							$leadsWhatsApp = class_exists("ModeloCRM") ? ModeloCRM::mdlMostrarLeadsWhatsApp() : array();
+
+							if (count($leadsWhatsApp) > 0) {
+								foreach ($leadsWhatsApp as $index => $l) {
+									$numWa = "";
+									if (preg_match('/\d{7,}/', $l["origen"] ?? '', $m)) {
+										$numWa = $m[0];
+									} else if (!empty($l["telefono_cliente"])) {
+										$numWa = $l["telefono_cliente"];
+									} else {
+										$numWa = "Sin número";
+									}
+
+									$nombreCli = !empty($l["nombre_cliente"]) ? htmlspecialchars($l["nombre_cliente"]) : "Cliente Prospecto";
+									$fechaRaw = !empty($l["fecha_ultima_interaccion"]) ? $l["fecha_ultima_interaccion"] : (!empty($l["fecha_creacion"]) ? $l["fecha_creacion"] : "");
+									$fechaInter = !empty($fechaRaw) ? date("d/m/Y H:i", strtotime($fechaRaw)) : "N/A";
+									$dataFecha = !empty($fechaRaw) ? date("Y-m-d", strtotime($fechaRaw)) : "";
+
+									$etapaLead = htmlspecialchars($l["etapa"] ?? "Contactado");
+									$badgeClass = "label-default";
+									if (in_array(strtolower($etapaLead), ["facturado", "confirmado"])) {
+										$badgeClass = "label-success";
+									} else if (in_array(strtolower($etapaLead), ["cotizado", "negociacion"])) {
+										$badgeClass = "label-warning";
+									} else if (strtolower($etapaLead) == "perdido") {
+										$badgeClass = "label-danger";
+									} else if (strtolower($etapaLead) == "contactado") {
+										$badgeClass = "label-info";
+									}
+
+									$esEliminado = ((isset($l["es_eliminado_wa"]) && $l["es_eliminado_wa"] == 1) || (isset($l["estado"]) && strtolower($l["estado"]) == "eliminado"));
+									$dataEstado = $esEliminado ? "eliminado" : "activo";
+									$estadoBadge = $esEliminado 
+										? "<span class='label label-danger' style='font-size: 11px; padding: 4px 8px;'><i class='fa fa-trash'></i> Eliminado</span>" 
+										: "<span class='label label-success' style='font-size: 11px; padding: 4px 8px;'><i class='fa fa-check'></i> Activo</span>";
+
+									echo "<tr class='rowLeadWhatsApp' data-estado='" . $dataEstado . "' data-fecha='" . $dataFecha . "'>
+										<td style='text-align: center;'>
+											<input type='checkbox' class='checkLeadWhatsApp' value='" . $l["id"] . "' style='cursor: pointer;'>
+										</td>
+										<td>" . ($index + 1) . "</td>
+										<td><b>" . $nombreCli . "</b></td>
+										<td>
+											<span style='color: #25D366; font-weight: bold;'>
+												<i class='fa fa-whatsapp'></i> " . htmlspecialchars($numWa) . "
+											</span>
+										</td>
+										<td><span class='label " . $badgeClass . "' style='font-size: 11px; padding: 4px 8px;'>" . $etapaLead . "</span></td>
+										<td><i class='fa fa-clock-o text-muted'></i> " . $fechaInter . "</td>
+										<td>" . $estadoBadge . "</td>
+									</tr>";
+								}
+							} else {
+								echo "<tr><td colspan='7' class='text-center text-muted' style='padding: 20px;'>No se encontraron leads de WhatsApp registrados en el CRM.</td></tr>";
+							}
+							?>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
 	</section>
 
 </div>
@@ -1232,6 +1362,202 @@ $(document).ready(function() {
 			});
 		}
 	});
+
+	/*=============================================
+	SELECCIONAR TODOS / INDIVIDUALES LEADS WHATSAPP
+	=============================================*/
+	$(document).on('change', '#checkTodosLeadsWhatsApp', function() {
+		var checked = $(this).is(':checked');
+		$('.rowLeadWhatsApp:visible .checkLeadWhatsApp').prop('checked', checked);
+		actualizarBotonEliminarLeadsWA();
+	});
+
+	$(document).on('change', '.checkLeadWhatsApp', function() {
+		var totalVisibles = $('.rowLeadWhatsApp:visible').length;
+		var totalCheckedVisibles = $('.rowLeadWhatsApp:visible .checkLeadWhatsApp:checked').length;
+		$('#checkTodosLeadsWhatsApp').prop('checked', totalVisibles > 0 && totalVisibles === totalCheckedVisibles);
+		actualizarBotonEliminarLeadsWA();
+	});
+
+	function actualizarBotonEliminarLeadsWA() {
+		var seleccionados = $('.checkLeadWhatsApp:checked').length;
+		$('#cantSeleccionadosLeadsWA').text(seleccionados);
+		if (seleccionados > 0) {
+			$('#btnEliminarSeleccionadosLeadsWA').prop('disabled', false);
+		} else {
+			$('#btnEliminarSeleccionadosLeadsWA').prop('disabled', true);
+		}
+	}
+
+	function resetearBotonEliminarLeadsWA() {
+		var seleccionados = $('.checkLeadWhatsApp:checked').length;
+		$('#btnEliminarSeleccionadosLeadsWA')
+			.html('<i class="fa fa-trash"></i> Eliminar Seleccionados (<span id="cantSeleccionadosLeadsWA">' + seleccionados + '</span>)')
+			.prop('disabled', seleccionados === 0);
+	}
+
+	/*=============================================
+	ELIMINAR MÚLTIPLES LEADS DE WHATSAPP
+	=============================================*/
+	$(document).on('click', '#btnEliminarSeleccionadosLeadsWA', function(e) {
+		e.preventDefault();
+		var idsLeads = [];
+		$('.checkLeadWhatsApp:checked').each(function() {
+			idsLeads.push($(this).val());
+		});
+
+		if (idsLeads.length === 0) {
+			swal({
+				title: "Atención",
+				text: "Por favor seleccione al menos un lead para eliminar.",
+				type: "warning"
+			});
+			return;
+		}
+
+		var yaEjecutado = false;
+		function ejecutarEliminacionMasivaLeads(ids) {
+			if (yaEjecutado) return;
+			yaEjecutado = true;
+
+			$('#btnEliminarSeleccionadosLeadsWA').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Eliminando...');
+
+			$.ajax({
+				url: "ajax/factus.ajax.php",
+				method: "POST",
+				data: {
+					accion: "eliminarMultiplesLeadsWhatsApp",
+					idsLeads: ids,
+					csrf_token: $('meta[name="csrf-token"]').attr('content')
+				},
+				dataType: "json",
+				success: function(respuesta) {
+					if (respuesta.status === "ok") {
+						// 1. Remover inmediatamente las filas eliminadas de la tabla en la pantalla
+						ids.forEach(function(idLead) {
+							$('.checkLeadWhatsApp[value="' + idLead + '"]').closest('tr').remove();
+						});
+
+						// 2. Restablecer el botón y actualizar el contador de resultados
+						$('#checkTodosLeadsWhatsApp').prop('checked', false);
+						resetearBotonEliminarLeadsWA();
+						aplicarFiltrosLeadsWhatsApp();
+
+						// 3. Notificación al usuario
+						swal({
+							title: "¡Eliminación Exitosa!",
+							text: respuesta.mensaje,
+							type: "success"
+						}, function() {
+							location.reload();
+						});
+
+						// Respaldar recarga tras 1.5 segundos
+						setTimeout(function() {
+							location.reload();
+						}, 1500);
+					} else {
+						resetearBotonEliminarLeadsWA();
+						swal({
+							title: "Error",
+							text: respuesta.mensaje || "No se pudieron eliminar los leads.",
+							type: "error"
+						});
+					}
+				},
+				error: function() {
+					resetearBotonEliminarLeadsWA();
+					swal({
+						title: "Error de conexión",
+						text: "Ocurrió un fallo al comunicarse con el servidor.",
+						type: "error"
+					});
+				}
+			});
+		}
+
+		var swalDel = swal({
+			title: "¿Eliminar " + idsLeads.length + " lead(s) seleccionado(s)?",
+			text: "Los leads seleccionados serán eliminados de esta tabla.",
+			type: "warning",
+			showCancelButton: true,
+			confirmButtonColor: "#d33",
+			cancelButtonText: "Cancelar",
+			confirmButtonText: "Sí, eliminar"
+		}, function(isConfirm) {
+			if (isConfirm) {
+				ejecutarEliminacionMasivaLeads(idsLeads);
+			}
+		});
+
+		if (swalDel && typeof swalDel.then === "function") {
+			swalDel.then(function(result) {
+				if (result && (result.value || result === true)) {
+					ejecutarEliminacionMasivaLeads(idsLeads);
+				}
+			});
+		}
+	});
+
+	/*=============================================
+	FILTRADO DINÁMICO DE LEADS WHATSAPP (FECHA Y ESTADO)
+	=============================================*/
+	function aplicarFiltrosLeadsWhatsApp() {
+		var fechaInicio = $('#filtroFechaInicioLeadWA').val();
+		var fechaFin = $('#filtroFechaFinLeadWA').val();
+		var estadoFiltro = $('#filtroEstadoLeadWA').val();
+
+		var visiblesCount = 0;
+
+		$('.rowLeadWhatsApp').each(function() {
+			var row = $(this);
+			var estadoRow = row.attr('data-estado');
+			var fechaRow = row.attr('data-fecha'); // Formato YYYY-MM-DD
+
+			var coincideEstado = (estadoFiltro === 'todos' || estadoRow === estadoFiltro);
+			var coincideFecha = true;
+
+			if (fechaInicio && fechaRow) {
+				if (fechaRow < fechaInicio) coincideFecha = false;
+			}
+			if (fechaFin && fechaRow) {
+				if (fechaRow > fechaFin) coincideFecha = false;
+			}
+			if ((fechaInicio || fechaFin) && !fechaRow) {
+				coincideFecha = false;
+			}
+
+			if (coincideEstado && coincideFecha) {
+				row.show();
+				visiblesCount++;
+			} else {
+				row.hide();
+				row.find('.checkLeadWhatsApp').prop('checked', false);
+			}
+		});
+
+		$('#numResultadosLeadsWA').text(visiblesCount);
+
+		var totalVisibles = $('.rowLeadWhatsApp:visible').length;
+		var totalCheckedVisibles = $('.rowLeadWhatsApp:visible .checkLeadWhatsApp:checked').length;
+		$('#checkTodosLeadsWhatsApp').prop('checked', totalVisibles > 0 && totalVisibles === totalCheckedVisibles);
+
+		actualizarBotonEliminarLeadsWA();
+	}
+
+	$(document).on('change input', '#filtroFechaInicioLeadWA, #filtroFechaFinLeadWA, #filtroEstadoLeadWA', function() {
+		aplicarFiltrosLeadsWhatsApp();
+	});
+
+	$(document).on('click', '#btnLimpiarFiltrosLeadWA', function() {
+		$('#filtroFechaInicioLeadWA').val('');
+		$('#filtroFechaFinLeadWA').val('');
+		$('#filtroEstadoLeadWA').val('todos');
+		aplicarFiltrosLeadsWhatsApp();
+	});
+
+	// Ejecutar conteo y filtrado inicial al cargar la página
+	aplicarFiltrosLeadsWhatsApp();
 
 });
 </script>

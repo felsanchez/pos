@@ -42,16 +42,17 @@ class ControladorVentas
 	{
 		$tabla = "ventas";
 
-		// Mapeo de columnas para ordenamiento
+		// Mapeo de columnas para ordenamiento:
+		// 0=Código, 1=Cliente, 2=Vendedor, 3=Imagen, 4=Total, 5=Fecha, 6=Observación, 7=Acciones
 		$columnsMap = array(
-			0 => 'v.codigo',
+			0 => 'v.id',
 			1 => 'c.nombre',
 			2 => 'u.nombre',
-			3 => 'v.id', // Imagen
+			3 => 'v.id',
 			4 => 'v.total',
-			5 => 'v.notas',
-			6 => 'v.fecha',
-			7 => 'v.observacion'
+			5 => 'v.fecha',
+			6 => 'v.observacion',
+			7 => 'v.id'
 		);
 
 		// Obtener configuración para moneda y formato
@@ -159,27 +160,23 @@ class ControladorVentas
 			$nestedData[] = $codigoHtml;
 
 			// 1: Cliente
-			$nestedData[] = '<span class="btnVerClienteDesdeVenta" data-toggle="modal" data-target="#modalEditarCliente" idCliente="' . $value["id_cliente"] . '" style="cursor: pointer; color: #337ab7; text-decoration: underline;">' . e($value["nombre_cliente"]) . '</span>';
+			$nestedData[] = '<span class="btnVerClienteDesdeVenta" data-toggle="modal" data-target="#modalEditarCliente" idCliente="' . e($value["id_cliente"] ?? '') . '" style="cursor: pointer; color: #337ab7; text-decoration: underline;">' . e($value["nombre_cliente"] ?? '') . '</span>';
 
 			// 2: Vendedor
-			$nestedData[] = e($value["nombre_vendedor"]);
+			$nestedData[] = e($value["nombre_vendedor"] ?? '');
 
 			// 3: Imagen
-			$imgSrc = $value["imagen"] != "" ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
+			$imgSrc = (!empty($value["imagen"])) ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
 			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idventa="' . $value["id"] . '">';
 
-			// 5: Total
-			$nestedData[] = $moneda . ' ' . number_format($value["total"], 2);
+			// 4: Total
+			$nestedData[] = $moneda . ' ' . number_format(floatval($value["total"] ?? 0), 2);
 
-			// 6: Notas - Limpiar etiquetas de notificación internas
-			$notasLimpias = str_replace(array(" [Notificado_n8n]", "[Notificado_n8n]", " [Notificado]", "[Notificado]"), "", $value['notas']);
-			$nestedData[] = e(trim($notasLimpias));
+			// 5: Fecha
+			$nestedData[] = $value["fecha"] ?? '';
 
-			// 7: Fecha
-			$nestedData[] = $value["fecha"];
-
-			// 8: Observación (Editable)
-			$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . $value['id'] . '">' . $value['observacion'] . '</div>';
+			// 6: Observación (Editable)
+			$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . $value['id'] . '">' . e($value['observacion'] ?? '') . '</div>';
 
 			// 9: Acciones
 			$botonesAcciones = '<div class="btn-group col-acciones">';
@@ -205,12 +202,6 @@ class ControladorVentas
 			}
 			$botonesAcciones .= '</div>';
 			$nestedData[] = $botonesAcciones;
-
-			// Metadatos para JS
-			$nestedData['DT_RowAttr'] = array(
-				'data-venta-id' => $value['id']
-			);
-
 			$data[] = $nestedData;
 		}
 
@@ -622,17 +613,17 @@ class ControladorVentas
 		$tabla = "ventas";
 
 		// Mapeo de columnas para ordenamiento:
-		// 0=Código, 1=Cliente, 2=Vendedor, 3=Imagen, 4=Total, 5=Notas, 6=Fecha, 7=Observación, 8=Estado DIAN, 9=Acciones
+		// 0=Código, 1=Cliente, 2=Vendedor, 3=Imagen, 4=Total, 5=Fecha, 6=Observación, 7=Estado DIAN, 8=Acciones
 		$columnsMap = array(
-			0 => 'v.numero_factura',
+			0 => 'v.id',
 			1 => 'c.nombre',
 			2 => 'u.nombre',
 			3 => 'v.id', // Imagen
 			4 => 'v.total',
-			5 => 'v.notas',
-			6 => 'v.fecha',
-			7 => 'v.observacion',
-			8 => 'v.estado_dian'
+			5 => 'v.fecha',
+			6 => 'v.observacion',
+			7 => 'v.estado_dian',
+			8 => 'v.id'
 		);
 
 		// Obtener configuración
@@ -761,14 +752,10 @@ class ControladorVentas
 			$imgSrc = ($value["imagen"] != "" && $value["imagen"] != null) ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
 			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idventa="' . $value["id"] . '">';
 
-			// 5: Total
+			// 4: Total
 			$nestedData[] = e($moneda) . ' ' . e(number_format($value["total"], 2));
 
-			// 6: Notas - Limpiar etiquetas de notificación internas
-			$notasLimpias = str_replace(array(" [Notificado_n8n]", "[Notificado_n8n]", " [Notificado]", "[Notificado]"), "", $value['notas'] ?? '');
-			$nestedData[] = e(trim($notasLimpias));
-
-			// 7: Fecha
+			// 5: Fecha
 			$nestedData[] = e($value["fecha"]);
 
 			// 8: Observación - Solo editable si la factura NO ha sido firmada

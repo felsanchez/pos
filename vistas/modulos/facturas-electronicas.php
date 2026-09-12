@@ -895,6 +895,8 @@ MODAL ENVIAR EMAIL
   $(document).ready(function () {
     setTimeout(function () {
       if ($("#tablaFacturasElectronicas").length > 0) {
+        $.fn.dataTable.ext.errMode = 'none';
+
         if ($.fn.DataTable.isDataTable('#tablaFacturasElectronicas')) {
           $('#tablaFacturasElectronicas').DataTable().destroy();
         }
@@ -902,6 +904,18 @@ MODAL ENVIAR EMAIL
         window.tablaFE = $("#tablaFacturasElectronicas").DataTable({
           "processing": true,
           "serverSide": true,
+          "order": [[0, "desc"]],
+          "columns": [
+            { "data": 0 },
+            { "data": 1 },
+            { "data": 2 },
+            { "data": 3 },
+            { "data": 4 },
+            { "data": 5 },
+            { "data": 6 },
+            { "data": 7 },
+            { "data": 8 }
+          ],
           "responsive": {
             "details": {
               "type": "inline",
@@ -968,17 +982,17 @@ MODAL ENVIAR EMAIL
             $('#wrapperTablaFacturas').fadeIn(200);
             $('#contenedorFiltrosFacturas').removeClass('fe-ui-hidden').css('display', '');
           },
-          "order": [[5, "desc"]], // Fecha
           "columnDefs": [
+            { "defaultContent": "", "targets": "_all" },
             { "targets": 0, "responsivePriority": 1 },
             { "targets": 1, "responsivePriority": 3 },
             { "targets": 2, "responsivePriority": 4 },
             { "targets": 3, "responsivePriority": 5, "orderable": false },
             { "targets": 4, "responsivePriority": 6 },
-            { "targets": 5, "responsivePriority": 7, "render": function (data, type, row) { return row[6]; } }, // Fecha (row[6])
-            { "targets": 6, "responsivePriority": 8, "orderable": false, "render": function (data, type, row) { return row[7]; } }, // Observación (row[7])
-            { "targets": 7, "responsivePriority": 9, "orderable": false, "render": function (data, type, row) { return row[8]; } }, // Estado DIAN (row[8])
-            { "targets": 8, "responsivePriority": 2, "orderable": false, "render": function (data, type, row) { return row[9]; } } // Acciones (row[9])
+            { "targets": 5, "responsivePriority": 7 },
+            { "targets": 6, "responsivePriority": 8, "orderable": false },
+            { "targets": 7, "responsivePriority": 9, "orderable": false },
+            { "targets": 8, "responsivePriority": 2, "orderable": false }
           ],
           "language": {
             "sProcessing": "Procesando...",

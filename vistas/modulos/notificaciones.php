@@ -354,7 +354,7 @@
 
             $claseNoLeida = $notif["leida"] == 0 ? ' no-leida' : '';
 
-            echo '<div class="card-notificacion' . $claseNoLeida . '">
+            echo '<div class="card-notificacion card-notificacion-item' . $claseNoLeida . '">
 
                     <input type="checkbox" class="checkNotificacion card-notificacion-checkbox" value="' . $notif["id"] . '">
 
@@ -555,13 +555,18 @@
       }
 
       // Filtrar cards (Mobile)
-      $(".cards-notificaciones .card-notificacion").hide();
-      $(".cards-notificaciones .card-notificacion").each(function () {
-        var textoTipo = $(this).find(".card-notificacion-tipo").text();
-        if (textoTipo.indexOf(tipo) != -1) {
-          $(this).show();
-        }
-      });
+      if (tipo === "") {
+        $(".cards-notificaciones .card-notificacion-item").show();
+      } else {
+        $(".cards-notificaciones .card-notificacion-item").each(function () {
+          var textoTipo = $(this).find(".card-notificacion-titulo").text();
+          if (textoTipo.indexOf(tipo) !== -1) {
+            $(this).show();
+          } else {
+            $(this).hide();
+          }
+        });
+      }
 
     });
 

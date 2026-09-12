@@ -102,33 +102,38 @@ $iconosMetodos = array(
 
 ?>
 
-<div class="box box-default">
+<div class="box box-default" style="border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); overflow: hidden; margin-bottom: 20px;">
 
-  <div class="box-header with-border">
-    <h3 class="box-title">Métodos de pago más usados</h3>
+  <div class="box-header with-border" style="background-color: #fafafa; padding: 15px 20px;">
+    <h3 class="box-title" style="font-weight: 700; color: #333;"><i class="fa fa-credit-card" style="margin-right: 8px; color: #0072ff;"></i>Métodos de pago más usados</h3>
   </div>
 
-  <div class="box-body">
-    <div class="row">
+  <div class="box-body" style="padding: 20px;">
+    <?php if (empty($metodosTop10) || $totalVentas == 0): ?>
+      <div class="text-center text-muted" style="padding: 40px 15px; font-weight: 600; font-size: 14px;">
+        <i class="fa fa-info-circle" style="margin-right: 5px; font-size: 18px;"></i> Sin ventas registradas
+      </div>
+    <?php else: ?>
+      <div class="row">
+        <div class="col-md-7">
+          <div class="chart-responsive">
+            <canvas id="pieChartMetodosPago" height="150"></canvas>
+          </div>
+        </div>
 
-      <div class="col-md-7">
-        <div class="chart-responsive">
-          <canvas id="pieChartMetodosPago" height="150"></canvas>
+        <div class="col-md-5">
+          <ul class="chart-legend clearfix">
+            <?php $i = 0; foreach ($metodosTop10 as $metodo => $cantidad): ?>
+              <li><i class="fa fa-circle-o text-<?= $colores[$i] ?>"></i> <?= htmlspecialchars($metodo) ?></li>
+            <?php $i++; endforeach; ?>
+          </ul>
         </div>
       </div>
-
-      <div class="col-md-5">
-        <ul class="chart-legend clearfix">
-          <?php $i = 0; foreach ($metodosTop10 as $metodo => $cantidad): ?>
-            <li><i class="fa fa-circle-o text-<?= $colores[$i] ?>"></i> <?= htmlspecialchars($metodo) ?></li>
-          <?php $i++; endforeach; ?>
-        </ul>
-      </div>
-
-    </div>
+    <?php endif; ?>
   </div>
 
-  <div class="box-footer no-padding">
+  <?php if (!empty($metodosTop10) && $totalVentas > 0): ?>
+  <div class="box-footer no-padding" style="background-color: #fff; border-top: 1px solid #f4f4f4;">
     <ul class="nav nav-pills nav-stacked">
       <?php $i = 0; foreach (array_slice($metodosTop10, 0, 5, true) as $metodo => $cantidad): ?>
         <?php
@@ -151,9 +156,11 @@ $iconosMetodos = array(
       <?php $i++; endforeach; ?>
     </ul>
   </div>
+  <?php endif; ?>
 
 </div>
 
+<?php if (!empty($metodosTop10) && $totalVentas > 0): ?>
 <script>
   var pieChartCanvasMetodos = $('#pieChartMetodosPago').get(0).getContext('2d');
   var pieChartMetodos       = new Chart(pieChartCanvasMetodos);
@@ -187,3 +194,4 @@ $iconosMetodos = array(
 
   pieChartMetodos.Doughnut(PieDataMetodos, pieOptionsMetodos);
 </script>
+<?php endif; ?>

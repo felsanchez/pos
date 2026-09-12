@@ -228,6 +228,8 @@
             <div class="col-md-6 col-xs-12">
               <?php include "reportes/productos-mas-vendidos.php"; ?>
             </div>
+          </div>
+          <div class="row" style="margin-top: 15px;">
             <div class="col-md-6 col-xs-12">
               <?php include "reportes/vendedores.php"; ?>
             </div>
@@ -293,13 +295,13 @@
         </div>
       </div>
       <div class="box-body" style="display: none;">
-        <div class="row form-filtros-fe" style="display: flex; align-items: center; flex-wrap: wrap;">
-          <!-- 1. Categoría -->
-          <div class="col-md-2" style="margin-bottom: 10px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span><b>Categoría:</b></span>
-              <div class="input-group">
-                <span class="input-group-addon" style="background-color: #f4f4f4;"><i class="fa fa-filter"></i></span>
+        <div class="formulario-filtros-container">
+          <form id="form-filtros-fe" class="formulario-filtros" onsubmit="return false;">
+            <div class="filtros-grid">
+
+              <!-- 1. Categoría -->
+              <div class="filtro-grupo">
+                <label for="seleccionarCategoriaReporte">Categoría:</label>
                 <select class="form-control" id="seleccionarCategoriaReporte">
                   <option value="todos">Mostrar Todas</option>
                   <option value="facturas">Facturas Electrónicas</option>
@@ -310,24 +312,41 @@
                   <?php endif; ?>
                 </select>
               </div>
-            </div>
-          </div>
 
-          <!-- 2. Tercero (Cliente/Proveedor) -->
-          <div class="col-md-3" style="margin-bottom: 10px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span><b>Cliente:</b></span>
-              <div class="input-group" style="width: 100%;">
-                <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
-                    class="fa fa-users"></i></span>
+              <!-- 2. Rango de fecha -->
+              <div class="filtro-grupo">
+                <label>Fecha:</label>
+                <button type="button" class="btn btn-default btn-daterange-av" id="daterange-btn-reportes" style="width: 100%;">
+                  <span><i class="fa fa-calendar"></i> Rango de fecha</span>
+                  <i class="fa fa-caret-down"></i>
+                </button>
+              </div>
 
+              <!-- 3. Vendedor -->
+              <div class="filtro-grupo">
+                <label for="seleccionarUsuarioReporte">Vendedor:</label>
+                <select class="form-control select2" id="seleccionarUsuarioReporte" style="width: 100%;">
+                  <option value="todos">Mostrar Todos</option>
+                  <?php
+                  $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
+                  foreach ($usuarios as $key => $value) {
+                    if ($value['perfil'] === '_SystemMaster_' || $value['perfil'] === 'Visitante') continue;
+                    echo '<option value="' . $value["id"] . '">' . htmlspecialchars($value["nombre"]) . '</option>';
+                  }
+                  ?>
+                </select>
+              </div>
+
+              <!-- 4. Tercero (Cliente/Proveedor) -->
+              <div class="filtro-grupo">
+                <label id="labelTerceroReporte" for="seleccionarClienteReporte">Cliente:</label>
                 <div id="divClienteReporte" style="display: block; width: 100%;">
                   <select class="form-control select2" id="seleccionarClienteReporte" style="width: 100%;">
                     <option value="todos">Mostrar Todos</option>
                     <?php
                     $clientes = ControladorClientes::ctrMostrarClientes(null, null);
                     foreach ($clientes as $key => $value) {
-                      echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                      echo '<option value="' . $value["id"] . '">' . htmlspecialchars($value["nombre"]) . '</option>';
                     }
                     ?>
                   </select>
@@ -339,88 +358,54 @@
                     <?php
                     $proveedores = ControladorProveedores::ctrMostrarProveedores(null, null);
                     foreach ($proveedores as $key => $value) {
-                      echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
+                      echo '<option value="' . $value["id"] . '">' . htmlspecialchars($value["nombre"]) . '</option>';
                     }
                     ?>
                   </select>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <!-- 3. Usuario -->
-          <div class="col-md-2" style="margin-bottom: 10px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span><b>Usuario:</b></span>
-              <div class="input-group" style="width: 100%;">
-                <span class="input-group-addon" style="background-color: #f4f4f4; width: 40px;"><i
-                    class="fa fa-user"></i></span>
-                <select class="form-control select2" id="seleccionarUsuarioReporte" style="width: 100%;">
-                  <option value="todos">Mostrar Todos</option>
-                  <?php
-                  $usuarios = ControladorUsuarios::ctrMostrarUsuarios(null, null);
-                  foreach ($usuarios as $key => $value) {
-                    if ($value['perfil'] === '_SystemMaster_' || $value['perfil'] === 'Visitante') continue;
-                    echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                  }
-                  ?>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- 4. Rango de fecha -->
-          <div class="col-md-3" style="margin-bottom: 10px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span><b>Fecha:</b></span>
-              <div class="input-group" style="width: 100%;">
-                <button type="button" class="btn btn-default" id="daterange-btn-reportes" style="width: 100%;">
-                  <span><i class="fa fa-calendar"></i> Rango de fecha</span>
-                  <i class="fa fa-caret-down"></i>
+              <!-- 5. Botones -->
+              <div class="filtro-grupo" style="display: flex; gap: 10px; align-items: center;">
+                <button type="button" class="btn btn-primary w-100 btn-filtrar" id="btnFiltrarReportes" style="flex: 1;">Aplicar filtros</button>
+                <button type="button" class="btn btn-default btn-limpiar" id="btnLimpiarFiltrosReportes" title="Limpiar Filtros">
+                  <i class="fa fa-refresh"></i>
                 </button>
               </div>
-            </div>
-          </div>
 
-          <!-- 5. Botones -->
-          <div class="col-md-2" style="margin-bottom: 10px;">
-            <div class="btn-group" style="width: 100%; display: flex;">
-              <button type="button" class="btn btn-primary" id="btnFiltrarReportes" style="flex: 1; margin-right: 2px;"
-                title="Buscar">
-                <i class="fa fa-search"></i>
-              </button>
-              <button type="button" class="btn btn-default" id="btnLimpiarFiltrosReportes" title="Limpiar Filtros"
-                style="flex: 1;">
-                <i class="fa fa-refresh"></i>
-              </button>
+              <!-- 6. Botones de descarga -->
+              <?php if (puedeAccion('reporte_ventas', 'imprimir') || puedeAccion('inicio', 'ver')): ?>
+                <div class="filtro-grupo" style="display: flex; flex-direction: column; gap: 6px; align-items: stretch; margin-top: 10px;">
+                  <a class="btn btn-success w-100" style="height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; margin: 0; padding: 4px 10px; font-size: 12px;" id="btn-descargar-excel-facturacion-directo" href="#">
+                    <i class="fa fa-file-excel-o" style="margin-right: 5px;"></i> Descargar Excel
+                  </a>
+                  <a class="btn btn-danger w-100" style="height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; margin: 0; padding: 4px 10px; font-size: 12px;" id="btn-descargar-pdf-facturacion-directo" href="#" target="_blank">
+                    <i class="fa fa-file-pdf-o" style="margin-right: 5px;"></i> Descargar PDF
+                  </a>
+                </div>
+              <?php endif; ?>
+
             </div>
-          </div>
+          </form>
         </div>
 
         <!-- WIDGETS DE RESUMEN (KPIs) -->
         <div class="row" id="kpi-reports" style="margin-top: 20px;">
-          <div class="col-lg-3 col-xs-6">
+          <div class="col-lg-4 col-sm-4 col-xs-12">
             <div class="inner">
               <h3 id="widget-total-ventas">$0</h3>
               <p>Venta Neta (Facturado - NC)</p>
             </div>
             <div class="icon"><i class="ion ion-social-usd"></i></div>
           </div>
-          <div class="col-lg-3 col-xs-6">
+          <div class="col-lg-4 col-sm-4 col-xs-12">
             <div class="inner">
               <h3 id="widget-total-iva">$0</h3>
               <p>Total IVA Recaudado</p>
             </div>
             <div class="icon"><i class="ion ion-pie-graph"></i></div>
           </div>
-          <div class="col-lg-3 col-xs-6">
-            <div class="inner">
-              <h3 id="widget-total-ds">$0</h3>
-              <p>Documentos Soporte</p>
-            </div>
-            <div class="icon"><i class="ion ion-ios-paper"></i></div>
-          </div>
-          <div class="col-lg-3 col-xs-6">
+          <div class="col-lg-4 col-sm-4 col-xs-12">
             <div class="inner">
               <h3 id="widget-total-docs">0</h3>
               <p>Docs. Electrónicos Totales</p>
@@ -435,10 +420,6 @@
             <div class="box box-default">
               <div class="box-header with-border">
                 <h3 class="box-title">Listado Consolidado de Documentos</h3>
-                <button type="button" class="btn btn-success pull-right" data-toggle="modal"
-                  data-target="#modalDescargarExcelFacturacion">
-                  <i class="fa fa-file-excel-o"></i> Descargar Reporte
-                </button>
               </div>
               <div class="box-body" style="padding-left: 0; padding-right: 0;">
                 <div class="table-responsive">
@@ -628,9 +609,12 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-        <?php if (puedeAccion('reporte_ventas', 'imprimir')): ?>
+        <?php if (puedeAccion('reporte_ventas', 'imprimir') || puedeAccion('inicio', 'ver')): ?>
+          <a id="btn-descargar-pdf-fact" href="#" class="btn btn-danger" target="_blank">
+            <i class="fa fa-file-pdf-o"></i> Descargar PDF
+          </a>
           <a id="btn-descargar-excel-fact" href="#" class="btn btn-success">
-            <i class="fa fa-download"></i> Descargar
+            <i class="fa fa-download"></i> Descargar Excel
           </a>
         <?php endif; ?>
       </div>
@@ -775,6 +759,71 @@
 
 
 
+  // ---- BOTONES DIRECTOS (EXCEL / PDF) FACTURACIÓN ELECTRÓNICA ----
+  $(document).on('click', '#btn-descargar-excel-facturacion-directo', function (e) {
+    e.preventDefault();
+
+    let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";
+    let url = `${rutaBase}/vistas/modulos/descargar-reporte-facturacion.php?reporte=reporte_facturacion`;
+
+    const categoria = document.getElementById('seleccionarCategoriaReporte') ? document.getElementById('seleccionarCategoriaReporte').value : 'todos';
+    let tercero = 'todos';
+    if (categoria === 'ds' || categoria === 'na') {
+      tercero = document.getElementById('seleccionarProveedorReporte') ? document.getElementById('seleccionarProveedorReporte').value : 'todos';
+    } else {
+      tercero = document.getElementById('seleccionarClienteReporte') ? document.getElementById('seleccionarClienteReporte').value : 'todos';
+    }
+    const idUsuario = document.getElementById('seleccionarUsuarioReporte') ? document.getElementById('seleccionarUsuarioReporte').value : 'todos';
+
+    const fechaInicio = (typeof fechaInicial !== 'undefined' && fechaInicial) ? fechaInicial : '';
+    const fechaFin = (typeof fechaFinal !== 'undefined' && fechaFinal) ? fechaFinal : '';
+
+    const sucursalMaestra = document.getElementById('sucursalReporteMaestro');
+    const idBodega = sucursalMaestra ? sucursalMaestra.value : '';
+
+    if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
+    if (tercero) url += `&tercero=${encodeURIComponent(tercero)}`;
+    if (idUsuario) url += `&idUsuario=${encodeURIComponent(idUsuario)}`;
+    if (fechaInicio) url += `&fechaInicial=${encodeURIComponent(fechaInicio)}`;
+    if (fechaFin) url += `&fechaFinal=${encodeURIComponent(fechaFin)}`;
+    if (idBodega && idBodega !== 'todos') url += `&idBodega=${encodeURIComponent(idBodega)}`;
+
+    mostrarToast('¡Descarga iniciada! El archivo Excel de Facturación se está descargando...');
+    window.location.href = url;
+  });
+
+  $(document).on('click', '#btn-descargar-pdf-facturacion-directo', function (e) {
+    e.preventDefault();
+
+    let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";
+    let url = `${rutaBase}/vistas/modulos/descargar-reporte-facturacion-pdf.php?reporte=reporte_facturacion`;
+
+    const categoria = document.getElementById('seleccionarCategoriaReporte') ? document.getElementById('seleccionarCategoriaReporte').value : 'todos';
+    let tercero = 'todos';
+    if (categoria === 'ds' || categoria === 'na') {
+      tercero = document.getElementById('seleccionarProveedorReporte') ? document.getElementById('seleccionarProveedorReporte').value : 'todos';
+    } else {
+      tercero = document.getElementById('seleccionarClienteReporte') ? document.getElementById('seleccionarClienteReporte').value : 'todos';
+    }
+    const idUsuario = document.getElementById('seleccionarUsuarioReporte') ? document.getElementById('seleccionarUsuarioReporte').value : 'todos';
+
+    const fechaInicio = (typeof fechaInicial !== 'undefined' && fechaInicial) ? fechaInicial : '';
+    const fechaFin = (typeof fechaFinal !== 'undefined' && fechaFinal) ? fechaFinal : '';
+
+    const sucursalMaestra = document.getElementById('sucursalReporteMaestro');
+    const idBodega = sucursalMaestra ? sucursalMaestra.value : '';
+
+    if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
+    if (tercero) url += `&tercero=${encodeURIComponent(tercero)}`;
+    if (idUsuario) url += `&idUsuario=${encodeURIComponent(idUsuario)}`;
+    if (fechaInicio) url += `&fechaInicial=${encodeURIComponent(fechaInicio)}`;
+    if (fechaFin) url += `&fechaFinal=${encodeURIComponent(fechaFin)}`;
+    if (idBodega && idBodega !== 'todos') url += `&idBodega=${encodeURIComponent(idBodega)}`;
+
+    mostrarToast('¡Generación iniciada! El archivo PDF de Facturación se está creando...');
+    window.open(url, '_blank');
+  });
+
   // --- LOGICA MODAL FACTURACION ELECTRONICA ---
 
   // También queremos que lea 'categoria' y 'tercero' actuales
@@ -789,6 +838,7 @@
 
   function actualizarEnlaceExcelFacturacion() {
     const btnDescargar = document.getElementById('btn-descargar-excel-fact');
+    const btnDescargarPdfModal = document.getElementById('btn-descargar-pdf-fact');
 
     // Obtener los otros filtros (categoría desde el modal)
     var cat = document.getElementById('filtro-categoria-excel-fact').value;
@@ -803,6 +853,7 @@
 
     let rutaBase = window.location.hostname.includes("localhost") ? "/pos" : "";
     let url = `${rutaBase}/vistas/modulos/descargar-reporte-facturacion.php?reporte=reporte_facturacion&categoria=${cat}&tercero=${tercero}`;
+    let urlPdf = `${rutaBase}/vistas/modulos/descargar-reporte-facturacion-pdf.php?reporte=reporte_facturacion&categoria=${cat}&tercero=${tercero}`;
 
     // Fechas desde los hidden inputs (gestionados por daterangepicker)
     const fechaInicio = document.getElementById('excel-fact-fecha-inicio').value;
@@ -810,20 +861,26 @@
 
     if (fechaInicio && fechaFin) {
       url += `&fechaInicial=${fechaInicio}&fechaFinal=${fechaFin}`;
+      urlPdf += `&fechaInicial=${fechaInicio}&fechaFinal=${fechaFin}`;
     }
 
     const usuario = document.getElementById('filtro-usuario-excel-fact').value;
     if (usuario) {
       url += `&idUsuario=${usuario}`;
+      urlPdf += `&idUsuario=${usuario}`;
     }
 
     // Incluir sucursal (idBodega)
     const sucursalMaestra = document.getElementById('sucursalReporteMaestro');
     const idBodega = sucursalMaestra ? sucursalMaestra.value : 'todos';
     url += `&idBodega=${idBodega}`;
+    urlPdf += `&idBodega=${idBodega}`;
 
     if (btnDescargar) {
       btnDescargar.href = url;
+    }
+    if (btnDescargarPdfModal) {
+      btnDescargarPdfModal.href = urlPdf;
     }
   }
 
@@ -856,6 +913,13 @@
 
   $('#btn-descargar-excel-fact').on('click', function (e) {
     mostrarToast('¡Descarga iniciada! El archivo Excel de Facturación se está descargando...');
+    setTimeout(function () {
+      $('#modalDescargarExcelFacturacion').modal('hide');
+    }, 1000);
+  });
+
+  $('#btn-descargar-pdf-fact').on('click', function (e) {
+    mostrarToast('¡Generación iniciada! El archivo PDF de Facturación se está creando...');
     setTimeout(function () {
       $('#modalDescargarExcelFacturacion').modal('hide');
     }, 1000);

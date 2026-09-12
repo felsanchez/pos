@@ -400,10 +400,13 @@ if ($venta["estado"] == "venta") {
             $impuestoGeneral += $impuestoItem;
 
             // Guardar para la tabla
+            $precioBaseUnitario = $precioUnitario / (1 + ($impuestoPorcentaje / 100));
+
             $itemsTabla[] = [
               "descripcion" => $prod["descripcion"],
               "cantidad" => $cantidad,
               "precio" => $precioUnitario,
+              "precio_base" => $precioBaseUnitario,
               "total" => $totalProductoConImpuesto,
               "impuesto_porc" => $impuestoPorcentaje,
               "impuesto_nombre" => $impuestoNombre
@@ -422,6 +425,7 @@ if ($venta["estado"] == "venta") {
               <th>Cant</th>
               <th>Precio Unit.</th>
               <th>Impuesto</th>
+              <th>Precio base (Sin impuesto)</th>
               <th>Subtotal</th>
             </tr>
           </thead>
@@ -432,6 +436,7 @@ if ($venta["estado"] == "venta") {
                 <td><?php echo $item["cantidad"]; ?></td>
                 <td>$<?php echo number_format($item["precio"], 2); ?></td>
                 <td><?php echo (!empty($item["impuesto_nombre"]) ? $item["impuesto_nombre"] . " " : "") . $item["impuesto_porc"]; ?>%</td>
+                <td>$<?php echo number_format($item["precio_base"], 2); ?></td>
                 <td>$<?php echo number_format($item["total"], 2); ?></td>
               </tr>
             <?php endforeach; ?>

@@ -85,14 +85,21 @@ $coloresDonaHex = array('#0072ff', '#7f00ff', '#fe8c00', '#11998e', '#ff5858', '
   </div>
 
   <div class="box-body" style="padding: 20px;">
-    <div class="row">
-      <div class="col-md-12">
-        <!-- Contenedor para ApexCharts -->
-        <div id="productos-mas-vendidos-chart" style="min-height: 250px;"></div>
+    <?php if (empty($productosTop)): ?>
+      <div class="text-center text-muted" style="padding: 40px 15px; font-weight: 600; font-size: 14px;">
+        <i class="fa fa-info-circle" style="margin-right: 5px; font-size: 18px;"></i> Sin ventas registradas
       </div>
-    </div>
+    <?php else: ?>
+      <div class="row">
+        <div class="col-md-12">
+          <!-- Contenedor para ApexCharts -->
+          <div id="productos-mas-vendidos-chart" style="min-height: 250px;"></div>
+        </div>
+      </div>
+    <?php endif; ?>
   </div>
 
+  <?php if (!empty($productosTop)): ?>
   <div class="box-footer no-padding" style="background-color: #fff; border-top: 1px solid #f4f4f4;">
     <ul class="nav nav-pills nav-stacked" id="lista-productos-mas-vendidos">
       <?php 
@@ -117,11 +124,9 @@ $coloresDonaHex = array('#0072ff', '#7f00ff', '#fe8c00', '#11998e', '#ff5858', '
           </a>
         </li>
       <?php endforeach; ?>
-      <?php if (empty($productosTop)): ?>
-        <li><a class="text-center text-muted" style="padding: 20px;">No hay ventas registradas en este periodo.</a></li>
-      <?php endif; ?>
     </ul>
   </div>
+  <?php endif; ?>
 
 </div>
 
@@ -132,6 +137,7 @@ $coloresDonaHex = array('#0072ff', '#7f00ff', '#fe8c00', '#11998e', '#ff5858', '
   }
 </script>
 
+<?php if (!empty($productosTop)): ?>
 <script>
   // Inicialización de la gráfica de productos con ApexCharts
   const optionsProductos = {
@@ -194,7 +200,7 @@ $coloresDonaHex = array('#0072ff', '#7f00ff', '#fe8c00', '#11998e', '#ff5858', '
     if (!containerLista) return;
 
     if (!productos || productos.length === 0) {
-      containerLista.innerHTML = '<li><a class="text-center text-muted" style="padding:20px;">No hay ventas registradas en este periodo.</a></li>';
+      containerLista.innerHTML = '<li><a class="text-center text-muted" style="padding:20px; font-weight:600;"><i class="fa fa-info-circle" style="margin-right: 5px;"></i> Sin ventas registradas</a></li>';
       chartProductos.updateOptions({
         series: [],
         labels: []
@@ -239,4 +245,5 @@ $coloresDonaHex = array('#0072ff', '#7f00ff', '#fe8c00', '#11998e', '#ff5858', '
     containerLista.innerHTML = html;
   }
 </script>
+<?php endif; ?>
 

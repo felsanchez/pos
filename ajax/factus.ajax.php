@@ -682,6 +682,42 @@ class AjaxFactus
 		}
 		exit;
 	}
+
+	/*=============================================
+	ELIMINAR MÚLTIPLES LEADS DE WHATSAPP
+	=============================================*/
+	public function ajaxEliminarMultiplesLeadsWhatsApp()
+	{
+		if (!class_exists("ModeloCRM")) {
+			if (file_exists(__DIR__ . "/../modelos/crm.modelo.php")) {
+				require_once __DIR__ . "/../modelos/crm.modelo.php";
+			}
+		}
+
+		$idsLeads = isset($_POST["idsLeads"]) ? $_POST["idsLeads"] : array();
+		if (!is_array($idsLeads) || empty($idsLeads)) {
+			echo json_encode(array("status" => "error", "mensaje" => "No se seleccionaron leads para eliminar."));
+			exit;
+		}
+
+		$contador = 0;
+		foreach ($idsLeads as $id) {
+			$idClean = intval($id);
+			if ($idClean > 0) {
+				$res = ModeloCRM::mdlEliminarLeadWhatsApp($idClean);
+				if ($res == "ok") {
+					$contador++;
+				}
+			}
+		}
+
+		echo json_encode(array(
+			"status" => "ok",
+			"mensaje" => "Se han marcado como eliminados " . $contador . " lead(s) correctamente.",
+			"eliminados" => $contador
+		));
+		exit;
+	}
 }
 
 /*=============================================
@@ -750,6 +786,9 @@ if (isset($_POST["accion"])) {
 			$respuesta = $factusEliminar->ctrEliminarNotaCredito();
 			echo $respuesta;
 			exit;
+			break;
+		case "eliminarMultiplesLeadsWhatsApp":
+			$factus->ajaxEliminarMultiplesLeadsWhatsApp();
 			break;
 		default:
 			echo json_encode(array("error" => true, "mensaje" => "Acción no válida"));

@@ -1779,3 +1779,16 @@
 2026-08-03 03:46:42 | RangoId: 1040 | Prefijo: FEFG | Local: 0 | NextLocal: 1 | ApiLive: 80 | Desde: 1 | Siguiente: 80
 2026-08-03 03:54:32 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000447 | Desde: 990000000 | Siguiente: 990000447
 2026-08-03 03:56:14 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000449 | Desde: 990000000 | Siguiente: 990000449
+2026-09-09 00:53:49 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000449 | Desde: 990000000 | Siguiente: 990000449
+2026-09-09 00:54:07 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000449 | Desde: 990000000 | Siguiente: 990000449
+2026-09-09 00:54:38 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000449 | Desde: 990000000 | Siguiente: 990000449
+2026-09-09 00:54:40 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000449 | Desde: 990000000 | Siguiente: 990000449
+2026-09-09 00:55:23 | RangoId: 1190 | Prefijo: SETP | Local: 0 | NextLocal: 1 | ApiLive: 990000449 | Desde: 990000000 | Siguiente: 990000449
+2026-09-09 21:52:44 | RangoId: 1190 | Prefijo: SETP | Local: 990000451 | NextLocal: 990000452 | ApiLive: 990000451 | Desde: 990000000 | Siguiente: 990000452
+2026-09-09 21:53:43 | RangoId: 1190 | Prefijo: SETP | Local: 990000451 | NextLocal: 990000452 | ApiLive: 990000451 | Desde: 990000000 | Siguiente: 990000452
+2026-09-09 22:27:38 | RangoId: 1190 | Prefijo: SETP | Local: 990000452 | NextLocal: 990000453 | ApiLive: 990000453 | Desde: 990000000 | Siguiente: 990000453
+2026-09-09 23:34:55 | RangoId: 1190 | Prefijo: SETP | Local: 990000453 | NextLocal: 990000454 | ApiLive: 990000453 | Desde: 990000000 | Siguiente: 990000454
+2026-09-09 23:49:54 | RangoId: 1190 | Prefijo: SETP | Local: 990000453 | NextLocal: 990000454 | ApiLive: 990000454 | Desde: 990000000 | Siguiente: 990000454
+2026-09-09 23:50:36 | RangoId: 1190 | Prefijo: SETP | Local: 990000453 | NextLocal: 990000454 | ApiLive: 990000454 | Desde: 990000000 | Siguiente: 990000454
+2026-09-09 23:58:59 | RangoId: 1190 | Prefijo: SETP | Local: 990000453 | NextLocal: 990000454 | ApiLive: 990000454 | Desde: 990000000 | Siguiente: 990000454
+2026-09-09 23:59:14 | RangoId: 1190 | Prefijo: SETP | Local: 990000453 | NextLocal: 990000454 | ApiLive: 990000454 | Desde: 990000000 | Siguiente: 990000454

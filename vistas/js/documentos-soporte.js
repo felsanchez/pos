@@ -1240,7 +1240,7 @@ $(document).ready(function () {
             $(this).parent().parent().parent().children(".cajasMetodoPagoDS").html(
                 '<div class="col-xs-6" style="padding-left:0px">' +
                 '<div class="input-group">' +
-                '<input type="text" class="form-control" id="nuevoCodigoTransaccionDS" name="nuevoCodigoTransaccionDS" placeholder="Ingrese el valor o código de transacción">' +
+                '<input type="text" class="form-control" id="nuevoCodigoTransaccionDS" name="nuevoCodigoTransaccionDS" placeholder="Ingrese el valor o código (Opcional)">' +
                 '<span class="input-group-addon"><i class="fa fa-lock"></i></span>' +
                 '</div>' +
                 '</div>'
