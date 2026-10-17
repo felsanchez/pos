@@ -502,7 +502,7 @@ class ControladorGoogle {
                 $notas .= ($notas !== "" ? "\n\n" : "") . "📎 Archivo adjunto: " . $fileUrl;
             }
         }
-        // Limpiar cualquier línea de "Hora programada" previa en $notas para actualizarla con la hora actual
+        // Limpiar cualquier línea de "Hora programada" previa en $notas para actualizarla con la hora actual.
         $notas = preg_replace('/(?:⏰\s*)?Hora programada:\s*\d{1,2}:\d{2}\s*(?:AM|PM)?\s*/iu', '', $notas);
         $notas = self::limpiarNotasDuplicadas($notas);
 
