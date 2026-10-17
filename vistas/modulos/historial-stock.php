@@ -159,7 +159,7 @@ foreach ($pre_resumen as $item) {
     $tv = $item["total_unidades"];
   if ($item["tipo_movimiento"] == "eliminacion_venta")
     $tc += intval($item["total_unidades"]);
-  if ($item["tipo_movimiento"] == "edicion_stock" || $item["tipo_movimiento"] == "ajuste_manual")
+  if ($item["tipo_movimiento"] == "edicion_stock" || $item["tipo_movimiento"] == "ajuste_manual" || $item["tipo_movimiento"] == "edicion_excel")
     $te += intval($item["total_movimientos"]);
 }
 ?>
@@ -372,6 +372,7 @@ foreach ($pre_resumen as $item) {
                   <option value="creacion_variante">Creación Variante</option>
                   <option value="eliminacion_variante">Eliminación de Variantes</option>
                   <option value="edicion_stock">Edición Stock</option>
+                  <option value="edicion_excel">Edición Excel</option>
                   <option value="ajuste_manual">Ajuste Manual</option>
                   <option value="traslado_salida">Traslado (Salida)</option>
                   <option value="traslado_entrada">Traslado (Entrada)</option>

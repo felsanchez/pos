@@ -37,6 +37,46 @@ if ($_SESSION["perfil"] !== "_SystemMaster_") {
       </ul>
     </div>
 
+    <!--=====================================
+    ALERTA PASOS VINCULACIÓN GOOGLE CALENDAR
+    ======================================-->
+    <div class="alert alert-warning alert-dismissible" style="background-color: #fff8e1 !important; color: #8a6d3b !important; border-color: #faebcc !important; border-left: 5px solid #f39c12 !important;">
+      <button type="button" class="close" data-dismiss="alert" aria-hidden="true" style="color: #8a6d3b !important; opacity: 0.8;">&times;</button>
+      <h4><i class="icon fa fa-calendar-check-o" style="color: #f39c12 !important;"></i> Pasos para vincular el Calendario con Google (OAuth 2.0):</h4>
+      <ol style="padding-left: 20px; font-size: 14px; margin-top: 5px; line-height: 1.6;">
+        <li style="margin-bottom: 8px;">
+          Ingresar a <a href="https://console.cloud.google.com/" target="_blank" style="color: #8a6d3b; text-decoration: underline; font-weight: bold;">Google Cloud Console <i class="fa fa-external-link"></i></a>.
+        </li>
+        <li style="margin-bottom: 8px;">
+          Crear un proyecto nuevo (o seleccionar uno existente).
+        </li>
+        <li style="margin-bottom: 8px;">
+          Ir a <strong>API y Servicios</strong> &gt; <strong>Biblioteca (Library)</strong> y habilitar:
+          <ul style="padding-left: 20px; margin-top: 4px; margin-bottom: 4px;">
+            <li>Google Tasks API</li>
+            <li>Google Calendar API</li>
+            <li>Calendar MCP API</li>
+            <li>CalDAV API</li>
+          </ul>
+        </li>
+        <li style="margin-bottom: 8px;">
+          Ir a <strong>API y Servicios</strong> &gt; <strong>Pantalla de consentimiento</strong> (se abre un nuevo menú lateral izq):
+          <ul style="padding-left: 20px; margin-top: 4px; margin-bottom: 4px; list-style-type: none;">
+            <li style="margin-bottom: 4px;"><strong>4.1</strong> En <strong>Información de la marca</strong>: llenar todos los campos.</li>
+            <li style="margin-bottom: 4px;"><strong>4.2</strong> En <strong>Público</strong>: Agregar el correo del usuario (<code>kontrolpos01@gmail.com</code>).</li>
+            <li style="margin-bottom: 4px;"><strong>4.3</strong> En <strong>Cliente</strong>: Crear un cliente y Agregar las Url Autorizadas, al guardar te proporcionará el ID y Clave secreta de cliente.</li>
+          </ul>
+        </li>
+      </ol>
+
+      <h5 style="font-weight: bold; margin-top: 15px; margin-bottom: 8px; color: #8a6d3b; font-size: 15px;"><i class="fa fa-globe"></i> Vincular nuevo Subdominio</h5>
+      <ol style="padding-left: 20px; font-size: 14px; margin-top: 5px; line-height: 1.6;">
+        <li>
+          En <strong>Cliente</strong>: Edita el cliente creado y en <strong>"URIs de redireccionamiento autorizados"</strong> agrega el nuevo subdominio.
+        </li>
+      </ol>
+    </div>
+
     <div class="box">
 
       <div class="box-header with-border">

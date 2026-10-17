@@ -79,7 +79,7 @@
         <div class="pull-right" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
           <div style="display: flex; align-items: center; gap: 6px;">
             <input type="checkbox" id="mostrarVisitantesCheck" style="margin: 0; width: 16px; height: 16px; cursor: pointer;">
-            <label for="mostrarVisitantesCheck" style="margin-bottom: 0; font-weight: 500; cursor: pointer; color: #333; font-size: 13px;">Mostrar Visitantes</label>
+            <label for="mostrarVisitantesCheck" style="margin-bottom: 0; font-weight: 500; cursor: pointer; color: #333; font-size: 13px;">Mostrar Solo Visitantes</label>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span><b>Perfil:</b></span>
@@ -123,7 +123,6 @@
               <tr>
                 <th>Usuario</th>
                 <th>Nombre</th>
-                <th>Email</th>
                 <th>Foto</th>
                 <th>Perfil</th>
                 <th>Sucursal</th>
@@ -171,7 +170,7 @@
         <div class="form-group">
           <label>Cambiar Foto del Usuario</label>
           <input type="file" class="form-control nuevaImagenUsuario" accept="image/*">
-          <p class="help-block">Peso máximo de la imagen 2MB</p>
+          <p class="help-block">Peso máximo de la imagen 8MB</p>
         </div>
         <input type="hidden" id="idUsuarioImagen">
         <input type="hidden" id="usuarioNombre">
@@ -281,8 +280,13 @@ MODAL AGREGAR USUARIO
                   <label>Contraseña:</label>
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-lock"></i></span>
-                    <input type="password" class="form-control input-lg" name="nuevoPassword"
+                    <input type="password" class="form-control input-lg" name="nuevoPassword" id="nuevoPassword"
                       placeholder="Ingresar contraseña" required>
+                    <span class="input-group-btn">
+                      <button class="btn btn-default btn-lg btnTogglePassword" type="button" data-target="#nuevoPassword" title="Mostrar/Ocultar contraseña">
+                        <i class="fa fa-eye"></i>
+                      </button>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -316,7 +320,7 @@ MODAL AGREGAR USUARIO
                   <label>Foto de Perfil:</label>
                   <div class="panel text-center" style="border: 1px dashed #ccc; padding: 10px;">
                     <input type="file" class="nuevaFoto" name="nuevaFoto" style="margin: 0 auto;">
-                    <p class="help-block">Peso máximo de la foto 2MB</p>
+                    <p class="help-block">Peso máximo de la foto 8MB</p>
                     <img src="vistas/img/usuarios/default/anonymous.png" class="img-thumbnail previsualizar"
                       width="100px">
                   </div>
@@ -475,7 +479,7 @@ MODAL EDITAR USUARIO
                   <label>Foto de Perfil:</label>
                   <div class="panel text-center" style="border: 1px dashed #ccc; padding: 10px;">
                     <input type="file" class="nuevaFoto" name="editarFoto" style="margin: 0 auto;">
-                    <p class="help-block">Peso máximo de la foto 2MB</p>
+                    <p class="help-block">Peso máximo de la foto 8MB</p>
                     <img src="vistas/img/usuarios/default/anonymous.png"
                       class="img-thumbnail previsualizar img-ampliar-usuario" width="100px" style="cursor: pointer;">
                     <input type="hidden" name="fotoActual" id="fotoActual">
@@ -564,11 +568,11 @@ $borrarUsuario->ctrBorrarUsuario();
           type: "error",
           confirmButtonText: "¡Cerrar!"
         });
-      } else if (imagen["size"] > 2000000) {
+      } else if (imagen["size"] > 8388608) {
         $(".nuevaFoto").val("");
         swal({
           title: "Error al subir la imagen",
-          text: "¡La imagen no debe pesar más de 2MB!",
+          text: "¡La imagen no debe pesar más de 8MB!",
           type: "error",
           confirmButtonText: "¡Cerrar!"
         });
@@ -621,11 +625,11 @@ AMPLIAR Y EDITAR IMAGEN DE USUARIO DESDE LA TABLA
           type: "error",
           confirmButtonText: "¡Cerrar!"
         });
-      } else if (imagen["size"] > 2000000) {
+      } else if (imagen["size"] > 8388608) {
         $(".nuevaImagenUsuario").val("");
         swal({
           title: "Error al subir la imagen",
-          text: "¡La imagen no debe pesar más de 2MB!",
+          text: "¡La imagen no debe pesar más de 8MB!",
           type: "error",
           confirmButtonText: "¡Cerrar!"
         });

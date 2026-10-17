@@ -23,6 +23,8 @@ try {
     require_once __DIR__ . "/../modelos/factus.modelo.php";
     require_once __DIR__ . "/../controladores/movimientos.controlador.php";
     require_once __DIR__ . "/../modelos/movimientos.modelo.php";
+    require_once __DIR__ . "/../controladores/bodegas.controlador.php";
+    require_once __DIR__ . "/../modelos/bodegas.modelo.php";
     require_once __DIR__ . "/../modelos/csrf.php";
     require_once __DIR__ . "/../modelos/helpers.php";
 

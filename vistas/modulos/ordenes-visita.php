@@ -114,7 +114,7 @@
         <div class="form-group">
           <label>Cambiar Imagen de la Orden</label>
           <input type="file" class="form-control nuevaImagenOrden" accept="image/*">
-          <p class="help-block">Peso máximo de la imagen 2MB</p>
+          <p class="help-block">Peso máximo de la imagen 8MB</p>
         </div>
         
         <input type="hidden" id="idOrdenImagen">
@@ -344,11 +344,11 @@ $(".nuevaImagenOrden").change(function(){
                 type: "error",
                 confirmButtonText: "¡Cerrar!"
             });
-        }else if(imagen["size"] > 2000000){
+        }else if(imagen["size"] > 8000000){
             $(".nuevaImagenOrden").val("");
             swal({
                 title: "Error al subir la imagen",
-                text: "¡La imagen no debe pesar más de 2MB!",
+                text: "¡La imagen no debe pesar más de 8MB!",
                 type: "error",
                 confirmButtonText: "¡Cerrar!"
             });

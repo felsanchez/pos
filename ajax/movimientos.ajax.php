@@ -27,8 +27,20 @@ class AjaxMovimientos
 	=============================================*/
 	public function ajaxMostrarMovimientosServerSide()
 	{
-		$respuesta = ControladorMovimientos::ctrMostrarMovimientosServerSide($_POST);
-		echo json_encode($respuesta);
+		try {
+			$respuesta = ControladorMovimientos::ctrMostrarMovimientosServerSide($_POST);
+			header('Content-Type: application/json');
+			echo json_encode($respuesta);
+		} catch (Exception $e) {
+			header('Content-Type: application/json');
+			echo json_encode(array(
+				"draw" => isset($_POST['draw']) ? intval($_POST['draw']) : 1,
+				"recordsTotal" => 0,
+				"recordsFiltered" => 0,
+				"data" => array(),
+				"error" => $e->getMessage()
+			));
+		}
 	}
 
 	/*=============================================

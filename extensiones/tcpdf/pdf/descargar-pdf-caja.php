@@ -236,7 +236,7 @@ class ImprimirArqueoCaja
             $rowsMediosHTML = '<tr><td colspan="2" class="text-center text-muted" style="font-style:italic; padding: 12px;">Sin ventas electrónicas en este turno</td></tr>';
         }
 
-        $totalRecaudado = $ventasEfectivo + $totalMediosElectronicos;
+        $totalRecaudado = $totalMediosElectronicos;
 
         $htmlRight = $style . '
         <div class="section-title"><i class="fa fa-credit-card"></i> MEDIOS ELECTRÓNICOS (BANCOS/TARJETAS)</div>
@@ -253,7 +253,7 @@ class ImprimirArqueoCaja
         </table>
         <table class="table" cellpadding="6" style="margin-top: 10px;">
             <tr style="background-color:#eee; font-size:10px;">
-                <td style="width:60%; font-weight:bold;">Total Recaudado (Ventas)</td>
+                <td style="width:60%; font-weight:bold;">Total Recaudado (Medios Electrónicos)</td>
                 <td style="width:40%;" class="text-right text-bold">' . $moneda . ' ' . number_format($totalRecaudado, 2) . '</td>
             </tr>
         </table>';

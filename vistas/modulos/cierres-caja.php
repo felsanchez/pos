@@ -233,7 +233,7 @@ MODAL VER DETALLE DE CIERRE DE CAJA
             
             <table class="table table-condensed" style="font-size: 14px; margin-top: 10px;">
               <tr style="background-color: #f5f5f5; font-size: 15px; font-weight: bold;">
-                <td style="width: 60%;">Total Recaudado (Ventas)</td>
+                <td style="width: 60%;">Total Recaudado (Medios Electrónicos)</td>
                 <td id="detTotalRecaudado" class="text-right text-bold" style="width: 40%;"></td>
               </tr>
             </table>

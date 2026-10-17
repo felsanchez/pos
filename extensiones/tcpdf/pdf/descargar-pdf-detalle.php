@@ -1,28 +1,28 @@
 <?php
 
-require_once "../../../controladores/ventas.controlador.php";
-require_once "../../../modelos/ventas.modelo.php";
+require_once __DIR__ . "/../../../controladores/ventas.controlador.php";
+require_once __DIR__ . "/../../../modelos/ventas.modelo.php";
 
-require_once "../../../controladores/clientes.controlador.php";
-require_once "../../../modelos/clientes.modelo.php";
+require_once __DIR__ . "/../../../controladores/clientes.controlador.php";
+require_once __DIR__ . "/../../../modelos/clientes.modelo.php";
 
-require_once "../../../controladores/usuarios.controlador.php";
-require_once "../../../modelos/usuarios.modelo.php";
+require_once __DIR__ . "/../../../controladores/usuarios.controlador.php";
+require_once __DIR__ . "/../../../modelos/usuarios.modelo.php";
 
-require_once "../../../controladores/productos.controlador.php";
-require_once "../../../modelos/productos.modelo.php";
+require_once __DIR__ . "/../../../controladores/productos.controlador.php";
+require_once __DIR__ . "/../../../modelos/productos.modelo.php";
 
-require_once "../../../controladores/configuracion.controlador.php";
-require_once "../../../modelos/configuracion.modelo.php";
+require_once __DIR__ . "/../../../controladores/configuracion.controlador.php";
+require_once __DIR__ . "/../../../modelos/configuracion.modelo.php";
 
-require_once "../../../controladores/factus.controlador.php";
-require_once "../../../modelos/factus.modelo.php";
+require_once __DIR__ . "/../../../controladores/factus.controlador.php";
+require_once __DIR__ . "/../../../modelos/factus.modelo.php";
 
 class imprimirDetalleVenta
 {
     public $idVenta;
 
-    public function traerImpresionDetalle()
+    public function traerImpresionDetalle($dest = 'I', $name = '')
     {
         $item = "id";
         $valor = $this->idVenta;
@@ -38,7 +38,7 @@ class imprimirDetalleVenta
         $configFactus = ControladorFactus::ctrObtenerConfiguracion();
 
         // REQUERIMOS LA CLASE TCPDF
-        require_once('tcpdf_include.php');
+        require_once(__DIR__ . '/tcpdf_include.php');
 
         $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
@@ -106,10 +106,36 @@ class imprimirDetalleVenta
             }
         }
 
+        // Obtener Tipo de Documento del Cliente y Forma de Pago
+        $tipoDocNombreCliente = '';
+        $tipoDocIdCliente = $cliente["tipo_documento_id"] ?? null;
+        if (!empty($tipoDocIdCliente)) {
+            $tiposDocumento = ControladorFactus::ctrMostrarTiposDocumento();
+            if (is_array($tiposDocumento)) {
+                foreach ($tiposDocumento as $td) {
+                    if ($td["id"] == $tipoDocIdCliente) {
+                        $tipoDocNombreCliente = $td["nombre"];
+                        break;
+                    }
+                }
+            }
+        }
+        if (empty($tipoDocNombreCliente) && !empty($cliente["tipo_documento"])) {
+            $tipoDocNombreCliente = $cliente["tipo_documento"];
+        }
+        if (empty($tipoDocNombreCliente)) {
+            $tipoDocNombreCliente = 'No especificado';
+        }
+
+        $formaPagoNombre = (isset($venta["forma_pago_dian"]) && $venta["forma_pago_dian"] == "2") ? "Crédito" : "Contado";
+        if ($formaPagoNombre == "Crédito" && !empty($venta["fecha_vencimiento"])) {
+            $formaPagoNombre .= ' (Vence: ' . $venta["fecha_vencimiento"] . ')';
+        }
+
         // --- LOGO FACTUS (Si existe) ---
         $htmlLogo = '';
         if (isset($configFactus['logo_empresa']) && !empty($configFactus['logo_empresa'])) {
-            $rutaLogoFactus = "../../../" . $configFactus['logo_empresa'];
+            $rutaLogoFactus = __DIR__ . "/../../../" . $configFactus['logo_empresa'];
             if (file_exists($rutaLogoFactus)) {
                 // Convertir a base64 para evitar problemas de ruta en TCPDF
                 $imgData = base64_encode(file_get_contents($rutaLogoFactus));
@@ -117,62 +143,6 @@ class imprimirDetalleVenta
                 $htmlLogo = '<img src="data:image/' . $ext . ';base64,' . $imgData . '" style="height:40px; vertical-align:middle; margin-bottom:5px;"> ';
             }
         }
-
-        // --- PARTE 1: HEADER Y TABLA DE PRODUCTOS (Ancho completo) ---
-        $htmlHeader = $style . '<div class="invoice">';
-        $htmlHeader .= '<table style="width:100%; border-bottom: 2px solid #3c8dbc; padding-bottom:10px;">
-            <tr>
-                <td style="width:50%; vertical-align:middle;">
-                    <span style="font-size:18px; font-weight:bold; color:#444;">' . $htmlLogo . $nombreEmpresa . '</span>
-                </td>
-                <td style="width:50%; text-align:right; vertical-align:middle;">
-                    <span style="font-size:16px; font-weight:bold; color:#3c8dbc;">FACTURA DE VENTA</span><br>
-                    ' . (isset($venta["estado"]) && $venta["estado"] == "anulada" ? '<span style="color:#d9534f; font-weight:bold; font-size:14px;">ANULADA</span><br>' : '') . '
-                    <span style="font-size:10px; color:#666;">Fecha: ' . $venta["fecha"] . '</span>
-                </td>
-            </tr>
-        </table><br>';
-
-        $htmlHeader .= '<table class="table" cellpadding="6">
-            <tr>
-                <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
-                    <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Empresa</span><br><br>
-                    <strong>' . $labelNombreEmisor . ':</strong> ' . $nombreEmpresa . '<br>
-                    <strong>NIT:</strong> ' . $nitConDv . '<br>
-                    <strong>Dirección:</strong> ' . $direccionEmisor . '<br>' .
-                    (!empty($municipioEmisor) ? '                    <strong>Municipio:</strong> ' . $municipioEmisor . '<br>' : '') . '
-                    <strong>Teléfono:</strong> ' . $telefonoEmisor . '<br>
-                    <strong>Email:</strong> ' . $emailEmisor . '
-                </td>
-                <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
-                    <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Cliente</span><br><br>
-                    <strong>Cliente:</strong> ' . ($cliente["nombre"] ?? '') . '<br>
-                    <strong>Documento:</strong> ' . ($cliente["documento"] ?? '') . (($cliente["tipo_documento_id"] ?? 0) == 6 && !empty($cliente["digito_verificacion"]) ? '-' . $cliente["digito_verificacion"] : '') . '<br>
-                    <strong>Dirección:</strong> ' . ($cliente["direccion"] ?? '') . '<br>
-                    <strong>Municipio:</strong> ' . $ciudadConDeptoCliente . '<br>
-                    <strong>Teléfono:</strong> ' . ($cliente["telefono"] ?? '') . '<br>
-                    <strong>Email:</strong> ' . ($cliente["email"] ?? '') . '
-                </td>
-                <td style="width:34%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
-                    <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Detalles</span><br><br>
-                    <strong>Factura de Venta #' . ($venta["codigo"] ?? '') . '</strong><br><br>
-                    <strong>Vendedor:</strong> ' . ($vendedor["nombre"] ?? '') . '<br>
-                    <strong>Método de Pago:</strong> ' . ($venta["metodo_pago"] ?? '') . '
-                </td>
-            </tr>
-        </table><br><br>';
-
-        $htmlHeader .= '<table class="table" cellpadding="5">
-            <thead>
-                <tr class="table-header">
-                    <th style="width:40%;">Producto</th>
-                    <th style="width:10%; text-align:center;">Cant</th>
-                    <th style="width:20%; text-align:right;">Precio Unit.</th>
-                    <th style="width:15%; text-align:center;">Impuesto</th>
-                    <th style="width:15%; text-align:right;">Subtotal</th>
-                </tr>
-            </thead>
-            <tbody>';
 
         // --- PRE-CALCULO DE TOTALES (Sincronizado con detalle-venta.php) ---
         $listaProducto = json_decode($venta["productos"], true);
@@ -273,6 +243,7 @@ class imprimirDetalleVenta
                 <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Cliente</span><br><br>
                     <strong>Cliente:</strong> ' . ($cliente["nombre"] ?? '') . '<br>
+                    <strong>Tipo de documento:</strong> ' . $tipoDocNombreCliente . '<br>
                     <strong>Documento:</strong> ' . ($cliente["documento"] ?? '') . (($cliente["tipo_documento_id"] ?? 0) == 6 && !empty($cliente["digito_verificacion"]) ? '-' . $cliente["digito_verificacion"] : '') . '<br>
                     <strong>Dirección:</strong> ' . ($cliente["direccion"] ?? '') . '<br>
                     <strong>Municipio:</strong> ' . $ciudadConDeptoCliente . '<br>
@@ -283,7 +254,8 @@ class imprimirDetalleVenta
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Detalles</span><br><br>
                     <strong>Factura de Venta #' . ($venta["codigo"] ?? '') . '</strong><br><br>
                     <strong>Vendedor:</strong> ' . ($vendedor["nombre"] ?? '') . '<br>
-                    <strong>Método de Pago:</strong> ' . ($venta["metodo_pago"] ?? '') . '
+                    <strong>Método de Pago:</strong> ' . ($venta["metodo_pago"] ?? '') . '<br>
+                    <strong>Forma de Pago:</strong> ' . $formaPagoNombre . '
                 </td>
             </tr>
         </table><br><br>';
@@ -400,8 +372,14 @@ class imprimirDetalleVenta
 
         $pdf->writeHTMLCell(75, 0, 125, $startY, $htmlRight, 0, 1, false, true, 'R', true);
 
-        ob_end_clean();
-        $pdf->Output('factura-de-venta-' . $venta["codigo"] . '.pdf', 'I');
+        if (empty($name)) {
+            $name = 'factura-de-venta-' . $venta["codigo"] . '.pdf';
+        }
+
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+        $pdf->Output($name, $dest);
     }
 }
 
@@ -409,4 +387,15 @@ if (isset($_GET["idVenta"])) {
     $imprimir = new imprimirDetalleVenta();
     $imprimir->idVenta = $_GET["idVenta"];
     $imprimir->traerImpresionDetalle();
+} elseif (isset($_GET["codigo"])) {
+    $item = "codigo";
+    $valor = $_GET["codigo"];
+    $venta = ControladorVentas::ctrMostrarVentas($item, $valor);
+    if ($venta) {
+        $imprimir = new imprimirDetalleVenta();
+        $imprimir->idVenta = $venta["id"];
+        $imprimir->traerImpresionDetalle();
+    } else {
+        die("Venta no encontrada.");
+    }
 }

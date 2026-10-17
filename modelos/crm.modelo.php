@@ -4,53 +4,165 @@ require_once "conexion.php";
 
 class ModeloCRM {
 
-	/*=============================================
-	MOSTRAR LEADS
-	=============================================*/
-	static public function mdlMostrarLeads($tabla, $item, $valor) {
-
-		$db = Conexion::conectar();
-		try {
-			$check1 = $db->query("SHOW COLUMNS FROM crm_leads LIKE 'estado'");
-			if ($check1->rowCount() == 0) {
-				$db->exec("ALTER TABLE crm_leads ADD COLUMN estado VARCHAR(20) NOT NULL DEFAULT 'activo'");
-			}
-		} catch (Exception $e) {}
-
-		if($item != null) {
-
-			$stmt = $db->prepare("
-				SELECT l.*, c.nombre as nombre_cliente, c.telefono as telefono_cliente, c.email as email_cliente, u.nombre as nombre_vendedor 
-				FROM $tabla l
-				INNER JOIN clientes c ON l.id_cliente = c.id
-				LEFT JOIN usuarios u ON l.id_vendedor = u.id
-				WHERE l.$item = :$item AND (l.estado IS NULL OR l.estado != 'eliminado')
-				ORDER BY l.orden ASC, l.fecha_creacion DESC
-			");
-
-			$stmt->bindParam(":".$item, $valor, PDO::PARAM_STR);
-			$stmt->execute();
-			return $stmt->fetch();
-
-		} else {
-
-			$stmt = $db->prepare("
-				SELECT l.*, c.nombre as nombre_cliente, c.telefono as telefono_cliente, c.email as email_cliente, u.nombre as nombre_vendedor 
-				FROM $tabla l
-				INNER JOIN clientes c ON l.id_cliente = c.id
-				LEFT JOIN usuarios u ON l.id_vendedor = u.id
-				WHERE (l.estado IS NULL OR l.estado != 'eliminado')
-				ORDER BY l.orden ASC, l.fecha_creacion DESC
-			");
-
-			$stmt->execute();
-			return $stmt->fetchAll();
-
-		}
-
-		$stmt = null;
-
-	}
+    /*=============================================
+    MOSTRAR LEADS
+    =============================================*/
+    static public function mdlMostrarLeads($tabla, $item, $valor) {
+    
+        $db = Conexion::conectar();
+    
+        try {
+    
+            $check1 = $db->query(
+                "SHOW COLUMNS FROM crm_leads LIKE 'estado'"
+            );
+    
+            if ($check1->rowCount() == 0) {
+    
+                $db->exec("
+                    ALTER TABLE crm_leads
+                    ADD COLUMN estado VARCHAR(20)
+                    NOT NULL DEFAULT 'activo'
+                ");
+    
+            }
+    
+        } catch (Exception $e) {}
+    
+    
+        /*=============================================
+            MOSTRAR UN LEAD
+        =============================================*/
+        if ($item != null) {
+    
+            $stmt = $db->prepare("
+    
+                SELECT
+                    l.*,
+                    c.nombre as nombre_cliente,
+                    c.telefono as telefono_cliente,
+                    c.email as email_cliente,
+                    u.nombre as nombre_vendedor
+    
+                FROM $tabla l
+    
+                INNER JOIN clientes c
+                    ON l.id_cliente = c.id
+    
+                LEFT JOIN usuarios u
+                    ON l.id_vendedor = u.id
+    
+                WHERE l.$item = :$item
+    
+                AND (
+                    l.estado IS NULL
+                    OR l.estado != 'eliminado'
+                )
+    
+                ORDER BY
+                    l.orden ASC,
+                    l.fecha_creacion DESC
+    
+            ");
+    
+            $stmt->bindParam(
+                ":".$item,
+                $valor,
+                PDO::PARAM_STR
+            );
+    
+            $stmt->execute();
+    
+            $respuesta = $stmt->fetch();
+    
+    
+            /*=============================================
+                OBTENER IMÁGENES DEL LEAD
+            =============================================*/
+    
+            if ($respuesta) {
+    
+                $stmtImagenes = $db->prepare("
+    
+                    SELECT
+                        id,
+                        id_lead,
+                        url_imagen,
+                        fecha_creacion
+    
+                    FROM crm_lead_imagenes
+    
+                    WHERE id_lead = :id_lead
+    
+                    ORDER BY
+                        fecha_creacion ASC,
+                        id ASC
+    
+                ");
+    
+                $stmtImagenes->bindParam(
+                    ":id_lead",
+                    $respuesta["id"],
+                    PDO::PARAM_INT
+                );
+    
+                $stmtImagenes->execute();
+    
+                $respuesta["imagenes"] =
+                    $stmtImagenes->fetchAll();
+    
+            } else {
+    
+                $respuesta = false;
+    
+            }
+    
+    
+            return $respuesta;
+    
+    
+        } else {
+    
+    
+            /*=============================================
+                MOSTRAR TODOS LOS LEADS
+            =============================================*/
+    
+            $stmt = $db->prepare("
+    
+                SELECT
+                    l.*,
+                    c.nombre as nombre_cliente,
+                    c.telefono as telefono_cliente,
+                    c.email as email_cliente,
+                    u.nombre as nombre_vendedor
+    
+                FROM $tabla l
+    
+                INNER JOIN clientes c
+                    ON l.id_cliente = c.id
+    
+                LEFT JOIN usuarios u
+                    ON l.id_vendedor = u.id
+    
+                WHERE (
+                    l.estado IS NULL
+                    OR l.estado != 'eliminado'
+                )
+    
+                ORDER BY
+                    l.orden ASC,
+                    l.fecha_creacion DESC
+    
+            ");
+    
+            $stmt->execute();
+    
+            return $stmt->fetchAll();
+    
+        }
+    
+    }
 
 	/*=============================================
 	MOSTRAR LEADS DE WHATSAPP
@@ -436,6 +548,18 @@ class ModeloCRM {
 	}
 
 	/*=============================================
+	ACTUALIZAR NOMBRE DE ETAPA EN LEADS
+	=============================================*/
+	static public function mdlActualizarNombreEtapaEnLeads($tablaLeads, $nombreAnterior, $nombreNuevo) {
+
+		$stmt = Conexion::conectar()->prepare("UPDATE $tablaLeads SET etapa = :nombreNuevo WHERE etapa = :nombreAnterior");
+		$stmt->bindParam(":nombreNuevo", $nombreNuevo, PDO::PARAM_STR);
+		$stmt->bindParam(":nombreAnterior", $nombreAnterior, PDO::PARAM_STR);
+
+		return $stmt->execute();
+	}
+
+	/*=============================================
 	ELIMINAR ETAPA
 	=============================================*/
 	static public function mdlEliminarEtapa($tabla, $id) {
@@ -455,15 +579,26 @@ class ModeloCRM {
 	}
 
 	/*=============================================
-	CONTAR LEADS EN ETAPA (VALIDAR ESCENARIO A)
+	LIMPIAR LEADS CON BORRADO LÓGICO DE UNA ETAPA
+	=============================================*/
+	static public function mdlLimpiarLeadsEliminadosDeEtapa($tablaLeads, $nombreEtapa) {
+
+		$stmt = Conexion::conectar()->prepare("DELETE FROM $tablaLeads WHERE etapa = :etapa AND estado = 'eliminado'");
+		$stmt->bindParam(":etapa", $nombreEtapa, PDO::PARAM_STR);
+		return $stmt->execute();
+
+	}
+
+	/*=============================================
+	CONTAR LEADS ACTIVOS EN ETAPA (EXCLUYE BORRADO LÓGICO)
 	=============================================*/
 	static public function mdlContarLeadsEnEtapa($tablaLeads, $nombreEtapa) {
 
-		$stmt = Conexion::conectar()->prepare("SELECT COUNT(*) as total FROM $tablaLeads WHERE etapa = :etapa");
+		$stmt = Conexion::conectar()->prepare("SELECT COUNT(*) as total FROM $tablaLeads WHERE etapa = :etapa AND (estado IS NULL OR estado != 'eliminado')");
 		$stmt->bindParam(":etapa", $nombreEtapa, PDO::PARAM_STR);
 		$stmt->execute();
 		$resultado = $stmt->fetch();
-		return $resultado ? $resultado["total"] : 0;
+		return $resultado ? intval($resultado["total"]) : 0;
 
 	}
 

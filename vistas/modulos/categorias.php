@@ -33,7 +33,7 @@
               <tr>
                 <th>Categoría</th>
                 <th>Prefijo</th>
-                <th>Productos</th>
+                <th>Productos vinculados</th>
                 <th style="width: 100px">Acciones</th>
               </tr>
             </thead>

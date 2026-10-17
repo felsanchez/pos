@@ -198,8 +198,9 @@ if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta
             <label>Imagen Comprobante</label>
             <div class="input-group">
               <span class="input-group-addon"><i class="fa fa-image"></i></span>
-              <input type="file" class="form-control" name="editarImagenComprobante" accept="image/*">
+              <input type="file" class="form-control nuevaImagenComprobante" name="editarImagenComprobante" accept="image/*">
             </div>
+            <p class="help-block">Peso máximo de la imagen 8MB</p>
             <input type="hidden" name="imagenActual" value="<?php echo $gasto["imagen_comprobante"]; ?>">
             <?php if (!empty($gasto["imagen_comprobante"])): ?>
               <div style="margin-top: 10px;">

@@ -558,20 +558,23 @@ $(document).ready(function () {
         $("#modalAmpliarComprobanteGasto").modal("show");
     });
 
-    $(document).on("change", ".nuevaImagenComprobante", function () {
+    $(document).on("change", ".nuevaImagenComprobante, input[name='nuevaImagenComprobante'], input[name='editarImagenComprobante']", function () {
         var imagen = this.files[0];
+        var $el = $(this);
         if (imagen) {
-            if (imagen["type"] != "image/jpeg" && imagen["type"] != "image/png") {
-                $(".nuevaImagenComprobante").val("");
+            if (imagen["type"] != "image/jpeg" && imagen["type"] != "image/png" && imagen["type"] != "image/jpg") {
+                $el.val("");
                 swal({ title: "Error", text: "¡La imagen debe ser JPG o PNG!", type: "error" });
-            } else if (imagen["size"] > 2000000) {
-                $(".nuevaImagenComprobante").val("");
-                swal({ title: "Error", text: "¡La imagen no debe pesar más de 2MB!", type: "error" });
+            } else if (imagen["size"] > 8388608) {
+                $el.val("");
+                swal({ title: "Error", text: "¡La imagen no debe pesar más de 8MB!", type: "error" });
             } else {
                 var datosImagen = new FileReader;
                 datosImagen.readAsDataURL(imagen);
                 $(datosImagen).on("load", function (event) {
-                    $("#imagenComprobanteAmpliada").attr("src", event.target.result);
+                    if ($("#imagenComprobanteAmpliada").length) {
+                        $("#imagenComprobanteAmpliada").attr("src", event.target.result);
+                    }
                 });
             }
         }

@@ -142,7 +142,6 @@
                 <select class="form-control" id="filtroTipoNotificacion" style="width: 160px; border-left: 0;">
                   <option value="">Mostrar Todas</option>
                   <option value="Stock Agotado">Stock Agotado</option>
-                  <option value="Actividad Próxima">Actividad Próxima</option>
                   <option value="Registro de Usuario">Registro de Usuario</option>
                   <?php 
                   $configNotif = ControladorConfiguracion::ctrObtenerConfiguracion(); 
@@ -206,7 +205,7 @@
 
           foreach ($notificaciones as $notif) {
 
-            if ($notif["tipo"] == "stock_bajo") continue;
+            if ($notif["tipo"] == "stock_bajo" || $notif["tipo"] == "actividad_proxima" || $notif["titulo"] == "Calendario Próximo") continue;
 
             // Determinar icono y color según tipo
             $icono = "fa-info-circle";
@@ -220,7 +219,7 @@
             } else if ($notif["tipo"] == "actividad_proxima") {
               $icono = "fa-calendar";
               $color = "text-blue";
-              $tipoTexto = "Actividad Próxima";
+              $tipoTexto = "Calendario Próximo";
             } else if ($notif["tipo"] == "registro_usuario") {
               $icono = "fa-user-plus";
               $color = "text-green";
@@ -299,7 +298,7 @@
 
           foreach ($notificaciones as $notif) {
 
-            if ($notif["tipo"] == "stock_bajo") continue;
+            if ($notif["tipo"] == "stock_bajo" || $notif["tipo"] == "actividad_proxima" || $notif["titulo"] == "Calendario Próximo") continue;
 
             // Determinar icono y color según tipo
             $icono = "fa-info-circle";
@@ -313,7 +312,7 @@
             } else if ($notif["tipo"] == "actividad_proxima") {
               $icono = "fa-calendar";
               $color = "text-blue";
-              $tipoTexto = "Actividad Próxima";
+              $tipoTexto = "Calendario Próximo";
             } else if ($notif["tipo"] == "registro_usuario") {
               $icono = "fa-user-plus";
               $color = "text-green";

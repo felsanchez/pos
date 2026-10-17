@@ -30,15 +30,14 @@ class ControladorProductos
 
 		// Columnas para ordenar (deben coincidir con el índice enviado por DataTables)
 		$columnsMap = array(
-			0 => 'p.id',
-			1 => 'p.codigo',
+			0 => 'p.codigo',
+			1 => 'p.id',
 			2 => 'p.descripcion',
 			3 => 'c.categoria',
 			4 => 'p.stock',
 			5 => 'p.precio_venta',
-			6 => 'prov.nombre',
-			7 => 'p.estado',
-			8 => 'p.id'
+			6 => 'p.estado',
+			7 => 'p.id'
 		);
 
 		$where = " WHERE 1=1 ";
@@ -1372,15 +1371,15 @@ class ControladorProductos
 						continue;
 					}
 
-					$codigo = trim($datos[0]);
-					$descripcion = trim($datos[1]);
-					$categoria = trim($datos[2]);
-					$proveedor = trim($datos[3]);
+					$codigo = self::asegurarUtf8(trim($datos[0]));
+					$descripcion = self::asegurarUtf8(trim($datos[1]));
+					$categoria = self::asegurarUtf8(trim($datos[2]));
+					$proveedor = self::asegurarUtf8(trim($datos[3]));
 					$stock = trim($datos[4]);
 					$precioCompra = trim($datos[5]);
 					$precioVenta = trim($datos[6]);
-					$unidadMedida = trim($datos[7]);
-					$tributo = trim($datos[8]);
+					$unidadMedida = self::asegurarUtf8(trim($datos[7]));
+					$tributo = self::asegurarUtf8(trim($datos[8]));
 
 					// Validar campos obligatorios (proveedor es OPCIONAL)
 
@@ -1586,19 +1585,38 @@ class ControladorProductos
 	}
 
 	/*=============================================
+	FUNCIÓN AUXILIAR: ASEGURAR UTF-8
+	=============================================*/
+	static private function asegurarUtf8($texto)
+	{
+		if ($texto === null || $texto === "") {
+			return "";
+		}
+		if (!mb_check_encoding($texto, 'UTF-8')) {
+			return mb_convert_encoding($texto, 'UTF-8', 'ISO-8859-1');
+		}
+		return $texto;
+	}
+
+	/*=============================================
 	FUNCIÓN AUXILIAR: NORMALIZAR TEXTO
 	=============================================*/
 	static private function normalizarTexto($texto)
 	{
 
-		// Convertir a minúsculas
-		$texto = strtolower($texto);
+		// Asegurar UTF-8 limpio (por si el CSV viene en ANSI/ISO-8859-1 desde Excel)
+		$texto = self::asegurarUtf8($texto);
+
+		// Convertir a minúsculas en UTF-8
+		$texto = mb_strtolower($texto, 'UTF-8');
 
 		// Quitar espacios al inicio y final
 		$texto = trim($texto);
 
-		// Quitar acentos
-		$texto = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $texto);
+		// Reemplazar vocales con acentos y caracteres especiales comunes
+		$buscar    = array('á', 'é', 'í', 'ó', 'ú', 'ä', 'ë', 'ï', 'ö', 'ü', 'à', 'è', 'ì', 'ò', 'ù', 'ñ');
+		$reemplazar = array('a', 'e', 'i', 'o', 'u', 'a', 'e', 'i', 'o', 'u', 'a', 'e', 'i', 'o', 'u', 'n');
+		$texto = str_replace($buscar, $reemplazar, $texto);
 
 		// Quitar espacios múltiples
 		$texto = preg_replace('/\s+/', ' ', $texto);

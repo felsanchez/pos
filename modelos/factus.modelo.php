@@ -170,7 +170,7 @@ class ModeloFactus
     }
 
     /*=============================================
-    GARANTIZAR TOKEN VALIDO (REFRESH SI ES NECESARIO)
+    GARANTIZAR TOKEN VALIDO (REFRESH O RE-AUTENTICACIÓN AUTOMÁTICA SI ES NECESARIO)
     =============================================*/
     static public function mdlGarantizarTokenValido()
     {
@@ -179,41 +179,93 @@ class ModeloFactus
         }
 
         $config = self::mdlObtenerConfiguracion();
-        $refreshToken = $config['refresh_token'];
-        $url = $config['api_url'] . '/oauth/token';
+        if (!$config || empty($config['api_url'])) {
+            return false;
+        }
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, [
-            'grant_type' => 'refresh_token',
-            'refresh_token' => $refreshToken,
-            'client_id' => $config['client_id'],
-            'client_secret' => $config['client_secret']
-        ]);
+        $url = rtrim($config['api_url'], '/') . '/oauth/token';
+        $refreshToken = $config['refresh_token'] ?? '';
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        // 1. Intentar renovar con refresh_token (si existe)
+        if (!empty($refreshToken)) {
+            $datosRefresh = [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken,
+                'client_id' => $config['client_id'],
+                'client_secret' => $config['client_secret']
+            ];
 
-        if ($httpCode === 200) {
-            $data = json_decode($response, true);
-            if (isset($data['access_token'])) {
-                // Calcular nueva fecha de expiración
-                $expiresIn = $data['expires_in'] ?? 3600;
-                $expirationDate = date('Y-m-d H:i:s', time() + $expiresIn);
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($datosRefresh));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
-                return self::mdlActualizarTokens([
-                    'access_token' => $data['access_token'],
-                    'refresh_token' => $data['refresh_token'] ?? $refreshToken,
-                    'token_expiracion' => $expirationDate
-                ]) === "ok";
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode === 200) {
+                $data = json_decode($response, true);
+                if (isset($data['access_token'])) {
+                    $expiresIn = $data['expires_in'] ?? 3600;
+                    $expirationDate = date('Y-m-d H:i:s', time() + $expiresIn);
+
+                    return self::mdlActualizarTokens([
+                        'access_token' => $data['access_token'],
+                        'refresh_token' => $data['refresh_token'] ?? $refreshToken,
+                        'token_expiracion' => $expirationDate
+                    ]) === "ok";
+                }
             }
         }
 
-        // LOG ERROR
-        file_put_contents("debug_token_refresh_error.txt", date('Y-m-d H:i:s') . " - HTTP: $httpCode - Response: $response\n", FILE_APPEND);
+        // 2. FALLBACK AUTOMÁTICO: Si refresh_token falló o expiró, re-autenticar con credenciales guardadas
+        if (!empty($config['client_id']) && !empty($config['client_secret'])) {
+            if (!empty($config['username']) && !empty($config['password'])) {
+                $datosAuth = [
+                    'grant_type' => 'password',
+                    'client_id' => $config['client_id'],
+                    'client_secret' => $config['client_secret'],
+                    'username' => $config['username'],
+                    'password' => $config['password']
+                ];
+            } else {
+                $datosAuth = [
+                    'grant_type' => 'client_credentials',
+                    'client_id' => $config['client_id'],
+                    'client_secret' => $config['client_secret']
+                ];
+            }
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($datosAuth));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode === 200) {
+                $data = json_decode($response, true);
+                if (isset($data['access_token'])) {
+                    $expiresIn = $data['expires_in'] ?? 3600;
+                    $expirationDate = date('Y-m-d H:i:s', time() + $expiresIn);
+
+                    return self::mdlActualizarTokens([
+                        'access_token' => $data['access_token'],
+                        'refresh_token' => $data['refresh_token'] ?? '',
+                        'token_expiracion' => $expirationDate
+                    ]) === "ok";
+                }
+            }
+        }
 
         return false;
     }
@@ -590,6 +642,69 @@ class ModeloFactus
             'respuesta' => $respuesta,
             'error_curl' => $curlError
         );
+    }
+
+    /*=============================================
+    BUSCAR DOCUMENTO FACTUS POR CÓDIGO DE REFERENCIA (BILLS / CREDIT-NOTES / SUPPORT-DOCUMENTS)
+    =============================================*/
+    static public function mdlBuscarDocumentoPorReferencia($token, $tipoDoc, $referenceCode)
+    {
+        $config = self::mdlObtenerConfiguracion();
+        $endpoint = ($tipoDoc === 'nc') ? 'credit-notes' : (($tipoDoc === 'ds') ? 'support-documents' : 'bills');
+        $urlSearch = rtrim($config['api_url'], '/') . '/v1/' . $endpoint . '?filter[reference_code]=' . urlencode($referenceCode);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $urlSearch);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Authorization: Bearer ' . $token,
+            'Content-Type: application/json',
+            'Accept: application/json'
+        ));
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+        $respuestaSearch = curl_exec($ch);
+        $httpCodeSearch = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCodeSearch == 200) {
+            $dataSearch = json_decode($respuestaSearch, true);
+            $items = $dataSearch['data']['data'] ?? [];
+            if (!empty($items)) {
+                $docItem = $items[0];
+                $number = $docItem['number'] ?? null;
+
+                if ($number) {
+                    // Obtener detalle completo usando el número del documento
+                    $subPath = ($tipoDoc === 'factura') ? 'bills/show/' : $endpoint . '/';
+                    $urlDetail = rtrim($config['api_url'], '/') . '/v1/' . $subPath . urlencode($number);
+
+                    $ch2 = curl_init();
+                    curl_setopt($ch2, CURLOPT_URL, $urlDetail);
+                    curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch2, CURLOPT_HTTPHEADER, array(
+                        'Authorization: Bearer ' . $token,
+                        'Content-Type: application/json',
+                        'Accept: application/json'
+                    ));
+                    curl_setopt($ch2, CURLOPT_TIMEOUT, 30);
+
+                    $respuestaDetail = curl_exec($ch2);
+                    $httpCodeDetail = curl_getinfo($ch2, CURLINFO_HTTP_CODE);
+                    curl_close($ch2);
+
+                    if ($httpCodeDetail == 200) {
+                        return array(
+                            'http_code' => 200,
+                            'respuesta' => $respuestaDetail,
+                            'error_curl' => ''
+                        );
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     /*=============================================
@@ -2405,14 +2520,14 @@ class ModeloFactus
         $filtroBodegaDS     = ($idBodega != "" && $idBodega != "todos") ? " AND ds.id_bodega = :ib3 " : "";
         $filtroBodegaNA     = ($idBodega != "" && $idBodega != "todos") ? " AND ds.id_bodega = :ib4 " : "";
 
-        $queryVentas = "(SELECT 'Factura' as tipo, numero_factura as numero, IFNULL(cl.nombre, 'Venta General') as tercero, IFNULL(us.nombre, 'Sistema/Varios') as vendedor, v.fecha as fecha, total as monto, estado_dian as estado, v.id as id_doc
+        $queryVentas = "(SELECT 'Factura' as tipo, numero_factura as numero, IFNULL(cl.nombre, 'Venta General') as tercero, IFNULL(us.nombre, 'Sistema/Varios') as vendedor, v.fecha as fecha, v.neto as valor_bruto, v.impuesto as impuesto, total as monto, estado_dian as estado, v.id as id_doc, v.productos
              FROM ventas v
              LEFT JOIN clientes cl ON v.id_cliente = cl.id
              LEFT JOIN usuarios us ON v.id_vendedor = us.id
              WHERE v.estado_dian IN ('aceptada', 'enviada')
              AND (v.fecha BETWEEN :i1 AND :f1 OR v.fecha_envio_dian BETWEEN :i2 AND :f2) " . $filtroVentasCliente . $filtroVendedor . $filtroBodegaVentas . ")";
 
-        $queryNC = "(SELECT 'Nota Crédito' as tipo, nc.numero_nota_credito as numero, IFNULL(cl.nombre, 'Sin Cliente') as tercero, IFNULL(us.nombre, 'Sistema') as vendedor, IFNULL(nc.fecha_envio_dian, nc.fecha_creacion) as fecha, nc.monto_total as monto, nc.estado_dian as estado, nc.id as id_doc
+        $queryNC = "(SELECT 'Nota Crédito' as tipo, nc.numero_nota_credito as numero, IFNULL(cl.nombre, 'Sin Cliente') as tercero, IFNULL(us.nombre, 'Sistema') as vendedor, IFNULL(nc.fecha_envio_dian, nc.fecha_creacion) as fecha, 0 as valor_bruto, 0 as impuesto, nc.monto_total as monto, nc.estado_dian as estado, nc.id as id_doc, nc.productos
              FROM notas_credito nc
              LEFT JOIN ventas v ON nc.id_venta_original = v.id
              LEFT JOIN clientes cl ON nc.id_cliente = cl.id
@@ -2420,14 +2535,14 @@ class ModeloFactus
              WHERE nc.estado_dian IN ('aceptada', 'enviada')
              AND IFNULL(nc.fecha_envio_dian, nc.fecha_creacion) BETWEEN :i3 AND :f3 " . $filtroNCCliente . $filtroNCUsuario . $filtroBodegaNC . ")";
 
-        $queryDS = "(SELECT 'Doc. Soporte' as tipo, ds.numero_ds as numero, IFNULL(pr.nombre, 'Empresa General') as tercero, IFNULL(us.nombre, 'Admin') as vendedor, ds.fecha_emision as fecha, ds.monto_total as monto, ds.estado_dian as estado, ds.id as id_doc
+        $queryDS = "(SELECT 'Doc. Soporte' as tipo, ds.numero_ds as numero, IFNULL(pr.nombre, 'Empresa General') as tercero, IFNULL(us.nombre, 'Admin') as vendedor, ds.fecha_emision as fecha, 0 as valor_bruto, 0 as impuesto, ds.monto_total as monto, ds.estado_dian as estado, ds.id as id_doc, ds.productos
              FROM documentos_soporte ds
              LEFT JOIN proveedores pr ON ds.id_proveedor = pr.id
              LEFT JOIN usuarios us ON ds.id_usuario = us.id
              WHERE ds.estado_dian IN ('aceptada', 'enviada')
              AND ds.fecha_emision BETWEEN :i4 AND :f4 " . $filtroDSProveedor . $filtroDSUsuario . $filtroBodegaDS . ")";
 
-        $queryNA = "(SELECT 'Nota Ajuste DS' as tipo, na.numero_nota_ajuste as numero, IFNULL(pr.nombre, 'Sin Proveedor') as tercero, IFNULL(us.nombre, 'Admin') as vendedor, IFNULL(na.fecha_envio_dian, na.fecha_registro) as fecha, na.monto_total as monto, na.estado_dian as estado, na.id as id_doc
+        $queryNA = "(SELECT 'Nota Ajuste DS' as tipo, na.numero_nota_ajuste as numero, IFNULL(pr.nombre, 'Sin Proveedor') as tercero, IFNULL(us.nombre, 'Admin') as vendedor, IFNULL(na.fecha_envio_dian, na.fecha_registro) as fecha, 0 as valor_bruto, 0 as impuesto, na.monto_total as monto, na.estado_dian as estado, na.id as id_doc, na.productos
              FROM notas_ajuste_ds na
              LEFT JOIN documentos_soporte ds ON na.id_ds_original = ds.id
              LEFT JOIN proveedores pr ON na.id_proveedor = pr.id

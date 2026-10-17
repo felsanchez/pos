@@ -34,13 +34,12 @@ $(document).ready(function () {
 						var labels = {
 							0: 'Usuario',
 							1: 'Nombre',
-							2: 'Email',
-							3: 'Imagen',
-							4: 'Perfil',
-							5: 'Sucursal',
-							6: 'Estado',
-							7: 'Último login',
-							8: 'Acciones'
+							2: 'Imagen',
+							3: 'Perfil',
+							4: 'Sucursal',
+							5: 'Estado',
+							6: 'Último login',
+							7: 'Acciones'
 						};
 
 						var finalHtml = '';
@@ -50,7 +49,7 @@ $(document).ready(function () {
 							if (!col.hidden) return;
 
 							var colIdx = col.columnIndex;
-							if (colIdx === 5 && $("#activarSucursales").val() !== "1") {
+							if (colIdx === 4 && $("#activarSucursales").val() !== "1") {
 								return;
 							}
 
@@ -76,23 +75,22 @@ $(document).ready(function () {
 					"responsivePriority": 1,
 					"orderable": true
 				},
-				{ "targets": 8, "responsivePriority": 1, "orderable": false },
+				{ "targets": 7, "responsivePriority": 1, "orderable": false },
 				{ "targets": 1, "responsivePriority": 2 },
-				{ "targets": 3, "responsivePriority": 3, "orderable": false },
-				{ "targets": 4, "responsivePriority": 4 },
+				{ "targets": 2, "responsivePriority": 3, "orderable": false },
+				{ "targets": 3, "responsivePriority": 4 },
 				{ 
-					"targets": 5, 
+					"targets": 4, 
 					"responsivePriority": 5,
 					"visible": $("#activarSucursales").val() == "1"
 				},
-				{ "targets": 2, "responsivePriority": 6 },
 				{
-					"targets": 6,
-					"responsivePriority": 7,
+					"targets": 5,
+					"responsivePriority": 6,
 					"visible": $("#puedeEditarUsuarios").val() == "1"
 				},
-				{ "targets": 7, "responsivePriority": 8 },
-				{ "targets": 9, "visible": false, "orderable": true }
+				{ "targets": 6, "responsivePriority": 7 },
+				{ "targets": 8, "visible": false, "orderable": true }
 			],
 			"dom": '<"row" <"col-sm-6" l><"col-sm-6" f>>rt <"row" <"col-sm-6" i><"col-sm-6" p>>',
 			"language": {
@@ -177,13 +175,13 @@ $(".nuevaFoto").change(function () {
 		});
 	}
 
-	else if (imagen["size"] > 2000000) {
+	else if (imagen["size"] > 8388608) {
 
 		$(".nuevaFoto").val("");
 
 		swal({
 			title: "Error al subir la imagen",
-			text: "¡La imagen no debe pesar mas de 2MB!",
+			text: "¡La imagen no debe pesar más de 8MB!",
 			type: "error",
 			confirmButtonText: "¡Cerrar!"
 		});
@@ -729,4 +727,21 @@ $(document).on("submit", "#formEditarUsuario", function (e) {
 			});
 		}
 	});
+});
+
+/*=============================================
+MOSTRAR / OCULTAR CONTRASEÑA
+=============================================*/
+$(document).on("click", ".btnTogglePassword", function () {
+	var targetSelector = $(this).attr("data-target");
+	var targetInput = $(targetSelector);
+	var icon = $(this).find("i");
+
+	if (targetInput.attr("type") === "password") {
+		targetInput.attr("type", "text");
+		icon.removeClass("fa-eye").addClass("fa-eye-slash");
+	} else {
+		targetInput.attr("type", "password");
+		icon.removeClass("fa-eye-slash").addClass("fa-eye");
+	}
 });

@@ -2366,8 +2366,7 @@ $(document).ready(function () {
 				{ "data": 3 },
 				{ "data": 4 },
 				{ "data": 5 },
-				{ "data": 6 },
-				{ "data": 7 }
+				{ "data": 6 }
 			],
 			"columnDefs": [
 				{ "defaultContent": "", "targets": "_all" }
@@ -2388,10 +2387,10 @@ $(document).ready(function () {
 				var idVenta = null;
 				if (data.DT_RowAttr && data.DT_RowAttr['data-venta-id']) {
 					idVenta = data.DT_RowAttr['data-venta-id'];
-				} else if (data[7]) {
-					idVenta = $(data[7]).find('.btnDetalleVenta, .btnEnviarEmail, .btnEliminarVenta').first().attr('idVenta');
-				} else if (data[3]) {
-					idVenta = $(data[3]).attr('data-idventa');
+				} else if (data[6]) {
+					idVenta = $(data[6]).find('.btnDetalleVenta, .btnEnviarEmail, .btnEliminarVenta').first().attr('idVenta');
+				} else if (data[2]) {
+					idVenta = $(data[2]).attr('data-idventa');
 				}
 				if (idVenta) {
 					$(row).attr('data-venta-id', idVenta);
@@ -2462,14 +2461,13 @@ $(document).ready(function () {
 					});
 				}
 			},
-			"order": [[5, "desc"]],
+			"order": [[4, "desc"]],
 			"responsive": {
 				"details": {
 					"type": "inline",
 					"renderer": function (api, rowIdx, columns) {
 						var labels = {
-							2: 'Vendedor', 3: 'Imagen', 4: 'Total',
-							5: 'Fecha', 6: 'Observación'
+							2: 'Imagen', 3: 'Total', 4: 'Fecha', 5: 'Observación'
 						};
 						var idVenta = $(api.row(rowIdx).node()).attr('data-venta-id') || '';
 						var finalHtml = '';
@@ -2482,7 +2480,7 @@ $(document).ready(function () {
 							var label = labels[colIdx] || col.title || ('Columna ' + colIdx);
 							var data = col.data || '';
 
-							if (colIdx === 6) {
+							if (colIdx === 5) {
 								var obsTexto = $('<div>').html(data).text().trim();
 								finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
 								finalHtml += '<span class="text-bold" style="block;color:#555;margin-bottom:4px;"> ' + label + ':</span>';
@@ -2505,12 +2503,11 @@ $(document).ready(function () {
 			"columnDefs": [
 				{ "targets": 0, "responsivePriority": 1 },
 				{ "targets": 1, "responsivePriority": 3 },
-				{ "targets": 2, "responsivePriority": 4 },
-				{ "targets": 3, "responsivePriority": 5, "render": function (data, type, row) { return row[3]; } }, // Imagen (row[3])
-				{ "targets": 4, "responsivePriority": 6, "render": function (data, type, row) { return row[4]; } }, // Total (row[4])
-				{ "targets": 5, "responsivePriority": 7, "render": function (data, type, row) { return row[6]; } }, // Fecha (row[6])
-				{ "targets": 6, "responsivePriority": 8, "render": function (data, type, row) { return row[7]; } }, // Observación (row[7])
-				{ "targets": 7, "responsivePriority": 2, "orderable": false, "render": function (data, type, row) { return row[8]; } } // Acciones (row[8])
+				{ "targets": 2, "responsivePriority": 4, "render": function (data, type, row) { return row[2]; } },
+				{ "targets": 3, "responsivePriority": 5, "render": function (data, type, row) { return row[3]; } },
+				{ "targets": 4, "responsivePriority": 6, "render": function (data, type, row) { return row[4]; } },
+				{ "targets": 5, "responsivePriority": 7, "render": function (data, type, row) { return row[5]; } },
+				{ "targets": 6, "responsivePriority": 2, "orderable": false, "render": function (data, type, row) { return row[6]; } }
 			],
 			"language": {
 				"sProcessing": "Procesando...",
@@ -2574,9 +2571,9 @@ $(".nuevaImagenVenta").change(function () {
 		if (imagen["type"] != "image/jpeg" && imagen["type"] != "image/png") {
 			$(".nuevaImagenVenta").val("");
 			swal({ title: "Error", text: "¡La imagen debe ser JPG o PNG!", type: "error" });
-		} else if (imagen["size"] > 2000000) {
+		} else if (imagen["size"] > 8000000) {
 			$(".nuevaImagenVenta").val("");
-			swal({ title: "Error", text: "¡La imagen no debe pesar más de 2MB!", type: "error" });
+			swal({ title: "Error", text: "¡La imagen no debe pesar más de 8MB!", type: "error" });
 		} else {
 			var datosImagen = new FileReader;
 			datosImagen.readAsDataURL(imagen);

@@ -127,6 +127,7 @@ AUTOCOMPLETAR ORDEN AL ABRIR MODAL DE OPCIÓN
 $(document).on("click", "[data-target='#modalAgregarOpcion']", function () {
 
     var idTipo = $("#idTipoVarianteActual").val();
+    $("#idTipoVarianteOpcion").val(idTipo);
 
     var datos = new FormData();
     datos.append("obtenerSiguienteOrdenOpcion", idTipo);
@@ -177,7 +178,7 @@ function recargarOpcionesVariante(idTipo, nombreTipo, silencioso) {
                 '<thead>' +
                     '<tr>' +
                         '<th>Nombre</th>' +
-                        '<th>Productos</th>' +
+                        '<th>Productos vinculados</th>' +
                         '<th>Acciones</th>' +
                     '</tr>' +
                 '</thead>' +
@@ -226,7 +227,7 @@ function recargarOpcionesVariante(idTipo, nombreTipo, silencioso) {
                             '</tr>';
                 }
             } else {
-                html = '<tr><td colspan="3" class="text-center">No hay opciones registradas</td></tr>';
+                html = '';
             }
 
             if ($.fn.DataTable.isDataTable("#" + tablaId)) {
@@ -719,7 +720,7 @@ $(document).on("click", ".btnEliminarOpcion", function () {
                                 }).then(function (result) {
                                     var idTipo = $("#idTipoVarianteActual").val();
                                     if (idTipo) {
-                                        recargarOpcionesVariante(idTipo, null, true);
+                                        recargarOpcionesVariante(idTipo, null, false);
                                     }
                                 });
                             } else if (respuesta == "error_productos_asociados_otra_sucursal") {
@@ -778,7 +779,7 @@ $(document).on("click", ".btnEliminarOpcion", function () {
                                 }).then(function (result) {
                                     var idTipo = $("#idTipoVarianteActual").val();
                                     if (idTipo) {
-                                        recargarOpcionesVariante(idTipo, null, true);
+                                        recargarOpcionesVariante(idTipo, null, false);
                                     }
                                 });
                             } else if (respuesta == "error_productos_asociados_otra_sucursal") {
@@ -995,19 +996,18 @@ $(document).on("submit", "#formAgregarOpcion", function (e) {
             boton.prop('disabled', false).html(htmlOriginal);
 
             if (respuesta.status === "ok") {
+                $("#modalAgregarOpcion").modal("hide");
+                var idTipo = $("#idTipoVarianteActual").val() || $("#idTipoVarianteOpcion").val();
+                form.reset();
+                if (idTipo) {
+                    recargarOpcionesVariante(idTipo, null, false);
+                }
                 swal({
                     type: "success",
                     title: "¡Éxito!",
                     text: respuesta.mensaje,
                     showConfirmButton: true,
                     confirmButtonText: "Cerrar"
-                }).then((result) => {
-                    $("#modalAgregarOpcion").modal("hide");
-                    form.reset();
-                    var idTipo = $("#idTipoVarianteActual").val();
-                    if (idTipo) {
-                        recargarOpcionesVariante(idTipo, null, true);
-                    }
                 });
             } else {
                 swal({
@@ -1070,18 +1070,17 @@ $(document).on("submit", "#formEditarOpcion", function (e) {
             boton.prop('disabled', false).html(htmlOriginal);
 
             if (respuesta.status === "ok") {
+                $("#modalEditarOpcion").modal("hide");
+                var idTipo = $("#idTipoVarianteActual").val() || $("#idTipoVarianteOpcion").val();
+                if (idTipo) {
+                    recargarOpcionesVariante(idTipo, null, false);
+                }
                 swal({
                     type: "success",
                     title: "¡Éxito!",
                     text: respuesta.mensaje,
                     showConfirmButton: true,
                     confirmButtonText: "Cerrar"
-                }).then((result) => {
-                    $("#modalEditarOpcion").modal("hide");
-                    var idTipo = $("#idTipoVarianteActual").val();
-                    if (idTipo) {
-                        recargarOpcionesVariante(idTipo, null, true);
-                    }
                 });
             } else {
                 swal({

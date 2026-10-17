@@ -262,7 +262,6 @@ if ($xml) {
               <tr>
                 <th>Código</th>
                 <th>Cliente</th>
-                <th>Vendedor</th>
                 <th>Imagen</th>
                 <th>Total</th>
                 <th>Fecha</th>
@@ -301,7 +300,7 @@ if ($xml) {
               <div class="form-group text-left">
                 <label>Cambiar Imagen de la Venta</label>
                 <input type="file" class="form-control nuevaImagenVenta" accept="image/*">
-                <p class="help-block">Peso máximo de la imagen 2MB</p>
+                <p class="help-block">Peso máximo de la imagen 8MB</p>
               </div>
 
               <input type="hidden" id="idVentaImagen">

@@ -163,7 +163,17 @@ if(isset($_FILES["nuevaImagenComprobante"])){
 	$idGasto = $_POST["idGastoImagen"];
 	$concepto = $_POST["conceptoGasto"];
 
-	list($ancho, $alto) = getimagesize($_FILES["nuevaImagenComprobante"]["tmp_name"]); 
+	if (isset($_FILES["nuevaImagenComprobante"]["tmp_name"]) && !empty($_FILES["nuevaImagenComprobante"]["tmp_name"])) {
+		if ($_FILES["nuevaImagenComprobante"]["size"] > 8388608) {
+			echo json_encode("error_size");
+			return;
+		}
+
+		list($ancho, $alto) = getimagesize($_FILES["nuevaImagenComprobante"]["tmp_name"]); 
+	} else {
+		echo json_encode("error_file");
+		return;
+	} 
 
 	$nuevoAncho = 800;
 	$nuevoAlto = 600; 

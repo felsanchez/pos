@@ -78,21 +78,21 @@ if (!puedeVer('variantes')) {
     ====================================== -->
     <div class="box box-info" id="boxOpciones" style="display:none;">
 
-      <div class="box-header with-border">
-        <h3 class="box-title">Opciones de: <span id="nombreTipoVariante"></span></h3>
+      <div class="box-header with-border" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+        <?php if (puedeAccion('variantes', 'crear')): ?>
+          <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarOpcion">
+            <i class="fa fa-plus"></i> Agregar Opción
+          </button>
+        <?php else: ?>
+          <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear variantes">
+            <i class="fa fa-plus"></i> Agregar Opción
+          </button>
+        <?php endif; ?>
+        <h3 class="box-title" style="margin: 0;">Opciones de: <span id="nombreTipoVariante"></span></h3>
         <input type="hidden" id="idTipoVarianteActual">
         <input type="hidden" id="puedeEditarVariante" value="<?php echo puedeAccion('variantes', 'editar') ? 1 : 0; ?>">
         <input type="hidden" id="puedeEliminarVariante"
           value="<?php echo puedeAccion('variantes', 'eliminar') ? 1 : 0; ?>">
-        <?php if (puedeAccion('variantes', 'crear')): ?>
-          <button class="btn btn-primary pull-right" data-toggle="modal" data-target="#modalAgregarOpcion">
-            <i class="fa fa-plus"></i> Agregar Opción
-          </button>
-        <?php else: ?>
-          <button class="btn btn-primary pull-right" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear variantes">
-            <i class="fa fa-plus"></i> Agregar Opción
-          </button>
-        <?php endif; ?>
       </div>
 
       <div class="box-body">
@@ -101,7 +101,7 @@ if (!puedeVer('variantes')) {
             <thead>
               <tr>
                 <th>Nombre</th>
-                <th>Productos</th>
+                <th>Productos vinculados</th>
                 <th>Acciones</th>
               </tr>
             </thead>

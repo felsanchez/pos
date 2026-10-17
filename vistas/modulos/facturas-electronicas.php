@@ -248,7 +248,6 @@ if ($xml) {
                 <tr>
                   <th>Código</th>
                   <th>Cliente</th>
-                  <th>Vendedor</th>
                   <th>Imagen</th>
 
                   <th>Total</th>
@@ -291,7 +290,7 @@ if ($xml) {
                 <div class="form-group text-left">
                   <label>Cambiar Imagen de la Venta</label>
                   <input type="file" class="form-control nuevaImagenVenta" accept="image/*">
-                  <p class="help-block">Peso máximo de la imagen 2MB</p>
+                  <p class="help-block">Peso máximo de la imagen 8MB</p>
                 </div>
 
                 <input type="hidden" id="idVentaImagen">
@@ -628,11 +627,11 @@ MODAL EDITAR CLIENTE
           type: "error",
           confirmButtonText: "¡Cerrar!"
         });
-      } else if (imagen["size"] > 2000000) {
+      } else if (imagen["size"] > 8000000) {
         $(".nuevaImagenVenta").val("");
         swal({
           title: "Error al subir la imagen",
-          text: "¡La imagen no debe pesar más de 2MB!",
+          text: "¡La imagen no debe pesar más de 8MB!",
           type: "error",
           confirmButtonText: "¡Cerrar!"
         });
@@ -913,16 +912,15 @@ MODAL ENVIAR EMAIL
             { "data": 4 },
             { "data": 5 },
             { "data": 6 },
-            { "data": 7 },
-            { "data": 8 }
+            { "data": 7 }
           ],
           "responsive": {
             "details": {
               "type": "inline",
               "renderer": function (api, rowIdx, columns) {
                 var labels = {
-                  2: 'Vendedor', 3: 'Imagen', 4: 'Total',
-                  5: 'Fecha', 6: 'Observación', 7: 'Estado DIAN'
+                  2: 'Imagen', 3: 'Total',
+                  4: 'Fecha', 5: 'Observación', 6: 'Estado DIAN'
                 };
                 var idVenta = $(api.row(rowIdx).node()).find('.celda-observacion').attr('data-id') || '';
                 var obsReadonly = $(api.row(rowIdx).node()).find('.celda-observacion').attr('data-readonly') || '0';
@@ -936,7 +934,7 @@ MODAL ENVIAR EMAIL
                   var label = labels[colIdx] || col.title || ('Columna ' + colIdx);
                   var data = col.data || '';
 
-                  if (colIdx === 6) { // Observación
+                  if (colIdx === 5) { // Observación
                     var obsTexto = $('<div>').html(data).text().trim();
                     var obsEditableAttr = obsReadonly === '1' ? 'false' : 'true';
                     var obsStyleStr = obsReadonly === '1'
@@ -986,13 +984,12 @@ MODAL ENVIAR EMAIL
             { "defaultContent": "", "targets": "_all" },
             { "targets": 0, "responsivePriority": 1 },
             { "targets": 1, "responsivePriority": 3 },
-            { "targets": 2, "responsivePriority": 4 },
-            { "targets": 3, "responsivePriority": 5, "orderable": false },
+            { "targets": 2, "responsivePriority": 4, "orderable": false },
+            { "targets": 3, "responsivePriority": 5 },
             { "targets": 4, "responsivePriority": 6 },
-            { "targets": 5, "responsivePriority": 7 },
+            { "targets": 5, "responsivePriority": 7, "orderable": false },
             { "targets": 6, "responsivePriority": 8, "orderable": false },
-            { "targets": 7, "responsivePriority": 9, "orderable": false },
-            { "targets": 8, "responsivePriority": 2, "orderable": false }
+            { "targets": 7, "responsivePriority": 2, "orderable": false }
           ],
           "language": {
             "sProcessing": "Procesando...",

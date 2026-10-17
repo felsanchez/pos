@@ -35,6 +35,7 @@ require_once "controladores/cajas.controlador.php";
 require_once "controladores/crm.controlador.php";
 require_once "controladores/tenants.controlador.php";
 require_once "controladores/conocimiento.controlador.php";
+require_once "controladores/google.controlador.php";
 
 require_once "modelos/usuarios.modelo.php";
 require_once "modelos/categorias.modelo.php";

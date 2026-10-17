@@ -82,12 +82,12 @@ if ($xml) {
 
 
     <h1>
-      Administrar orden de venta
+      Administrar ordenes o pedidos
     </h1>
 
     <ol class="breadcrumb">
       <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
-      <li class="active">Administrar Ordenes de Venta</li>
+      <li class="active">Administrar ordenes o pedidos</li>
     </ol>
 
   </section>
@@ -233,7 +233,6 @@ if ($xml) {
               <tr>
                 <th>Código</th>
                 <th>Cliente</th>
-                <th>Vendedor</th>
                 <th>Imagen</th>
                 <th>Total</th>
                 <th>Fecha</th>
@@ -289,7 +288,7 @@ if ($xml) {
         <div class="form-group">
           <label>Cambiar Imagen de la Orden</label>
           <input type="file" class="form-control nuevaImagenOrden" accept="image/*">
-          <p class="help-block">Peso máximo de la imagen 2MB</p>
+          <p class="help-block">Peso máximo de la imagen 8MB</p>
         </div>
 
         <input type="hidden" id="idOrdenImagen">

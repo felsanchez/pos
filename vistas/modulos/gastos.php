@@ -512,7 +512,7 @@ MODAL AMPLIAR Y EDITAR IMAGEN COMPROBANTE
         <div class="form-group">
           <label>Cambiar Imagen del Comprobante</label>
           <input type="file" class="form-control nuevaImagenComprobante" accept="image/*">
-          <p class="help-block">Peso máximo de la imagen 2MB</p>
+          <p class="help-block">Peso máximo de la imagen 8MB</p>
         </div>
         <input type="hidden" id="idGastoImagen">
         <input type="hidden" id="conceptoGasto">

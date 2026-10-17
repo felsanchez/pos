@@ -148,7 +148,9 @@ class ControladorConfiguracion
 				"color_secundario" => $_POST["colorSecundario"],
 				"mensaje_recibido" => isset($_POST["mensajeRecibido"]) ? $_POST["mensajeRecibido"] : "",
 				"mensaje_procesado" => isset($_POST["mensajeProcesado"]) ? $_POST["mensajeProcesado"] : "",
-				"mensaje_confirmado" => isset($_POST["mensajeConfirmado"]) ? $_POST["mensajeConfirmado"] : ""
+				"mensaje_confirmado" => isset($_POST["mensajeConfirmado"]) ? $_POST["mensajeConfirmado"] : "",
+				"google_client_id" => isset($_POST["googleClientId"]) ? trim($_POST["googleClientId"]) : ($configuracion["google_client_id"] ?? null),
+				"google_client_secret" => isset($_POST["googleClientSecret"]) ? trim($_POST["googleClientSecret"]) : ($configuracion["google_client_secret"] ?? null)
 			);
 
 			/*=============================================

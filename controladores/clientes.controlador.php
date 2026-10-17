@@ -238,12 +238,10 @@ class ControladorClientes
 		$columnsMap = array(
 			0 => 'nombre',
 			1 => 'documento',
-			2 => 'email',
-			3 => 'telefono',
-			4 => 'direccion',
-			5 => 'estatus',
-			6 => 'notas',
-			7 => 'id'
+			2 => 'telefono',
+			3 => 'estatus',
+			4 => 'notas',
+			5 => 'id'
 		);
 
 		$where = " WHERE 1=1 ";
@@ -308,16 +306,10 @@ class ControladorClientes
 			}
 			$nestedData[] = $documentoDisplay;
 
-			// 2: Email
-			$nestedData[] = e($value["email"]);
-
-			// 3: Teléfono
+			// 2: Teléfono
 			$nestedData[] = e($value["telefono"]);
 
-			// 4: Dirección
-			$nestedData[] = e($value["direccion"]);
-
-			// 5: Estado (Badge color)
+			// 3: Estado (Badge color)
 			$estatus = $value["estatus"] ?? "";
 			$colorEstado = "#999"; 
 			foreach ($estadosDisponibles as $estado) {
@@ -332,14 +324,11 @@ class ControladorClientes
 				$nestedData[] = '<span class="text-muted">Sin estado</span>';
 			}
 
-			// 6: Notas (Editable)
+			// 4: Notas (Editable)
 			$notas = trim($value["notas"] ?? "");
 			$nestedData[] = '<div contenteditable="true" class="celda-notas" tabindex="0" data-id="' . $value['id'] . '">' . e($notas) . '</div>';
 
-			// 7: Última compra
-			$nestedData[] = e($value["ultima_compra"]);
-
-			// 8: Acciones
+			// 5: Acciones
 			$botonesAcciones = '<div class="btn-group">';
 			if (puedeAccion('clientes', 'editar')) {
 				$botonesAcciones .= '<a href="cliente-detalle?id=' . $value["id"] . '" class="btn btn-warning" title="Editar cliente"><i class="fa fa-pencil"></i></a>';
@@ -353,6 +342,15 @@ class ControladorClientes
 			}
 			$botonesAcciones .= '</div>';
 			$nestedData[] = $botonesAcciones;
+
+			// 6: Última compra
+			$nestedData[] = e($value["ultima_compra"]);
+
+			// 7: Email
+			$nestedData[] = e($value["email"]);
+
+			// 8: Dirección
+			$nestedData[] = e($value["direccion"]);
 
 			// 9: Ingreso al sistema
 			$nestedData[] = e($value["fecha"]);
@@ -755,13 +753,13 @@ class ControladorClientes
 						continue;
 					}
 
-					$stringTipoPersona = trim($datos[0]);
-					$stringTipoDoc = trim($datos[1]);
-					$dv = trim($datos[2]);
-					$documento = trim($datos[3]);
-					$nombre = trim($datos[4]);
-					$email = trim($datos[5]);
-					$telefono = trim($datos[6]);
+					$stringTipoPersona = self::asegurarUtf8(trim($datos[0]));
+					$stringTipoDoc = self::asegurarUtf8(trim($datos[1]));
+					$dv = self::asegurarUtf8(trim($datos[2]));
+					$documento = self::asegurarUtf8(trim($datos[3]));
+					$nombre = self::asegurarUtf8(trim($datos[4]));
+					$email = self::asegurarUtf8(trim($datos[5]));
+					$telefono = self::asegurarUtf8(trim($datos[6]));
 
 					// Formatear teléfono a (XXX) XXX-XXXX si tiene 10 dígitos (o 12 con prefijo 57)
 					$telefonoLimpio = preg_replace('/[^0-9]/', '', $telefono);
@@ -771,10 +769,10 @@ class ControladorClientes
 					if (strlen($telefonoLimpio) === 10) {
 						$telefono = '(' . substr($telefonoLimpio, 0, 3) . ') ' . substr($telefonoLimpio, 3, 3) . '-' . substr($telefonoLimpio, 6);
 					}
-					$stringMunicipio = trim($datos[7]);
-					$direccion = trim($datos[8]);
-					$fechaNacimiento = trim($datos[9]);
-					$notas = trim($datos[10]);
+					$stringMunicipio = self::asegurarUtf8(trim($datos[7]));
+					$direccion = self::asegurarUtf8(trim($datos[8]));
+					$fechaNacimiento = self::asegurarUtf8(trim($datos[9]));
+					$notas = self::asegurarUtf8(trim($datos[10]));
 
 					// Validar campos obligatorios
 					if (empty($documento) || empty($nombre) || empty($stringTipoPersona) || empty($stringTipoDoc) || $direccion === "" || $stringMunicipio === "" || $telefono === "") {
@@ -1039,14 +1037,26 @@ class ControladorClientes
 		return null;
 	}
 
+	/*=============================================
+	FUNCIÓN AUXILIAR: ASEGURAR UTF-8
+	=============================================*/
+	static private function asegurarUtf8($texto)
+	{
+		if ($texto === null || $texto === "") {
+			return "";
+		}
+		if (!mb_check_encoding($texto, 'UTF-8')) {
+			return mb_convert_encoding($texto, 'UTF-8', 'ISO-8859-1');
+		}
+		return $texto;
+	}
+
 	static private function normalizarTextoImport($texto)
 	{
-		$texto = strtolower($texto);
-		$texto = str_replace(
-			array('á', 'é', 'í', 'ó', 'ú', 'ñ'),
-			array('a', 'e', 'i', 'o', 'u', 'n'),
-			$texto
-		);
-		return $texto;
+		$texto = self::asegurarUtf8($texto);
+		$texto = mb_strtolower($texto, 'UTF-8');
+		$buscar    = array('á', 'é', 'í', 'ó', 'ú', 'ä', 'ë', 'ï', 'ö', 'ü', 'à', 'è', 'ì', 'ò', 'ù', 'ñ');
+		$reemplazar = array('a', 'e', 'i', 'o', 'u', 'a', 'e', 'i', 'o', 'u', 'a', 'e', 'i', 'o', 'u', 'n');
+		return str_replace($buscar, $reemplazar, $texto);
 	}
 }

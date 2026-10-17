@@ -17,11 +17,22 @@ var table = $("table.tablaProductos").DataTable({
 			console.log("Respuesta del servidor:", xhr.responseText);
 		}
 	},
-	"order": [[2, 'asc']],
+	"order": [[0, 'asc']],
 	"responsive": {
 		"details": {
 			"type": "inline",
 			"renderer": function (api, rowIdx, columns) {
+				var labels = {
+					0: 'Código',
+					1: 'Imagen',
+					2: 'Descripción',
+					3: 'Categoría',
+					4: 'Stock',
+					5: 'Precio Venta',
+					6: 'Estado',
+					7: 'Acciones'
+				};
+
 				var finalHtml = '';
 				var hasHidden = false;
 
@@ -29,8 +40,11 @@ var table = $("table.tablaProductos").DataTable({
 					if (!col.hidden) return;
 
 					hasHidden = true;
-					var label = col.title || ('Columna ' + col.columnIndex);
-					var data = col.data || '';
+					var label = labels[col.columnIndex] || col.title || ('Columna ' + col.columnIndex);
+					var data = api.cell(rowIdx, col.columnIndex).render('display');
+					if (!data && col.data) {
+						data = col.data;
+					}
 
 					finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
 					finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
@@ -67,23 +81,25 @@ var table = $("table.tablaProductos").DataTable({
 	},
 	"columnDefs": [
 		{
-			"targets": 0,  // Imagen
+			"targets": 0,  // Código
 			"data": null,
 			"responsivePriority": 1,
+			"render": function (data, type, row) {
+				return '<code>' + row[2] + '</code>';
+			}
+		},
+		{
+			"targets": 1,  // Imagen
+			"data": null,
+			"responsivePriority": 3,
 			"render": function (data, type, row) {
 				return '<img src="' + row[1] + '" class="img-thumbnail imgTabla img-ampliar-producto" width="40px" style="cursor: pointer;" data-imagen="' + row[1] + '" data-idproducto="' + row[0] + '">';
 			}
 		},
 		{
-			"targets": 1, // Código
-			"data": null,
-			"responsivePriority": 4,
-			"render": function (data, type, row) { return row[2]; }
-		},
-		{
 			"targets": 2, // Descripcion
 			"data": null,
-			"responsivePriority": 3,
+			"responsivePriority": 2,
 			"render": function (data, type, row) { return row[3]; }
 		},
 		{
@@ -104,17 +120,12 @@ var table = $("table.tablaProductos").DataTable({
 			}
 		},
 		{
-			"targets": 6, // Proveedor
-			"responsivePriority": 9,
-			"render": function (data, type, row) { return row[8]; }
-		},
-		{
-			"targets": 7, // Estado
+			"targets": 6, // Estado
 			"responsivePriority": 8,
 			"render": function (data, type, row) { return row[11]; }
 		},
 		{
-			"targets": 8, // Acciones
+			"targets": 7, // Acciones
 			"data": null,
 			"responsivePriority": 2,
 			"orderable": false,
@@ -401,13 +412,13 @@ $(".nuevaImagen").change(function () {
 		});
 	}
 
-	else if (imagen["size"] > 10000000) {
+	else if (imagen["size"] > 8388608) {
 
 		$(this).val("");
 
 		swal({
 			title: "Error al subir la imagen",
-			text: "¡La imagen no debe pesar más de 10MB!",
+			text: "¡La imagen no debe pesar más de 8MB!",
 			type: "error",
 			confirmButtonText: "¡Cerrar!"
 		});

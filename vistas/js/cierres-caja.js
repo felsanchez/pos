@@ -220,9 +220,8 @@ $(document).ready(function () {
                         $("#tablaMediosElectronicos tbody").append("<tr><td colspan='2' class='text-center text-muted'>Sin ventas por medios electrónicos en este turno</td></tr>");
                     }
 
-                    // Total Recaudado en Turno (Efectivo + Electrónicos)
-                    var ventasEfectivo = parseFloat(c.ventas_efectivo) || 0;
-                    var totalRecaudado = ventasEfectivo + totalMediosElectronicos;
+                    // Total Recaudado por Medios Electrónicos
+                    var totalRecaudado = totalMediosElectronicos;
 
                     $("#detTotalRecaudado").text(moneda + " " + totalRecaudado.toLocaleString('es-ES', { minimumFractionDigits: 2 }));
 

@@ -14,7 +14,17 @@ class ControladorTraslados
         ModeloTraslados::mdlLimpiarTrasladosAntiguos($tabla);
 
         return ModeloTraslados::mdlMostrarTraslados($tabla, $item, $valor, $fechaInicial, $fechaFinal);
-    }    /*=============================================
+    }
+
+    /*=============================================
+    OBTENER SIGUIENTE CONSECUTIVO
+    =============================================*/
+    static public function ctrObtenerSiguienteConsecutivo()
+    {
+        return ModeloTraslados::mdlObtenerSiguienteConsecutivo("traslados");
+    }
+
+    /*=============================================
     CREAR TRASLADO
     =============================================*/
     static public function ctrCrearTraslado()

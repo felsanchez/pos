@@ -254,11 +254,9 @@ $editarCliente->ctrEditarCliente();
             <tr>
               <th>Nombre</th>
               <th>Documento</th>
-              <th>Email</th>
               <th>Teléfono</th>
               <!--<th>Departamento</th>-->
               <!--<th>Ciudad</th>-->
-              <th>Dirección</th>
               <th>Estado</th>
               <!--<th><i class="fa fa-pencil-square"></i> Notas</th>-->
               <th></i> Notas</th>
@@ -434,12 +432,13 @@ MODAL AGREGAR CLIENTE
 
                 <select class="form-control input-lg" name="nuevoTipoDocumento" id="nuevoTipoDocumento">
                   <option value="">Seleccione tipo de documento</option>
-                  <option value="3" selected>NIT - Número de Identificación Tributaria</option>
-                  <option value="1">Cédula de Ciudadanía (CC)</option>
-                  <option value="2">Cédula de Extranjería (CE)</option>
-                  <option value="4">Pasaporte</option>
-                  <option value="5">Tarjeta de Identidad</option>
-                  <option value="6">Registro Civil</option>
+                  <?php
+                  $tiposDoc = ControladorFactus::ctrMostrarTiposDocumento();
+                  foreach ($tiposDoc as $tipo) {
+                    $selected = ($tipo['id'] == 3) ? 'selected' : '';
+                    echo '<option value="' . $tipo['id'] . '" ' . $selected . '>' . $tipo['nombre'] . '</option>';
+                  }
+                  ?>
                 </select>
 
               </div>
@@ -715,12 +714,14 @@ MODAL EDITAR CLIENTE
 
                 <select class="form-control input-lg" name="editarTipoDocumento" id="editarTipoDocumento">
                   <option value="">Seleccione tipo de documento</option>
-                  <option value="3">NIT - Número de Identificación Tributaria</option>
-                  <option value="1">Cédula de Ciudadanía (CC)</option>
-                  <option value="2">Cédula de Extranjería (CE)</option>
-                  <option value="4">Pasaporte</option>
-                  <option value="5">Tarjeta de Identidad</option>
-                  <option value="6">Registro Civil</option>
+                  <?php
+                  if (!isset($tiposDoc)) {
+                    $tiposDoc = ControladorFactus::ctrMostrarTiposDocumento();
+                  }
+                  foreach ($tiposDoc as $tipo) {
+                    echo '<option value="' . $tipo['id'] . '">' . $tipo['nombre'] . '</option>';
+                  }
+                  ?>
                 </select>
 
               </div>

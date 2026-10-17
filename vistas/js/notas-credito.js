@@ -22,25 +22,24 @@ $(document).ready(function () {
                 }
             },
             "autoWidth": false,
-            "order": [[5, "desc"]],
+            "order": [[4, "desc"]],
             "columnDefs": [
                 { "targets": 0, "responsivePriority": 1, "className": "vertical-middle" }, // Código
                 { "targets": 1, "responsivePriority": 2, "className": "vertical-middle" }, // Factura Original
-                { "targets": 8, "responsivePriority": 3, "className": "text-center vertical-middle", "orderable": false }, // Acciones
+                { "targets": 7, "responsivePriority": 3, "className": "text-center vertical-middle", "orderable": false }, // Acciones
                 { "targets": 2, "responsivePriority": 4, "className": "vertical-middle" }, // Cliente
-                { "targets": 3, "responsivePriority": 5, "className": "vertical-middle" }, // Vendedor
-                { "targets": 4, "responsivePriority": 6, "className": "vertical-middle" }, // Total
-                { "targets": 5, "responsivePriority": 7, "className": "vertical-middle" }, // Fecha
-                { "targets": 6, "responsivePriority": 8, "className": "vertical-middle", "orderable": false }, // Observación
-                { "targets": 7, "responsivePriority": 9, "className": "vertical-middle text-center", "orderable": false } // Estado DIAN
+                { "targets": 3, "responsivePriority": 5, "className": "vertical-middle" }, // Total
+                { "targets": 4, "responsivePriority": 6, "className": "vertical-middle" }, // Fecha
+                { "targets": 5, "responsivePriority": 7, "className": "vertical-middle", "orderable": false }, // Observación
+                { "targets": 6, "responsivePriority": 8, "className": "vertical-middle text-center", "orderable": false } // Estado DIAN
             ],
             "responsive": {
                 "details": {
                     "type": "inline",
                     "renderer": function (api, rowIdx, columns) {
                         var labels = {
-                            2: 'Cliente', 3: 'Vendedor', 4: 'Total',
-                            5: 'Fecha', 6: 'Observación', 7: 'Estado DIAN'
+                            2: 'Cliente', 3: 'Total',
+                            4: 'Fecha', 5: 'Observación', 6: 'Estado DIAN'
                         };
                         var $mainCell   = $(api.row(rowIdx).node()).find('.celda-observacion-nc');
                         var idNota      = $mainCell.attr('data-id') || '';
@@ -55,7 +54,7 @@ $(document).ready(function () {
                             var label  = labels[colIdx] || col.title || ('Columna ' + colIdx);
                             var data   = col.data || '';
 
-                            if (colIdx === 6) { // Observación
+                            if (colIdx === 5) { // Observación
                                 var obsTexto   = $('<div>').html(data).text().trim();
                                 var esFirmada  = (estadoCelda === 'firmada');
                                 var ceEditable = esFirmada ? 'false' : 'true';

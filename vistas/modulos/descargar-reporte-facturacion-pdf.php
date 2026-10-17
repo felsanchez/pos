@@ -260,13 +260,48 @@ foreach ($reporte as $item) {
           <th>Tercero (Cliente/Proveedor)</th>
           <th>Vendedor</th>
           <th>Fecha</th>
+          <th>Valor Bruto</th>
+          <th>Impuesto</th>
           <th>Monto Total</th>
           <th>Estado DIAN</th>
         </tr>
       </thead>
       <tbody>
+        <?php 
+          $sumValorBruto = 0;
+          $sumImpuesto = 0;
+          $sumMontoTotal = 0;
+        ?>
         <?php foreach ($reporte as $i => $item): ?>
           <?php 
+            $montoVal = floatval($item["monto"] ?? 0);
+            $brutoVal = floatval($item["valor_bruto"] ?? 0);
+            $impuestoVal = floatval($item["impuesto"] ?? 0);
+
+            if ($brutoVal == 0 && $impuestoVal == 0 && !empty($item["productos"])) {
+                $prods = json_decode($item["productos"], true);
+                if (is_array($prods)) {
+                    foreach ($prods as $p) {
+                        $cant = floatval($p["cantidad"] ?? 1);
+                        $prec = floatval($p["precio"] ?? 0);
+                        $taxRate = floatval($p["impuesto"] ?? 0);
+                        $subt = $cant * $prec;
+                        $brutoVal += $subt;
+                        if ($taxRate > 0) {
+                            $impuestoVal += ($subt * ($taxRate / 100));
+                        }
+                    }
+                }
+            }
+
+            if ($brutoVal == 0 && $montoVal > 0) {
+                $brutoVal = $montoVal - $impuestoVal;
+            }
+
+            $sumValorBruto += $brutoVal;
+            $sumImpuesto += $impuestoVal;
+            $sumMontoTotal += $montoVal;
+
             $estadoClase = 'badge-aceptada';
             if (strtolower($item["estado"]) === 'enviada') $estadoClase = 'badge-enviada';
             else if (strtolower($item["estado"]) === 'error' || strtolower($item["estado"]) === 'rechazada') $estadoClase = 'badge-error';
@@ -278,17 +313,24 @@ foreach ($reporte as $item) {
             <td><?php echo htmlspecialchars($item["tercero"]); ?></td>
             <td><?php echo htmlspecialchars($item["vendedor"]); ?></td>
             <td><?php echo date('d/m/Y H:i', strtotime($item["fecha"])); ?></td>
-            <td>$ <?php echo number_format($item["monto"], 0, ',', '.'); ?></td>
+            <td>$ <?php echo number_format($brutoVal, 0, ',', '.'); ?></td>
+            <td>$ <?php echo number_format($impuestoVal, 0, ',', '.'); ?></td>
+            <td>$ <?php echo number_format($montoVal, 0, ',', '.'); ?></td>
             <td><span class="estado-badge <?php echo $estadoClase; ?>"><?php echo htmlspecialchars($item["estado"]); ?></span></td>
           </tr>
         <?php endforeach; ?>
       </tbody>
+      <?php if ($categoria === "facturas" || $categoria === "nc"): ?>
       <tfoot>
         <tr>
-          <td colspan="6" style="text-align:right;">TOTAL ACUMULADO:</td>
-          <td colspan="2">$ <?php echo number_format($totalMonto, 0, ',', '.'); ?></td>
+          <td colspan="6" style="text-align:right; font-weight:bold;">TOTALES:</td>
+          <td style="font-weight:bold;">$ <?php echo number_format($sumValorBruto, 0, ',', '.'); ?></td>
+          <td style="font-weight:bold;">$ <?php echo number_format($sumImpuesto, 0, ',', '.'); ?></td>
+          <td style="font-weight:bold;">$ <?php echo number_format($sumMontoTotal, 0, ',', '.'); ?></td>
+          <td></td>
         </tr>
       </tfoot>
+      <?php endif; ?>
     </table>
   <?php endif; ?>
 

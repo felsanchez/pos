@@ -1,5 +1,7 @@
 <?php
 
+date_default_timezone_set('America/Bogota');
+
 class ControladorUsuarios
 {
 
@@ -406,13 +408,13 @@ class ControladorUsuarios
 		$columns = array(
 			0 => 'u.usuario',
 			1 => 'u.nombre',
-			2 => 'u.email',
-			3 => 'u.foto',
-			4 => 'u.perfil',
-			5 => 'b.nombre',
-			6 => 'u.estado',
-			7 => 'u.ultimo_login',
-			9 => 'u.id'
+			2 => 'u.foto',
+			3 => 'u.perfil',
+			4 => 'b.nombre',
+			5 => 'u.estado',
+			6 => 'u.ultimo_login',
+			7 => 'u.id',
+			8 => 'u.id'
 		);
 
 		$where = " WHERE 1=1 ";
@@ -434,9 +436,11 @@ class ControladorUsuarios
 			$where .= " AND u.perfil = '$perfilFiltro' ";
 		}
 
-		// Filtro Mostrar/Ocultar Visitantes (Personalizado)
+		// Filtro Mostrar/Ocultar Visitantes (Personalizado: si está activo, mostrar SOLO usuarios visitantes)
 		$mostrarVisitantes = isset($params['mostrarVisitantes']) ? intval($params['mostrarVisitantes']) : 0;
-		if ($mostrarVisitantes === 0) {
+		if ($mostrarVisitantes === 1) {
+			$where .= " AND u.perfil = 'Visitante' ";
+		} else {
 			$where .= " AND u.perfil != 'Visitante' ";
 		}
 
@@ -456,7 +460,8 @@ class ControladorUsuarios
 
 		// Obtener datos
 		$usuarios = ModeloUsuarios::mdlMostrarUsuariosServerSide($tabla, $where, $order, $limit);
-		$totalData = ModeloUsuarios::mdlGetTotalUsuarios($tabla, " WHERE 1=1 " . (isset($_SESSION["usuario"]) ? " AND u.usuario != '".$_SESSION["usuario"]."' " : "") . ($mostrarVisitantes === 0 ? " AND u.perfil != 'Visitante' " : ""));
+		$condicionVisitantes = ($mostrarVisitantes === 1) ? " AND u.perfil = 'Visitante' " : " AND u.perfil != 'Visitante' ";
+		$totalData = ModeloUsuarios::mdlGetTotalUsuarios($tabla, " WHERE 1=1 " . (isset($_SESSION["usuario"]) ? " AND u.usuario != '".$_SESSION["usuario"]."' " : "") . $condicionVisitantes);
 		$totalFiltered = ModeloUsuarios::mdlGetTotalUsuarios($tabla, $where);
 
 		$data = array();
@@ -467,7 +472,6 @@ class ControladorUsuarios
 
 			$nestedData[] = e($value["usuario"]);
 			$nestedData[] = e($value["nombre"]);
-			$nestedData[] = e($value["email"]);
 
 			// Foto
 			if ($value["foto"] != "") {

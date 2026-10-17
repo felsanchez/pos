@@ -149,18 +149,6 @@ $mensajeConfirmado = !empty($configuracion["mensaje_confirmado"]) ? $configuraci
                 </div>
 
 
-                <!--=====================================
-                      ENTRADA Imagen
-                      ======================================-->
-
-                <?php if (!empty($venta["imagen"])): ?>
-                  <div class="form-group text-center">
-                    <label>Imagen de la orden</label>
-                    <br>
-                    <img src="<?php echo $venta["imagen"]; ?>" class="img-thumbnail" style="max-width:150px;">
-                  </div>
-                <?php endif; ?>
-
                 <!-- Campo oculto para enviar la imagen al guardar la venta -->
                 <input type="hidden" name="nuevaimagen" value="<?php echo $venta["imagen"]; ?>">
 
@@ -654,9 +642,9 @@ MODAL AGREGAR CLIENTE
 
           <div class="box-body">
 
-            <!-- Fila 1: Nombre y Documento -->
+            <!-- Fila 1: Nombre, Tipo Documento y Documento -->
             <div class="row">
-              <div class="col-md-6">
+              <div class="col-md-4">
                 <div class="form-group">
                   <label>Nombre Completo *</label>
                   <div class="input-group">
@@ -667,7 +655,26 @@ MODAL AGREGAR CLIENTE
                 </div>
               </div>
 
-              <div class="col-md-6">
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label>Tipo Documento *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-id-card"></i></span>
+                    <select class="form-control" name="nuevoTipoDocumento" required>
+                      <option value="">Seleccionar tipo</option>
+                      <?php
+                      $tiposDocModal = ControladorFactus::ctrMostrarTiposDocumento();
+                      foreach ($tiposDocModal as $tipo) {
+                        $selected = ($tipo['id'] == 3) ? 'selected' : '';
+                        echo '<option value="' . $tipo['id'] . '" ' . $selected . '>' . $tipo['nombre'] . '</option>';
+                      }
+                      ?>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4">
                 <div class="form-group">
                   <label>Documento *</label>
                   <div class="input-group">

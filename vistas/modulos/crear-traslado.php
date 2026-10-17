@@ -70,17 +70,8 @@ if (!puedeAccion("traslados", "crear")) {
                     <span class="input-group-addon"><i class="fa fa-key"></i></span>
 
                     <?php
-                      $item = null;
-                      $valor = null;
-                      $traslados = ControladorTraslados::ctrMostrarTraslados($item, $valor);
-
-                      if(!$traslados){
-                        echo '<input type="text" class="form-control" id="nuevoCodigoTraslado" name="nuevoCodigoTraslado" value="10001" readonly>';
-                      } else {
-                        foreach ($traslados as $key => $value) { }
-                        $codigo = $value["codigo"] + 1;
-                        echo '<input type="text" class="form-control" id="nuevoCodigoTraslado" name="nuevoCodigoTraslado" value="'.$codigo.'" readonly>';
-                      }
+                      $codigo = ControladorTraslados::ctrObtenerSiguienteConsecutivo();
+                      echo '<input type="text" class="form-control" id="nuevoCodigoTraslado" name="nuevoCodigoTraslado" value="'.$codigo.'" readonly>';
                     ?>
                     
                   </div>

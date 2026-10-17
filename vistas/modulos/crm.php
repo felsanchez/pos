@@ -475,9 +475,9 @@ $crmController->ctrEliminarEtapa();
           </div>
 
           <!-- Buscador -->
-          <div class="input-group" style="width: 250px;">
+          <div class="input-group" style="width: 280px;">
             <span class="input-group-addon"><i class="fa fa-search"></i></span>
-            <input type="text" class="form-control" id="buscadorCRM" placeholder="Buscar cliente o negocio...">
+            <input type="text" class="form-control" id="buscadorCRM" placeholder="Buscar cliente, teléfono o negocio...">
           </div>
 
         </div>
@@ -549,11 +549,6 @@ $crmController->ctrEliminarEtapa();
               </div>
             </div>
 
-            <!-- Total Monetario en la Columna -->
-            <div class="crm-column-value-total">
-               Acumulado: <strong>$ <?php echo number_format($valorAcumuladoInicial, 2); ?></strong>
-            </div>
-
             <!-- Contenedor de Tarjetas -->
             <div class="crm-cards-container" data-etapa="<?php echo $etapa["nombre"]; ?>">
               <?php foreach ($leadsColumna as $lead): 
@@ -566,6 +561,7 @@ $crmController->ctrEliminarEtapa();
                      data-vendedor="<?php echo htmlspecialchars($lead["nombre_vendedor"]); ?>"
                      data-prioridad="<?php echo $lead["prioridad"]; ?>"
                      data-cliente="<?php echo htmlspecialchars($lead["nombre_cliente"]); ?>"
+                     data-telefono="<?php echo htmlspecialchars(!empty($lead["telefono_cliente"]) ? $lead["telefono_cliente"] : (!empty($lead["telefono"]) ? $lead["telefono"] : '')); ?>"
                      data-titulo="<?php echo htmlspecialchars($lead["titulo"]); ?>"
                      data-valor="<?php echo $lead["valor_estimado"]; ?>"
                      data-origen="<?php echo htmlspecialchars($lead["origen"]); ?>"
@@ -619,7 +615,7 @@ $crmController->ctrEliminarEtapa();
                         <span class="crm-badge-type crm-badge-order" title="Creado desde Órdenes de Venta">
                           <i class="fa fa-shopping-cart"></i> Orden #<?php echo $lead["codigo_orden"]; ?>
                         </span>
-                      <?php else: ?>
+                      <?php elseif (!$esWhatsApp): ?>
                         <span class="crm-badge-type crm-badge-manual" title="Lead creado manualmente">
                           <i class="fa fa-user"></i> Prospecto
                         </span>
@@ -764,10 +760,10 @@ MODAL AGREGAR LEAD
                 </div>
 
                 <div class="row">
-                  <!-- Fecha Cierre Estimado -->
+                  <!-- Fecha Cierre -->
                   <div class="col-md-6 col-sm-12">
                     <div class="form-group" style="margin-bottom: 0;">
-                      <label style="font-weight: 600; color: #475569;">Cierre Estimado</label>
+                      <label style="font-weight: 600; color: #475569;">Fecha de Cierre</label>
                       <div class="input-group">
                         <span class="input-group-addon" style="background: #f1f5f9;"><i class="fa fa-calendar text-muted"></i></span>
                         <input type="date" class="form-control" name="nuevoLeadFechaCierre" style="border-radius: 0 4px 4px 0;">
@@ -895,10 +891,10 @@ MODAL EDITAR LEAD
                 </div>
 
                 <div class="row">
-                  <!-- Fecha Cierre Estimado -->
+                  <!-- Fecha Cierre -->
                   <div class="col-md-6 col-sm-12">
                     <div class="form-group" style="margin-bottom: 0;">
-                      <label style="font-weight: 600; color: #475569;">Cierre Estimado</label>
+                      <label style="font-weight: 600; color: #475569;">Fecha de Cierre</label>
                       <div class="input-group">
                         <span class="input-group-addon" style="background: #f1f5f9;"><i class="fa fa-calendar text-muted"></i></span>
                         <input type="date" class="form-control" name="editarLeadFechaCierre" id="editarLeadFechaCierre" style="border-radius: 0 4px 4px 0;">
@@ -945,6 +941,33 @@ MODAL EDITAR LEAD
                   <label style="font-weight: 600; color: #2e7d32;"><i class="fa fa-magic text-success"></i> Resumen de Conversación (IA)</label>
                   <textarea class="form-control" name="editarLeadResumenIA" id="editarLeadResumenIA" rows="3" style="background-color: #ffffff; border: 1px solid #a5d6a7; border-left: 4px solid #25D366; border-radius: 4px;" placeholder="Resumen generado por el Agente IA..."></textarea>
                 </div>
+                
+                
+                <!-- Imágenes enviadas por el cliente -->
+                <br>
+                <div id="contenedorImagenesLead" style="margin-top: 15px;">
+                    <label style="font-weight: 600; color: #2e7d32;">
+                        <i class="fa fa-image text-success"></i>
+                        Imágenes enviadas
+                    </label>
+                    <div 
+                        id="listaImagenesLead"
+                        style="
+                            display: flex;
+                            flex-wrap: wrap;
+                            gap: 10px;
+                            margin-top: 8px;
+                        ">
+                    </div>
+                </div>
+            
+                <!-- Botón Editar Contacto -->
+                <div style="margin-top: 15px; text-align: right;">
+                    <button type="button" class="btn btn-success btn-editar-contacto-lead" id="btnEditarContactoLead" style="font-weight: 600; background-color: #25D366; border-color: #25D366;">
+                        <i class="fa fa-pencil"></i> Editar contacto
+                    </button>
+                </div>
+            
               </div>
             </div>
 
@@ -1047,50 +1070,52 @@ MODAL GESTIONAR ETAPAS (COLUMNAS)
             <h3 class="panel-title">Etapas Existentes</h3>
           </div>
           <div class="panel-body">
-            <table class="table table-bordered table-striped">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Nombre</th>
-                  <th>Color</th>
-                  <th>Tipo</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php
-                foreach ($etapas as $key => $value) {
-                  $badgeTipo = ($value["editable"] == 0) ? '<span class="label label-primary">Sistema (Protegida)</span>' : '<span class="label label-default">Personalizada</span>';
-                  
-                  $btnAcciones = '';
-                  if ($value["editable"] == 1) {
-                      $btnAcciones = '
-                        <button class="btn btn-warning btn-xs btnEditarEtapaCRM"
-                          data-id="' . $value["id"] . '"
-                          data-nombre="' . $value["nombre"] . '"
-                          data-color="' . $value["color"] . '"
-                          data-orden="' . $value["orden"] . '"
-                          data-toggle="modal"
-                          data-target="#modalEditarEtapaCRM">
-                          <i class="fa fa-pencil"></i>
-                        </button>
-                        <button class="btn btn-danger btn-xs btnEliminarEtapaCRM" idEtapa="' . $value["id"] . '" nombreEtapa="' . $value["nombre"] . '"><i class="fa fa-times"></i></button>
-                      ';
-                  } else {
-                      $btnAcciones = '<span class="text-muted"><i class="fa fa-lock"></i> Bloqueada</span>';
-                  }
+            <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%;">
+              <table class="table table-bordered table-striped" style="min-width: 500px;">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th>Color</th>
+                    <th>Tipo</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php
+                  foreach ($etapas as $key => $value) {
+                    $badgeTipo = ($value["editable"] == 0) ? '<span class="label label-primary">Sistema (Protegida)</span>' : '<span class="label label-default">Personalizada</span>';
+                    
+                    $btnAcciones = '';
+                    if ($value["editable"] == 1) {
+                        $btnAcciones = '
+                          <button class="btn btn-warning btn-xs btnEditarEtapaCRM"
+                            data-id="' . $value["id"] . '"
+                            data-nombre="' . $value["nombre"] . '"
+                            data-color="' . $value["color"] . '"
+                            data-orden="' . $value["orden"] . '"
+                            data-toggle="modal"
+                            data-target="#modalEditarEtapaCRM">
+                            <i class="fa fa-pencil"></i>
+                          </button>
+                          <button class="btn btn-danger btn-xs btnEliminarEtapaCRM" idEtapa="' . $value["id"] . '" nombreEtapa="' . $value["nombre"] . '"><i class="fa fa-times"></i></button>
+                        ';
+                    } else {
+                        $btnAcciones = '<span class="text-muted"><i class="fa fa-lock"></i> Bloqueada</span>';
+                    }
 
-                  echo '<tr>
-                      <td>' . ($value["orden"]) . '</td>
-                      <td><span class="badge" style="background-color: ' . $value["color"] . '; font-size: 13px;">' . $value["nombre"] . '</span></td>
-                      <td><input type="color" value="' . $value["color"] . '" disabled style="width: 50px;"></td>
-                      <td>' . $badgeTipo . '</td>
-                      <td>' . $btnAcciones . '</td>
-                    </tr>';
-                }
-                ?>
-              </tbody>
-            </table>
+                    echo '<tr>
+                        <td>' . ($value["orden"]) . '</td>
+                        <td><span class="badge" style="background-color: ' . $value["color"] . '; font-size: 13px;">' . $value["nombre"] . '</span></td>
+                        <td><input type="color" value="' . $value["color"] . '" disabled style="width: 50px;"></td>
+                        <td>' . $badgeTipo . '</td>
+                        <td>' . $btnAcciones . '</td>
+                      </tr>';
+                  }
+                  ?>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -1179,9 +1204,9 @@ MODAL AGREGAR CLIENTE
 
           <div class="box-body">
 
-            <!-- Fila 1: Nombre y Documento -->
+            <!-- Fila 1: Nombre, Tipo Documento y Documento -->
             <div class="row">
-              <div class="col-md-6">
+              <div class="col-md-4">
                 <div class="form-group">
                   <label>Nombre Completo *</label>
                   <div class="input-group">
@@ -1191,7 +1216,26 @@ MODAL AGREGAR CLIENTE
                 </div>
               </div>
 
-              <div class="col-md-6">
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label>Tipo Documento *</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-id-card"></i></span>
+                    <select class="form-control" name="nuevoTipoDocumento" required>
+                      <option value="">Seleccionar tipo</option>
+                      <?php
+                      $tiposDocModal = ControladorFactus::ctrMostrarTiposDocumento();
+                      foreach ($tiposDocModal as $tipo) {
+                        $selected = ($tipo['id'] == 3) ? 'selected' : '';
+                        echo '<option value="' . $tipo['id'] . '" ' . $selected . '>' . $tipo['nombre'] . '</option>';
+                      }
+                      ?>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4">
                 <div class="form-group">
                   <label>Documento *</label>
                   <div class="input-group">

@@ -6,7 +6,9 @@
     justify-content: center;
     min-height: 100vh;
     margin: 0;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 20px 10px;
     font-family: 'Source Sans Pro', sans-serif;
   }
 
@@ -19,7 +21,8 @@
     position: relative;
     z-index: 1;
     width: 420px;
-    margin: 0;
+    max-width: 100%;
+    margin: auto;
     background: #ffffff;
     border-radius: 24px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
@@ -28,12 +31,13 @@
   }
 
   .login-logo {
-    margin-bottom: 30px;
+    margin-bottom: 25px;
     text-align: center;
   }
 
   .login-logo img {
-    max-width: 200px;
+    max-width: 180px;
+    height: auto;
   }
 
   .login-box-body {
@@ -43,9 +47,9 @@
   }
 
   .login-box-msg {
-    font-size: 1.3em;
+    font-size: 1.25em;
     font-weight: 600;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     color: #2c3e50;
     text-align: center;
   }
@@ -55,7 +59,7 @@
     border: 1px solid #e9ecef;
     border-radius: 12px;
     color: #495057;
-    height: 50px;
+    height: 48px;
     padding-left: 15px;
     font-size: 15px;
     transition: all 0.3s ease;
@@ -74,7 +78,7 @@
 
   .form-control-feedback {
     color: #6c757d !important;
-    line-height: 50px;
+    line-height: 48px;
     font-size: 18px;
     margin-right: 5px;
   }
@@ -83,10 +87,10 @@
     background: #007bff;
     border: none;
     border-radius: 12px;
-    height: 50px;
+    height: 48px;
     font-size: 16px;
     font-weight: 600;
-    margin-top: 10px;
+    margin-top: 5px;
     transition: all 0.3s ease;
     box-shadow: 0 8px 20px rgba(0, 123, 255, 0.15);
   }
@@ -111,8 +115,8 @@
 
   .register-link {
     display: block;
-    margin-top: 15px;
-    padding-top: 15px;
+    margin-top: 12px;
+    padding-top: 12px;
     border-top: 1px solid #eee;
   }
 
@@ -132,11 +136,91 @@
     animation: fadeInScale 0.6s ease-out;
   }
 
-  /* Ajustes para móviles */
+  /* Ajustes para móviles por ancho */
   @media (max-width: 480px) {
     .login-box {
-      width: 90%;
-      padding: 30px 20px;
+      width: 95%;
+      padding: 25px 20px;
+      border-radius: 18px;
+    }
+
+    .login-logo {
+      margin-bottom: 15px;
+    }
+
+    .login-logo img {
+      max-width: 140px;
+    }
+
+    .login-box-msg {
+      font-size: 1.1em;
+      margin-bottom: 15px;
+    }
+
+    .form-group.has-feedback .form-control {
+      height: 44px;
+      font-size: 14px;
+    }
+
+    .form-control-feedback {
+      line-height: 44px;
+      font-size: 16px;
+    }
+
+    .btn-primary {
+      height: 44px;
+      font-size: 15px;
+    }
+  }
+
+  /* Ajustes para dispositivos de poca altura (pantallas pequeñas o teclado desplegado) */
+  @media (max-height: 680px) {
+    body.login-page {
+      padding: 15px 10px;
+      align-items: flex-start;
+    }
+
+    .login-box {
+      padding: 20px 18px;
+      margin-top: auto;
+      margin-bottom: auto;
+    }
+
+    .login-logo {
+      margin-bottom: 12px;
+    }
+
+    .login-logo img {
+      max-width: 130px;
+    }
+
+    .login-box-msg {
+      font-size: 1.05em;
+      margin-bottom: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 12px !important;
+    }
+
+    .form-group.has-feedback .form-control {
+      height: 42px;
+      font-size: 14px;
+    }
+
+    .form-control-feedback {
+      line-height: 42px;
+    }
+
+    .btn-primary {
+      height: 42px;
+      font-size: 14px;
+      margin-top: 0;
+    }
+
+    .register-link {
+      margin-top: 10px;
+      padding-top: 10px;
     }
   }
 </style>

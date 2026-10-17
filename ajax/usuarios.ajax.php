@@ -336,6 +336,10 @@ if (isset($_POST["guardarEditarUsuario"])) {
 			if ($respuesta != "ok") {
 				throw new Exception("Error al actualizar el usuario.");
 			}
+			if (isset($_SESSION["id"]) && $_SESSION["id"] == $_POST["idUsuario"]) {
+				$_SESSION["foto"] = $ruta;
+				$_SESSION["nombre"] = $_POST["editarNombre"];
+			}
 			$db->commit();
 			echo json_encode(["status" => "ok", "mensaje" => "¡El usuario ha sido editado correctamente!"]);
 		} catch (Exception $e) {
@@ -432,8 +436,10 @@ if (isset($_FILES["nuevaImagenUsuario"])) {
 		$respuesta = ModeloUsuarios::mdlActualizarImagenUsuario($tabla, $datos, $idUsuario);
 
 		if ($respuesta == "ok") {
-			// Actualizar la variable de sesión para que el cambio se refleje inmediatamente
-			$_SESSION["foto"] = $ruta;
+			// Solo actualizar la foto de la sesión si la imagen corresponde al usuario actualmente logueado
+			if (isset($_SESSION["id"]) && $_SESSION["id"] == $idUsuario) {
+				$_SESSION["foto"] = $ruta;
+			}
 		}
 
 		echo json_encode($respuesta);

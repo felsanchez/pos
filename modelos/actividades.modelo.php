@@ -10,7 +10,8 @@ class ModeloActividades{
 
 	static public function mdlIngresarActividad($tabla, $datos){
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(descripcion, tipo, id_user, fecha, estado, id_cliente, observacion, id_bodega) VALUES (:descripcion, :tipo, :id_user, :fecha, :estado, :id_cliente, :observacion, :id_bodega)");
+		$db = Conexion::conectar();
+		$stmt = $db->prepare("INSERT INTO $tabla(descripcion, tipo, id_user, fecha, estado, id_cliente, observacion, id_bodega, categoria_google, google_event_id, google_meet_link, ubicacion, invitados_email, fecha_fin, todo_dia, archivo) VALUES (:descripcion, :tipo, :id_user, :fecha, :estado, :id_cliente, :observacion, :id_bodega, :categoria_google, :google_event_id, :google_meet_link, :ubicacion, :invitados_email, :fecha_fin, :todo_dia, :archivo)");
 
 		$stmt->bindParam(":descripcion", $datos["descripcion"], PDO::PARAM_STR);
 		$stmt->bindParam(":tipo", $datos["tipo"], PDO::PARAM_STR);
@@ -22,18 +23,45 @@ class ModeloActividades{
 		$idBodega = isset($datos["id_bodega"]) ? intval($datos["id_bodega"]) : 1;
 		$stmt->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
 
-		if($stmt->execute()){
+		$catG = $datos["categoria_google"] ?? "evento";
+		$gEvId = $datos["google_event_id"] ?? null;
+		$gMeet = $datos["google_meet_link"] ?? null;
+		$ubicacion = $datos["ubicacion"] ?? null;
+		$invitados = $datos["invitados_email"] ?? null;
+		$fechaFin = $datos["fecha_fin"] ?? null;
+		$todoDia = isset($datos["todo_dia"]) ? intval($datos["todo_dia"]) : 0;
+		$archivo = $datos["archivo"] ?? null;
 
-			return "ok";
+		$stmt->bindParam(":categoria_google", $catG, PDO::PARAM_STR);
+		$stmt->bindParam(":google_event_id", $gEvId, PDO::PARAM_STR);
+		$stmt->bindParam(":google_meet_link", $gMeet, PDO::PARAM_STR);
+		$stmt->bindParam(":ubicacion", $ubicacion, PDO::PARAM_STR);
+		$stmt->bindParam(":invitados_email", $invitados, PDO::PARAM_STR);
+		$stmt->bindParam(":fecha_fin", $fechaFin, PDO::PARAM_STR);
+		$stmt->bindParam(":todo_dia", $todoDia, PDO::PARAM_INT);
+		$stmt->bindParam(":archivo", $archivo, PDO::PARAM_STR);
+
+		if($stmt->execute()){
+			$lastId = $db->lastInsertId();
+			return ($lastId > 0) ? $lastId : "ok";
 		}
 		else{
-
 			return "error";
 		}
 
-		$stmt -> close();
 		$stmt = null;
 
+	}
+
+	/*=============================================
+	ACTUALIZAR GOOGLE EVENT ID Y MEET LINK
+	=============================================*/
+	static public function mdlActualizarGoogleInfo($idActividad, $googleEventId, $googleMeetLink = null) {
+		$stmt = Conexion::conectar()->prepare("UPDATE actividades SET google_event_id = :gid, google_meet_link = :gmeet WHERE id = :id");
+		$stmt->bindParam(":gid", $googleEventId, PDO::PARAM_STR);
+		$stmt->bindParam(":gmeet", $googleMeetLink, PDO::PARAM_STR);
+		$stmt->bindParam(":id", $idActividad, PDO::PARAM_INT);
+		return $stmt->execute() ? "ok" : "error";
 	}
 
 
@@ -132,29 +160,40 @@ class ModeloActividades{
 
 	static public function mdlEditarActividad($tabla, $datos){
 
-		//var_dump($datos["fecha"]);
-
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET descripcion = :descripcion, tipo = :tipo, id_user = :id_user, estado = :estado, id_cliente = :id_cliente, observacion = :observacion WHERE id = :id");
+		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET descripcion = :descripcion, tipo = :tipo, id_user = :id_user, fecha = :fecha, estado = :estado, id_cliente = :id_cliente, observacion = :observacion, categoria_google = :categoria_google, google_meet_link = :google_meet_link, ubicacion = :ubicacion, invitados_email = :invitados_email, fecha_fin = :fecha_fin, todo_dia = :todo_dia, archivo = :archivo WHERE id = :id");
 
 		$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
 		$stmt->bindParam(":descripcion", $datos["descripcion"], PDO::PARAM_STR);
 		$stmt->bindParam(":tipo", $datos["tipo"], PDO::PARAM_STR);
 		$stmt->bindParam(":id_user", $datos["id_user"], PDO::PARAM_STR);
-		//$stmt->bindParam(":fecha", $datos["fecha"], PDO::PARAM_STR);
+		$stmt->bindParam(":fecha", $datos["fecha"], PDO::PARAM_STR);
 		$stmt->bindParam(":estado", $datos["estado"], PDO::PARAM_STR);
 		$stmt->bindParam(":id_cliente", $datos["id_cliente"], PDO::PARAM_STR);
 		$stmt->bindParam(":observacion", $datos["observacion"], PDO::PARAM_STR);
 
-		if($stmt->execute()){
+		$catG = $datos["categoria_google"] ?? "evento";
+		$gMeet = $datos["google_meet_link"] ?? null;
+		$ubicacion = $datos["ubicacion"] ?? null;
+		$invitados = $datos["invitados_email"] ?? null;
+		$fechaFin = $datos["fecha_fin"] ?? null;
+		$todoDia = isset($datos["todo_dia"]) ? intval($datos["todo_dia"]) : 0;
+		$archivo = $datos["archivo"] ?? null;
 
+		$stmt->bindParam(":categoria_google", $catG, PDO::PARAM_STR);
+		$stmt->bindParam(":google_meet_link", $gMeet, PDO::PARAM_STR);
+		$stmt->bindParam(":ubicacion", $ubicacion, PDO::PARAM_STR);
+		$stmt->bindParam(":invitados_email", $invitados, PDO::PARAM_STR);
+		$stmt->bindParam(":fecha_fin", $fechaFin, PDO::PARAM_STR);
+		$stmt->bindParam(":todo_dia", $todoDia, PDO::PARAM_INT);
+		$stmt->bindParam(":archivo", $archivo, PDO::PARAM_STR);
+
+		if($stmt->execute()){
 			return "ok";
 		}
 		else{
-
 			return "error";
 		}
 
-		$stmt -> close();
 		$stmt = null;
 
 	}

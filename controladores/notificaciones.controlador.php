@@ -1,5 +1,7 @@
 <?php
 
+date_default_timezone_set('America/Bogota');
+
 class ControladorNotificaciones
 {
 
@@ -7,7 +9,7 @@ class ControladorNotificaciones
 	CREAR NOTIFICACIÓN
 	=============================================*/
 
-	static public function ctrCrearNotificacion($tipo, $titulo, $mensaje, $referenciaTipo = null, $referenciaId = null)
+	static public function ctrCrearNotificacion($tipo, $titulo, $mensaje, $referenciaTipo = null, $referenciaId = null, $idBodega = null)
 	{
 
 		$datos = array(
@@ -16,7 +18,8 @@ class ControladorNotificaciones
 			"mensaje" => $mensaje,
 			"referencia_tipo" => $referenciaTipo,
 			"referencia_id" => $referenciaId,
-			"id_bodega" => isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : null
+			"id_bodega" => $idBodega !== null ? intval($idBodega) : (isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : null),
+			"fecha" => date("Y-m-d H:i:s")
 		);
 
 		$respuesta = ModeloNotificaciones::mdlCrearNotificacion($datos);
@@ -110,12 +113,12 @@ class ControladorNotificaciones
 			return;
 		}
 
-		// Obtener todos los productos
-		$productos = ControladorProductos::ctrMostrarProductos(null, null, "id");
+		$idBodegaActiva = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : null;
+
+		// Obtener todos los productos para la bodega activa
+		$productos = ControladorProductos::ctrMostrarProductos(null, null, "id", $idBodegaActiva);
 
 		foreach ($productos as $producto) {
-
-			$idBodegaActiva = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : null;
 
 			// Verificar si el producto tiene variantes
 			if (isset($producto["tiene_variantes"]) && $producto["tiene_variantes"] == 1) {
@@ -157,7 +160,8 @@ class ControladorNotificaciones
 								"Stock Agotado",
 								"El producto \"" . $nombreCompleto . "\" (Código: " . $codigoVariante . ") se ha agotado.",
 								"variante",
-								$variante["id"]
+								$variante["id"],
+								$idBodegaActiva
 							);
 						}
 
@@ -175,7 +179,8 @@ class ControladorNotificaciones
 								"Stock Bajo",
 								"El producto \"" . $nombreCompleto . "\" (Código: " . $codigoVariante . ") tiene stock bajo: " . $variante["stock"] . " unidades.",
 								"variante",
-								$variante["id"]
+								$variante["id"],
+								$idBodegaActiva
 							);
 						}
 
@@ -199,7 +204,8 @@ class ControladorNotificaciones
 							"Stock Agotado",
 							"El producto \"" . $producto["descripcion"] . "\" (Código: " . $producto["codigo"] . ") se ha agotado.",
 							"producto",
-							$producto["id"]
+							$producto["id"],
+							$idBodegaActiva
 						);
 					}
 
@@ -217,7 +223,8 @@ class ControladorNotificaciones
 							"Stock Bajo",
 							"El producto \"" . $producto["descripcion"] . "\" (Código: " . $producto["codigo"] . ") tiene stock bajo: " . $producto["stock"] . " unidades.",
 							"producto",
-							$producto["id"]
+							$producto["id"],
+							$idBodegaActiva
 						);
 					}
 
@@ -233,8 +240,9 @@ class ControladorNotificaciones
 	VERIFICAR ACTIVIDADES PRÓXIMAS Y GENERAR NOTIFICACIONES
 	=============================================*/
 
-	static public function ctrVerificarActividadesProximas()
+	static public function ctrVerificarActividadesProximas($diasAntes = 3)
 	{
+		return;
 
 		// Obtener configuración
 		$configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
@@ -285,8 +293,8 @@ class ControladorNotificaciones
 						// Crear notificación
 						ControladorNotificaciones::ctrCrearNotificacion(
 							"actividad_proxima",
-							"Actividad Próxima",
-							"La actividad \"" . $actividad["descripcion"] . "\" de " . $nombreUsuario . " está programada para $diasFaltantes días (" . $actividad["fecha"] . ").",
+							"Calendario Próximo",
+							"El calendario \"" . $actividad["descripcion"] . "\" de " . $nombreUsuario . " está programada para $diasFaltantes días (" . $actividad["fecha"] . ").",
 							"actividad",
 							$actividad["id"]
 						);

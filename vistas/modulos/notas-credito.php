@@ -184,7 +184,6 @@ if ($_SESSION["perfil"] == "Especial") {
                                 <th>Código Nota</th>
                                 <th>Factura Original</th>
                                 <th>Cliente</th>
-                                <th>Vendedor</th>
                                 <th>Total</th>
                                 <th>Fecha</th>
                                 <th>Observación</th>

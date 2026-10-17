@@ -37,8 +37,14 @@ $(document).ready(function () {
                     "data": 3, // Fecha
                     "render": function (data, type, row) {
                         if (type === 'display' && data) {
-                            var fecha = new Date(data);
-                            return fecha.toLocaleString('es-ES', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'});
+                            var p = data.split(' ');
+                            if (p.length >= 2) {
+                                var f = p[0].split('-');
+                                var h = p[1].split(':');
+                                if (f.length === 3 && h.length >= 2) {
+                                    return f[2] + '/' + f[1] + '/' + f[0] + ' ' + h[0] + ':' + h[1];
+                                }
+                            }
                         }
                         return data;
                     }
@@ -116,12 +122,18 @@ $(document).ready(function () {
 
     // 5. Botón Limpiar (Vuelve al estado inicial: Todo)
     $("#btnLimpiar").on("click", function () {
-        $("#cat_s, #tipo_s, #user_s, #fi_s, #ff_s").val("").trigger("change");
+        $("#cat_s, #tipo_s, #user_s, #fi_s, #ff_s").val("");
+        if (typeof $.fn.select2 !== 'undefined') {
+            $("#cat_s, #tipo_s, #user_s").trigger("change.select2");
+        }
         $("#span-rango-stock").html('<i class="fa fa-calendar"></i> Rango de fecha');
         
         if($("#sucursalReporteMaestro").is("select")){
             var defaultSucursal = typeof defaultSucursalHistorial !== 'undefined' ? defaultSucursalHistorial : 'todos';
-            $("#sucursalReporteMaestro").val(defaultSucursal).trigger("change.select2");
+            $("#sucursalReporteMaestro").val(defaultSucursal);
+            if (typeof $.fn.select2 !== 'undefined') {
+                $("#sucursalReporteMaestro").trigger("change.select2");
+            }
         }
         
         reloadStockTable();
@@ -177,7 +189,7 @@ $(document).ready(function () {
                     totalMovimientos += parseInt(item.total_movimientos);
                     if (item.tipo_movimiento == "venta") $("#totalVentas").text(item.total_unidades);
                     if (item.tipo_movimiento == "eliminacion_venta") totalEliminacionesVentas += parseInt(item.total_unidades);
-                    if (item.tipo_movimiento == "edicion_stock" || item.tipo_movimiento == "ajuste_manual") totalEdiciones += parseInt(item.total_movimientos);
+                    if (item.tipo_movimiento == "edicion_stock" || item.tipo_movimiento == "ajuste_manual" || item.tipo_movimiento == "edicion_excel") totalEdiciones += parseInt(item.total_movimientos);
                 });
                 
                 $("#totalEliminacionesVentas").text(totalEliminacionesVentas);

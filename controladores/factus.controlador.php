@@ -621,14 +621,14 @@ class ControladorFactus
 				// Intentar refrescar token automáticamente
 				$tokenNuevo = ModeloFactus::mdlGarantizarTokenValido();
 				if (!$tokenNuevo) {
-					$errores[] = "El token de Factus ha expirado y no se pudo renovar automáticamente. Vaya a Configuración > Datos para la Factura y haga clic en 'Autenticar' nuevamente.";
+					$errores[] = "El token de Facturación electrónica ha expirado y no se pudo renovar automáticamente. Vaya a Configuración > Datos para la Factura y haga clic en 'Autenticar' nuevamente.";
 				}
 			}
 		} else {
 			// Si no hay fecha de expiración, también intentamos obtener/refrescar
 			$tokenNuevo = ModeloFactus::mdlGarantizarTokenValido();
 			if (!$tokenNuevo) {
-				$errores[] = "No hay un token válido de Factus. Vaya a Configuración > Datos para la Factura y autentíquese.";
+				$errores[] = "No hay un token válido de Facturación electrónica. Vaya a Configuración > Datos para la Factura y autentíquese.";
 			}
 		}
 
@@ -722,48 +722,49 @@ class ControladorFactus
 		// 🟢 LOGUEAR PAYLOAD ENVIADO
 		Logger::debug(print_r($datosFactura, true));
 
-		// 4. Enviar factura a Factus (Con reintento automático si hay conflicto de consecutivos 409)
+		// 4. Enviar factura a Factus (Con reintento y consulta por código de referencia)
+		$referenceCode = $datosFactura['reference_code'] ?? null;
 		$intentos = 0;
-		$maxIntentos = 3;
+		$maxIntentos = 6;
 		$resultado = null;
 		$exito = false;
 
 		while ($intentos < $maxIntentos && !$exito) {
 			$intentos++;
 
-			// Si es reintento, actualizar el consecutivo antes de enviar
-			if ($intentos > 1) {
-				// Obtener rango y forzar avance del consecutivo
-				$rango = ModeloFactus::mdlObtenerRangoActivo();
-				if ($rango) {
-					$nuevoConsecutivo = intval($rango['numero_actual']) + 1;
-					ModeloFactus::mdlActualizarNumeroActualRango($rango['id_factus'], $nuevoConsecutivo);
-
-					// Re-validar y re-preparar datos con el nuevo consecutivo
-					$datosFactura = self::prepararDatosFactura($venta);
-
-					Logger::debug("Reintento #$intentos: Forzando consecutivo a $nuevoConsecutivo\n");
+			if ($intentos == 1) {
+				$resultado = ModeloFactus::mdlCrearFacturaElectronica($auth['token'], $datosFactura);
+			} else {
+				if (!empty($referenceCode)) {
+					$docConsultado = ModeloFactus::mdlBuscarDocumentoPorReferencia($token, 'factura', $referenceCode);
+					if ($docConsultado !== null) {
+						$resultado = $docConsultado;
+						$exito = true;
+						break;
+					}
 				}
 			}
 
-			// 🟢 DEBUG: Ver qué datos se envían a Factus (JSON)
-			Logger::debug(json_encode($datosFactura, JSON_PRETTY_PRINT));
+			if (isset($resultado['http_code']) && ($resultado['http_code'] == 201 || $resultado['http_code'] == 200)) {
+				$resCheck = json_decode($resultado['respuesta'], true);
+				if (!empty($resCheck['data']['bill']['number']) || !empty($resCheck['data']['number'])) {
+					$exito = true;
+					break;
+				}
+			}
 
-			// Enviar solicitud
-			$resultado = ModeloFactus::mdlCrearFacturaElectronica($auth['token'], $datosFactura);
+			if ($intentos < $maxIntentos) {
+				Logger::debug("Reintento #$intentos Factura (Ref: $referenceCode): Esperando 3 segundos para consultar estado en Factus/DIAN...\n");
+				sleep(3);
 
-			// Verificar si fue exitoso (200 o 201)
-			if ($resultado['http_code'] == 201 || $resultado['http_code'] == 200) {
-				$exito = true;
-			} elseif ($resultado['http_code'] == 409) {
-				// 409 Conflict: Con el código de referencia único, esto solo pasaría si reintentamos la misma fila ID
-				// pero Factus ya la tiene. En este caso no incrementamos, solo fallamos o logueamos.
-				$debugMsg = "Error 409: El documento ya existe en Factus con esta referencia única.\n";
-				Logger::debug($debugMsg);
-				break;
-			} else {
-				// Otro error (400, 422, 500)
-				break;
+				if (!empty($referenceCode)) {
+					$docConsultado = ModeloFactus::mdlBuscarDocumentoPorReferencia($token, 'factura', $referenceCode);
+					if ($docConsultado !== null) {
+						$resultado = $docConsultado;
+						$exito = true;
+						break;
+					}
+				}
 			}
 		}
 
@@ -776,10 +777,10 @@ class ControladorFactus
 			// Actualizar datos en la venta
 			$datosActualizar = array(
 				"estado_dian" => "enviada", // ENUM: 'pendiente','enviada','rechazada','aceptada'
-				"cufe" => $respuestaFactus['data']['cufe'] ?? $respuestaFactus['cufe'] ?? '',
+				"cufe" => $respuestaFactus['data']['bill']['cufe'] ?? $respuestaFactus['data']['cufe'] ?? $respuestaFactus['cufe'] ?? '',
 				"qr_data" => $respuestaFactus['data']['bill']['qr'] ?? $respuestaFactus['data']['qr_code'] ?? $respuestaFactus['qr_code'] ?? '',
-				"xml_dian" => $respuestaFactus['data']['xml_url'] ?? $respuestaFactus['xml_url'] ?? '',
-				"pdf_dian" => $respuestaFactus['data']['pdf_url'] ?? $respuestaFactus['pdf_url'] ?? '',
+				"xml_dian" => $respuestaFactus['data']['bill']['xml_url'] ?? $respuestaFactus['data']['xml_url'] ?? $respuestaFactus['xml_url'] ?? '',
+				"pdf_dian" => $respuestaFactus['data']['bill']['public_url'] ?? $respuestaFactus['data']['pdf_url'] ?? $respuestaFactus['pdf_url'] ?? '',
 				"mensaje_dian" => $respuestaFactus['message'] ?? 'Factura generada exitosamente',
 				"fecha_envio_dian" => date('Y-m-d H:i:s'),
 				// 🔹 CAPTURAR EL NÚMERO OFICIAL DE FACTURA
@@ -1418,11 +1419,54 @@ class ControladorFactus
 			return $datosNC;
 		}
 
-		// 4. Enviar a Factus
-		$resultado = ModeloFactus::mdlCrearNotaCredito($token, $datosNC);
+		// 4. Enviar a Factus (Con reintento y consulta por código de referencia)
+		$referenceCode = $datosNC['reference_code'] ?? null;
+		$intentos = 0;
+		$maxIntentos = 6;
+		$resultado = null;
+		$exito = false;
+
+		while ($intentos < $maxIntentos && !$exito) {
+			$intentos++;
+
+			if ($intentos == 1) {
+				$resultado = ModeloFactus::mdlCrearNotaCredito($token, $datosNC);
+			} else {
+				if (!empty($referenceCode)) {
+					$docConsultado = ModeloFactus::mdlBuscarDocumentoPorReferencia($token, 'nc', $referenceCode);
+					if ($docConsultado !== null) {
+						$resultado = $docConsultado;
+						$exito = true;
+						break;
+					}
+				}
+			}
+
+			if (isset($resultado['http_code']) && ($resultado['http_code'] == 201 || $resultado['http_code'] == 200)) {
+				$resCheck = json_decode($resultado['respuesta'], true);
+				if (!empty($resCheck['data']['credit_note']['number']) || !empty($resCheck['data']['number'])) {
+					$exito = true;
+					break;
+				}
+			}
+
+			if ($intentos < $maxIntentos) {
+				Logger::debug("Reintento #$intentos NC Generar (Ref: $referenceCode): Esperando 3 segundos para consultar estado en Factus/DIAN...\n");
+				sleep(3);
+
+				if (!empty($referenceCode)) {
+					$docConsultado = ModeloFactus::mdlBuscarDocumentoPorReferencia($token, 'nc', $referenceCode);
+					if ($docConsultado !== null) {
+						$resultado = $docConsultado;
+						$exito = true;
+						break;
+					}
+				}
+			}
+		}
 
 		// 5. Procesar respuesta
-		if ($resultado['http_code'] == 201 || $resultado['http_code'] == 200) {
+		if ($exito && isset($resultado['http_code']) && ($resultado['http_code'] == 201 || $resultado['http_code'] == 200)) {
 			$respuestaFactus = json_decode($resultado['respuesta'], true);
 
 			// Extraer datos de la respuesta
@@ -1444,11 +1488,11 @@ class ControladorFactus
 				"monto_total" => $venta["total"],
 				"id_cliente" => !empty($idCliente) ? $idCliente : $venta["id_cliente"],
 				"estado_dian" => "enviada",
-				"numero_nota_credito" => $respuestaFactus['data']['credit_note']['number'] ?? '',
-				"cufe_nc" => $respuestaFactus['data']['credit_note']['cude'] ?? $respuestaFactus['data']['cufe'] ?? '',
-				"qr_data_nc" => $respuestaFactus['data']['credit_note']['qr'] ?? $respuestaFactus['data']['qr_code'] ?? '',
-				"xml_dian_nc" => $respuestaFactus['data']['credit_note']['xml_url'] ?? '',
-				"pdf_dian_nc" => $respuestaFactus['data']['credit_note']['public_url'] ?? $respuestaFactus['data']['pdf_url'] ?? '',
+				"numero_nota_credito" => $respuestaFactus['data']['credit_note']['number'] ?? $respuestaFactus['data']['number'] ?? '',
+				"cufe_nc" => $respuestaFactus['data']['credit_note']['cude'] ?? $respuestaFactus['data']['cude'] ?? $respuestaFactus['data']['cufe'] ?? '',
+				"qr_data_nc" => $respuestaFactus['data']['credit_note']['qr'] ?? $respuestaFactus['data']['qr'] ?? $respuestaFactus['data']['qr_code'] ?? '',
+				"xml_dian_nc" => $respuestaFactus['data']['credit_note']['xml_url'] ?? $respuestaFactus['data']['xml_url'] ?? '',
+				"pdf_dian_nc" => $respuestaFactus['data']['credit_note']['public_url'] ?? $respuestaFactus['data']['public_url'] ?? $respuestaFactus['data']['pdf_url'] ?? '',
 				"mensaje_dian" => $respuestaFactus['message'] ?? 'NC generada exitosamente',
 				"fecha_envio_dian" => date('Y-m-d H:i:s'),
 				"id_usuario" => !empty($_SESSION['id']) ? $_SESSION['id'] : (!empty($_POST['idUsuario']) ? intval($_POST['idUsuario']) : null),
@@ -2073,22 +2117,65 @@ class ControladorFactus
 			return $datosFactus;
 		}
 
-		// 4. Enviar a Factus
-		$resultado = ModeloFactus::mdlCrearDocumentoSoporte($auth['token'], $datosFactus);
+		// 4. Enviar a Factus (Con reintento y consulta por código de referencia)
+		$referenceCode = $datosFactus['reference_code'] ?? null;
+		$intentos = 0;
+		$maxIntentos = 6;
+		$resultado = null;
+		$exito = false;
+
+		while ($intentos < $maxIntentos && !$exito) {
+			$intentos++;
+
+			if ($intentos == 1) {
+				$resultado = ModeloFactus::mdlCrearDocumentoSoporte($auth['token'], $datosFactus);
+			} else {
+				if (!empty($referenceCode)) {
+					$docConsultado = ModeloFactus::mdlBuscarDocumentoPorReferencia($token, 'ds', $referenceCode);
+					if ($docConsultado !== null) {
+						$resultado = $docConsultado;
+						$exito = true;
+						break;
+					}
+				}
+			}
+
+			if (isset($resultado['http_code']) && ($resultado['http_code'] == 201 || $resultado['http_code'] == 200)) {
+				$resCheck = json_decode($resultado['respuesta'], true);
+				if (!empty($resCheck['data']['support_document']['number']) || !empty($resCheck['data']['number'])) {
+					$exito = true;
+					break;
+				}
+			}
+
+			if ($intentos < $maxIntentos) {
+				Logger::debug("Reintento #$intentos DS (Ref: $referenceCode): Esperando 3 segundos para consultar estado en Factus/DIAN...\n");
+				sleep(3);
+
+				if (!empty($referenceCode)) {
+					$docConsultado = ModeloFactus::mdlBuscarDocumentoPorReferencia($token, 'ds', $referenceCode);
+					if ($docConsultado !== null) {
+						$resultado = $docConsultado;
+						$exito = true;
+						break;
+					}
+				}
+			}
+		}
 
 		// 5. Procesar respuesta
-		if ($resultado['http_code'] == 201 || $resultado['http_code'] == 200) {
+		if ($exito && isset($resultado['http_code']) && ($resultado['http_code'] == 201 || $resultado['http_code'] == 200)) {
 			$respuestaFactus = json_decode($resultado['respuesta'], true);
 
 			$datosActualizar = [
-				"numero_ds" => $respuestaFactus['data']['support_document']['number'] ?? '',
+				"numero_ds" => $respuestaFactus['data']['support_document']['number'] ?? $respuestaFactus['data']['number'] ?? '',
 				"estado_dian" => "enviada",
-				"cuds" => $respuestaFactus['data']['support_document']['cuds'] ?? '',
-				"qr_data" => $respuestaFactus['data']['support_document']['qr'] ?? '',
-				"pdf_dian" => $respuestaFactus['data']['support_document']['public_url'] ?? '',
-				"xml_dian" => $respuestaFactus['data']['support_document']['xml_url'] ?? '',
+				"cuds" => $respuestaFactus['data']['support_document']['cuds'] ?? $respuestaFactus['data']['cuds'] ?? '',
+				"qr_data" => $respuestaFactus['data']['support_document']['qr'] ?? $respuestaFactus['data']['qr'] ?? '',
+				"pdf_dian" => $respuestaFactus['data']['support_document']['public_url'] ?? $respuestaFactus['data']['public_url'] ?? '',
+				"xml_dian" => $respuestaFactus['data']['support_document']['xml_url'] ?? $respuestaFactus['data']['xml_url'] ?? '',
 				"mensaje_dian" => $respuestaFactus['message'] ?? 'Documento Soporte firmado y enviado exitosamente',
-				"factus_id" => $respuestaFactus['data']['support_document']['id'] ?? null
+				"factus_id" => $respuestaFactus['data']['support_document']['id'] ?? $respuestaFactus['data']['id'] ?? null
 			];
 
 			$actualizado = ModeloFactus::mdlActualizarDatosDocumentoSoporte($idDS, $datosActualizar);
@@ -2175,21 +2262,64 @@ class ControladorFactus
 			return $datosNC;
 		}
 
-		// 5. Enviar a Factus
-		$resultado = ModeloFactus::mdlCrearNotaCredito($token, $datosNC);
+		// 5. Enviar a Factus (Con reintento y consulta por código de referencia)
+		$referenceCode = $datosNC['reference_code'] ?? null;
+		$intentos = 0;
+		$maxIntentos = 6;
+		$resultado = null;
+		$exito = false;
+
+		while ($intentos < $maxIntentos && !$exito) {
+			$intentos++;
+
+			if ($intentos == 1) {
+				$resultado = ModeloFactus::mdlCrearNotaCredito($token, $datosNC);
+			} else {
+				if (!empty($referenceCode)) {
+					$docConsultado = ModeloFactus::mdlBuscarDocumentoPorReferencia($token, 'nc', $referenceCode);
+					if ($docConsultado !== null) {
+						$resultado = $docConsultado;
+						$exito = true;
+						break;
+					}
+				}
+			}
+
+			if (isset($resultado['http_code']) && ($resultado['http_code'] == 201 || $resultado['http_code'] == 200)) {
+				$resCheck = json_decode($resultado['respuesta'], true);
+				if (!empty($resCheck['data']['credit_note']['number']) || !empty($resCheck['data']['number'])) {
+					$exito = true;
+					break;
+				}
+			}
+
+			if ($intentos < $maxIntentos) {
+				Logger::debug("Reintento #$intentos NC (Ref: $referenceCode): Esperando 3 segundos para consultar estado en Factus/DIAN...\n");
+				sleep(3);
+
+				if (!empty($referenceCode)) {
+					$docConsultado = ModeloFactus::mdlBuscarDocumentoPorReferencia($token, 'nc', $referenceCode);
+					if ($docConsultado !== null) {
+						$resultado = $docConsultado;
+						$exito = true;
+						break;
+					}
+				}
+			}
+		}
 
 		// 6. Procesar respuesta
-		if ($resultado['http_code'] == 201 || $resultado['http_code'] == 200) {
+		if ($exito && isset($resultado['http_code']) && ($resultado['http_code'] == 201 || $resultado['http_code'] == 200)) {
 			$respuestaFactus = json_decode($resultado['respuesta'], true);
 
 			// Actualizar registro local
 			$datosActualizar = [
 				"estado_dian" => "enviada",
-				"numero_nota_credito" => $respuestaFactus['data']['credit_note']['number'] ?? '',
-				"cufe_nc" => $respuestaFactus['data']['credit_note']['cude'] ?? $respuestaFactus['data']['cufe'] ?? '',
-				"qr_data_nc" => $respuestaFactus['data']['credit_note']['qr'] ?? $respuestaFactus['data']['qr_code'] ?? '',
-				"xml_dian_nc" => $respuestaFactus['data']['credit_note']['xml_url'] ?? '',
-				"pdf_dian_nc" => $respuestaFactus['data']['credit_note']['public_url'] ?? $respuestaFactus['data']['pdf_url'] ?? '',
+				"numero_nota_credito" => $respuestaFactus['data']['credit_note']['number'] ?? $respuestaFactus['data']['number'] ?? '',
+				"cufe_nc" => $respuestaFactus['data']['credit_note']['cude'] ?? $respuestaFactus['data']['cude'] ?? $respuestaFactus['data']['cufe'] ?? '',
+				"qr_data_nc" => $respuestaFactus['data']['credit_note']['qr'] ?? $respuestaFactus['data']['qr'] ?? $respuestaFactus['data']['qr_code'] ?? '',
+				"xml_dian_nc" => $respuestaFactus['data']['credit_note']['xml_url'] ?? $respuestaFactus['data']['xml_url'] ?? '',
+				"pdf_dian_nc" => $respuestaFactus['data']['credit_note']['public_url'] ?? $respuestaFactus['data']['public_url'] ?? $respuestaFactus['data']['pdf_url'] ?? '',
 				"mensaje_dian" => $respuestaFactus['message'] ?? 'NC firmada y enviada a DIAN',
 				"fecha_envio_dian" => date('Y-m-d H:i:s')
 			];
@@ -2712,11 +2842,10 @@ class ControladorFactus
 			0 => 'nc.numero_nota_credito',
 			1 => 'nc.numero_factura_original',
 			2 => 'c.nombre',
-			3 => 'u.nombre',
-			4 => 'nc.monto_total',
-			5 => 'nc.fecha_creacion',
-			6 => 'nc.observacion',
-			7 => 'nc.estado_dian',
+			3 => 'nc.monto_total',
+			4 => 'nc.fecha_creacion',
+			5 => 'nc.observacion',
+			6 => 'nc.estado_dian',
 		];
 
 		$where = " WHERE 1=1 ";
@@ -2801,9 +2930,6 @@ class ControladorFactus
 
 			// Col 2: Cliente
 			$row[] = e($value['cliente_nombre'] ?? 'N/A');
-
-			// Col 2.5: Vendedor
-			$row[] = e($value['nombre_vendedor'] ?? 'N/A');
 
 			// Col 3: Total
 			$row[] = '$ ' . number_format((float)($value['monto_total'] ?? 0), 2);
@@ -3182,20 +3308,66 @@ class ControladorFactus
 				<td style='font-weight:bold; border:1px solid #eee;'>TERCERO</td>
 				<td style='font-weight:bold; border:1px solid #eee;'>VENDEDOR</td>
 				<td style='font-weight:bold; border:1px solid #eee;'>FECHA</td>
+				<td style='font-weight:bold; border:1px solid #eee;'>VALOR BRUTO</td>
+				<td style='font-weight:bold; border:1px solid #eee;'>IMPUESTO</td>
 				<td style='font-weight:bold; border:1px solid #eee;'>MONTO TOTAL</td>		
 				<td style='font-weight:bold; border:1px solid #eee;'>ESTADO DIAN</td>		
 				</tr>");
 
+			$sumValorBruto = 0;
+			$sumImpuesto = 0;
+			$sumMontoTotal = 0;
+
 			foreach ($reporte as $row => $item) {
+				$montoVal = floatval($item["monto"] ?? 0);
+				$brutoVal = floatval($item["valor_bruto"] ?? 0);
+				$impuestoVal = floatval($item["impuesto"] ?? 0);
+
+				if ($brutoVal == 0 && $impuestoVal == 0 && !empty($item["productos"])) {
+					$prods = json_decode($item["productos"], true);
+					if (is_array($prods)) {
+						foreach ($prods as $p) {
+							$cant = floatval($p["cantidad"] ?? 1);
+							$prec = floatval($p["precio"] ?? 0);
+							$taxRate = floatval($p["impuesto"] ?? 0);
+							$subt = $cant * $prec;
+							$brutoVal += $subt;
+							if ($taxRate > 0) {
+								$impuestoVal += ($subt * ($taxRate / 100));
+							}
+						}
+					}
+				}
+
+				if ($brutoVal == 0 && $montoVal > 0) {
+					$brutoVal = $montoVal - $impuestoVal;
+				}
+
+				$sumValorBruto += $brutoVal;
+				$sumImpuesto += $impuestoVal;
+				$sumMontoTotal += $montoVal;
+
 				echo utf8_decode("<tr>
 				 			<td style='border:1px solid #eee;'>" . $item["tipo"] . "</td> 
 				 			<td style='border:1px solid #eee;'>" . $item["numero"] . "</td>
 				 			<td style='border:1px solid #eee;'>" . $item["tercero"] . "</td>
 				 			<td style='border:1px solid #eee;'>" . $item["vendedor"] . "</td>
 				 			<td style='border:1px solid #eee;'>" . substr($item["fecha"], 0, 10) . "</td>
-					<td style='border:1px solid #eee;'>$ " . number_format($item["monto"], 2) . "</td>
+					<td style='border:1px solid #eee;'>$ " . number_format($brutoVal, 2) . "</td>
+					<td style='border:1px solid #eee;'>$ " . number_format($impuestoVal, 2) . "</td>
+					<td style='border:1px solid #eee;'>$ " . number_format($montoVal, 2) . "</td>
 					<td style='border:1px solid #eee;'>" . strtoupper($item["estado"]) . "</td>		
 		 			</tr>");
+			}
+
+			if ($categoria === "facturas" || $categoria === "nc") {
+				echo utf8_decode("<tr>
+					<td colspan='5' style='font-weight:bold; border:1px solid #eee; text-align:right;'>TOTALES:</td>
+					<td style='font-weight:bold; border:1px solid #eee; background-color:#f9f9f9;'>$ " . number_format($sumValorBruto, 2) . "</td>
+					<td style='font-weight:bold; border:1px solid #eee; background-color:#f9f9f9;'>$ " . number_format($sumImpuesto, 2) . "</td>
+					<td style='font-weight:bold; border:1px solid #eee; background-color:#f9f9f9;'>$ " . number_format($sumMontoTotal, 2) . "</td>
+					<td style='border:1px solid #eee;'></td>
+				</tr>");
 			}
 
 			echo "</table>";

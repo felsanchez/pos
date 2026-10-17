@@ -238,6 +238,28 @@ $codigoFactura = !empty($venta["numero_factura"]) ? $venta["numero_factura"] : (
           style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #d2d6de; display: block; margin-bottom: 10px; width: fit-content;">Cliente</span>
         <address>
           <strong>Cliente:</strong> <?php echo $cliente["nombre"] ?? ''; ?><br>
+          <?php
+          $tipoDocNombre = '';
+          $tipoDocId = $cliente["tipo_documento_id"] ?? null;
+          if (!empty($tipoDocId)) {
+              if (!class_exists("ControladorFactus")) {
+                  require_once "controladores/factus.controlador.php";
+              }
+              $tiposDocumento = ControladorFactus::ctrMostrarTiposDocumento();
+              if (is_array($tiposDocumento)) {
+                  foreach ($tiposDocumento as $td) {
+                      if ($td["id"] == $tipoDocId) {
+                          $tipoDocNombre = $td["nombre"];
+                          break;
+                      }
+                  }
+              }
+          }
+          if (empty($tipoDocNombre) && !empty($cliente["tipo_documento"])) {
+              $tipoDocNombre = $cliente["tipo_documento"];
+          }
+          ?>
+          <strong>Tipo de documento:</strong> <?php echo !empty($tipoDocNombre) ? $tipoDocNombre : 'No especificado'; ?><br>
           <strong>Documento:</strong> <?php echo $cliente["documento"] ?? ''; ?><?php if (($cliente["tipo_documento_id"] ?? 0) == 6 && !empty($cliente["digito_verificacion"])): ?> - <?php echo $cliente["digito_verificacion"]; ?><?php endif; ?><br>
           <strong>Dirección:</strong> <?php echo $cliente["direccion"] ?? ''; ?><br>
           <?php 
@@ -268,6 +290,14 @@ $codigoFactura = !empty($venta["numero_factura"]) ? $venta["numero_factura"] : (
         echo htmlspecialchars($partesMetodo[0]);
         if (isset($partesMetodo[1]) && !empty($partesMetodo[1])) {
             echo ' -' . htmlspecialchars($partesMetodo[1]);
+        }
+        ?><br>
+        <b>Forma de Pago:</b>
+        <?php
+        $formaPago = (isset($venta["forma_pago_dian"]) && $venta["forma_pago_dian"] == "2") ? "Crédito" : "Contado";
+        echo $formaPago;
+        if ($formaPago == "Crédito" && !empty($venta["fecha_vencimiento"])) {
+            echo ' <small class="text-muted">(Vence: ' . htmlspecialchars($venta["fecha_vencimiento"]) . ')</small>';
         }
         ?><br>
       </div>

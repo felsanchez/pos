@@ -8,13 +8,16 @@ class ControladorMovimientos{
 	static public function ctrRegistrarMovimiento($tipo, $idProducto, $idVariante, $nombreProducto, $tipoMovimiento, $cantidad, $stockAnterior, $stockNuevo, $referencia, $notas = "", $idBodega = null){
 
 		// Si no se pasa idBodega, intentar obtenerlo de la sesión
-		if($idBodega == null){
-			$idBodega = (!empty($_SESSION["id_bodega"])) ? $_SESSION["id_bodega"] : 1;
+		if(empty($idBodega) || $idBodega == null || intval($idBodega) <= 0){
+			$idBodega = (!empty($_SESSION["id_bodega"])) ? intval($_SESSION["id_bodega"]) : 1;
 		}
 
 		// Obtener usuario actual de la sesión
 		$idUsuario = isset($_SESSION["id"]) ? $_SESSION["id"] : null;
 		$nombreUsuario = isset($_SESSION["nombre"]) ? $_SESSION["nombre"] : "Sistema"; 
+
+		date_default_timezone_set('America/Bogota');
+		$fechaActual = date('Y-m-d H:i:s');
 
 		$datos = array(
 			"tipo_producto" => $tipo,
@@ -29,7 +32,8 @@ class ControladorMovimientos{
 			"id_usuario" => $idUsuario,
 			"nombre_usuario" => $nombreUsuario,
 			"referencia" => $referencia,
-			"notas" => $notas
+			"notas" => $notas,
+			"fecha" => $fechaActual
 		); 
 
 		$respuesta = ModeloMovimientos::mdlRegistrarMovimiento($datos); 
@@ -217,6 +221,7 @@ class ControladorMovimientos{
 				"creacion_producto" => "Creación Producto",
 				"creacion_variante" => "Creación Variante",
 				"edicion_stock" => "Edición Stock",
+				"edicion_excel" => "Edición Excel",
 				"traslado_salida" => "Traslado (Salida)",
 				"traslado_entrada" => "Traslado (Entrada)"
 			];
@@ -274,20 +279,20 @@ class ControladorMovimientos{
 			10 => 'notas'
 		);
 
-		$where = " WHERE (referencia NOT LIKE '%(por variante%' OR referencia IS NULL) ";
+		$where = " WHERE (m.referencia NOT LIKE '%(por variante%' OR m.referencia IS NULL) ";
 
 		// Filtro por Bodega
 		if (!empty($params["id_bodega"]) && $params["id_bodega"] !== 'todos') {
-			$where .= " AND id_bodega = " . intval($params["id_bodega"]);
+			$where .= " AND m.id_bodega = " . intval($params["id_bodega"]);
 		}
 
 		// Filtros personalizados
 		if (!empty($params["id_producto"])) {
 			if (strpos($params["id_producto"], 'v_') === 0) {
 				$id_variante = intval(substr($params["id_producto"], 2));
-				$where .= " AND id_variante = " . $id_variante;
+				$where .= " AND m.id_variante = " . $id_variante;
 			} else {
-				$where .= " AND id_producto = " . intval($params["id_producto"]);
+				$where .= " AND m.id_producto = " . intval($params["id_producto"]);
 			}
 		}
 
@@ -297,40 +302,44 @@ class ControladorMovimientos{
 
 			if ($tipoBusqueda == "traslado_salida") {
 				// Buscar por tipo exacto o por palabra clave en referencia + cantidad negativa
-				$where .= " AND (tipo_movimiento = 'traslado_salida' OR (referencia LIKE '%Traslado%' AND cantidad < 0))";
+				$where .= " AND (m.tipo_movimiento = 'traslado_salida' OR (m.referencia LIKE '%Traslado%' AND m.cantidad < 0))";
 			} else if ($tipoBusqueda == "traslado_entrada") {
 				// Buscar por tipo exacto o por palabra clave en referencia + cantidad positiva
-				$where .= " AND (tipo_movimiento = 'traslado_entrada' OR (referencia LIKE '%Traslado%' AND cantidad > 0))";
+				$where .= " AND (m.tipo_movimiento = 'traslado_entrada' OR (m.referencia LIKE '%Traslado%' AND m.cantidad > 0))";
 			} else {
-				$where .= " AND tipo_movimiento = '" . $tipoBusqueda . "'";
+				$where .= " AND m.tipo_movimiento = '" . $tipoBusqueda . "'";
 			}
 
 		}
 
 		if (!empty($params["fecha_desde"])) {
-			$where .= " AND DATE(m.`fecha`) >= '" . $params["fecha_desde"] . "'";
+			$fechaDesde = trim($params["fecha_desde"]);
+			if (strlen($fechaDesde) == 10) $fechaDesde .= " 00:00:00";
+			$where .= " AND m.fecha >= '" . $fechaDesde . "'";
 		}
 
 		if (!empty($params["fecha_hasta"])) {
-			$where .= " AND DATE(m.`fecha`) <= '" . $params["fecha_hasta"] . "'";
+			$fechaHasta = trim($params["fecha_hasta"]);
+			if (strlen($fechaHasta) == 10) $fechaHasta .= " 23:59:59";
+			$where .= " AND m.fecha <= '" . $fechaHasta . "'";
 		}
 
 		if (!empty($params["usuario"])) {
-			$where .= " AND id_usuario = " . intval($params["usuario"]);
+			$where .= " AND m.id_usuario = " . intval($params["usuario"]);
 		}
 
 		// Búsqueda global (DataTables)
 		if (!empty($params['search']['value'])) {
 			$searchValue = $params['search']['value'];
-			$where .= " AND (nombre_producto LIKE '%$searchValue%' OR tipo_movimiento LIKE '%$searchValue%' OR nombre_usuario LIKE '%$searchValue%' OR referencia LIKE '%$searchValue%' OR notas LIKE '%$searchValue%') ";
+			$where .= " AND (m.nombre_producto LIKE '%$searchValue%' OR m.tipo_movimiento LIKE '%$searchValue%' OR m.nombre_usuario LIKE '%$searchValue%' OR m.referencia LIKE '%$searchValue%' OR m.notas LIKE '%$searchValue%') ";
 		}
 
 		// Ordenar
 		$order = "";
 		if (isset($params['order'][0]['column'])) {
-			$order = " ORDER BY " . $columns[$params['order'][0]['column']] . " " . $params['order'][0]['dir'] . ", id DESC";
+			$order = " ORDER BY " . $columns[$params['order'][0]['column']] . " " . $params['order'][0]['dir'] . ", m.id DESC";
 		} else {
-			$order = " ORDER BY fecha DESC, id DESC";
+			$order = " ORDER BY m.fecha DESC, m.id DESC";
 		}
 
 		// Paginación
@@ -342,9 +351,9 @@ class ControladorMovimientos{
 		// Obtener datos
 		$movimientos = ModeloMovimientos::mdlMostrarMovimientosServerSide($tabla, $where, $order, $limit);
 		
-		$whereTotal = " WHERE (referencia NOT LIKE '%(por variante%' OR referencia IS NULL) ";
+		$whereTotal = " WHERE (m.referencia NOT LIKE '%(por variante%' OR m.referencia IS NULL) ";
 		if (!empty($params["id_bodega"]) && $params["id_bodega"] !== 'todos') {
-			$whereTotal .= " AND id_bodega = " . intval($params["id_bodega"]);
+			$whereTotal .= " AND m.id_bodega = " . intval($params["id_bodega"]);
 		}
 		
 		$totalData = ModeloMovimientos::mdlGetTotalMovimientos($tabla, $whereTotal);
@@ -391,14 +400,20 @@ class ControladorMovimientos{
 				"creacion_producto" => '<span class="label label-primary">Creación</span>',
 				"creacion_variante" => '<span class="label label-info">Creación Variante</span>',
 				"edicion_stock" => '<span class="label label-default">Edición Stock</span>',
+				"edicion_excel" => '<span class="label label-primary" style="background-color: #605ca8 !important;">Edición Excel</span>',
 				"traslado_salida" => '<span class="label label-warning" style="background-color: #ff851b !important;">Traslado (Salida)</span>',
 				"traslado_entrada" => '<span class="label label-info" style="background-color: #39cccc !important;">Traslado (Entrada)</span>'
 			];
-			// Lógica ultra-robusta para traslados y otros tipos
+			// Lógica ultra-robusta para traslados, ediciones excel y otros tipos
 			$tipoActual = trim($value["tipo_movimiento"]);
 			$referencia = trim($value["referencia"]);
+			$notas = isset($value["notas"]) ? trim($value["notas"]) : "";
 			
-			if (isset($badges[$tipoActual]) && $tipoActual != "") {
+			if ($tipoActual == "edicion_excel" || stripos($referencia, 'Excel') !== false || stripos($notas, 'masiva') !== false || stripos($referencia, 'Importación') !== false) {
+				
+				$nestedData[] = '<span class="label label-primary" style="background-color: #605ca8 !important;">Edición Excel</span>';
+
+			} else if (isset($badges[$tipoActual]) && $tipoActual != "") {
 				
 				$nestedData[] = $badges[$tipoActual];
 
@@ -413,8 +428,8 @@ class ControladorMovimientos{
 
 			} else {
 
-				// Fallback: Si el tipo está vacío, mostrar algo útil
-				$nestedData[] = ($tipoActual != "") ? e($tipoActual) : '<span class="label label-default">Movimiento</span>';
+				// Fallback: Si el tipo está vacío o desconocido, mostrar Edición Excel en vez de Movimiento
+				$nestedData[] = ($tipoActual != "") ? e($tipoActual) : '<span class="label label-primary" style="background-color: #605ca8 !important;">Edición Excel</span>';
 				
 			}
 

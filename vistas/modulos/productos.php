@@ -150,13 +150,12 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
 
             <thead>
               <tr>
-                <th>Imagen</th>
                 <th>Código</th>
+                <th>Imagen</th>
                 <th>Descripción</th>
                 <th>Categoría</th>
                 <th>Stock</th>
                 <th>Precio de Venta</th>
-                <th>Proveedor</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
@@ -195,7 +194,7 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
       <div class="form-group">
         <label><i class="fa fa-upload"></i> Cambiar Imagen del Producto</label>
         <input type="file" class="form-control nuevaImagenProducto" accept="image/*">
-        <p class="help-block"><i class="fa fa-info-circle"></i> Peso máximo de la imagen 2MB</p>
+        <p class="help-block"><i class="fa fa-info-circle"></i> Peso máximo de la imagen 8MB</p>
       </div>
       <input type="hidden" id="idProductoImagen">
       <input type="hidden" id="codigoProductoImagen">
@@ -442,7 +441,7 @@ MODAL AGREGAR PRODUCTO
 
               <input type="file" class="nuevaImagen" name="nuevaImagen">
 
-              <p class="help-block">Peso máximo de la imagen 2MB</p>
+              <p class="help-block">Peso máximo de la imagen 4MB</p>
 
               <img src="vistas/img/productos/default/anonymous.png" class="img-thumbnail previsualizar" width="100px">
 
@@ -780,7 +779,7 @@ MODAL EDITAR PRODUCTO
 
               <input type="file" class="nuevaImagen" name="editarImagen">
 
-              <p class="help-block">Peso máximo de la imagen 2MB</p>
+              <p class="help-block">Peso máximo de la imagen 8MB</p>
 
               <img src="vistas/img/productos/default/anonymous.png"
                 class="img-thumbnail previsualizar img-ampliar-producto-modal" width="100px" style="cursor: pointer;">
@@ -1184,11 +1183,11 @@ AMPLIAR Y EDITAR IMAGEN DE PRODUCTO DESDE LA TABLA
           type: "error",
           confirmButtonText: "¡Cerrar!"
         });
-      } else if (imagen["size"] > 2000000) {
+      } else if (imagen["size"] > 8388608) {
         $(".nuevaImagenProducto").val("");
         swal({
           title: "Error al subir la imagen",
-          text: "¡La imagen no debe pesar más de 2MB!",
+          text: "¡La imagen no debe pesar más de 8MB!",
           type: "error",
           confirmButtonText: "¡Cerrar!"
         });
@@ -1334,11 +1333,11 @@ AMPLIAR Y EDITAR IMAGEN DE PRODUCTO DESDE LA TABLA
           type: "error",
           confirmButtonText: "¡Cerrar!"
         });
-      } else if (imagen["size"] > 2000000) {
+      } else if (imagen["size"] > 8388608) {
         $(".nuevaImagen").val("");
         swal({
           title: "Error al subir la imagen",
-          text: "¡La imagen no debe pesar más de 2MB!",
+          text: "¡La imagen no debe pesar más de 8MB!",
           type: "error",
           confirmButtonText: "¡Cerrar!"
         });

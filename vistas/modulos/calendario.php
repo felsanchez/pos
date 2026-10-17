@@ -1,4 +1,9 @@
 <?php
+if (!headers_sent()) {
+    header("Cache-Control: no-cache, no-store, must-revalidate");
+    header("Pragma: no-cache");
+    header("Expires: 0");
+}
 $urlActual = "calendario";
 ?>
 <!-- Ruta actividades.css -->
@@ -93,15 +98,50 @@ $urlActual = "calendario";
     font-size: 0.75em !important;
 }
 
-/* Ajuste móvil */
+/* Modales Flexibles y Desplazables (Responsive Scrollable Modals) */
+.modal-dialog {
+    margin: 30px auto;
+}
 @media (max-width: 768px) {
-    .fc-toolbar {
-        flex-direction: column !important;
-        gap: 10px;
+    .modal-dialog {
+        margin: 10px;
+        width: auto !important;
     }
-    .fc-toolbar-title {
-        font-size: 1.1em !important;
-    }
+}
+.modal-content {
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    border-radius: 10px;
+    overflow: hidden;
+}
+.modal-header {
+    flex-shrink: 0;
+}
+.modal-body {
+    max-height: calc(90vh - 120px);
+    overflow-y: auto;
+    padding: 15px 20px;
+}
+.modal-footer {
+    flex-shrink: 0;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+}
+/* Estilo moderno para la barra de desplazamiento (Scrollbar) */
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+.modal-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 </style>
 
@@ -116,7 +156,7 @@ MODAL MOSTRAR actividad
     <div class="container-fluid">
       <div class="row mb-2">
         <div class="col-sm-6">
-          <h1><i class="fa fa-calendar"></i> Calendario de Actividades</h1>
+          <h1><i class="fa fa-calendar"></i> Calendario de Google</h1>
         </div>
       </div>
     </div>
@@ -129,13 +169,28 @@ MODAL MOSTRAR actividad
         <div class="box-header with-border">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; width: 100%;">
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <?php if(puedeAccion('actividades', 'crear')): ?>
-                <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarActividad">
-                  <i class="fa fa-plus"></i> Agregar Actividad
+              <?php
+                require_once "controladores/google.controlador.php";
+                $idUsuarioLogueado = $_SESSION["id"] ?? null;
+                $urlAutorizacionGoogle = ControladorGoogle::ctrObtenerUrlAutorizacion($idUsuarioLogueado);
+
+                $dbUser = Conexion::conectar()->prepare("SELECT google_account_email FROM usuarios WHERE id = :id");
+                $dbUser->execute([":id" => $idUsuarioLogueado]);
+                $dataUserG = $dbUser->fetch(PDO::FETCH_ASSOC);
+                $emailGoogleUser = $dataUserG["google_account_email"] ?? null;
+              ?>
+
+              <?php if (!puedeAccion('actividades', 'crear')): ?>
+                <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear actividades">
+                  <i class="fa fa-plus"></i> Agregar
+                </button>
+              <?php elseif (!$emailGoogleUser): ?>
+                <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="Debe conectar su cuenta de Google Calendar para agregar actividades">
+                  <i class="fa fa-plus"></i> Agregar
                 </button>
               <?php else: ?>
-                <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear actividades">
-                  <i class="fa fa-plus"></i> Agregar Actividad
+                <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarActividad">
+                  <i class="fa fa-plus"></i> Agregar
                 </button>
               <?php endif; ?>
 
@@ -143,35 +198,37 @@ MODAL MOSTRAR actividad
                 <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
                   <i class="fa fa-flag"></i> Gestionar estados
                 </button>
-                <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarTipos">
-                  <i class="fa fa-tags"></i> Gestionar tipos
-                </button>
               <?php else: ?>
                 <button class="btn btn-default" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para gestionar estados">
                   <i class="fa fa-flag"></i> Gestionar estados
                 </button>
-                <button class="btn btn-default" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para gestionar tipos">
-                  <i class="fa fa-tags"></i> Gestionar tipos
-                </button>
               <?php endif; ?>
+
+              <?php if ($emailGoogleUser): ?>
+                <div class="btn-group">
+                  <span class="btn btn-success disabled" style="opacity: 1; cursor: default; background-color: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; font-weight: 600;">
+                    <i class="fa fa-google text-danger"></i> Google Conectado: <?php echo htmlspecialchars($emailGoogleUser); ?>
+                  </span>
+                  <button type="button" class="btn btn-info btnSincronizarGoogle" style="font-weight: 600;" title="Sincronizar eventos y tareas desde Google">
+                    <i class="fa fa-refresh"></i> Sincronizar desde Google
+                  </button>
+                  <button type="button" class="btn btn-danger btnDesconectarGoogle" title="Desconectar Google Calendar">
+                    <i class="fa fa-power-off"></i>
+                  </button>
+                </div>
+              <?php else: ?>
+                <a href="<?php echo $urlAutorizacionGoogle; ?>" class="btn btn-default" style="border-color: #4285F4; color: #4285F4; font-weight: 600;" title="Vincular con tu cuenta de Google Calendar & Tasks">
+                  <i class="fa fa-google text-danger"></i> Conectar Google Calendar
+                </a>
+              <?php endif; ?>
+
+              <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer" class="btn btn-default" style="font-weight: 600;" title="Abrir Google Calendar en una nueva pestaña">
+                <i class="fa fa-external-link text-primary"></i> Ir a Google Calendar
+              </a>
             </div>
 
             <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span><b>Tipo:</b></span>
-                <div class="input-group" style="width: 200px;">
-                  <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;"><i class="fa fa-search text-primary"></i></span>
-                  <select class="form-control select2" id="filtroTipo" style="width: 100%;">
-                    <option value="">Mostrar Todos</option>
-                    <?php
-                    $tiposFiltro = ControladorTiposActividades::ctrMostrarTiposActividades(null, null);
-                    foreach ($tiposFiltro as $tipoFiltroItem) {
-                      echo '<option value="' . $tipoFiltroItem["nombre"] . '">' . ucfirst($tipoFiltroItem["nombre"]) . '</option>';
-                    }
-                    ?>
-                  </select>
-                </div>
-              </div>
+              <input type="hidden" id="filtroTipo" value="">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span><b>Estado:</b></span>
                 <div class="input-group" style="width: 200px;">
@@ -225,25 +282,10 @@ MODAL MOSTRAR actividad
               <span style="display: block; font-size: 11px; text-transform: uppercase; color: #999; font-weight: 600; margin-bottom: 3px;">📅 Fecha y Hora</span>
               <span id="detFecha" style="font-size: 14px; font-weight: 500; color: #444;"></span>
             </div>
-            
-            <div style="margin-bottom: 15px;">
-              <span style="display: block; font-size: 11px; text-transform: uppercase; color: #999; font-weight: 600; margin-bottom: 3px;">👤 Responsable</span>
-              <span id="detUsuario" style="font-size: 14px; font-weight: 500; color: #444;"></span>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-              <span style="display: block; font-size: 11px; text-transform: uppercase; color: #999; font-weight: 600; margin-bottom: 3px;">🏢 Cliente</span>
-              <span id="detCliente" style="font-size: 14px; font-weight: 500; color: #444;"></span>
-            </div>
           </div>
 
           <!-- Columna Derecha -->
           <div class="col-sm-6" style="padding-left: 20px;">
-            <div style="margin-bottom: 15px;">
-              <span style="display: block; font-size: 11px; text-transform: uppercase; color: #999; font-weight: 600; margin-bottom: 5px;">🏷️ Tipo de Actividad</span>
-              <span id="detTipo" class="label label-primary" style="font-size: 12px; padding: 4px 8px; display: inline-block;"></span>
-            </div>
-
             <div style="margin-bottom: 15px;">
               <span style="display: block; font-size: 11px; text-transform: uppercase; color: #999; font-weight: 600; margin-bottom: 5px;">🚩 Estado</span>
               <div id="detEstado" style="display: inline-block;"></div>
@@ -258,6 +300,18 @@ MODAL MOSTRAR actividad
           </h5>
           <p id="detObservacion" style="color: #666; font-size: 13px; margin: 0; line-height: 1.4; white-space: pre-wrap; font-style: italic;"></p>
         </div>
+
+        <!-- Ubicación (si aplica) -->
+        <div id="detUbicacionContainer"></div>
+
+        <!-- Invitados (si aplica) -->
+        <div id="detInvitadosContainer"></div>
+
+        <!-- Botón Videoconferencia Google Meet (si aplica) -->
+        <div id="detMeetContainer"></div>
+
+        <!-- Archivo adjunto (si aplica) -->
+        <div id="detArchivoContainer"></div>
       </div>
 
       <div class="modal-footer" style="background-color: #fcfcfc; border-top: 1px solid #f4f4f4; padding: 12px 20px; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; display: flex; justify-content: flex-end; gap: 10px; align-items: center;">
@@ -304,69 +358,129 @@ MODAL EDITAR ACTIVIDAD
         <!-- CABEZA DEL MODAL -->
         <div class="modal-header" style="background:#f39c12; color: white">
           <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title" style="color: white !important;"><i class="fa fa-pencil"></i> Editar actividad</h4>
+          <h4 class="modal-title" style="color: white !important;"><i class="fa fa-pencil"></i> Editar Tarea/Evento</h4>
         </div>
 
         <!-- CUERPO DEL MODAL -->
         <div class="modal-body">
           <div class="box-body"> 
+
+            <!-- TOGGLE MODO GOOGLE EN EDITAR: EVENTO VS TAREA -->
+            <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+              <div style="background: #f1f5f9; padding: 4px; border-radius: 24px; display: inline-flex; gap: 4px; border: 1px solid #cbd5e1;">
+                <button type="button" class="btn btn-primary btnToggleEditarModo" data-modo="evento" id="btnEditarModoEvento" style="border-radius: 20px; padding: 6px 20px; font-weight: 600; box-shadow: none;">
+                  <i class="fa fa-calendar"></i> Evento
+                </button>
+                <button type="button" class="btn btn-default btnToggleEditarModo" data-modo="tarea" id="btnEditarModoTarea" style="border-radius: 20px; padding: 6px 20px; font-weight: 600; background: transparent; border: none; color: #64748b;">
+                  <i class="fa fa-check-square-o"></i> Tarea
+                </button>
+              </div>
+              <input type="hidden" name="editarCategoriaGoogle" id="editarCategoriaGoogle" value="evento">
+            </div>
+
             <div class="row"> 
-              <!-- Descripción -->
+              <!-- Título / Descripción -->
               <div class="col-md-12">
                 <div class="form-group">
-                  <label>Descripción *</label>
+                  <label>Título / Descripción *</label>
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-tasks"></i></span>
-                    <input type="text" class="form-control" name="editarActividad" id="editarActividad" placeholder="Descripción de la actividad" required>
+                    <input type="text" class="form-control" name="editarActividad" id="editarActividad" placeholder="Añade un título..." required>
                   </div>
                 </div>
               </div> 
             </div>
 
+            <div class="row">
+              <!-- Fecha y Hora con Checkbox Todo el día -->
+              <div class="col-md-12">
+                <div class="form-group">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <label id="lblEditarFecha" style="margin: 0; font-weight: 600;">Fecha y Hora *</label>
+                    <label style="font-weight: 600; cursor: pointer; margin: 0; font-size: 13px; color: #475569;" title="Marcar si la actividad o tarea dura todo el día sin hora específica">
+                      <input type="checkbox" name="editarChkTodoElDia" id="editarChkTodoElDia" value="1" style="vertical-align: middle; cursor: pointer;"> Todo el día
+                    </label>
+                  </div>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                    <input type="datetime-local" class="form-control" name="editarFecha" id="editarFecha" required>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- FILA CAMPOS ESPECÍFICOS DE GOOGLE EVENTO -->
+            <div class="row secEditarGoogleEvento">
+              <!-- Videoconferencia Google Meet -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label style="color: #0284c7; font-weight: 600;"><i class="fa fa-video-camera"></i> Videoconferencia</label>
+                  <div class="checkbox" style="margin-top: 5px;">
+                    <label style="font-weight: 600; cursor: pointer;">
+                      <input type="checkbox" name="editarGenerarMeet" id="editarGenerarMeet" value="1">
+                      Añadir videoconferencia de Google Meet 📹
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ubicación -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label><i class="fa fa-map-marker text-danger"></i> Ubicación</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
+                    <input type="text" class="form-control" name="editarUbicacion" id="editarUbicacion" placeholder="Añadir ubicación presencial...">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row secEditarGoogleEvento" style="margin-bottom: 10px;">
+              <!-- Invitados Email -->
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label><i class="fa fa-envelope text-primary"></i> Invitados (Correos electrónicos separados por coma)</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-users"></i></span>
+                    <input type="text" class="form-control" name="editarInvitados" id="editarInvitados" placeholder="ejemplo1@gmail.com, cliente@empresa.com">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Observación -->
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label>Notas / Descripción adicional</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
+                    <input type="text" class="form-control" name="editarObservacion" id="editarObservacion" placeholder="Escribe una nota o detalles adicionales...">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Archivo Adjunto -->
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label><i class="fa fa-paperclip"></i> Archivo Adjunto</label>
+                  <div id="previewArchivoActual" style="margin-bottom: 8px;"></div>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-file"></i></span>
+                    <input type="file" class="form-control" name="editarArchivoActividad" id="editarArchivoActividad">
+                  </div>
+                  <input type="hidden" name="archivoActual" id="archivoActual">
+                  <p class="help-block" style="font-size: 11px; margin-top: 3px; color: #777;">Formatos permitidos: imágenes, PDF, Word, Excel, etc.</p>
+                </div>
+              </div>
+            </div>
+
             <div class="row"> 
-              <!-- Tipo -->
-              <div class="col-md-4">
-                <div class="form-group">
-                  <label>Tipo *</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-info-circle"></i></span>
-                    <select class="form-control" name="editarTipo" id="editarTipo" required>
-                      <option value="">Seleccionar tipo</option>
-                      <?php
-                      $tiposModalEditar = ControladorTiposActividades::ctrMostrarTiposActividades(null, null);
-                      foreach($tiposModalEditar as $tipoModal){
-                          echo '<option value="'.$tipoModal["nombre"].'">'.ucfirst($tipoModal["nombre"]).'</option>';
-                      }
-                      ?>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Responsable -->
-              <div class="col-md-4">
-                <div class="form-group">
-                  <label>Responsable *</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-user-plus"></i></span>
-                    <select class="form-control" id="editarUsuario" name="editarUsuario" required>
-                      <option value="">Seleccionar responsable</option>
-                      <?php
-                      $usuariosEditar = ControladorUsuarios::ctrMostrarUsuarios(null, null);
-                      foreach ($usuariosEditar as $key => $value) {
-                          if ($value["perfil"] == "_SystemMaster_" || $value["perfil"] == "Visitante" || $value["estado"] == 0) {
-                              continue;
-                          }
-                          echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
-                      }
-                      ?>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
               <!-- Estado -->
-              <div class="col-md-4">
+              <div class="col-md-12">
                 <div class="form-group">
                   <label>Estado *</label>
                   <div class="input-group">
@@ -383,40 +497,10 @@ MODAL EDITAR ACTIVIDAD
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div class="row">
-              <!-- Cliente -->
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label>Cliente</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-user"></i></span>
-                    <select class="form-control" id="editarCliente" name="editarCliente" required>
-                      <option value="0">Sin cliente</option>
-                      <?php
-                      $clientesEditar = ControladorClientes::ctrMostrarClientes(null, null);
-                      foreach ($clientesEditar as $key => $value) {
-                          echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
-                      }
-                      ?>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="row">
-              <!-- Observación -->
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label>Notas</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
-                    <input type="text" class="form-control" name="editarObservacion" id="editarObservacion" placeholder="Escribe una nota...">
-                  </div>
-                </div>
-              </div>
+              <input type="hidden" id="editarTipo" name="editarTipo" value="Reunión">
+              <input type="hidden" id="editarUsuario" name="editarUsuario">
+              <input type="hidden" id="editarCliente" name="editarCliente" value="0">
             </div>
 
           </div>
@@ -462,7 +546,7 @@ MODAL AGREGAR actividad
 
         <button type="button" class="close" data-dismiss="modal">&times;</button>
 
-        <h4 class="modal-title">Agregar actividad</h4>
+        <h4 class="modal-title">Agregar Tarea/Evento</h4>
 
       </div>
 
@@ -476,6 +560,19 @@ MODAL AGREGAR actividad
 
         <div class="box-body"> 
 
+            <!-- TOGGLE MODO GOOGLE: EVENTO VS TAREA (ESTILO GOOGLE CALENDAR) -->
+            <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+              <div style="background: #f1f5f9; padding: 4px; border-radius: 24px; display: inline-flex; gap: 4px; border: 1px solid #cbd5e1;">
+                <button type="button" class="btn btn-primary btnToggleModo" data-modo="evento" id="btnModoEvento" style="border-radius: 20px; padding: 6px 20px; font-weight: 600; box-shadow: none;">
+                  <i class="fa fa-calendar"></i> Evento
+                </button>
+                <button type="button" class="btn btn-default btnToggleModo" data-modo="tarea" id="btnModoTarea" style="border-radius: 20px; padding: 6px 20px; font-weight: 600; background: transparent; border: none; color: #64748b;">
+                  <i class="fa fa-check-square-o"></i> Tarea
+                </button>
+              </div>
+              <input type="hidden" name="categoriaGoogle" id="categoriaGoogle" value="evento">
+            </div>
+
             <div class="row"> 
 
                 <!-- Descripción -->
@@ -484,13 +581,13 @@ MODAL AGREGAR actividad
 
                     <div class="form-group">
 
-                        <label>Descripción *</label>
+                        <label>Título / Descripción *</label>
 
                         <div class="input-group">
 
                             <span class="input-group-addon"><i class="fa fa-tasks"></i></span>
 
-                            <input type="text" class="form-control" name="nuevaActividad" id="nuevaActividad" placeholder="Descripción de la actividad" required>
+                            <input type="text" class="form-control" name="nuevaActividad" id="nuevaActividad" placeholder="Añade un título..." required>
 
                         </div>
 
@@ -500,231 +597,114 @@ MODAL AGREGAR actividad
 
             </div>
 
+            <div class="row">
+                <!-- Fecha y Hora con Checkbox Todo el día (Estilo Google Calendar) -->
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                            <label id="lblNuevaFecha" style="margin: 0; font-weight: 600;">Fecha y Hora *</label>
+                            <label style="font-weight: 600; cursor: pointer; margin: 0; font-size: 13px; color: #475569;" title="Marcar si la actividad o tarea dura todo el día sin hora específica">
+                                <input type="checkbox" name="chkTodoElDia" id="chkTodoElDia" value="1" style="vertical-align: middle; cursor: pointer;"> Todo el día
+                            </label>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                            <input type="datetime-local" class="form-control" name="nuevaFecha" id="nuevaFecha" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FILA CAMPOS ESPECÍFICOS DE GOOGLE EVENTO -->
+            <div class="row secGoogleEvento">
+                <!-- Videoconferencia Google Meet -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label style="color: #0284c7; font-weight: 600;"><i class="fa fa-video-camera"></i> Videoconferencia</label>
+                        <div class="checkbox" style="margin-top: 5px;">
+                            <label style="font-weight: 600; cursor: pointer;">
+                                <input type="checkbox" name="generarMeet" id="generarMeet" value="1">
+                                Añadir videoconferencia de Google Meet 📹
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ubicación -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label><i class="fa fa-map-marker text-danger"></i> Ubicación</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
+                            <input type="text" class="form-control" name="nuevaUbicacion" id="nuevaUbicacion" placeholder="Añadir ubicación presencial...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row secGoogleEvento" style="margin-bottom: 10px;">
+                <!-- Invitados Email -->
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label><i class="fa fa-envelope text-primary"></i> Invitados (Correos electrónicos separados por coma)</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-users"></i></span>
+                            <input type="text" class="form-control" name="nuevosInvitados" id="nuevosInvitados" placeholder="ejemplo1@gmail.com, cliente@empresa.com">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Observación -->
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>Notas / Descripción adicional</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
+                            <input type="text" class="form-control" name="nuevaObservacion" id="nuevaObservacion" placeholder="Escribe una nota o detalles adicionales...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Archivo Adjunto -->
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label><i class="fa fa-paperclip"></i> Adjuntar Archivo</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-file"></i></span>
+                            <input type="file" class="form-control" name="nuevoArchivoActividad" id="nuevoArchivoActividad">
+                        </div>
+                        <p class="help-block" style="font-size: 11px; margin-top: 3px; color: #777;">Formatos permitidos: imágenes, PDF, Word, Excel, etc.</p>
+                    </div>
+                </div>
+            </div>
 
             <div class="row"> 
-
-                <!-- Tipo -->
-
-                <div class="col-md-4">
-
-                    <div class="form-group">
-
-                        <label>Tipo *</label>
-
-                        <div class="input-group">
-
-                            <span class="input-group-addon"><i class="fa fa-info-circle"></i></span>
-
-                            <select class="form-control" name="nuevoTipo" id="nuevoTipo" required>
-
-                                <option value="">Seleccionar tipo</option>
-
-                                <?php
-
-                                $tiposModalAgregar = ControladorTiposActividades::ctrMostrarTiposActividades(null, null);
-
-                                foreach($tiposModalAgregar as $tipoModal){
-
-                                    echo '<option value="'.$tipoModal["nombre"].'">'.ucfirst($tipoModal["nombre"]).'</option>';
-
-                                }
-
-                                ?>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-                </div>
- 
-
-                <!-- Responsable -->
-
-                <div class="col-md-4">
-
-                    <div class="form-group">
-
-                        <label>Responsable *</label>
-
-                        <div class="input-group">
-
-                            <span class="input-group-addon"><i class="fa fa-user-plus"></i></span>
-
-                            <select class="form-control" id="nuevoUsuario" name="nuevoUsuario" required>
-
-                                <option value="">Seleccionar responsable</option>
-
-                                <?php
-
-                                $item = null;
-
-                                $valor = null;
-
-                                $usuarios = ControladorUsuarios::ctrMostrarUsuarios($item, $valor);
-
-                                foreach ($usuarios as $key => $value) {
-
-                                    if ($value["perfil"] == "_SystemMaster_" || $value["perfil"] == "Visitante" || $value["estado"] == 0) {
-                                        continue;
-                                    }
-
-                                    echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
-
-                                }
-
-                                ?>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-                </div>
- 
-
                 <!-- Estado -->
-
-                <div class="col-md-4">
-
-                    <div class="form-group">
-
-                        <label>Estado *</label>
-
-                        <div class="input-group">
-
-                            <span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
-
-                            <select class="form-control" name="nuevoEstado" id="nuevoEstado" required>
-
-                                <option value="">Seleccionar estado</option>
-
-                                <?php
-
-                                $estadosModalAgregar = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
-
-                                foreach($estadosModalAgregar as $estadoModal){
-
-                                    echo '<option value="'.$estadoModal["nombre"].'">'.ucfirst($estadoModal["nombre"]).'</option>';
-
-                                }
-
-                                ?>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
- 
-
-            </div>
-
- 
-
-            <div class="row">
-
- 
-
-                <!-- Fecha -->
-
-                <div class="col-md-6">
-
-                    <div class="form-group">
-
-                        <label>Fecha *</label>
-
-                        <div class="input-group">
-
-                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-
-                            <input type="datetime-local" class="form-control" name="nuevaFecha" id="nuevaFecha" required>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
- 
-
-                <!-- Cliente -->
-
-                <div class="col-md-6">
-
-                    <div class="form-group">
-
-                        <label>Cliente</label>
-
-                        <div class="input-group">
-
-                            <span class="input-group-addon"><i class="fa fa-user"></i></span>
-
-                            <select class="form-control" id="nuevoCliente" name="nuevoCliente" required>
-
-                                <option value="0">Sin cliente</option>
-
-                                <?php
-
-                                $item = null;
-
-                                $valor = null;
-
-                                $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
-
-                                foreach ($clientes as $key => $value) {
-
-                                    echo'<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
-
-                                }
-
-                                ?>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
- 
-
-            </div>
-
- 
-
-            <div class="row">
-
- 
-
-                <!-- Observación -->
-
                 <div class="col-md-12">
-
                     <div class="form-group">
-
-                        <label>Notas</label>
-
+                        <label>Estado *</label>
                         <div class="input-group">
-
-                            <span class="input-group-addon"><i class="fa fa-pencil-square-o"></i></span>
-
-                            <input type="text" class="form-control" name="nuevaObservacion" id="nuevaObservacion" placeholder="Escribe una nota...">
-
+                            <span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
+                            <select class="form-control" name="nuevoEstado" id="nuevoEstado" required>
+                                <option value="">Seleccionar estado</option>
+                                <?php
+                                $estadosModalAgregar = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
+                                foreach($estadosModalAgregar as $estadoModal){
+                                    echo '<option value="'.$estadoModal["nombre"].'">'.ucfirst($estadoModal["nombre"]).'</option>';
+                                }
+                                ?>
+                            </select>
                         </div>
-
                     </div>
-
                 </div>
 
- 
-
+                <input type="hidden" id="nuevoTipo" name="nuevoTipo" value="Reunión">
+                <input type="hidden" id="nuevoUsuario" name="nuevoUsuario" value="<?php echo $_SESSION['id']; ?>">
+                <input type="hidden" id="nuevoCliente" name="nuevoCliente" value="0">
             </div>
 
  
@@ -738,7 +718,7 @@ MODAL AGREGAR actividad
         ======================================-->
         <div class="modal-footer">
           <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
-          <button type="submit" class="btn btn-primary">Guardar actividad</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
         </div>
         <input type="hidden" name="urlActual" value="calendario">
      </form>
@@ -758,7 +738,7 @@ MODAL AGREGAR actividad
     <div class="modal-content">
       <div class="modal-header bg-warning">
         <h5 class="modal-title" id="sinActividadesModalLabel">
-          <i class="fa fa-calendar-times"></i> Sin Actividades
+          <i class="fa fa-calendar-times"></i> Sin tarea/evento
         </h5>
         <button type="button" class="close text-dark" data-dismiss="modal"><span>&times;</span></button>
       </div>
@@ -766,20 +746,24 @@ MODAL AGREGAR actividad
         <div class="mb-3">
           <i class="fa fa-calendar-times fa-4x text-warning"></i>
         </div>
-        <h6>Sin Actividades para esta fecha</h6>
-        <p class="text-muted mb-0">No hay actividades programadas para el <strong id="fechaSinActividad"></strong></p>
+        <h6>Sin tarea/evento para esta fecha</h6>
+        <p class="text-muted mb-0">No hay tareas o eventos programados para el <strong id="fechaSinActividad"></strong></p>
       </div>
       <div class="modal-footer justify-content-center">
         <button type="button" class="btn btn-warning" data-dismiss="modal">
           <i class="fa fa-check"></i> Entendido
         </button>
-        <?php if(puedeAccion('actividades', 'crear')): ?>
-        <button type="button" class="btn btn-primary" id="crearNuevaActividad">
-          <i class="fa fa-plus"></i> Crear Nueva Actividad
+        <?php if(!puedeAccion('actividades', 'crear')): ?>
+        <button type="button" class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear tareas o eventos">
+          <i class="fa fa-plus"></i> Crear nueva tarea/evento
+        </button>
+        <?php elseif(!$emailGoogleUser): ?>
+        <button type="button" class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="Debe conectar su cuenta de Google Calendar para crear tareas o eventos">
+          <i class="fa fa-plus"></i> Crear nueva tarea/evento
         </button>
         <?php else: ?>
-        <button type="button" class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear actividades">
-          <i class="fa fa-plus"></i> Crear Nueva Actividad
+        <button type="button" class="btn btn-primary" id="crearNuevaActividad">
+          <i class="fa fa-plus"></i> Crear nueva tarea/evento
         </button>
         <?php endif; ?>
       </div>
@@ -807,20 +791,39 @@ document.addEventListener('DOMContentLoaded', function() {
   var fechaSeleccionada = null; // Variable para guardar la fecha
 
   // -------------------------
-  // Función para convertir fecha a formato datetime-local
+  // Función para convertir fecha a formato datetime-local o date
   // -------------------------
-  function formatearFechaParaInput(fechaStr) {
-    var fecha = new Date(fechaStr + 'T00:00:00');
-    var year = fecha.getFullYear();
-    var month = String(fecha.getMonth() + 1).padStart(2, '0');
-    var day = String(fecha.getDate()).padStart(2, '0');
-    var hours = '08'; // Hora por defecto 8:00 AM
-    var minutes = '00';
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  function formatearFechaParaInput(fechaStr, isAllDay) {
+    if (!fechaStr) {
+      var d = new Date();
+      var year = d.getFullYear();
+      var month = String(d.getMonth() + 1).padStart(2, '0');
+      var day = String(d.getDate()).padStart(2, '0');
+      var hours = String(d.getHours()).padStart(2, '0');
+      var minutes = String(d.getMinutes()).padStart(2, '0');
+      return isAllDay ? `${year}-${month}-${day}` : `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    var cleanStr = String(fechaStr).trim().replace(' ', 'T');
+
+    if (cleanStr.length === 10) {
+      return isAllDay ? cleanStr : cleanStr + 'T08:00';
+    }
+
+    var parts = cleanStr.split('T');
+    var datePart = parts[0];
+    var timePart = parts[1] ? parts[1].substring(0, 5) : '08:00';
+
+    if (isAllDay) {
+      return datePart;
+    } else {
+      return datePart + 'T' + timePart;
+    }
   }
 
   function manejadorDeClicCalendario(fechaObj, fechaStr) {
     if (!fechaStr) return;
+    fechaSeleccionada = fechaStr; // Guardar fecha seleccionada inmediatamente
     
     $.ajax({
       url: 'ajax/actividades.ajax.php',
@@ -915,7 +918,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var fieldFecha = pick(['#fechaSeleccionada','#fecha']);
   var fieldTitulo = pick(['#tituloEvento','#titulo','#descripcionTitulo','#descripcion']);
   var fieldTipo = pick(['#tipoEvento','#tipo','#editarTipo']);
-  var fieldPrioridad = pick(['#prioridad','#estado','#editarEstado']);
+  var fieldPrioridad = pick(['#prioridad','#estado']);
   var fieldDescripcion = pick(['#observacion','#descripcion','#editarObservacion','#nuevaObservacion']);
   var fieldIdHidden = pick(['#idActividad','#id_actividad','input[name="idActividad"]']);
 
@@ -923,8 +926,15 @@ document.addEventListener('DOMContentLoaded', function() {
   // Helper para rellenar campos existentes
   // -------------------------
   function fillFields(obj){
-    var actividad = Array.isArray(obj) ? obj[0] : obj;
+    window.ultimaActividad = Array.isArray(obj) ? obj[0] : obj;
+    var actividad = window.ultimaActividad;
     if (!actividad) return;
+
+    var catG = (actividad.categoria_google || '').toLowerCase();
+    var tipoAct = (actividad.tipo || '').toLowerCase();
+    var esTarea = (catG === 'tarea' || tipoAct === 'tarea');
+    var tituloModal = esTarea ? 'Tarea Asignada' : 'Evento Asignado';
+    if (modalSelector) $(modalSelector).find('.modal-title').text(tituloModal);
 
     // Rellenar elementos visuales del nuevo modal
     $('#detDescripcion').text(actividad.descripcion !== undefined ? actividad.descripcion : (actividad.title !== undefined ? actividad.title : ''));
@@ -936,7 +946,7 @@ document.addEventListener('DOMContentLoaded', function() {
       var colorEstado = '#3c8dbc';
       var estadoLower = actividad.estado.toLowerCase();
       if (estadoLower === 'programada' || estadoLower === 'pendiente') colorEstado = '#f39c12';
-      else if (estadoLower === 'completada' || estadoLower === 'finalizada') colorEstado = '#00a65a';
+      else if (estadoLower === 'completada' || estadoLower === 'finalizada') colorEstado = '#808080';
       else if (estadoLower === 'cancelada') colorEstado = '#dd4b39';
       estadoHtml = `<span class="label" style="background-color: ${colorEstado}; font-size: 11px; padding: 4px 8px; text-transform: uppercase;">${actividad.estado}</span>`;
     }
@@ -946,7 +956,54 @@ document.addEventListener('DOMContentLoaded', function() {
     $('#detCliente').text(actividad.nombre_cliente && actividad.nombre_cliente !== 'Sin cliente' ? actividad.nombre_cliente : 'Sin cliente');
     
     var obsText = actividad.observacion ? actividad.observacion : 'Sin notas registradas...';
-    $('#detObservacion').text(obsText);
+    var safeObs = $('<div>').text(obsText).html();
+    var urlRegex = /((?:https?:\/\/|www\.|drive\.google\.com|docs\.google\.com)[^\s<]+[^\s<.,:;"')\]>])/gi;
+    safeObs = safeObs.replace(urlRegex, function(url) {
+      var href = url.match(/^https?:\/\//i) ? url : 'http://' + url;
+      return '<a href="' + href + '" target="_blank" rel="noopener noreferrer" style="text-decoration:underline; font-weight:600; color:#3c8dbc;">' + url + '</a>';
+    });
+    safeObs = safeObs.replace(/\n/g, '<br>');
+    $('#detObservacion').html(safeObs);
+
+    if (actividad.ubicacion) {
+      var safeUbic = $('<div>').text(actividad.ubicacion).html();
+      $('#detUbicacionContainer').html('<div style="margin-top: 12px; background: #fff5f5; border-left: 4px solid #dd4b39; padding: 10px 12px; border-radius: 6px;"><span style="display: block; font-size: 11px; text-transform: uppercase; color: #dd4b39; font-weight: 600; margin-bottom: 3px;"><i class="fa fa-map-marker"></i> Ubicación</span><span style="font-size: 13px; color: #333;">' + safeUbic + '</span></div>');
+    } else {
+      $('#detUbicacionContainer').html('');
+    }
+
+    if (actividad.invitados_email) {
+      var safeInv = $('<div>').text(actividad.invitados_email).html();
+      $('#detInvitadosContainer').html('<div style="margin-top: 12px; background: #f0f7ff; border-left: 4px solid #3c8dbc; padding: 10px 12px; border-radius: 6px;"><span style="display: block; font-size: 11px; text-transform: uppercase; color: #3c8dbc; font-weight: 600; margin-bottom: 3px;"><i class="fa fa-users"></i> Invitados</span><span style="font-size: 13px; color: #333;">' + safeInv + '</span></div>');
+    } else {
+      $('#detInvitadosContainer').html('');
+    }
+
+    var isMeetValid = actividad.google_meet_link && (actividad.google_meet_link.indexOf('meet.google.com') !== -1 || actividad.google_meet_link.indexOf('hangouts') !== -1);
+
+    if (isMeetValid) {
+      $('#detMeetContainer').html('<a href="'+actividad.google_meet_link+'" target="_blank" class="btn btn-info btn-block" style="background-color: #00832d; border-color: #00832d; font-weight: 600; margin-top: 15px; border-radius: 6px;"><i class="fa fa-video-camera"></i> Unirse con Google Meet 📹</a>');
+    } else {
+      $('#detMeetContainer').html('');
+    }
+
+    var fileLink = actividad.archivo || null;
+    if (!fileLink && actividad.observacion) {
+      var matchFile = actividad.observacion.match(/(https?:\/\/[^\s<]+)/i);
+      if (matchFile) {
+        fileLink = matchFile[0].replace(/[.,;:)"\']+$/, '');
+      }
+    }
+
+    if (fileLink) {
+      $('#detArchivoContainer').html('<a href="'+fileLink+'" target="_blank" class="btn btn-default btn-block" style="font-weight: 600; margin-top: 10px; border-radius: 6px; border-color: #3c8dbc; color: #3c8dbc;"><i class="fa fa-paperclip"></i> Ver / Descargar archivo adjunto 📎</a>');
+      $('#archivoActual').val(fileLink);
+      $('#previewArchivoActual').html('<a href="'+fileLink+'" target="_blank" class="btn btn-xs btn-info"><i class="fa fa-file"></i> Ver archivo adjunto actual</a>');
+    } else {
+      $('#detArchivoContainer').html('');
+      $('#archivoActual').val('');
+      $('#previewArchivoActual').html('');
+    }
 
     // Rellenar campos originales ocultos (por compatibilidad)
     if (fieldIdHidden && actividad.id !== undefined) $(fieldIdHidden).val(actividad.id);
@@ -961,11 +1018,80 @@ document.addEventListener('DOMContentLoaded', function() {
     // Rellenar formulario de edición (modalEditarActividad)
     $('#editarIdActividad').val(actividad.id || '');
     $('#editarActividad').val(actividad.descripcion || '');
-    $('#editarTipo').val(actividad.tipo || '');
+    $('#editarTipo').val(actividad.tipo || 'Reunión');
     $('#editarUsuario').val(actividad.id_user || '');
-    $('#editarEstado').val(actividad.estado || '');
+    
+    // Rellenar estado de manera insensible a mayúsculas/minúsculas y con soporte de alias
+    if (actividad.estado) {
+      var estBuscado = $.trim(actividad.estado).toLowerCase();
+      var valorEncontrado = '';
+      $('#editarEstado option').each(function() {
+        var optVal = $.trim($(this).val());
+        if (optVal.toLowerCase() === estBuscado) {
+          valorEncontrado = optVal;
+          return false;
+        }
+      });
+
+      if (!valorEncontrado) {
+        if (estBuscado === 'finalizada' || estBuscado === 'completed') estBuscado = 'completada';
+        else if (estBuscado === 'scheduled') estBuscado = 'programada';
+        else if (estBuscado === 'pending' || estBuscado === 'needsaction') estBuscado = 'pendiente';
+        else if (estBuscado === 'canceled') estBuscado = 'cancelada';
+
+        $('#editarEstado option').each(function() {
+          var optVal = $.trim($(this).val());
+          if (optVal.toLowerCase() === estBuscado) {
+            valorEncontrado = optVal;
+            return false;
+          }
+        });
+      }
+
+      if (valorEncontrado) {
+        $('#editarEstado').val(valorEncontrado);
+      } else if (actividad.estado) {
+        var textoEstado = actividad.estado.charAt(0).toUpperCase() + actividad.estado.slice(1);
+        if (!$('#editarEstado option[value="' + actividad.estado + '"]').length) {
+          $('#editarEstado').append(new Option(textoEstado, actividad.estado, true, true));
+        }
+        $('#editarEstado').val(actividad.estado);
+      }
+    } else {
+      $('#editarEstado').val('');
+    }
+
     $('#editarCliente').val(actividad.id_cliente || '0');
     $('#editarObservacion').val(actividad.observacion || '');
+    $('#editarUbicacion').val(actividad.ubicacion || '');
+    $('#editarInvitados').val(actividad.invitados_email || '');
+    $('#editarGenerarMeet').prop('checked', !!isMeetValid);
+
+    var modoG = (actividad.categoria_google || 'evento').toLowerCase();
+    $('#editarCategoriaGoogle').val(modoG);
+    $('.btnToggleEditarModo').removeClass('btn-primary active').addClass('btn-default').css({'background':'transparent', 'color':'#64748b', 'border':'none'});
+    if (modoG === 'tarea') {
+      $('#btnEditarModoTarea').removeClass('btn-default').addClass('btn-primary active').css({'background':'#3c8dbc', 'color':'#fff', 'border':'none'});
+      $('.secEditarGoogleEvento').hide();
+      $('#lblEditarFecha').text('Fecha y Hora *');
+      $('#editarTipo').val('Tarea');
+      $('#modalEditarActividad .modal-title').html('<i class="fa fa-pencil"></i> Editar Tarea');
+    } else {
+      $('#btnEditarModoEvento').removeClass('btn-default').addClass('btn-primary active').css({'background':'#3c8dbc', 'color':'#fff', 'border':'none'});
+      $('.secEditarGoogleEvento').show();
+      $('#lblEditarFecha').text('Fecha y Hora *');
+      $('#editarTipo').val('Reunión');
+      $('#modalEditarActividad .modal-title').html('<i class="fa fa-pencil"></i> Editar Evento');
+    }
+
+    var isAllDay = actividad.allDay || false;
+    var rawFecha = actividad.fecha_full || actividad.fecha || '';
+    if (rawFecha && (rawFecha.indexOf('00:00:00') !== -1 || rawFecha.length <= 10)) {
+      isAllDay = true;
+    }
+    $('#editarChkTodoElDia').prop('checked', isAllDay);
+    var dateFormatted = formatearFechaParaInput(rawFecha, isAllDay);
+    $('#editarFecha').attr('type', isAllDay ? 'date' : 'datetime-local').val(dateFormatted);
     
     setTimeout(function() {
       if ($('#id_cliente').length && actividad.id_cliente !== undefined) {
@@ -986,6 +1112,210 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.ultimaActividad = actividad;
   }
+  window.fillFields = fillFields;
+
+  // -------------------------
+  // MANEJADOR DE TOGGLE EVENTO VS TAREA (ESTILO GOOGLE CALENDAR)
+  // -------------------------
+  $(document).on('click', '.btnToggleModo', function() {
+    $('.btnToggleModo').removeClass('btn-primary active').addClass('btn-default').css({'background':'transparent', 'color':'#64748b', 'border':'none'});
+    $(this).removeClass('btn-default').addClass('btn-primary active').css({'background':'#3c8dbc', 'color':'#fff', 'border':'none'});
+    
+    var modo = $(this).attr('data-modo');
+    $('#categoriaGoogle').val(modo);
+
+    if (modo === 'tarea') {
+      $('.secGoogleEvento').slideUp(150);
+      $('#lblNuevaFecha').text($('#chkTodoElDia').is(':checked') ? 'Fecha de Recordatorio *' : 'Fecha y Hora de Recordatorio *');
+      $('#nuevoTipo').val('Tarea');
+    } else {
+      $('.secGoogleEvento').slideDown(150);
+      $('#lblNuevaFecha').text($('#chkTodoElDia').is(':checked') ? 'Fecha *' : 'Fecha y Hora *');
+      $('#nuevoTipo').val('Reunión');
+    }
+  });
+
+  $(document).on('click', '.btnToggleEditarModo', function() {
+    $('.btnToggleEditarModo').removeClass('btn-primary active').addClass('btn-default').css({'background':'transparent', 'color':'#64748b', 'border':'none'});
+    $(this).removeClass('btn-default').addClass('btn-primary active').css({'background':'#3c8dbc', 'color':'#fff', 'border':'none'});
+    
+    var modo = $(this).attr('data-modo');
+    $('#editarCategoriaGoogle').val(modo);
+
+    if (modo === 'tarea') {
+      $('.secEditarGoogleEvento').slideUp(150);
+      $('#lblEditarFecha').text($('#editarChkTodoElDia').is(':checked') ? 'Fecha de Recordatorio *' : 'Fecha y Hora de Recordatorio *');
+      $('#editarTipo').val('Tarea');
+      $('#modalEditarActividad .modal-title').html('<i class="fa fa-pencil"></i> Editar Tarea');
+    } else {
+      $('.secEditarGoogleEvento').slideDown(150);
+      $('#lblEditarFecha').text($('#editarChkTodoElDia').is(':checked') ? 'Fecha *' : 'Fecha y Hora *');
+      $('#editarTipo').val('Reunión');
+      $('#modalEditarActividad .modal-title').html('<i class="fa fa-pencil"></i> Editar Evento');
+    }
+  });
+
+  // -------------------------
+  // MANEJADOR DE CHECKBOX "TODO EL DÍA" (ESTILO GOOGLE CALENDAR)
+  // -------------------------
+  $(document).on('change', '#chkTodoElDia', function() {
+    var isAllDay = $(this).is(':checked');
+    var $input = $('#nuevaFecha');
+    var val = $input.val() || '';
+
+    if (isAllDay) {
+      var dateOnly = val ? val.split('T')[0] : new Date().toISOString().split('T')[0];
+      $input.attr('type', 'date').val(dateOnly);
+      var modo = $('#categoriaGoogle').val();
+      $('#lblNuevaFecha').html('<i class="fa fa-calendar-check-o text-success"></i> ' + (modo === 'tarea' ? 'Fecha de Recordatorio *' : 'Fecha *'));
+    } else {
+      var dateOnly = val ? val.split('T')[0] : new Date().toISOString().split('T')[0];
+      var timePart = (val.indexOf('T') !== -1 && val.split('T')[1]) ? val.split('T')[1].substring(0, 5) : '08:00';
+      $input.attr('type', 'datetime-local').val(dateOnly + 'T' + timePart);
+      var modo = $('#categoriaGoogle').val();
+      $('#lblNuevaFecha').html(modo === 'tarea' ? 'Fecha y Hora de Recordatorio *' : 'Fecha y Hora *');
+    }
+  });
+
+
+
+  // -------------------------
+  // MANEJADOR DE CHECKBOX "TODO EL DÍA" EN EDITAR
+  // -------------------------
+  $(document).on('change', '#editarChkTodoElDia', function() {
+    var isAllDay = $(this).is(':checked');
+    var $input = $('#editarFecha');
+    var val = $input.val() || '';
+
+    if (isAllDay) {
+      var dateOnly = val ? val.split('T')[0] : new Date().toISOString().split('T')[0];
+      $input.attr('type', 'date').val(dateOnly);
+      var modo = $('#editarCategoriaGoogle').val();
+      $('#lblEditarFecha').html('<i class="fa fa-calendar-check-o text-success"></i> ' + (modo === 'tarea' ? 'Fecha de Recordatorio *' : 'Fecha *'));
+    } else {
+      var dateOnly = val ? val.split('T')[0] : new Date().toISOString().split('T')[0];
+      var timePart = (val.indexOf('T') !== -1 && val.split('T')[1]) ? val.split('T')[1].substring(0, 5) : '08:00';
+      $input.attr('type', 'datetime-local').val(dateOnly + 'T' + timePart);
+      var modo = $('#editarCategoriaGoogle').val();
+      $('#lblEditarFecha').html(modo === 'tarea' ? 'Fecha y Hora de Recordatorio *' : 'Fecha y Hora *');
+    }
+  });
+
+  // -------------------------
+  // DESCONECTAR GOOGLE CALENDAR
+  // -------------------------
+  $(document).on('click', '.btnDesconectarGoogle', function() {
+    swal({
+      title: '¿Desconectar Google Calendar?',
+      text: "Se desvinculará tu cuenta y se eliminarán las tareas y eventos sincronizados con Google.",
+      type: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Sí, desconectar'
+    }).then((result) => {
+      if (result.value) {
+        $.ajax({
+          url: 'ajax/actividades.ajax.php',
+          method: 'POST',
+          data: { accion: 'desconectarGoogle' },
+          dataType: 'json',
+          success: function(res) {
+            swal({
+              type: 'success',
+              title: '¡Desconectado!',
+              text: 'Se ha desvinculado la cuenta y se limpiaron los eventos y tareas.',
+              timer: 1500,
+              showConfirmButton: false
+            }).then(() => {
+              window.location.reload();
+            });
+          }
+        });
+      }
+    });
+  });
+
+  // -------------------------
+  // SINCRONIZAR DESDE GOOGLE
+  // -------------------------
+  $(document).on('click', '.btnSincronizarGoogle', function() {
+    var $btn = $(this);
+    var originalHtml = $btn.html();
+    $btn.html('<i class="fa fa-refresh fa-spin"></i> Sincronizando...').prop('disabled', true);
+
+    $.ajax({
+      url: 'ajax/actividades.ajax.php',
+      method: 'POST',
+      data: {
+        accion: 'sincronizarDesdeGoogle',
+        csrf_token: $('meta[name="csrf-token"]').attr('content')
+      },
+      dataType: 'json',
+      success: function(res) {
+        $btn.html(originalHtml).prop('disabled', false);
+        if (res.status === 'ok') {
+          var eliminadosHtml = (res.eliminados && res.eliminados > 0) ? ('🗑️ Novedades eliminadas: <b>' + res.eliminados + '</b><br>') : '';
+          swal({
+            type: 'success',
+            title: '¡Sincronización completada!',
+            html: '<b>Se han sincronizado las novedades desde Google:</b><br><br>' +
+                  '✨ Novedades nuevas creadas: <b>' + res.importados + '</b><br>' +
+                  '🔄 Novedades actualizadas: <b>' + res.actualizados + '</b><br>' +
+                  eliminadosHtml +
+                  '📋 Total procesadas: <b>' + res.total + '</b>',
+            confirmButtonText: 'Excelente'
+          }).then(() => {
+            if (typeof calendar !== 'undefined') {
+              calendar.refetchEvents();
+            }
+          });
+        } else {
+          console.error("Respuesta error de sincronización:", res);
+          var msgError = (res && res.message) ? res.message : 'No se pudieron sincronizar las novedades desde Google.';
+          swal({
+            type: 'error',
+            title: 'Error de sincronización',
+            html: msgError,
+            confirmButtonText: 'Cerrar'
+          });
+        }
+      },
+      error: function(xhr, status, error) {
+        console.error("Error AJAX sincronización:", xhr.responseText);
+        $btn.html(originalHtml).prop('disabled', false);
+        swal({
+          type: 'error',
+          title: 'Error de red o servidor',
+          html: 'Ocurrió un error al comunicarse con el servidor.<br><small style="color:#777;">' + (xhr.responseText || error) + '</small>',
+          confirmButtonText: 'Cerrar'
+        });
+      }
+    });
+  });
+
+  <?php if ($emailGoogleUser): ?>
+  // Sincronización automática silenciosa al cargar el calendario
+  setTimeout(function() {
+    $.ajax({
+      url: 'ajax/actividades.ajax.php',
+      method: 'POST',
+      data: {
+        accion: 'sincronizarDesdeGoogle',
+        csrf_token: $('meta[name="csrf-token"]').attr('content')
+      },
+      dataType: 'json',
+      success: function(res) {
+        if (res.status === 'ok' && res.total > 0) {
+          if (typeof calendar !== 'undefined') {
+            calendar.refetchEvents();
+          }
+        }
+      }
+    });
+  }, 1000);
+  <?php endif; ?>
 
   // -------------------------
   // Inicializar FullCalendar
@@ -994,6 +1324,13 @@ document.addEventListener('DOMContentLoaded', function() {
     locale: 'es',
     initialView: 'dayGridMonth',
     height: 'auto',
+    displayEventTime: true,
+    eventTimeFormat: {
+      hour: '2-digit',
+      minute: '2-digit',
+      meridiem: 'short',
+      hour12: true
+    },
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
@@ -1039,7 +1376,13 @@ document.addEventListener('DOMContentLoaded', function() {
         data: { idActividad: info.event.id },
         success: function(respuesta) {
           if (respuesta) {
-            if (modalSelector) $(modalSelector).find('.modal-title').text('Actividad Asignada');
+            var actObj = Array.isArray(respuesta) ? respuesta[0] : respuesta;
+            var catG = (actObj.categoria_google || '').toLowerCase();
+            var tipoAct = (actObj.tipo || '').toLowerCase();
+            var esTarea = (catG === 'tarea' || tipoAct === 'tarea');
+            var tituloModal = esTarea ? 'Tarea Asignada' : 'Evento Asignado';
+
+            if (modalSelector) $(modalSelector).find('.modal-title').text(tituloModal);
             if (modalSelector) {
               $(modalSelector).modal('show');
               setTimeout(function() {
@@ -1073,6 +1416,7 @@ document.addEventListener('DOMContentLoaded', function() {
         data: {
           id: idActividad,
           fecha: nuevaFecha,
+          todo_dia: info.event.allDay ? 1 : 0,
           accion: 'actualizarFecha',
           csrf_token: $('meta[name="csrf-token"]').attr('content')
         },
@@ -1107,12 +1451,61 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
     },
+    eventResize: function(info) {
+      var idActividad = info.event.id;
+      var date = info.event.start;
+      
+      var year = date.getFullYear();
+      var month = String(date.getMonth() + 1).padStart(2, '0');
+      var day = String(date.getDate()).padStart(2, '0');
+      var hours = String(date.getHours()).padStart(2, '0');
+      var minutes = String(date.getMinutes()).padStart(2, '0');
+      var seconds = String(date.getSeconds()).padStart(2, '0');
+      var nuevaFecha = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+
+      $.ajax({
+        url: 'ajax/actividades.ajax.php',
+        method: 'POST',
+        data: {
+          id: idActividad,
+          fecha: nuevaFecha,
+          todo_dia: info.event.allDay ? 1 : 0,
+          accion: 'actualizarFecha',
+          csrf_token: $('meta[name="csrf-token"]').attr('content')
+        },
+        dataType: 'json',
+        success: function(response) {
+          if (response === 'ok') {
+            swal({
+              type: "success",
+              title: "¡Guardado!",
+              text: "Se ha actualizado la duración de la actividad.",
+              timer: 1500,
+              showConfirmButton: false
+            });
+          } else {
+            info.revert();
+          }
+        },
+        error: function() {
+          info.revert();
+        }
+      });
+    },
 
     // -------------------------
     // LÓGICA DE TOOLTIPS PREMIUM (FIN DEL DIAGNÓSTICO)
     // -------------------------
     eventDidMount: function(info) {
         var props = info.event.extendedProps;
+        var estadoLower = (props.estado || '').toLowerCase();
+        
+        if (estadoLower === 'completada' || estadoLower === 'completed' || estadoLower === 'finalizada') {
+            info.el.style.opacity = '0.55';
+            info.el.style.filter = 'opacity(55%)';
+            info.el.style.textDecoration = 'line-through';
+        }
+
         var statusColor = info.event.backgroundColor || '#3c8dbc';
         var titulo = props.descripcion_original || info.event.title;
         var cliente = (props.nombre_cliente && props.nombre_cliente !== 'Sin cliente') ? "\n👤 Cliente: " + props.nombre_cliente : "";
@@ -1147,30 +1540,31 @@ document.addEventListener('DOMContentLoaded', function() {
   // EVENTO DEL BOTÓN "Crear Nueva Actividad" 
   // -------------------------
   $('#crearNuevaActividad, #crearNuevaActividadDeConflicto').on('click', function() {
-    // Cerrar modal actual
     $('#sinActividadesModal, #yaTieneActividadesModal').modal('hide');
     
-    // Esperar y abrir modal de agregar
     setTimeout(function() {
-      // Limpiar formulario
       $('#modalAgregarActividad form')[0].reset();
       
-      // Abrir modal
-      $('#modalAgregarActividad').modal('show');
-      
-      // Prellenar fecha
+      var isAllDay = $('#chkTodoElDia').is(':checked');
+      $('#nuevaFecha').attr('type', isAllDay ? 'date' : 'datetime-local');
+
       if (fechaSeleccionada) {
-        console.log("📅 Prellenando fecha:", fechaSeleccionada);
-        var fechaFormateada = formatearFechaParaInput(fechaSeleccionada);
-        console.log("📅 Fecha formateada:", fechaFormateada);
-        
+        var fechaFormateada = formatearFechaParaInput(fechaSeleccionada, isAllDay);
         $('#nuevaFecha').val(fechaFormateada);
-        
-        setTimeout(function() {
-          console.log("📅 Fecha verificada en campo:", $('#nuevaFecha').val());
-        }, 100);
       }
+
+      $('#modalAgregarActividad').modal('show');
     }, 300);
+  });
+
+  // Al mostrar modalAgregarActividad directamente
+  $('#modalAgregarActividad').on('show.bs.modal', function() {
+    var isAllDay = $('#chkTodoElDia').is(':checked');
+    $('#nuevaFecha').attr('type', isAllDay ? 'date' : 'datetime-local');
+    if (fechaSeleccionada) {
+      var fechaFormateada = formatearFechaParaInput(fechaSeleccionada, isAllDay);
+      $('#nuevaFecha').val(fechaFormateada);
+    }
   });
 
   // -------------------------
@@ -1326,13 +1720,34 @@ MODAL GESTIONAR ESTADOS
               <tbody>
                 <?php
                 $estadosGestion = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
+
+                // Colocar el estado 'completada' al inicio de la lista
+                $completadoItem = null;
+                $otrosEstados = array();
+
+                if (is_array($estadosGestion)) {
+                    foreach ($estadosGestion as $value) {
+                        if (strcasecmp(trim($value["nombre"]), "completada") === 0) {
+                            $completadoItem = $value;
+                        } else {
+                            $otrosEstados[] = $value;
+                        }
+                    }
+                }
+
+                if ($completadoItem !== null) {
+                    array_unshift($otrosEstados, $completadoItem);
+                }
+                $estadosGestion = $otrosEstados;
+
                 foreach ($estadosGestion as $key => $value) {
-                  echo '<tr>
-                      <td>' . ($key + 1) . '</td>
-                      <td><span class="badge" style="background-color: ' . $value["color"] . '">' . ucfirst($value["nombre"]) . '</span></td>
-                      <td><input type="color" value="' . $value["color"] . '" disabled style="width: 50px;"></td>
-                      <td>
-                        <button class="btn btn-warning btn-xs btnEditarEstadoActividad"
+                  $esCompletada = (strcasecmp(trim($value["nombre"]), "completada") === 0);
+
+                  $acciones = '';
+                  if ($esCompletada) {
+                      $acciones = '<span class="text-muted" style="font-size: 11px; font-weight: 600;" title="Estado predeterminado del sistema"><i class="fa fa-lock"></i> Protegido</span>';
+                  } else {
+                      $acciones = '<button class="btn btn-warning btn-xs btnEditarEstadoActividad"
                           data-id="' . $value["id"] . '"
                           data-nombre="' . $value["nombre"] . '"
                           data-color="' . $value["color"] . '"
@@ -1341,8 +1756,14 @@ MODAL GESTIONAR ESTADOS
                           data-target="#modalEditarEstadoActividad">
                           <i class="fa fa-pencil"></i>
                         </button>
-                        <button class="btn btn-danger btn-xs btnEliminarEstadoActividad" idEstado="' . $value["id"] . '" nombreEstado="' . $value["nombre"] . '"><i class="fa fa-times"></i></button>
-                      </td>
+                        <button class="btn btn-danger btn-xs btnEliminarEstadoActividad" idEstado="' . $value["id"] . '" nombreEstado="' . $value["nombre"] . '"><i class="fa fa-times"></i></button>';
+                  }
+
+                  echo '<tr>
+                      <td>' . ($key + 1) . '</td>
+                      <td><span class="badge" style="background-color: ' . $value["color"] . '">' . ucfirst($value["nombre"]) . '</span></td>
+                      <td><input type="color" value="' . $value["color"] . '" disabled style="width: 50px;"></td>
+                      <td>' . $acciones . '</td>
                     </tr>';
                 }
                 ?>
@@ -1606,6 +2027,16 @@ MODAL EDITAR TIPO
 
 <script>
 $(document).ready(function() {
+	// Detectar si la página se restauró desde el caché del navegador (BFCache / Botón Atrás) y forzar recarga limpia
+	window.addEventListener('pageshow', function(e) {
+		var isBackNav = e.persisted || 
+			(window.performance && window.performance.getEntriesByType && window.performance.getEntriesByType('navigation')[0] && window.performance.getEntriesByType('navigation')[0].type === 'back_forward') ||
+			(window.performance && window.performance.navigation && window.performance.navigation.type === 2);
+		if (isBackNav) {
+			window.location.reload();
+		}
+	});
+
 	// Mover los nuevos modales al body para evitar conflictos de z-index con AdminLTE
 	$('#modalGestionarEstados').appendTo("body");
 	$('#modalEditarEstadoActividad').appendTo("body");
@@ -1617,8 +2048,42 @@ $(document).ready(function() {
 	$(document).on('click', '#btnIrAEditarActividad', function() {
 		$('#actividadModal').modal('hide');
 		setTimeout(function() {
+			if (window.ultimaActividad && typeof window.fillFields === 'function') {
+				window.fillFields(window.ultimaActividad);
+			}
 			$('#modalEditarActividad').modal('show');
 		}, 300);
+	});
+
+	// Al abrir directamente el modal de edición, rellenar sus campos si existe última actividad
+	$('#modalEditarActividad').on('show.bs.modal', function() {
+		if (window.ultimaActividad && typeof window.fillFields === 'function') {
+			window.fillFields(window.ultimaActividad);
+		}
+	});
+
+	// Clic en el botón Editar desde la tabla server-side de actividades
+	$(document).on('click', '.btnEditarActividad', function(e) {
+		e.preventDefault();
+		var idActividad = $(this).attr('idActividad') || $(this).attr('data-id');
+		if (!idActividad) return;
+
+		$.ajax({
+			url: 'ajax/actividades.ajax.php',
+			type: 'POST',
+			dataType: 'json',
+			data: { idActividad: idActividad },
+			success: function(respuesta) {
+				if (respuesta) {
+					var actObj = Array.isArray(respuesta) ? respuesta[0] : respuesta;
+					window.ultimaActividad = actObj;
+					if (typeof window.fillFields === 'function') {
+						window.fillFields(actObj);
+					}
+					$('#modalEditarActividad').modal('show');
+				}
+			}
+		});
 	});
 
 	// Corrección de z-index para modales anidados

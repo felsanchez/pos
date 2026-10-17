@@ -431,16 +431,30 @@ class ControladorCRM {
 
 				$tabla = "crm_etapas";
 
+				$idEtapa = $_POST["idEtapa"];
+				$nuevoNombre = trim($_POST["editarEtapaNombre"]);
+				$nuevoColor = $_POST["editarEtapaColor"];
+				$nuevoOrden = $_POST["editarEtapaOrden"];
+
+				// Obtener el nombre de la etapa previo para mantener vinculados sus leads
+				$etapaAnterior = self::ctrMostrarEtapas("id", $idEtapa);
+				$nombreAnterior = $etapaAnterior ? $etapaAnterior["nombre"] : null;
+
 				$datos = array(
-					"id" => $_POST["idEtapa"],
-					"nombre" => $_POST["editarEtapaNombre"],
-					"color" => $_POST["editarEtapaColor"],
-					"orden" => $_POST["editarEtapaOrden"]
+					"id" => $idEtapa,
+					"nombre" => $nuevoNombre,
+					"color" => $nuevoColor,
+					"orden" => $nuevoOrden
 				);
 
 				$respuesta = ModeloCRM::mdlEditarEtapa($tabla, $datos);
 
 				if ($respuesta == "ok") {
+
+					// Si el nombre de la etapa cambió, actualizar la etapa en todos los leads vinculados
+					if ($nombreAnterior && $nombreAnterior !== $nuevoNombre) {
+						ModeloCRM::mdlActualizarNombreEtapaEnLeads("crm_leads", $nombreAnterior, $nuevoNombre);
+					}
 
 					echo '<script>
 						swal({
@@ -537,7 +551,10 @@ class ControladorCRM {
 
 				}
 
-				// 4. Proceder a eliminar si está vacía
+				// 4. Limpiar leads con borrado lógico asociados a esta etapa
+				ModeloCRM::mdlLimpiarLeadsEliminadosDeEtapa("crm_leads", $etapa["nombre"]);
+
+				// 5. Proceder a eliminar la etapa si no tiene leads activos
 				$tabla = "crm_etapas";
 				$respuesta = ModeloCRM::mdlEliminarEtapa($tabla, $idEtapa);
 

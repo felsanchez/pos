@@ -589,6 +589,29 @@ MODAL AGREGAR CLIENTE
 
             </div>
 
+            <!-- entrada para tipo documento -->
+
+            <div class="form-group">
+
+              <div class="input-group">
+
+                <span class="input-group-addon"><i class="fa fa-id-card"></i></span>
+
+                <select class="form-control input-lg" name="nuevoTipoDocumento" required>
+                  <option value="">Seleccionar tipo de documento</option>
+                  <?php
+                  $tiposDocModal = ControladorFactus::ctrMostrarTiposDocumento();
+                  foreach ($tiposDocModal as $tipo) {
+                    $selected = ($tipo['id'] == 3) ? 'selected' : '';
+                    echo '<option value="' . $tipo['id'] . '" ' . $selected . '>' . $tipo['nombre'] . '</option>';
+                  }
+                  ?>
+                </select>
+
+              </div>
+
+            </div>
+
 
             <!-- entrada para Email -->
 

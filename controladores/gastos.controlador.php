@@ -262,6 +262,22 @@ class ControladorGastos{
 
 				if(isset($_FILES["nuevaImagenComprobante"]["tmp_name"]) && !empty($_FILES["nuevaImagenComprobante"]["tmp_name"])){
 
+					if ($_FILES["nuevaImagenComprobante"]["size"] > 8388608) {
+						echo '<script>
+							swal({
+								type: "error",
+								title: "¡La imagen no debe pesar más de 8MB!",
+								showConfirmButton: true,
+								confirmButtonText: "Cerrar"
+							}).then(function(result){
+								if (result.value) {
+									window.location = "' . $rutaRedireccion . '";
+								}
+							})
+						</script>';
+						return;
+					}
+
 					list($ancho, $alto) = getimagesize($_FILES["nuevaImagenComprobante"]["tmp_name"]);
 
 					$nuevoAncho = 500;
@@ -481,6 +497,22 @@ class ControladorGastos{
 				$rutaImagen = $_POST["imagenActual"];
 
 				if(isset($_FILES["editarImagenComprobante"]["tmp_name"]) && !empty($_FILES["editarImagenComprobante"]["tmp_name"])){
+
+					if ($_FILES["editarImagenComprobante"]["size"] > 8388608) {
+						echo '<script>
+							swal({
+								type: "error",
+								title: "¡La imagen no debe pesar más de 8MB!",
+								showConfirmButton: true,
+								confirmButtonText: "Cerrar"
+							}).then(function(result){
+								if (result.value) {
+									window.location = "' . $rutaRedireccion . '";
+								}
+							})
+						</script>';
+						return;
+					}
 
 					list($ancho, $alto) = getimagesize($_FILES["editarImagenComprobante"]["tmp_name"]);
 

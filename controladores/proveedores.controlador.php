@@ -145,11 +145,10 @@ class ControladorProveedores
 		$columnsMap = array(
 			0 => 'nombre',
 			1 => 'celular',
-			2 => 'correo',
-			3 => 'direccion',
-			4 => 'id', // Productos (calculado)
-			5 => 'notas',
-			6 => 'id'  // Acciones
+			2 => 'direccion',
+			3 => 'id', // Productos (calculado)
+			4 => 'notas',
+			5 => 'id'  // Acciones
 		);
 
 		$where = " WHERE 1=1 ";
@@ -193,17 +192,14 @@ class ControladorProveedores
 			// 1: Celular
 			$nestedData[] = e($value["celular"]);
 
-			// 2: Correo
-			$nestedData[] = e($value["correo"]);
-
-			// 3: Dirección
+			// 2: Dirección
 			$nestedData[] = e($value["direccion"]);
 
-			// 5: Productos
+			// 3: Productos vinculados
 			$totalProductos = ModeloProveedores::mdlContarProductosPorProveedor($value["id"]);
 			$nestedData[] = '<span class="badge bg-blue">' . $totalProductos . '</span>';
 
-			// 6: Notas (Editable)
+			// 4: Notas (Editable)
 			$notas = isset($value["notas"]) ? e($value["notas"]) : '';
 			$nestedData[] = '<div contenteditable="true" class="celda-notas-proveedor" tabindex="0" data-id="' . $value['id'] . '">' . $notas . '</div>';
 

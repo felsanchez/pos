@@ -32,7 +32,7 @@ $(document).ready(function () {
 							finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">';
 							finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
 
-							if (col.columnIndex === 5) {
+							if (col.columnIndex === 4) {
 								// Reconstruimos la celda editable de notas si está escondida
 								var rowNode = api.row(rowIdx).node();
 								var providerId = $(rowNode).find('.btnEditarProveedor').attr('idProveedor');
@@ -55,12 +55,11 @@ $(document).ready(function () {
 			},
 			"columnDefs": [
 				{ "targets": 0, "responsivePriority": 1 }, // Nombre
-				{ "targets": 6, "responsivePriority": 2, "orderable": false }, // Acciones
+				{ "targets": 5, "responsivePriority": 2, "orderable": false }, // Acciones
 				{ "targets": 1, "responsivePriority": 3 }, // Celular
-				{ "targets": 2, "responsivePriority": 4 }, // Correo
-				{ "targets": 3, "responsivePriority": 5 }, // Dirección
-				{ "targets": 4, "responsivePriority": 6 }, // Productos
-				{ "targets": 5, "responsivePriority": 7 }  // Notas
+				{ "targets": 2, "responsivePriority": 4 }, // Dirección
+				{ "targets": 3, "responsivePriority": 5 }, // Productos vinculados
+				{ "targets": 4, "responsivePriority": 6 }  // Notas
 			],
 			"drawCallback": function (settings) {
 				if (typeof inicializarPlaceholdersProveedores === "function") {

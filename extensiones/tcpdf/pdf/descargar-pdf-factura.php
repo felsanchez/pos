@@ -122,6 +122,32 @@ class imprimirDetalleFactura
             }
         }
 
+        // Obtener Tipo de Documento del Cliente y Forma de Pago
+        $tipoDocNombreCliente = '';
+        $tipoDocIdCliente = $cliente["tipo_documento_id"] ?? null;
+        if (!empty($tipoDocIdCliente)) {
+            $tiposDocumento = ControladorFactus::ctrMostrarTiposDocumento();
+            if (is_array($tiposDocumento)) {
+                foreach ($tiposDocumento as $td) {
+                    if ($td["id"] == $tipoDocIdCliente) {
+                        $tipoDocNombreCliente = $td["nombre"];
+                        break;
+                    }
+                }
+            }
+        }
+        if (empty($tipoDocNombreCliente) && !empty($cliente["tipo_documento"])) {
+            $tipoDocNombreCliente = $cliente["tipo_documento"];
+        }
+        if (empty($tipoDocNombreCliente)) {
+            $tipoDocNombreCliente = 'No especificado';
+        }
+
+        $formaPagoNombre = (isset($venta["forma_pago_dian"]) && $venta["forma_pago_dian"] == "2") ? "Crédito" : "Contado";
+        if ($formaPagoNombre == "Crédito" && !empty($venta["fecha_vencimiento"])) {
+            $formaPagoNombre .= ' (Vence: ' . $venta["fecha_vencimiento"] . ')';
+        }
+
         // --- LOGO FACTUS (Si existe) ---
         $htmlLogo = '';
         if (isset($configFactus['logo_empresa']) && !empty($configFactus['logo_empresa'])) {
@@ -162,6 +188,7 @@ class imprimirDetalleFactura
                 <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Cliente</span><br><br>
                     <strong>Cliente:</strong> ' . ($cliente["nombre"] ?? '') . '<br>
+                    <strong>Tipo de documento:</strong> ' . $tipoDocNombreCliente . '<br>
                     <strong>Documento:</strong> ' . ($cliente["documento"] ?? '') . (($cliente["tipo_documento_id"] ?? 0) == 6 && !empty($cliente["digito_verificacion"]) ? '-' . $cliente["digito_verificacion"] : '') . '<br>
                     <strong>Dirección:</strong> ' . ($cliente["direccion"] ?? '') . '<br>
                     <strong>Municipio:</strong> ' . $ciudadConDeptoCliente . '<br>
@@ -173,7 +200,8 @@ class imprimirDetalleFactura
                     <strong>' . $etiquetaDocumento . ' #' . $numeroDocumento . '</strong><br><br>
                     <strong>Vendedor:</strong> ' . ($vendedor["nombre"] ?? '') . '<br>
                     <strong>Estado Dian:</strong> ' . $estadoDianLabel . '<br>
-                    <strong>Método de Pago:</strong> ' . ($venta["metodo_pago"] ?? '') . '
+                    <strong>Método de Pago:</strong> ' . ($venta["metodo_pago"] ?? '') . '<br>
+                    <strong>Forma de Pago:</strong> ' . $formaPagoNombre . '
                 </td>
             </tr>
         </table><br><br>';
@@ -288,6 +316,7 @@ class imprimirDetalleFactura
                 <td style="width:33%; background-color:#f8f9fa; border-left:4px solid #3c8dbc;">
                     <span style="font-weight:bold; font-size:11px; border-bottom:1px solid #ddd;">Cliente</span><br><br>
                     <strong>Cliente:</strong> ' . ($cliente["nombre"] ?? '') . '<br>
+                    <strong>Tipo de documento:</strong> ' . $tipoDocNombreCliente . '<br>
                     <strong>Documento:</strong> ' . ($cliente["documento"] ?? '') . (($cliente["tipo_documento_id"] ?? 0) == 6 && !empty($cliente["digito_verificacion"]) ? '-' . $cliente["digito_verificacion"] : '') . '<br>
                     <strong>Dirección:</strong> ' . ($cliente["direccion"] ?? '') . '<br>
                     <strong>Municipio:</strong> ' . $ciudadConDeptoCliente . '<br>
@@ -299,7 +328,8 @@ class imprimirDetalleFactura
                     <strong>' . $etiquetaDocumento . ' #' . $numeroDocumento . '</strong><br><br>
                     <strong>Vendedor:</strong> ' . ($vendedor["nombre"] ?? '') . '<br>
                     <strong>Estado Dian:</strong> ' . $estadoDianLabel . '<br>
-                    <strong>Método de Pago:</strong> ' . ($venta["metodo_pago"] ?? '') . '
+                    <strong>Método de Pago:</strong> ' . ($venta["metodo_pago"] ?? '') . '<br>
+                    <strong>Forma de Pago:</strong> ' . $formaPagoNombre . '
                 </td>
             </tr>
         </table><br><br>';

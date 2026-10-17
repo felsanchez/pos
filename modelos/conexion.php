@@ -83,6 +83,12 @@ class Conexion{
 
 			$link->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			$link->exec("set names utf8");
+
+			try {
+				$link->exec("SET time_zone = '-05:00'");
+			} catch (Exception $e) {
+				// Ignorar error si el servidor de hosting bloquea o no soporta el cambio de time_zone
+			}
  
 			// Log de conexión exitosa comentado para evitar ruido en logs
 			// Solo se registran errores de conexión
@@ -115,6 +121,7 @@ class Conexion{
 			$link = new PDO("mysql:host={$host};dbname={$dbname}", $user, $pass);
 			$link->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			$link->exec("set names utf8");
+			$link->exec("SET time_zone = '-05:00'");
 			return $link;
 		} catch (PDOException $e) {
 			Logger::error('Error al conectar a la base de datos Master', [

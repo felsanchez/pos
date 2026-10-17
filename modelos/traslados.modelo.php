@@ -149,6 +149,22 @@ class ModeloTraslados
         return $stmt->fetchAll();
     }
     /*=============================================
+    OBTENER SIGUIENTE CONSECUTIVO DE TRASLADO
+    =============================================*/
+    static public function mdlObtenerSiguienteConsecutivo($tabla)
+    {
+        $stmt = Conexion::conectar()->prepare("SELECT MAX(CAST(codigo AS UNSIGNED)) as max_codigo FROM $tabla");
+        $stmt->execute();
+        $resultado = $stmt->fetch();
+
+        if ($resultado && $resultado["max_codigo"] != null && intval($resultado["max_codigo"]) > 0) {
+            return intval($resultado["max_codigo"]) + 1;
+        } else {
+            return 10001;
+        }
+    }
+
+    /*=============================================
     LIMPIAR TRASLADOS ANTIGUOS (MÁS DE 3 MESES)
     =============================================*/
     static public function mdlLimpiarTrasladosAntiguos($tabla)

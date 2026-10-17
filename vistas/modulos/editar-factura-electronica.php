@@ -158,6 +158,34 @@ $productosVenta = json_decode($venta["productos"], true);
                   </div>
                 </div>
 
+                <!-- Forma de Pago DIAN -->
+                <div class="row">
+                  <div class="col-xs-12 col-md-6">
+                    <div class="form-group">
+                      <label><i class="fa fa-credit-card"></i> Forma de Pago</label>
+                      <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-exchange"></i></span>
+                        <select class="form-control" id="forma_pago_dian" name="forma_pago_dian">
+                          <option value="1" <?php echo (isset($venta["forma_pago_dian"]) && $venta["forma_pago_dian"] == "1") || empty($venta["forma_pago_dian"]) ? 'selected' : ''; ?>>Contado (Pago inmediato)</option>
+                          <option value="2" <?php echo (isset($venta["forma_pago_dian"]) && $venta["forma_pago_dian"] == "2") ? 'selected' : ''; ?>>Crédito (Pago a plazo)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-xs-12 col-md-6" id="campo_fecha_vencimiento" style="<?php echo (isset($venta["forma_pago_dian"]) && $venta["forma_pago_dian"] == "2") ? '' : 'display:none;'; ?>">
+                    <div class="form-group">
+                      <label><i class="fa fa-calendar"></i> Fecha de Vencimiento</label>
+                      <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                        <input type="date" class="form-control" id="fecha_vencimiento_fe" name="fecha_vencimiento"
+                          value="<?php echo isset($venta["fecha_vencimiento"]) ? $venta["fecha_vencimiento"] : ''; ?>"
+                          placeholder="YYYY-MM-DD" <?php echo (isset($venta["forma_pago_dian"]) && $venta["forma_pago_dian"] == "2") ? 'required' : ''; ?>>
+                      </div>
+                      <small class="text-muted">Requerido para pago a crédito</small>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Cliente -->
                 <div class="row">
                   <div class="col-xs-12">
@@ -481,9 +509,9 @@ MODAL AGREGAR CLIENTE
       <div class="modal-custom-body" style="text-align: left;">
         <div class="box-body">
 
-          <!-- Fila 1: Nombre y Documento -->
+          <!-- Fila 1: Nombre, Tipo Documento y Documento -->
           <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-4">
               <div class="form-group">
                 <label>Nombre Completo *</label>
                 <div class="input-group">
@@ -493,7 +521,26 @@ MODAL AGREGAR CLIENTE
               </div>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Tipo Documento *</label>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-id-card"></i></span>
+                  <select class="form-control" name="nuevoTipoDocumento" required>
+                    <option value="">Seleccionar tipo</option>
+                    <?php
+                    $tiposDocModal = ControladorFactus::ctrMostrarTiposDocumento();
+                    foreach ($tiposDocModal as $tipo) {
+                      $selected = ($tipo['id'] == 3) ? 'selected' : '';
+                      echo '<option value="' . $tipo['id'] . '" ' . $selected . '>' . $tipo['nombre'] . '</option>';
+                    }
+                    ?>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
               <div class="form-group">
                 <label>Documento *</label>
                 <div class="input-group">
@@ -613,6 +660,19 @@ MODAL AGREGAR CLIENTE
             title: "La venta no se puede guardar porque no tiene productos",
             showConfirmButton: true,
             confirmButtonText: "Cerrar"
+          });
+          return false;
+        }
+
+        // VALIDACIÓN DE FECHA DE VENCIMIENTO SI ES CRÉDITO
+        if ($('#forma_pago_dian').val() === '2' && !$('#fecha_vencimiento_fe').val()) {
+          e.stopImmediatePropagation();
+          swal({
+            type: 'warning',
+            title: 'Fecha de Vencimiento requerida',
+            text: 'Para facturas a crédito debe ingresar la fecha de vencimiento.',
+            showConfirmButton: true,
+            confirmButtonText: 'Aceptar'
           });
           return false;
         }
@@ -871,6 +931,22 @@ MODAL AGREGAR RETENCION
 <script>
   // Pre-cargar datos de la factura existente
   $(document).ready(function () {
+    // Toggle del campo fecha de vencimiento al cambiar Forma de Pago
+    $('#forma_pago_dian').on('change', function () {
+      if ($(this).val() === '2') {
+        $('#campo_fecha_vencimiento').slideDown(200);
+        $('#fecha_vencimiento_fe').attr('required', true);
+      } else {
+        $('#campo_fecha_vencimiento').slideUp(200);
+        $('#fecha_vencimiento_fe').removeAttr('required').val('');
+      }
+    });
+
+    if ($('#forma_pago_dian').val() === '2') {
+      $('#campo_fecha_vencimiento').show();
+      $('#fecha_vencimiento_fe').attr('required', true);
+    }
+
     // Seleccionar el cliente
     $("#seleccionarCliente").val("<?php echo $venta['id_cliente']; ?>");
 

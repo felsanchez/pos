@@ -11,13 +11,16 @@ class ModeloNotificaciones
 
 	static public function mdlCrearNotificacion($datos)
 	{
+		date_default_timezone_set('America/Bogota');
+		$fecha = !empty($datos["fecha"]) ? $datos["fecha"] : date("Y-m-d H:i:s");
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO notificaciones(tipo, titulo, mensaje, referencia_tipo, referencia_id, id_bodega)
-												VALUES (:tipo, :titulo, :mensaje, :referencia_tipo, :referencia_id, :id_bodega)");
+		$stmt = Conexion::conectar()->prepare("INSERT INTO notificaciones(tipo, titulo, mensaje, fecha, referencia_tipo, referencia_id, id_bodega)
+												VALUES (:tipo, :titulo, :mensaje, :fecha, :referencia_tipo, :referencia_id, :id_bodega)");
 
 		$stmt->bindParam(":tipo", $datos["tipo"], PDO::PARAM_STR);
 		$stmt->bindParam(":titulo", $datos["titulo"], PDO::PARAM_STR);
 		$stmt->bindParam(":mensaje", $datos["mensaje"], PDO::PARAM_STR);
+		$stmt->bindParam(":fecha", $fecha, PDO::PARAM_STR);
 		$stmt->bindParam(":referencia_tipo", $datos["referencia_tipo"], PDO::PARAM_STR);
 		$stmt->bindParam(":referencia_id", $datos["referencia_id"], PDO::PARAM_INT);
 		$stmt->bindParam(":id_bodega", $datos["id_bodega"], PDO::PARAM_INT);
@@ -41,6 +44,7 @@ class ModeloNotificaciones
 	{
 
 		$idUsuario = $idUsuario ? intval($idUsuario) : 0;
+		$idBodegaSesion = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : null;
 
 		$sql = "SELECT n.*, 
                 CASE WHEN nl.id_usuario IS NOT NULL THEN 1 ELSE 0 END as leida
@@ -51,11 +55,20 @@ class ModeloNotificaciones
                 LEFT JOIN usuarios u_viewer ON u_viewer.id = :id_usuario_viewer
                 WHERE n.eliminada = 0
                   AND ne.id_usuario IS NULL
+                  AND n.tipo != 'actividad_proxima'
+                  AND n.titulo != 'Calendario Próximo'
                   AND (n.tipo NOT IN ('orden_agente_ia', 'orden_creada') OR c.notif_orden_agente_ia = 1)
                   AND (n.referencia_tipo IS NULL OR n.referencia_tipo != 'pago_bold' OR c.notif_transaccion_bold = 1)
                   AND (n.referencia_tipo IS NULL OR n.referencia_tipo != 'solicitud_edicion' OR c.notif_solicitud_edicion = 1)
                   AND (n.referencia_tipo IS NULL OR n.referencia_tipo != 'solicitud_eliminacion' OR c.notif_solicitud_eliminacion = 1)
-                  AND (n.tipo NOT IN ('stock_bajo', 'stock_agotado') OR n.id_bodega IS NULL OR u_viewer.id_bodega = n.id_bodega)";
+                  AND (n.tipo NOT IN ('stock_bajo', 'stock_agotado') 
+                       OR n.id_bodega IS NULL 
+                       OR (
+                           CASE 
+                               WHEN :id_bodega_sesion IS NOT NULL THEN (n.id_bodega = :id_bodega_sesion)
+                               ELSE (u_viewer.id_bodega = n.id_bodega)
+                           END
+                       ))";
 
 		if ($soloNoLeidas) {
 			// Si solo queremos no leídas, filtramos donde NO haya registro en la tabla de lectura
@@ -73,6 +86,7 @@ class ModeloNotificaciones
 		$stmt->bindParam(":id_usuario", $idUsuario, PDO::PARAM_INT);
 		$stmt->bindParam(":id_usuario_elim", $idUsuario, PDO::PARAM_INT);
 		$stmt->bindParam(":id_usuario_viewer", $idUsuario, PDO::PARAM_INT);
+		$stmt->bindValue(":id_bodega_sesion", $idBodegaSesion, $idBodegaSesion !== null ? PDO::PARAM_INT : PDO::PARAM_NULL);
 
 		if ($cantidad) {
 			$stmt->bindParam(":cantidad", $cantidad, PDO::PARAM_INT);
@@ -99,6 +113,7 @@ class ModeloNotificaciones
 	{
 
 		$idUsuario = intval($idUsuario);
+		$idBodegaSesion = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : null;
 
 		$stmt = Conexion::conectar()->prepare("SELECT COUNT(*) as total 
                                                FROM notificaciones n
@@ -109,15 +124,25 @@ class ModeloNotificaciones
                                                WHERE n.eliminada = 0
                                                  AND ne.id_usuario IS NULL
                                                  AND nl.id_usuario IS NULL
+                                                 AND n.tipo != 'actividad_proxima'
+                                                 AND n.titulo != 'Calendario Próximo'
                                                  AND (n.tipo NOT IN ('orden_agente_ia', 'orden_creada') OR c.notif_orden_agente_ia = 1)
                                                  AND (n.referencia_tipo IS NULL OR n.referencia_tipo != 'pago_bold' OR c.notif_transaccion_bold = 1)
                                                  AND (n.referencia_tipo IS NULL OR n.referencia_tipo != 'solicitud_edicion' OR c.notif_solicitud_edicion = 1)
                                                  AND (n.referencia_tipo IS NULL OR n.referencia_tipo != 'solicitud_eliminacion' OR c.notif_solicitud_eliminacion = 1)
-                                                 AND (n.tipo NOT IN ('stock_bajo', 'stock_agotado') OR n.id_bodega IS NULL OR u_viewer.id_bodega = n.id_bodega)");
+                                                 AND (n.tipo NOT IN ('stock_bajo', 'stock_agotado') 
+                                                      OR n.id_bodega IS NULL 
+                                                      OR (
+                                                          CASE 
+                                                              WHEN :id_bodega_sesion IS NOT NULL THEN (n.id_bodega = :id_bodega_sesion)
+                                                              ELSE (u_viewer.id_bodega = n.id_bodega)
+                                                          END
+                                                      ))");
 
 		$stmt->bindParam(":id_usuario", $idUsuario, PDO::PARAM_INT);
 		$stmt->bindParam(":id_usuario_elim", $idUsuario, PDO::PARAM_INT);
 		$stmt->bindParam(":id_usuario_viewer", $idUsuario, PDO::PARAM_INT);
+		$stmt->bindValue(":id_bodega_sesion", $idBodegaSesion, $idBodegaSesion !== null ? PDO::PARAM_INT : PDO::PARAM_NULL);
 		$stmt->execute();
 
 		$resultado = $stmt->fetch();
@@ -352,29 +377,55 @@ class ModeloNotificaciones
 	=============================================*/
 	static public function mdlSincronizarPagosBold()
 	{
+		$db = Conexion::conectar();
+
+		try {
+			$db->exec("ALTER TABLE pagos_bold ADD COLUMN IF NOT EXISTS nombre VARCHAR(255) NULL AFTER correo");
+			$db->exec("ALTER TABLE pagos_bold ADD COLUMN IF NOT EXISTS merchant_id VARCHAR(255) NULL AFTER monto");
+		} catch (Exception $e) {
+			// Ignorar si ya existen o no hay permisos ALTER
+		}
+
 		// Insertamos en notificaciones, seleccionando de pagos_bold
 		// Solo insertamos si NO existe ya una notificación con referencia_tipo='pago_bold' y referencia_id = id del pago
 		$sql = "INSERT INTO notificaciones (tipo, titulo, mensaje, fecha, referencia_tipo, referencia_id)
 				SELECT 
 					'Transaccion de BOLD',
-					CONCAT(cuenta, ' - $', FORMAT(monto, 0)),
-					CONCAT('Transaccion recibida de: ', correo),
+					CONCAT(COALESCE(cuenta, ''), ' - $', REPLACE(FORMAT(monto, 0), ',', '.')),
+					CONCAT(
+						'Recibido de: ', COALESCE(NULLIF(nombre, ''), correo, ''),
+						' / Cuenta: ', COALESCE(cuenta, ''),
+						' / Monto: $', REPLACE(FORMAT(monto, 0), ',', '.')
+					),
 					fecha,
 					'pago_bold',
 					id
 				FROM pagos_bold
 				WHERE id NOT IN (SELECT referencia_id FROM notificaciones WHERE referencia_tipo = 'pago_bold')";
 
-		$stmt = Conexion::conectar()->prepare($sql);
+		$stmt = $db->prepare($sql);
+		$res = $stmt->execute();
 
-		if ($stmt->execute()) {
+		// Actualizar notificaciones de Bold existentes al nuevo formato de mensaje
+		$sqlUpdate = "UPDATE notificaciones n
+					  INNER JOIN pagos_bold p ON n.referencia_id = p.id AND n.referencia_tipo = 'pago_bold'
+					  SET n.mensaje = CONCAT(
+							'Recibido de: ', COALESCE(NULLIF(p.nombre, ''), p.correo, ''),
+							' / Cuenta: ', COALESCE(p.cuenta, ''),
+							' / Monto: $', REPLACE(FORMAT(p.monto, 0), ',', '.')
+					  )
+					  WHERE n.tipo IN ('Transaccion de BOLD', 'Transaccion Bold', 'Transaccion BOLD')";
+		$stmtUpdate = $db->prepare($sqlUpdate);
+		$stmtUpdate->execute();
+
+		if ($res) {
 			return "ok";
 		} else {
 			return "error";
 		}
 
-		$stmt->close();
 		$stmt = null;
+		$stmtUpdate = null;
 	}
 
 	/*=============================================

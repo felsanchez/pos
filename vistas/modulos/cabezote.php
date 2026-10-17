@@ -369,6 +369,8 @@ BARRA DE NAVEGACION
 
 								if ($notificaciones && count($notificaciones) > 0) {
 									foreach ($notificaciones as $notif) {
+										if ($notif["tipo"] == "actividad_proxima" || $notif["titulo"] == "Calendario Próximo") continue;
+
 										// Determinar icono según tipo
 										$icono = "fa-info-circle";
 										$color = "text-blue";
@@ -854,11 +856,11 @@ BARRA DE NAVEGACION
 						type: "error",
 						confirmButtonText: "¡Cerrar!"
 					});
-				} else if (imagen["size"] > 2000000) {
+				} else if (imagen["size"] > 4194304) {
 					$(".nuevaImagenPerfil").val("");
 					swal({
 						title: "Error al subir la imagen",
-						text: "¡La imagen no debe pesar más de 2MB!",
+						text: "¡La imagen no debe pesar más de 4MB!",
 						type: "error",
 						confirmButtonText: "¡Cerrar!"
 					});

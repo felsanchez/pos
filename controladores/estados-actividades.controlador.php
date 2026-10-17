@@ -139,6 +139,26 @@ class ControladorEstadosActividades{
 				}
 			}
 
+			if (isset($_POST["idEstado"])) {
+				$estadoExistente = ModeloEstadosActividades::mdlMostrarEstadosActividades("estados_actividades", "id", $_POST["idEstado"]);
+				if (!empty($estadoExistente) && strcasecmp(trim($estadoExistente["nombre"]), "completada") === 0) {
+					echo '<script>
+						swal({
+							type: "error",
+							title: "¡Acción no permitida!",
+							text: "El estado completada es un estado protegido del sistema y no se puede modificar.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then((result) => {
+							if(result.value){
+								window.location = "'.$redireccion.'";
+							}
+						});
+					</script>';
+					return;
+				}
+			}
+
 			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarEstadoNombre"])){
 
 				$tabla = "estados_actividades";
@@ -223,7 +243,31 @@ class ControladorEstadosActividades{
 			$nombreEstado = $_GET["nombreEstado"];
 
 			// Detectar desde dónde se llamó la eliminación
-			$redireccion = isset($_GET["origen"]) && $_GET["origen"] == "actividades" ? "actividades" : "estados-actividades";
+			$redireccion = "estados-actividades";
+			if (isset($_GET["origen"])) {
+				if ($_GET["origen"] == "actividades") {
+					$redireccion = "actividades";
+				} else if ($_GET["origen"] == "calendario") {
+					$redireccion = "calendario";
+				}
+			}
+
+			if (!empty($nombreEstado) && strcasecmp(trim($nombreEstado), "completada") === 0) {
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡Acción no permitida!",
+						text: "El estado completada es un estado protegido del sistema y no se puede eliminar.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result) => {
+						if(result.value){
+							window.location = "'.$redireccion.'";
+						}
+					});
+				</script>';
+				return;
+			}
 
 			// Verificar si el estado está en uso
 			$enUso = ModeloEstadosActividades::mdlVerificarEstadoEnUso($nombreEstado);

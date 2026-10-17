@@ -780,11 +780,19 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 
 
 	/*=============================================
-	IMPORTAR Y ACTUALIZAR PRODUCTOS MASIVOS
+	IMPORTAR Y ACTUALIZAR PRODUCTOS MASIVOS / EXCEL
 	=============================================*/
+	static public function mdlImportarProductosExcel($tabla, $productosInsertar, $productosActualizar = array(), $idBodega = null)
+	{
+		return self::mdlImportarProductosMasivos($tabla, $productosInsertar, $productosActualizar, $idBodega);
+	}
 
 	static public function mdlImportarProductosMasivos($tabla, $productosInsertar, $productosActualizar = array(), $idBodega = null)
 	{
+
+		if (empty($idBodega) || $idBodega == null || intval($idBodega) <= 0) {
+			$idBodega = (!empty($_SESSION["id_bodega"])) ? intval($_SESSION["id_bodega"]) : 1;
+		}
 
 		$conexion = Conexion::conectar();
 
@@ -794,8 +802,8 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 
 			$id_usuario_sesion = isset($_SESSION["id"]) ? $_SESSION["id"] : 1; // Fallback al admin
 			$nombre_usuario_sesion = isset($_SESSION["nombre"]) ? $_SESSION["nombre"] : "Sistema";
-
-			$stmtHistorial = $conexion->prepare("INSERT INTO movimientos_stock (tipo_producto, id_producto, id_variante, id_bodega, nombre_producto, tipo_movimiento, cantidad, stock_anterior, stock_nuevo, id_usuario, nombre_usuario, referencia, notas) VALUES (:tipo_producto, :id_producto, :id_variante, :id_bodega, :nombre_producto, :tipo_movimiento, :cantidad, :stock_anterior, :stock_nuevo, :id_usuario, :nombre_usuario, :referencia, :notas)");
+			date_default_timezone_set('America/Bogota');
+			$fechaActualHistorial = date("Y-m-d H:i:s");
 
 			// Prepare statement for products-bodegas and global stock update
 			$stmtPb = null;
@@ -854,28 +862,22 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 
 					// Registrar historial si tiene stock inicial
 					if ($producto["stock"] > 0) {
-						$tipo_movimiento = "creacion_producto";
-						$tipo_producto = "producto";
-						$id_variante = 0;
-						$referencia = "Importación Excel/CSV";
-						$notas = "Carga inicial masiva. (Código: " . $producto["codigo"] . ")";
-						$stock_anterior = 0;
-
-						$stmtHistorial->bindParam(":tipo_producto", $tipo_producto, PDO::PARAM_STR);
-						$stmtHistorial->bindParam(":id_producto", $idNuevoProducto, PDO::PARAM_INT);
-						$stmtHistorial->bindParam(":id_variante", $id_variante, PDO::PARAM_INT);
-						$stmtHistorial->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
-						$stmtHistorial->bindParam(":nombre_producto", $producto["descripcion"], PDO::PARAM_STR);
-						$stmtHistorial->bindParam(":tipo_movimiento", $tipo_movimiento, PDO::PARAM_STR);
-						$stmtHistorial->bindParam(":cantidad", $producto["stock"], PDO::PARAM_INT);
-						$stmtHistorial->bindParam(":stock_anterior", $stock_anterior, PDO::PARAM_INT);
-						$stmtHistorial->bindParam(":stock_nuevo", $producto["stock"], PDO::PARAM_INT);
-						$stmtHistorial->bindParam(":id_usuario", $id_usuario_sesion, PDO::PARAM_INT);
-						$stmtHistorial->bindParam(":nombre_usuario", $nombre_usuario_sesion, PDO::PARAM_STR);
-						$stmtHistorial->bindParam(":referencia", $referencia, PDO::PARAM_STR);
-						$stmtHistorial->bindParam(":notas", $notas, PDO::PARAM_STR);
-
-						$stmtHistorial->execute();
+						ModeloMovimientos::mdlRegistrarMovimiento(array(
+							"tipo_producto" => "producto",
+							"id_producto" => $idNuevoProducto,
+							"id_variante" => 0,
+							"id_bodega" => $idBodega,
+							"nombre_producto" => $producto["descripcion"],
+							"tipo_movimiento" => "creacion_producto",
+							"cantidad" => $producto["stock"],
+							"stock_anterior" => 0,
+							"stock_nuevo" => $producto["stock"],
+							"id_usuario" => $id_usuario_sesion,
+							"nombre_usuario" => $nombre_usuario_sesion,
+							"referencia" => "Importación Excel/CSV",
+							"notas" => "Carga inicial masiva. (Código: " . $producto["codigo"] . ")",
+							"fecha" => $fechaActualHistorial
+						));
 					}
 				}
 			}
@@ -914,31 +916,33 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 						$stmtUpdateGlobalStock->execute();
 					}
 
-					// Registrar historial solo si el stock cambió y NO tiene variantes
-					if (!$tieneVariantes && $producto["stock"] != $producto["stock_anterior"]) {
-						$diferencia = $producto["stock"] - $producto["stock_anterior"];
-						$tipo_movimiento = "edicion_stock";
-						$tipo_producto = "producto";
-						$id_variante = 0;
-						$referencia = "Importación Excel/CSV";
-						$notas = "Actualización de stock por carga masiva. (Código: " . $producto["codigo"] . ")";
+					// Registrar historial para cada producto editado desde Excel
+					$diferencia = (!$tieneVariantes) ? (intval($producto["stock"]) - intval($producto["stock_anterior"])) : 0;
+					$stockAnt = intval($producto["stock_anterior"]);
+					$stockNue = (!$tieneVariantes) ? intval($producto["stock"]) : intval($producto["stock_anterior"]);
 
-						$stmtHistorial->bindParam(":tipo_producto", $tipo_producto, PDO::PARAM_STR);
-						$stmtHistorial->bindParam(":id_producto", $producto["id"], PDO::PARAM_INT);
-						$stmtHistorial->bindParam(":id_variante", $id_variante, PDO::PARAM_INT);
-						$stmtHistorial->bindParam(":id_bodega", $idBodega, PDO::PARAM_INT);
-						$stmtHistorial->bindParam(":nombre_producto", $producto["descripcion"], PDO::PARAM_STR);
-						$stmtHistorial->bindParam(":tipo_movimiento", $tipo_movimiento, PDO::PARAM_STR);
-						$stmtHistorial->bindParam(":stock_anterior", $producto["stock_anterior"], PDO::PARAM_INT);
-						$stmtHistorial->bindParam(":stock_nuevo", $producto["stock"], PDO::PARAM_INT);
-						$stmtHistorial->bindParam(":cantidad", $diferencia, PDO::PARAM_INT);
-						$stmtHistorial->bindParam(":id_usuario", $id_usuario_sesion, PDO::PARAM_INT);
-						$stmtHistorial->bindParam(":nombre_usuario", $nombre_usuario_sesion, PDO::PARAM_STR);
-						$stmtHistorial->bindParam(":referencia", $referencia, PDO::PARAM_STR);
-						$stmtHistorial->bindParam(":notas", $notas, PDO::PARAM_STR);
-
-						$stmtHistorial->execute();
+					if ($diferencia != 0) {
+						$notas = "Edición de producto y stock por carga masiva. (Código: " . $producto["codigo"] . ")";
+					} else {
+						$notas = "Edición de datos de producto por carga masiva. (Código: " . $producto["codigo"] . ")";
 					}
+
+					ModeloMovimientos::mdlRegistrarMovimiento(array(
+						"tipo_producto" => "producto",
+						"id_producto" => $producto["id"],
+						"id_variante" => 0,
+						"id_bodega" => $idBodega,
+						"nombre_producto" => $producto["descripcion"],
+						"tipo_movimiento" => "edicion_excel",
+						"cantidad" => $diferencia,
+						"stock_anterior" => $stockAnt,
+						"stock_nuevo" => $stockNue,
+						"id_usuario" => $id_usuario_sesion,
+						"nombre_usuario" => $nombre_usuario_sesion,
+						"referencia" => "Importación Excel/CSV",
+						"notas" => $notas,
+						"fecha" => $fechaActualHistorial
+					));
 				}
 			}
 
@@ -947,7 +951,6 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 
 			$stmtInsert = null;
 			$stmtUpdate = null;
-			$stmtHistorial = null;
 			$stmtPb = null;
 			$stmtUpdateGlobalStock = null;
 			return "ok";
@@ -959,7 +962,6 @@ REGISTRAR PRODUCTO CON VARIANTES - RETORNA ID
 
 			$stmtInsert = null;
 			$stmtUpdate = null;
-			$stmtHistorial = null;
 			$stmtPb = null;
 			$stmtUpdateGlobalStock = null;
 			return "error";

@@ -43,16 +43,15 @@ class ControladorVentas
 		$tabla = "ventas";
 
 		// Mapeo de columnas para ordenamiento:
-		// 0=Código, 1=Cliente, 2=Vendedor, 3=Imagen, 4=Total, 5=Fecha, 6=Observación, 7=Acciones
+		// 0=Código, 1=Cliente, 2=Imagen, 3=Total, 4=Fecha, 5=Observación, 6=Acciones
 		$columnsMap = array(
-			0 => 'v.id',
+			0 => 'v.codigo',
 			1 => 'c.nombre',
-			2 => 'u.nombre',
-			3 => 'v.id',
-			4 => 'v.total',
-			5 => 'v.fecha',
-			6 => 'v.observacion',
-			7 => 'v.id'
+			2 => 'v.id',
+			3 => 'v.total',
+			4 => 'v.fecha',
+			5 => 'v.observacion',
+			6 => 'v.id'
 		);
 
 		// Obtener configuración para moneda y formato
@@ -162,10 +161,7 @@ class ControladorVentas
 			// 1: Cliente
 			$nestedData[] = '<span class="btnVerClienteDesdeVenta" data-toggle="modal" data-target="#modalEditarCliente" idCliente="' . e($value["id_cliente"] ?? '') . '" style="cursor: pointer; color: #337ab7; text-decoration: underline;">' . e($value["nombre_cliente"] ?? '') . '</span>';
 
-			// 2: Vendedor
-			$nestedData[] = e($value["nombre_vendedor"] ?? '');
-
-			// 3: Imagen
+			// 2: Imagen
 			$imgSrc = (!empty($value["imagen"])) ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
 			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idventa="' . $value["id"] . '">';
 
@@ -187,7 +183,7 @@ class ControladorVentas
 			}
 
 			// Enviar por Correo
-			if (puedeAccion('ventas', 'ver') || puedeAccion('ventas', 'crear')) {
+			if (puedeAccion('ventas', 'crear') || puedeAccion('ventas', 'editar')) {
 				$botonesAcciones .= ' <button class="btn btn-primary btnEnviarEmail" idVenta="' . $value["id"] . '" nombreCliente="' . e($value["nombre_cliente"]) . '" emailCliente="' . e($value["email_cliente"]) . '" title="Enviar por Correo" style="width: auto !important;"><i class="fa fa-envelope"></i></button>';
 			} else {
 				$botonesAcciones .= ' <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed; width: auto !important;" title="No tiene permisos para enviar por correo"><i class="fa fa-envelope"></i></button>';
@@ -221,16 +217,16 @@ class ControladorVentas
 		$tabla = "ventas";
 
 		// Mapeo de columnas para ordenamiento:
-		// 0=Código, 1=Cliente, 2=Vendedor, 3=Imagen, 4=Total, 5=Notas, 6=Observación, 7=Fecha
+		// 0=Código, 1=Cliente, 2=Imagen, 3=Total, 4=Fecha, 5=Observación, 6=Convertir, 7=Acciones
 		$columnsMap = array(
 			0 => 'v.codigo',
 			1 => 'c.nombre',
-			2 => 'u.nombre',
-			3 => 'v.id', // Imagen
-			4 => 'v.total',
-			5 => 'v.notas',
-			6 => 'v.fecha',
-			7 => 'v.observacion'
+			2 => 'v.id', // Imagen
+			3 => 'v.total',
+			4 => 'v.fecha',
+			5 => 'v.observacion',
+			6 => 'v.id',
+			7 => 'v.id'
 		);
 
 		// Obtener configuración para moneda y formato
@@ -613,17 +609,16 @@ class ControladorVentas
 		$tabla = "ventas";
 
 		// Mapeo de columnas para ordenamiento:
-		// 0=Código, 1=Cliente, 2=Vendedor, 3=Imagen, 4=Total, 5=Fecha, 6=Observación, 7=Estado DIAN, 8=Acciones
+		// 0=Código, 1=Cliente, 2=Imagen, 3=Total, 4=Fecha, 5=Observación, 6=Estado DIAN, 7=Acciones
 		$columnsMap = array(
-			0 => 'v.id',
+			0 => 'v.codigo',
 			1 => 'c.nombre',
-			2 => 'u.nombre',
-			3 => 'v.id', // Imagen
-			4 => 'v.total',
-			5 => 'v.fecha',
-			6 => 'v.observacion',
-			7 => 'v.estado_dian',
-			8 => 'v.id'
+			2 => 'v.id', // Imagen
+			3 => 'v.total',
+			4 => 'v.fecha',
+			5 => 'v.observacion',
+			6 => 'v.estado_dian',
+			7 => 'v.id'
 		);
 
 		// Obtener configuración
@@ -745,10 +740,7 @@ class ControladorVentas
 			// 1: Cliente
 			$nestedData[] = '<span class="btnVerClienteDesdeVenta" data-toggle="modal" data-target="#modalEditarCliente" idCliente="' . e($value["id_cliente"]) . '" style="cursor: pointer; color: #337ab7; text-decoration: underline;">' . e($value["nombre_cliente"]) . '</span>';
 
-			// 2: Vendedor
-			$nestedData[] = e($value["nombre_vendedor"]);
-
-						// 4: Imagen
+			// 2: Imagen
 			$imgSrc = ($value["imagen"] != "" && $value["imagen"] != null) ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
 			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idventa="' . $value["id"] . '">';
 
@@ -1033,10 +1025,10 @@ class ControladorVentas
 					"extra" => isset($_POST["extra"]) ? $_POST["extra"] : 0,
 					"retenciones" => isset($_POST["datosRetenciones"]) ? $_POST["datosRetenciones"] : "",
 					"resolucion_id" => $venta["resolucion_id"], // Mantener el mismo
-					"fecha_vencimiento" => $venta["fecha_vencimiento"],
+					"fecha_vencimiento" => isset($_POST["fecha_vencimiento"]) && !empty($_POST["fecha_vencimiento"]) ? $_POST["fecha_vencimiento"] : $venta["fecha_vencimiento"],
 					"orden_compra" => $venta["orden_compra"],
-					"forma_pago_dian" => $venta["forma_pago_dian"],
-					"metodo_pago_dian_id" => $venta["metodo_pago_dian_id"],
+					"forma_pago_dian" => isset($_POST["forma_pago_dian"]) ? $_POST["forma_pago_dian"] : $venta["forma_pago_dian"],
+					"metodo_pago_dian_id" => isset($_POST["metodo_pago_dian_id"]) ? $_POST["metodo_pago_dian_id"] : $venta["metodo_pago_dian_id"],
 					"estado_dian" => $venta["estado_dian"], // Mantener en borrador
 					"cufe" => $venta["cufe"],
 					"qr_data" => $venta["qr_data"],
@@ -2762,10 +2754,22 @@ class ControladorVentas
 				<td style='font-weight:bold; border:1px solid #eee;'>FECHA</td>		
 				</tr>");
 
+			$totalImpuesto = 0;
+			$totalNeto = 0;
+			$totalTotal = 0;
+
 			foreach ($ventas as $row => $item) {
 
 				$cliente = ControladorClientes::ctrMostrarClientes("id", $item["id_cliente"]);
 				$vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $item["id_vendedor"]);
+
+				$impuestoVal = floatval($item["impuesto"]);
+				$netoVal = floatval($item["neto"]);
+				$totalVal = floatval($item["total"]);
+
+				$totalImpuesto += $impuestoVal;
+				$totalNeto += $netoVal;
+				$totalTotal += $totalVal;
 
 				echo utf8_decode("<tr>
 				 			<td style='border:1px solid #eee;'>" . $item["codigo"] . "</td> 
@@ -2788,14 +2792,23 @@ class ControladorVentas
 				}
 
 				echo utf8_decode("</td>
-					<td style='border:1px solid #eee;'>$ " . number_format($item["impuesto"], 2) . "</td>
-					<td style='border:1px solid #eee;'>$ " . number_format($item["neto"], 2) . "</td>	
-					<td style='border:1px solid #eee;'>$ " . number_format($item["total"], 2) . "</td>
+					<td style='border:1px solid #eee;'>$ " . number_format($impuestoVal, 2) . "</td>
+					<td style='border:1px solid #eee;'>$ " . number_format($netoVal, 2) . "</td>	
+					<td style='border:1px solid #eee;'>$ " . number_format($totalVal, 2) . "</td>
 					<td style='border:1px solid #eee;'>" . $item["metodo_pago"] . "</td>
 					<td style='border:1px solid #eee;'>" . substr($item["fecha"], 0, 10) . "</td>		
 		 			</tr>");
 
 			}
+
+			echo utf8_decode("<tr>
+				<td colspan='5' style='font-weight:bold; border:1px solid #eee; text-align:right;'>TOTALES:</td>
+				<td style='font-weight:bold; border:1px solid #eee; background-color:#f9f9f9;'>$ " . number_format($totalImpuesto, 2) . "</td>
+				<td style='font-weight:bold; border:1px solid #eee; background-color:#f9f9f9;'>$ " . number_format($totalNeto, 2) . "</td>
+				<td style='font-weight:bold; border:1px solid #eee; background-color:#f9f9f9;'>$ " . number_format($totalTotal, 2) . "</td>
+				<td style='border:1px solid #eee;'></td>
+				<td style='border:1px solid #eee;'></td>
+			</tr>");
 
 			echo "</table>";
 

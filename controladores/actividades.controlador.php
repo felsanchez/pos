@@ -1,4 +1,7 @@
 <?php
+date_default_timezone_set('America/Bogota');
+
+require_once __DIR__ . "/google.controlador.php";
 
 class ControladorActividades{
 
@@ -30,33 +33,74 @@ class ControladorActividades{
 				return;
 			}
 
-			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevaActividad"]) &&
-                preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoTipo"]) &&
-                preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoEstado"])){
+			if (!empty($_POST["nuevaActividad"]) && !empty($_POST["nuevoTipo"]) && !empty($_POST["nuevoEstado"])) {
 
 				$tabla = "actividades";
 
-				// Convertimos el valor "0" en NULL para el cliente
-				$idCliente = ($_POST["nuevoCliente"] == "0") ? null : $_POST["nuevoCliente"];
+				$idCliente = (isset($_POST["nuevoCliente"]) && $_POST["nuevoCliente"] !== "0") ? $_POST["nuevoCliente"] : null;
+				$fechaRaw = trim($_POST["nuevaFecha"]);
+				$isAllDay = !empty($_POST["chkTodoElDia"]) || (strlen($fechaRaw) <= 10);
 
-				$datos = array("descripcion" => $_POST["nuevaActividad"],
-							   "tipo" => $_POST["nuevoTipo"],
-							   "id_user" => $_POST["nuevoUsuario"],
-					           "fecha" => $_POST["nuevaFecha"],
-							   "estado" => $_POST["nuevoEstado"],
-							   "id_cliente" => $idCliente,
-							   "observacion" => $_POST["nuevaObservacion"],
-							   "id_bodega" => isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1);
+				if ($isAllDay) {
+					$dateOnly = substr($fechaRaw, 0, 10);
+					$fechaInicio = $dateOnly . " 00:00:00";
+					$fechaFin = !empty($_POST["nuevaFechaFin"]) ? $_POST["nuevaFechaFin"] : ($dateOnly . " 23:59:59");
+				} else {
+					$fechaInicio = str_replace("T", " ", $fechaRaw);
+					if (strlen($fechaInicio) == 16) {
+						$fechaInicio .= ":00";
+					}
+					$fechaFin = !empty($_POST["nuevaFechaFin"]) ? str_replace("T", " ", $_POST["nuevaFechaFin"]) : date("Y-m-d H:i:s", strtotime($fechaInicio . " +1 hour"));
+				}
 
-				$respuesta = ModeloActividades::mdlIngresarActividad($tabla, $datos);
+				$rutaArchivo = null;
+				if (isset($_FILES["nuevoArchivoActividad"]) && !empty($_FILES["nuevoArchivoActividad"]["name"]) && $_FILES["nuevoArchivoActividad"]["error"] == 0) {
+					$directorio = "vistas/img/actividades/";
+					if (!file_exists($directorio)) {
+						mkdir($directorio, 0755, true);
+					}
+					$extension = strtolower(pathinfo($_FILES["nuevoArchivoActividad"]["name"], PATHINFO_EXTENSION));
+					$nombreArchivo = "actividad_" . date("Ymd_His") . "_" . uniqid() . "." . $extension;
+					$rutaArchivo = $directorio . $nombreArchivo;
+					move_uploaded_file($_FILES["nuevoArchivoActividad"]["tmp_name"], $rutaArchivo);
+				}
 
+				$datos = array(
+					"descripcion" => trim($_POST["nuevaActividad"]),
+					"tipo" => trim($_POST["nuevoTipo"]),
+					"id_user" => $_POST["nuevoUsuario"],
+					"fecha" => $fechaInicio,
+					"fecha_fin" => $fechaFin,
+					"todo_dia" => $isAllDay ? 1 : 0,
+					"estado" => trim($_POST["nuevoEstado"]),
+					"id_cliente" => $idCliente,
+					"observacion" => trim($_POST["nuevaObservacion"] ?? ""),
+					"id_bodega" => isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1,
+					"categoria_google" => !empty($_POST["categoriaGoogle"]) ? $_POST["categoriaGoogle"] : ((strtolower(trim($_POST["nuevoTipo"])) === "tarea") ? "tarea" : "evento"),
+					"generar_meet" => !empty($_POST["generarMeet"]) ? 1 : 0,
+					"ubicacion" => !empty($_POST["nuevaUbicacion"]) ? trim($_POST["nuevaUbicacion"]) : null,
+					"invitados_email" => !empty($_POST["nuevosInvitados"]) ? trim($_POST["nuevosInvitados"]) : null,
+					"archivo" => $rutaArchivo
+				);
 
-				if ($respuesta == "ok") {
+				$respuestaId = ModeloActividades::mdlIngresarActividad($tabla, $datos);
+
+				if ($respuestaId && $respuestaId != "error") {
+
+					$idActividad = is_numeric($respuestaId) ? intval($respuestaId) : null;
+
+					// Sincronizar con Google Calendar / Tasks si está conectado
+					if (class_exists("ControladorGoogle")) {
+						$resSync = ControladorGoogle::ctrSincronizarActividad($datos, "crear");
+						if ($idActividad && !empty($resSync["google_event_id"])) {
+							ModeloActividades::mdlActualizarGoogleInfo($idActividad, $resSync["google_event_id"], $resSync["google_meet_link"] ?? null);
+						}
+					}
 
 					// Verificar si la actividad creada requiere notificación
 					ControladorNotificaciones::ctrVerificarActividadesProximas();
 
-					// Determinar a de dónde redirigir según la URL actual o el origen
+					// Determinar a dónde redirigir según la URL actual o el origen
 					$paginaDestino = isset($_POST["urlActual"]) ? $_POST["urlActual"] : "actividades";
 
 					echo '<script>
@@ -72,13 +116,12 @@ class ControladorActividades{
 				}
 			} else {
 
-				// Determinar a de dónde redirigir según la URL actual o el origen
 				$paginaDestino = isset($_POST["urlActual"]) ? $_POST["urlActual"] : "actividades";
 
 				echo '<script>
 					swal({
 						type: "error",
-						title: "¡La actividad no puede ir vacía o llevar caracteres especiales!",
+						title: "¡La actividad no puede ir vacía!",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 						}).then(() => {
@@ -112,7 +155,6 @@ class ControladorActividades{
 	{
 		$tabla = "actividades";
 
-		// Columnas para ordenar (coinciden con la vista HTML: 0=desc, 1=tipo, 2=resp, 3=fecha, 4=estado, 5=cliente, 6=notas)
 		$columnsMap = array(
 			0 => 'a.descripcion',
 			1 => 'a.tipo',
@@ -121,22 +163,19 @@ class ControladorActividades{
 			4 => 'a.estado',
 			5 => 'c.nombre',
 			6 => 'a.observacion',
-			7 => 'a.id' // Acciones
+			7 => 'a.id'
 		);
 
 		$where = " WHERE 1=1 ";
 
-		// Filtro por bodega activa
 		$idBodegaActiva = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
 		$where .= " AND a.id_bodega = $idBodegaActiva ";
 
-		// Búsqueda global (DataTables)
 		if (!empty($params['search']['value'])) {
 			$searchValue = $params['search']['value'];
 			$where .= " AND (a.descripcion LIKE '%$searchValue%' OR a.tipo LIKE '%$searchValue%' OR a.estado LIKE '%$searchValue%' OR a.observacion LIKE '%$searchValue%' OR c.nombre LIKE '%$searchValue%' OR u.nombre LIKE '%$searchValue%') ";
 		}
 
-		// Filtros personalizados (Tipo y Estado)
 		if (!empty($params['filtroTipo'])) {
 			$filtroTipo = $params['filtroTipo'];
 			$where .= " AND a.tipo = '$filtroTipo' ";
@@ -147,7 +186,6 @@ class ControladorActividades{
 			$where .= " AND a.estado = '$filtroEstado' ";
 		}
 
-		// Ordenar
 		$order = "";
 		if (isset($params['order'][0]['column'])) {
 			$colIdx = $params['order'][0]['column'];
@@ -157,20 +195,17 @@ class ControladorActividades{
 			$order = " ORDER BY a.id DESC";
 		}
 
-		// Paginación
 		$limit = "";
 		if ($params['length'] != -1) {
 			$limit = " LIMIT " . $params['start'] . ", " . $params['length'];
 		}
 
-		// Obtener datos
 		$actividades = ModeloActividades::mdlMostrarActividadesServerSide($tabla, $where, $order, $limit);
 		$totalData = ModeloActividades::mdlGetTotalActividades($tabla, " WHERE 1=1 AND a.id_bodega = $idBodegaActiva ");
 		$totalFiltered = ModeloActividades::mdlGetTotalActividades($tabla, $where);
 
 		$data = array();
 
-		// Pre-fetch estados para los badges y tooltips
 		require_once "../controladores/estados-actividades.controlador.php";
 		require_once "../modelos/estados-actividades.modelo.php";
 		$estadosDisponibles = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
@@ -183,7 +218,6 @@ class ControladorActividades{
 			$fechaActividad = !empty($value["fecha"]) ? substr($value["fecha"], 0, 10) : '';
 			$esHoy = ($fechaActividad == $fechaHoy);
 
-			// Buscar color del estado
 			$estadoActual = $value["estado"] ?? "S/E";
 			$colorEstado = "#999";
 			foreach ($estadosDisponibles as $estadoFor) {
@@ -193,11 +227,9 @@ class ControladorActividades{
 				}
 			}
 
-			// Nombres para el tooltip
 			$nomUser = !empty($value["nombre_usuario"]) ? $value["nombre_usuario"] : "Sin asignar";
 			$nomCli = !empty($value["nombre_cliente"]) ? $value["nombre_cliente"] : "Sin cliente";
 
-			// Tooltip HTML
 			$tooltipHTMLBody = '
 				<div class="tooltip-card" style="border-left: 5px solid ' . $colorEstado . '">
 				<div class="tooltip-header">
@@ -229,7 +261,6 @@ class ControladorActividades{
 				<div class="tooltip-footer">ID Actividad: #' . $value["id"] . '</div>
 				</div>';
 
-			// Atributos del <tr>
 			$dtRowAttr = array(
 				'data-tipo' => strtolower($value["tipo"] ?? ""),
 				'data-estado' => strtolower($value["estado"] ?? ""),
@@ -243,36 +274,25 @@ class ControladorActividades{
 			$nestedData['DT_RowAttr'] = $dtRowAttr;
 			$nestedData['DT_RowClass'] = 'has-tooltip';
 
-			// 0: Descripción
 			$nestedData[] = e($value["descripcion"]);
-
-			// 1: Tipo
 			$nestedData[] = e($value["tipo"]);
-
-			// 2: Responsable
 			$nestedData[] = e($nomUser);
-
-			// 3: Fecha
 			$nestedData[] = e($value["fecha"]);
 
-			// 4: Estado (Badge)
 			if (!empty($estadoActual) && $estadoActual !== "S/E") {
 				$nestedData[] = '<span class="badge" style="background-color: ' . $colorEstado . '">' . ucfirst($estadoActual) . '</span>';
 			} else {
 				$nestedData[] = '<span class="text-muted">Sin estado</span>';
 			}
 
-			// 5: Cliente
 			$nestedData[] = e($nomCli);
 
-			// 6: Notas (Editable)
 			$observacion = trim($value["observacion"] ?? "");
 			$nestedData[] = '<div contenteditable="true" class="celda-observacion" tabindex="0" data-id="' . $value['id'] . '" data-placeholder="Escribe una nota..">' . e($observacion) . '</div>';
 
-			// 7: Acciones
 			$botonesAcciones = '<div class="btn-group">';
 			if (puedeAccion('actividades', 'editar')) {
-				$botonesAcciones .= '<button class="btn btn-warning btnEditarActividad" data-id="' . $value["id"] . '" data-toggle="modal" data-target="#modalEditarActividad" idActividad="' . $value["id"] . '" title="Editar actividad"><i class="fa fa-pencil"></i></button>';
+				$botonesAcciones .= '<button class="btn btn-warning btnEditarActividad" data-id="' . $value["id"] . '" idActividad="' . $value["id"] . '" title="Editar actividad"><i class="fa fa-pencil"></i></button>';
 			} else {
 				$botonesAcciones .= '<button class="btn btn-warning" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para editar"><i class="fa fa-pencil"></i></button>';
 			}
@@ -297,7 +317,6 @@ class ControladorActividades{
 		return $json_data;
 	}
 
-
 	/*=============================================
 	EDITAR Actividad
 	=============================================*/
@@ -306,9 +325,6 @@ class ControladorActividades{
 
 		if(isset($_POST["editarActividad"])){
 
-			/*=============================================
-			VALIDAR CSRF
-			=============================================*/
 			if (!CSRF::validateToken()) {
 				echo '<script>
 					swal({
@@ -326,82 +342,121 @@ class ControladorActividades{
 				return;
 			}
 
-			// En el controlador
-			//var_dump($actividad);
+			if(!empty($_POST["editarActividad"]) && !empty($_POST["editarTipo"]) && !empty($_POST["editarEstado"])){
 
-			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarActividad"]) &&
-                preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarTipo"]) &&
-                preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarEstado"])){
+				$tabla = "actividades";
 
-                    $tabla = "actividades";
+				$idCliente = ($_POST["editarCliente"] == "0") ? null : $_POST["editarCliente"];
 
-					$idCliente = ($_POST["editarCliente"] == "0") ? null : $_POST["editarCliente"];
+				$rutaArchivo = $_POST["archivoActual"] ?? null;
+				if (isset($_FILES["editarArchivoActividad"]) && !empty($_FILES["editarArchivoActividad"]["name"]) && $_FILES["editarArchivoActividad"]["error"] == 0) {
+					$directorio = "vistas/img/actividades/";
+					if (!file_exists($directorio)) {
+						mkdir($directorio, 0755, true);
+					}
+					$extension = strtolower(pathinfo($_FILES["editarArchivoActividad"]["name"], PATHINFO_EXTENSION));
+					$nombreArchivo = "actividad_" . date("Ymd_His") . "_" . uniqid() . "." . $extension;
+					$rutaArchivo = $directorio . $nombreArchivo;
+					if (move_uploaded_file($_FILES["editarArchivoActividad"]["tmp_name"], $rutaArchivo)) {
+						if (!empty($_POST["archivoActual"]) && file_exists($_POST["archivoActual"])) {
+							unlink($_POST["archivoActual"]);
+						}
+					}
+				}
 
-                    $datos = array(
-								"id" => $_POST["idActividad"],
-								"descripcion" => $_POST["editarActividad"],
-								"tipo" => $_POST["editarTipo"],
-								"id_user" => $_POST["editarUsuario"],
-								 // "fecha" => $fecha,
-								"estado" => $_POST["editarEstado"],
-								//"id_cliente" => $_POST["editarCliente"],
-								"id_cliente" => $idCliente,
-								"observacion" => $_POST["editarObservacion"]);
+				$actividadPrev = ModeloActividades::mdlMostrarActividades($tabla, "id", $_POST["idActividad"]);
 
-								
-                    $respuesta = ModeloActividades::mdlEditarActividad($tabla, $datos);    
-    
+				$fechaInicio = $actividadPrev["fecha"] ?? date("Y-m-d H:i:s");
+				$fechaFin = $actividadPrev["fecha_fin"] ?? null;
+				$isAllDay = $actividadPrev["todo_dia"] ?? 0;
 
-                    if ($respuesta == "ok") {
+				if (!empty($_POST["editarFecha"])) {
+					$fechaRaw = trim($_POST["editarFecha"]);
+					$isAllDay = !empty($_POST["editarChkTodoElDia"]) || (strlen($fechaRaw) <= 10);
 
-						// Verificar si la actividad editada requiere notificación
-						ControladorNotificaciones::ctrVerificarActividadesProximas();
+					if ($isAllDay) {
+						$dateOnly = substr($fechaRaw, 0, 10);
+						$fechaInicio = $dateOnly . " 00:00:00";
+						$fechaFin = !empty($_POST["editarFechaFin"]) ? $_POST["editarFechaFin"] : ($dateOnly . " 23:59:59");
+					} else {
+						$fechaInicio = str_replace("T", " ", $fechaRaw);
+						if (strlen($fechaInicio) == 16) {
+							$fechaInicio .= ":00";
+						}
+						$fechaFin = !empty($_POST["editarFechaFin"]) ? str_replace("T", " ", $_POST["editarFechaFin"]) : date("Y-m-d H:i:s", strtotime($fechaInicio . " +1 hour"));
+					}
+				}
 
-                        // Determinar a de dónde redirigir según la URL actual o el origen
-                        $paginaDestino = isset($_POST["urlActual"]) ? $_POST["urlActual"] : "actividades";
+				$generarMeet = !empty($_POST["editarGenerarMeet"]) ? 1 : 0;
+				$gMeetInitial = ($generarMeet == 1) ? ($actividadPrev["google_meet_link"] ?? null) : null;
 
-                        echo '<script>
-                        swal({
-                            type: "success",
-                            title: "!La actividad ha sido editada correctamente!",
-                            showConfirmButton: true,
-                            confirmButtonText: "Cerrar",
-                            closeOnConfirm: false
-                            }).then((result)=>{
-                                if(result.value){
-    
-                                   window.location = "'.$paginaDestino.'";
-                                }
-                            })
-                         </script>';
-                     }
-                }
-    
-                else{
-                    // Determinar a de dónde redirigir según la URL actual o el origen
-                    $paginaDestino = isset($_POST["urlActual"]) ? $_POST["urlActual"] : "actividades";
+				$datos = array(
+					"id" => $_POST["idActividad"],
+					"descripcion" => trim($_POST["editarActividad"]),
+					"tipo" => trim($_POST["editarTipo"]),
+					"id_user" => $_POST["editarUsuario"],
+					"fecha" => $fechaInicio,
+					"fecha_fin" => $fechaFin,
+					"todo_dia" => $isAllDay ? 1 : 0,
+					"estado" => trim($_POST["editarEstado"]),
+					"id_cliente" => $idCliente,
+					"observacion" => trim($_POST["editarObservacion"] ?? ""),
+					"categoria_google" => !empty($_POST["editarCategoriaGoogle"]) ? $_POST["editarCategoriaGoogle"] : ((strtolower(trim($_POST["editarTipo"])) === "tarea") ? "tarea" : "evento"),
+					"generar_meet" => $generarMeet,
+					"google_meet_link" => $gMeetInitial,
+					"ubicacion" => !empty($_POST["editarUbicacion"]) ? trim($_POST["editarUbicacion"]) : null,
+					"invitados_email" => !empty($_POST["editarInvitados"]) ? trim($_POST["editarInvitados"]) : null,
+					"archivo" => $rutaArchivo,
+					"google_event_id" => $actividadPrev["google_event_id"] ?? null
+				);
 
-                    echo '<script>
-                        swal({
-                            type: "error",
-                            title: "!La actividad no puede ir vacío o llevar caracteres especiales!",
-                            showConfirmButton: true,
-                            confirmButtonText: "Cerrar",
-                            closeOnConfirm: false
-                            }).then((result)=>{
-    
-                                if(result.value){
-    
-                                    window.location = "'.$paginaDestino.'";
-                                }
-                            })
-                    </script>';
-                }
-    
-            }
-    
-        }
+				$respuesta = ModeloActividades::mdlEditarActividad($tabla, $datos);    
 
+				if ($respuesta == "ok") {
+
+					if (class_exists("ControladorGoogle")) {
+						$resSync = ControladorGoogle::ctrSincronizarActividad($datos, "editar");
+						$meetLinkToSave = !empty($resSync["google_meet_link"]) ? $resSync["google_meet_link"] : null;
+						$gEvIdToSave = !empty($resSync["google_event_id"]) ? $resSync["google_event_id"] : ($datos["google_event_id"] ?? null);
+						ModeloActividades::mdlActualizarGoogleInfo($_POST["idActividad"], $gEvIdToSave, $meetLinkToSave);
+					}
+
+					ControladorNotificaciones::ctrVerificarActividadesProximas();
+					$paginaDestino = isset($_POST["urlActual"]) ? $_POST["urlActual"] : "actividades";
+
+					echo '<script>
+					swal({
+						type: "success",
+						title: "¡La actividad ha sido editada correctamente!",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+						}).then((result)=>{
+							if(result.value){
+								window.location = "'.$paginaDestino.'";
+							}
+						})
+					 </script>';
+				}
+			} else {
+				$paginaDestino = isset($_POST["urlActual"]) ? $_POST["urlActual"] : "actividades";
+
+				echo '<script>
+					swal({
+						type: "error",
+						title: "¡La actividad no puede ir vacía!",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+						}).then((result)=>{
+							if(result.value){
+								window.location = "'.$paginaDestino.'";
+							}
+						})
+				</script>';
+			}
+
+		}
+
+	}
 
 	/*=============================================
 	BORRAR actividades
@@ -411,9 +466,6 @@ class ControladorActividades{
 
 		if (isset($_GET["idActividad"]) || isset($_POST["idActividadEliminar"])) {
 
-			/*=============================================
-			VALIDAR CSRF (Solo si es POST)
-			=============================================*/
 			if ($_SERVER['REQUEST_METHOD'] == 'POST' && !CSRF::validateToken()) {
 				if (isset($_POST["idActividadEliminar"])) {
 					return "error_csrf";
@@ -436,6 +488,15 @@ class ControladorActividades{
 
 			$tabla = "actividades";
 			$idActividad = isset($_GET["idActividad"]) ? $_GET["idActividad"] : $_POST["idActividadEliminar"];
+
+			$actividadPrev = ModeloActividades::mdlMostrarActividades($tabla, "id", $idActividad);
+			if (!empty($actividadPrev) && !empty($actividadPrev["google_event_id"]) && class_exists("ControladorGoogle")) {
+				ControladorGoogle::ctrSincronizarActividad([
+					"id_user" => $actividadPrev["id_user"],
+					"categoria_google" => $actividadPrev["categoria_google"] ?? "evento",
+					"google_event_id" => $actividadPrev["google_event_id"]
+				], "eliminar");
+			}
 
 			$respuesta = ModeloActividades::mdlEliminarActividad($tabla, $idActividad);
 

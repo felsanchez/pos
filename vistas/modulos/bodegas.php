@@ -139,7 +139,7 @@ MODAL AGREGAR BODEGA
         <div class="modal-body">
 
           <div class="alert alert-info" style="margin-bottom: 15px; font-size: 13px;">
-            <i class="fa fa-info-circle"></i> <strong>Nota:</strong> Al crear una nueva sucursal se compartirán automáticamente las: • categorías de productos, • variantes de productos, • proveedores, • clientes y • actividades entre todas las sucursales.
+            <i class="fa fa-info-circle"></i> <strong>Nota:</strong> Al crear una nueva sucursal se compartirán automáticamente las: • categorías de productos, • variantes de productos, • proveedores, • clientes.
           </div>
 
           <div class="box-body">

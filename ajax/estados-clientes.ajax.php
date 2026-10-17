@@ -105,9 +105,16 @@ if (isset($_POST["guardarEditarEstado"])) {
 
 	if (!empty($_POST["editarEstadoNombre"])) {
 		$tabla = "estados_clientes";
+		$item = "id";
+		$valor = $_POST["idEstado"];
+		$estadoAnterior = ModeloEstadosClientes::mdlMostrarEstadosClientes($tabla, $item, $valor);
+		$nombreAnterior = $estadoAnterior ? $estadoAnterior["nombre"] : "";
+
+		$nuevoNombre = strtolower(trim($_POST["editarEstadoNombre"]));
+
 		$datos = array(
 			"id" => $_POST["idEstado"],
-			"nombre" => $_POST["editarEstadoNombre"],
+			"nombre" => $nuevoNombre,
 			"color" => $_POST["editarEstadoColor"],
 			"orden" => $_POST["editarEstadoOrden"]
 		);
@@ -119,6 +126,11 @@ if (isset($_POST["guardarEditarEstado"])) {
 			if ($respuesta != "ok") {
 				throw new Exception("Error al actualizar el estado.");
 			}
+
+			if (!empty($nombreAnterior) && $nombreAnterior !== $nuevoNombre) {
+				ModeloEstadosClientes::mdlActualizarNombreEstadoClientes($nombreAnterior, $nuevoNombre);
+			}
+
 			$db->commit();
 			echo json_encode(["status" => "ok", "mensaje" => "¡El estado ha sido editado correctamente!"]);
 		} catch (Exception $e) {

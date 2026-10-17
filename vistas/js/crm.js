@@ -185,7 +185,6 @@ $(document).ready(function() {
 
             // Actualizar cabecera de columna
             $(columna).find('.crm-column-count').text(conteo);
-            $(columna).find('.crm-column-value-total strong').text('$ ' + totalDinero.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
         });
 
         // Calcular y actualizar las métricas superiores de forma dinámica
@@ -198,19 +197,25 @@ $(document).ready(function() {
         var totalCalientes = 0;
 
         var textoBusqueda = $('#buscadorCRM').val().toLowerCase();
+        var textoBusquedaNumeros = textoBusqueda.replace(/\D/g, '');
         var origenSeleccionado = $('#filtroOrigenCRM').val();
         var prioridadSeleccionada = $('#filtroPrioridadCRM').val();
 
         $('.crm-lead-card').each(function() {
             var card = this;
-            var cliente = $(card).attr('data-cliente').toLowerCase();
-            var titulo = $(card).attr('data-titulo').toLowerCase();
+            var cliente = ($(card).attr('data-cliente') || '').toLowerCase();
+            var titulo = ($(card).attr('data-titulo') || '').toLowerCase();
+            var telefonoRaw = ($(card).attr('data-telefono') || '').toLowerCase();
+            var telefonoNumeros = telefonoRaw.replace(/\D/g, '');
             var prioridad = $(card).attr('data-prioridad');
             var origen = ($(card).attr('data-origen') || '').toLowerCase();
             var etapa = $(card).parent().attr('data-etapa');
 
             // Filtrado del lead para métricas (excluyendo el filtro de archivados de la visualización)
-            var coincideTexto = cliente.includes(textoBusqueda) || titulo.includes(textoBusqueda);
+            var coincideTexto = cliente.includes(textoBusqueda) || 
+                                titulo.includes(textoBusqueda) || 
+                                telefonoRaw.includes(textoBusqueda) ||
+                                (textoBusquedaNumeros !== '' && telefonoNumeros.includes(textoBusquedaNumeros));
             var coincidePrioridad = !prioridadSeleccionada || prioridad === prioridadSeleccionada;
             
             var esWhatsApp = origen.includes('whatsapp');
@@ -259,20 +264,26 @@ $(document).ready(function() {
 
     function filtrarTablero() {
         var textoBusqueda = $('#buscadorCRM').val().toLowerCase();
+        var textoBusquedaNumeros = textoBusqueda.replace(/\D/g, '');
         var origenSeleccionado = $('#filtroOrigenCRM').val();
         var prioridadSeleccionada = $('#filtroPrioridadCRM').val();
         var mostrarArchivados = $('#toggleArchivadosCRM').is(':checked');
 
         $('.crm-lead-card').each(function() {
             var card = this;
-            var cliente = $(card).attr('data-cliente').toLowerCase();
-            var titulo = $(card).attr('data-titulo').toLowerCase();
+            var cliente = ($(card).attr('data-cliente') || '').toLowerCase();
+            var titulo = ($(card).attr('data-titulo') || '').toLowerCase();
+            var telefonoRaw = ($(card).attr('data-telefono') || '').toLowerCase();
+            var telefonoNumeros = telefonoRaw.replace(/\D/g, '');
             var prioridad = $(card).attr('data-prioridad');
             var origen = ($(card).attr('data-origen') || '').toLowerCase();
             var estaArchivado = $(card).parent().attr('data-etapa') === "Facturado" || $(card).parent().attr('data-etapa') === "Perdido";
 
             // Condiciones
-            var coincideTexto = cliente.includes(textoBusqueda) || titulo.includes(textoBusqueda);
+            var coincideTexto = cliente.includes(textoBusqueda) || 
+                                titulo.includes(textoBusqueda) || 
+                                telefonoRaw.includes(textoBusqueda) ||
+                                (textoBusquedaNumeros !== '' && telefonoNumeros.includes(textoBusquedaNumeros));
             var coincidePrioridad = !prioridadSeleccionada || prioridad === prioridadSeleccionada;
             var coincideArchivo = !estaArchivado || mostrarArchivados;
 
@@ -360,7 +371,202 @@ $(document).ready(function() {
 
                     if (esWhatsApp) {
                         $('#editarLeadOrigen').val(origenTexto);
-                        $('#editarLeadResumenIA').val(respuesta.resumen_ia || '');
+                        
+                        
+                        
+                        var resumenIA = respuesta.resumen_ia || '';
+
+                        // Eliminar enlaces de imágenes enviados por WhatsApp
+                        resumenIA = resumenIA.replace(
+                            /\s*Imagen enviada:\s*https?:\/\/\S+/gi,
+                            ''
+                        ).trim();
+                        
+                        $('#editarLeadResumenIA').val(resumenIA);
+                        
+                        
+                        // =============================================
+                        // MOSTRAR IMÁGENES EN MINIATURA
+                        // =============================================
+                        
+                        var contenedorImagenes = $('#listaImagenesLead');
+                        
+                        contenedorImagenes.empty();
+                        
+                        if (respuesta.imagenes && respuesta.imagenes.length > 0) {
+                        
+                            respuesta.imagenes.forEach(function(imagen, index) {
+                        
+                                // -----------------------------------------
+                                // FORMATEAR FECHA Y HORA
+                                // -----------------------------------------
+                        
+                                var fechaFormateada = '';
+                        
+                                if (imagen.fecha_creacion) {
+                        
+                                    var fecha = new Date(
+                                        imagen.fecha_creacion.replace(' ', 'T')
+                                    );
+                        
+                                    if (!isNaN(fecha.getTime())) {
+                        
+                                        var dia = String(
+                                            fecha.getDate()
+                                        ).padStart(2, '0');
+                        
+                                        var mes = String(
+                                            fecha.getMonth() + 1
+                                        ).padStart(2, '0');
+                        
+                                        var año = fecha.getFullYear();
+                        
+                                        var horas = String(
+                                            fecha.getHours()
+                                        ).padStart(2, '0');
+                        
+                                        var minutos = String(
+                                            fecha.getMinutes()
+                                        ).padStart(2, '0');
+                        
+                                        var segundos = String(
+                                            fecha.getSeconds()
+                                        ).padStart(2, '0');
+                        
+                                        fechaFormateada =
+                                            dia + '/' +
+                                            mes + '/' +
+                                            año + ' ' +
+                                            horas + ':' +
+                                            minutos + ':' +
+                                            segundos;
+                        
+                                    } else {
+                        
+                                        fechaFormateada =
+                                            imagen.fecha_creacion;
+                        
+                                    }
+                        
+                                }
+                        
+                                // -----------------------------------------
+                                // CONTENEDOR DE LA MINIATURA
+                                // -----------------------------------------
+                        
+                                var tarjetaImagen = $('<div>')
+                                    .addClass('imagen-lead-miniatura')
+                                    .attr('data-indice', index)
+                                    .css({
+                                        'display': 'inline-block',
+                                        'width': '120px',
+                                        'margin-right': '10px',
+                                        'margin-bottom': '10px',
+                                        'vertical-align': 'top',
+                                        'cursor': 'pointer',
+                                        'text-align': 'center'
+                                    });
+                        
+                                // -----------------------------------------
+                                // MINIATURA
+                                // -----------------------------------------
+                        
+                                var miniatura = $('<img>')
+                                .attr('alt', 'Imagen ' + (index + 1))
+                                .attr('referrerpolicy', 'no-referrer')
+                                .css({
+                                    'width': '120px',
+                                    'height': '90px',
+                                    'object-fit': 'cover',
+                                    'border-radius': '6px',
+                                    'border': '2px solid #c8e6c9',
+                                    'display': 'block',
+                                    'background-color': '#ffffff'
+                                });
+                            
+                            miniatura.on('load', function() {
+                            
+                                console.log(
+                                    'Imagen cargada correctamente:',
+                                    imagen.url_imagen
+                                );
+                            
+                            });
+                            
+                            miniatura.on('error', function() {
+                            
+                                console.error(
+                                    'ERROR cargando imagen:',
+                                    imagen.url_imagen
+                                );
+                            
+                            });
+                            
+                            miniatura.attr('src', imagen.url_imagen);
+                            
+                            
+                            // =============================================
+                            // ABRIR GALERÍA AL HACER CLICK
+                            // =============================================
+                            
+                            tarjetaImagen.on('click', function(e) {
+                            
+                                e.stopPropagation();
+                            
+                                abrirGaleriaImagenes(
+                                    respuesta.imagenes,
+                                    index
+                                );
+                            
+                            });
+                        
+                                // -----------------------------------------
+                                // NÚMERO DE IMAGEN
+                                // -----------------------------------------
+                        
+                                var numeroImagen = $('<div>')
+                                    .text('Imagen ' + (index + 1))
+                                    .css({
+                                        'font-size': '12px',
+                                        'font-weight': '600',
+                                        'color': '#2e7d32',
+                                        'margin-top': '4px'
+                                    });
+                        
+                                // -----------------------------------------
+                                // FECHA Y HORA
+                                // -----------------------------------------
+                        
+                                var fechaImagen = $('<div>')
+                                    .text(fechaFormateada)
+                                    .css({
+                                        'font-size': '10px',
+                                        'color': '#666',
+                                        'margin-top': '2px',
+                                        'line-height': '1.2'
+                                    });
+                        
+                                // -----------------------------------------
+                                // ARMAR MINIATURA
+                                // -----------------------------------------
+                        
+                                tarjetaImagen.append(miniatura);
+                                tarjetaImagen.append(numeroImagen);
+                                tarjetaImagen.append(fechaImagen);
+                        
+                                contenedorImagenes.append(tarjetaImagen);
+                        
+                            });
+                        
+                        } else {
+                        
+                            contenedorImagenes.html(
+                                '<span style="color:#777;">No hay imágenes enviadas.</span>'
+                            );
+                        
+                        }
+
+
                         $('#editarLeadProductosInteres').val(respuesta.productos_interes || '');
                         $('#editarLeadFechaUltimaInteraccion').val(respuesta.fecha_ultima_interaccion || '');
                         $('#secWhatsAppLeadIA').slideDown(200);
@@ -650,6 +856,332 @@ $(document).ready(function() {
                     title: "¡Error!",
                     text: "Ocurrió un problema de conexión al actualizar la oportunidad.",
                     showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        });
+    });
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    // =============================================
+// GALERÍA DE IMÁGENES DEL LEAD
+// =============================================
+
+function abrirGaleriaImagenes(imagenes, indiceInicial) {
+
+    var indiceActual = indiceInicial;
+
+    // Eliminar modal anterior si existe
+    $('#modalGaleriaImagenes').remove();
+
+    // Crear modal
+    var modal = $(`
+        <div class="modal fade" id="modalGaleriaImagenes" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+
+                <div class="modal-content">
+
+                    <div class="modal-header">
+
+                        <h5 class="modal-title">
+                            <i class="fa fa-image"></i>
+                            Imagen del cliente
+                        </h5>
+
+                        <button type="button"
+                                class="close"
+                                data-dismiss="modal"
+                                aria-label="Cerrar">
+
+                            <span aria-hidden="true">&times;</span>
+
+                        </button>
+
+                    </div>
+
+                    <div class="modal-body text-center">
+
+                        <div id="galeriaImagenContenedor"
+                             style="position:relative;">
+
+                            <img id="galeriaImagenPrincipal"
+                                 src=""
+                                 alt="Imagen"
+                                 style="
+                                    max-width:100%;
+                                    max-height:65vh;
+                                    object-fit:contain;
+                                    border-radius:6px;
+                                 ">
+
+                        </div>
+
+                        <div id="galeriaNombreImagen"
+                             style="
+                                margin-top:10px;
+                                font-weight:600;
+                                color:#2e7d32;
+                             ">
+                        </div>
+
+                        <div id="galeriaFechaImagen"
+                             style="
+                                font-size:12px;
+                                color:#777;
+                                margin-top:3px;
+                             ">
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer"
+                         style="justify-content:center;">
+
+                        <button type="button"
+                                class="btn btn-default"
+                                id="galeriaAnterior">
+
+                            <i class="fa fa-chevron-left"></i>
+                            Anterior
+
+                        </button>
+
+                        <span id="galeriaContador"
+                              style="
+                                min-width:80px;
+                                text-align:center;
+                                padding-top:7px;
+                              ">
+                        </span>
+
+                        <button type="button"
+                                class="btn btn-default"
+                                id="galeriaSiguiente">
+
+                            Siguiente
+                            <i class="fa fa-chevron-right"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    `);
+
+    $('body').append(modal);
+
+
+    // =============================================
+    // MOSTRAR IMAGEN ACTUAL
+    // =============================================
+
+    function mostrarImagen() {
+
+        var imagen = imagenes[indiceActual];
+
+        $('#galeriaImagenPrincipal')
+            .attr('src', imagen.url_imagen);
+
+        $('#galeriaNombreImagen')
+            .text(
+                'Imagen ' +
+                (indiceActual + 1)
+            );
+
+        var fechaImagen = '';
+
+        if (imagen.fecha_creacion) {
+
+            var fecha = new Date(
+                imagen.fecha_creacion.replace(' ', 'T')
+            );
+
+            if (!isNaN(fecha.getTime())) {
+
+                fechaImagen =
+                    String(fecha.getDate()).padStart(2, '0') + '/' +
+                    String(fecha.getMonth() + 1).padStart(2, '0') + '/' +
+                    fecha.getFullYear() + ' ' +
+                    String(fecha.getHours()).padStart(2, '0') + ':' +
+                    String(fecha.getMinutes()).padStart(2, '0') + ':' +
+                    String(fecha.getSeconds()).padStart(2, '0');
+
+            } else {
+
+                fechaImagen = imagen.fecha_creacion;
+
+            }
+
+        }
+
+        $('#galeriaFechaImagen')
+            .text(fechaImagen);
+
+        $('#galeriaContador')
+            .text(
+                (indiceActual + 1) +
+                ' / ' +
+                imagenes.length
+            );
+
+        // Desactivar botones cuando corresponda
+        $('#galeriaAnterior')
+            .prop(
+                'disabled',
+                indiceActual === 0
+            );
+
+        $('#galeriaSiguiente')
+            .prop(
+                'disabled',
+                indiceActual === imagenes.length - 1
+            );
+    }
+
+
+    // =============================================
+    // BOTÓN ANTERIOR
+    // =============================================
+
+    $('#galeriaAnterior').on('click', function() {
+
+        if (indiceActual > 0) {
+
+            indiceActual--;
+
+            mostrarImagen();
+
+        }
+
+    });
+
+
+    // =============================================
+    // BOTÓN SIGUIENTE
+    // =============================================
+
+    $('#galeriaSiguiente').on('click', function() {
+
+        if (indiceActual < imagenes.length - 1) {
+
+            indiceActual++;
+
+            mostrarImagen();
+
+        }
+
+    });
+
+
+    // =============================================
+    // TECLADO
+    // =============================================
+
+    $(document).off(
+        'keydown.galeriaImagenes'
+    );
+
+    $(document).on(
+        'keydown.galeriaImagenes',
+        function(e) {
+
+            if (!$('#modalGaleriaImagenes').hasClass('show')) {
+                return;
+            }
+
+            if (e.key === 'ArrowLeft') {
+
+                $('#galeriaAnterior').click();
+
+            }
+
+            if (e.key === 'ArrowRight') {
+
+                $('#galeriaSiguiente').click();
+
+            }
+
+        }
+    );
+
+
+    // =============================================
+    // LIMPIAR EVENTO AL CERRAR
+    // =============================================
+
+    $('#modalGaleriaImagenes').on(
+        'hidden.bs.modal',
+        function() {
+
+            $(document).off(
+                'keydown.galeriaImagenes'
+            );
+
+            $(this).remove();
+
+        }
+    );
+
+
+    // Mostrar primera imagen seleccionada
+    mostrarImagen();
+
+    // Abrir modal
+    $('#modalGaleriaImagenes').modal('show');
+
+}
+
+    // =============================================
+    // BOTÓN EDITAR CONTACTO (DESDE MODAL LEAD)
+    // =============================================
+    $(document).on("click", "#btnEditarContactoLead, .btn-editar-contacto-lead", function() {
+        var origen = $("#editarLeadOrigen").val() || "";
+        if (!origen.trim()) {
+            swal({
+                type: "warning",
+                title: "Cliente no encontrado",
+                text: "No se encontró un número de teléfono registrado en el origen del lead.",
+                confirmButtonText: "Cerrar"
+            });
+            return;
+        }
+
+        $.ajax({
+            url: "ajax/clientes.ajax.php",
+            method: "POST",
+            data: {
+                accion: "buscarClientePorTelefono",
+                telefono: origen
+            },
+            dataType: "json",
+            success: function(respuesta) {
+                if (respuesta && respuesta.status === "ok" && respuesta.idCliente) {
+                    window.location = "index.php?ruta=cliente-detalle&id=" + respuesta.idCliente;
+                } else {
+                    swal({
+                        type: "warning",
+                        title: "Cliente no encontrado",
+                        text: "El cliente no ha sido encontrado",
+                        confirmButtonText: "Cerrar"
+                    });
+                }
+            },
+            error: function() {
+                swal({
+                    type: "error",
+                    title: "Error",
+                    text: "Ocurrió un error al buscar el cliente.",
                     confirmButtonText: "Cerrar"
                 });
             }

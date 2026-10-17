@@ -186,8 +186,9 @@ if (class_exists("ControladorCajas") && !ControladorCajas::ctrValidarCajaAbierta
             <label>Imagen Comprobante</label>
             <div class="input-group">
               <span class="input-group-addon"><i class="fa fa-image"></i></span>
-              <input type="file" class="form-control" name="nuevaImagenComprobante" accept="image/*">
+              <input type="file" class="form-control nuevaImagenComprobante" name="nuevaImagenComprobante" accept="image/*">
             </div>
+            <p class="help-block">Peso máximo de la imagen 8MB</p>
           </div>
 
           <!-- Notas -->

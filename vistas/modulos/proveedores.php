@@ -82,9 +82,8 @@ if (!puedeVer('proveedores')) {
               <tr>
                 <th>Nombre</th>
                 <th>Celular</th>
-                <th>Correo</th>
                 <th>Dirección</th>
-                <th>Productos</th>
+                <th>Productos vinculados</th>
                 <th>Notas</th>
                 <th>Acciones</th>
               </tr>

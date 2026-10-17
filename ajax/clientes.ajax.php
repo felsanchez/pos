@@ -324,6 +324,20 @@ if (isset($_POST["idClienteEliminar"])) {
 }
 
 /*=============================================
+SOLICITUD PARA BUSCAR CLIENTE POR TELÉFONO
+=============================================*/
+if (isset($_POST["accion"]) && $_POST["accion"] == "buscarClientePorTelefono") {
+  $telefono = isset($_POST["telefono"]) ? $_POST["telefono"] : "";
+  $cliente = ModeloClientes::mdlBuscarClientePorTelefono("clientes", $telefono);
+  if ($cliente) {
+    echo json_encode(["status" => "ok", "idCliente" => $cliente["id"], "nombre" => $cliente["nombre"]]);
+  } else {
+    echo json_encode(["status" => "no_encontrado"]);
+  }
+  exit;
+}
+
+/*=============================================
 SOLICITUD PARA VALIDAR DUPLICADOS
 =============================================*/
 if (isset($_POST["validarDocumento"]) || isset($_POST["validarTelefono"])) {

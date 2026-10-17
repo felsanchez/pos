@@ -207,7 +207,7 @@ if ($modoEdicion) {
                                         <label>Imagen del Producto</label>
                                         <input type="file" class="form-control" id="imagen" name="<?php echo $modoEdicion ? 'editarImagen' : 'nuevaImagen'; ?>"
                                             accept="image/*">
-                                        <p class="help-block">Peso máximo: 2MB</p>
+                                        <p class="help-block">Peso máximo: 8MB</p>
                                         <img src="<?php echo ($modoEdicion && !empty($producto['imagen'])) ? $producto['imagen'] : 'vistas/img/productos/default/anonymous.png'; ?>" class="img-thumbnail"
                                             style="max-width: 100px; margin-top: 10px;">
                                         <input type="hidden" name="imagenActual" value="<?php echo ($modoEdicion && !empty($producto['imagen'])) ? $producto['imagen'] : 'vistas/img/productos/default/anonymous.png'; ?>">
@@ -242,14 +242,14 @@ if ($modoEdicion) {
                         <div class="box-body">
                             <div class="row">
                                 <!-- Stock -->
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>Stock Inicial *</label>
                                         <div class="input-group">
                                             <span class="input-group-addon"><i class="fa fa-cubes"></i></span>
                                             <input type="number" class="form-control" id="stock" name="<?php echo $modoEdicion ? 'editarStock' : 'nuevoStock'; ?>"
                                                 min="0" placeholder="0"
-                                                value="<?php echo $modoEdicion ? $producto['stock'] : '0'; ?>"
+                                                value="<?php echo $modoEdicion ? $producto['stock'] : ''; ?>"
                                                 required>
                                         </div>
                                     </div>
@@ -270,6 +270,20 @@ if ($modoEdicion) {
                                     </div>
                                 </div>
 
+                                <!-- Porcentaje de Ganancia -->
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                         <label title="Usar Porcentaje de Ganancia">
+                                             <input type="checkbox" id="usarPorcentaje"> Usar Porcentaje de Ganancia
+                                         </label>
+                                         <div class="input-group">
+                                             <input type="number" class="form-control" id="porcentaje" min="0"
+                                                 value="50" placeholder="50" disabled>
+                                             <span class="input-group-addon"><i class="fa fa-percent"></i></span>
+                                         </div>
+                                    </div>
+                                </div>
+
                                 <!-- Precio de Venta -->
                                 <div class="col-md-3">
                                     <div class="form-group">
@@ -281,20 +295,6 @@ if ($modoEdicion) {
                                                 name="<?php echo $modoEdicion ? 'editarPrecioVenta' : 'nuevoPrecioVenta'; ?>" min="0" step="1" placeholder="0"
                                                 value="<?php echo $modoEdicion ? $producto['precio_venta'] : ''; ?>"
                                                 required>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Porcentaje de Ganancia -->
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label>
-                                            <input type="checkbox" id="usarPorcentaje" checked> Usar %
-                                        </label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="porcentaje" min="0"
-                                                value="50" placeholder="50">
-                                            <span class="input-group-addon"><i class="fa fa-percent"></i></span>
                                         </div>
                                     </div>
                                 </div>
@@ -371,11 +371,11 @@ if ($modoEdicion) {
                     </div>
 
                     <!-- ============================================= -->
-                    <!-- SECCIÓN 4: FACTURACIÓN ELECTRÓNICA -->
+                    <!-- SECCIÓN 4: CLASIFICACIÓN FISCAL -->
                     <!-- ============================================= -->
                     <div class="box box-warning">
                         <div class="box-header with-border">
-                            <h3 class="box-title"><i class="fa fa-file-text"></i> Facturación Electrónica</h3>
+                            <h3 class="box-title"><i class="fa fa-file-text"></i> Clasificación Fiscal</h3>
                         </div>
                         <div class="box-body">
                             <p class="help-block"><i class="fa fa-info-circle"></i> Estos datos son requeridos para generar facturas electrónicas válidas ante la DIAN.</p>

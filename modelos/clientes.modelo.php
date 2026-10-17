@@ -443,4 +443,34 @@ class ModeloClientes
 			"errores" => $errors
 		];
 	}
+
+	/*=============================================
+	BUSCAR CLIENTE POR TELÉFONO (NORMALIZANDO DÍGITOS)
+	=============================================*/
+	static public function mdlBuscarClientePorTelefono($tabla, $telefono)
+	{
+		$digitsInput = preg_replace('/\D/', '', $telefono);
+		if (empty($digitsInput)) {
+			return null;
+		}
+
+		$last10Input = strlen($digitsInput) >= 10 ? substr($digitsInput, -10) : $digitsInput;
+
+		$stmt = Conexion::conectar()->prepare("SELECT id, nombre, telefono FROM $tabla WHERE eliminado = 0");
+		$stmt->execute();
+		$clientes = $stmt->fetchAll();
+
+		foreach ($clientes as $cliente) {
+			if (empty($cliente["telefono"])) continue;
+			$digitsCliente = preg_replace('/\D/', '', $cliente["telefono"]);
+			if (empty($digitsCliente)) continue;
+			$last10Cliente = strlen($digitsCliente) >= 10 ? substr($digitsCliente, -10) : $digitsCliente;
+
+			if ($last10Input === $last10Cliente) {
+				return $cliente;
+			}
+		}
+
+		return null;
+	}
 }

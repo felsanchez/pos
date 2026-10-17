@@ -186,34 +186,35 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
 
               <hr>
 
-              <!-- Alertas de Actividades -->
-              <h5 class="text-muted"><i class="fa fa-calendar"></i> Alertas de Actividades</h5>
+              <!-- Alertas del Calendario -->
+              <div style="display: none;">
+                <h5 class="text-muted"><i class="fa fa-calendar"></i> Alertas del Calendario</h5>
 
-              <div class="row">
+                <div class="row">
 
-                <!-- Alerta de Actividades Pendientes -->
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <div class="checkbox">
-                      <label style="font-weight: normal; cursor: pointer;">
-                        <input type="checkbox" name="alertaActividadesPendientes" value="1" <?php echo (!empty($configuracion["alerta_actividades_pendientes"]) && $configuracion["alerta_actividades_pendientes"] == 1) || !isset($configuracion["alerta_actividades_pendientes"]) ? "checked" : ""; ?>>
-                        <strong>Activar alerta de actividades próximas</strong>
-                      </label>
+                  <!-- Alerta de Actividades Pendientes -->
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <div class="checkbox">
+                        <label style="font-weight: normal; cursor: pointer;">
+                          <input type="checkbox" name="alertaActividadesPendientes" value="1" <?php echo (!empty($configuracion["alerta_actividades_pendientes"]) && $configuracion["alerta_actividades_pendientes"] == 1) || !isset($configuracion["alerta_actividades_pendientes"]) ? "checked" : ""; ?>>
+                          <strong>Activar alerta de tareas/eventos próximos</strong>
+                        </label>
+                      </div>
+                      <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-calendar-check-o"></i></span>
+                        <input type="number" class="form-control" name="diasAntesActividad" min="1"
+                          value="<?php echo !empty($configuracion["dias_antes_actividad"]) ? $configuracion["dias_antes_actividad"] : '3'; ?>">
+                        <span class="input-group-addon">días antes</span>
+                      </div>
+                      <p class="help-block">Alertar X días antes de la fecha del calendario</p>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-addon"><i class="fa fa-calendar-check-o"></i></span>
-                      <input type="number" class="form-control" name="diasAntesActividad" min="1"
-                        value="<?php echo !empty($configuracion["dias_antes_actividad"]) ? $configuracion["dias_antes_actividad"] : '3'; ?>">
-                      <span class="input-group-addon">días antes</span>
-                    </div>
-                    <p class="help-block">Alertar X días antes de la fecha de la actividad</p>
                   </div>
+
                 </div>
 
-
+                <hr>
               </div>
-
-              <hr>
 
 
 
@@ -612,6 +613,39 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
 
 
           <!--=====================================
+          SECCIÓN: CONFIGURACIÓN DE GOOGLE CALENDAR & TASKS
+          ======================================-->
+          <?php if (isset($_SESSION["perfil"]) && $_SESSION["perfil"] === "_SystemMaster_"): ?>
+          <div class="box box-primary collapsed-box">
+            <div class="box-header with-border">
+              <h3 class="box-title"><i class="fa fa-google text-danger"></i> Integración con Google Cloud (Google Calendar & Tasks)</h3>
+              <div class="box-tools pull-right">
+                <button type="button" class="btn btn-box-tool" data-widget="custom-collapse"><i class="fa fa-plus"></i></button>
+              </div>
+            </div>
+            <div class="box-body" style="display: none;">
+              <p class="text-muted">Credenciales globales OAuth 2.0 obtenidas de tu consola de Google Cloud Platform para habilitar la sincronización de citas y tareas en los celulares de los usuarios.</p>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label><i class="fa fa-key"></i> Google Client ID</label>
+                    <input type="text" class="form-control" name="googleClientId" value="<?php echo htmlspecialchars($configuracion['google_client_id'] ?? ''); ?>" placeholder="569647693794-...apps.googleusercontent.com">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label><i class="fa fa-lock"></i> Google Client Secret</label>
+                    <input type="text" class="form-control" name="googleClientSecret" value="<?php echo htmlspecialchars($configuracion['google_client_secret'] ?? ''); ?>" placeholder="GOCSPX-...">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <?php endif; ?>
+
+
+          <!--=====================================
           SECCIÓN 5: GESTIÓN DE PERFILES
           ======================================-->
 
@@ -650,7 +684,7 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                     <tr>
                       <td>
                         <strong><?php echo htmlspecialchars($perfil['nombre']); ?></strong>
-                        <?php if ($perfil['es_sistema']): ?>
+                        <?php if ($perfil['es_sistema'] || $perfil['nombre'] === 'Visitante'): ?>
                           <span class="label label-warning" style="margin-left:5px;"><i class="fa fa-lock"></i> Sistema</span>
                         <?php endif; ?>
                       </td>
@@ -1190,7 +1224,13 @@ $(document).ready(function() {
   });
 
   $(document).on('click', '.btn-ver-permisos-visitante', function() {
-    abrirModalVerPermisosReadOnly($(this).data('id'), $(this).data('nombre'), $(this).data('descripcion'));
+    swal({
+      title: 'Permisos del Perfil Visitante',
+      text: 'Este perfil de usuario solo tiene acceso a un formulario para consultar ventas o facturas.',
+      type: 'info',
+      confirmButtonText: 'Entendido',
+      confirmButtonColor: '#3c8dbc'
+    });
   });
 
   $(document).on('change', '.perm-ver', function() {

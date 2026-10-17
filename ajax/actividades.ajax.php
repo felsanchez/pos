@@ -95,27 +95,47 @@ class AjaxActividades{
         // Color por defecto (azul AdminLTE) si no hay match
         $color = isset($mapaEstados[$estadoLower]) ? $mapaEstados[$estadoLower] : "#3c8dbc";
 
-        // Título con prefijo de estado
-        $tituloConEstado = !empty($estadoNombre) ? "[" . strtoupper($estadoNombre) . "] " . $actividad["descripcion"] : $actividad["descripcion"];
+        $isAllDay = !empty($actividad["todo_dia"]) || (substr($actividad["fecha"], 11, 8) === "00:00:00" && (empty($actividad["fecha_fin"]) || substr($actividad["fecha_fin"], 11, 8) === "23:59:59" || substr($actividad["fecha_fin"], 11, 8) === "00:00:00"));
 
-        $eventos[] = [
+        $startDate = $isAllDay ? substr($actividad["fecha"], 0, 10) : str_replace(" ", "T", $actividad["fecha"]);
+
+        $evtObj = [
             "id"             => $actividad["id"],
-            "title"          => $tituloConEstado,
+            "title"          => $actividad["descripcion"],
             "descripcion_original" => $actividad["descripcion"],
             "fecha_full"     => $actividad["fecha"],
-            "start"          => str_replace(" ", "T", $actividad["fecha"]),
-            "end"            => str_replace(" ", "T", date("Y-m-d H:i:s", strtotime($actividad["fecha"] . " +1 minute"))),
+            "allDay"         => $isAllDay,
+            "start"          => $startDate,
             "backgroundColor"=> $color,
             "borderColor"    => $color,
-            "textColor"      => "#fff", // Asegurar legibilidad
+            "textColor"      => "#fff",
             "tipo"           => $actividad["tipo"],
             "estado"         => $actividad["estado"],
             "id_user"        => $actividad["id_user"],
             "nombre_usuario" => $actividad["nombre_usuario"] ?? 'Sin usuario',
             "id_cliente"     => $actividad["id_cliente"],
             "nombre_cliente" => $actividad["nombre_cliente"] ?? 'Sin cliente',
-            "observacion"    => $actividad["observacion"]
+            "observacion"    => $actividad["observacion"],
+            "categoria_google" => $actividad["categoria_google"] ?? "evento",
+            "google_event_id"  => $actividad["google_event_id"] ?? null,
+            "google_meet_link" => $actividad["google_meet_link"] ?? null,
+            "ubicacion"        => $actividad["ubicacion"] ?? null,
+            "invitados_email"  => $actividad["invitados_email"] ?? null,
+            "archivo"          => $actividad["archivo"] ?? null
         ];
+
+        if (!$isAllDay) {
+            $evtObj["end"] = !empty($actividad["fecha_fin"]) ? str_replace(" ", "T", $actividad["fecha_fin"]) : str_replace(" ", "T", date("Y-m-d H:i:s", strtotime($actividad["fecha"] . " +1 hour")));
+        } else if (!empty($actividad["fecha_fin"])) {
+            $startD = substr($actividad["fecha"], 0, 10);
+            $endD = substr($actividad["fecha_fin"], 0, 10);
+            if ($endD > $startD) {
+                // En FullCalendar, para allDay multidía la fecha de fin es exclusiva (+1 día)
+                $evtObj["end"] = date("Y-m-d", strtotime($endD . " +1 day"));
+            }
+        }
+
+        $eventos[] = $evtObj;
     }
     
     header('Content-Type: application/json');
@@ -134,9 +154,6 @@ public function ajaxListarUsuarios(){
     echo json_encode($respuesta);
 }
 
-    
-
-
 }
 
 
@@ -151,14 +168,6 @@ if (isset($_GET["action"]) && $_GET["action"] == "listar") {
     $actividades->ajaxListarActividades();
     exit;
 }
-
-// Editar actividad (POST)
-/*if (isset($_POST["idActividad"])) {
-    $actividad = new AjaxActividades();
-    $actividad->idActividad = $_POST["idActividad"];
-    $actividad->ajaxEditarActividad();
-    exit;
-}*/
 
 /*=============================================
   BUSCAR ACTIVIDADES POR FECHA
@@ -181,7 +190,7 @@ if (isset($_POST["fecha"]) && !isset($_POST["idActividad"]) && (!isset($_POST["a
             if (!empty($filtroEstado) && strtolower($actividad["estado"]) !== strtolower($filtroEstado)) {
                 continue;
             }
-            $filtrado[] = $actividad;
+            $filtrado[] = $filtrado;
         }
         $respuesta = $filtrado;
     }
@@ -205,103 +214,182 @@ if (isset($_GET["action"]) && $_GET["action"] == "usuarios") {
     exit;
 }
 
+/*=============================================
+EDITAR Actividad
+=============================================*/
+if(isset($_POST["idActividad"]) && !isset($_POST["nuevoTipo"]) && !isset($_POST["nuevoEstado"])){
 
+    $Actividad = new AjaxActividades();
+    $Actividad -> idActividad = $_POST["idActividad"];
+    $Actividad -> ajaxEditarActividad();
+}
 
-        /*=============================================
-        EDITAR Actividad
-        =============================================*/
-        if(isset($_POST["idActividad"])){
+/*=============================================
+Guardar Tipo de Actividad
+=============================================*/
+if (isset($_POST["idActividad"]) && isset($_POST["nuevoTipo"])) {
+    $datos = array(
+        "id" => $_POST["idActividad"],
+        "tipo" => $_POST["nuevoTipo"]
+    );
 
-            $Actividad = new AjaxActividades();
-            $Actividad -> idActividad = $_POST["idActividad"];
-            $Actividad -> ajaxEditarActividad();
-			//return;
+    $respuesta = ControladorActividades::ctrActualizarTipoActividad($datos);
+
+    header('Content-Type: application/json');
+    echo json_encode($respuesta);
+    exit;
+}
+
+/*=============================================
+Guardar Estado de Actividad
+=============================================*/
+if (isset($_POST["idActividad"]) && isset($_POST["nuevoEstado"])) {
+    $datos = array(
+        "id" => $_POST["idActividad"],
+        "estado" => $_POST["nuevoEstado"]
+    );
+
+    $respuesta = ControladorActividades::ctrActualizarEstadoActividad($datos);
+
+    if ($respuesta === "ok") {
+        if (class_exists("ControladorGoogle")) {
+            require_once "../controladores/google.controlador.php";
+            $actividadPrev = ModeloActividades::mdlMostrarActividades("actividades", "id", $_POST["idActividad"]);
+            if (!empty($actividadPrev) && !empty($actividadPrev["google_event_id"])) {
+                ControladorGoogle::ctrSincronizarActividad([
+                    "id" => $_POST["idActividad"],
+                    "id_user" => $_SESSION["id"] ?? $actividadPrev["id_user"],
+                    "categoria_google" => $actividadPrev["categoria_google"] ?? "evento",
+                    "google_event_id" => $actividadPrev["google_event_id"],
+                    "descripcion" => $actividadPrev["descripcion"],
+                    "observacion" => $actividadPrev["observacion"],
+                    "fecha" => $actividadPrev["fecha"],
+                    "fecha_fin" => $actividadPrev["fecha_fin"],
+                    "todo_dia" => $actividadPrev["todo_dia"] ?? 0,
+                    "estado" => $_POST["nuevoEstado"]
+                ], "editar");
+            }
         }
 
+        echo json_encode([
+            "status" => "ok",
+            "idActividad" => $datos["id"],
+            "nuevoEstado" => $datos["estado"]
+        ]);
+    } else {
+        echo json_encode([
+            "status" => "error",
+            "message" => "Error al actualizar estado"
+        ]);
+    }
 
-		/*=============================================
-        Guardar Tipo de Actividad
-        =============================================*/
-		if (isset($_POST["idActividad"]) && isset($_POST["nuevoTipo"])) {
-			$datos = array(
-				"id" => $_POST["idActividad"],
-				"tipo" => $_POST["nuevoTipo"]
-			);
-		
-			$respuesta = ControladorActividades::ctrActualizarTipoActividad($datos);
-		
-			header('Content-Type: application/json');
-			echo json_encode($respuesta);
-			exit;
-		}
-		
-		
-		/*=============================================
-        Guardar Estado de Actividad
-        =============================================*/
-		/*if (isset($_POST["idActividad"]) && isset($_POST["nuevoEstado"])) {
-			$datos = array(
-				"id" => $_POST["idActividad"],
-				"estado" => $_POST["nuevoEstado"]
-			);
-			$respuesta = ControladorActividades::ctrActualizarEstadoActividad($datos);
-			header('Content-Type: application/json');
-			echo json_encode($respuesta);
-			exit;
-		}
-			*/		
+    exit;
+}
 
-		if (isset($_POST["idActividad"]) && isset($_POST["nuevoEstado"])) {
-			$datos = array(
-				"id" => $_POST["idActividad"],
-				"estado" => $_POST["nuevoEstado"]
-			);
-		
-			$respuesta = ControladorActividades::ctrActualizarEstadoActividad($datos);
-		
-			// Siempre devolvemos un objeto JSON estructurado
-			if ($respuesta === "ok") {
-				echo json_encode([
-					"status" => "ok",
-					"idActividad" => $datos["id"],
-					"nuevoEstado" => $datos["estado"]
-				]);
-			} else {
-				echo json_encode([
-					"status" => "error",
-					"message" => "Error al actualizar estado"
-				]);
-			}
-		
-			exit;
-		}
-		
+/*=============================================
+PERMITE EDITAR Observacion
+=============================================*/
+if (isset($_POST["accion"]) && $_POST["accion"] == "actualizarObservacion") {
+    $tabla = "actividades";
+    $datos = array(
+    "id" => $_POST["id"],
+    "observacion" => $_POST["observacion"]
+    );
+    $respuesta = ModeloActividades::mdlActualizarObservacion("actividades", $_POST["id"], $_POST["observacion"]);
+    echo json_encode($respuesta);
+    exit;
+}
 
+/*=============================================
+DESCONECTAR GOOGLE CALENDAR
+=============================================*/
+if (isset($_POST["accion"]) && $_POST["accion"] == "desconectarGoogle") {
+    require_once "../controladores/google.controlador.php";
+    $idUser = $_SESSION["id"] ?? null;
+    if ($idUser) {
+        ControladorGoogle::ctrDesconectarGoogle($idUser);
+        echo json_encode(["status" => "ok"]);
+    } else {
+        echo json_encode(["status" => "error"]);
+    }
+    exit;
+}
 
-		/*=============================================
-		PERMITE EDITAR Observacion
-		=============================================*/
-		
-		if (isset($_POST["accion"]) && $_POST["accion"] == "actualizarObservacion") {
-			$tabla = "actividades";
-			$datos = array(
-			"id" => $_POST["id"],
-			"observacion" => $_POST["observacion"]
-			);
-			$respuesta = ModeloActividades::mdlActualizarObservacion("actividades", $_POST["id"], $_POST["observacion"]);
-			echo json_encode($respuesta);
-			exit;
-		}
+/*=============================================
+SINCRONIZAR DESDE GOOGLE (CALENDAR & TASKS)
+=============================================*/
+if (isset($_POST["accion"]) && $_POST["accion"] == "sincronizarDesdeGoogle") {
+    require_once "../controladores/google.controlador.php";
+    $idUser = $_SESSION["id"] ?? null;
+    if ($idUser) {
+        try {
+            $res = ControladorGoogle::ctrImportarNovedadesGoogle($idUser);
+            echo json_encode($res);
+        } catch (Exception $e) {
+            echo json_encode(["status" => "error", "message" => "Excepción en el servidor: " . $e->getMessage()]);
+        } catch (Throwable $e) {
+            echo json_encode(["status" => "error", "message" => "Error de ejecución: " . $e->getMessage()]);
+        }
+    } else {
+        echo json_encode(["status" => "error", "message" => "Sesión no válida"]);
+    }
+    exit;
+}
 
-		/*=============================================
-		PERMITE EDITAR Fecha (Drag & Drop)
-		=============================================*/
-		if (isset($_POST["accion"]) && $_POST["accion"] == "actualizarFecha") {
-			$tabla = "actividades";
-			$respuesta = ModeloActividades::mdlActualizarActividad($tabla, "fecha", $_POST["fecha"], $_POST["id"]);
-			echo json_encode($respuesta);
-			exit;
-		}
+/*=============================================
+PERMITE EDITAR Fecha (Drag & Drop con Sincronización Google)
+=============================================*/
+if (isset($_POST["accion"]) && $_POST["accion"] == "actualizarFecha") {
+    require_once "../controladores/google.controlador.php";
+    $tabla = "actividades";
+    $idActividad = $_POST["id"];
+    $nuevaFecha = $_POST["fecha"];
+
+    $actividadPrev = ModeloActividades::mdlMostrarActividades($tabla, "id", $idActividad);
+
+    $isAllDay = isset($_POST["todo_dia"]) ? intval($_POST["todo_dia"]) : (empty($nuevaFecha) || strlen($nuevaFecha) <= 10 || substr($nuevaFecha, 11, 8) === "00:00:00" ? 1 : 0);
+
+    // Calcular la nueva fecha fin manteniendo la duración original
+    $duracion = 3600; // 1 hora por defecto
+    if (!empty($actividadPrev["fecha"]) && !empty($actividadPrev["fecha_fin"])) {
+        $diff = strtotime($actividadPrev["fecha_fin"]) - strtotime($actividadPrev["fecha"]);
+        if ($diff > 0) {
+            $duracion = $diff;
+        }
+    }
+    $nuevaFechaFin = date("Y-m-d H:i:s", strtotime($nuevaFecha) + $duracion);
+
+    $respuesta = ModeloActividades::mdlActualizarActividad($tabla, "fecha", $nuevaFecha, $idActividad);
+    ModeloActividades::mdlActualizarActividad($tabla, "fecha_fin", $nuevaFechaFin, $idActividad);
+    ModeloActividades::mdlActualizarActividad($tabla, "todo_dia", $isAllDay, $idActividad);
+
+    if ($respuesta === "ok" && class_exists("ControladorGoogle")) {
+        if (!empty($actividadPrev)) {
+            $accionSync = !empty($actividadPrev["google_event_id"]) ? "editar" : "crear";
+            $categoriaGoogle = !empty($actividadPrev["categoria_google"]) ? $actividadPrev["categoria_google"] : ((strtolower(trim($actividadPrev["tipo"] ?? "")) === "tarea") ? "tarea" : "evento");
+            $resSync = ControladorGoogle::ctrSincronizarActividad([
+                "id" => $idActividad,
+                "id_user" => $_SESSION["id"] ?? $actividadPrev["id_user"],
+                "categoria_google" => $categoriaGoogle,
+                "google_event_id" => $actividadPrev["google_event_id"] ?? null,
+                "descripcion" => $actividadPrev["descripcion"],
+                "observacion" => $actividadPrev["observacion"],
+                "fecha" => $nuevaFecha,
+                "fecha_fin" => $nuevaFechaFin,
+                "todo_dia" => $isAllDay,
+                "ubicacion" => $actividadPrev["ubicacion"] ?? null,
+                "invitados_email" => $actividadPrev["invitados_email"] ?? null
+            ], $accionSync);
+
+            if (!empty($resSync["google_event_id"])) {
+                ModeloActividades::mdlActualizarGoogleInfo($idActividad, $resSync["google_event_id"], $resSync["google_meet_link"] ?? null);
+            }
+        }
+    }
+
+    echo json_encode($respuesta);
+    exit;
+}
 
 /*=============================================
 ELIMINAR ACTIVIDAD

@@ -88,8 +88,31 @@ $(document).ready(function () {
         if (precioCompra > 0 && porcentaje > 0) {
             var precioVenta = precioCompra * (1 + (porcentaje / 100));
             $('#precioVenta').val(Math.round(precioVenta));
+            actualizarPreciosFinalesCombinaciones();
         }
     }
+
+    function actualizarPreciosFinalesCombinaciones() {
+        var precioBase = parseFloat($('#precioVenta').val()) || 0;
+        $('.filaCombinacion').each(function () {
+            var $fila = $(this);
+            var ajuste = parseFloat($fila.find('.inputPrecioAdicional').val()) || 0;
+            var total = Math.round(precioBase + ajuste);
+            $fila.find('.inputPrecioFinal').val(total);
+        });
+    }
+
+    $(document).on('input change', '#precioVenta', function () {
+        actualizarPreciosFinalesCombinaciones();
+    });
+
+    $(document).on('input change', '.inputPrecioAdicional', function () {
+        var $fila = $(this).closest('.filaCombinacion');
+        var precioBase = parseFloat($('#precioVenta').val()) || 0;
+        var ajuste = parseFloat($(this).val()) || 0;
+        var total = Math.round(precioBase + ajuste);
+        $fila.find('.inputPrecioFinal').val(total);
+    });
 
     /*=============================================
     SINCRONIZAR CHECKBOX EXCLUIDO CON TASA DE IMPUESTO
@@ -158,11 +181,11 @@ $(document).ready(function () {
         var file = this.files[0];
 
         if (file) {
-            // Validar tamaño (10MB)
-            if (file.size > 10000000) {
+            // Validar tamaño (8MB)
+            if (file.size > 8388608) {
                 swal({
                     title: "Error",
-                    text: "La imagen no debe pesar más de 10MB",
+                    text: "La imagen no debe pesar más de 8MB",
                     type: "error",
                     confirmButtonText: "¡Cerrar!"
                 });
@@ -561,17 +584,23 @@ function generarCombinaciones() {
     html += '<tr>';
     html += '<th width="40px" style="vertical-align: top;"><input type="checkbox" id="checkTodasCombinaciones" checked></th>';
     html += '<th style="vertical-align: top;">Variante</th>';
-    html += '<th width="250px" style="vertical-align: top;">';
+    html += '<th width="200px" style="vertical-align: top;">';
     html += '  Precio (+/-)';
-    html += '  <small class="text-muted" style="display: block; font-weight: normal; font-size: 11px; margin-top: 3px; line-height: 1.3;">Indica cuánto deseas aumentar o disminuir el precio base del producto. Usa un valor positivo (+) para aumentar y uno negativo (-) para disminuir</small>';
+    html += '  <small class="text-muted" style="display: block; font-weight: normal; font-size: 11px; margin-top: 3px; line-height: 1.3;">Indica cuanto deseas aumentar o disminuir el precio de venta del producto. Usa un valor positivo (+) para aumentar y uno negativo (-) para disminuir</small>';
     html += '</th>';
     html += '<th width="180px" style="vertical-align: top;">';
+    html += '  Precio final de la variante';
+    html += '  <small class="text-muted" style="display: block; font-weight: normal; font-size: 11px; margin-top: 3px; line-height: 1.3;">Calculado automáticamente según el precio de venta y el ajuste de la variante</small>';
+    html += '</th>';
+    html += '<th width="150px" style="vertical-align: top;">';
     html += '  Stock';
     html += '  <small class="text-muted" style="display: block; font-weight: normal; font-size: 11px; margin-top: 3px; line-height: 1.3;">Indica la cantidad total disponible de esta variante</small>';
     html += '</th>';
     html += '</tr>';
     html += '</thead>';
     html += '<tbody>';
+
+    var precioBaseVenta = parseFloat($('#precioVenta').val()) || 0;
 
     for (var i = 0; i < combinaciones.length; i++) {
         var nombreCombinacion = combinaciones[i].map(function (opt) { return opt.nombre; }).join(' - ');
@@ -602,8 +631,12 @@ function generarCombinaciones() {
             console.log("✅ MATCH DETECTADO: " + busquedaLimpia + " -> ID " + idExistente);
         }
 
-        var valorPrecio = datosExistentes ? datosExistentes.precio_adicional : 0;
-        var valorStock = datosExistentes ? datosExistentes.stock : 0;
+        var valorPrecio = datosExistentes ? parseFloat(datosExistentes.precio_adicional) : 0;
+        var valorStock = datosExistentes ? parseFloat(datosExistentes.stock) : 0;
+        var precioTotalCalculado = Math.round(precioBaseVenta + valorPrecio);
+
+        var valPrecioDisplay = (valorPrecio !== 0) ? Math.round(valorPrecio) : '';
+        var valStockDisplay = (valorStock !== 0) ? Math.round(valorStock) : '';
 
         // 🔓 REVERTIDO: Permitir edición de nuevo según solicitud del usuario
         // Pero mantenemos una marca visual sutil para saber que ya existe
@@ -615,11 +648,17 @@ function generarCombinaciones() {
         html += '<td>';
         html += '<div class="input-group input-group-sm">';
         html += '<span class="input-group-addon">$</span>';
-        html += '<input type="number" class="form-control" name="' + prefixPrecio + idsCombinacion + '" placeholder="0" step="1" value="' + Math.round(valorPrecio) + '">';
+        html += '<input type="number" class="form-control inputPrecioAdicional" name="' + prefixPrecio + idsCombinacion + '" placeholder="0" step="1" value="' + valPrecioDisplay + '">';
         html += '</div>';
         html += '</td>';
         html += '<td>';
-        html += '<input type="number" class="form-control input-sm stockVariante" name="' + prefixStock + idsCombinacion + '" placeholder="0" min="0" step="1" value="' + Math.round(valorStock) + '">';
+        html += '<div class="input-group input-group-sm">';
+        html += '<span class="input-group-addon">$</span>';
+        html += '<input type="number" class="form-control inputPrecioFinal" readonly value="' + precioTotalCalculado + '" style="background:#f9f9f9; font-weight:bold; color:#00a65a;">';
+        html += '</div>';
+        html += '</td>';
+        html += '<td>';
+        html += '<input type="number" class="form-control input-sm stockVariante" name="' + prefixStock + idsCombinacion + '" placeholder="0" min="0" step="1" value="' + valStockDisplay + '">';
         html += '</td>';
 
         // Inputs hidden para enviar datos
