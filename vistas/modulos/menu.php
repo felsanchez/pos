@@ -209,11 +209,31 @@
       }
 
       if (puedeVer('crm') && (!isset($configuracionGlobalMenu["crm_activo"]) || $configuracionGlobalMenu["crm_activo"] == 1)) {
-        echo '<li>
-                <a href="crm">
+        $rutaActual = $_GET["ruta"] ?? '';
+        $esCrmActivo = ($rutaActual === 'crm' || $rutaActual === 'data-crm');
+
+        echo '<li class="treeview' . ($esCrmActivo ? ' active menu-open' : '') . '">
+                <a href="#">
                     <i class="fa fa-filter"></i>
-                    <span>CRM / Pipeline</span>
+                    <span>CRM</span>
+                    <span class="pull-right-container">
+                        <i class="fa fa-angle-left pull-right"></i>
+                    </span>
                 </a>
+                <ul class="treeview-menu">
+                    <li' . ($rutaActual === 'crm' ? ' class="active"' : '') . '>
+                        <a href="crm">
+                            <i class="fa fa-circle-o"></i>
+                            <span>CRM / Pipeline</span>
+                        </a>
+                    </li>
+                    <li' . ($rutaActual === 'data-crm' ? ' class="active"' : '') . '>
+                        <a href="data-crm">
+                            <i class="fa fa-circle-o"></i>
+                            <span>Data CRM</span>
+                        </a>
+                    </li>
+                </ul>
               </li>';
       }
 

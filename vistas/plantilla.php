@@ -271,6 +271,7 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "traslados" ||
         $_GET["ruta"] == "crear-traslado" ||
         $_GET["ruta"] == "crm" ||
+        $_GET["ruta"] == "data-crm" ||
         ($_GET["ruta"] == "inquilinos" && $_SESSION["perfil"] === "_SystemMaster_") ||
         ($_GET["ruta"] == "conocimiento" && ($_SESSION["perfil"] === "Administrador" || $_SESSION["perfil"] === "_SystemMaster_") && (!isset($configuracionGeneral["base_conocimiento_activa"]) || $configuracionGeneral["base_conocimiento_activa"] == 1)) ||
         $_GET["ruta"] == "salir"
