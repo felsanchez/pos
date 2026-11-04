@@ -196,7 +196,7 @@ $(document).ready(function() {
         var montoPerdidos = 0;
         var totalCalientes = 0;
 
-        var textoBusqueda = $('#buscadorCRM').val().toLowerCase();
+        var textoBusqueda = $('#buscadorCRM').val().toLowerCase().trim();
         var textoBusquedaNumeros = textoBusqueda.replace(/\D/g, '');
         var origenSeleccionado = $('#filtroOrigenCRM').val();
         var prioridadSeleccionada = $('#filtroPrioridadCRM').val();
@@ -211,8 +211,32 @@ $(document).ready(function() {
             var origen = ($(card).attr('data-origen') || '').toLowerCase();
             var etapa = $(card).parent().attr('data-etapa');
 
+            var idLead = ($(card).attr('data-id') || '').toString();
+            var codigoLead = '#' + idLead;
+            var busquedaSinEspacios = textoBusqueda.replace(/\s+/g, '');
+
+            var coincideCodigo = false;
+            if (textoBusqueda !== '') {
+                if (textoBusqueda === idLead || codigoLead === busquedaSinEspacios) {
+                    coincideCodigo = true;
+                } else if (textoBusqueda.startsWith('#')) {
+                    var numBuscado = textoBusqueda.replace(/[^0-9]/g, '');
+                    if (numBuscado !== '' && (idLead === numBuscado || idLead.includes(numBuscado))) {
+                        coincideCodigo = true;
+                    }
+                } else if (busquedaSinEspacios.startsWith('lead')) {
+                    var numLead = busquedaSinEspacios.replace(/[^0-9]/g, '');
+                    if (numLead !== '' && (idLead === numLead || idLead.includes(numLead))) {
+                        coincideCodigo = true;
+                    }
+                } else {
+                    coincideCodigo = idLead === textoBusqueda || idLead.includes(textoBusqueda);
+                }
+            }
+
             // Filtrado del lead para métricas (excluyendo el filtro de archivados de la visualización)
-            var coincideTexto = cliente.includes(textoBusqueda) || 
+            var coincideTexto = coincideCodigo ||
+                                cliente.includes(textoBusqueda) || 
                                 titulo.includes(textoBusqueda) || 
                                 telefonoRaw.includes(textoBusqueda) ||
                                 (textoBusquedaNumeros !== '' && telefonoNumeros.includes(textoBusquedaNumeros));
@@ -263,7 +287,7 @@ $(document).ready(function() {
     });
 
     function filtrarTablero() {
-        var textoBusqueda = $('#buscadorCRM').val().toLowerCase();
+        var textoBusqueda = $('#buscadorCRM').val().toLowerCase().trim();
         var textoBusquedaNumeros = textoBusqueda.replace(/\D/g, '');
         var origenSeleccionado = $('#filtroOrigenCRM').val();
         var prioridadSeleccionada = $('#filtroPrioridadCRM').val();
@@ -279,8 +303,32 @@ $(document).ready(function() {
             var origen = ($(card).attr('data-origen') || '').toLowerCase();
             var estaArchivado = $(card).parent().attr('data-etapa') === "Facturado" || $(card).parent().attr('data-etapa') === "Perdido";
 
+            var idLead = ($(card).attr('data-id') || '').toString();
+            var codigoLead = '#' + idLead;
+            var busquedaSinEspacios = textoBusqueda.replace(/\s+/g, '');
+
+            var coincideCodigo = false;
+            if (textoBusqueda !== '') {
+                if (textoBusqueda === idLead || codigoLead === busquedaSinEspacios) {
+                    coincideCodigo = true;
+                } else if (textoBusqueda.startsWith('#')) {
+                    var numBuscado = textoBusqueda.replace(/[^0-9]/g, '');
+                    if (numBuscado !== '' && (idLead === numBuscado || idLead.includes(numBuscado))) {
+                        coincideCodigo = true;
+                    }
+                } else if (busquedaSinEspacios.startsWith('lead')) {
+                    var numLead = busquedaSinEspacios.replace(/[^0-9]/g, '');
+                    if (numLead !== '' && (idLead === numLead || idLead.includes(numLead))) {
+                        coincideCodigo = true;
+                    }
+                } else {
+                    coincideCodigo = idLead === textoBusqueda || idLead.includes(textoBusqueda);
+                }
+            }
+
             // Condiciones
-            var coincideTexto = cliente.includes(textoBusqueda) || 
+            var coincideTexto = coincideCodigo ||
+                                cliente.includes(textoBusqueda) || 
                                 titulo.includes(textoBusqueda) || 
                                 telefonoRaw.includes(textoBusqueda) ||
                                 (textoBusquedaNumeros !== '' && telefonoNumeros.includes(textoBusquedaNumeros));
@@ -351,6 +399,9 @@ $(document).ready(function() {
             success: function(respuesta) {
                 if (respuesta) {
                     $('#editarLeadId').val(respuesta.id);
+                    var codigoLead = '#' + respuesta.id;
+                    $('#editarLeadCodigo').val(codigoLead);
+                    $('#badgeEditarLeadCodigo').text(codigoLead).show();
                     $('#editarLeadTitulo').val(respuesta.titulo);
                     $('#editarLeadValor').val(respuesta.valor_estimado);
                     $('#editarLeadPrioridad').val(respuesta.prioridad);
@@ -578,6 +629,8 @@ $(document).ready(function() {
                         $('#editarLeadFechaUltimaInteraccion').val('');
                     }
 
+                    $('#editarLeadTelefonoCliente').val(respuesta.telefono_cliente || '');
+                    $('#editarLeadNombreCliente').val(respuesta.nombre_cliente || '');
                     $('#modalEditarLead').modal('show');
                 }
             },
@@ -586,6 +639,25 @@ $(document).ready(function() {
             }
         });
     }
+
+    $('#modalEditarLead').on('hidden.bs.modal', function () {
+        $('#badgeEditarLeadCodigo').text('').hide();
+        $('#editarLeadCodigo').val('');
+    });
+
+    // Ver conversacion WhatsApp desde CRM
+    $(document).on('click', '#btnVerConversacionWhatsAppLead', function() {
+        var tel = $('#editarLeadTelefonoCliente').val();
+        var nom = $('#editarLeadNombreCliente').val();
+        if (!tel) {
+            swal('Sin tel\u00e9fono', 'Este lead no tiene n\u00famero celular registrado.', 'warning');
+            return;
+        }
+        $('#modalEditarLead').modal('hide');
+        setTimeout(function() {
+            window.location.href = '?ruta=whatsapp-chats&tel=' + encodeURIComponent(tel) + '&nom=' + encodeURIComponent(nom);
+        }, 300);
+    });
 
     // =============================================
     // ELIMINACIÓN DE LEADS

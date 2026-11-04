@@ -210,7 +210,7 @@
 
       if (puedeVer('crm') && (!isset($configuracionGlobalMenu["crm_activo"]) || $configuracionGlobalMenu["crm_activo"] == 1)) {
         $rutaActual = $_GET["ruta"] ?? '';
-        $esCrmActivo = ($rutaActual === 'crm' || $rutaActual === 'data-crm');
+        $esCrmActivo = ($rutaActual === 'crm' || $rutaActual === 'data-crm' || $rutaActual === 'whatsapp-chats');
 
         echo '<li class="treeview' . ($esCrmActivo ? ' active menu-open' : '') . '">
                 <a href="#">
@@ -231,6 +231,12 @@
                         <a href="data-crm">
                             <i class="fa fa-circle-o"></i>
                             <span>Data CRM</span>
+                        </a>
+                    </li>
+                    <li' . ($rutaActual === 'whatsapp-chats' ? ' class="active"' : '') . '>
+                        <a href="whatsapp-chats">
+                            <i class="fa fa-whatsapp text-success" style="color: #25D366 !important;"></i>
+                            <span>Chats WhatsApp</span>
                         </a>
                     </li>
                 </ul>

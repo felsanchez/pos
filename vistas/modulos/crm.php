@@ -477,7 +477,7 @@ $crmController->ctrEliminarEtapa();
           <!-- Buscador -->
           <div class="input-group" style="width: 280px;">
             <span class="input-group-addon"><i class="fa fa-search"></i></span>
-            <input type="text" class="form-control" id="buscadorCRM" placeholder="Buscar cliente, teléfono o negocio...">
+            <input type="text" class="form-control" id="buscadorCRM" placeholder="Buscar por código (#), cliente, teléfono o negocio...">
           </div>
 
         </div>
@@ -558,6 +558,7 @@ $crmController->ctrEliminarEtapa();
               ?>
                 <div class="crm-lead-card <?php echo $claseTemperatura; ?> <?php echo ($lead["etapa"] == "Facturado" || $lead["etapa"] == "Perdido") ? 'crm-lead-archived' : ''; ?>" 
                      data-id="<?php echo $lead["id"]; ?>" 
+                     data-codigo="#<?php echo $lead["id"]; ?>" 
                      data-vendedor="<?php echo htmlspecialchars($lead["nombre_vendedor"]); ?>"
                      data-prioridad="<?php echo $lead["prioridad"]; ?>"
                      data-cliente="<?php echo htmlspecialchars($lead["nombre_cliente"]); ?>"
@@ -580,7 +581,10 @@ $crmController->ctrEliminarEtapa();
                      ?>>
                   
                   <div class="crm-lead-card-header">
-                    <h4 class="crm-lead-client"><?php echo $lead["nombre_cliente"]; ?></h4>
+                    <div style="display: flex; align-items: center; gap: 6px; overflow: hidden; flex: 1; margin-right: 6px;">
+                      <span class="badge" style="background: #f1f5f9; color: #475569; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 2px 6px; border: 1px solid #e2e8f0; flex-shrink: 0;" title="Código del Lead">#<?php echo $lead["id"]; ?></span>
+                      <h4 class="crm-lead-client" title="<?php echo htmlspecialchars($lead["nombre_cliente"]); ?>" style="margin: 0;"><?php echo $lead["nombre_cliente"]; ?></h4>
+                    </div>
                     <span class="crm-lead-badge-priority crm-badge-<?php echo $lead["prioridad"]; ?>">
                       <?php 
                       if ($lead["prioridad"] == "frio") echo "❄️ Frío";
@@ -690,8 +694,19 @@ MODAL AGREGAR LEAD
               </div>
               <div class="panel-body" style="padding: 15px;">
                 <div class="row">
+                  <!-- Código del Lead -->
+                  <div class="col-md-3 col-sm-12">
+                    <div class="form-group">
+                      <label style="font-weight: 600; color: #475569;">Código Lead</label>
+                      <div class="input-group">
+                        <span class="input-group-addon" style="background: #f1f5f9;"><i class="fa fa-barcode text-muted"></i></span>
+                        <input type="text" class="form-control" readonly style="background-color: #f8fafc; font-weight: 600; color: #94a3b8; border-radius: 0 4px 4px 0;" value="Auto (#)">
+                      </div>
+                    </div>
+                  </div>
+
                   <!-- Título de Oportunidad -->
-                  <div class="col-md-8 col-sm-12">
+                  <div class="col-md-5 col-sm-12">
                     <div class="form-group">
                       <label style="font-weight: 600; color: #475569;">Título del Negocio *</label>
                       <div class="input-group">
@@ -783,7 +798,7 @@ MODAL AGREGAR LEAD
           </div>
         </div>
 
-        <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 12px 20px;">
+        <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 20px; flex-wrap: wrap;">
           <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 6px; font-weight: 500;">Salir</button>
           <button type="submit" class="btn btn-primary" style="font-weight: 600; border-radius: 6px;">
             <i class="fa fa-save"></i> Registrar Lead
@@ -809,7 +824,7 @@ MODAL EDITAR LEAD
         <div class="modal-header" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; padding: 15px 20px;">
           <button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 0.9; font-size: 24px;">&times;</button>
           <h4 class="modal-title" style="color: white !important; font-weight: bold; margin: 0; display: flex; align-items: center; gap: 8px;">
-            <i class="fa fa-pencil-square-o"></i> Editar Oportunidad Comercial
+            <i class="fa fa-pencil-square-o"></i> Editar Oportunidad Comercial <span class="badge" id="badgeEditarLeadCodigo" style="background: rgba(255,255,255,0.25); color: #fff; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 4px; display: none;"></span>
           </h4>
         </div>
 
@@ -827,8 +842,19 @@ MODAL EDITAR LEAD
               </div>
               <div class="panel-body" style="padding: 15px;">
                 <div class="row">
+                  <!-- Código del Lead -->
+                  <div class="col-md-3 col-sm-12">
+                    <div class="form-group">
+                      <label style="font-weight: 600; color: #475569;">Código Lead</label>
+                      <div class="input-group">
+                        <span class="input-group-addon" style="background: #f1f5f9;"><i class="fa fa-barcode text-muted"></i></span>
+                        <input type="text" class="form-control" name="editarLeadCodigo" id="editarLeadCodigo" readonly style="background-color: #f8fafc; font-weight: 700; color: #1e293b; border-radius: 0 4px 4px 0;" placeholder="#000">
+                      </div>
+                    </div>
+                  </div>
+
                   <!-- Título de Oportunidad -->
-                  <div class="col-md-8 col-sm-12">
+                  <div class="col-md-5 col-sm-12">
                     <div class="form-group">
                       <label style="font-weight: 600; color: #475569;">Título del Negocio *</label>
                       <div class="input-group">
@@ -980,7 +1006,10 @@ MODAL EDITAR LEAD
           </div>
         </div>
 
-        <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 12px 20px;">
+        <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 20px; flex-wrap: wrap;">
+          <input type="hidden" id="editarLeadTelefonoCliente">
+          <input type="hidden" id="editarLeadNombreCliente">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <?php if(puedeAccion('crm', 'eliminar')): ?>
             <button type="button" class="btn btn-danger btnEliminarLeadCRM" style="font-weight: 600; border-radius: 6px;">
               <i class="fa fa-trash"></i> Eliminar Lead
@@ -990,6 +1019,10 @@ MODAL EDITAR LEAD
               <i class="fa fa-trash"></i> Eliminar Lead
             </button>
           <?php endif; ?>
+            <button type="button" class="btn btn-success" id="btnVerConversacionWhatsAppLead" style="background-color:#25D366;border-color:#1ebe5d;font-weight:600;border-radius:6px;">
+              <i class="fa fa-whatsapp" style="font-size:16px;margin-right:4px;"></i> Ver conversaci&oacute;n WhatsApp
+            </button>
+          </div>
 
           <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 6px; font-weight: 500;">Salir</button>
 

@@ -48,6 +48,19 @@ $totalPorFranjaWA = [
 $maxConsultasCeldaWA = 0;
 $totalConsultasWA = 0;
 
+// Variables para Análisis de Tiempo Transcurrido desde Última Interacción
+$ahora = time();
+$leadsInactividad = [];
+$leadsPorCliente = [];
+$conteoLeadsPorCliente = [];
+$rangosInactividad = [
+    'menos_24h'   => 0,
+    '1_a_3_dias'  => 0,
+    '4_a_7_dias'  => 0,
+    '8_a_15_dias' => 0,
+    'mas_15_dias' => 0
+];
+
 if (!empty($leads)) {
     foreach ($leads as $l) {
         $etapa = trim(mb_strtolower($l["etapa"] ?? ''));
@@ -82,15 +95,17 @@ if (!empty($leads)) {
             $montoEnProceso += $valor;
         }
 
-        // Procesar Fecha para Mapa de Calor de WhatsApp
-        if ($esWhatsApp) {
-            $fechaRaw = (!empty($l["fecha_ultima_interaccion"]) && $l["fecha_ultima_interaccion"] != "0000-00-00 00:00:00")
-                ? $l["fecha_ultima_interaccion"]
-                : ((!empty($l["fecha_creacion"]) && $l["fecha_creacion"] != "0000-00-00 00:00:00") ? $l["fecha_creacion"] : "");
+        // Fecha de última interacción (con fallback a fecha_creacion)
+        $fechaRaw = (!empty($l["fecha_ultima_interaccion"]) && $l["fecha_ultima_interaccion"] != "0000-00-00 00:00:00")
+            ? $l["fecha_ultima_interaccion"]
+            : ((!empty($l["fecha_creacion"]) && $l["fecha_creacion"] != "0000-00-00 00:00:00") ? $l["fecha_creacion"] : "");
 
-            if (!empty($fechaRaw)) {
-                $time = strtotime($fechaRaw);
-                if ($time) {
+        if (!empty($fechaRaw)) {
+            $time = strtotime($fechaRaw);
+            if ($time) {
+
+                // 1. Procesar Mapa de Calor de WhatsApp
+                if ($esWhatsApp) {
                     $diaNum = intval(date('N', $time)); // 1 (Lunes) a 7 (Domingo)
                     $horaNum = intval(date('G', $time)); // 0 a 23
 
@@ -115,10 +130,140 @@ if (!empty($leads)) {
                         }
                     }
                 }
+
+                // 2. Procesar Tiempo Transcurrido desde la Última Interacción (Única por Cliente)
+                $telOriginal = !empty($l["telefono_cliente"]) ? trim($l["telefono_cliente"]) : '';
+                if (empty($telOriginal) && preg_match('/\d{7,}/', $l["origen"] ?? '', $m)) {
+                    $telOriginal = $m[0];
+                }
+                $telDigitos = preg_replace('/\D/', '', $telOriginal);
+
+                // Determinar clave única del cliente
+                if (!empty($l["id_cliente"]) && intval($l["id_cliente"]) > 0) {
+                    $claveCliente = "cli_" . intval($l["id_cliente"]);
+                } elseif (!empty($telDigitos)) {
+                    $claveCliente = "tel_" . $telDigitos;
+                } else {
+                    $claveCliente = "lead_" . $l["id"];
+                }
+
+                $conteoLeadsPorCliente[$claveCliente] = ($conteoLeadsPorCliente[$claveCliente] ?? 0) + 1;
+
+                // Solo guardar si es el primer registro del cliente o si este lead tiene una interacción más reciente (mayor timestamp)
+                if (!isset($leadsPorCliente[$claveCliente]) || $time > $leadsPorCliente[$claveCliente]['time_timestamp']) {
+                    $segundos = max(0, $ahora - $time);
+                    $minutos = floor($segundos / 60);
+                    $horas = floor($segundos / 3600);
+                    $dias = floor($segundos / 86400);
+
+                    if ($dias < 1) {
+                        $nivelAlerta = 'success';
+                        $nivelTexto = '< 24 Horas';
+                    } elseif ($dias <= 3) {
+                        $nivelAlerta = 'info';
+                        $nivelTexto = '1 - 3 Días';
+                    } elseif ($dias <= 7) {
+                        $nivelAlerta = 'warning';
+                        $nivelTexto = '4 - 7 Días';
+                    } elseif ($dias <= 15) {
+                        $nivelAlerta = 'danger';
+                        $nivelTexto = '8 - 15 Días';
+                    } else {
+                        $nivelAlerta = 'critical';
+                        $nivelTexto = '> 15 Días';
+                    }
+
+                    if ($dias > 0) {
+                        $horasRestantes = $horas % 24;
+                        $tiempoFormateado = $dias == 1 ? "1 día" : "{$dias} días";
+                        if ($horasRestantes > 0) {
+                            $tiempoFormateado .= " y {$horasRestantes}h";
+                        }
+                    } elseif ($horas > 0) {
+                        $minRestantes = $minutos % 60;
+                        $tiempoFormateado = $horas == 1 ? "1 hora" : "{$horas} horas";
+                        if ($minRestantes > 0) {
+                            $tiempoFormateado .= " y {$minRestantes}m";
+                        }
+                    } elseif ($minutos > 0) {
+                        $tiempoFormateado = $minutos == 1 ? "1 minuto" : "{$minutos} minutos";
+                    } else {
+                        $tiempoFormateado = "Hace un momento";
+                    }
+
+                    $nombreLead = !empty($l["nombre_cliente"]) ? trim($l["nombre_cliente"]) : (!empty($l["titulo"]) ? trim($l["titulo"]) : "Lead #".$l["id"]);
+                    $emailLead = !empty($l["email_cliente"]) ? trim($l["email_cliente"]) : '';
+
+                    $leadsPorCliente[$claveCliente] = [
+                        'id'                => $l["id"],
+                        'id_cliente'        => $l["id_cliente"] ?? null,
+                        'nombre'            => $nombreLead,
+                        'titulo'            => $l["titulo"] ?? '',
+                        'telefono'          => $telOriginal,
+                        'telefono_digitos'  => $telDigitos,
+                        'email'             => $emailLead,
+                        'origen'            => $l["origen"] ?? '',
+                        'es_whatsapp'       => $esWhatsApp,
+                        'etapa'             => $l["etapa"] ?? 'Sin etapa',
+                        'prioridad'         => $l["prioridad"] ?? 'normal',
+                        'fecha_interaccion' => $fechaRaw,
+                        'time_timestamp'    => $time,
+                        'segundos'          => $segundos,
+                        'horas'             => $horas,
+                        'dias'              => $dias,
+                        'tiempo_formateado' => $tiempoFormateado,
+                        'nivel_alerta'      => $nivelAlerta,
+                        'nivel_texto'       => $nivelTexto
+                    ];
+                }
             }
         }
     }
 }
+
+// Consolidar únicamente el lead más reciente de cada cliente y calcular rangos
+foreach ($leadsPorCliente as $clave => $item) {
+    $item['total_leads_cliente'] = $conteoLeadsPorCliente[$clave] ?? 1;
+
+    if ($item['dias'] < 1) {
+        $rangosInactividad['menos_24h']++;
+    } elseif ($item['dias'] <= 3) {
+        $rangosInactividad['1_a_3_dias']++;
+    } elseif ($item['dias'] <= 7) {
+        $rangosInactividad['4_a_7_dias']++;
+    } elseif ($item['dias'] <= 15) {
+        $rangosInactividad['8_a_15_dias']++;
+    } else {
+        $rangosInactividad['mas_15_dias']++;
+    }
+
+    $leadsInactividad[] = $item;
+}
+
+// Ordenar leads por inactividad descendente (los que llevan más tiempo primero)
+usort($leadsInactividad, function($a, $b) {
+    return $b['segundos'] <=> $a['segundos'];
+});
+
+// Top 10 leads con mayor tiempo de inactividad para la gráfica
+$top10Inactivos = array_slice($leadsInactividad, 0, 10);
+$labelsTopLeads = [];
+$diasTopLeads = [];
+foreach ($top10Inactivos as $tLead) {
+    $nombreCorto = mb_strlen($tLead['nombre']) > 16 ? mb_substr($tLead['nombre'], 0, 15) . '..' : $tLead['nombre'];
+    $labelsTopLeads[] = $nombreCorto;
+    $diasTopLeads[] = $tLead['dias'];
+}
+
+// Datos de distribución por rangos
+$labelsRangosInactividad = ['< 24h', '1 a 3 días', '4 a 7 días', '8 a 15 días', '> 15 días'];
+$dataRangosInactividad = [
+    $rangosInactividad['menos_24h'],
+    $rangosInactividad['1_a_3_dias'],
+    $rangosInactividad['4_a_7_dias'],
+    $rangosInactividad['8_a_15_dias'],
+    $rangosInactividad['mas_15_dias']
+];
 
 // Hallar Picos de WhatsApp
 $diaPicoNombre = "Sin datos";
@@ -250,15 +395,23 @@ $pctManuales = $totalLeads > 0 ? round(($leadsManuales / $totalLeads) * 100, 1) 
 
 .chart-card {
     background: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-    border: none;
-    margin-bottom: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    border: 1px solid #e2e8f0;
+    margin-bottom: 32px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chart-card:hover {
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
 .chart-card .box-header {
-    border-bottom: 1px solid #f0f0f0;
-    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 16px 22px;
+    background: #fafbfc;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -267,11 +420,83 @@ $pctManuales = $totalLeads > 0 ? round(($leadsManuales / $totalLeads) * 100, 1) 
 .chart-card .box-title {
     font-size: 16px;
     font-weight: 700;
-    color: #333;
+    color: #1e293b;
     display: flex;
     align-items: center;
     gap: 8px;
     margin: 0;
+}
+
+/* SEPARADORES DE SECCIÓN */
+.data-crm-section-divider {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin: 35px 0 18px 0;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e2e8f0;
+    flex-wrap: wrap;
+}
+
+.data-crm-section-divider .section-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.data-crm-section-divider .section-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+}
+
+.data-crm-section-divider .section-desc {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 400;
+    display: block;
+    margin-top: 3px;
+}
+
+/* SUBPANELES DE GRÁFICAS */
+.chart-subpanel {
+    background: #fafbfc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chart-subpanel:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.chart-inner-divider {
+    margin: 35px 0 25px 0;
+    border-top: 1px solid #e2e8f0;
+    position: relative;
+    text-align: left;
+}
+
+.chart-inner-divider span {
+    position: relative;
+    top: -12px;
+    background: #ffffff;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .chart-legend-custom {
@@ -398,6 +623,50 @@ $pctManuales = $totalLeads > 0 ? round(($leadsManuales / $totalLeads) * 100, 1) 
     border-radius: 3px;
     display: inline-block;
 }
+
+/* ESTILOS DE LA TABLA DE INACTIVIDAD */
+.inactivity-table th {
+    background-color: #f8fafc;
+    color: #475569;
+    font-size: 13px;
+    padding: 10px 12px !important;
+}
+
+.inactivity-table td {
+    padding: 10px 12px !important;
+    vertical-align: middle !important;
+}
+
+.badge-inact-success {
+    background-color: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+
+.badge-inact-info {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.badge-inact-warning {
+    background-color: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+.badge-inact-danger {
+    background-color: #ffedd5;
+    color: #c2410c;
+    border: 1px solid #fed7aa;
+}
+
+.badge-inact-critical {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    font-weight: 700;
+}
 </style>
 
 <div class="content-wrapper data-crm-wrapper">
@@ -485,6 +754,21 @@ $pctManuales = $totalLeads > 0 ? round(($leadsManuales / $totalLeads) * 100, 1) 
 
     </div>
 
+    <!-- ========================================================
+         SECCIÓN 1: RESUMEN DE CONVERSIÓN Y CANALES DE CAPTACIÓN
+    ======================================================== -->
+    <div class="data-crm-section-divider" style="margin-top: 10px;">
+      <div>
+        <div class="section-title">
+          <i class="fa fa-pie-chart text-success"></i> 1. Rendimiento Comercial & Canales de Captación
+        </div>
+        <span class="section-desc">Proporción de cierre de oportunidades y distribución del origen de prospectos</span>
+      </div>
+      <span class="badge section-badge" style="background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;">
+        <i class="fa fa-pie-chart"></i> Gráficas de Cierre
+      </span>
+    </div>
+
     <!-- SECCIÓN DE GRÁFICAS DE ETAPAS Y ORIGEN (2 COLUMNAS) -->
     <div class="row">
 
@@ -506,8 +790,8 @@ $pctManuales = $totalLeads > 0 ? round(($leadsManuales / $totalLeads) * 100, 1) 
             <?php else: ?>
               <div class="row">
                 <div class="col-xs-12 col-sm-6 text-center">
-                  <div class="chart-responsive" style="height: 220px; position: relative;">
-                    <canvas id="pieChartEtapas" height="220"></canvas>
+                  <div class="chart-responsive" style="height: 240px; position: relative;">
+                    <canvas id="pieChartEtapas" height="240"></canvas>
                   </div>
                 </div>
 
@@ -585,8 +869,8 @@ $pctManuales = $totalLeads > 0 ? round(($leadsManuales / $totalLeads) * 100, 1) 
             <?php else: ?>
               <div class="row">
                 <div class="col-xs-12 col-sm-6 text-center">
-                  <div class="chart-responsive" style="height: 220px; position: relative;">
-                    <canvas id="pieChartOrigen" height="220"></canvas>
+                  <div class="chart-responsive" style="height: 240px; position: relative;">
+                    <canvas id="pieChartOrigen" height="240"></canvas>
                   </div>
                 </div>
 
@@ -639,8 +923,20 @@ $pctManuales = $totalLeads > 0 ? round(($leadsManuales / $totalLeads) * 100, 1) 
     </div>
 
     <!-- ========================================================
-         NUEVA SECCIÓN: MAPA DE CALOR Y HORARIOS PICO (WHATSAPP)
+         SECCIÓN 2: MAPA DE CALOR Y HORARIOS PICO (WHATSAPP)
     ======================================================== -->
+    <div class="data-crm-section-divider">
+      <div>
+        <div class="section-title">
+          <i class="fa fa-whatsapp" style="color: #25D366;"></i> 2. Inteligencia de Horarios y Consultas WhatsApp
+        </div>
+        <span class="section-desc">Identificación de momentos clave con mayor tráfico de consultas y tasa de interacción</span>
+      </div>
+      <span class="badge section-badge" style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;">
+        <i class="fa fa-clock-o"></i> Mapa 24/7 & Curva Horaria
+      </span>
+    </div>
+
     <div class="row">
       <div class="col-xs-12">
         <div class="box chart-card">
@@ -787,18 +1083,25 @@ $pctManuales = $totalLeads > 0 ? round(($leadsManuales / $totalLeads) * 100, 1) 
               </span>
             </div>
 
-            <hr style="margin: 25px 0; border-top: 1px solid #e2e8f0;">
+            <!-- SEPARADOR INTERNO VISUAL -->
+            <div class="chart-inner-divider">
+              <span>
+                <i class="fa fa-bar-chart text-success"></i> Curva Horaria de Demanda (00:00 - 23:00) y Franjas Clave
+              </span>
+            </div>
 
             <!-- GRÁFICA DE BARRAS POR HORAS Y DESGLOSE POR FRANJAS -->
             <div class="row">
 
               <!-- Gráfica de Barras: Curva Horaria (00:00 a 23:00) -->
               <div class="col-md-8 col-sm-12">
-                <h4 style="font-size: 14px; font-weight: 700; color: #334155; margin: 0 0 15px 0;">
-                  <i class="fa fa-bar-chart text-success"></i> Volumen de Consultas por Hora del Día (00:00 - 23:00)
-                </h4>
-                <div class="chart-responsive" style="height: 220px; position: relative;">
-                  <canvas id="barChartHorasWhatsApp" height="220"></canvas>
+                <div class="chart-subpanel">
+                  <h4 style="font-size: 14px; font-weight: 700; color: #334155; margin: 0 0 15px 0;">
+                    <i class="fa fa-bar-chart text-success"></i> Volumen de Consultas por Hora del Día (00:00 - 23:00)
+                  </h4>
+                  <div class="chart-responsive" style="height: 250px; position: relative;">
+                    <canvas id="barChartHorasWhatsApp" height="250"></canvas>
+                  </div>
                 </div>
               </div>
 
@@ -851,7 +1154,271 @@ $pctManuales = $totalLeads > 0 ? round(($leadsManuales / $totalLeads) * 100, 1) 
       </div>
     </div>
 
-    <!-- TABLA DE DETALLE COMPARATIVO -->
+    <!-- ========================================================
+         SECCIÓN 3: TIEMPO TRANSCURRIDO Y SEGUIMIENTO DE LEADS
+    ======================================================== -->
+    <div class="data-crm-section-divider">
+      <div>
+        <div class="section-title">
+          <i class="fa fa-hourglass-half text-warning"></i> 3. Monitoreo de Tiempos sin Contacto y Retención
+        </div>
+        <span class="section-desc">Alertas tempranas de leads desatendidos basadas en la fecha de última interacción</span>
+      </div>
+      <span class="badge section-badge" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a;">
+        <i class="fa fa-clock-o"></i> Detección de Inactividad
+      </span>
+    </div>
+
+    <!-- TARJETA 3A: GRÁFICAS Y BADGES DE INACTIVIDAD -->
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="box chart-card">
+          <div class="box-header">
+            <h3 class="box-title">
+              <i class="fa fa-bar-chart text-warning"></i> Análisis y Distribución de Inactividad por Lead
+            </h3>
+            <span class="label label-warning" style="font-size: 11px; padding: 4px 10px;">
+              <i class="fa fa-user"></i> 1 Lead más reciente por cliente
+            </span>
+          </div>
+
+          <div class="box-body" style="padding: 24px;">
+
+            <!-- RESUMEN POR RANGOS DE TIEMPO -->
+            <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 28px;">
+              
+              <div class="heatmap-peak-badge" style="border-left: 4px solid #00a65a;">
+                <div>
+                  <div style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">Atendidos Hoy</div>
+                  <div style="font-size: 18px; font-weight: 700; color: #00a65a;"><?= $rangosInactividad['menos_24h'] ?> leads</div>
+                  <small style="color: #64748b;">< 24 Horas transcurridas</small>
+                </div>
+              </div>
+
+              <div class="heatmap-peak-badge" style="border-left: 4px solid #3c8dbc;">
+                <div>
+                  <div style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">Recientes</div>
+                  <div style="font-size: 18px; font-weight: 700; color: #3c8dbc;"><?= $rangosInactividad['1_a_3_dias'] ?> leads</div>
+                  <small style="color: #64748b;">1 a 3 Días transcurridos</small>
+                </div>
+              </div>
+
+              <div class="heatmap-peak-badge" style="border-left: 4px solid #f39c12;">
+                <div>
+                  <div style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">En Seguimiento</div>
+                  <div style="font-size: 18px; font-weight: 700; color: #f39c12;"><?= $rangosInactividad['4_a_7_dias'] ?> leads</div>
+                  <small style="color: #64748b;">4 a 7 Días transcurridos</small>
+                </div>
+              </div>
+
+              <div class="heatmap-peak-badge" style="border-left: 4px solid #e67e22;">
+                <div>
+                  <div style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">En Riesgo</div>
+                  <div style="font-size: 18px; font-weight: 700; color: #e67e22;"><?= $rangosInactividad['8_a_15_dias'] ?> leads</div>
+                  <small style="color: #64748b;">8 a 15 Días transcurridos</small>
+                </div>
+              </div>
+
+              <div class="heatmap-peak-badge" style="border-left: 4px solid #dd4b39;">
+                <div>
+                  <div style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">Inactivos Críticos</div>
+                  <div style="font-size: 18px; font-weight: 700; color: #dd4b39;"><?= $rangosInactividad['mas_15_dias'] ?> leads</div>
+                  <small style="color: #dd4b39; font-weight: 600;">Más de 15 Días</small>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- FILA DE GRÁFICAS DE TIEMPO TRANSCURRIDO -->
+            <div class="row">
+
+              <!-- Gráfica 1: Distribución por Rangos de Antigüedad -->
+              <div class="col-md-6 col-sm-12" style="margin-bottom: 15px;">
+                <div class="chart-subpanel">
+                  <h4 style="font-size: 14px; font-weight: 700; color: #334155; margin: 0 0 15px 0; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa fa-bar-chart text-primary"></i> Distribución de Leads por Antigüedad
+                  </h4>
+                  <div class="chart-responsive" style="height: 250px; position: relative;">
+                    <canvas id="barChartDistribucionInactividad" height="250"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Gráfica 2: Top 10 Leads con Mayor Tiempo Transcurrido -->
+              <div class="col-md-6 col-sm-12" style="margin-bottom: 15px;">
+                <div class="chart-subpanel">
+                  <h4 style="font-size: 14px; font-weight: 700; color: #334155; margin: 0 0 15px 0; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa fa-clock-o text-danger"></i> Top Leads con Mayor Tiempo sin Contacto (Días)
+                  </h4>
+                  <div class="chart-responsive" style="height: 250px; position: relative;">
+                    <canvas id="barChartTopInactivos" height="250"></canvas>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TARJETA 3B: TABLA AUDITORÍA DETALLADA -->
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="box chart-card">
+          <div class="box-header">
+            <div>
+              <h3 class="box-title">
+                <i class="fa fa-list-alt text-primary"></i> Detalle de Clientes y Tiempo Transcurrido
+              </h3>
+              <div style="color: #64748b; font-size: 12px; margin-top: 3px;">
+                Listado ordenado por tiempo sin interacción (mostrando únicamente la última interacción más reciente por cliente)
+              </div>
+            </div>
+
+            <div style="width: 320px; max-width: 100%;">
+              <div class="input-group">
+                <span class="input-group-addon" style="background: #f8fafc; border-color: #cbd5e1;"><i class="fa fa-search text-muted"></i></span>
+                <input type="text" id="buscarTablaInactividad" class="form-control" placeholder="Buscar por código (#), cliente, WhatsApp..." style="border-radius: 0 4px 4px 0; font-size: 12px;">
+              </div>
+            </div>
+          </div>
+
+          <div class="box-body" style="padding: 20px;">
+            <div class="table-responsive" style="border: 1px solid #e2e8f0; border-radius: 8px; max-height: 520px; overflow-y: auto;">
+              <table class="table table-hover table-striped inactivity-table" style="margin-bottom: 0;">
+                <thead style="position: sticky; top: 0; z-index: 5;">
+                  <tr>
+                    <th style="min-width: 180px;">Cliente / Lead</th>
+                    <th style="min-width: 140px;">WhatsApp</th>
+                    <th style="min-width: 170px;">Correo Electrónico</th>
+                    <th class="text-center" style="min-width: 110px;">Etapa</th>
+                    <th style="min-width: 140px;">Última Interacción</th>
+                    <th style="min-width: 170px;">Tiempo Transcurrido</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaCuerpoInactividad">
+                  <?php if (empty($leadsInactividad)): ?>
+                    <tr>
+                      <td colspan="6" class="text-center" style="padding: 30px; color: #94a3b8;">
+                        <i class="fa fa-info-circle fa-2x" style="opacity: 0.5; margin-bottom: 8px;"></i>
+                        <p style="margin: 0;">No se encontraron leads con registro de fecha para mostrar.</p>
+                      </td>
+                    </tr>
+                  <?php else: ?>
+                    <?php foreach ($leadsInactividad as $leadItem): 
+                      $badgeClass = 'badge-inact-' . $leadItem['nivel_alerta'];
+                      $porcentajeBarra = min(100, round(($leadItem['dias'] / 30) * 100)); // Relativo a 30 días
+                    ?>
+                      <tr>
+                        <!-- Nombre del Lead / Cliente -->
+                        <td>
+                          <div style="font-weight: 700; color: #1e293b; font-size: 13px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                            <span class="badge" style="background: #f1f5f9; color: #475569; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 2px 6px; border: 1px solid #e2e8f0; flex-shrink: 0;" title="Código del Lead">#<?= $leadItem['id'] ?></span>
+                            <span><?= htmlspecialchars($leadItem['nombre']) ?></span>
+                            <?php if ($leadItem['total_leads_cliente'] > 1): ?>
+                              <span class="badge" style="background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; font-size: 10px; font-weight: 600;" title="Este cliente tiene <?= $leadItem['total_leads_cliente'] ?> leads en total. Se muestra el más reciente.">
+                                <i class="fa fa-refresh"></i> <?= $leadItem['total_leads_cliente'] ?> leads
+                              </span>
+                            <?php endif; ?>
+                          </div>
+                          <?php if (!empty($leadItem['titulo']) && $leadItem['titulo'] !== $leadItem['nombre']): ?>
+                            <small style="color: #64748b; font-size: 11px; display: block; margin-top: 2px;">
+                              <i class="fa fa-briefcase text-muted"></i> <?= htmlspecialchars($leadItem['titulo']) ?>
+                            </small>
+                          <?php endif; ?>
+                        </td>
+
+                        <!-- WhatsApp con botón interactivo -->
+                        <td>
+                          <?php if (!empty($leadItem['telefono_digitos'])): ?>
+                            <a href="https://wa.me/<?= $leadItem['telefono_digitos'] ?>" target="_blank" class="btn btn-xs btn-success" style="background-color: #25D366; border-color: #25D366; font-weight: 600; border-radius: 4px; padding: 3px 8px;" title="Abrir chat de WhatsApp">
+                              <i class="fa fa-whatsapp"></i> <?= htmlspecialchars($leadItem['telefono']) ?>
+                            </a>
+                          <?php elseif (!empty($leadItem['telefono'])): ?>
+                            <span class="text-muted"><i class="fa fa-phone"></i> <?= htmlspecialchars($leadItem['telefono']) ?></span>
+                          <?php else: ?>
+                            <span class="text-muted" style="font-size: 12px; font-style: italic;">Sin teléfono</span>
+                          <?php endif; ?>
+                        </td>
+
+                        <!-- Correo Electrónico -->
+                        <td>
+                          <?php if (!empty($leadItem['email'])): ?>
+                            <a href="mailto:<?= htmlspecialchars($leadItem['email']) ?>" class="text-primary" style="font-size: 12px; word-break: break-all;" title="Enviar correo">
+                              <i class="fa fa-envelope-o text-muted"></i> <?= htmlspecialchars($leadItem['email']) ?>
+                            </a>
+                          <?php else: ?>
+                            <span class="text-muted" style="font-size: 12px; font-style: italic;">Sin correo registrado</span>
+                          <?php endif; ?>
+                        </td>
+
+                        <!-- Etapa -->
+                        <td class="text-center">
+                          <span class="label label-default" style="font-size: 11px; padding: 3px 7px; background: #e2e8f0; color: #334155;">
+                            <?= htmlspecialchars($leadItem['etapa']) ?>
+                          </span>
+                        </td>
+
+                        <!-- Fecha de Última Interacción -->
+                        <td>
+                          <div style="font-size: 12px; color: #334155; font-weight: 500;">
+                            <i class="fa fa-calendar-o text-muted" style="margin-right: 3px;"></i>
+                            <?= date("d/m/Y", strtotime($leadItem['fecha_interaccion'])) ?>
+                          </div>
+                          <small style="color: #64748b; font-size: 11px;">
+                            <i class="fa fa-clock-o text-muted" style="margin-right: 3px;"></i>
+                            <?= date("g:i a", strtotime($leadItem['fecha_interaccion'])) ?>
+                          </small>
+                        </td>
+
+                        <!-- Tiempo Transcurrido -->
+                        <td>
+                          <span class="badge <?= $badgeClass ?>" style="padding: 4px 8px; font-size: 11px; border-radius: 4px; display: inline-block;">
+                            <i class="fa fa-hourglass-end" style="margin-right: 3px;"></i>
+                            <?= $leadItem['tiempo_formateado'] ?>
+                          </span>
+                          <div class="progress progress-xs" style="height: 4px; margin-top: 5px; margin-bottom: 0; background: #e2e8f0; border-radius: 2px;">
+                            <?php 
+                              $colorBarra = '#00a65a';
+                              if ($leadItem['nivel_alerta'] === 'info') $colorBarra = '#3c8dbc';
+                              elseif ($leadItem['nivel_alerta'] === 'warning') $colorBarra = '#f39c12';
+                              elseif ($leadItem['nivel_alerta'] === 'danger') $colorBarra = '#e67e22';
+                              elseif ($leadItem['nivel_alerta'] === 'critical') $colorBarra = '#dd4b39';
+                            ?>
+                            <div class="progress-bar" style="width: <?= max(5, $porcentajeBarra) ?>%; background-color: <?= $colorBarra ?>;"></div>
+                          </div>
+                        </td>
+
+                      </tr>
+                    <?php endforeach; ?>
+                  <?php endif; ?>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         SECCIÓN 4: AUDITORÍA Y RENDIMIENTO POR CANAL
+    ======================================================== -->
+    <div class="data-crm-section-divider">
+      <div>
+        <div class="section-title">
+          <i class="fa fa-table text-primary"></i> 4. Rendimiento Comparativo por Canal Comercial
+        </div>
+        <span class="section-desc">Totales consolidados, volumen facturado, leads perdidos y tasa de conversión neta</span>
+      </div>
+      <span class="badge section-badge" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;">
+        <i class="fa fa-check-square-o"></i> Resumen Ejecutivo
+      </span>
+    </div>
+
+    <!-- TABLA DE DETALLE COMPARATIVO POR CANAL -->
     <div class="row">
       <div class="col-xs-12">
         <div class="box chart-card">
@@ -959,6 +1526,14 @@ $(document).ready(function() {
         $('[data-toggle="tooltip"]').tooltip({ container: 'body' });
     }
 
+    // Buscador interactivo de la tabla de inactividad
+    $('#buscarTablaInactividad').on('keyup', function() {
+        var valor = $(this).val().toLowerCase();
+        $('#tablaCuerpoInactividad tr').filter(function() {
+            $(this).toggle($(this).text().toLowerCase().indexOf(valor) > -1);
+        });
+    });
+
     var pieOptions = {
         segmentShowStroke: true,
         segmentStrokeColor: '#ffffff',
@@ -1044,7 +1619,7 @@ $(document).ready(function() {
             ]
         };
 
-        var barOptions = {
+        var barOptionsHoras = {
             scaleBeginAtZero: true,
             scaleShowGridLines: true,
             scaleGridLineColor: 'rgba(0,0,0,.05)',
@@ -1060,7 +1635,81 @@ $(document).ready(function() {
             tooltipTemplate: '<%=label%>: <%=value%> consultas WhatsApp'
         };
 
-        new Chart(ctxHoras).Bar(dataHoras, barOptions);
+        new Chart(ctxHoras).Bar(dataHoras, barOptionsHoras);
+    }
+
+    // 4. Gráfica de Distribución de Inactividad por Rangos
+    var canvasDistribucion = document.getElementById('barChartDistribucionInactividad');
+    if (canvasDistribucion) {
+        var ctxDist = canvasDistribucion.getContext('2d');
+        var dataDist = {
+            labels: <?= json_encode($labelsRangosInactividad) ?>,
+            datasets: [
+                {
+                    label: 'Cantidad de Leads',
+                    fillColor: 'rgba(60, 141, 188, 0.8)',
+                    strokeColor: 'rgba(60, 141, 188, 1)',
+                    highlightFill: 'rgba(54, 127, 169, 0.95)',
+                    highlightStroke: 'rgba(54, 127, 169, 1)',
+                    data: <?= json_encode($dataRangosInactividad) ?>
+                }
+            ]
+        };
+
+        var barOptionsDist = {
+            scaleBeginAtZero: true,
+            scaleShowGridLines: true,
+            scaleGridLineColor: 'rgba(0,0,0,.05)',
+            scaleGridLineWidth: 1,
+            scaleShowHorizontalLines: true,
+            scaleShowVerticalLines: false,
+            barShowStroke: true,
+            barStrokeWidth: 1,
+            barValueSpacing: 6,
+            barDatasetSpacing: 1,
+            responsive: true,
+            maintainAspectRatio: false,
+            tooltipTemplate: '<%=label%>: <%=value%> leads'
+        };
+
+        new Chart(ctxDist).Bar(dataDist, barOptionsDist);
+    }
+
+    // 5. Gráfica Top Leads con Mayor Inactividad (Días)
+    var canvasTopLeads = document.getElementById('barChartTopInactivos');
+    if (canvasTopLeads) {
+        var ctxTop = canvasTopLeads.getContext('2d');
+        var dataTop = {
+            labels: <?= json_encode($labelsTopLeads) ?>,
+            datasets: [
+                {
+                    label: 'Días Transcurridos',
+                    fillColor: 'rgba(221, 75, 57, 0.8)',
+                    strokeColor: 'rgba(221, 75, 57, 1)',
+                    highlightFill: 'rgba(215, 57, 37, 0.95)',
+                    highlightStroke: 'rgba(215, 57, 37, 1)',
+                    data: <?= json_encode($diasTopLeads) ?>
+                }
+            ]
+        };
+
+        var barOptionsTop = {
+            scaleBeginAtZero: true,
+            scaleShowGridLines: true,
+            scaleGridLineColor: 'rgba(0,0,0,.05)',
+            scaleGridLineWidth: 1,
+            scaleShowHorizontalLines: true,
+            scaleShowVerticalLines: false,
+            barShowStroke: true,
+            barStrokeWidth: 1,
+            barValueSpacing: 6,
+            barDatasetSpacing: 1,
+            responsive: true,
+            maintainAspectRatio: false,
+            tooltipTemplate: '<%=label%>: <%=value%> días sin interacción'
+        };
+
+        new Chart(ctxTop).Bar(dataTop, barOptionsTop);
     }
 
 });
