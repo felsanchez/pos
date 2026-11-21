@@ -2481,10 +2481,19 @@ $(document).ready(function () {
 							var data = col.data || '';
 
 							if (colIdx === 5) {
+								var rowNode = api.row(rowIdx).node();
+								var celdaOriginal = $(rowNode).find('.celda-observacion, .celda-observacion-disabled');
+								var esEditable = celdaOriginal.hasClass('celda-observacion') && celdaOriginal.attr('contenteditable') === 'true';
 								var obsTexto = $('<div>').html(data).text().trim();
+								if (obsTexto === "Sin observación") obsTexto = "";
+
 								finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
 								finalHtml += '<span class="text-bold" style="block;color:#555;margin-bottom:4px;"> ' + label + ':</span>';
-								finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:24px;">' + obsTexto + '</div>';
+								if (esEditable) {
+									finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:24px;">' + obsTexto + '</div>';
+								} else {
+									finalHtml += '<div class="celda-observacion-disabled" contenteditable="false" data-id="' + idVenta + '" title="Permiso de edición requerido" style="min-height:24px; border:1px solid #e2e8f0; border-radius:4px; padding:6px 8px; background:#f8fafc; color:#64748b; cursor:not-allowed; opacity:0.85;">' + (obsTexto || '<span class="text-muted" style="font-style:italic;">Sin observación</span>') + '</div>';
+								}
 								finalHtml += '</div>';
 								return;
 							}
@@ -2558,10 +2567,20 @@ GESTIÓN DE IMÁGENES DE VENTA
 $(document).on("click", ".img-ampliar-venta, .btnVerFotoVenta", function () {
 	var rutaImagen = $(this).attr("data-imagen");
 	var idVenta = $(this).attr("data-idventa");
+	var editable = $(this).attr("data-editable");
 
 	$("#imagenVentaAmpliada").attr("src", rutaImagen);
 	$("#idVentaImagen").val(idVenta);
 	$(".nuevaImagenVenta").val("");
+
+	if (editable === "0") {
+		$(".seccion-cambiar-imagen-venta").hide();
+		$(".btnGuardarImagenVenta").hide();
+	} else {
+		$(".seccion-cambiar-imagen-venta").show();
+		$(".btnGuardarImagenVenta").show();
+	}
+
 	$("#modalAmpliarImagenVenta").fadeIn();
 });
 

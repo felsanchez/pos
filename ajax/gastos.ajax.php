@@ -158,6 +158,11 @@ ACTUALIZAR IMAGEN DE COMPROBANTE DESDE LA TABLA
 
 if(isset($_FILES["nuevaImagenComprobante"])){ 
 
+	if (!puedeAccion('gastos', 'editar')) {
+		echo json_encode("error_permisos");
+		return;
+	}
+
 	require_once "../modelos/gastos.modelo.php"; 
 
 	$idGasto = $_POST["idGastoImagen"];

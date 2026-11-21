@@ -151,16 +151,24 @@ class ControladorGastos{
 
 
 
-			// Columna 6: Imagen
+			// Columna 6: Imagen (Editable solo si tiene permiso de editar gastos)
 			$imgSrc = !empty($value["imagen_comprobante"]) ? $value["imagen_comprobante"] : "vistas/img/gastos/default/sin-imagen.png";
-			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-comprobante-clickeable" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idgasto="' . $value["id"] . '" data-concepto="' . e($value["concepto"]) . '">';
+			$puedeEditarGastoImg = puedeAccion('gastos', 'editar');
+			$editableAttrGasto = $puedeEditarGastoImg ? '1' : '0';
+			$tituloImgGasto = $puedeEditarGastoImg ? 'Ver / Modificar comprobante' : 'Ver comprobante (Edición deshabilitada)';
+			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-comprobante-clickeable" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idgasto="' . $value["id"] . '" data-concepto="' . e($value["concepto"]) . '" data-editable="' . $editableAttrGasto . '" title="' . $tituloImgGasto . '">';
 
 			// Columna 7: Fecha
 			$nestedData[] = !empty($value["fecha"]) ? date("d/m/Y", strtotime($value["fecha"])) : '-';
 
-			// Columna 8: Notas (Editable)
-			$placeholderAttr = empty($value["notas"]) ? ' data-placeholder="Escribe una nota..."' : '';
-			$nestedData[] = '<div contenteditable="true" class="celda-notas-gasto" data-id="' . $value["id"] . '"' . $placeholderAttr . '>' . e($value["notas"]) . '</div>';
+			// Columna 8: Notas (Editable solo si tiene permiso de editar gastos)
+			$notasGasto = trim($value["notas"] ?? "");
+			if (puedeAccion('gastos', 'editar')) {
+				$placeholderAttr = empty($notasGasto) ? ' data-placeholder="Escribe una nota..."' : '';
+				$nestedData[] = '<div contenteditable="true" class="celda-notas-gasto" data-id="' . $value["id"] . '"' . $placeholderAttr . '>' . e($notasGasto) . '</div>';
+			} else {
+				$nestedData[] = '<div contenteditable="false" class="celda-notas-gasto-disabled" style="cursor: not-allowed; opacity: 0.85; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 4px 8px; color: #64748b; min-height: 28px;" title="Permiso de edición requerido para modificar notas" data-id="' . $value["id"] . '">' . (!empty($notasGasto) ? e($notasGasto) : '<span class="text-muted" style="font-style: italic;">Sin notas</span>') . '</div>';
+			}
 
 			// Columna 9: Acciones
 			$botonesAcciones = '<div class="btn-group">';

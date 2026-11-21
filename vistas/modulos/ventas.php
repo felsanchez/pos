@@ -295,19 +295,25 @@ if ($xml) {
               <img id="imagenVentaAmpliada" src="" class="img-responsive"
                 style="max-width: 100%; margin: 0 auto; margin-bottom: 20px;">
 
-              <hr>
+              <?php if (puedeAccion('ventas', 'editar')): ?>
+              <div class="seccion-cambiar-imagen-venta">
+                <hr>
 
-              <div class="form-group text-left">
-                <label>Cambiar Imagen de la Venta</label>
-                <input type="file" class="form-control nuevaImagenVenta" accept="image/*">
-                <p class="help-block">Peso máximo de la imagen 8MB</p>
+                <div class="form-group text-left">
+                  <label>Cambiar Imagen de la Venta</label>
+                  <input type="file" class="form-control nuevaImagenVenta" accept="image/*">
+                  <p class="help-block">Peso máximo de la imagen 8MB</p>
+                </div>
               </div>
+              <?php endif; ?>
 
               <input type="hidden" id="idVentaImagen">
             </div>
             <div class="modal-custom-footer">
-              <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancelar</button>
+              <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cerrar</button>
+              <?php if (puedeAccion('ventas', 'editar')): ?>
               <button type="button" class="btn btn-primary btnGuardarImagenVenta">Guardar Imagen</button>
+              <?php endif; ?>
             </div>
           </div>
         </div>

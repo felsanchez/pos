@@ -184,6 +184,119 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
 
               </div>
 
+              <!-- Vinculación con Cuenta Bold -->
+              <div class="row" style="margin-top: 10px;">
+                <div class="col-md-12">
+                  <div style="background: #faf5ff; border: 1px solid #d8b4fe; border-left: 4px solid #9333ea; border-radius: 6px; padding: 15px 18px; margin-bottom: 5px;">
+                    <h5 style="color: #6b21a8; font-weight: 700; margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                      <i class="fa fa-credit-card" style="font-size: 18px;"></i> Vinculación con Cuenta Bold (Transacciones en tiempo real)
+                    </h5>
+                    
+                    <p style="font-size: 13px; color: #374151; margin-bottom: 12px;">
+                      Para solicitar y configurar la vinculación con tu cuenta Bold, sigue las siguientes instrucciones:
+                    </p>
+
+                    <ol style="font-size: 13px; color: #374151; padding-left: 20px; line-height: 1.8; margin-bottom: 14px;">
+                      <li>
+                        Ingresa a la plataforma Web de Bold: 
+                        <a href="https://panel.bold.co/misventas/integraciones/webhooks" target="_blank" rel="noopener noreferrer" style="font-weight: 600; color: #7c3aed; text-decoration: underline;">
+                          https://panel.bold.co/misventas/integraciones/webhooks <i class="fa fa-external-link" style="font-size: 11px;"></i>
+                        </a>
+                      </li>
+                      <li>Dirígete al módulo <strong>"Integraciones"</strong>.</li>
+                      <li>Crea una nueva <strong>llave de integración</strong>.</li>
+                      <li>
+                        Crea un nuevo <strong>Webhook</strong> y configura:
+                        <div style="margin-top: 6px; margin-bottom: 6px; background: #ffffff; border: 1px solid #e9d5ff; border-radius: 6px; padding: 10px 12px;">
+                          <div style="margin-bottom: 8px;">
+                            <span style="font-size: 11px; font-weight: 700; color: #6b21a8; text-transform: uppercase;">URL del Webhook:</span>
+                            <div class="input-group input-group-sm" style="margin-top: 3px; max-width: 600px;">
+                              <input type="text" class="form-control" id="urlWebhookBoldInput" value="https://master-n8n.la6x8e.easypanel.host/webhook/cuenta-bold" readonly style="background: #fdf4ff; font-family: monospace; font-size: 12px; color: #581c87; font-weight: 600;">
+                              <span class="input-group-btn">
+                                <button class="btn btn-default" type="button" onclick="navigator.clipboard.writeText('https://master-n8n.la6x8e.easypanel.host/webhook/cuenta-bold'); if(typeof swal === 'function'){ swal('Copiado', 'URL del Webhook copiada al portapapeles', 'success'); } else { alert('URL copiada al portapapeles'); }" title="Copiar URL">
+                                  <i class="fa fa-copy"></i> Copiar
+                                </button>
+                              </span>
+                            </div>
+                          </div>
+                          <div>
+                            <span style="font-size: 12px; color: #4b5563;">
+                              <i class="fa fa-check-square-o text-success"></i> <strong>Activa los 4 eventos solicitados</strong> en la configuración del Webhook en Bold.
+                            </span>
+                          </div>
+                        </div>
+                      </li>
+                    </ol>
+
+                    <div style="background: #fef3c7; border: 1px solid #fde68a; border-left: 3px solid #f59e0b; border-radius: 4px; padding: 8px 12px; font-size: 12.5px; color: #92400e;">
+                      <i class="fa fa-clock-o" style="font-size: 14px; margin-right: 4px;"></i>
+                      <strong>Nota de tiempo:</strong> Ten en cuenta que la vinculación puede tardar entre <strong>3 y 36 horas</strong>.
+                    </div>
+
+                    <!-- Botón Solicitar Vinculación Bold -->
+                    <div style="margin-top: 15px; display: flex; align-items: center; justify-content: flex-end; gap: 10px;">
+                      <?php 
+                        $solicitudBoldActual = !empty($configuracion["solicitud_bold"]) ? $configuracion["solicitud_bold"] : "sin solicitud";
+                        $yaSolicitado = (strpos(strtolower($solicitudBoldActual), 'solicito') !== false);
+                      ?>
+                      <button type="button" class="btn btn-primary" id="btnSolicitarBold" style="background-color: #7c3aed; border-color: #6d28d9; font-weight: 700; padding: 8px 24px; border-radius: 6px; box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);" <?php echo $yaSolicitado ? 'disabled' : ''; ?>>
+                        <i class="fa <?php echo $yaSolicitado ? 'fa-check' : 'fa-paper-plane'; ?>" id="iconoBtnSolicitarBold"></i> 
+                        <span id="textoBtnSolicitarBold"><?php echo $yaSolicitado ? 'Solicitado' : 'Solicitar'; ?></span>
+                      </button>
+                    </div>
+
+                    <script>
+                    $(document).on("click", "#btnSolicitarBold", function(e) {
+                      e.preventDefault();
+                      var btn = $(this);
+                      btn.prop("disabled", true);
+                      $("#iconoBtnSolicitarBold").removeClass("fa-paper-plane fa-check").addClass("fa-spinner fa-spin");
+                      
+                      $.ajax({
+                        url: "ajax/configuracion.ajax.php",
+                        method: "POST",
+                        data: { accion: "solicitarBold" },
+                        dataType: "json",
+                        success: function(res) {
+                          if (res && res.status === "ok") {
+                            $("#iconoBtnSolicitarBold").removeClass("fa-spinner fa-spin").addClass("fa-check");
+                            $("#textoBtnSolicitarBold").text("Solicitado");
+                            if (typeof swal === 'function') {
+                              swal({
+                                title: "¡Solicitud enviada!",
+                                text: "Se ha registrado tu solicitud para vincular la cuenta BOLD.",
+                                type: "success",
+                                confirmButtonText: "Aceptar"
+                              });
+                            } else {
+                              alert("¡Solicitud enviada! Se ha registrado tu solicitud para vincular la cuenta BOLD.");
+                            }
+                          } else {
+                            btn.prop("disabled", false);
+                            $("#iconoBtnSolicitarBold").removeClass("fa-spinner fa-spin").addClass("fa-paper-plane");
+                            if (typeof swal === 'function') {
+                              swal("Error", "No se pudo registrar la solicitud. Intenta de nuevo.", "error");
+                            } else {
+                              alert("Error al registrar la solicitud.");
+                            }
+                          }
+                        },
+                        error: function() {
+                          btn.prop("disabled", false);
+                          $("#iconoBtnSolicitarBold").removeClass("fa-spinner fa-spin").addClass("fa-paper-plane");
+                          if (typeof swal === 'function') {
+                            swal("Error", "Error al comunicarse con el servidor.", "error");
+                          } else {
+                            alert("Error al comunicarse con el servidor.");
+                          }
+                        }
+                      });
+                    });
+                    </script>
+                  </div>
+                </div>
+              </div>
+
               <hr>
 
               <!-- Alertas del Calendario -->
@@ -606,6 +719,82 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
                     });
                   });
                   </script>
+
+                  <hr style="margin: 25px 0 20px 0; border-top: 1px dashed #d2d6de;">
+
+                  <!-- SOLICITAR FACTURACIÓN ELECTRÓNICA POR PRIMERA VEZ -->
+                  <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; border-radius: 6px; padding: 16px 20px; margin-top: 15px;">
+                    <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                      <div style="flex: 1; min-width: 260px;">
+                        <h4 style="margin: 0 0 8px 0; color: #166534; font-weight: 700; font-size: 15px;">
+                          <i class="fa fa-file-text-o" style="margin-right: 6px;"></i> Solicitar Facturación Electrónica por primera vez
+                        </h4>
+                        <p style="margin: 0; color: #374151; font-size: 13px; line-height: 1.5;">
+                          Si aún no cuentas con el servicio de Facturación Electrónica DIAN activo en tu cuenta, solicita la activación aquí. Nuestro equipo gestionará tu vinculación y habilitación.
+                        </p>
+                      </div>
+
+                      <div style="display: flex; align-items: center; gap: 10px; align-self: center;">
+                        <?php 
+                          $solicitudFEActual = !empty($configuracion["solicitud_facturacion_electronica"]) ? $configuracion["solicitud_facturacion_electronica"] : "sin solicitud";
+                          $yaSolicitadoFE = (strpos(strtolower($solicitudFEActual), 'solicito') !== false);
+                        ?>
+                        <button type="button" class="btn btn-success" id="btnSolicitarFE" style="background-color: #16a34a; border-color: #15803d; font-weight: 700; padding: 8px 22px; border-radius: 6px; box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);" <?php echo $yaSolicitadoFE ? 'disabled' : ''; ?>>
+                          <i class="fa <?php echo $yaSolicitadoFE ? 'fa-check' : 'fa-paper-plane'; ?>" id="iconoBtnSolicitarFE"></i> 
+                          <span id="textoBtnSolicitarFE"><?php echo $yaSolicitadoFE ? 'Solicitado' : 'Solicitar'; ?></span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <script>
+                  $(document).on("click", "#btnSolicitarFE", function(e) {
+                    e.preventDefault();
+                    var btn = $(this);
+                    btn.prop("disabled", true);
+                    $("#iconoBtnSolicitarFE").removeClass("fa-paper-plane fa-check").addClass("fa-spinner fa-spin");
+                    
+                    $.ajax({
+                      url: "ajax/configuracion.ajax.php",
+                      method: "POST",
+                      data: { accion: "solicitarFacturacionElectronica" },
+                      dataType: "json",
+                      success: function(res) {
+                        if (res && res.status === "ok") {
+                          $("#iconoBtnSolicitarFE").removeClass("fa-spinner fa-spin").addClass("fa-check");
+                          $("#textoBtnSolicitarFE").text("Solicitado");
+                          if (typeof swal === 'function') {
+                            swal({
+                              title: "¡Solicitud enviada!",
+                              text: "Se ha registrado tu solicitud para activar la Facturación Electrónica por primera vez.",
+                              type: "success",
+                              confirmButtonText: "¡Entendido!"
+                            });
+                          } else {
+                            alert("¡Solicitud enviada! Se ha registrado tu solicitud para activar la Facturación Electrónica por primera vez.");
+                          }
+                        } else {
+                          btn.prop("disabled", false);
+                          $("#iconoBtnSolicitarFE").removeClass("fa-spinner fa-spin").addClass("fa-paper-plane");
+                          if (typeof swal === 'function') {
+                            swal("Error", "No se pudo registrar la solicitud. Intenta de nuevo.", "error");
+                          } else {
+                            alert("Error al registrar la solicitud.");
+                          }
+                        }
+                      },
+                      error: function() {
+                        btn.prop("disabled", false);
+                        $("#iconoBtnSolicitarFE").removeClass("fa-spinner fa-spin").addClass("fa-paper-plane");
+                        if (typeof swal === 'function') {
+                          swal("Error", "Error al comunicarse con el servidor.", "error");
+                        } else {
+                          alert("Error al comunicarse con el servidor.");
+                        }
+                      }
+                    });
+                  });
+                  </script>
                 </div>
               </div>
             </div>
@@ -613,9 +802,140 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
 
 
           <!--=====================================
+          SECCIÓN: CONFIGURACIÓN DEL CORREO EMISOR (SMTP)
+          ======================================-->
+          <div class="box box-warning collapsed-box">
+            <div class="box-header with-border">
+              <h3 class="box-title"><i class="fa fa-envelope text-warning"></i> Configuración del Correo Emisor (SMTP)</h3>
+              <div class="box-tools pull-right">
+                <button type="button" class="btn btn-box-tool" data-widget="custom-collapse"><i class="fa fa-plus"></i></button>
+              </div>
+            </div>
+            <div class="box-body" style="display: none;">
+              
+              <!-- Alerta Informativa / Instrucciones -->
+              <div class="alert alert-info" style="border-radius: 6px; background-color: #f0f9ff; border-color: #bae6fd; color: #0369a1; margin-bottom: 20px;">
+                <h4 style="font-weight: 700; font-size: 15px; margin-top: 0;">
+                  <i class="icon fa fa-info-circle"></i> ¿Para qué se utiliza este correo?
+                </h4>
+                <p style="margin-bottom: 8px; font-size: 13px;">
+                  Este correo es el <strong>remitente oficial</strong> desde el cual el sistema envía automáticamente los comprobantes y facturas en formato PDF a los clientes en los módulos de <strong>Ventas</strong> y <strong>Órdenes</strong>.
+                </p>
+                <hr style="margin: 10px 0; border-top: 1px solid #bae6fd;">
+                <div class="row" style="font-size: 12.5px;">
+                  <div class="col-md-6" style="margin-bottom: 10px;">
+                    <strong style="color: #0c4a6e;"><i class="fa fa-google"></i> Si utilizas Gmail:</strong>
+                    <ol style="margin-top: 5px; padding-left: 20px; line-height: 1.6;">
+                      <li>Activa la <strong>Verificación en dos pasos</strong> en tu cuenta de Google (<a href="https://myaccount.google.com/security" target="_blank" style="color: #0284c7; text-decoration: underline;">myaccount.google.com/security</a>).</li>
+                      <li>Genera una <strong>Contraseña de Aplicación</strong> en <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color: #0284c7; text-decoration: underline;">myaccount.google.com/apppasswords</a> con el nombre <em>"POS Facturas"</em>.</li>
+                      <li>Copia el código de 16 letras resultante y pégalo abajo en <strong>Contraseña SMTP</strong>.</li>
+                      <li>Host: <code>smtp.gmail.com</code> | Puerto: <code>587</code> | Seguridad: <code>TLS</code>.</li>
+                    </ol>
+                  </div>
+                  <div class="col-md-6">
+                    <strong style="color: #0c4a6e;"><i class="fa fa-server"></i> Si utilizas Correo Corporativo Propio (cPanel / Webmail):</strong>
+                    <ul style="margin-top: 5px; padding-left: 20px; line-height: 1.6;">
+                      <li><strong>Correo Emisor:</strong> Tu correo completo (ej. <code>facturacion@tudominio.com</code>).</li>
+                      <li><strong>Contraseña SMTP:</strong> La misma clave con la que ingresas a tu Webmail.</li>
+                      <li><strong>Servidor Host:</strong> Normalmente <code>mail.tudominio.com</code>.</li>
+                      <li><strong>Puerto:</strong> <code>465</code> (con seguridad SSL) o <code>587</code> (con seguridad TLS).</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <!-- Correo Emisor -->
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label style="font-weight: 600;">Correo Emisor (SMTP Username)</label>
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-envelope text-muted"></i></span>
+                      <input type="email" class="form-control" name="smtpCorreo"
+                        value="<?php echo isset($configFactus['smtp_correo']) ? htmlspecialchars($configFactus['smtp_correo']) : 'kontrolpos01@gmail.com'; ?>"
+                        placeholder="ejemplo@gmail.com">
+                    </div>
+                    <p class="help-block" style="font-size: 12px;">Correo electrónico que verán los clientes como remitente al recibir sus facturas.</p>
+                  </div>
+                </div>
+
+                <!-- Contraseña SMTP -->
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label style="font-weight: 600;">Contraseña SMTP (App Password)</label>
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-lock text-muted"></i></span>
+                      <input type="password" class="form-control" name="smtpPassword" id="smtpPasswordConfig"
+                        value="<?php echo isset($configFactus['smtp_password']) ? htmlspecialchars($configFactus['smtp_password']) : 'jnjs tvux pfwd aghm'; ?>"
+                        placeholder="Contraseña de aplicación o clave SMTP">
+                      <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" onclick="togglePasswordVisibility('smtpPasswordConfig', this)" title="Ver / Ocultar">
+                          <i class="fa fa-eye"></i>
+                        </button>
+                      </span>
+                    </div>
+                    <p class="help-block" style="font-size: 12px;">Contraseña de aplicación de Gmail (16 caracteres) o contraseña de tu servidor Webmail.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <!-- Servidor Host -->
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label style="font-weight: 600;">Servidor SMTP (Host)</label>
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-server text-muted"></i></span>
+                      <input type="text" class="form-control" name="smtpHost"
+                        value="<?php echo isset($configFactus['smtp_host']) ? htmlspecialchars($configFactus['smtp_host']) : 'smtp.gmail.com'; ?>"
+                        placeholder="smtp.gmail.com">
+                    </div>
+                    <p class="help-block" style="font-size: 12px;">Dirección del servidor SMTP (ej: smtp.gmail.com).</p>
+                  </div>
+                </div>
+
+                <!-- Puerto SMTP -->
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label style="font-weight: 600;">Puerto SMTP</label>
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-plug text-muted"></i></span>
+                      <input type="number" class="form-control" name="smtpPort"
+                        value="<?php echo isset($configFactus['smtp_port']) ? htmlspecialchars($configFactus['smtp_port']) : 587; ?>"
+                        placeholder="587">
+                    </div>
+                    <p class="help-block" style="font-size: 12px;">Puerto TCP: 587 (TLS recomendado) o 465 (SSL).</p>
+                  </div>
+                </div>
+
+                <!-- Seguridad SMTP -->
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label style="font-weight: 600;">Seguridad SMTP</label>
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-shield text-muted"></i></span>
+                      <select class="form-control" name="smtpSecure">
+                        <?php
+                        $secureVal = isset($configFactus['smtp_secure']) ? strtolower($configFactus['smtp_secure']) : 'tls';
+                        ?>
+                        <option value="tls" <?php echo ($secureVal == 'tls') ? 'selected' : ''; ?>>TLS (Recomendado)</option>
+                        <option value="ssl" <?php echo ($secureVal == 'ssl') ? 'selected' : ''; ?>>SSL</option>
+                        <option value="none" <?php echo ($secureVal == 'none' || $secureVal == '') ? 'selected' : ''; ?>>Ninguna</option>
+                      </select>
+                    </div>
+                    <p class="help-block" style="font-size: 12px;">Tipo de cifrado seguro para la conexión.</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+
+          <!--=====================================
           SECCIÓN: CONFIGURACIÓN DE GOOGLE CALENDAR & TASKS
           ======================================-->
-          <?php if (isset($_SESSION["perfil"]) && $_SESSION["perfil"] === "_SystemMaster_"): ?>
+          <?php if (isset($_SESSION["perfil"]) && in_array($_SESSION["perfil"], ["_SystemMaster_", "Administrador"])): ?>
           <div class="box box-primary collapsed-box">
             <div class="box-header with-border">
               <h3 class="box-title"><i class="fa fa-google text-danger"></i> Integración con Google Cloud (Google Calendar & Tasks)</h3>
@@ -625,6 +945,16 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
             </div>
             <div class="box-body" style="display: none;">
               <p class="text-muted">Credenciales globales OAuth 2.0 obtenidas de tu consola de Google Cloud Platform para habilitar la sincronización de citas y tareas en los celulares de los usuarios.</p>
+
+              <?php
+              require_once "controladores/google.controlador.php";
+              $uriRedireccionGoogle = ControladorGoogle::ctrObtenerRedirectUri();
+              ?>
+              <div class="alert alert-info" style="margin-bottom: 15px;">
+                <h5 style="margin-top: 0; font-weight: bold;"><i class="fa fa-info-circle"></i> URI de redireccionamiento autorizada:</h5>
+                <p>Copia esta URL y pégala en tu proyecto de Google Cloud Console en <em>"URIs de redireccionamiento autorizados"</em>:</p>
+                <code style="font-size: 13px; color: #1e3a8a; background: #e0f2fe; padding: 4px 8px; border-radius: 4px; display: inline-block; word-break: break-all;"><?php echo htmlspecialchars($uriRedireccionGoogle); ?></code>
+              </div>
               
               <div class="row">
                 <div class="col-md-6">
@@ -1050,6 +1380,7 @@ MODAL: CREAR / EDITAR PERFIL (FUERA DEL FORM)
                 'ordenes'              => ['imprimir'],
                 'ventas'               => ['imprimir'],
                 'cierres-caja'         => ['crear','editar','eliminar'],
+                'menu_digital'         => ['editar','eliminar','imprimir'],
                 'documento_soporte'    => ['editar'],
                 'notas_credito'        => ['editar'],
                 'notas_ajuste'         => ['editar'],
@@ -1352,6 +1683,25 @@ $(document).ready(function() {
     $('#adminFullAccessAlert').hide();
   });
 });
+
+function togglePasswordVisibility(inputId, btn) {
+  var input = document.getElementById(inputId);
+  if (!input) return;
+  var icon = btn.querySelector('i');
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (icon) {
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    }
+  } else {
+    input.type = 'password';
+    if (icon) {
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
+  }
+}
 </script>
   </section>
 

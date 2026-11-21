@@ -122,6 +122,15 @@ class ModeloWhatsAppChats {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             ");
 
+            // Columna tipo para distinguir grupo/contacto
+            try {
+                $db->exec("ALTER TABLE `whatsapp_chats` ADD COLUMN `tipo` VARCHAR(20) NOT NULL DEFAULT 'contacto' AFTER `nombre`");
+            } catch (Exception $e) {}
+            // Ampliar telefono para soportar IDs de grupo @g.us
+            try {
+                $db->exec("ALTER TABLE `whatsapp_chats` MODIFY `telefono` VARCHAR(100) NOT NULL");
+            } catch (Exception $e) {}
+
             if (session_status() === PHP_SESSION_ACTIVE) {
                 $_SESSION['wa_tablas_creadas'] = true;
             }

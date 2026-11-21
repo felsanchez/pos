@@ -54,12 +54,21 @@ function filterTable1() {
 
 $(document).ready(function () {
 
-  // Inicializar Select2 para el filtro de estado
+  // Inicializar Select2 para el filtro de estado y origen
   if ($("#filtroEstatus1").length > 0 && typeof $.fn.select2 !== 'undefined') {
     $("#filtroEstatus1").select2({
       placeholder: "Seleccionar estado...",
       allowClear: true,
       minimumResultsForSearch: 0,
+      width: '100%'
+    });
+  }
+
+  if ($("#filtroOrigenCliente").length > 0 && typeof $.fn.select2 !== 'undefined') {
+    $("#filtroOrigenCliente").select2({
+      placeholder: "Todos",
+      allowClear: true,
+      minimumResultsForSearch: -1,
       width: '100%'
     });
   }
@@ -75,6 +84,7 @@ $(document).ready(function () {
       "data": function ( d ) {
           d.csrf_token = $('meta[name="csrf-token"]').attr('content');
           d.filtroEstatus1 = $('#filtroEstatus1').val();
+          d.filtroOrigenCliente = $('#filtroOrigenCliente').val();
       }
     },
     "destroy": true,
@@ -98,13 +108,20 @@ $(document).ready(function () {
             finalHtml += '<span class="text-bold" style="color:#555;">' + label + ':</span>';
 
             if (col.columnIndex === 4) {
-                // Reconstruimos la celda editable de notas
+                // Reconstruimos la celda de notas respetando si es editable o no
                 var rowNode = api.row(rowIdx).node();
                 var idCliente = $(rowNode).attr('data-cliente-id') || "";
-                var notasText = $(rowNode).find('.celda-notas').text().trim();
-                var placeholderAttr = (notasText === "") ? ' data-placeholder="Escribe una nota..."' : "";
+                var celdaOriginal = $(rowNode).find('.celda-notas, .celda-notas-disabled');
+                var esEditable = celdaOriginal.hasClass('celda-notas') && celdaOriginal.attr('contenteditable') === 'true';
+                var notasText = celdaOriginal.text().trim();
+                if (notasText === "Sin notas") notasText = "";
                 
-                finalHtml += '<div contenteditable="true" class="celda-notas" data-id="' + idCliente + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + notasText + '</div>';
+                if (esEditable) {
+                    var placeholderAttr = (notasText === "") ? ' data-placeholder="Escribe una nota..."' : "";
+                    finalHtml += '<div contenteditable="true" class="celda-notas" data-id="' + idCliente + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + notasText + '</div>';
+                } else {
+                    finalHtml += '<div contenteditable="false" class="celda-notas-disabled" data-id="' + idCliente + '" title="Permiso de edición requerido" style="width:100%; display:block; border:1px solid #e2e8f0; border-radius:4px; padding:8px; background:#f8fafc; color:#64748b; margin-top:5px; cursor:not-allowed; opacity:0.85;">' + (notasText || '<span class="text-muted" style="font-style:italic;">Sin notas</span>') + '</div>';
+                }
             } else {
                 // El resto pasa su HTML o texto tal cual
                 finalHtml += '<span style="color:#333;">' + col.data + '</span>';
@@ -148,6 +165,10 @@ $(document).ready(function () {
   });
 
   $('#filtroEstatus1').on('change', function () {
+    filterTable1();
+  });
+
+  $('#filtroOrigenCliente').on('change', function () {
     filterTable1();
   });
 
@@ -579,4 +600,224 @@ $(document).on("submit", "#formEditarCliente", function (e) {
 			});
 		}
 	});
+});
+
+/*=============================================
+TABLA DE ANÁLISIS DE COMPRAS E INACTIVIDAD DE CLIENTES
+=============================================*/
+var tablaInactividadClientes = null;
+
+$(document).ready(function () {
+
+    if ($('#tablaAnalisisInactividad').length === 0) return;
+
+    // Inicializar DataTable en la tabla analítica
+    tablaInactividadClientes = $('#tablaAnalisisInactividad').DataTable({
+        "order": [[5, 'asc']], // Ordenar por días transcurridos ascendente por defecto
+        "pageLength": 25,
+        "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+        "language": {
+            "sProcessing": "Procesando...",
+            "sLengthMenu": "Mostrar _MENU_ registros",
+            "sZeroRecords": "No se encontraron resultados",
+            "sEmptyTable": "Ningún dato disponible en esta tabla",
+            "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+            "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
+            "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+            "sSearch": "Buscar:",
+            "oPaginate": {
+                "sFirst": "Primero",
+                "sLast": "Último",
+                "sNext": "Siguiente",
+                "sPrevious": "Anterior"
+            }
+        },
+        "dom": '<"row"<"col-sm-6"l><"col-sm-6 text-right">>t<"row"<"col-sm-6"i><"col-sm-6"p>>',
+        "autoWidth": false
+    });
+
+    // Filtro personalizado por rango de inactividad
+    $.fn.dataTable.ext.search.push(
+        function (settings, data, dataIndex) {
+            if (settings.nTable.id !== 'tablaAnalisisInactividad') {
+                return true;
+            }
+
+            var filtro = $('#filtroRangoInactividad').val();
+            if (!filtro || filtro === 'todos') {
+                return true;
+            }
+
+            var rowNode = settings.aoData[dataIndex].nTr;
+            var rangoFila = $(rowNode).attr('data-rango');
+
+            if (filtro === 'activos') {
+                return (rangoFila === 'menos_15' || rangoFila === '15_a_30');
+            }
+
+            return rangoFila === filtro;
+        }
+    );
+
+    // Función para actualizar contador de clientes
+    function actualizarContadorInactividad() {
+        if (!tablaInactividadClientes) return;
+        var info = tablaInactividadClientes.page.info();
+        $('#contadorClientesInactividad').html('Mostrando <b>' + info.recordsDisplay + '</b> de <b>' + info.recordsTotal + '</b> clientes');
+    }
+
+    // Evento al cambiar selector de rango
+    $('#filtroRangoInactividad').on('change', function () {
+        var valor = $(this).val();
+        
+        // Sincronizar estado visual de las tarjetas KPI
+        $('.card-kpi-inact').removeClass('active');
+        var kpiMatch = $('.card-kpi-inact[data-filtro-kpi="' + valor + '"]');
+        if (kpiMatch.length > 0) {
+            kpiMatch.addClass('active');
+        } else if (valor === 'menos_15' || valor === '15_a_30') {
+            $('.card-kpi-inact[data-filtro-kpi="activos"]').addClass('active');
+        }
+
+        tablaInactividadClientes.draw();
+        actualizarContadorInactividad();
+    });
+
+    // Evento de búsqueda rápida en tiempo real
+    $('#buscarTablaInactividad').on('keyup input', function () {
+        tablaInactividadClientes.search(this.value).draw();
+        actualizarContadorInactividad();
+    });
+
+    // Clic en tarjetas KPI para filtrar directamente
+    $('.card-kpi-inact').on('click', function () {
+        var filtro = $(this).attr('data-filtro-kpi');
+        $('.card-kpi-inact').removeClass('active');
+        $(this).addClass('active');
+
+        $('#filtroRangoInactividad').val(filtro);
+        tablaInactividadClientes.draw();
+        actualizarContadorInactividad();
+    });
+
+    // Botón para restablecer filtros
+    $('#btnResetFiltrosInactividad').on('click', function () {
+        $('#filtroRangoInactividad').val('todos');
+        $('#buscarTablaInactividad').val('');
+        $('.card-kpi-inact').removeClass('active');
+        $('.card-kpi-inact[data-filtro-kpi="todos"]').addClass('active');
+
+        tablaInactividadClientes.search('').draw();
+        actualizarContadorInactividad();
+    });
+
+    // Reajustar columnas al alternar pestañas
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        if (tablaInactividadClientes) {
+            tablaInactividadClientes.columns.adjust();
+        }
+        if (typeof tabla1 !== 'undefined' && tabla1) {
+            tabla1.columns.adjust();
+        }
+    });
+
+    /*=============================================
+    EXPORTAR A EXCEL (CLIENTES FILTRADOS VISIBLES)
+    =============================================*/
+    $('#btnExportarExcelInactividad').on('click', function () {
+        if (!tablaInactividadClientes) return;
+
+        var filas = tablaInactividadClientes.rows({ search: 'applied' }).nodes();
+        if (filas.length === 0) {
+            swal({
+                type: "warning",
+                title: "Sin registros",
+                text: "No hay clientes que coincidan con los filtros aplicados para exportar.",
+                showConfirmButton: true,
+                confirmButtonText: "Entendido"
+            });
+            return;
+        }
+
+        var fechaActual = new Date().toISOString().slice(0, 10);
+        var nombreArchivo = "Analisis_Inactividad_Clientes_" + fechaActual + ".xls";
+
+        var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+        html += '<head><meta charset="utf-8">';
+        html += '<style>';
+        html += 'table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11px; }';
+        html += 'th { background-color: #3c8dbc; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #ddd; padding: 6px; }';
+        html += 'td { border: 1px solid #e2e8f0; padding: 5px; vertical-align: middle; }';
+        html += '.num-text { mso-number-format: "\\@"; }';
+        html += '.center { text-align: center; }';
+        html += '.right { text-align: right; }';
+        html += '</style></head><body>';
+        html += '<table>';
+        html += '<thead>';
+        html += '<tr>';
+        html += '<th>#</th>';
+        html += '<th>Nombre del Cliente</th>';
+        html += '<th>Ciudad</th>';
+        html += '<th>Documento</th>';
+        html += '<th>Teléfono</th>';
+        html += '<th>Correo Electrónico</th>';
+        html += '<th>Última Compra</th>';
+        html += '<th>Días Transcurridos</th>';
+        html += '<th>Total Compras</th>';
+        html += '<th>Total Gastado ($)</th>';
+        html += '<th>Estado / Semáforo</th>';
+        html += '</tr>';
+        html += '</thead><tbody>';
+
+        var numItem = 1;
+        $(filas).each(function () {
+            var $fila = $(this);
+            var nombre = $fila.find('td:eq(1) div').text().trim();
+            var ciudad = $fila.find('td:eq(1) small').text().replace(/[\n\r]+/g, '').trim();
+            var doc = $fila.find('td:eq(2) span').text().trim();
+            var tel = $fila.find('td:eq(3) div:first-child').text().replace(/[\n\r]+/g, '').trim();
+            var email = $fila.find('td:eq(3) a').text().trim();
+            var fecha = $fila.find('td:eq(4) span').text().trim();
+            var dias = $fila.find('td:eq(5)').text().replace(/[\n\r]+/g, '').trim();
+            var compras = $fila.find('td:eq(6) span').text().trim();
+            var total = $fila.find('td:eq(7)').text().trim();
+            var estado = $fila.find('td:eq(8) span').text().trim();
+
+            if (!fecha || fecha === '') fecha = 'Sin registro';
+
+            html += '<tr>';
+            html += '<td class="center">' + (numItem++) + '</td>';
+            html += '<td>' + nombre + '</td>';
+            html += '<td>' + ciudad + '</td>';
+            html += '<td class="num-text center">' + doc + '</td>';
+            html += '<td class="num-text center">' + tel + '</td>';
+            html += '<td>' + email + '</td>';
+            html += '<td class="center">' + fecha + '</td>';
+            html += '<td class="center">' + dias + '</td>';
+            html += '<td class="center">' + compras + '</td>';
+            html += '<td class="right">' + total + '</td>';
+            html += '<td class="center">' + estado + '</td>';
+            html += '</tr>';
+        });
+
+        html += '</tbody></table></body></html>';
+
+        var blob = new Blob(["\ufeff" + html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        var link = document.createElement("a");
+        var url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = nombreArchivo;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        swal({
+            type: "success",
+            title: "¡Exportación exitosa!",
+            text: "Se descargó el archivo Excel con " + (numItem - 1) + " clientes filtrados.",
+            timer: 2500,
+            showConfirmButton: false
+        });
+    });
+
 });

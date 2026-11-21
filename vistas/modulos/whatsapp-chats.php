@@ -98,7 +98,13 @@ if ($_SESSION["perfil"] == "Visitante") {
           
           <!-- Encabezado del Chat Activo -->
           <div class="whatsapp-chat-header">
-            <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
+            <div style="display: flex; align-items: center; gap: 10px; overflow: hidden; flex: 1;">
+              
+              <!-- Botón Volver a lista (Visible solo en móviles) -->
+              <button type="button" class="btn btn-default btn-volver-chats-mobile" id="btnVolverChatsMobile" title="Volver a conversaciones">
+                <i class="fa fa-arrow-left"></i>
+              </button>
+
               <div class="whatsapp-chat-avatar" id="headerChatAvatar">
                 <!-- Iniciales -->
               </div>
@@ -112,12 +118,12 @@ if ($_SESSION["perfil"] == "Visitante") {
               </div>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
               <span id="badgeClienteRegistrado" class="badge" style="background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; font-size: 11px; font-weight: 600; padding: 4px 8px; display: none;">
-                <i class="fa fa-user"></i> Cliente POS
+                <i class="fa fa-user"></i> <span class="btn-pipeline-text">Cliente POS</span>
               </span>
               <a href="crm" class="btn btn-default btn-xs" style="border-radius: 4px; font-weight: 600;" title="Ir al Tablero CRM">
-                <i class="fa fa-filter text-primary"></i> Pipeline CRM
+                <i class="fa fa-filter text-primary"></i> <span class="btn-pipeline-text">Pipeline CRM</span>
               </a>
               <button class="btn btn-default btn-xs" id="btnRefrescarMensajes" title="Actualizar conversación">
                 <i class="fa fa-refresh"></i>
@@ -493,6 +499,126 @@ if ($_SESSION["perfil"] == "Visitante") {
     box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     margin: 8px 0;
 }
+
+/* =============================================
+   BOTÓN VOLVER EN MÓVIL (Oculto en Desktop)
+============================================= */
+.btn-volver-chats-mobile {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid #d1d7db;
+    color: #54656f;
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.btn-volver-chats-mobile:hover,
+.btn-volver-chats-mobile:focus {
+    background: #e9edef;
+    color: #111b21;
+}
+
+/* =============================================
+   RESPONSIVE MÓVIL / CELULAR (PANTALLAS <= 768px)
+============================================= */
+@media (max-width: 768px) {
+    .content-header {
+        padding: 8px 10px 0 10px !important;
+    }
+    .content-header h1 {
+        font-size: 16px !important;
+    }
+    .content-header .breadcrumb {
+        display: none !important;
+    }
+    .content {
+        padding: 6px 8px !important;
+    }
+
+    .whatsapp-app-container {
+        height: calc(100vh - 120px) !important;
+        min-height: 480px !important;
+        position: relative !important;
+        border-radius: 8px !important;
+    }
+
+    /* Estado inicial en móvil: Lista de chats ocupa el 100%, chat oculto */
+    .whatsapp-sidebar {
+        width: 100% !important;
+        min-width: 100% !important;
+        flex: 1 !important;
+        display: flex !important;
+        border-right: none !important;
+    }
+
+    .whatsapp-chat-panel {
+        width: 100% !important;
+        min-width: 100% !important;
+        display: none !important;
+    }
+
+    /* Cuando se abre una conversación en móvil */
+    .whatsapp-app-container.chat-activo-mobile .whatsapp-sidebar {
+        display: none !important;
+    }
+
+    .whatsapp-app-container.chat-activo-mobile .whatsapp-chat-panel {
+        display: flex !important;
+        width: 100% !important;
+        height: 100% !important;
+        flex: 1 !important;
+    }
+
+    .whatsapp-app-container.chat-activo-mobile #panelChatActivo {
+        display: flex !important;
+        height: 100% !important;
+        width: 100% !important;
+        flex: 1 !important;
+    }
+
+    /* Mostrar botón Volver en el encabezado en móvil */
+    .btn-volver-chats-mobile {
+        display: inline-flex !important;
+    }
+
+    /* Encabezado más compacto en móvil */
+    .whatsapp-chat-header {
+        padding: 8px 10px !important;
+    }
+    .btn-pipeline-text {
+        display: none !important;
+    }
+    #headerChatNombre {
+        max-width: 140px !important;
+        font-size: 14px !important;
+    }
+
+    /* Burbujas adaptadas a pantallas pequeñas */
+    .whatsapp-messages-container {
+        padding: 10px 8px !important;
+    }
+    .whatsapp-message-bubble {
+        max-width: 88% !important;
+        font-size: 13px !important;
+    }
+
+    /* Barra de envío adaptada */
+    .whatsapp-chat-input-bar {
+        padding: 8px 10px !important;
+        gap: 6px !important;
+    }
+    .whatsapp-btn-send {
+        width: 38px !important;
+        height: 38px !important;
+        font-size: 14px !important;
+    }
+}
 </style>
 
-<script src="vistas/js/whatsapp-chats.js"></script>
+<script src="vistas/js/whatsapp-chats.js?v=<?php echo time(); ?>"></script>

@@ -46,10 +46,18 @@ $(document).ready(function () {
                             finalHtml += '<span class="text-bold" style="color:#555; min-width:100px;">' + label + ':</span>';
                             if (label === 'Notas') {
                                 var rowNode = api.row(rowIdx).node();
-                                var idGasto = $(rowNode).find('.celda-notas-gasto').data('id') || "";
-                                var notasText = $(rowNode).find('.celda-notas-gasto').text().trim();
-                                var placeholderAttr = (notasText === "") ? ' data-placeholder="Escribe una nota..."' : "";
-                                finalHtml += '<div contenteditable="true" class="celda-notas-gasto" data-id="' + idGasto + '"' + placeholderAttr + ' style="flex:1; outline:none; border:1px dashed #ccc; padding:6px; background:#fff9e6; margin-top:5px; width:100%;">' + notasText + '</div>';
+                                var celdaOriginal = $(rowNode).find('.celda-notas-gasto, .celda-notas-gasto-disabled');
+                                var esEditable = celdaOriginal.hasClass('celda-notas-gasto') && celdaOriginal.attr('contenteditable') === 'true';
+                                var idGasto = celdaOriginal.data('id') || "";
+                                var notasText = celdaOriginal.text().trim();
+                                if (notasText === "Sin notas") notasText = "";
+
+                                if (esEditable) {
+                                    var placeholderAttr = (notasText === "") ? ' data-placeholder="Escribe una nota..."' : "";
+                                    finalHtml += '<div contenteditable="true" class="celda-notas-gasto" data-id="' + idGasto + '"' + placeholderAttr + ' style="flex:1; outline:none; border:1px dashed #ccc; padding:6px; background:#fff9e6; margin-top:5px; width:100%;">' + notasText + '</div>';
+                                } else {
+                                    finalHtml += '<div contenteditable="false" class="celda-notas-gasto-disabled" data-id="' + idGasto + '" title="Permiso de edición requerido" style="flex:1; display:block; border:1px solid #e2e8f0; border-radius:4px; padding:6px; background:#f8fafc; color:#64748b; margin-top:5px; width:100%; cursor:not-allowed; opacity:0.85;">' + (notasText || '<span class="text-muted" style="font-style:italic;">Sin notas</span>') + '</div>';
+                                }
                             } else {
                                 finalHtml += '<span style="color:#333;">' + col.data + '</span>';
                             }
@@ -549,12 +557,22 @@ $(document).ready(function () {
     $(document).on("click", ".img-comprobante-clickeable, .img-ampliar-gasto, .btnVerFotoGasto", function () {
         var rutaImagen = $(this).attr("data-imagen") || $(this).attr("src");
         var idGasto = $(this).attr("data-idgasto") || $(this).attr("data-id");
+        var editable = $(this).attr("data-editable");
 
         if (!rutaImagen) return;
 
         $("#imagenComprobanteAmpliada").attr("src", rutaImagen);
         $("#idGastoImagen").val(idGasto);
         $(".nuevaImagenComprobante").val("");
+
+        if (editable === "0") {
+            $(".seccion-cambiar-imagen-gasto").hide();
+            $(".btnGuardarImagenComprobante").hide();
+        } else {
+            $(".seccion-cambiar-imagen-gasto").show();
+            $(".btnGuardarImagenComprobante").show();
+        }
+
         $("#modalAmpliarComprobanteGasto").modal("show");
     });
 

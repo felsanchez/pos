@@ -161,9 +161,12 @@ class ControladorVentas
 			// 1: Cliente
 			$nestedData[] = '<span class="btnVerClienteDesdeVenta" data-toggle="modal" data-target="#modalEditarCliente" idCliente="' . e($value["id_cliente"] ?? '') . '" style="cursor: pointer; color: #337ab7; text-decoration: underline;">' . e($value["nombre_cliente"] ?? '') . '</span>';
 
-			// 2: Imagen
+			// 2: Imagen (Editable solo si tiene permiso de editar ventas)
 			$imgSrc = (!empty($value["imagen"])) ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
-			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idventa="' . $value["id"] . '">';
+			$puedeEditarVentaImg = puedeAccion('ventas', 'editar');
+			$editableAttrVenta = $puedeEditarVentaImg ? '1' : '0';
+			$tituloImgVenta = $puedeEditarVentaImg ? 'Ver / Modificar imagen' : 'Ver imagen (Edición deshabilitada)';
+			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idventa="' . $value["id"] . '" data-editable="' . $editableAttrVenta . '" title="' . $tituloImgVenta . '">';
 
 			// 4: Total
 			$nestedData[] = $moneda . ' ' . number_format(floatval($value["total"] ?? 0), 2);
@@ -171,8 +174,13 @@ class ControladorVentas
 			// 5: Fecha
 			$nestedData[] = $value["fecha"] ?? '';
 
-			// 6: Observación (Editable)
-			$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . $value['id'] . '">' . e($value['observacion'] ?? '') . '</div>';
+			// 6: Observación (Editable solo si tiene permiso de editar ventas)
+			$obsVenta = trim($value['observacion'] ?? '');
+			if (puedeAccion('ventas', 'editar')) {
+				$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . $value['id'] . '">' . e($obsVenta) . '</div>';
+			} else {
+				$nestedData[] = '<div contenteditable="false" class="celda-observacion-disabled" style="cursor: not-allowed; opacity: 0.85; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 4px 8px; color: #64748b; min-height: 28px;" title="Permiso de edición requerido para modificar observación" data-id="' . $value['id'] . '">' . (!empty($obsVenta) ? e($obsVenta) : '<span class="text-muted" style="font-style: italic;">Sin observación</span>') . '</div>';
+			}
 
 			// 9: Acciones
 			$botonesAcciones = '<div class="btn-group col-acciones">';
@@ -339,19 +347,35 @@ class ControladorVentas
 			// 3: Forma de pago
 			$nestedData[] = e($moneda) . ' ' . e($value["metodo_pago"]);
 
-			// 4: Imagen
+			// 4: Imagen (Editable solo si tiene permiso de editar órdenes)
 			$imgSrc = ($value["imagen"] != "" && $value["imagen"] != null) ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
-			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-ampliar-orden" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idventa="' . $value["id"] . '">';
+			$puedeEditarOrdenImg = puedeAccion('ordenes', 'editar');
+			$editableAttrOrden = $puedeEditarOrdenImg ? '1' : '0';
+			$tituloImgOrden = $puedeEditarOrdenImg ? 'Ver / Modificar imagen' : 'Ver imagen (Edición deshabilitada)';
+			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-ampliar-orden" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idventa="' . $value["id"] . '" data-editable="' . $editableAttrOrden . '" title="' . $tituloImgOrden . '">';
 
 			// 5: Total
 			$nestedData[] = e($moneda) . ' ' . e(number_format($value["total"], 2));
 
 			// 6: Notas (Editable) - Limpiar etiquetas de notificación internas
-			$notasLimpias = str_replace(array(" [Notificado_n8n]", "[Notificado_n8n]", " [Notificado]", "[Notificado]"), "", $value['notas'] ?? '');
+			$notasLimpias = str_replace(array(" [Notificado_n8n]", "[Notificado_n8n]", " [Notificado_menu]", "[Notificado_menu]", " [Notificado]", "[Notificado]"), "", $value['notas'] ?? '');
 			$nestedData[] = '<div contenteditable="false" class="celda-nota" data-id="' . e($value['id']) . '">' . e(trim($notasLimpias)) . '</div>';
 
-			// 7: Observación (Editable)
-			$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . e($value['id']) . '">' . e($value['observacion']) . '</div>';
+			// 7: Observación (Editable solo si tiene permiso de editar órdenes)
+			$obsRaw = $value['observacion'] ?? '';
+			$badgeMenu = '';
+			if (stripos($obsRaw, '[Menú Digital]') !== false || stripos($obsRaw, 'Menú Digital') !== false) {
+				$badgeMenu = '<span class="badge" style="background-color: #00a65a; margin-right: 6px; font-size: 11px;"><i class="fa fa-cutlery"></i> Menú Digital</span> ';
+				// Eliminar el texto repetido "Menú Digital" y "[Menú Digital]" dejando solo la etiqueta verde
+				$obsRaw = trim(str_ireplace(array('[Menú Digital]', 'Menú Digital', '[Menu Digital]', 'Menu Digital'), '', $obsRaw));
+				$obsRaw = ltrim($obsRaw, " \t\n\r\0\x0B|:-");
+			}
+			$obsTexto = trim($obsRaw);
+			if (puedeAccion('ordenes', 'editar')) {
+				$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . e($value['id']) . '">' . $badgeMenu . e($obsTexto) . '</div>';
+			} else {
+				$nestedData[] = '<div contenteditable="false" class="celda-observacion-disabled" style="cursor: not-allowed; opacity: 0.85; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 4px 8px; color: #64748b; min-height: 28px;" title="Permiso de edición requerido para modificar observación" data-id="' . e($value['id']) . '">' . $badgeMenu . (!empty($obsTexto) ? e($obsTexto) : '<span class="text-muted" style="font-style: italic;">Sin observación</span>') . '</div>';
+			}
 
 			// 8: Fecha
 			$nestedData[] = e($value["fecha"]);
@@ -473,10 +497,17 @@ class ControladorVentas
 			$botonesAcciones = '<div class="btn-group">';
 			$botonesAcciones .= '<a class="btn btn-warning" href="index.php?ruta=ver-detalle-orden&idVenta=' . $value["id"] . '" title="Ver Detalle" style="width: auto !important;"><i class="fa fa-eye"></i></a>';
 
-			if (puedeAccion('ordenes', 'eliminar')) {
-				$botonesAcciones .= '<button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar Orden" style="width: auto !important;"><i class="fa fa-times"></i></button>';
+			// Enviar por Correo
+			if (puedeAccion('ordenes', 'crear') || puedeAccion('ordenes', 'editar')) {
+				$botonesAcciones .= ' <button class="btn btn-primary btnEnviarEmail" idVenta="' . $value["id"] . '" nombreCliente="' . e($value["nombre_cliente"]) . '" emailCliente="' . e($value["email_cliente"]) . '" title="Enviar por Correo" style="width: auto !important;"><i class="fa fa-envelope"></i></button>';
 			} else {
-				$botonesAcciones .= '<button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed; width: auto !important;" title="No tiene permisos para eliminar"><i class="fa fa-times"></i></button>';
+				$botonesAcciones .= ' <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed; width: auto !important;" title="No tiene permisos para enviar por correo"><i class="fa fa-envelope"></i></button>';
+			}
+
+			if (puedeAccion('ordenes', 'eliminar')) {
+				$botonesAcciones .= ' <button class="btn btn-danger btnEliminarVenta" idVenta="' . $value["id"] . '" title="Eliminar Orden" style="width: auto !important;"><i class="fa fa-times"></i></button>';
+			} else {
+				$botonesAcciones .= ' <button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed; width: auto !important;" title="No tiene permisos para eliminar"><i class="fa fa-times"></i></button>';
 			}
 			$botonesAcciones .= '</div>';
 			$nestedData[] = $botonesAcciones;
@@ -740,9 +771,12 @@ class ControladorVentas
 			// 1: Cliente
 			$nestedData[] = '<span class="btnVerClienteDesdeVenta" data-toggle="modal" data-target="#modalEditarCliente" idCliente="' . e($value["id_cliente"]) . '" style="cursor: pointer; color: #337ab7; text-decoration: underline;">' . e($value["nombre_cliente"]) . '</span>';
 
-			// 2: Imagen
+			// 2: Imagen (Editable solo si tiene permiso de editar facturas/ventas)
 			$imgSrc = ($value["imagen"] != "" && $value["imagen"] != null) ? $value["imagen"] : "vistas/img/ventas/default/sinventa.png";
-			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idventa="' . $value["id"] . '">';
+			$puedeEditarFEImg = puedeAccion('factura_electronica', 'editar') || puedeAccion('ventas', 'editar');
+			$editableAttrFE = $puedeEditarFEImg ? '1' : '0';
+			$tituloImgFE = $puedeEditarFEImg ? 'Ver / Modificar imagen' : 'Ver imagen (Edición deshabilitada)';
+			$nestedData[] = '<img src="' . $imgSrc . '" class="img-thumbnail img-ampliar-venta" width="40px" style="cursor: pointer;" data-imagen="' . $imgSrc . '" data-idventa="' . $value["id"] . '" data-editable="' . $editableAttrFE . '" title="' . $tituloImgFE . '">';
 
 			// 4: Total
 			$nestedData[] = e($moneda) . ' ' . e(number_format($value["total"], 2));
@@ -3070,6 +3104,50 @@ class ControladorVentas
 			// Actualizar lista
 			$_POST["listaProductos"] = json_encode($productosValidos);
 
+			/*=============================================
+			2. VALIDACIÓN PREVENTIVA FACTUS / DIAN
+			=============================================*/
+			require_once __DIR__ . "/factus.controlador.php";
+			$datosValidacion = array(
+				"id_cliente" => $_POST["seleccionarCliente"],
+				"productos" => $_POST["listaProductos"]
+			);
+			$validacionFactura = ControladorFactus::ctrValidarDatosFactura($datosValidacion);
+
+			if (!$validacionFactura["valido"]) {
+				$listaErrores = $validacionFactura["errores"];
+				$mensajeTexto = "No se puede generar la factura electrónica. Corrija los siguientes errores:\n• " . implode("\n• ", $listaErrores);
+				$mensajeHtml = "No se puede generar la factura electrónica. Corrija los siguientes errores:<br><ul style=\'text-align:left; margin-top:10px;\'><li>" . implode("</li><li>", array_map('htmlspecialchars', $listaErrores)) . "</li></ul>";
+
+				$esConversionOrden = isset($_POST["editarVenta"]) && !empty($_POST["editarVenta"]);
+				$urlRedireccion = $esConversionOrden ? "ordenes" : "crear-factura-electronica";
+
+				if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+					if (ob_get_length()) ob_clean();
+					echo json_encode([
+						"status" => "error",
+						"titulo" => "No se puede generar la Factura Electrónica",
+						"mensaje" => $mensajeTexto,
+						"errores" => $listaErrores,
+						"ruta" => $urlRedireccion
+					]);
+					return;
+				}
+
+				echo '<script>
+					swal({
+						type: "error",
+						title: "No se puede generar la Factura Electrónica",
+						html: "' . addslashes($mensajeHtml) . '",
+						showConfirmButton: true,
+						confirmButtonText: "' . ($esConversionOrden ? 'Volver a Órdenes' : 'Cerrar') . '"
+					}).then(() => {
+						window.location = "' . $urlRedireccion . '";
+					});
+				</script>';
+				return;
+			}
+
 			$db = Conexion::conectar();
 
 			try {
@@ -3228,12 +3306,9 @@ class ControladorVentas
 					"numero_factura" => null
 				);
 
-				// 🔹 SI ES CONVERSIÓN DE ORDEN, ELIMINAR LA ORDEN ORIGINAL E INSERTAR LA FE
+				// 🔹 SI ES CONVERSIÓN DE ORDEN, OBTENER VENTA ORIGINAL (SE ELIMINARÁ SOLO TRAS ÉXITO EN FACTUS)
 				if (isset($_POST["editarVenta"]) && !empty($_POST["editarVenta"])) {
 					$ventaOriginal = ModeloVentas::mdlMostrarVentas($tabla, "codigo", $_POST["editarVenta"]);
-					if ($ventaOriginal) {
-						ModeloVentas::mdlEliminarVenta($tabla, $ventaOriginal["id"]);
-					}
 				}
 
 				// INSERTAR COMO UNA NUEVA VENTA (TIPO FE)
@@ -3249,15 +3324,6 @@ class ControladorVentas
 
 				$db->commit();
 
-				// Hook CRM: Si es conversión de orden a factura electrónica, sincronizar el lead en el CRM (valor y cliente, sin cambiar la etapa)
-				if (isset($_POST["editarVenta"]) && !empty($_POST["editarVenta"])) {
-					$datosCRM = array(
-						"valor_estimado" => $_POST["totalVenta"],
-						"id_cliente" => $_POST["seleccionarCliente"]
-					);
-					ModeloCRM::mdlActualizarDatosLeadPorCodigoOrden("crm_leads", $_POST["editarVenta"], $datosCRM);
-				}
-
 				/*=============================================
 				 4. ENVIAR A FACTUS (Refactorizado para usar lógica unificada)
 				 =============================================*/
@@ -3271,6 +3337,20 @@ class ControladorVentas
 				$resultadoFactura = ControladorFactus::ctrGenerarFacturaElectronica($idVenta, false);
 
 				if (!$resultadoFactura["error"]) {
+					// 🔹 SI ES CONVERSIÓN DE ORDEN, ELIMINAR LA ORDEN ORIGINAL AHORA QUE LA FE ESTÁ CREADA
+					if (isset($_POST["editarVenta"]) && !empty($_POST["editarVenta"]) && $ventaOriginal) {
+						ModeloVentas::mdlEliminarVenta($tabla, $ventaOriginal["id"]);
+					}
+
+					// Hook CRM: Si es conversión de orden a factura electrónica, sincronizar el lead en el CRM (valor y cliente, sin cambiar la etapa)
+					if (isset($_POST["editarVenta"]) && !empty($_POST["editarVenta"])) {
+						$datosCRM = array(
+							"valor_estimado" => $_POST["totalVenta"],
+							"id_cliente" => $_POST["seleccionarCliente"]
+						);
+						ModeloCRM::mdlActualizarDatosLeadPorCodigoOrden("crm_leads", $_POST["editarVenta"], $datosCRM);
+					}
+
 					// EXITO
 					if (isset($_POST["ajax"])) {
 						if (ob_get_length()) ob_clean();
@@ -3297,32 +3377,78 @@ class ControladorVentas
 					</script>';
 				} else {
 					// ERROR
+					// 🔹 Si era conversión de orden, revertir la venta local creada para que la orden siga siendo una orden intacta
+					if (isset($_POST["editarVenta"]) && !empty($_POST["editarVenta"])) {
+						ModeloVentas::mdlEliminarVenta($tabla, $idVenta);
+
+						// Revertir inventario si se descontó
+						if ($_POST["estado"] == "venta") {
+							foreach ($listaProductos as $key => $value) {
+								if (isset($value["esVariante"]) && $value["esVariante"] == "1") {
+									$idVariante = $value["idVariante"];
+									$traerVariante = ModeloProductos::mdlObtenerVariantePorId($idVariante, $idBodegaActual);
+									if ($traerVariante) {
+										$stockRevertido = $traerVariante["stock"] + $value["cantidad"];
+										ModeloProductos::mdlActualizarStockVarianteBodega($idVariante, $idBodegaActual, $stockRevertido);
+									}
+									$traerProducto = ModeloProductos::mdlMostrarProductos("productos", "id", $value["id"], "id");
+									if ($traerProducto) {
+										$stockBaseRevertido = $traerProducto["stock"] + $value["cantidad"];
+										ModeloProductos::mdlActualizarProducto("productos", "stock", $stockBaseRevertido, $value["id"]);
+										$ventasRevertidas = max(0, $traerProducto["ventas"] - $value["cantidad"]);
+										ModeloProductos::mdlActualizarProducto("productos", "ventas", $ventasRevertidas, $value["id"]);
+									}
+								} else {
+									$traerProducto = ModeloProductos::mdlMostrarProductos("productos", "id", $value["id"], "id", $idBodegaActual);
+									if ($traerProducto) {
+										$ventasRevertidas = max(0, $traerProducto["ventas"] - $value["cantidad"]);
+										ModeloProductos::mdlActualizarProducto("productos", "ventas", $ventasRevertidas, $value["id"]);
+										$stockBodegaRevertido = $traerProducto["stock"] + $value["cantidad"];
+										ModeloProductos::mdlActualizarStockBodega($value["id"], $idBodegaActual, $stockBodegaRevertido);
+										$stockGlobalRevertido = (isset($traerProducto["stock_global"]) ? $traerProducto["stock_global"] : $traerProducto["stock"]) + $value["cantidad"];
+										ModeloProductos::mdlActualizarProducto("productos", "stock", $stockGlobalRevertido, $value["id"]);
+									}
+								}
+							}
+						}
+
+						// Revertir compras del cliente
+						if ($traerCliente && !empty($totalProductosComprados)) {
+							$comprasRevertidas = max(0, $traerCliente["compras"]);
+							ModeloClientes::mdlActualizarCliente($tablaClientes, "compras", $comprasRevertidas, $valor);
+						}
+					}
+
 					$errorMsg = $resultadoFactura["mensaje"];
 					if (isset($resultadoFactura["errores"]) && !empty($resultadoFactura["errores"])) {
 						$errorMsg .= " " . implode(", ", $resultadoFactura["errores"]);
 					}
 
+					$esConversionOrden = isset($_POST["editarVenta"]) && !empty($_POST["editarVenta"]);
+					$urlRedireccion = $esConversionOrden ? "ordenes" : "facturas-electronicas";
+					$tituloMsg = $esConversionOrden ? "No se pudo convertir la Orden a Factura Electrónica" : "Venta guardada pero Factura RECHAZADA";
+
 					if (isset($_POST["ajax"]) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
 						if (ob_get_length())
 							ob_clean();
 						echo json_encode([
-							"status" => "success", // Se considera éxito porque la venta se guardó localmente
-							"titulo" => "Venta guardada pero Factura RECHAZADA",
+							"status" => "error",
+							"titulo" => $tituloMsg,
 							"mensaje" => $errorMsg,
-							"ruta" => "facturas-electronicas"
+							"ruta" => $urlRedireccion
 						]);
 						return;
 					}
 
 					echo '<script>
 						swal({
-						  type: "warning",
-						  title: "Venta guardada pero Factura RECHAZADA",
+						  type: "error",
+						  title: "' . $tituloMsg . '",
 						  text: "' . str_replace('"', "'", $errorMsg) . '",
 						  showConfirmButton: true,
-						  confirmButtonText: "Cerrar"
+						  confirmButtonText: "' . ($esConversionOrden ? 'Volver a Órdenes' : 'Cerrar') . '"
 						  }).then(() => {
-									window.location = "facturas-electronicas";
+									window.location = "' . $urlRedireccion . '";
 								})
 						</script>';
 				}

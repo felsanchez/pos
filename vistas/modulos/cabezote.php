@@ -35,6 +35,9 @@ ControladorNotificaciones::ctrVerificarPagosBold();
 // Verificar leads de WhatsApp CRM
 ControladorNotificaciones::ctrVerificarLeadsWhatsApp();
 
+// Verificar órdenes desde Menú Digital
+ControladorNotificaciones::ctrVerificarOrdenMenuDigital();
+
 // Contar notificaciones no leídas
 $totalNoLeidas = ControladorNotificaciones::ctrContarNoLeidas();
 ?>
@@ -395,6 +398,9 @@ BARRA DE NAVEGACION
 											$color = "text-green";
 										} else if ($notif["tipo"] == "orden_creada") {
 											$icono = "fa-shopping-cart";
+											$color = "text-green";
+										} else if ($notif["tipo"] == "orden_menu_digital") {
+											$icono = "fa-cutlery";
 											$color = "text-green";
 										} else if (strpos($notif["tipo"], "Edicion de pedido") !== false) {
 											$icono = "fa-pencil-square-o";

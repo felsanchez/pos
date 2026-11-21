@@ -197,6 +197,7 @@ class ControladorProductos
 				}
 			}
 			$nestedData[] = $estadoHtml;
+			$nestedData[] = puedeAccion('productos', 'editar') ? 1 : 0;
 
 			$data[] = $nestedData;
 		}
@@ -205,7 +206,8 @@ class ControladorProductos
 			"draw"            => intval($params['draw']),
 			"recordsTotal"    => intval($totalData),
 			"recordsFiltered" => intval($totalFiltered),
-			"data"            => $data
+			"data"            => $data,
+			"puedeEditar"     => puedeAccion('productos', 'editar')
 		);
 
 		return $json_data;
@@ -1769,6 +1771,11 @@ class ControladorProductos
 	public static function ctrAjaxEditarImagen()
 	{
 		try {
+			// 0. Validar permisos de edición
+			if (!puedeAccion('productos', 'editar')) {
+				throw new Exception("No tiene permisos para modificar la imagen del producto.");
+			}
+
 			// 1. Validar que los datos necesarios lleguen
 			if (!isset($_FILES["nuevaImagenProducto"]) || !isset($_POST["idProductoImagen"]) || !isset($_POST["codigoProductoImagen"])) {
 				throw new Exception("Datos incompletos.");

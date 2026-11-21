@@ -1,28 +1,28 @@
 <?php
 
-require_once "../../../controladores/ventas.controlador.php";
-require_once "../../../modelos/ventas.modelo.php";
+require_once __DIR__ . "/../../../controladores/ventas.controlador.php";
+require_once __DIR__ . "/../../../modelos/ventas.modelo.php";
 
-require_once "../../../controladores/clientes.controlador.php";
-require_once "../../../modelos/clientes.modelo.php";
+require_once __DIR__ . "/../../../controladores/clientes.controlador.php";
+require_once __DIR__ . "/../../../modelos/clientes.modelo.php";
 
-require_once "../../../controladores/usuarios.controlador.php";
-require_once "../../../modelos/usuarios.modelo.php";
+require_once __DIR__ . "/../../../controladores/usuarios.controlador.php";
+require_once __DIR__ . "/../../../modelos/usuarios.modelo.php";
 
-require_once "../../../controladores/productos.controlador.php";
-require_once "../../../modelos/productos.modelo.php";
+require_once __DIR__ . "/../../../controladores/productos.controlador.php";
+require_once __DIR__ . "/../../../modelos/productos.modelo.php";
 
-require_once "../../../controladores/configuracion.controlador.php";
-require_once "../../../modelos/configuracion.modelo.php";
+require_once __DIR__ . "/../../../controladores/configuracion.controlador.php";
+require_once __DIR__ . "/../../../modelos/configuracion.modelo.php";
 
-require_once "../../../controladores/factus.controlador.php";
-require_once "../../../modelos/factus.modelo.php";
+require_once __DIR__ . "/../../../controladores/factus.controlador.php";
+require_once __DIR__ . "/../../../modelos/factus.modelo.php";
 
 class imprimirDetalleOrden
 {
     public $idVenta;
 
-    public function traerImpresionDetalle()
+    public function traerImpresionDetalle($dest = 'I', $name = '')
     {
         $item = "id";
         $valor = $this->idVenta;
@@ -65,7 +65,7 @@ class imprimirDetalleOrden
         }
 
         // REQUERIMOS LA CLASE TCPDF
-        require_once('tcpdf_include.php');
+        require_once(__DIR__ . '/tcpdf_include.php');
 
         $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
@@ -122,7 +122,7 @@ class imprimirDetalleOrden
         // --- LOGO FACTUS (Si existe) ---
         $htmlLogo = '';
         if (isset($configFactus['logo_empresa']) && !empty($configFactus['logo_empresa'])) {
-            $rutaLogoFactus = "../../../" . $configFactus['logo_empresa'];
+            $rutaLogoFactus = __DIR__ . "/../../../" . $configFactus['logo_empresa'];
             if (file_exists($rutaLogoFactus)) {
                 // Convertir a base64 para evitar problemas de ruta en TCPDF
                 $imgData = base64_encode(file_get_contents($rutaLogoFactus));
@@ -415,9 +415,14 @@ class imprimirDetalleOrden
 
         $pdf->writeHTMLCell(75, 0, 125, $startY, $htmlRight, 0, 1, false, true, 'R', true);
 
-        ob_end_clean();
-        $filename = strtolower(str_replace(' ', '-', $etiquetaDocumento)) . '-' . $numeroDocumento . '.pdf';
-        $pdf->Output($filename, 'I');
+        if (empty($name)) {
+            $name = strtolower(str_replace(' ', '-', $etiquetaDocumento)) . '-' . $numeroDocumento . '.pdf';
+        }
+
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+        $pdf->Output($name, $dest);
     }
 }
 

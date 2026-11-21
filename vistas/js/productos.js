@@ -66,6 +66,10 @@ var table = $("table.tablaProductos").DataTable({
 		$('.img-ampliar-producto').off('click').on('click', function () {
 			var imagen = $(this).attr('data-imagen');
 			var idProducto = $(this).attr('data-idproducto');
+			var editable = $(this).attr('data-editable');
+			if (typeof editable === 'undefined' && typeof permisoEditarProductos !== 'undefined') {
+				editable = permisoEditarProductos ? "1" : "0";
+			}
 
 			$('#imagenProductoAmpliada').attr('src', imagen);
 			$('#idProductoImagen').val(idProducto);
@@ -74,6 +78,14 @@ var table = $("table.tablaProductos").DataTable({
 			var rowData = table.row($(this).closest('tr')).data();
 			if(rowData) {
 			    $('#codigoProductoImagen').val(rowData[2]); // Asumiendo que el índice 2 es el código
+			}
+
+			if (editable === "0") {
+				$(".seccion-cambiar-imagen-producto").hide();
+				$(".btnGuardarImagenProducto").hide();
+			} else {
+				$(".seccion-cambiar-imagen-producto").show();
+				$(".btnGuardarImagenProducto").show();
 			}
 
 			$('#modalAmpliarImagenProducto').fadeIn();
@@ -93,7 +105,10 @@ var table = $("table.tablaProductos").DataTable({
 			"data": null,
 			"responsivePriority": 3,
 			"render": function (data, type, row) {
-				return '<img src="' + row[1] + '" class="img-thumbnail imgTabla img-ampliar-producto" width="40px" style="cursor: pointer;" data-imagen="' + row[1] + '" data-idproducto="' + row[0] + '">';
+				var esEditable = (typeof permisoEditarProductos !== 'undefined') ? permisoEditarProductos : (row[12] === 1 || row[12] === '1');
+				var editableAttr = esEditable ? '1' : '0';
+				var tooltipTitle = esEditable ? 'Ver / Modificar imagen' : 'Ver imagen (Edición deshabilitada)';
+				return '<img src="' + row[1] + '" class="img-thumbnail imgTabla img-ampliar-producto" width="40px" style="cursor: pointer;" data-imagen="' + row[1] + '" data-idproducto="' + row[0] + '" data-editable="' + editableAttr + '" title="' + tooltipTitle + '">';
 			}
 		},
 		{

@@ -428,6 +428,11 @@ ACTUALIZAR IMAGEN DE PRODUCTO
 =============================================*/
 
 if (isset($_FILES["nuevaImagenProducto"])) {
+    if (!puedeAccion('productos', 'editar')) {
+        header('Content-Type: application/json');
+        echo json_encode(array("status" => "error", "message" => "No tiene permisos para modificar la imagen del producto."));
+        exit;
+    }
     // La lógica ahora está centralizada en el controlador
     ControladorProductos::ctrAjaxEditarImagen();
     exit;

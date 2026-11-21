@@ -167,11 +167,12 @@ MODAL MOSTRAR actividad
     <div class="container-fluid">
       <div class="box">
         <div class="box-header with-border">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; width: 100%;">
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
               <?php
                 require_once "controladores/google.controlador.php";
                 $idUsuarioLogueado = $_SESSION["id"] ?? null;
+                $credencialesGoogle = ControladorGoogle::ctrObtenerCredenciales();
                 $urlAutorizacionGoogle = ControladorGoogle::ctrObtenerUrlAutorizacion($idUsuarioLogueado);
 
                 $dbUser = Conexion::conectar()->prepare("SELECT google_account_email FROM usuarios WHERE id = :id");
@@ -180,69 +181,100 @@ MODAL MOSTRAR actividad
                 $emailGoogleUser = $dataUserG["google_account_email"] ?? null;
               ?>
 
+              <!-- Botones principales del sistema -->
               <?php if (!puedeAccion('actividades', 'crear')): ?>
-                <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear actividades">
+                <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed; font-weight: 600;" title="No tiene permisos para crear actividades">
                   <i class="fa fa-plus"></i> Agregar
                 </button>
               <?php elseif (!$emailGoogleUser): ?>
-                <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="Debe conectar su cuenta de Google Calendar para agregar actividades">
+                <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed; font-weight: 600;" title="Debe conectar su cuenta de Google Calendar para agregar actividades">
                   <i class="fa fa-plus"></i> Agregar
                 </button>
               <?php else: ?>
-                <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarActividad">
+                <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarActividad" style="font-weight: 600;">
                   <i class="fa fa-plus"></i> Agregar
                 </button>
               <?php endif; ?>
 
               <?php if (puedeAccion('actividades', 'editar')): ?>
-                <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
-                  <i class="fa fa-flag"></i> Gestionar estados
+                <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados" style="font-weight: 500;">
+                  <i class="fa fa-tags text-muted"></i> Gestionar estados
                 </button>
               <?php else: ?>
-                <button class="btn btn-default" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para gestionar estados">
-                  <i class="fa fa-flag"></i> Gestionar estados
+                <button class="btn btn-default" disabled style="opacity: 0.5; cursor: not-allowed; font-weight: 500;" title="No tiene permisos para gestionar estados">
+                  <i class="fa fa-tags text-muted"></i> Gestionar estados
                 </button>
               <?php endif; ?>
 
+              <!-- Separador vertical -->
+              <div style="height: 26px; width: 1px; background: #e2e8f0; margin: 0 2px;" class="hidden-xs"></div>
+
+              <!-- Bloque de Integración Google -->
               <?php if ($emailGoogleUser): ?>
-                <div class="btn-group">
-                  <span class="btn btn-success disabled" style="opacity: 1; cursor: default; background-color: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; font-weight: 600;">
-                    <i class="fa fa-google text-danger"></i> Google Conectado: <?php echo htmlspecialchars($emailGoogleUser); ?>
+                <div style="display: inline-flex; align-items: center; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 4px; padding: 6px 12px; font-size: 13px; color: #166534; gap: 7px; height: 34px;">
+                  <i class="fa fa-google" style="color: #ea4335;"></i>
+                  <span style="font-weight: 600; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<?php echo htmlspecialchars($emailGoogleUser); ?>">
+                    <?php echo htmlspecialchars($emailGoogleUser); ?>
                   </span>
-                  <button type="button" class="btn btn-info btnSincronizarGoogle" style="font-weight: 600;" title="Sincronizar eventos y tareas desde Google">
-                    <i class="fa fa-refresh"></i> Sincronizar desde Google
+                  <span style="display: inline-block; width: 7px; height: 7px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);" title="Conectado"></span>
+                </div>
+
+                <div class="btn-group">
+                  <button type="button" class="btn btn-default btnSincronizarGoogle" style="font-weight: 500;" title="Sincronizar eventos y tareas desde Google">
+                    <i class="fa fa-refresh text-info"></i> Sincronizar
                   </button>
-                  <button type="button" class="btn btn-danger btnDesconectarGoogle" title="Desconectar Google Calendar">
-                    <i class="fa fa-power-off"></i>
-                  </button>
+                  <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer" class="btn btn-default" style="font-weight: 500;" title="Abrir Google Calendar en una nueva pestaña">
+                    <i class="fa fa-external-link text-primary"></i> Ir a Google Calendar
+                  </a>
+                  <?php if (puedeAccion('actividades', 'editar')): ?>
+                    <button type="button" class="btn btn-default btnDesconectarGoogle" title="Desconectar Google Calendar" style="color: #dc2626;">
+                      <i class="fa fa-power-off"></i>
+                    </button>
+                  <?php else: ?>
+                    <button type="button" class="btn btn-default" disabled style="opacity: 0.5; cursor: not-allowed; color: #94a3b8;" title="No tiene permisos para desconectar Google Calendar">
+                      <i class="fa fa-power-off"></i>
+                    </button>
+                  <?php endif; ?>
                 </div>
               <?php else: ?>
-                <a href="<?php echo $urlAutorizacionGoogle; ?>" class="btn btn-default" style="border-color: #4285F4; color: #4285F4; font-weight: 600;" title="Vincular con tu cuenta de Google Calendar & Tasks">
-                  <i class="fa fa-google text-danger"></i> Conectar Google Calendar
-                </a>
-              <?php endif; ?>
+                <div class="btn-group">
+                  <?php if (puedeAccion('actividades', 'editar')): ?>
+                    <?php if (!empty($credencialesGoogle["client_id"])): ?>
+                      <a href="<?php echo $urlAutorizacionGoogle; ?>" class="btn btn-default" style="border-color: #4285F4; color: #4285F4; font-weight: 600;" title="Vincular con tu cuenta de Google Calendar & Tasks">
+                        <i class="fa fa-google text-danger"></i> Conectar Google Calendar
+                      </a>
+                    <?php else: ?>
+                      <button type="button" class="btn btn-default btnSinCredencialesGoogle" style="border-color: #4285F4; color: #4285F4; font-weight: 600;" title="Falta configurar Google Client ID en Configuración">
+                        <i class="fa fa-google text-danger"></i> Conectar Google Calendar
+                      </button>
+                    <?php endif; ?>
+                  <?php else: ?>
+                    <button type="button" class="btn btn-default" disabled style="border-color: #d2d6de; color: #999; font-weight: 600; opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para conectar Google Calendar">
+                      <i class="fa fa-google text-muted"></i> Conectar Google Calendar
+                    </button>
+                  <?php endif; ?>
 
-              <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer" class="btn btn-default" style="font-weight: 600;" title="Abrir Google Calendar en una nueva pestaña">
-                <i class="fa fa-external-link text-primary"></i> Ir a Google Calendar
-              </a>
+                  <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer" class="btn btn-default" style="font-weight: 500;" title="Abrir Google Calendar en una nueva pestaña">
+                    <i class="fa fa-external-link text-primary"></i> Ir a Google Calendar
+                  </a>
+                </div>
+              <?php endif; ?>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <!-- Filtro de estado -->
+            <div style="display: flex; align-items: center; gap: 8px;">
               <input type="hidden" id="filtroTipo" value="">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span><b>Estado:</b></span>
-                <div class="input-group" style="width: 200px;">
-                  <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;"><i class="fa fa-search text-primary"></i></span>
-                  <select class="form-control select2" id="filtroEstado" style="width: 100%;">
-                    <option value="">Mostrar Todos</option>
-                    <?php
-                    $estadosFiltro = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
-                    foreach ($estadosFiltro as $estadoFiltroItem) {
-                      echo '<option value="' . $estadoFiltroItem["nombre"] . '">' . ucfirst($estadoFiltroItem["nombre"]) . '</option>';
-                    }
-                    ?>
-                  </select>
-                </div>
+              <span style="font-weight: 600; font-size: 13px; color: #475569;"><i class="fa fa-filter text-muted"></i> Estado:</span>
+              <div style="width: 190px;">
+                <select class="form-control select2" id="filtroEstado" style="width: 100%;">
+                  <option value="">Todos los estados</option>
+                  <?php
+                  $estadosFiltro = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
+                  foreach ($estadosFiltro as $estadoFiltroItem) {
+                    echo '<option value="' . $estadoFiltroItem["nombre"] . '">' . ucfirst($estadoFiltroItem["nombre"]) . '</option>';
+                  }
+                  ?>
+                </select>
               </div>
             </div>
           </div>
@@ -1199,6 +1231,19 @@ document.addEventListener('DOMContentLoaded', function() {
       var modo = $('#editarCategoriaGoogle').val();
       $('#lblEditarFecha').html(modo === 'tarea' ? 'Fecha y Hora de Recordatorio *' : 'Fecha y Hora *');
     }
+  });
+
+  // -------------------------
+  // ADVERTENCIA CUANDO NO HAY CREDENCIALES CONFIGURADAS
+  // -------------------------
+  $(document).on('click', '.btnSinCredencialesGoogle', function(e) {
+    e.preventDefault();
+    swal({
+      title: 'Google Calendar no configurado',
+      text: 'Para conectar Google Calendar, primero debes ingresar el Google Client ID y Client Secret en el módulo de Configuración.',
+      type: 'warning',
+      confirmButtonText: 'Entendido'
+    });
   });
 
   // -------------------------

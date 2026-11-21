@@ -94,6 +94,24 @@ class ControladorFactus
 			$stmtCaja->bindParam(":columna_notas_cliente_activa", $columna_notas_cliente_activa, PDO::PARAM_INT);
 			$stmtCaja->execute();
 
+			// Actualizar estado de solicitud BOLD si viene en el formulario
+			if (isset($_POST["solicitudBold"])) {
+				try {
+					$stmtBold = Conexion::conectar()->prepare("UPDATE configuracion SET solicitud_bold = :solicitud_bold WHERE id = 1");
+					$stmtBold->bindParam(":solicitud_bold", $_POST["solicitudBold"], PDO::PARAM_STR);
+					$stmtBold->execute();
+				} catch (Exception $eBold) {}
+			}
+
+			// Actualizar estado de solicitud Facturación Electrónica si viene en el formulario
+			if (isset($_POST["solicitudFacturacionElectronica"])) {
+				try {
+					$stmtFE = Conexion::conectar()->prepare("UPDATE configuracion SET solicitud_facturacion_electronica = :solicitud_fe WHERE id = 1");
+					$stmtFE->bindParam(":solicitud_fe", $_POST["solicitudFacturacionElectronica"], PDO::PARAM_STR);
+					$stmtFE->execute();
+				} catch (Exception $eFE) {}
+			}
+
 			// 0. Obtener configuración actual para mantener datos de la empresa si no vienen en el POST
 			$configConfig = ModeloFactus::mdlObtenerConfiguracion();
 

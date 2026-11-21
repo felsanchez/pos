@@ -13,6 +13,12 @@ require_once "modelos/sanitizer.php";
 // Obtener configuración general del sistema de forma dinámica
 $configuracionGeneral = ControladorConfiguracion::ctrObtenerConfiguracion();
 $nombreEmpresa = !empty($configuracionGeneral["nombre_empresa"]) ? $configuracionGeneral["nombre_empresa"] : "Kontrol Pos";
+
+// Ruta pública para el Menú Digital (clientes vía QR o enlace directo)
+if (isset($_GET["ruta"]) && $_GET["ruta"] === "menu") {
+    include "modulos/menu-publico.php";
+    return;
+}
 ?>
 
 <!DOCTYPE html>
@@ -273,6 +279,7 @@ CUERPO DOCUMENTO
         $_GET["ruta"] == "crm" ||
         $_GET["ruta"] == "data-crm" ||
         $_GET["ruta"] == "whatsapp-chats" ||
+        $_GET["ruta"] == "menu-digital" ||
         ($_GET["ruta"] == "inquilinos" && $_SESSION["perfil"] === "_SystemMaster_") ||
         ($_GET["ruta"] == "conocimiento" && ($_SESSION["perfil"] === "Administrador" || $_SESSION["perfil"] === "_SystemMaster_") && (!isset($configuracionGeneral["base_conocimiento_activa"]) || $configuracionGeneral["base_conocimiento_activa"] == 1)) ||
         $_GET["ruta"] == "salir"
@@ -333,6 +340,7 @@ CUERPO DOCUMENTO
   <script src="vistas/js/logs.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/traslados.js?v=<?php echo time(); ?>"></script>
   <script src="vistas/js/conocimiento.js?v=<?php echo time(); ?>"></script>
+  <script src="vistas/js/menu-digital.js?v=<?php echo time(); ?>"></script>
 
   <?php if (isset($_SESSION["iniciarSesion"]) && $_SESSION["iniciarSesion"] == "ok" && isset($configuracionGeneral["control_caja"]) && intval($configuracionGeneral["control_caja"]) === 1): ?>
   <script src="vistas/js/cajas.js?v=<?php echo time(); ?>"></script>

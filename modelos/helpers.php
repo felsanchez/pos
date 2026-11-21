@@ -30,6 +30,8 @@ function puedeVer(string $modulo): bool
         $modulo = 'ordenes-visita';
     } elseif ($modulo === 'data-crm') {
         $modulo = 'crm';
+    } elseif ($modulo === 'menu-digital') {
+        $modulo = 'menu_digital';
     }
 
     return !empty($_SESSION['permisos'][$modulo]['ver']);
@@ -56,6 +58,8 @@ function puedeAccion(string $modulo, string $accion): bool
         $modulo = 'ordenes-visita';
     } elseif ($modulo === 'data-crm') {
         $modulo = 'crm';
+    } elseif ($modulo === 'menu-digital') {
+        $modulo = 'menu_digital';
     }
 
     return !empty($_SESSION['permisos'][$modulo][$accion]);

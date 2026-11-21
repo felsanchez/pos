@@ -90,7 +90,8 @@ class ClienteCRMModel
                 estatus,
                 notas,
                 compras,
-                eliminado
+                eliminado,
+                origen
                 
             FROM clientes
             WHERE
@@ -146,7 +147,8 @@ class ClienteCRMModel
                 documento,
                 estatus,
                 notas,
-                compras
+                compras,
+                origen
             FROM clientes
             WHERE id = ?
             LIMIT 1
@@ -202,6 +204,8 @@ class ClienteCRMModel
         $notas = "Registrado por la IA";
     
         $compras = 0;
+
+        $origen = "agente_ia";
     
         $sql = "
             INSERT INTO clientes (
@@ -211,9 +215,10 @@ class ClienteCRMModel
                 direccion,
                 estatus,
                 notas,
-                compras
+                compras,
+                origen
             )
-            VALUES (?,?,?,?,?,?,?)
+            VALUES (?,?,?,?,?,?,?,?)
         ";
     
         $stmt = $db->prepare($sql);
@@ -223,14 +228,15 @@ class ClienteCRMModel
         }
     
         $stmt->bind_param(
-            "ssssssi",
+            "ssssssis",
             $nombre,
             $documento,
             $telefonoFormateado,
             $direccion,
             $estatus,
             $notas,
-            $compras
+            $compras,
+            $origen
         );
     
         if (!$stmt->execute()) {
@@ -248,7 +254,8 @@ class ClienteCRMModel
             "documento" => $documento,
             "estatus" => $estatus,
             "notas" => $notas,
-            "compras" => $compras
+            "compras" => $compras,
+            "origen" => $origen
         ];
     
     }
@@ -298,7 +305,8 @@ class ClienteCRMModel
         $sql = "
             SELECT
                 nombre,
-                direccion
+                direccion,
+                origen
             FROM clientes
             WHERE id = ?
             LIMIT 1
@@ -346,6 +354,13 @@ class ClienteCRMModel
             $tipos .= "s";
             $valores[] = trim($direccion);
     
+        }
+
+        // Si el cliente no tiene origen definido o es 'sistema', asignar 'agente_ia'
+        if (empty($cliente["origen"]) || $cliente["origen"] === "sistema") {
+            $campos[] = "origen = ?";
+            $tipos .= "s";
+            $valores[] = "agente_ia";
         }
     
         // No hay nada para actualizar

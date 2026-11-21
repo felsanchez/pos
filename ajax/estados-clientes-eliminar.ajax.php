@@ -23,6 +23,16 @@ class AjaxEliminarEstado {
 
 	public function ajaxEliminarEstado() {
 
+		// Bloquear eliminación de estados protegidos (nuevo y leads)
+		if (in_array(strtolower(trim($this->nombreEstado)), ['nuevo', 'leads'])) {
+			echo json_encode(array(
+				"status" => "error",
+				"type" => "bloqueado",
+				"message" => "El estado '" . ucfirst($this->nombreEstado) . "' es un estado protegido del sistema y no puede eliminarse."
+			));
+			return;
+		}
+
 		$tabla = "estados_clientes";
 
 		// Verificar si el estado está en uso

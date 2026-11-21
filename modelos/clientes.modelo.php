@@ -62,6 +62,7 @@ class ModeloClientes
 
 	static public function mdlMostrarClientes($tabla, $item, $valor)
 	{
+		self::mdlVerificarColumnaOrigen();
 
 		if ($item != null) {
 
@@ -133,10 +134,61 @@ class ModeloClientes
 	}
 
 	/*=============================================
+	VERIFICAR Y MIGRAR COLUMNA ORIGEN EN CLIENTES
+	=============================================*/
+	static public function mdlVerificarColumnaOrigen()
+	{
+		static $yaVerificado = false;
+		if ($yaVerificado) {
+			return;
+		}
+
+		try {
+			$db = Conexion::conectar();
+
+			// 1. Verificar si existe la columna origen
+			$check = $db->query("SHOW COLUMNS FROM clientes LIKE 'origen'");
+			if ($check && $check->rowCount() == 0) {
+				$db->exec("ALTER TABLE clientes ADD COLUMN origen VARCHAR(50) NOT NULL DEFAULT 'sistema'");
+			}
+
+			// 2. Migrar clientes antiguos de Menú Digital
+			$db->exec("UPDATE clientes 
+					   SET origen = 'menu_digital' 
+					   WHERE (origen IS NULL OR origen = '' OR origen = 'sistema') 
+					     AND (estatus = 'Menú Digital' OR notas LIKE '%Menú Digital%')");
+
+			$db->exec("UPDATE clientes SET estatus = 'Nuevo' WHERE estatus = 'Menú Digital'");
+
+			// 3. Migrar clientes antiguos de WhatsApp / CRM / n8n / Agente IA
+			$db->exec("UPDATE clientes 
+					   SET origen = 'agente_ia' 
+					   WHERE (origen IS NULL OR origen = '' OR origen = 'sistema') 
+					     AND (
+					       notas LIKE '%Registrado por la IA%' 
+					       OR notas LIKE '%WhatsApp%' 
+					       OR notas LIKE '%n8n%' 
+					       OR id IN (
+					           SELECT DISTINCT id_cliente 
+					           FROM crm_leads 
+					           WHERE (origen LIKE '%WhatsApp%' OR (resumen_ia IS NOT NULL AND resumen_ia != '')) 
+					             AND id_cliente IS NOT NULL
+					       )
+					     )");
+
+			$yaVerificado = true;
+		} catch (Exception $e) {
+			// Ignorar si hay error de permisos
+		}
+	}
+
+	/*=============================================
 	MOSTRAR CLIENTES SERVER-SIDE
 	=============================================*/
 	static public function mdlMostrarClientesServerSide($tabla, $where, $order, $limit)
 	{
+		self::mdlVerificarColumnaOrigen();
+
 		if (empty(trim($where))) {
 			$where = "WHERE c.eliminado = 0";
 		} else {
@@ -472,5 +524,39 @@ class ModeloClientes
 		}
 
 		return null;
+	}
+
+	/*=============================================
+	MOSTRAR CLIENTES CON ANÁLISIS DE INACTIVIDAD Y COMPRAS
+	=============================================*/
+	static public function mdlMostrarClientesInactividad()
+	{
+		$sql = "SELECT 
+					c.id, 
+					c.nombre, 
+					c.documento, 
+					c.tipo_documento_id,
+					c.digito_verificacion,
+					c.telefono, 
+					c.email, 
+					c.ciudad, 
+					c.estatus,
+					c.direccion,
+					COALESCE(MAX(CASE WHEN v.estado = 'venta' THEN v.fecha ELSE NULL END), c.ultima_compra) AS ultima_compra,
+					COUNT(CASE WHEN v.estado = 'venta' THEN v.id ELSE NULL END) AS total_compras,
+					COALESCE(SUM(CASE WHEN v.estado = 'venta' THEN v.total ELSE 0 END), 0) AS total_gastado,
+					DATEDIFF(NOW(), COALESCE(MAX(CASE WHEN v.estado = 'venta' THEN v.fecha ELSE NULL END), c.ultima_compra)) AS dias_inactivo
+				FROM clientes c
+				LEFT JOIN ventas v ON c.id = v.id_cliente AND v.estado != 'anulada'
+				WHERE c.eliminado = 0
+				GROUP BY c.id
+				ORDER BY 
+					(CASE WHEN COALESCE(MAX(CASE WHEN v.estado = 'venta' THEN v.fecha ELSE NULL END), c.ultima_compra) IS NULL THEN 1 ELSE 0 END) ASC,
+					dias_inactivo ASC,
+					c.id DESC";
+
+		$stmt = Conexion::conectar()->prepare($sql);
+		$stmt->execute();
+		return $stmt->fetchAll(PDO::FETCH_ASSOC);
 	}
 }

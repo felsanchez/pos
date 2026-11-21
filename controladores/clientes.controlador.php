@@ -249,13 +249,25 @@ class ControladorClientes
 		// Búsqueda global (DataTables)
 		if (!empty($params['search']['value'])) {
 			$searchValue = $params['search']['value'];
-			$where .= " AND (c.nombre LIKE '%$searchValue%' OR c.documento LIKE '%$searchValue%' OR c.email LIKE '%$searchValue%' OR c.telefono LIKE '%$searchValue%' OR c.direccion LIKE '%$searchValue%' OR c.estatus LIKE '%$searchValue%' OR c.notas LIKE '%$searchValue%') ";
+			$where .= " AND (c.nombre LIKE '%$searchValue%' OR c.documento LIKE '%$searchValue%' OR c.email LIKE '%$searchValue%' OR c.telefono LIKE '%$searchValue%' OR c.direccion LIKE '%$searchValue%' OR c.estatus LIKE '%$searchValue%' OR c.notas LIKE '%$searchValue%' OR c.origen LIKE '%$searchValue%') ";
 		}
 
 		// Filtro por Estado (filtroEstatus1) pasado desde el request adicional si existe
 		if (isset($_POST['filtroEstatus1']) && !empty($_POST['filtroEstatus1'])) {
 			$estatusFilter = $_POST['filtroEstatus1'];
 			$where .= " AND c.estatus = '$estatusFilter' ";
+		}
+
+		// Filtro por Origen / Canal de Registro
+		if (isset($_POST['filtroOrigenCliente']) && !empty($_POST['filtroOrigenCliente'])) {
+			$origenFilter = $_POST['filtroOrigenCliente'];
+			if ($origenFilter === 'menu_digital') {
+				$where .= " AND (c.origen = 'menu_digital' OR c.origen = 'Menú Digital') ";
+			} else if ($origenFilter === 'agente_ia') {
+				$where .= " AND (c.origen = 'agente_ia' OR c.origen = 'Agente IA') ";
+			} else if ($origenFilter === 'sistema') {
+				$where .= " AND (c.origen IS NULL OR c.origen = '' OR c.origen = 'sistema') ";
+			}
 		}
 
 		// Ordenar
@@ -295,8 +307,16 @@ class ControladorClientes
 				'data-cliente-id' => $value['id']
 			);
 
-			// 0: Nombre
-			$nestedData[] = e($value["nombre"]);
+			// 0: Nombre con badge de origen (Menú Digital / Agente IA)
+			$nombreDisplay = e($value["nombre"]);
+			if (!empty($value["origen"])) {
+				if ($value["origen"] === 'menu_digital' || $value["origen"] === 'Menú Digital') {
+					$nombreDisplay .= ' <span class="badge" style="background-color: #00a65a; font-size: 10px; font-weight: 600; padding: 2px 6px; margin-left: 5px; vertical-align: middle; border-radius: 3px;" title="Cliente registrado automáticamente desde el Menú Digital"><i class="fa fa-cutlery"></i> Menú Digital</span>';
+				} else if ($value["origen"] === 'agente_ia' || $value["origen"] === 'Agente IA') {
+					$nombreDisplay .= ' <span class="badge" style="background-color: #7c3aed; font-size: 10px; font-weight: 600; padding: 2px 6px; margin-left: 5px; vertical-align: middle; border-radius: 3px;" title="Cliente registrado desde CRM / WhatsApp / n8n (Agente IA)"><i class="fa fa-android"></i> Agente IA</span>';
+				}
+			}
+			$nestedData[] = $nombreDisplay;
 
 			// 1: Documento (con DV si es NIT)
 			$documentoDisplay = e($value["documento"]);
@@ -324,9 +344,13 @@ class ControladorClientes
 				$nestedData[] = '<span class="text-muted">Sin estado</span>';
 			}
 
-			// 4: Notas (Editable)
+			// 4: Notas (Editable solo si tiene permiso de editar clientes)
 			$notas = trim($value["notas"] ?? "");
-			$nestedData[] = '<div contenteditable="true" class="celda-notas" tabindex="0" data-id="' . $value['id'] . '">' . e($notas) . '</div>';
+			if (puedeAccion('clientes', 'editar')) {
+				$nestedData[] = '<div contenteditable="true" class="celda-notas" tabindex="0" data-id="' . $value['id'] . '">' . e($notas) . '</div>';
+			} else {
+				$nestedData[] = '<div contenteditable="false" class="celda-notas-disabled" style="cursor: not-allowed; opacity: 0.85; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 4px 8px; color: #64748b; min-height: 28px;" title="Permiso de edición requerido para modificar notas" data-id="' . $value['id'] . '">' . (!empty($notas) ? e($notas) : '<span class="text-muted" style="font-style: italic;">Sin notas</span>') . '</div>';
+			}
 
 			// 5: Acciones
 			$botonesAcciones = '<div class="btn-group">';
@@ -1058,5 +1082,13 @@ class ControladorClientes
 		$buscar    = array('á', 'é', 'í', 'ó', 'ú', 'ä', 'ë', 'ï', 'ö', 'ü', 'à', 'è', 'ì', 'ò', 'ù', 'ñ');
 		$reemplazar = array('a', 'e', 'i', 'o', 'u', 'a', 'e', 'i', 'o', 'u', 'a', 'e', 'i', 'o', 'u', 'n');
 		return str_replace($buscar, $reemplazar, $texto);
+	}
+
+	/*=============================================
+	MOSTRAR CLIENTES CON ANÁLISIS DE INACTIVIDAD Y COMPRAS
+	=============================================*/
+	static public function ctrMostrarClientesInactividad()
+	{
+		return ModeloClientes::mdlMostrarClientesInactividad();
 	}
 }

@@ -8,6 +8,20 @@ if (!isset($_SESSION["usuario"]) || $_SESSION["usuario"] != "jumperadmindev") {
 $actualizar = new ControladorFactus();
 $actualizar->ctrActualizarConfiguracion();
 
+// Asegurar columnas de solicitudes en tabla configuracion
+try {
+	$dbInit = Conexion::conectar();
+	$dbInit->exec("ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS solicitud_bold VARCHAR(255) NULL DEFAULT 'sin solicitud'");
+	$dbInit->exec("ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS solicitud_facturacion_electronica VARCHAR(255) NULL DEFAULT 'sin solicitud'");
+} catch(Exception $eInit) {
+	try {
+		$dbInit->exec("ALTER TABLE configuracion ADD COLUMN solicitud_bold VARCHAR(255) NULL DEFAULT 'sin solicitud'");
+	} catch(Exception $eInit2) {}
+	try {
+		$dbInit->exec("ALTER TABLE configuracion ADD COLUMN solicitud_facturacion_electronica VARCHAR(255) NULL DEFAULT 'sin solicitud'");
+	} catch(Exception $eInit3) {}
+}
+
 $configuracion = ControladorFactus::ctrObtenerConfiguracion();
 $configuracionGlobal = ControladorConfiguracion::ctrObtenerConfiguracion();
 
@@ -205,12 +219,110 @@ if (!$configuracion) {
 			</div>
 
 			<!-- ===================================================
-			SECCIÓN 2: INTEGRACIÓN AGENTE IA (BASE DE CONOCIMIENTO)
+			SECCIÓN 2: SOLICITUDES DE VINCULACIÓN (BOLD Y FACTURACIÓN ELECTRÓNICA)
+			=================================================== -->
+			<div class="box" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid #7c3aed; margin-bottom: 25px;">
+				<div class="box-header with-border" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 15px 20px; border-radius: 8px 8px 0 0;">
+					<h3 class="box-title" style="font-weight: 700; color: #1e293b; font-size: 17px; display: flex; align-items: center; gap: 8px;">
+						<i class="fa fa-exchange" style="color: #7c3aed;"></i> 2. Solicitudes de Vinculación (BOLD y Facturación Electrónica)
+					</h3>
+				</div>
+
+				<div class="box-body" style="padding: 20px;">
+					<p class="text-muted" style="margin-bottom: 20px; font-size: 13px;">
+						<i class="fa fa-info-circle"></i> Gestiona el estado de las solicitudes enviadas por el cliente desde el módulo de <strong>Configuración</strong> para vincular su cuenta BOLD o activar Facturación Electrónica.
+					</p>
+
+					<div class="row">
+						<!-- Solicitud de Vinculación BOLD -->
+						<div class="col-md-6">
+							<div class="panel panel-default" style="border-radius: 6px; border-color: #e2e8f0; border-left: 4px solid #7c3aed; margin-bottom: 0;">
+								<div class="panel-heading" style="background: #faf5ff; font-weight: 700; color: #581c87; display: flex; align-items: center; justify-content: space-between;">
+									<span><i class="fa fa-credit-card" style="color: #7c3aed;"></i> Solicitud de Vinculación BOLD</span>
+									<?php 
+										$solicitudBold = !empty($configuracionGlobal["solicitud_bold"]) ? $configuracionGlobal["solicitud_bold"] : "sin solicitud";
+										$esSolicitado = (strpos(strtolower($solicitudBold), 'solicito') !== false);
+									?>
+									<span class="label <?php echo $esSolicitado ? 'label-warning' : 'label-default'; ?>" style="font-size: 11px;">
+										<?php echo $esSolicitado ? 'Solicitud Activa' : 'Sin Solicitud'; ?>
+									</span>
+								</div>
+								<div class="panel-body">
+									<div class="form-group" style="margin-bottom: 0;">
+										<label style="font-weight: 600; font-size: 13px; color: #334155;">Estado de la Solicitud:</label>
+										<div class="input-group">
+											<span class="input-group-addon" style="background: <?php echo $esSolicitado ? '#ede9fe' : '#f1f5f9'; ?>; color: <?php echo $esSolicitado ? '#7c3aed' : '#64748b'; ?>;">
+												<i class="fa <?php echo $esSolicitado ? 'fa-bell text-warning' : 'fa-info-circle'; ?>"></i>
+											</span>
+											<input type="text" class="form-control" name="solicitudBold" id="campoSolicitudBold" value="<?php echo htmlspecialchars($solicitudBold); ?>" style="font-weight: 700; background: <?php echo $esSolicitado ? '#f5f3ff' : '#ffffff'; ?>; color: <?php echo $esSolicitado ? '#6b21a8' : '#64748b'; ?>; font-size: 14px;">
+											<span class="input-group-btn">
+												<button class="btn btn-default" type="button" onclick="$('#campoSolicitudBold').val('sin solicitud');" title="Restablecer a 'sin solicitud'">
+													<i class="fa fa-undo"></i> Restablecer
+												</button>
+											</span>
+										</div>
+										<p class="help-block" style="font-size: 12px; margin-top: 6px;">
+											<?php if ($esSolicitado): ?>
+												<span class="text-success" style="font-weight: 600;"><i class="fa fa-check-circle"></i> El cliente solicitó vincular BOLD desde el módulo de Configuración.</span>
+											<?php else: ?>
+												<span class="text-muted"><i class="fa fa-info-circle"></i> Estado actual: sin solicitud. Al hacer clic en "Solicitar" en Configuración, cambiará automáticamente a "El cliente solicito vincular BOLD".</span>
+											<?php endif; ?>
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Solicitud de Facturación Electrónica -->
+						<div class="col-md-6">
+							<div class="panel panel-default" style="border-radius: 6px; border-color: #e2e8f0; border-left: 4px solid #16a34a; margin-bottom: 0;">
+								<div class="panel-heading" style="background: #f0fdf4; font-weight: 700; color: #166534; display: flex; align-items: center; justify-content: space-between;">
+									<span><i class="fa fa-file-text-o" style="color: #16a34a;"></i> Solicitud de Facturación Electrónica</span>
+									<?php 
+										$solicitudFE = !empty($configuracionGlobal["solicitud_facturacion_electronica"]) ? $configuracionGlobal["solicitud_facturacion_electronica"] : "sin solicitud";
+										$esSolicitadoFE = (strpos(strtolower($solicitudFE), 'solicito') !== false);
+									?>
+									<span class="label <?php echo $esSolicitadoFE ? 'label-warning' : 'label-default'; ?>" style="font-size: 11px;">
+										<?php echo $esSolicitadoFE ? 'Solicitud Activa' : 'Sin Solicitud'; ?>
+									</span>
+								</div>
+								<div class="panel-body">
+									<div class="form-group" style="margin-bottom: 0;">
+										<label style="font-weight: 600; font-size: 13px; color: #334155;">Estado de la Solicitud:</label>
+										<div class="input-group">
+											<span class="input-group-addon" style="background: <?php echo $esSolicitadoFE ? '#dcfce7' : '#f1f5f9'; ?>; color: <?php echo $esSolicitadoFE ? '#16a34a' : '#64748b'; ?>;">
+												<i class="fa <?php echo $esSolicitadoFE ? 'fa-bell text-warning' : 'fa-info-circle'; ?>"></i>
+											</span>
+											<input type="text" class="form-control" name="solicitudFacturacionElectronica" id="campoSolicitudFE" value="<?php echo htmlspecialchars($solicitudFE); ?>" style="font-weight: 700; background: <?php echo $esSolicitadoFE ? '#f0fdf4' : '#ffffff'; ?>; color: <?php echo $esSolicitadoFE ? '#15803d' : '#64748b'; ?>; font-size: 14px;">
+											<span class="input-group-btn">
+												<button class="btn btn-default" type="button" onclick="$('#campoSolicitudFE').val('sin solicitud');" title="Restablecer a 'sin solicitud'">
+													<i class="fa fa-undo"></i> Restablecer
+												</button>
+											</span>
+										</div>
+										<p class="help-block" style="font-size: 12px; margin-top: 6px;">
+											<?php if ($esSolicitadoFE): ?>
+												<span class="text-success" style="font-weight: 600;"><i class="fa fa-check-circle"></i> El cliente solicitó vincular facturas electrónicas desde el módulo de Configuración.</span>
+											<?php else: ?>
+												<span class="text-muted"><i class="fa fa-info-circle"></i> Estado actual: sin solicitud. Al hacer clic en "Solicitar" en Configuración, cambiará automáticamente a "El cliente solicito vincular facturas electronicas".</span>
+											<?php endif; ?>
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+
+			<!-- ===================================================
+			SECCIÓN 3: INTEGRACIÓN AGENTE IA (BASE DE CONOCIMIENTO)
 			=================================================== -->
 			<div class="box box-info" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid #0073b7; margin-bottom: 25px;">
 				<div class="box-header with-border" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 15px 20px; border-radius: 8px 8px 0 0;">
 					<h3 class="box-title" style="font-weight: 700; color: #0284c7; font-size: 17px; display: flex; align-items: center; gap: 8px;">
-						<i class="fa fa-robot text-info"></i> 2. Sincronización Agente IA (Base de Conocimiento)
+						<i class="fa fa-robot text-info"></i> 3. Sincronización Agente IA (Base de Conocimiento)
 					</h3>
 				</div>
 
@@ -234,16 +346,47 @@ if (!$configuracion) {
 			</div>
 
 			<!-- ===================================================
-			SECCIÓN 3: CONFIGURACIÓN DEL CORREO EMISOR (SMTP)
+			SECCIÓN 4: CONFIGURACIÓN DEL CORREO EMISOR (SMTP)
 			=================================================== -->
 			<div class="box box-warning" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid #f39c12; margin-bottom: 25px;">
 				<div class="box-header with-border" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 15px 20px; border-radius: 8px 8px 0 0;">
 					<h3 class="box-title" style="font-weight: 700; color: #d97706; font-size: 17px; display: flex; align-items: center; gap: 8px;">
-						<i class="fa fa-envelope text-warning"></i> 3. Configuración del Correo Emisor (SMTP)
+						<i class="fa fa-envelope text-warning"></i> 4. Configuración del Correo Emisor (SMTP)
 					</h3>
 				</div>
 
 				<div class="box-body" style="padding: 20px;">
+					<!-- Alerta Informativa / Instrucciones -->
+					<div class="alert alert-info" style="border-radius: 6px; background-color: #f0f9ff; border-color: #bae6fd; color: #0369a1; margin-bottom: 20px;">
+						<h4 style="font-weight: 700; font-size: 15px; margin-top: 0;">
+							<i class="icon fa fa-info-circle"></i> ¿Para qué se utiliza este correo?
+						</h4>
+						<p style="margin-bottom: 8px; font-size: 13px;">
+							Este correo es el <strong>remitente oficial</strong> desde el cual el sistema envía automáticamente los comprobantes y facturas en formato PDF a los clientes en los módulos de <strong>Ventas</strong> y <strong>Órdenes</strong>.
+						</p>
+						<hr style="margin: 10px 0; border-top: 1px solid #bae6fd;">
+						<div class="row" style="font-size: 12.5px;">
+							<div class="col-md-6" style="margin-bottom: 10px;">
+								<strong style="color: #0c4a6e;"><i class="fa fa-google"></i> Si utilizas Gmail:</strong>
+								<ol style="margin-top: 5px; padding-left: 20px; line-height: 1.6;">
+									<li>Activa la <strong>Verificación en dos pasos</strong> en tu cuenta de Google (<a href="https://myaccount.google.com/security" target="_blank" style="color: #0284c7; text-decoration: underline;">myaccount.google.com/security</a>).</li>
+									<li>Genera una <strong>Contraseña de Aplicación</strong> en <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color: #0284c7; text-decoration: underline;">myaccount.google.com/apppasswords</a> con el nombre <em>"POS Facturas"</em>.</li>
+									<li>Copia el código de 16 letras resultante y pégalo abajo en <strong>Contraseña SMTP</strong>.</li>
+									<li>Host: <code>smtp.gmail.com</code> | Puerto: <code>587</code> | Seguridad: <code>TLS</code>.</li>
+								</ol>
+							</div>
+							<div class="col-md-6">
+								<strong style="color: #0c4a6e;"><i class="fa fa-server"></i> Si utilizas Correo Corporativo Propio (cPanel / Webmail):</strong>
+								<ul style="margin-top: 5px; padding-left: 20px; line-height: 1.6;">
+									<li><strong>Correo Emisor:</strong> Tu correo completo (ej. <code>facturacion@tudominio.com</code>).</li>
+									<li><strong>Contraseña SMTP:</strong> La misma clave con la que ingresas a tu Webmail.</li>
+									<li><strong>Servidor Host:</strong> Normalmente <code>mail.tudominio.com</code>.</li>
+									<li><strong>Puerto:</strong> <code>465</code> (con seguridad SSL) o <code>587</code> (con seguridad TLS).</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+
 					<div class="row">
 						<!-- Correo Emisor -->
 						<div class="col-md-6">
@@ -252,7 +395,7 @@ if (!$configuracion) {
 								<div class="input-group">
 									<span class="input-group-addon"><i class="fa fa-envelope text-muted"></i></span>
 									<input type="email" class="form-control" name="smtpCorreo"
-										value="<?php echo isset($configuracion['smtp_correo']) ? $configuracion['smtp_correo'] : 'kontrolpos01@gmail.com'; ?>"
+										value="<?php echo isset($configuracion['smtp_correo']) ? htmlspecialchars($configuracion['smtp_correo']) : 'kontrolpos01@gmail.com'; ?>"
 										placeholder="ejemplo@gmail.com">
 								</div>
 								<p class="help-block" style="font-size: 12px;">Correo electrónico para enviar facturas y notificaciones.</p>
@@ -265,9 +408,14 @@ if (!$configuracion) {
 								<label style="font-weight: 600;">Contraseña SMTP (App Password)</label>
 								<div class="input-group">
 									<span class="input-group-addon"><i class="fa fa-lock text-muted"></i></span>
-									<input type="password" class="form-control" name="smtpPassword"
-										value="<?php echo isset($configuracion['smtp_password']) ? $configuracion['smtp_password'] : 'jnjs tvux pfwd aghm'; ?>"
+									<input type="password" class="form-control" name="smtpPassword" id="smtpPasswordFactus"
+										value="<?php echo isset($configuracion['smtp_password']) ? htmlspecialchars($configuracion['smtp_password']) : 'jnjs tvux pfwd aghm'; ?>"
 										placeholder="Contraseña de aplicación o clave SMTP">
+									<span class="input-group-btn">
+										<button class="btn btn-default" type="button" onclick="togglePasswordVisibilityFactus('smtpPasswordFactus', this)" title="Ver / Ocultar">
+											<i class="fa fa-eye"></i>
+										</button>
+									</span>
 								</div>
 								<p class="help-block" style="font-size: 12px;">Contraseña de aplicación de Gmail o clave SMTP de tu servidor.</p>
 							</div>
@@ -326,12 +474,12 @@ if (!$configuracion) {
 			</div>
 
 			<!-- ===================================================
-			SECCIÓN 4: API DE FACTURACIÓN ELECTRÓNICA (FACTUS)
+			SECCIÓN 5: API DE FACTURACIÓN ELECTRÓNICA (FACTUS)
 			=================================================== -->
 			<div class="box box-success" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid #00a65a; margin-bottom: 25px;">
 				<div class="box-header with-border" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 15px 20px; border-radius: 8px 8px 0 0;">
 					<h3 class="box-title" style="font-weight: 700; color: #16a34a; font-size: 17px; display: flex; align-items: center; gap: 8px;">
-						<i class="fa fa-cloud text-success"></i> 4. Conexión y Credenciales API Factus
+						<i class="fa fa-cloud text-success"></i> 5. Conexión y Credenciales API Factus
 					</h3>
 				</div>
 
@@ -555,13 +703,13 @@ if (!$configuracion) {
 		</form>
 
 		<!-- ===================================================
-		SECCIÓN 5: TABLAS MAESTRAS Y PARÁMETROS DIAN / FACTUS
+		SECCIÓN 6: TABLAS MAESTRAS Y PARÁMETROS DIAN / FACTUS
 		=================================================== -->
 		<?php if ($configuracion['activo'] == 1): ?>
 		<div class="box box-default" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid #64748b; margin-top: 30px;">
 			<div class="box-header with-border" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 15px 20px; border-radius: 8px 8px 0 0;">
 				<h3 class="box-title" style="font-weight: 700; color: #334155; font-size: 17px; display: flex; align-items: center; gap: 8px;">
-					<i class="fa fa-database text-muted"></i> 5. Tablas Maestras y Parámetros DIAN / Factus
+					<i class="fa fa-database text-muted"></i> 6. Tablas Maestras y Parámetros DIAN / Factus
 				</h3>
 			</div>
 
@@ -747,12 +895,12 @@ if (!$configuracion) {
 		<?php endif; ?>
 
 		<!-- ===================================================
-		SECCIÓN 6: LEADS DE WHATSAPP REGISTRADOS EN EL CRM
+		SECCIÓN 7: LEADS DE WHATSAPP REGISTRADOS EN EL CRM
 		=================================================== -->
 		<div class="box box-success" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid #25D366; margin-top: 30px;">
 			<div class="box-header with-border" style="background-color: #f0fdf4; border-bottom: 1px solid #bbf7d0; padding: 15px 20px; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
 				<h3 class="box-title" style="font-weight: 700; color: #166534; font-size: 17px; display: flex; align-items: center; gap: 8px; margin: 0;">
-					<i class="fa fa-whatsapp" style="color: #25D366; font-size: 20px;"></i> Leads de WhatsApp Registrados en el CRM
+					<i class="fa fa-whatsapp" style="color: #25D366; font-size: 20px;"></i> 7. Leads de WhatsApp Registrados en el CRM
 				</h3>
 				<button type="button" class="btn btn-danger btn-sm" id="btnEliminarSeleccionadosLeadsWA" disabled style="font-weight: 600; border-radius: 6px;">
 					<i class="fa fa-trash"></i> Eliminar Seleccionados (<span id="cantSeleccionadosLeadsWA">0</span>)
@@ -1560,6 +1708,25 @@ $(document).ready(function() {
 	aplicarFiltrosLeadsWhatsApp();
 
 });
+
+function togglePasswordVisibilityFactus(inputId, btn) {
+	var input = document.getElementById(inputId);
+	if (!input) return;
+	var icon = btn.querySelector('i');
+	if (input.type === 'password') {
+		input.type = 'text';
+		if (icon) {
+			icon.classList.remove('fa-eye');
+			icon.classList.add('fa-eye-slash');
+		}
+	} else {
+		input.type = 'password';
+		if (icon) {
+			icon.classList.remove('fa-eye-slash');
+			icon.classList.add('fa-eye');
+		}
+	}
+}
 </script>
 
 

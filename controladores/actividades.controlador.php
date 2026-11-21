@@ -171,6 +171,11 @@ class ControladorActividades{
 		$idBodegaActiva = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : 1;
 		$where .= " AND a.id_bodega = $idBodegaActiva ";
 
+		$idUsuarioActivo = isset($_SESSION["id"]) ? intval($_SESSION["id"]) : 0;
+		if ($idUsuarioActivo > 0) {
+			$where .= " AND (a.google_event_id IS NULL OR a.google_event_id = '' OR a.id_user = $idUsuarioActivo) ";
+		}
+
 		if (!empty($params['search']['value'])) {
 			$searchValue = $params['search']['value'];
 			$where .= " AND (a.descripcion LIKE '%$searchValue%' OR a.tipo LIKE '%$searchValue%' OR a.estado LIKE '%$searchValue%' OR a.observacion LIKE '%$searchValue%' OR c.nombre LIKE '%$searchValue%' OR u.nombre LIKE '%$searchValue%') ";
@@ -201,7 +206,8 @@ class ControladorActividades{
 		}
 
 		$actividades = ModeloActividades::mdlMostrarActividadesServerSide($tabla, $where, $order, $limit);
-		$totalData = ModeloActividades::mdlGetTotalActividades($tabla, " WHERE 1=1 AND a.id_bodega = $idBodegaActiva ");
+		$whereTotalBase = " WHERE 1=1 AND a.id_bodega = $idBodegaActiva " . ($idUsuarioActivo > 0 ? " AND (a.google_event_id IS NULL OR a.google_event_id = '' OR a.id_user = $idUsuarioActivo) " : "");
+		$totalData = ModeloActividades::mdlGetTotalActividades($tabla, $whereTotalBase);
 		$totalFiltered = ModeloActividades::mdlGetTotalActividades($tabla, $where);
 
 		$data = array();
@@ -541,10 +547,13 @@ class ControladorActividades{
 
 //CUADRO ACTIVIDADES CON CLIENTE********************************************************
 	// Agregar este método después de ctrMostrarActividades
-static public function ctrMostrarActividadesConCliente($item, $valor){
+static public function ctrMostrarActividadesConCliente($item, $valor, $idUsuario = null){
     $tabla = "actividades";
     $idBodega = isset($_SESSION["id_bodega"]) ? intval($_SESSION["id_bodega"]) : null;
-    $respuesta = ModeloActividades::mdlMostrarActividadesConCliente($tabla, $item, $valor, $idBodega);
+    if ($idUsuario === null && isset($_SESSION["id"]) && !empty($_SESSION["id"])) {
+        $idUsuario = intval($_SESSION["id"]);
+    }
+    $respuesta = ModeloActividades::mdlMostrarActividadesConCliente($tabla, $item, $valor, $idBodega, $idUsuario);
     return $respuesta;
 }
 

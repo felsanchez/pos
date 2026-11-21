@@ -46,10 +46,14 @@ class AjaxActualizarNotaGasto{
 ACTUALIZAR NOTA
 =============================================*/
 if(isset($_POST["idGasto"])){
+	require_once "../modelos/helpers.php";
+	if (!puedeAccion('gastos', 'editar')) {
+		echo json_encode(["status" => "error", "mensaje" => "No tiene permisos para editar notas de gastos"]);
+		exit;
+	}
 
 	$actualizarNota = new AjaxActualizarNotaGasto();
 	$actualizarNota -> idGasto = $_POST["idGasto"];
 	$actualizarNota -> nota = $_POST["nota"];
 	$actualizarNota -> ajaxActualizarNotaGasto();
-
 }

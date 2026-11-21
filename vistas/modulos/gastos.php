@@ -508,18 +508,26 @@ MODAL AMPLIAR Y EDITAR IMAGEN COMPROBANTE
       <div class="modal-body text-center">
         <img id="imagenComprobanteAmpliada" src="" class="img-responsive"
           style="max-width: 100%; margin: 0 auto; margin-bottom: 20px;">
-        <hr>
-        <div class="form-group">
-          <label>Cambiar Imagen del Comprobante</label>
-          <input type="file" class="form-control nuevaImagenComprobante" accept="image/*">
-          <p class="help-block">Peso máximo de la imagen 8MB</p>
+        
+        <?php if (puedeAccion('gastos', 'editar')): ?>
+        <div class="seccion-cambiar-imagen-gasto">
+          <hr>
+          <div class="form-group">
+            <label>Cambiar Imagen del Comprobante</label>
+            <input type="file" class="form-control nuevaImagenComprobante" accept="image/*">
+            <p class="help-block">Peso máximo de la imagen 8MB</p>
+          </div>
         </div>
+        <?php endif; ?>
+
         <input type="hidden" id="idGastoImagen">
         <input type="hidden" id="conceptoGasto">
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+        <?php if (puedeAccion('gastos', 'editar')): ?>
         <button type="button" class="btn btn-primary btnGuardarImagenComprobante">Guardar Imagen</button>
+        <?php endif; ?>
       </div>
     </div>
   </div>

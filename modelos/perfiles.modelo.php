@@ -8,7 +8,7 @@ class ModeloPerfiles
         'productos'            => 'Productos',
         'proveedores'          => 'Proveedores',
         'clientes'             => 'Clientes',
-        'actividades'          => 'Actividades',
+        'actividades'          => 'Calendario',
         'ordenes'              => 'Órdenes',
         'ordenes-visita'       => 'Consulta de ventas',
         'ventas'               => 'Ventas',
@@ -22,6 +22,7 @@ class ModeloPerfiles
         'traslados'            => 'Traslados entre Bodegas',
         'gastos'               => 'Gastos',
         'cierres-caja'         => 'Cierres de Caja',
+        'menu_digital'         => 'Menú Digital',
         'notificaciones'       => 'Notificaciones',
         'configuracion'        => 'Configuración',
     ];

@@ -167,7 +167,7 @@ class ControladorConfiguracion
 
 				// ACTUALIZAR CONFIGURACIÓN DE FACTUS DENTRO DE LA MISMA TRANSACCIÓN
 				$logoFactusAnteriorAEliminar = null;
-				if (isset($_POST["nombrefactus"])) {
+				if (isset($_POST["nombrefactus"]) || isset($_POST["smtpCorreo"])) {
 					$configFactus = ModeloFactus::mdlObtenerConfiguracion();
 
 					// Validación de DV obligatorio para Persona Jurídica
@@ -250,13 +250,13 @@ class ControladorConfiguracion
 						"activo" => $configFactus['activo'],
 						"rango_numeracion_id" => $configFactus['rango_numeracion_id'],
 						// Determine if we should update company data based on lock status
-						"nombre_empresa" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['nombre_empresa'] : $_POST["nombrefactus"],
-						"nombre_comercial" => ($configFactus['bloqueo_datos_emisor'] == 1) ? (isset($configFactus['nombre_comercial']) ? $configFactus['nombre_comercial'] : '') : (isset($_POST["nombrecomercialfactus"]) ? $_POST["nombrecomercialfactus"] : ''),
-						"nit_empresa" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['nit_empresa'] : $_POST["nitfactus"],
-						"direccion_empresa" => $_POST["direccionfactus"],
-						"telefono_empresa" => $_POST["telefonofactus"],
-						"email_empresa" => $_POST["emailfactus"],
-						"municipio_id" => $_POST["municipiofactus"],
+						"nombre_empresa" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['nombre_empresa'] : (isset($_POST["nombrefactus"]) ? $_POST["nombrefactus"] : $configFactus['nombre_empresa']),
+						"nombre_comercial" => ($configFactus['bloqueo_datos_emisor'] == 1) ? (isset($configFactus['nombre_comercial']) ? $configFactus['nombre_comercial'] : '') : (isset($_POST["nombrecomercialfactus"]) ? $_POST["nombrecomercialfactus"] : (isset($configFactus['nombre_comercial']) ? $configFactus['nombre_comercial'] : '')),
+						"nit_empresa" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['nit_empresa'] : (isset($_POST["nitfactus"]) ? $_POST["nitfactus"] : $configFactus['nit_empresa']),
+						"direccion_empresa" => isset($_POST["direccionfactus"]) ? $_POST["direccionfactus"] : $configFactus['direccion_empresa'],
+						"telefono_empresa" => isset($_POST["telefonofactus"]) ? $_POST["telefonofactus"] : $configFactus['telefono_empresa'],
+						"email_empresa" => isset($_POST["emailfactus"]) ? $_POST["emailfactus"] : $configFactus['email_empresa'],
+						"municipio_id" => isset($_POST["municipiofactus"]) ? $_POST["municipiofactus"] : $configFactus['municipio_id'],
 						// Campos extendidos
 						"tributo_emisor" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['tributo_emisor'] : (isset($_POST["tributofactus"]) ? $_POST["tributofactus"] : 'no_responsable'),
 						"actividad_economica" => ($configFactus['bloqueo_datos_emisor'] == 1) ? $configFactus['actividad_economica'] : (isset($_POST["actividadfactus"]) ? $_POST["actividadfactus"] : null),
@@ -268,7 +268,13 @@ class ControladorConfiguracion
 						// Mantener bloqueo actual
 						"bloqueo_datos_emisor" => $configFactus['bloqueo_datos_emisor'],
 						// Nuevo Logo Factus
-						"logo_empresa" => $rutaLogoFactus
+						"logo_empresa" => $rutaLogoFactus,
+						// Configuración SMTP Correo Emisor
+						"smtp_correo" => isset($_POST["smtpCorreo"]) ? trim($_POST["smtpCorreo"]) : ($configFactus['smtp_correo'] ?? null),
+						"smtp_password" => isset($_POST["smtpPassword"]) ? trim($_POST["smtpPassword"]) : ($configFactus['smtp_password'] ?? null),
+						"smtp_host" => isset($_POST["smtpHost"]) ? trim($_POST["smtpHost"]) : ($configFactus['smtp_host'] ?? null),
+						"smtp_port" => isset($_POST["smtpPort"]) && $_POST["smtpPort"] !== '' ? intval($_POST["smtpPort"]) : ($configFactus['smtp_port'] ?? null),
+						"smtp_secure" => isset($_POST["smtpSecure"]) ? trim($_POST["smtpSecure"]) : ($configFactus['smtp_secure'] ?? null)
 					);
 
 					$respFactus = ModeloFactus::mdlActualizarConfiguracion($datosFactus);

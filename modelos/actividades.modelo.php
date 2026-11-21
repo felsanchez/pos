@@ -324,13 +324,16 @@ class ModeloActividades{
 
 
 //CUADRO ACTIVIDADES CON CLIENTE********************************************************
-		static public function mdlMostrarActividadesConCliente($tabla, $item, $valor, $idBodega = null){
+		static public function mdlMostrarActividadesConCliente($tabla, $item, $valor, $idBodega = null, $idUsuario = null){
     $bodegaFiltro = ($idBodega !== null) ? " AND a.id_bodega = " . intval($idBodega) : "";
+    $usuarioGoogleFiltro = ($idUsuario !== null && $idUsuario > 0) ? " AND (a.google_event_id IS NULL OR a.google_event_id = '' OR a.id_user = " . intval($idUsuario) . ") " : "";
     
     if($item != null){
         $whereClause = "WHERE a.$item = :$item $bodegaFiltro";
         if ($item == "fecha") {
-            $whereClause = "WHERE DATE(a.fecha) = DATE(:$item) $bodegaFiltro";
+            $whereClause = "WHERE DATE(a.fecha) = DATE(:$item) $bodegaFiltro $usuarioGoogleFiltro";
+        } elseif ($item != "id") {
+            $whereClause = "WHERE a.$item = :$item $bodegaFiltro $usuarioGoogleFiltro";
         }
         $stmt = Conexion::conectar()->prepare("
             SELECT 
@@ -352,7 +355,7 @@ class ModeloActividades{
         }
     } 
     else{
-        $bodegaFiltroSolo = ($idBodega !== null) ? "WHERE a.id_bodega = " . intval($idBodega) : "";
+        $whereClause = "WHERE 1=1 $bodegaFiltro $usuarioGoogleFiltro";
         $stmt = Conexion::conectar()->prepare("
             SELECT 
                 a.*, 
@@ -361,7 +364,7 @@ class ModeloActividades{
             FROM $tabla a
             LEFT JOIN clientes c ON a.id_cliente = c.id
             LEFT JOIN usuarios u ON a.id_user = u.id
-            $bodegaFiltroSolo
+            $whereClause
             ORDER BY a.id DESC
         ");
         $stmt->execute();

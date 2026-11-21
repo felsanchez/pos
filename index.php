@@ -36,6 +36,7 @@ require_once "controladores/crm.controlador.php";
 require_once "controladores/tenants.controlador.php";
 require_once "controladores/conocimiento.controlador.php";
 require_once "controladores/google.controlador.php";
+require_once "controladores/menu-digital.controlador.php";
 
 require_once "modelos/usuarios.modelo.php";
 require_once "modelos/categorias.modelo.php";
@@ -61,6 +62,7 @@ require_once "modelos/cajas.modelo.php";
 require_once "modelos/crm.modelo.php";
 require_once "modelos/tenants.modelo.php";
 require_once "modelos/conocimiento.modelo.php";
+require_once "modelos/menu-digital.modelo.php";
 require_once "modelos/helpers.php";
 
 // Exportar Excel de Historial de Stock

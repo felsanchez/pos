@@ -143,11 +143,21 @@ if (isset($_POST["idVentaNota"])) {
 
 //Guardar Observaciones
 if (isset($_POST["idVentaObservacion"])) {
+  require_once "../modelos/helpers.php";
   require_once "../controladores/ventas.controlador.php";
   require_once "../modelos/ventas.modelo.php";
 
+  $idVenta = $_POST["idVentaObservacion"];
+  $venta = ModeloVentas::mdlMostrarVentas("ventas", "id", $idVenta);
+  $moduloRequerido = ($venta && isset($venta["estado"]) && $venta["estado"] == "orden") ? "ordenes" : "ventas";
+
+  if (!puedeAccion($moduloRequerido, 'editar')) {
+    echo json_encode(["status" => "error", "mensaje" => "No tiene permisos para editar observaciones"]);
+    exit;
+  }
+
   $datos = [
-    "id" => $_POST["idVentaObservacion"],
+    "id" => $idVenta,
     "observacion" => $_POST["nuevaObservacion"]
   ];
 

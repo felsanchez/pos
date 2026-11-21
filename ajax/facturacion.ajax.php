@@ -59,7 +59,50 @@ class AjaxFacturacion
         $venta = ControladorVentas::ctrMostrarVentas($item, $valor);
 
         if (!$venta) {
-            echo json_encode(["status" => "error", "mensaje" => "Venta no encontrada"]);
+            echo json_encode(["status" => "error", "mensaje" => "Documento no encontrado"]);
+            return;
+        }
+
+        // Si el documento es una ORDEN
+        if (isset($venta["estado"]) && $venta["estado"] == "orden") {
+            require_once __DIR__ . "/../extensiones/tcpdf/pdf/descargar-pdf-orden.php";
+
+            $tempDir = __DIR__ . '/../vistas/img/temp/';
+            if (!file_exists($tempDir)) {
+                mkdir($tempDir, 0777, true);
+            }
+            $nombreArchivo = 'Orden-' . $venta["codigo"] . '-' . date('YmdHis') . '.pdf';
+            $rutaCompleta = $tempDir . $nombreArchivo;
+
+            $imprimir = new imprimirDetalleOrden();
+            $imprimir->idVenta = $this->idVenta;
+            $imprimir->traerImpresionDetalle('F', $rutaCompleta);
+
+            $cliente = ControladorClientes::ctrMostrarClientes("id", $venta["id_cliente"]);
+            $configFactus = ControladorFactus::ctrObtenerConfiguracion();
+            $configuracion = ControladorConfiguracion::ctrObtenerConfiguracion();
+
+            $nombreEmpresaSubject = isset($configFactus['nombre_empresa']) && !empty($configFactus['nombre_empresa'])
+                ? trim($configFactus['nombre_empresa'])
+                : ($configuracion["nombre_empresa"] ?? 'Empresa');
+
+            $asunto = "Orden de Venta #" . $venta["codigo"] . (!empty($nombreEmpresaSubject) ? " - " . $nombreEmpresaSubject : "");
+            $mensaje = "<h3>Estimado(a) " . ($cliente["nombre"] ?? 'Cliente') . "</h3>";
+            $mensaje .= "<p>Adjunto encontrará su orden de venta / pedido #" . $venta["codigo"] . " en formato PDF.</p>";
+            $mensaje .= "<p>Gracias por su preferencia.</p>";
+            $mensaje .= "<br><hr><small>Este es un correo automático, por favor no responda a este mensaje.</small>";
+
+            $enviar = ControladorCorreo::ctrEnviarCorreo($this->emailDestino, $asunto, $mensaje, $rutaCompleta);
+
+            if (file_exists($rutaCompleta)) {
+                unlink($rutaCompleta);
+            }
+
+            if ($enviar == "ok") {
+                echo json_encode(["status" => "success", "mensaje" => "Orden enviada correctamente a " . $this->emailDestino]);
+            } else {
+                echo json_encode(["status" => "error", "mensaje" => "Error al enviar el correo: " . $enviar]);
+            }
             return;
         }
 

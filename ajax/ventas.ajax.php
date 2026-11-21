@@ -52,6 +52,20 @@ try {
         =============================================*/
         public function ajaxEditarImagenVenta()
         {
+            $venta = ModeloVentas::mdlMostrarVentas("ventas", "id", $this->idVentaImagen);
+            $esOrden = (isset($venta["estado"]) && $venta["estado"] == "orden");
+            if ($esOrden) {
+                if (!puedeAccion('ordenes', 'editar')) {
+                    echo json_encode("error_permisos");
+                    return;
+                }
+            } else {
+                if (!puedeAccion('ventas', 'editar') && !puedeAccion('factura_electronica', 'editar')) {
+                    echo json_encode("error_permisos");
+                    return;
+                }
+            }
+
             if (isset($_FILES["nuevaImagenVenta"]["tmp_name"]) && !empty($_FILES["nuevaImagenVenta"]["tmp_name"])) {
                 list($ancho, $alto) = getimagesize($_FILES["nuevaImagenVenta"]["tmp_name"]);
                 $nuevoAncho = 500; $nuevoAlto = 500;

@@ -143,10 +143,17 @@ $(document).ready(function () {
 							if (col.columnIndex === 5) {
 								var rowNode = api.row(rowIdx).node();
 								var idOrden = $(rowNode).attr('data-orden-id') || "";
-								var observacionText = $(rowNode).find('.celda-observacion').text().trim();
-								var placeholderAttr = ' data-placeholder="Escribe una observación..."';
+								var celdaOriginal = $(rowNode).find('.celda-observacion, .celda-observacion-disabled');
+								var esEditable = celdaOriginal.hasClass('celda-observacion') && celdaOriginal.attr('contenteditable') === 'true';
+								var observacionText = celdaOriginal.text().trim();
+								if (observacionText === "Sin observación") observacionText = "";
 
-								finalHtml += '<div contenteditable="true" class="celda-observacion" data-id="' + idOrden + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + observacionText + '</div>';
+								if (esEditable) {
+									var placeholderAttr = ' data-placeholder="Escribe una observación..."';
+									finalHtml += '<div contenteditable="true" class="celda-observacion" data-id="' + idOrden + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + observacionText + '</div>';
+								} else {
+									finalHtml += '<div contenteditable="false" class="celda-observacion-disabled" data-id="' + idOrden + '" title="Permiso de edición requerido" style="width:100%; display:block; border:1px solid #e2e8f0; border-radius:4px; padding:8px; background:#f8fafc; color:#64748b; margin-top:5px; cursor:not-allowed; opacity:0.85;">' + (observacionText || '<span class="text-muted" style="font-style:italic;">Sin observación</span>') + '</div>';
+								}
 							} else {
 								finalHtml += '<span style="color:#333;">' + col.data + '</span>';
 							}
@@ -246,10 +253,20 @@ GESTIÓN DE IMÁGENES DE ORDEN
 $(document).on("click", ".img-ampliar-orden", function () {
 	var rutaImagen = $(this).attr("data-imagen");
 	var idVenta = $(this).attr("data-idventa");
+	var editable = $(this).attr("data-editable");
 
 	$("#imagenOrdenAmpliada").attr("src", rutaImagen);
 	$("#idOrdenImagen").val(idVenta);
 	$(".nuevaImagenOrden").val("");
+
+	if (editable === "0") {
+		$(".seccion-cambiar-imagen-orden").hide();
+		$(".btnGuardarImagenOrden").hide();
+	} else {
+		$(".seccion-cambiar-imagen-orden").show();
+		$(".btnGuardarImagenOrden").show();
+	}
+
 	$("#modalAmpliarImagenOrden").modal("show");
 });
 
@@ -428,6 +445,87 @@ $(document).on("click", ".btnVerClienteDesdeVenta", function () {
 			$("#editarCiudad").val(data["ciudad"]);
 
 			$('#modalEditarCliente').modal('show');
+		}
+	});
+});
+
+/*=============================================
+ABRIR MODAL ENVIAR EMAIL
+=============================================*/
+$(document).on("click", ".btnEnviarEmail", function () {
+	var idVenta = $(this).attr("idVenta");
+	var nombreCliente = $(this).attr("nombreCliente");
+	var emailCliente = $(this).attr("emailCliente");
+
+	$("#emailIdVenta").val(idVenta);
+	$("#emailNombreCliente").val(nombreCliente);
+	$("#emailDestino").val(emailCliente);
+
+	$("#modalEnviarEmail").fadeIn();
+});
+
+/*=============================================
+ENVIAR EMAIL POR AJAX
+=============================================*/
+$("#formEnviarEmail").submit(function (e) {
+	e.preventDefault();
+
+	var idVenta = $("#emailIdVenta").val();
+	var emailDestino = $("#emailDestino").val();
+
+	swal({
+		title: "Enviando Correo...",
+		text: "Por favor espere mientras se genera el PDF y se envía el correo.",
+		allowOutsideClick: false,
+		onBeforeOpen: () => {
+			swal.showLoading();
+		}
+	});
+
+	var datos = new FormData();
+	datos.append("idVenta", idVenta);
+	datos.append("emailDestino", emailDestino);
+
+	$.ajax({
+		url: "ajax/facturacion.ajax.php",
+		method: "POST",
+		data: datos,
+		cache: false,
+		contentType: false,
+		processData: false,
+		dataType: "json",
+		success: function (respuesta) {
+			if (respuesta.status == "success") {
+				swal({
+					type: "success",
+					title: "¡Enviado!",
+					text: respuesta.mensaje,
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				}).then(function (result) {
+					if (result.value) {
+						$("#modalEnviarEmail").fadeOut();
+					}
+				});
+			} else {
+				swal({
+					type: "error",
+					title: "Error",
+					text: respuesta.mensaje,
+					showConfirmButton: true,
+					confirmButtonText: "Cerrar"
+				});
+			}
+		},
+		error: function (xhr, status, error) {
+			console.error("AJAX Error:", error);
+			swal({
+				type: "error",
+				title: "Error del Servidor",
+				text: "No se pudo procesar la solicitud. Revisa la consola para más detalles.",
+				showConfirmButton: true,
+				confirmButtonText: "Cerrar"
+			});
 		}
 	});
 });

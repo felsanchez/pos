@@ -143,6 +143,7 @@
                   <option value="">Mostrar Todas</option>
                   <option value="Stock Agotado">Stock Agotado</option>
                   <option value="Registro de Usuario">Registro de Usuario</option>
+                  <option value="Menú Digital">Menú Digital</option>
                   <?php 
                   $configNotif = ControladorConfiguracion::ctrObtenerConfiguracion(); 
                   ?>
@@ -248,6 +249,10 @@
               $icono = "fa-android";
               $color = "text-green";
               $tipoTexto = "Orden creada";
+            } else if ($notif["tipo"] == "orden_menu_digital") {
+              $icono = "fa-cutlery";
+              $color = "text-green";
+              $tipoTexto = "Menú Digital";
             } else if ($notif["tipo"] == "Transaccion de BOLD") {
               $icono = "fa-credit-card";
               $color = "text-purple";
@@ -341,6 +346,10 @@
               $icono = "fa-android";
               $color = "text-green";
               $tipoTexto = "Orden creada";
+            } else if ($notif["tipo"] == "orden_menu_digital") {
+              $icono = "fa-cutlery";
+              $color = "text-green";
+              $tipoTexto = "Menú Digital";
             } else if ($notif["tipo"] == "Transaccion de BOLD") {
               $icono = "fa-credit-card";
               $color = "text-purple";

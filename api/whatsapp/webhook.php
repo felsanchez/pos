@@ -34,9 +34,12 @@ $rawInput = file_get_contents('php://input');
 // Registrar log para depuración e inspección de la estructura exacta de WaFloW
 $logFile = __DIR__ . '/log_webhook.txt';
 $fechaLog = date('Y-m-d H:i:s');
+// Detectar si es grupo en el raw para marcar el log
+$esGrupoRaw = (stripos($rawInput, '@g.us') !== false || stripos($rawInput, 'isGroup') !== false || stripos($rawInput, 'groupName') !== false);
+$marcaGrupo = $esGrupoRaw ? ' [*** GRUPO ***]' : '';
 file_put_contents(
     $logFile,
-    "=== [{$fechaLog}] Evento Recibido ===\n" . $rawInput . "\n\n",
+    "=== [{$fechaLog}]{$marcaGrupo} Evento Recibido ===\n" . $rawInput . "\n\n",
     FILE_APPEND
 );
 
@@ -57,46 +60,54 @@ try {
         $db->exec("SET NAMES utf8mb4");
     } catch (Exception $e) {}
 
-    // 1. Asegurar que existan las tablas necesarias
-    $db->exec("
-        CREATE TABLE IF NOT EXISTS `whatsapp_chats` (
-            `id` INT(11) NOT NULL AUTO_INCREMENT,
-            `telefono` VARCHAR(50) NOT NULL,
-            `nombre` VARCHAR(150) NULL DEFAULT NULL,
-            `ultimo_mensaje` TEXT NULL,
-            `fecha_ultimo_mensaje` DATETIME NULL,
-            `no_leidos` INT(11) NOT NULL DEFAULT 0,
-            `id_cliente` INT(11) NULL DEFAULT NULL,
-            `origen` VARCHAR(50) NULL DEFAULT 'waflow',
-            `estado` VARCHAR(20) NOT NULL DEFAULT 'activo',
-            `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (`id`),
-            UNIQUE KEY `uk_telefono` (`telefono`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    ");
+    // Asegurar que existan las tablas necesarias y columnas (solo una vez para evitar bloqueos)
+    $schemaLock = __DIR__ . '/.schema_ok';
+    if (!file_exists($schemaLock)) {
+        try {
+            $db->exec("
+                CREATE TABLE IF NOT EXISTS `whatsapp_chats` (
+                    `id` INT(11) NOT NULL AUTO_INCREMENT,
+                    `telefono` VARCHAR(100) NOT NULL,
+                    `nombre` VARCHAR(150) NULL DEFAULT NULL,
+                    `tipo` VARCHAR(20) NOT NULL DEFAULT 'contacto',
+                    `ultimo_mensaje` TEXT NULL,
+                    `fecha_ultimo_mensaje` DATETIME NULL,
+                    `no_leidos` INT(11) NOT NULL DEFAULT 0,
+                    `id_cliente` INT(11) NULL DEFAULT NULL,
+                    `origen` VARCHAR(50) NULL DEFAULT 'waflow',
+                    `estado` VARCHAR(20) NOT NULL DEFAULT 'activo',
+                    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `uk_telefono` (`telefono`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
 
-    $db->exec("
-        CREATE TABLE IF NOT EXISTS `whatsapp_mensajes` (
-            `id` INT(11) NOT NULL AUTO_INCREMENT,
-            `id_chat` INT(11) NOT NULL,
-            `waflow_message_id` VARCHAR(150) NULL DEFAULT NULL,
-            `direccion` ENUM('inbound', 'outbound') NOT NULL,
-            `remitente` VARCHAR(50) NOT NULL DEFAULT 'cliente',
-            `mensaje` TEXT NULL,
-            `tipo` VARCHAR(30) NOT NULL DEFAULT 'text',
-            `media_url` MEDIUMTEXT NULL,
-            `fecha_hora` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            `leido` TINYINT(1) NOT NULL DEFAULT 0,
-            PRIMARY KEY (`id`),
-            KEY `idx_chat` (`id_chat`),
-            KEY `idx_waflow_id` (`waflow_message_id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    ");
+            $db->exec("
+                CREATE TABLE IF NOT EXISTS `whatsapp_mensajes` (
+                    `id` INT(11) NOT NULL AUTO_INCREMENT,
+                    `id_chat` INT(11) NOT NULL,
+                    `waflow_message_id` VARCHAR(150) NULL DEFAULT NULL,
+                    `direccion` ENUM('inbound', 'outbound') NOT NULL,
+                    `remitente` VARCHAR(50) NOT NULL DEFAULT 'cliente',
+                    `mensaje` TEXT NULL,
+                    `tipo` VARCHAR(30) NOT NULL DEFAULT 'text',
+                    `media_url` MEDIUMTEXT NULL,
+                    `fecha_hora` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    `leido` TINYINT(1) NOT NULL DEFAULT 0,
+                    PRIMARY KEY (`id`),
+                    KEY `idx_chat` (`id_chat`),
+                    KEY `idx_waflow_id` (`waflow_message_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
 
-    try {
-        $db->exec("ALTER TABLE `whatsapp_mensajes` MODIFY `media_url` MEDIUMTEXT NULL");
-    } catch (Exception $e) {}
+            try { $db->exec("ALTER TABLE `whatsapp_mensajes` MODIFY `media_url` MEDIUMTEXT NULL"); } catch (Exception $e) {}
+            try { $db->exec("ALTER TABLE `whatsapp_chats` ADD COLUMN `tipo` VARCHAR(20) NOT NULL DEFAULT 'contacto' AFTER `nombre`"); } catch (Exception $e) {}
+            try { $db->exec("ALTER TABLE `whatsapp_chats` MODIFY `telefono` VARCHAR(100) NOT NULL"); } catch (Exception $e) {}
+
+            file_put_contents($schemaLock, date('Y-m-d H:i:s'));
+        } catch (Exception $e) {}
+    }
 
 function normalizarTelefonoWebhook($telefono) {
     $limpio = preg_replace('/\D/', '', $telefono ?? '');
@@ -420,7 +431,6 @@ if (
 
 // Extraer teléfono del interlocutor (el contacto con quien se chatea)
 if ($direccion === 'outbound') {
-    // Si el mensaje salió desde nuestro celular, el cliente es el destinatario (to / recipient)
     $telefonoRaw = $data['to'] 
         ?? $data['recipient'] 
         ?? ($data['contact']['phone'] ?? '')
@@ -428,7 +438,6 @@ if ($direccion === 'outbound') {
         ?? ($data['phone'] ?? '') 
         ?? ($data['from'] ?? '');
 } else {
-    // Si el mensaje entró desde el cliente, el cliente es el remitente (from / sender)
     $telefonoRaw = $data['from'] 
         ?? $data['sender'] 
         ?? ($data['contact']['phone'] ?? '')
@@ -437,10 +446,35 @@ if ($direccion === 'outbound') {
         ?? ($data['to'] ?? '');
 }
 
-$telefono = preg_replace('/\D/', '', $telefonoRaw);
-$telNormalizado = normalizarTelefonoWebhook($telefonoRaw);
-$telPrincipal = !empty($telNormalizado) ? $telNormalizado : $telefono;
-$tel10 = substr($telPrincipal, -10);
+// Detectar grupo buscando @g.us en todo el JSON raw
+$esGrupo = (strpos($rawInput, '@g.us') !== false);
+$telPrincipalGrupo = '';
+if ($esGrupo) {
+    // Buscar el ID del grupo (ej: 1203630248291829@g.us o 57301...-152...@g.us) en el JSON
+    if (preg_match('/[a-zA-Z0-9_\-\.]+@g\.us/', $rawInput, $mGrp)) {
+        $telPrincipalGrupo = $mGrp[0];
+    }
+}
+
+// Log diagnóstico (siempre visible)
+file_put_contents(
+    __DIR__ . '/log_webhook.txt',
+    "[DIAG {$fechaLog}] raw_tel=" . json_encode($telefonoRaw) . " esGrupo=" . ($esGrupo?'SI':'NO') . " grupoId=" . json_encode($telPrincipalGrupo) . "\n",
+    FILE_APPEND
+);
+
+if ($esGrupo && !empty($telPrincipalGrupo)) {
+    $telPrincipal   = $telPrincipalGrupo;
+    $telefono       = $telPrincipalGrupo;
+    $telNormalizado = $telPrincipalGrupo;
+    $tel10          = '';
+} else {
+    $esGrupo        = false;
+    $telefono       = preg_replace('/\D/', '', $telefonoRaw);
+    $telNormalizado = normalizarTelefonoWebhook($telefonoRaw);
+    $telPrincipal   = !empty($telNormalizado) ? $telNormalizado : $telefono;
+    $tel10          = substr($telPrincipal, -10);
+}
 
 // Extraer nombre del payload si viene
 $nombrePayload = null;
@@ -538,7 +572,8 @@ if ($tipo === 'audio') {
         }
     }
 
-    if (!empty($telefono)) {
+    if (!empty($telPrincipal)) {
+        if (empty($telefono)) { $telefono = $telPrincipal; }
         // 3. Buscar si el cliente ya está registrado en la tabla `clientes` de Kontrol POS
         $telLike = "%" . substr($telefono, -8);
         $stmtCli = $db->prepare("
@@ -587,17 +622,28 @@ if ($tipo === 'audio') {
         }
 
         // 4. Buscar o crear el chat en `whatsapp_chats`
-        $stmtChat = $db->prepare("
-            SELECT id, no_leidos, nombre, id_cliente 
-            FROM whatsapp_chats 
-            WHERE telefono = :tel 
-               OR telefono = :telNorm 
-               OR telefono LIKE :telLike 
-            LIMIT 1
-        ");
-        $stmtChat->bindParam(':tel', $telPrincipal, PDO::PARAM_STR);
-        $stmtChat->bindParam(':telNorm', $telefono, PDO::PARAM_STR);
-        $stmtChat->bindParam(':telLike', $telLike, PDO::PARAM_STR);
+        if ($esGrupo) {
+            // Para grupos: buscar solo por ID exacto del grupo
+            $stmtChat = $db->prepare("
+                SELECT id, no_leidos, nombre, id_cliente
+                FROM whatsapp_chats 
+                WHERE telefono = :tel 
+                LIMIT 1
+            ");
+            $stmtChat->bindParam(':tel', $telPrincipal, PDO::PARAM_STR);
+        } else {
+            $stmtChat = $db->prepare("
+                SELECT id, no_leidos, nombre, id_cliente
+                FROM whatsapp_chats 
+                WHERE telefono = :tel 
+                   OR telefono = :telNorm 
+                   OR telefono LIKE :telLike 
+                LIMIT 1
+            ");
+            $stmtChat->bindParam(':tel', $telPrincipal, PDO::PARAM_STR);
+            $stmtChat->bindParam(':telNorm', $telefono, PDO::PARAM_STR);
+            $stmtChat->bindParam(':telLike', $telLike, PDO::PARAM_STR);
+        }
         $stmtChat->execute();
         $chat = $stmtChat->fetch(PDO::FETCH_ASSOC);
 
@@ -686,12 +732,14 @@ if ($tipo === 'audio') {
                 $nombreInsert = '+' . $telPrincipal;
             }
 
+            $tipoChat = $esGrupo ? 'grupo' : 'contacto';
             $stmtInsertChat = $db->prepare("
-                INSERT INTO whatsapp_chats (telefono, nombre, ultimo_mensaje, fecha_ultimo_mensaje, no_leidos, id_cliente) 
-                VALUES (:tel, :nom, :msg, :fec, :nl, :idCli)
+                INSERT INTO whatsapp_chats (telefono, nombre, tipo, ultimo_mensaje, fecha_ultimo_mensaje, no_leidos, id_cliente) 
+                VALUES (:tel, :nom, :tipo, :msg, :fec, :nl, :idCli)
             ");
             $stmtInsertChat->bindParam(':tel', $telPrincipal, PDO::PARAM_STR);
             $stmtInsertChat->bindParam(':nom', $nombreInsert, PDO::PARAM_STR);
+            $stmtInsertChat->bindParam(':tipo', $tipoChat, PDO::PARAM_STR);
             $stmtInsertChat->bindParam(':msg', $snippetUltimoMensaje, PDO::PARAM_STR);
             $stmtInsertChat->bindParam(':fec', $fechaHora, PDO::PARAM_STR);
             $stmtInsertChat->bindParam(':nl', $noLeidos, PDO::PARAM_INT);

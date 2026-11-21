@@ -639,4 +639,94 @@ class ControladorNotificaciones
 		return $respuesta;
 	}
 
+	/*=============================================
+	VERIFICAR ÓRDENES DE MENÚ DIGITAL Y GENERAR NOTIFICACIÓN
+	=============================================*/
+	static public function ctrVerificarOrdenMenuDigital($codigoVenta = null)
+	{
+		$tabla = "ventas";
+
+		if ($codigoVenta !== null) {
+			$item = "codigo";
+			$venta = ModeloVentas::mdlMostrarVentas($tabla, $item, $codigoVenta);
+
+			if (!$venta) {
+				return;
+			}
+
+			$esMenuDigital = (isset($venta["observacion"]) && stripos($venta["observacion"], "[Menú Digital]") !== false)
+						  || (isset($venta["metodo_pago"]) && stripos($venta["metodo_pago"], "Menú Digital") !== false);
+
+			if ($esMenuDigital && $venta["estado"] == "orden") {
+				if (!isset($venta["notas"]) || stripos($venta["notas"], "[Notificado_menu]") === false) {
+					$existe = ModeloNotificaciones::mdlExisteNotificacion("orden_menu_digital", $venta["id"], "venta");
+
+					if (!$existe) {
+						$cliente = ControladorClientes::ctrMostrarClientes("id", $venta["id_cliente"]);
+						$nombreCliente = ($cliente && isset($cliente["nombre"])) ? $cliente["nombre"] : "Cliente";
+
+						ControladorNotificaciones::ctrCrearNotificacion(
+							"orden_menu_digital",
+							"Nuevo Pedido Menú Digital",
+							"Orden #" . $venta["codigo"] . " - Cliente: " . $nombreCliente . " - Total: $" . number_format($venta["total"], 2, ',', '.'),
+							"venta",
+							$venta["id"],
+							$venta["id_bodega"]
+						);
+					}
+
+					$nuevasNotas = (isset($venta["notas"]) ? $venta["notas"] : "") . " [Notificado_menu]";
+					$datosActualizacion = array(
+						"id" => $venta["id"],
+						"notas" => trim($nuevasNotas)
+					);
+					ModeloVentas::mdlActualizarNotaVenta("ventas", $datosActualizacion);
+				}
+			}
+
+		} else {
+			$ordenes = ModeloVentas::mdlMostrarVentas($tabla, null, null);
+
+			if (!$ordenes) {
+				return;
+			}
+
+			foreach ($ordenes as $venta) {
+				if ($venta["estado"] != "orden") {
+					continue;
+				}
+
+				$esMenuDigital = (isset($venta["observacion"]) && stripos($venta["observacion"], "[Menú Digital]") !== false)
+							  || (isset($venta["metodo_pago"]) && stripos($venta["metodo_pago"], "Menú Digital") !== false);
+
+				if ($esMenuDigital) {
+					if (!isset($venta["notas"]) || stripos($venta["notas"], "[Notificado_menu]") === false) {
+						$existe = ModeloNotificaciones::mdlExisteNotificacion("orden_menu_digital", $venta["id"], "venta");
+
+						if (!$existe) {
+							$cliente = ControladorClientes::ctrMostrarClientes("id", $venta["id_cliente"]);
+							$nombreCliente = ($cliente && isset($cliente["nombre"])) ? $cliente["nombre"] : "Cliente";
+
+							ControladorNotificaciones::ctrCrearNotificacion(
+								"orden_menu_digital",
+								"Nuevo Pedido Menú Digital",
+								"Orden #" . $venta["codigo"] . " - Cliente: " . $nombreCliente . " - Total: $" . number_format($venta["total"], 2, ',', '.'),
+								"venta",
+								$venta["id"],
+								$venta["id_bodega"]
+							);
+						}
+
+						$nuevasNotas = (isset($venta["notas"]) ? $venta["notas"] : "") . " [Notificado_menu]";
+						$datosActualizacion = array(
+							"id" => $venta["id"],
+							"notas" => trim($nuevasNotas)
+						);
+						ModeloVentas::mdlActualizarNotaVenta("ventas", $datosActualizacion);
+					}
+				}
+			}
+		}
+	}
+
 }

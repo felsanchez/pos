@@ -57,7 +57,10 @@ $(document).ready(function() {
                 var html = "";
                 chats.forEach(function(c) {
                     var isActive = (idChatActivo && idChatActivo == c.id) ? " active" : "";
-                    var iniciales = obtenerIniciales(c.nombre || c.telefono);
+                    var esGrupo = (c.tipo === "grupo") || (c.telefono && c.telefono.indexOf("@g.us") !== -1);
+                    var iniciales = esGrupo
+                        ? '<i class="fa fa-users" style="font-size:14px;"></i>'
+                        : obtenerIniciales(c.nombre || c.telefono);
                     var horaFormateada = formatearHoraFecha(c.fecha_ultimo_mensaje || c.created_at);
                     var rawMsg = c.ultimo_mensaje || "Sin mensajes";
                     var snippetMsg = rawMsg;
@@ -95,12 +98,16 @@ $(document).ready(function() {
                         }
                     }
 
+                    var badgeGrupo = esGrupo
+                        ? '<span style="font-size:9px;background:#25D366;color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px;vertical-align:middle;">GRUPO</span>'
+                        : '';
+                    var avatarStyle = esGrupo ? 'background:#128C7E;' : '';
                     html += 
-                    '<div class="whatsapp-chat-item' + isActive + '" data-id="' + c.id + '" data-tel="' + c.telefono + '" data-nom="' + escapeHtml(c.nombre || c.telefono) + '">' +
-                    '  <div class="whatsapp-item-avatar">' + iniciales + '</div>' +
+                    '<div class="whatsapp-chat-item' + isActive + '" role="button" tabindex="0" data-id="' + c.id + '" data-tel="' + c.telefono + '" data-nom="' + escapeHtml(c.nombre || c.telefono) + '" data-tipo="' + (c.tipo || 'contacto') + '">' +
+                    '  <div class="whatsapp-item-avatar" style="' + avatarStyle + '">' + iniciales + '</div>' +
                     '  <div class="whatsapp-item-info">' +
                     '    <div class="whatsapp-item-name">' +
-                    '      <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">' + escapeHtml(c.nombre || '+' + c.telefono) + '</span>' +
+                    '      <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">' + escapeHtml(c.nombre || '+' + c.telefono) + badgeGrupo + '</span>' +
                     '      <span class="whatsapp-item-time">' + horaFormateada + '</span>' +
                     '    </div>' +
                     '    <div class="whatsapp-item-lastmsg">' +
@@ -146,7 +153,8 @@ $(document).ready(function() {
     // =============================================
     // SELECCIONAR Y ABRIR UN CHAT
     // =============================================
-    $(document).on("click", ".whatsapp-chat-item", function() {
+    $(document).on("click", ".whatsapp-chat-item", function(e) {
+        e.preventDefault();
         var id = $(this).attr("data-id");
         var tel = $(this).attr("data-tel");
         var nom = $(this).attr("data-nom");
@@ -157,6 +165,15 @@ $(document).ready(function() {
     function abrirConversacion(id, tel, nom) {
         idChatActivo = id;
         telefonoActivo = tel;
+
+        // En móviles: ocultar lista de chats y mostrar la conversación activa
+        $(".whatsapp-app-container").addClass("chat-activo-mobile");
+        if (window.innerWidth <= 768) {
+            $(".whatsapp-sidebar").hide();
+            $(".whatsapp-chat-panel").show().css("display", "flex");
+            $("#panelChatVacio").hide();
+            $("#panelChatActivo").show().css("display", "flex");
+        }
 
         // Actualizar UI activa en sidebar
         $(".whatsapp-chat-item").removeClass("active");
@@ -190,6 +207,23 @@ $(document).ready(function() {
             $("#inputMensajeWhatsApp").focus();
         }, 150);
     }
+
+    // =============================================
+    // VOLVER A LA LISTA DE CHATS EN MÓVIL
+    // =============================================
+    $(document).on("click", "#btnVolverChatsMobile", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(".whatsapp-app-container").removeClass("chat-activo-mobile");
+        $(".whatsapp-chat-item").removeClass("active");
+        idChatActivo = null;
+        telefonoActivo = null;
+
+        if (window.innerWidth <= 768) {
+            $(".whatsapp-chat-panel").hide();
+            $(".whatsapp-sidebar").show().css("display", "flex");
+        }
+    });
 
     // =============================================
     // CARGAR MENSAJES DE LA CONVERSACIÓN ACTIVA

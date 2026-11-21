@@ -259,6 +259,15 @@
           </li>';
       }
 
+      if (puedeVer('menu_digital')) {
+        echo '<li class="' . (isset($_GET["ruta"]) && $_GET["ruta"] == "menu-digital" ? "active" : "") . '">
+            <a href="menu-digital">
+              <i class="fa fa-cutlery text-warning"></i>
+              <span>Menú Digital & QR</span>
+            </a>
+          </li>';
+      }
+
       if (puedeVer('consulta-ventas') && (!isset($configuracionGlobalMenu["consulta_ventas"]) || $configuracionGlobalMenu["consulta_ventas"] == 1)) {
         echo '<li>
                       <a href="consulta-ventas">

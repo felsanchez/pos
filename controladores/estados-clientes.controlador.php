@@ -159,6 +159,24 @@ class ControladorEstadosClientes
 				$estadoAnterior = ModeloEstadosClientes::mdlMostrarEstadosClientes($tabla, $item, $valor);
 				$nombreAnterior = $estadoAnterior["nombre"];
 
+				// Bloquear edición de estados protegidos (nuevo y leads)
+				if (in_array(strtolower(trim($nombreAnterior)), ['nuevo', 'leads'])) {
+					echo '<script>
+						swal({
+							type: "warning",
+							title: "¡Estado protegido!",
+							text: "El estado \'' . ucfirst($nombreAnterior) . '\' es parte del sistema y no puede ser modificado.",
+							showConfirmButton: true,
+							confirmButtonText: "Cerrar"
+						}).then((result) => {
+							if(result.value){
+								window.location = "' . $redireccion . '";
+							}
+						});
+					</script>';
+					return;
+				}
+
 				$datos = array(
 					"id" => $_POST["idEstado"],
 					"nombre" => strtolower($_POST["editarEstadoNombre"]),
@@ -291,6 +309,27 @@ class ControladorEstadosClientes
 			$id = isset($_GET["idEstado"]) ? $_GET["idEstado"] : $_POST["idEstadoEliminar"];
 
 			$nombreEstado = isset($_GET["nombreEstado"]) ? $_GET["nombreEstado"] : $_POST["nombreEstado"];
+
+			// Bloquear eliminación de estados protegidos (nuevo y leads)
+			if (in_array(strtolower(trim($nombreEstado)), ['nuevo', 'leads'])) {
+				if (isset($_POST["idEstadoEliminar"])) {
+					return "error_bloqueado";
+				}
+				echo '<script>
+					swal({
+						type: "warning",
+						title: "¡Estado protegido!",
+						text: "El estado \'' . ucfirst($nombreEstado) . '\' es parte del sistema y no puede ser eliminado.",
+						showConfirmButton: true,
+						confirmButtonText: "Cerrar"
+					}).then((result) => {
+						if(result.value){
+							window.location = "' . $redireccion . '";
+						}
+					});
+				</script>';
+				return;
+			}
 
 			// Verificar si el estado está en uso
 			$enUso = ModeloEstadosClientes::mdlVerificarEstadoEnUso($nombreEstado);

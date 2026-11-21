@@ -45,6 +45,15 @@ class AjaxActividades{
     
     // Usar el método con cliente Y usuario
     $respuesta = ControladorActividades::ctrMostrarActividadesConCliente($item, $valor);
+
+    // Si la actividad proviene de una cuenta de Google, solo debe verla su respectivo usuario
+    if (!empty($respuesta) && !empty($respuesta["google_event_id"])) {
+        $idUsuarioSesion = isset($_SESSION["id"]) ? intval($_SESSION["id"]) : 0;
+        if ($idUsuarioSesion > 0 && intval($respuesta["id_user"]) !== $idUsuarioSesion) {
+            echo json_encode(null);
+            return;
+        }
+    }
     
     echo json_encode($respuesta);
 }
@@ -56,24 +65,27 @@ class AjaxActividades{
     // Obtener filtros del GET
     $filtroTipo = isset($_GET["filtroTipo"]) ? $_GET["filtroTipo"] : null;
     $filtroEstado = isset($_GET["filtroEstado"]) ? $_GET["filtroEstado"] : null;
+    $idUsuarioSesion = isset($_SESSION["id"]) ? intval($_SESSION["id"]) : 0;
 
     // Obtener actividades
-    $actividades = ControladorActividades::ctrMostrarActividadesConCliente(null, null);
+    $actividades = ControladorActividades::ctrMostrarActividadesConCliente(null, null, $idUsuarioSesion);
 
     // Filtrar actividades si aplica
-    if (!empty($filtroTipo) || !empty($filtroEstado)) {
-        $actividadesFiltradas = [];
-        foreach ($actividades as $actividad) {
-            if (!empty($filtroTipo) && strtolower($actividad["tipo"]) !== strtolower($filtroTipo)) {
-                continue;
-            }
-            if (!empty($filtroEstado) && strtolower($actividad["estado"]) !== strtolower($filtroEstado)) {
-                continue;
-            }
-            $actividadesFiltradas[] = $actividad;
+    $actividadesFiltradas = [];
+    foreach ($actividades as $actividad) {
+        // Las tareas y eventos conectados a Google solo se muestran a su respectivo usuario
+        if (!empty($actividad["google_event_id"]) && $idUsuarioSesion > 0 && intval($actividad["id_user"]) !== $idUsuarioSesion) {
+            continue;
         }
-        $actividades = $actividadesFiltradas;
+        if (!empty($filtroTipo) && strtolower($actividad["tipo"]) !== strtolower($filtroTipo)) {
+            continue;
+        }
+        if (!empty($filtroEstado) && strtolower($actividad["estado"]) !== strtolower($filtroEstado)) {
+            continue;
+        }
+        $actividadesFiltradas[] = $actividad;
     }
+    $actividades = $actividadesFiltradas;
     
     // Obtener estados para el mapeo de colores
     $estados = ControladorEstadosActividades::ctrMostrarEstadosActividades(null, null);
@@ -175,25 +187,29 @@ if (isset($_GET["action"]) && $_GET["action"] == "listar") {
 if (isset($_POST["fecha"]) && !isset($_POST["idActividad"]) && (!isset($_POST["accion"]) || $_POST["accion"] !== "actualizarFecha")) {
     $item = "fecha";
     $valor = $_POST["fecha"];
-    $respuesta = ControladorActividades::ctrMostrarActividadesConCliente($item, $valor);
+    $idUsuarioSesion = isset($_SESSION["id"]) ? intval($_SESSION["id"]) : 0;
+    $respuesta = ControladorActividades::ctrMostrarActividadesConCliente($item, $valor, $idUsuarioSesion);
 
-    // Filtrar actividades por tipo/estado si se especificaron
+    // Filtrar actividades por tipo/estado y por usuario si tienen cuenta de Google
     $filtroTipo = isset($_POST["filtroTipo"]) ? $_POST["filtroTipo"] : null;
     $filtroEstado = isset($_POST["filtroEstado"]) ? $_POST["filtroEstado"] : null;
 
-    if (!empty($filtroTipo) || !empty($filtroEstado)) {
-        $filtrado = [];
+    $filtrado = [];
+    if (is_array($respuesta)) {
         foreach ($respuesta as $actividad) {
+            if (!empty($actividad["google_event_id"]) && $idUsuarioSesion > 0 && intval($actividad["id_user"]) !== $idUsuarioSesion) {
+                continue;
+            }
             if (!empty($filtroTipo) && strtolower($actividad["tipo"]) !== strtolower($filtroTipo)) {
                 continue;
             }
             if (!empty($filtroEstado) && strtolower($actividad["estado"]) !== strtolower($filtroEstado)) {
                 continue;
             }
-            $filtrado[] = $filtrado;
+            $filtrado[] = $actividad;
         }
-        $respuesta = $filtrado;
     }
+    $respuesta = $filtrado;
     
     echo json_encode($respuesta);
     exit;

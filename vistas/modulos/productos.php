@@ -190,23 +190,31 @@ $tipoCodigoProducto = !empty($configuracion["tipo_codigo_producto"]) ? $configur
     <div class="modal-custom-body">
       <img id="imagenProductoAmpliada" src="" class="img-responsive"
         style="max-width: 100%; margin: 0 auto 20px auto; border-radius: 5px;">
-      <hr>
-      <div class="form-group">
-        <label><i class="fa fa-upload"></i> Cambiar Imagen del Producto</label>
-        <input type="file" class="form-control nuevaImagenProducto" accept="image/*">
-        <p class="help-block"><i class="fa fa-info-circle"></i> Peso máximo de la imagen 8MB</p>
+
+      <?php if (puedeAccion('productos', 'editar')): ?>
+      <div class="seccion-cambiar-imagen-producto">
+        <hr>
+        <div class="form-group">
+          <label><i class="fa fa-upload"></i> Cambiar Imagen del Producto</label>
+          <input type="file" class="form-control nuevaImagenProducto" accept="image/*">
+          <p class="help-block"><i class="fa fa-info-circle"></i> Peso máximo de la imagen 8MB</p>
+        </div>
       </div>
+      <?php endif; ?>
+
       <input type="hidden" id="idProductoImagen">
       <input type="hidden" id="codigoProductoImagen">
     </div>
 
     <div class="modal-custom-footer">
       <button type="button" class="btn btn-default" id="btnCancelarModalProducto">
-        <i class="fa fa-times"></i> Cancelar
+        <i class="fa fa-times"></i> Cerrar
       </button>
+      <?php if (puedeAccion('productos', 'editar')): ?>
       <button type="button" class="btn btn-primary btnGuardarImagenProducto">
         <i class="fa fa-save"></i> Guardar Imagen
       </button>
+      <?php endif; ?>
     </div>
   </div>
 </div>
@@ -1138,6 +1146,19 @@ AMPLIAR Y EDITAR IMAGEN DE PRODUCTO DESDE LA TABLA
     $("#idProductoImagen").val(idProducto);
     $("#codigoProductoImagen").val(codigo);
     $(".nuevaImagenProducto").val("");
+
+    var editable = $(this).attr("data-editable");
+    if (typeof editable === 'undefined' && typeof permisoEditarProductos !== 'undefined') {
+      editable = permisoEditarProductos ? "1" : "0";
+    }
+
+    if (editable === "0") {
+      $(".seccion-cambiar-imagen-producto").hide();
+      $(".btnGuardarImagenProducto").hide();
+    } else {
+      $(".seccion-cambiar-imagen-producto").show();
+      $(".btnGuardarImagenProducto").show();
+    }
 
     // Mostrar modal personalizado
     $("#modalAmpliarImagenProducto").fadeIn(300);

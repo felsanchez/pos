@@ -164,111 +164,509 @@ $editarCliente->ctrEditarCliente();
 
   <section class="content">
 
-    <div class="box">
-
-      <div class="box-header with-border">
-        <?php if (puedeAccion('clientes', 'crear')): ?>
-          <a href="cliente-detalle" class="btn btn-primary">
-            <i class="fa fa-plus"></i> Agregar Cliente
-          </a>
-        <?php else: ?>
-          <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear clientes">
-            <i class="fa fa-plus"></i> Agregar Cliente
-          </button>
-        <?php endif; ?>
-
-        <?php if (puedeAccion('clientes', 'crear')): ?>
-          <button class="btn btn-success" data-toggle="modal" data-target="#modalImportarClientes">
-            <i class="fa fa-upload"></i> Exportar / Importar Clientes
-          </button>
-        <?php else: ?>
-          <button class="btn btn-success" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para importar/exportar">
-            <i class="fa fa-upload"></i> Exportar / Importar Clientes
-          </button>
-        <?php endif; ?>
-
-        <?php if (puedeAccion('clientes', 'editar')): ?>
-          <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
-            <i class="fa fa-flag"></i> Gestionar estados
-          </button>
-        <?php else: ?>
-          <button class="btn btn-default" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para gestionar estados">
-            <i class="fa fa-flag"></i> Gestionar estados
-          </button>
-        <?php endif; ?>
-
-        <!-- Filtro por Estado Estandarizado en el Header -->
-        <div class="pull-right form-filtros-clientes" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <span><b>Estado:</b></span>
-          <div class="input-group" style="width: 220px;">
-            <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
-              <i class="fa fa-search text-primary"></i>
-            </span>
-            <select class="form-control select2" id="filtroEstatus1" style="width: 100%;">
-              <option value="">Mostrar Todos</option>
-              <?php
-              $estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
-              foreach ($estadosDisponibles as $estado) {
-                // Notar: filtroEstatus1 debe estar capturado previamente o usar el valor del GET
-                $selected = ($filtroEstatus1 == $estado["nombre"]) ? "selected" : "";
-                echo '<option value="' . $estado["nombre"] . '" ' . $selected . '>' . ucfirst($estado["nombre"]) . '</option>';
-              }
-              ?>
-            </select>
-          </div>
-        </div>
-      </div>
-
-
-      <!--CODIGO PARA LLAMAR AL WEBHOOK DE n8n -->
-      <!--
-        <form id="formN8N" action="https://c610c962d42e.ngrok-free.app/webhook/mipos" method="POST" target="_blank">
-
-        <?php
-        echo '<script>console.log("DEBUG: Entrando a CSRF::insertToken");</script>';
-        CSRF::insertToken();
-        echo '<script>console.log("DEBUG: Saliendo de CSRF::insertToken");</script>';
-        ?>
-          <input type="hidden" name="origen" value="clientes">
-          <button type="submit" class="btn btn-success">Enviar a n8n</button>
-        </form>
-        -->
-
-
-      <?php
-      $filtroEstatus1 = isset($_GET['filtroEstatus1']) ? $_GET['filtroEstatus1'] : ''; // Captura el valor del filtro de estatus si existe.
+    <div class="nav-tabs-custom" style="box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-radius: 4px; overflow: hidden;">
       
-      // Aquí aplica el filtro de estatus desde el GET para obtener los clientes correctos
-      $item = "estatus";
-      $valor = $filtroEstatus1;
-      $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
-      ?>
+      <ul class="nav nav-tabs" style="font-size: 14px; background: #fafafa; border-bottom: 2px solid #3c8dbc;">
+        <li class="active">
+          <a href="#tab_directorio_clientes" data-toggle="tab" style="font-weight: 600; padding: 12px 20px;">
+            <i class="fa fa-users text-primary" style="margin-right: 6px;"></i> Directorio de Clientes
+          </a>
+        </li>
+        <li>
+          <a href="#tab_inactividad_clientes" data-toggle="tab" style="font-weight: 600; padding: 12px 20px;">
+            <i class="fa fa-clock-o text-yellow" style="margin-right: 6px;"></i> Análisis de Compras e Inactividad
+          </a>
+        </li>
+      </ul>
 
+      <div class="tab-content" style="padding: 15px 15px 25px 15px;">
 
+        <!--=====================================
+        PESTAÑA 1: DIRECTORIO DE CLIENTES (ACTUAL)
+        ======================================-->
+        <div class="tab-pane active" id="tab_directorio_clientes">
 
+          <div class="box" style="border-top: none; box-shadow: none; margin-bottom: 0;">
 
-      <div class="box-body">
-        <div class="tabla-clientes table-responsive">
-        <table class="table table-bordered table-striped tablas1 display nowrap" style="width: 100%;">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Documento</th>
-              <th>Teléfono</th>
-              <!--<th>Departamento</th>-->
-              <!--<th>Ciudad</th>-->
-              <th>Estado</th>
-              <!--<th><i class="fa fa-pencil-square"></i> Notas</th>-->
-              <th></i> Notas</th>
-              <!--<th>Total compras</th>-->
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-             <!-- DataTables Server-Side -->
-          </tbody>
-        </table>
-        </div><!-- /.tabla-clientes -->
+            <div class="box-header with-border" style="padding-left: 0; padding-right: 0;">
+              <?php if (puedeAccion('clientes', 'crear')): ?>
+                <a href="cliente-detalle" class="btn btn-primary">
+                  <i class="fa fa-plus"></i> Agregar Cliente
+                </a>
+              <?php else: ?>
+                <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para crear clientes">
+                  <i class="fa fa-plus"></i> Agregar Cliente
+                </button>
+              <?php endif; ?>
+
+              <?php if (puedeAccion('clientes', 'crear')): ?>
+                <button class="btn btn-success" data-toggle="modal" data-target="#modalImportarClientes">
+                  <i class="fa fa-upload"></i> Exportar / Importar Clientes
+                </button>
+              <?php else: ?>
+                <button class="btn btn-success" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para importar/exportar">
+                  <i class="fa fa-upload"></i> Exportar / Importar Clientes
+                </button>
+              <?php endif; ?>
+
+              <?php if (puedeAccion('clientes', 'editar')): ?>
+                <button class="btn btn-default" data-toggle="modal" data-target="#modalGestionarEstados">
+                  <i class="fa fa-flag"></i> Gestionar estados
+                </button>
+              <?php else: ?>
+                <button class="btn btn-default" disabled style="opacity: 0.5; cursor: not-allowed;" title="No tiene permisos para gestionar estados">
+                  <i class="fa fa-flag"></i> Gestionar estados
+                </button>
+              <?php endif; ?>
+
+              <!-- Filtros en el Header: Estado y Origen -->
+              <?php
+              $configGlobalClientes = ControladorConfiguracion::ctrObtenerConfiguracion();
+              $mostrarFiltroAgenteIA = (!isset($configGlobalClientes["leads_whatsapp_activos"]) || $configGlobalClientes["leads_whatsapp_activos"] == 1);
+              ?>
+              <div class="pull-right form-filtros-clientes" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <span><b>Origen:</b></span>
+                <div class="input-group" style="width: 160px;">
+                  <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+                    <i class="fa fa-filter text-success"></i>
+                  </span>
+                  <select class="form-control select2" id="filtroOrigenCliente" style="width: 100%;">
+                    <option value="">Todos los canales</option>
+                    <option value="menu_digital">Menú Digital</option>
+                    <?php if ($mostrarFiltroAgenteIA): ?>
+                      <option value="agente_ia">Agente IA</option>
+                    <?php endif; ?>
+                    <option value="sistema">POS / Caja</option>
+                  </select>
+                </div>
+
+                <span><b>Estado:</b></span>
+                <div class="input-group" style="width: 180px;">
+                  <span class="input-group-addon" style="background: #fcfcfc; border-color: #d2d6de;">
+                    <i class="fa fa-search text-primary"></i>
+                  </span>
+                  <select class="form-control select2" id="filtroEstatus1" style="width: 100%;">
+                    <option value="">Mostrar Todos</option>
+                    <?php
+                    $estadosDisponibles = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
+                    foreach ($estadosDisponibles as $estado) {
+                      $selected = ($filtroEstatus1 == $estado["nombre"]) ? "selected" : "";
+                      echo '<option value="' . $estado["nombre"] . '" ' . $selected . '>' . ucfirst($estado["nombre"]) . '</option>';
+                    }
+                    ?>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <?php
+            $filtroEstatus1 = isset($_GET['filtroEstatus1']) ? $_GET['filtroEstatus1'] : '';
+            $item = "estatus";
+            $valor = $filtroEstatus1;
+            $clientes = ControladorClientes::ctrMostrarClientes($item, $valor);
+            ?>
+
+            <div class="box-body" style="padding-left: 0; padding-right: 0;">
+              <div class="tabla-clientes table-responsive">
+              <table class="table table-bordered table-striped tablas1 display nowrap" style="width: 100%;">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Documento</th>
+                    <th>Teléfono</th>
+                    <th>Estado</th>
+                    <th>Notas</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                   <!-- DataTables Server-Side -->
+                </tbody>
+              </table>
+              </div><!-- /.tabla-clientes -->
+            </div>
+
+          </div>
+
+        </div>
+
+        <!--=====================================
+        PESTAÑA 2: ANÁLISIS DE COMPRAS E INACTIVIDAD
+        ======================================-->
+        <div class="tab-pane" id="tab_inactividad_clientes">
+
+          <?php
+          // Cargar datos analíticos de compras e inactividad
+          $clientesInactividad = ControladorClientes::ctrMostrarClientesInactividad();
+          $totalClientesAnalisis = is_array($clientesInactividad) ? count($clientesInactividad) : 0;
+
+          $conteoActivos15 = 0;   // < 15 días
+          $conteoActivos30 = 0;   // 15 a 30 días
+          $conteoEnRiesgo = 0;    // 31 a 60 días
+          $conteoAlerta = 0;      // 61 a 90 días
+          $conteoInactivos = 0;   // > 90 días
+          $conteoSinCompras = 0;  // Sin compras
+          $totalFacturadoGlobal = 0;
+
+          if (!empty($clientesInactividad)) {
+              foreach ($clientesInactividad as $cliItem) {
+                  $totalFacturadoGlobal += floatval($cliItem["total_gastado"] ?? 0);
+                  if ($cliItem["ultima_compra"] === null || $cliItem["dias_inactivo"] === null) {
+                      $conteoSinCompras++;
+                  } else {
+                      $dias = intval($cliItem["dias_inactivo"]);
+                      if ($dias < 15) {
+                          $conteoActivos15++;
+                      } elseif ($dias <= 30) {
+                          $conteoActivos30++;
+                      } elseif ($dias <= 60) {
+                          $conteoEnRiesgo++;
+                      } elseif ($dias <= 90) {
+                          $conteoAlerta++;
+                      } else {
+                          $conteoInactivos++;
+                      }
+                  }
+              }
+          }
+          $conteoTotalActivos = $conteoActivos15 + $conteoActivos30;
+          ?>
+
+          <style>
+          .card-kpi-inact {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            margin-bottom: 12px;
+          }
+          .card-kpi-inact:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-color: #cbd5e1;
+          }
+          .card-kpi-inact.active {
+            border-color: #3c8dbc;
+            background: #f0f9ff;
+            box-shadow: 0 2px 8px rgba(60,141,188,0.25);
+          }
+          .card-kpi-inact .kpi-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+          }
+          .card-kpi-inact .kpi-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+          }
+          .card-kpi-inact .kpi-num {
+            font-size: 19px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.2;
+          }
+          .card-kpi-inact .kpi-label {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          </style>
+
+          <!-- KPI Cards / Resumen Estadístico Interactivo -->
+          <div class="row" style="margin-bottom: 15px;">
+            
+            <div class="col-md-2 col-sm-4 col-xs-6">
+              <div class="card-kpi-inact active" data-filtro-kpi="todos" title="Ver todos los clientes">
+                <div class="kpi-icon" style="background: rgba(60, 141, 188, 0.12); color: #3c8dbc;">
+                  <i class="fa fa-users"></i>
+                </div>
+                <div class="kpi-info">
+                  <span class="kpi-num"><?= $totalClientesAnalisis ?></span>
+                  <span class="kpi-label">Total Clientes</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-2 col-sm-4 col-xs-6">
+              <div class="card-kpi-inact" data-filtro-kpi="activos" title="Filtrar Clientes Activos (&le; 30 días)">
+                <div class="kpi-icon" style="background: rgba(0, 166, 90, 0.12); color: #00a65a;">
+                  <i class="fa fa-check-circle"></i>
+                </div>
+                <div class="kpi-info">
+                  <span class="kpi-num" style="color: #00a65a;"><?= $conteoTotalActivos ?></span>
+                  <span class="kpi-label">Activos (&le; 30d)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-2 col-sm-4 col-xs-6">
+              <div class="card-kpi-inact" data-filtro-kpi="30_a_60" title="Filtrar Clientes En Riesgo (31 a 60 días)">
+                <div class="kpi-icon" style="background: rgba(243, 156, 18, 0.12); color: #f39c12;">
+                  <i class="fa fa-clock-o"></i>
+                </div>
+                <div class="kpi-info">
+                  <span class="kpi-num" style="color: #f39c12;"><?= $conteoEnRiesgo ?></span>
+                  <span class="kpi-label">En Riesgo (31-60d)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-2 col-sm-4 col-xs-6">
+              <div class="card-kpi-inact" data-filtro-kpi="60_a_90" title="Filtrar Clientes en Alerta (61 a 90 días)">
+                <div class="kpi-icon" style="background: rgba(255, 133, 27, 0.12); color: #ff851b;">
+                  <i class="fa fa-exclamation-triangle"></i>
+                </div>
+                <div class="kpi-info">
+                  <span class="kpi-num" style="color: #ff851b;"><?= $conteoAlerta ?></span>
+                  <span class="kpi-label">Alerta (61-90d)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-2 col-sm-4 col-xs-6">
+              <div class="card-kpi-inact" data-filtro-kpi="mas_90" title="Filtrar Clientes Inactivos (> 90 días)">
+                <div class="kpi-icon" style="background: rgba(221, 75, 57, 0.12); color: #dd4b39;">
+                  <i class="fa fa-times-circle"></i>
+                </div>
+                <div class="kpi-info">
+                  <span class="kpi-num" style="color: #dd4b39;"><?= $conteoInactivos ?></span>
+                  <span class="kpi-label">Inactivos (&gt; 90d)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-2 col-sm-4 col-xs-6">
+              <div class="card-kpi-inact" data-filtro-kpi="sin_compras" title="Filtrar Clientes Sin Compras">
+                <div class="kpi-icon" style="background: rgba(108, 117, 125, 0.12); color: #6c757d;">
+                  <i class="fa fa-minus-circle"></i>
+                </div>
+                <div class="kpi-info">
+                  <span class="kpi-num" style="color: #6c757d;"><?= $conteoSinCompras ?></span>
+                  <span class="kpi-label">Sin Compras</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Barra de Filtros y Botón de Exportar a Excel -->
+          <div class="box box-solid" style="border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-bottom: 20px;">
+            <div class="box-body" style="padding: 15px 20px;">
+              <div class="row" style="display: flex; align-items: center; flex-wrap: wrap;">
+                
+                <div class="col-md-4 col-sm-6 col-xs-12" style="margin-bottom: 10px;">
+                  <label style="font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px; display: block;">
+                    <i class="fa fa-filter text-primary"></i> Rango de Inactividad:
+                  </label>
+                  <select class="form-control" id="filtroRangoInactividad" style="font-weight: 500; height: 38px; border-radius: 4px;">
+                    <option value="todos">Todos los Rangos (<?= $totalClientesAnalisis ?> clientes)</option>
+                    <option value="menos_15">Menos de 15 días (Recientes - <?= $conteoActivos15 ?>)</option>
+                    <option value="15_a_30">15 a 30 días (Activos - <?= $conteoActivos30 ?>)</option>
+                    <option value="activos">Todos los Activos &le; 30 días (<?= $conteoTotalActivos ?>)</option>
+                    <option value="30_a_60">30 a 60 días (En Riesgo - <?= $conteoEnRiesgo ?>)</option>
+                    <option value="60_a_90">60 a 90 días (Alerta - <?= $conteoAlerta ?>)</option>
+                    <option value="mas_90">Más de 90 días (Inactivos - <?= $conteoInactivos ?>)</option>
+                    <option value="sin_compras">Sin Compras Registradas (<?= $conteoSinCompras ?>)</option>
+                  </select>
+                </div>
+
+                <div class="col-md-4 col-sm-6 col-xs-12" style="margin-bottom: 10px;">
+                  <label style="font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px; display: block;">
+                    <i class="fa fa-search text-primary"></i> Búsqueda Rápida:
+                  </label>
+                  <div class="input-group" style="width: 100%;">
+                    <span class="input-group-addon" style="background: #f8fafc; border-color: #cbd5e1;"><i class="fa fa-search text-muted"></i></span>
+                    <input type="text" id="buscarTablaInactividad" class="form-control" placeholder="Buscar por cliente, documento, teléfono..." style="height: 38px; border-radius: 0 4px 4px 0;">
+                  </div>
+                </div>
+
+                <div class="col-md-4 col-sm-12 col-xs-12 text-right" style="margin-bottom: 10px; display: flex; align-items: flex-end; justify-content: flex-end; gap: 8px;">
+                  <button type="button" id="btnExportarExcelInactividad" class="btn btn-success" style="font-weight: 600; height: 38px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(40,167,69,0.25);">
+                    <i class="fa fa-file-excel-o" style="font-size: 16px;"></i> Exportar a Excel
+                  </button>
+                  <button type="button" id="btnResetFiltrosInactividad" class="btn btn-default" style="height: 38px;" title="Restablecer filtros">
+                    <i class="fa fa-refresh"></i>
+                  </button>
+                </div>
+
+              </div>
+
+              <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 8px; flex-wrap: wrap; gap: 6px;">
+                <div>
+                  <span id="contadorClientesInactividad">Mostrando <b><?= $totalClientesAnalisis ?></b> de <b><?= $totalClientesAnalisis ?></b> clientes</span>
+                </div>
+                <div>
+                  <span>Total facturado histórico: <b style="color: #1e293b;">$ <?= number_format($totalFacturadoGlobal, 2, ',', '.') ?></b></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabla Analítica de Inactividad -->
+          <div class="box box-solid" style="border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
+            <div class="box-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="table table-hover table-striped" id="tablaAnalisisInactividad" style="width: 100%; margin-bottom: 0;">
+                  <thead style="background: #f8fafc; color: #334155; border-bottom: 2px solid #e2e8f0;">
+                    <tr>
+                      <th style="width: 40px;" class="text-center">#</th>
+                      <th style="min-width: 180px;">Cliente</th>
+                      <th style="min-width: 120px;">Documento</th>
+                      <th style="min-width: 180px;">Contacto</th>
+                      <th class="text-center" style="min-width: 110px;">Última Compra</th>
+                      <th class="text-center" style="min-width: 130px;">Días Transcurridos</th>
+                      <th class="text-center" style="min-width: 100px;">Total Compras</th>
+                      <th class="text-right" style="min-width: 130px;">Monto Acumulado</th>
+                      <th class="text-center" style="min-width: 130px;">Estado / Semáforo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php if (empty($clientesInactividad)): ?>
+                      <tr>
+                        <td colspan="9" class="text-center" style="padding: 30px; color: #94a3b8;">
+                          <i class="fa fa-info-circle fa-2x" style="opacity: 0.5; margin-bottom: 8px;"></i>
+                          <p style="margin: 0;">No se encontraron clientes para mostrar.</p>
+                        </td>
+                      </tr>
+                    <?php else: ?>
+                      <?php
+                      $contadorFila = 1;
+                      foreach ($clientesInactividad as $cli):
+                          $dias = $cli["dias_inactivo"] !== null ? intval($cli["dias_inactivo"]) : null;
+                          
+                          if ($cli["ultima_compra"] === null || $dias === null) {
+                              $rangoSlug = 'sin_compras';
+                              $fechaTexto = '<span class="text-muted" style="font-style: italic;">Sin registro</span>';
+                              $fechaExport = 'Nunca';
+                              $diasTexto = '<span class="text-muted" style="font-style: italic;">Sin compras</span>';
+                              $diasNum = 999999;
+                              $badgeSemaforo = '<span class="badge" style="background-color: #6c757d; font-size: 11px; padding: 4px 8px;"><i class="fa fa-minus-circle"></i> Sin compras</span>';
+                          } else {
+                              $fechaExport = date("d/m/Y", strtotime($cli["ultima_compra"]));
+                              $fechaTexto = '<span style="font-weight: 500;">' . $fechaExport . '</span>' .
+                                            '<br><small class="text-muted">' . date("h:i A", strtotime($cli["ultima_compra"])) . '</small>';
+                              $diasNum = $dias;
+
+                              if ($dias < 15) {
+                                  $rangoSlug = 'menos_15';
+                                  $diasTexto = ($dias == 0) ? '<span class="badge" style="background-color: #00a65a; font-size: 11px;">¡Hoy!</span>' : '<b class="text-success">Hace ' . $dias . ' día' . ($dias == 1 ? '' : 's') . '</b>';
+                                  $badgeSemaforo = '<span class="badge" style="background-color: #00a65a; font-size: 11px; padding: 4px 8px;"><i class="fa fa-check-circle"></i> Activo (&lt; 15d)</span>';
+                              } elseif ($dias <= 30) {
+                                  $rangoSlug = '15_a_30';
+                                  $diasTexto = '<span style="color: #28a745; font-weight: 600;">Hace ' . $dias . ' días</span>';
+                                  $badgeSemaforo = '<span class="badge" style="background-color: #28a745; font-size: 11px; padding: 4px 8px;"><i class="fa fa-check"></i> Activo (15-30d)</span>';
+                              } elseif ($dias <= 60) {
+                                  $rangoSlug = '30_a_60';
+                                  $diasTexto = '<b style="color: #f39c12;">Hace ' . $dias . ' días</b>';
+                                  $badgeSemaforo = '<span class="badge" style="background-color: #f39c12; font-size: 11px; padding: 4px 8px;"><i class="fa fa-clock-o"></i> En Riesgo (31-60d)</span>';
+                              } elseif ($dias <= 90) {
+                                  $rangoSlug = '60_a_90';
+                                  $diasTexto = '<b style="color: #ff851b;">Hace ' . $dias . ' días</b>';
+                                  $badgeSemaforo = '<span class="badge" style="background-color: #ff851b; font-size: 11px; padding: 4px 8px;"><i class="fa fa-exclamation-triangle"></i> Alerta (61-90d)</span>';
+                              } else {
+                                  $rangoSlug = 'mas_90';
+                                  $diasTexto = '<b style="color: #dd4b39;">Hace ' . $dias . ' días</b>';
+                                  $badgeSemaforo = '<span class="badge" style="background-color: #dd4b39; font-size: 11px; padding: 4px 8px;"><i class="fa fa-times-circle"></i> Inactivo (&gt; 90d)</span>';
+                              }
+                          }
+
+                          $docDisplay = htmlspecialchars($cli['documento'] ?? '');
+                          if (!empty($cli['tipo_documento_id']) && $cli['tipo_documento_id'] == 6 && isset($cli['digito_verificacion']) && $cli['digito_verificacion'] !== '') {
+                              $docDisplay .= '-' . htmlspecialchars($cli['digito_verificacion']);
+                          }
+
+                          $busquedaTexto = mb_strtolower($cli['nombre'] . ' ' . $docDisplay . ' ' . ($cli['telefono'] ?? '') . ' ' . ($cli['email'] ?? '') . ' ' . ($cli['ciudad'] ?? ''));
+                      ?>
+                        <tr data-rango="<?= $rangoSlug ?>" data-dias="<?= $diasNum ?>" data-search="<?= htmlspecialchars($busquedaTexto) ?>">
+                          <!-- # -->
+                          <td class="text-center text-muted" style="font-size: 12px;"><?= $contadorFila++ ?></td>
+
+                          <!-- Cliente -->
+                          <td>
+                            <div style="font-weight: 700; color: #1e293b; font-size: 13px;">
+                              <?= htmlspecialchars($cli['nombre']) ?>
+                            </div>
+                            <?php if (!empty($cli['ciudad'])): ?>
+                              <small class="text-muted" style="font-size: 11px;"><i class="fa fa-map-marker"></i> <?= htmlspecialchars($cli['ciudad']) ?></small>
+                            <?php endif; ?>
+                          </td>
+
+                          <!-- Documento -->
+                          <td>
+                            <span style="font-family: monospace; font-size: 12px; font-weight: 600; color: #334155;"><?= $docDisplay ?></span>
+                          </td>
+
+                          <!-- Contacto (Teléfono y Email - SIN Botón de WhatsApp) -->
+                          <td style="font-size: 12px;">
+                            <?php if (!empty($cli['telefono'])): ?>
+                              <div style="margin-bottom: 2px;">
+                                <i class="fa fa-phone text-muted" style="width: 14px;"></i> <?= htmlspecialchars($cli['telefono']) ?>
+                              </div>
+                            <?php endif; ?>
+                            <?php if (!empty($cli['email'])): ?>
+                              <div>
+                                <i class="fa fa-envelope-o text-muted" style="width: 14px;"></i> <a href="mailto:<?= htmlspecialchars($cli['email']) ?>" style="color: #3c8dbc; word-break: break-all;"><?= htmlspecialchars($cli['email']) ?></a>
+                              </div>
+                            <?php endif; ?>
+                            <?php if (empty($cli['telefono']) && empty($cli['email'])): ?>
+                              <span class="text-muted" style="font-style: italic; font-size: 11px;">Sin contacto</span>
+                            <?php endif; ?>
+                          </td>
+
+                          <!-- Última Compra -->
+                          <td class="text-center" data-order="<?= !empty($cli['ultima_compra']) ? strtotime($cli['ultima_compra']) : 0 ?>">
+                            <?= $fechaTexto ?>
+                          </td>
+
+                          <!-- Días Transcurridos -->
+                          <td class="text-center" data-order="<?= $diasNum ?>">
+                            <?= $diasTexto ?>
+                          </td>
+
+                          <!-- Total Compras -->
+                          <td class="text-center" data-order="<?= intval($cli['total_compras']) ?>">
+                            <span class="badge" style="background-color: #f1f5f9; color: #334155; font-size: 12px; border: 1px solid #cbd5e1; font-weight: 600;">
+                              <?= intval($cli['total_compras']) ?>
+                            </span>
+                          </td>
+
+                          <!-- Monto Acumulado -->
+                          <td class="text-right" style="font-weight: 600; color: #1e293b;" data-order="<?= floatval($cli['total_gastado']) ?>">
+                            $ <?= number_format($cli['total_gastado'], 2, ',', '.') ?>
+                          </td>
+
+                          <!-- Estado / Semáforo -->
+                          <td class="text-center">
+                            <?= $badgeSemaforo ?>
+                          </td>
+                        </tr>
+                      <?php endforeach; ?>
+                    <?php endif; ?>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
       </div>
 
     </div>
@@ -1074,23 +1472,47 @@ MODAL GESTIONAR ESTADOS
                 <tbody>
                   <?php
                   $estados = ControladorEstadosClientes::ctrMostrarEstadosClientes(null, null);
+                  $estadosBloqueados = ['nuevo', 'leads'];
+
                   foreach ($estados as $key => $value) {
+                    $nombreMinuscula = strtolower(trim($value["nombre"]));
+                    $esBloqueado = in_array($nombreMinuscula, $estadosBloqueados);
+
                     echo '<tr>
                       <td>' . e($key + 1) . '</td>
-                      <td><span class="badge" style="background-color: ' . e($value["color"]) . '">' . e($value["nombre"]) . '</span></td>
-                      <td><input type="color" value="' . e($value["color"]) . '" disabled style="width: 50px;"></td>
                       <td>
-                        <button class="btn btn-warning btn-xs btnEditarEstado"
-                          data-id="' . e($value["id"]) . '"
-                          data-nombre="' . e($value["nombre"]) . '"
-                          data-color="' . e($value["color"]) . '"
-                          data-orden="' . e($value["orden"]) . '"
-                          data-toggle="modal"
-                          data-target="#modalEditarEstado">
-                          <i class="fa fa-pencil"></i>
-                        </button>
-                        <button class="btn btn-danger btn-xs btnEliminarEstado" idEstado="' . e($value["id"]) . '" nombreEstado="' . e($value["nombre"]) . '"><i class="fa fa-times"></i></button>
-                      </td>
+                        <span class="badge" style="background-color: ' . e($value["color"]) . '">' . e($value["nombre"]) . '</span>';
+                    if ($esBloqueado) {
+                      echo ' <i class="fa fa-lock text-muted" title="Estado protegido del sistema" style="margin-left: 4px;"></i>';
+                    }
+                    echo '</td>
+                      <td><input type="color" value="' . e($value["color"]) . '" disabled style="width: 50px;"></td>
+                      <td>';
+
+                    if ($esBloqueado) {
+                      echo '<button class="btn btn-default btn-xs" disabled style="opacity: 0.5; cursor: not-allowed; margin-right: 2px;" title="Este estado no se puede editar (protegido por el sistema)">
+                              <i class="fa fa-lock"></i>
+                            </button>
+                            <button class="btn btn-default btn-xs" disabled style="opacity: 0.5; cursor: not-allowed;" title="Este estado no se puede eliminar (protegido por el sistema)">
+                              <i class="fa fa-ban"></i>
+                            </button>';
+                    } else {
+                      echo '<button class="btn btn-warning btn-xs btnEditarEstado"
+                              data-id="' . e($value["id"]) . '"
+                              data-nombre="' . e($value["nombre"]) . '"
+                              data-color="' . e($value["color"]) . '"
+                              data-orden="' . e($value["orden"]) . '"
+                              data-toggle="modal"
+                              data-target="#modalEditarEstado"
+                              title="Editar estado">
+                              <i class="fa fa-pencil"></i>
+                            </button>
+                            <button class="btn btn-danger btn-xs btnEliminarEstado" idEstado="' . e($value["id"]) . '" nombreEstado="' . e($value["nombre"]) . '" title="Eliminar estado">
+                              <i class="fa fa-times"></i>
+                            </button>';
+                    }
+
+                    echo '</td>
                     </tr>';
                   }
                   ?>

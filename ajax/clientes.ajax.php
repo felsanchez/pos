@@ -167,6 +167,11 @@ if (isset($_POST["idCliente"]) && isset($_POST["nuevoEstatus"])) {
 PERMITE EDITAR NOTAS
 =============================================*/
 if (isset($_POST["accion"]) && $_POST["accion"] == "actualizarNota") {
+  require_once "../modelos/helpers.php";
+  if (!puedeAccion('clientes', 'editar')) {
+    echo json_encode(["status" => "error", "mensaje" => "No tiene permisos para editar notas de clientes"]);
+    exit;
+  }
   $tabla = "clientes";
   $datos = array(
     "id" => $_POST["id"],
@@ -174,6 +179,7 @@ if (isset($_POST["accion"]) && $_POST["accion"] == "actualizarNota") {
   );
   $respuesta = ModeloClientes::mdlActualizarNota("clientes", $_POST["id"], $_POST["notas"]);
   echo json_encode($respuesta);
+  exit;
 }
 
 

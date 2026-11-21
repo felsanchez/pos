@@ -86,6 +86,17 @@ function obtenerValor($cliente, $campo, $default = '') {
     <section class="content-header">
         <h1>
             <?php echo $modoEdicion ? 'Editar ' . $tipoEntidad : 'Nuevo ' . $tipoEntidad; ?>
+            <?php if ($modoEdicion && !empty($cliente['origen'])): ?>
+                <?php if ($cliente['origen'] === 'menu_digital' || $cliente['origen'] === 'Menú Digital'): ?>
+                    <span class="label label-success" style="font-size: 12px; font-weight: 600; padding: 4px 8px; vertical-align: middle; margin-left: 10px; border-radius: 3px;">
+                        <i class="fa fa-cutlery"></i> Menú Digital
+                    </span>
+                <?php elseif ($cliente['origen'] === 'agente_ia' || $cliente['origen'] === 'Agente IA'): ?>
+                    <span class="label" style="background-color: #7c3aed; color: #fff; font-size: 12px; font-weight: 600; padding: 4px 8px; vertical-align: middle; margin-left: 10px; border-radius: 3px;">
+                        <i class="fa fa-android"></i> Agente IA
+                    </span>
+                <?php endif; ?>
+            <?php endif; ?>
         </h1>
         <ol class="breadcrumb">
             <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
@@ -153,6 +164,28 @@ function obtenerValor($cliente, $campo, $default = '') {
                                                <?php echo ($tipoPersonaActual == 'juridica') ? 'checked' : ''; ?>>
                                         Persona Jurídica
                                     </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Canal de Origen / Captación -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Canal de Origen</label>
+                                <div style="padding-top: 5px;">
+                                    <?php if (!empty($cliente['origen']) && ($cliente['origen'] === 'menu_digital' || $cliente['origen'] === 'Menú Digital')): ?>
+                                        <span class="label label-success" style="font-size: 13px; font-weight: 600; padding: 5px 10px; border-radius: 4px; display: inline-block;">
+                                            <i class="fa fa-qrcode"></i> Menú Digital (Pedido Online)
+                                        </span>
+                                    <?php elseif (!empty($cliente['origen']) && ($cliente['origen'] === 'agente_ia' || $cliente['origen'] === 'Agente IA')): ?>
+                                        <span class="label" style="background-color: #7c3aed; color: #fff; font-size: 13px; font-weight: 600; padding: 5px 10px; border-radius: 4px; display: inline-block;">
+                                            <i class="fa fa-android"></i> Agente IA (WhatsApp / n8n / CRM)
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="label label-default" style="font-size: 13px; font-weight: 500; padding: 5px 10px; border-radius: 4px; display: inline-block; background-color: #64748b; color: #fff;">
+                                            <i class="fa fa-desktop"></i> Sistema POS / Caja
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>                        

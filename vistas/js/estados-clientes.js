@@ -55,6 +55,18 @@ $('#modalEditarEstado').off('show.bs.modal').on('show.bs.modal', function (event
 	var color = button.attr('data-color');
 	var orden = button.attr('data-orden');
 
+	var nombreMinuscula = (nombre || "").toLowerCase().trim();
+	if (nombreMinuscula === "nuevo" || nombreMinuscula === "leads") {
+		event.preventDefault();
+		swal({
+			type: "info",
+			title: "Estado Bloqueado",
+			text: "El estado '" + nombre + "' es un estado protegido del sistema y no puede ser modificado.",
+			confirmButtonText: "Entendido"
+		});
+		return false;
+	}
+
 	console.log("✓ Abriendo modal editar estado cliente - ID:", id, "Nombre:", nombre, "Color:", color, "Orden:", orden);
 
 	// Llenar el formulario
@@ -120,6 +132,17 @@ $(document).on("click", ".btnEliminarEstado", function(){
 
  	var idEstado = $(this).attr("idEstado");
 	var nombreEstado = $(this).attr("nombreEstado");
+
+	var nombreMinuscula = (nombreEstado || "").toLowerCase().trim();
+	if (nombreMinuscula === "nuevo" || nombreMinuscula === "leads") {
+		swal({
+			type: "info",
+			title: "Estado Bloqueado",
+			text: "El estado '" + nombreEstado + "' es un estado protegido del sistema y no puede ser eliminado.",
+			confirmButtonText: "Entendido"
+		});
+		return;
+	}
 
 	console.log("✓ Click en Eliminar Estado - ID:", idEstado, "Nombre:", nombreEstado);
 
