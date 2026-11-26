@@ -502,7 +502,38 @@ if ($venta["estado"] == "venta") {
         <?php if (!empty($venta["observacion"])): ?>
           <p class="lead" style="margin-top: 20px;">Observaciones:</p>
           <p class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
-            <?php echo $venta["observacion"]; ?>
+            <?php
+            $obsDet = $venta["observacion"];
+            $badgeMenuDet = '';
+            $badgeBoldDet = '';
+            if (
+                stripos($obsDet, 'Pago en Línea Bold') !== false ||
+                stripos($obsDet, 'Pago en Linea Bold') !== false ||
+                stripos($obsDet, 'Pago Bold') !== false ||
+                (isset($venta['metodo_pago']) && stripos($venta['metodo_pago'], 'Bold') !== false)
+            ) {
+                $badgeBoldDet = '<span class="badge" style="background-color: #2563eb; margin-right: 6px; font-size: 11px;"><i class="fa fa-credit-card"></i> Pago en Línea Bold</span> ';
+                $obsDet = str_ireplace(array(
+                    '[ - Pago en Línea Bold]',
+                    '[- Pago en Línea Bold]',
+                    '[ - Pago en Linea Bold]',
+                    '[- Pago en Linea Bold]',
+                    '- Pago en Línea Bold',
+                    '- Pago en Linea Bold',
+                    'Pago en Línea Bold',
+                    'Pago en Linea Bold',
+                    '[Pago en Línea Bold]',
+                    '[Pago en Linea Bold]'
+                ), '', $obsDet);
+            }
+            if (stripos($obsDet, '[Menú Digital]') !== false || stripos($obsDet, 'Menú Digital') !== false || stripos($obsDet, 'Menu Digital') !== false) {
+                $badgeMenuDet = '<span class="badge" style="background-color: #00a65a; margin-right: 6px; font-size: 11px;"><i class="fa fa-cutlery"></i> Menú Digital</span> ';
+                $obsDet = trim(str_ireplace(array('[Menú Digital]', 'Menú Digital', '[Menu Digital]', 'Menu Digital'), '', $obsDet));
+            }
+            $obsDet = str_ireplace(array('[ - ]', '[-]', '[]', '[ -', '[- '), '', $obsDet);
+            $obsDet = ltrim($obsDet, " \t\n\r\0\x0B|:-\\[\\]");
+            echo $badgeMenuDet . $badgeBoldDet . htmlspecialchars($obsDet);
+            ?>
           </p>
         <?php endif; ?>
 

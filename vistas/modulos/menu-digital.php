@@ -48,6 +48,10 @@ if ($baseDir == '/' || $baseDir == '\\') {
 }
 $urlMenuPublico = $protocolo . "://" . $host . $baseDir . "/index.php?ruta=menu";
 
+// Configuración y URL de webhook para Pasarela Bold
+$configBold = ControladorMenuDigital::ctrObtenerConfiguracionBold();
+$urlWebhookBold = $protocolo . "://" . $host . $baseDir . "/ajax/bold-webhook.php";
+
 // Generar QR Code localmente en base64 para carga instantánea y 100% offline
 $qrSrcInicial = "ajax/generar-qr.php?data=" . urlencode($urlMenuPublico);
 if (file_exists(__DIR__ . "/../../extensiones/tcpdf/pdf/phpqrcode/qrlib.php")) {
@@ -90,10 +94,20 @@ if (file_exists(__DIR__ . "/../../extensiones/tcpdf/pdf/phpqrcode/qrlib.php")) {
             <i class="fa fa-qrcode text-warning" style="margin-right: 6px;"></i> Enlace Público & Códigos QR
           </a>
         </li>
+        <li>
+          <a href="#tab_pagos_bold" data-toggle="tab" style="font-weight: 600; padding: 12px 20px;">
+            <i class="fa fa-credit-card text-success" style="margin-right: 6px;"></i> Pasarela de Pagos (Bold)
+          </a>
+        </li>
         <?php else: ?>
         <li class="disabled" style="cursor: not-allowed;" title="Permiso de creación requerido para acceder a esta pestaña">
           <a href="javascript:void(0);" style="font-weight: 600; padding: 12px 20px; color: #94a3b8; cursor: not-allowed; background: #f1f5f9;" onclick="return false;">
             <i class="fa fa-lock text-muted" style="margin-right: 6px;"></i> Enlace Público & Códigos QR
+          </a>
+        </li>
+        <li class="disabled" style="cursor: not-allowed;" title="Permiso de creación requerido para acceder a esta pestaña">
+          <a href="javascript:void(0);" style="font-weight: 600; padding: 12px 20px; color: #94a3b8; cursor: not-allowed; background: #f1f5f9;" onclick="return false;">
+            <i class="fa fa-lock text-muted" style="margin-right: 6px;"></i> Pasarela de Pagos (Bold)
           </a>
         </li>
         <?php endif; ?>
@@ -365,6 +379,162 @@ if (file_exists(__DIR__ . "/../../extensiones/tcpdf/pdf/phpqrcode/qrlib.php")) {
                 </div>
               </div>
 
+            </div>
+
+          </div>
+
+        </div>
+        <?php endif; ?>
+
+        <?php if ($puedeCrearMenu): ?>
+        <!--=====================================
+        PESTAÑA 3: PASARELA DE PAGOS (BOLD)
+        ======================================-->
+        <div class="tab-pane" id="tab_pagos_bold" style="padding-top: 10px;">
+          
+          <div class="row">
+            
+            <!-- Columna Izquierda: Instrucciones de Integración -->
+            <div class="col-md-6 col-xs-12">
+              <div class="box box-solid" style="border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <div class="box-header with-border" style="background: #f8fafc; border-top-left-radius: 8px; border-top-right-radius: 8px; padding: 14px 18px;">
+                  <h3 class="box-title" style="font-size: 16px; font-weight: 700; color: #1e293b;">
+                    <i class="fa fa-book text-primary" style="margin-right: 6px;"></i> Instrucciones de Vinculación con Bold
+                  </h3>
+                </div>
+                <div class="box-body" style="padding: 20px;">
+                  
+                  <div style="display: flex; gap: 14px; margin-bottom: 22px;">
+                    <div style="flex-shrink: 0; width: 32px; height: 32px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #2563eb; border: 1px solid #bfdbfe;">
+                      1
+                    </div>
+                    <div style="flex-grow: 1;">
+                      <p style="margin: 0 0 8px 0; font-size: 14px; color: #334155; font-weight: 600;">
+                        Ingresa a la plataforma Web de Bold:
+                      </p>
+                      <a href="https://panel.bold.co/misventas/integraciones/webhooks" target="_blank" rel="noopener noreferrer" class="btn btn-default" style="border-color: #cbd5e1; color: #2563eb; font-weight: 600; font-size: 13px;">
+                        <i class="fa fa-external-link" style="margin-right: 5px;"></i> Abrir panel.bold.co/misventas/integraciones/webhooks
+                      </a>
+                    </div>
+                  </div>
+
+                  <div style="display: flex; gap: 14px; margin-bottom: 22px;">
+                    <div style="flex-shrink: 0; width: 32px; height: 32px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #2563eb; border: 1px solid #bfdbfe;">
+                      2
+                    </div>
+                    <div style="flex-grow: 1;">
+                      <p style="margin: 0; font-size: 14px; color: #334155;">
+                        En el menú lateral de la plataforma de Bold, dirígete al módulo <strong>"Integraciones"</strong>.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style="display: flex; gap: 14px; margin-bottom: 22px;">
+                    <div style="flex-shrink: 0; width: 32px; height: 32px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #2563eb; border: 1px solid #bfdbfe;">
+                      3
+                    </div>
+                    <div style="flex-grow: 1;">
+                      <p style="margin: 0; font-size: 14px; color: #334155;">
+                        Haz clic en <strong>"Crea una nueva llave de integración"</strong> (o sección Botón de pagos).
+                      </p>
+                      <p style="margin: 6px 0 0 0; font-size: 13px; color: #64748b;">
+                        Obtendrás tu <strong>Llave de Identidad (API Key)</strong> y tu <strong>Llave Secreta (Secret Key)</strong>. Cópialas y pégalas en el formulario de la derecha.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style="display: flex; gap: 14px; margin-bottom: 10px;">
+                    <div style="flex-shrink: 0; width: 32px; height: 32px; background: #f0fdf4; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #16a34a; border: 1px solid #bbf7d0;">
+                      <i class="fa fa-bell-o"></i>
+                    </div>
+                    <div style="flex-grow: 1;">
+                      <p style="margin: 0 0 6px 0; font-size: 14px; color: #334155; font-weight: 600;">
+                        URL de Webhook para Notificaciones Automáticas:
+                      </p>
+                      <p style="margin: 0 0 8px 0; font-size: 12px; color: #64748b;">
+                        Registra esta URL en la sección de Webhooks de Bold para que el POS confirme y marque los pedidos automáticamente como pagados:
+                      </p>
+                      <div class="input-group">
+                        <input type="text" readonly class="form-control" id="urlWebhookBold" value="<?php echo htmlspecialchars($urlWebhookBold); ?>" style="background: #f8fafc; font-size: 12px; font-family: monospace;">
+                        <span class="input-group-btn">
+                          <button type="button" class="btn btn-default" id="btnCopiarWebhookBold" title="Copiar URL al portapapeles" style="font-weight: 600;">
+                            <i class="fa fa-copy"></i> Copiar
+                          </button>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Columna Derecha: Formulario y Activador -->
+            <div class="col-md-6 col-xs-12">
+              <div class="box box-solid" style="border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <div class="box-header with-border" style="background: #f8fafc; border-top-left-radius: 8px; border-top-right-radius: 8px; padding: 14px 18px;">
+                  <h3 class="box-title" style="font-size: 16px; font-weight: 700; color: #1e293b;">
+                    <i class="fa fa-sliders text-success" style="margin-right: 6px;"></i> Configuración de la Pasarela Bold
+                  </h3>
+                </div>
+                <div class="box-body" style="padding: 20px;">
+
+                  <!-- Switch Activador -->
+                  <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+                    <div>
+                      <h4 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #0f172a;">
+                        <i class="fa fa-credit-card text-success" style="margin-right: 6px;"></i> Activar Pagos en Línea
+                      </h4>
+                      <p style="margin: 0; font-size: 12px; color: #64748b;">
+                        Habilita la opción de pago con Bold (Tarjetas, PSE, Nequi) en el checkout del Menú Digital.
+                      </p>
+                    </div>
+                    <div>
+                      <label class="switch-menu" style="position: relative; display: inline-block; width: 48px; height: 24px; margin: 0;">
+                        <input type="checkbox" id="bold_activo" <?php echo (!empty($configBold['bold_activo']) && intval($configBold['bold_activo']) === 1 ? 'checked' : ''); ?>>
+                        <span class="slider-menu" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 24px;"></span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Campo Llave de Identidad -->
+                  <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="font-size: 13px; font-weight: 600; color: #334155;">
+                      <i class="fa fa-id-badge text-primary" style="margin-right: 4px;"></i> Llave de Identidad (API Key pública):
+                    </label>
+                    <input type="text" class="form-control input-lg" id="bold_api_key" value="<?php echo htmlspecialchars($configBold['bold_api_key'] ?? ''); ?>" placeholder="Ej: DZSkDqh2iWmpY123..." style="font-family: monospace; font-size: 14px; border-radius: 6px;">
+                    <p class="help-block" style="font-size: 12px; margin-top: 5px; color: #64748b;">
+                      <i class="fa fa-info-circle"></i> Identificador único de tu comercio provisto por Bold.
+                    </p>
+                  </div>
+
+                  <!-- Campo Llave Secreta -->
+                  <div class="form-group" style="margin-bottom: 25px;">
+                    <label style="font-size: 13px; font-weight: 600; color: #334155;">
+                      <i class="fa fa-lock text-danger" style="margin-right: 4px;"></i> Llave Secreta (Secret Key privada):
+                    </label>
+                    <div class="input-group">
+                      <input type="password" class="form-control input-lg" id="bold_secret_key" value="<?php echo htmlspecialchars($configBold['bold_secret_key'] ?? ''); ?>" placeholder="Pega tu Secret Key de Bold..." style="font-family: monospace; font-size: 14px; border-radius: 6px 0 0 6px;">
+                      <span class="input-group-btn">
+                        <button type="button" class="btn btn-default btn-lg" id="btnToggleSecretKeyBold" style="border-radius: 0 6px 6px 0;" title="Mostrar / Ocultar">
+                          <i class="fa fa-eye"></i>
+                        </button>
+                      </span>
+                    </div>
+                    <p class="help-block" style="font-size: 12px; margin-top: 5px; color: #64748b;">
+                      <i class="fa fa-shield text-success"></i> Se utiliza de forma 100% segura en el servidor para generar la firma de integridad SHA-256.
+                    </p>
+                  </div>
+
+                  <!-- Botón Guardar -->
+                  <div>
+                    <button type="button" class="btn btn-success btn-lg btn-block" id="btnGuardarConfigBold" style="font-weight: 700; font-size: 15px; border-radius: 6px; padding: 12px;">
+                      <i class="fa fa-save" style="margin-right: 6px;"></i> Guardar Configuración de Bold
+                    </button>
+                  </div>
+
+                </div>
+              </div>
             </div>
 
           </div>

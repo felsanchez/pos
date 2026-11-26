@@ -131,6 +131,33 @@ class ModeloWhatsAppChats {
                 $db->exec("ALTER TABLE `whatsapp_chats` MODIFY `telefono` VARCHAR(100) NOT NULL");
             } catch (Exception $e) {}
 
+            // Tabla de Configuración de WhatsApp / WaFloW
+            $db->exec("
+                CREATE TABLE IF NOT EXISTS `whatsapp_configuracion` (
+                    `id` INT(11) NOT NULL AUTO_INCREMENT,
+                    `api_key` VARCHAR(255) NULL,
+                    `agency_id` VARCHAR(100) NULL,
+                    `location_id` VARCHAR(100) NULL,
+                    `slot_id` INT(11) NOT NULL DEFAULT 1,
+                    `api_url` VARCHAR(255) NOT NULL DEFAULT 'https://wa.waflow.ai/agency/n8n/send-message',
+                    `telefono_conectado` VARCHAR(50) NULL,
+                    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    PRIMARY KEY (`id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+
+            // Registro inicial si la tabla está vacía
+            try {
+                $stmtCheck = $db->query("SELECT COUNT(*) as c FROM whatsapp_configuracion");
+                $hayConf = $stmtCheck ? intval($stmtCheck->fetch(PDO::FETCH_ASSOC)['c']) : 0;
+                if ($hayConf === 0) {
+                    $db->exec("
+                        INSERT INTO whatsapp_configuracion (id, api_key, agency_id, location_id, slot_id, api_url, telefono_conectado)
+                        VALUES (1, 'wf_node_73ddd265bbaa3603ef6fe56e8f8401f033902f2e10e49866', 'AG-1793500451718', 'loc_e1033bf5-06be-40b1-9a36-8b60e9d3165b', 1, 'https://wa.waflow.ai/agency/n8n/send-message', '573013142899')
+                    ");
+                }
+            } catch (Exception $e) {}
+
             if (session_status() === PHP_SESSION_ACTIVE) {
                 $_SESSION['wa_tablas_creadas'] = true;
             }
@@ -560,5 +587,107 @@ class ModeloWhatsAppChats {
         $stmt = $db->query("SELECT SUM(no_leidos) as total FROM whatsapp_chats WHERE estado = 'activo'");
         $res = $stmt->fetch(PDO::FETCH_ASSOC);
         return intval($res['total'] ?? 0);
+    }
+
+    /*=============================================
+    OBTENER CONFIGURACIÓN WAFLOW / WHATSAPP
+    =============================================*/
+    static public function mdlObtenerConfiguracion() {
+        try {
+            $db = Conexion::conectar();
+            // Asegurar que la tabla exista siempre
+            $db->exec("
+                CREATE TABLE IF NOT EXISTS `whatsapp_configuracion` (
+                    `id` INT(11) NOT NULL AUTO_INCREMENT,
+                    `api_key` VARCHAR(255) NULL,
+                    `agency_id` VARCHAR(100) NULL,
+                    `location_id` VARCHAR(100) NULL,
+                    `slot_id` INT(11) NOT NULL DEFAULT 1,
+                    `api_url` VARCHAR(255) NOT NULL DEFAULT 'https://wa.waflow.ai/agency/n8n/send-message',
+                    `telefono_conectado` VARCHAR(50) NULL,
+                    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    PRIMARY KEY (`id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+
+            $stmt = $db->query("SELECT * FROM whatsapp_configuracion WHERE id = 1 LIMIT 1");
+            $config = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : null;
+            if ($config) {
+                return $config;
+            }
+        } catch (Throwable $e) {}
+
+        // Fallback a valores por defecto
+        return [
+            "id" => 1,
+            "api_key" => defined('WAFLOW_API_KEY') ? WAFLOW_API_KEY : 'wf_node_73ddd265bbaa3603ef6fe56e8f8401f033902f2e10e49866',
+            "agency_id" => defined('WAFLOW_AGENCY_ID') ? WAFLOW_AGENCY_ID : 'AG-1793500451718',
+            "location_id" => defined('WAFLOW_LOCATION_ID') ? WAFLOW_LOCATION_ID : 'loc_e1033bf5-06be-40b1-9a36-8b60e9d3165b',
+            "slot_id" => defined('WAFLOW_SLOT_ID') ? WAFLOW_SLOT_ID : 1,
+            "api_url" => defined('WAFLOW_API_URL') ? WAFLOW_API_URL : 'https://wa.waflow.ai/agency/n8n/send-message',
+            "telefono_conectado" => '573013142899'
+        ];
+    }
+
+    /*=============================================
+    GUARDAR / ACTUALIZAR CONFIGURACIÓN WAFLOW
+    =============================================*/
+    static public function mdlGuardarConfiguracion($datos) {
+        try {
+            $db = Conexion::conectar();
+
+            // Asegurar que la tabla exista siempre
+            $db->exec("
+                CREATE TABLE IF NOT EXISTS `whatsapp_configuracion` (
+                    `id` INT(11) NOT NULL AUTO_INCREMENT,
+                    `api_key` VARCHAR(255) NULL,
+                    `agency_id` VARCHAR(100) NULL,
+                    `location_id` VARCHAR(100) NULL,
+                    `slot_id` INT(11) NOT NULL DEFAULT 1,
+                    `api_url` VARCHAR(255) NOT NULL DEFAULT 'https://wa.waflow.ai/agency/n8n/send-message',
+                    `telefono_conectado` VARCHAR(50) NULL,
+                    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    PRIMARY KEY (`id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+
+            // Verificar si existe la fila 1
+            $stmtCheck = $db->query("SELECT id FROM whatsapp_configuracion WHERE id = 1 LIMIT 1");
+            $existe = $stmtCheck ? $stmtCheck->fetch(PDO::FETCH_ASSOC) : false;
+
+            if ($existe) {
+                $stmt = $db->prepare("
+                    UPDATE whatsapp_configuracion 
+                    SET api_key = :api_key,
+                        agency_id = :agency_id,
+                        location_id = :location_id,
+                        slot_id = :slot_id,
+                        api_url = :api_url,
+                        telefono_conectado = :telefono_conectado
+                    WHERE id = 1
+                ");
+            } else {
+                $stmt = $db->prepare("
+                    INSERT INTO whatsapp_configuracion (id, api_key, agency_id, location_id, slot_id, api_url, telefono_conectado)
+                    VALUES (1, :api_key, :agency_id, :location_id, :slot_id, :api_url, :telefono_conectado)
+                ");
+            }
+
+            $stmt->bindParam(":api_key", $datos["api_key"], PDO::PARAM_STR);
+            $stmt->bindParam(":agency_id", $datos["agency_id"], PDO::PARAM_STR);
+            $stmt->bindParam(":location_id", $datos["location_id"], PDO::PARAM_STR);
+            $stmt->bindParam(":slot_id", $datos["slot_id"], PDO::PARAM_INT);
+            $stmt->bindParam(":api_url", $datos["api_url"], PDO::PARAM_STR);
+            $stmt->bindParam(":telefono_conectado", $datos["telefono_conectado"], PDO::PARAM_STR);
+
+            if ($stmt->execute()) {
+                return ["success" => true];
+            } else {
+                $err = $stmt->errorInfo();
+                return ["success" => false, "error" => "Error SQL: " . ($err[2] ?? 'Error al ejecutar consulta.')];
+            }
+        } catch (Throwable $e) {
+            return ["success" => false, "error" => "Excepción BD: " . $e->getMessage()];
+        }
     }
 }

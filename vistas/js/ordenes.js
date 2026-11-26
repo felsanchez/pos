@@ -145,14 +145,14 @@ $(document).ready(function () {
 								var idOrden = $(rowNode).attr('data-orden-id') || "";
 								var celdaOriginal = $(rowNode).find('.celda-observacion, .celda-observacion-disabled');
 								var esEditable = celdaOriginal.hasClass('celda-observacion') && celdaOriginal.attr('contenteditable') === 'true';
-								var observacionText = celdaOriginal.text().trim();
-								if (observacionText === "Sin observación") observacionText = "";
+								var observacionHtml = celdaOriginal.html() ? celdaOriginal.html().trim() : "";
+								if (celdaOriginal.text().trim() === "Sin observación") observacionHtml = "";
 
 								if (esEditable) {
 									var placeholderAttr = ' data-placeholder="Escribe una observación..."';
-									finalHtml += '<div contenteditable="true" class="celda-observacion" data-id="' + idOrden + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + observacionText + '</div>';
+									finalHtml += '<div contenteditable="true" class="celda-observacion" data-id="' + idOrden + '"' + placeholderAttr + ' style="width:100%; outline:none; display:block; border:1px dashed #ccc; padding:8px; background:#fff9e6; margin-top:5px;">' + observacionHtml + '</div>';
 								} else {
-									finalHtml += '<div contenteditable="false" class="celda-observacion-disabled" data-id="' + idOrden + '" title="Permiso de edición requerido" style="width:100%; display:block; border:1px solid #e2e8f0; border-radius:4px; padding:8px; background:#f8fafc; color:#64748b; margin-top:5px; cursor:not-allowed; opacity:0.85;">' + (observacionText || '<span class="text-muted" style="font-style:italic;">Sin observación</span>') + '</div>';
+									finalHtml += '<div contenteditable="false" class="celda-observacion-disabled" data-id="' + idOrden + '" title="Permiso de edición requerido" style="width:100%; display:block; border:1px solid #e2e8f0; border-radius:4px; padding:8px; background:#f8fafc; color:#64748b; margin-top:5px; cursor:not-allowed; opacity:0.85;">' + (observacionHtml || '<span class="text-muted" style="font-style:italic;">Sin observación</span>') + '</div>';
 								}
 							} else {
 								finalHtml += '<span style="color:#333;">' + col.data + '</span>';

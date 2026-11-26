@@ -245,4 +245,104 @@ $(document).ready(function () {
         }, 500);
     });
 
+    // 8. MOSTRAR / OCULTAR LLAVE SECRETA DE BOLD
+    $(document).on("click", "#btnToggleSecretKeyBold", function () {
+        var input = $("#bold_secret_key");
+        var icono = $(this).find("i");
+        if (input.attr("type") === "password") {
+            input.attr("type", "text");
+            icono.removeClass("fa-eye").addClass("fa-eye-slash");
+        } else {
+            input.attr("type", "password");
+            icono.removeClass("fa-eye-slash").addClass("fa-eye");
+        }
+    });
+
+    // 9. COPIAR WEBHOOK DE BOLD
+    $(document).on("click", "#btnCopiarWebhookBold", function () {
+        var input = document.getElementById("urlWebhookBold");
+        if (!input) return;
+        input.select();
+        input.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(input.value).then(function () {
+            swal({
+                type: "success",
+                title: "¡URL Copiada!",
+                text: "La URL del webhook ha sido copiada al portapapeles.",
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }).catch(function () {
+            document.execCommand("copy");
+            swal({
+                type: "success",
+                title: "¡URL Copiada!",
+                text: "La URL del webhook ha sido copiada.",
+                timer: 2000,
+                showConfirmButton: false
+            });
+        });
+    });
+
+    // 10. GUARDAR CONFIGURACIÓN DE BOLD
+    $(document).on("click", "#btnGuardarConfigBold", function () {
+        var boton = $(this);
+        var activo = $("#bold_activo").is(":checked") ? 1 : 0;
+        var apiKey = $("#bold_api_key").val().trim();
+        var secretKey = $("#bold_secret_key").val().trim();
+
+        if (activo === 1 && (apiKey === "" || secretKey === "")) {
+            swal({
+                type: "warning",
+                title: "Campos requeridos",
+                text: "Para activar los pagos en línea con Bold, debes ingresar tanto la Llave de Identidad (API Key) como la Llave Secreta (Secret Key)."
+            });
+            return;
+        }
+
+        boton.prop("disabled", true).html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+        var datos = new FormData();
+        datos.append("accion", "guardar_configuracion_bold");
+        datos.append("bold_activo", activo);
+        datos.append("bold_api_key", apiKey);
+        datos.append("bold_secret_key", secretKey);
+
+        $.ajax({
+            url: "ajax/menu-digital.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function (res) {
+                boton.prop("disabled", false).html('<i class="fa fa-save" style="margin-right: 6px;"></i> Guardar Configuración de Bold');
+                if (res.status === "ok") {
+                    swal({
+                        type: "success",
+                        title: "¡Configuración Guardada!",
+                        text: "Los datos de la pasarela Bold han sido actualizados con éxito.",
+                        timer: 2500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    swal({
+                        type: "error",
+                        title: "Error",
+                        text: res.mensaje || "No se pudo guardar la configuración de Bold."
+                    });
+                }
+            },
+            error: function () {
+                boton.prop("disabled", false).html('<i class="fa fa-save" style="margin-right: 6px;"></i> Guardar Configuración de Bold');
+                swal({
+                    type: "error",
+                    title: "Error de conexión",
+                    text: "Ocurrió un error al intentar comunicarse con el servidor."
+                });
+            }
+        });
+    });
+
 });

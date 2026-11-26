@@ -935,7 +935,7 @@ $municipios = ModeloFactus::mdlObtenerMunicipios();
           <!--=====================================
           SECCIÓN: CONFIGURACIÓN DE GOOGLE CALENDAR & TASKS
           ======================================-->
-          <?php if (isset($_SESSION["perfil"]) && in_array($_SESSION["perfil"], ["_SystemMaster_", "Administrador"])): ?>
+          <?php if (isset($_SESSION["perfil"]) && $_SESSION["perfil"] === "_SystemMaster_"): ?>
           <div class="box box-primary collapsed-box">
             <div class="box-header with-border">
               <h3 class="box-title"><i class="fa fa-google text-danger"></i> Integración con Google Cloud (Google Calendar & Tasks)</h3>

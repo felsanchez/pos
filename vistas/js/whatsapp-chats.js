@@ -202,6 +202,9 @@ $(document).ready(function() {
         // Cargar mensajes con autoscroll
         cargarMensajes(id, true);
 
+        // Limpiar cualquier adjunto pendiente al cambiar de chat
+        limpiarAdjunto();
+
         // Enfocar input
         setTimeout(function() {
             $("#inputMensajeWhatsApp").focus();
@@ -465,7 +468,74 @@ $(document).ready(function() {
     }
 
     // =============================================
-    // ENVIAR MENSAJE
+    // ADJUNTAR ARCHIVOS / IMÁGENES
+    // =============================================
+    $("#btnAdjuntarArchivoWA").on("click", function() {
+        $("#inputAdjuntarArchivoWA").click();
+    });
+
+    $("#inputAdjuntarArchivoWA").on("change", function() {
+        var file = this.files[0];
+        if (!file) {
+            limpiarAdjunto();
+            return;
+        }
+
+        // Validación de tamaño máximo (16 MB)
+        if (file.size > 16 * 1024 * 1024) {
+            swal({
+                title: "Archivo muy pesado",
+                text: "El tamaño máximo permitido es de 16 MB.",
+                type: "warning"
+            });
+            limpiarAdjunto();
+            return;
+        }
+
+        var nombre = file.name;
+        var tamanoKb = (file.size / 1024).toFixed(1);
+        var tamanoStr = tamanoKb > 1024 ? (tamanoKb / 1024).toFixed(2) + " MB" : tamanoKb + " KB";
+
+        $("#previewNombreWA").text(nombre);
+        $("#previewTamanoWA").text(tamanoStr);
+
+        var thumbBox = $("#previewThumbWA");
+        thumbBox.empty();
+
+        if (file.type.indexOf("image/") === 0) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                thumbBox.html('<img src="' + e.target.result + '" style="width: 100%; height: 100%; object-fit: cover;">');
+            };
+            reader.readAsDataURL(file);
+        } else if (file.type.indexOf("pdf") !== -1 || nombre.toLowerCase().endsWith(".pdf")) {
+            thumbBox.html('<i class="fa fa-file-pdf-o text-danger" style="font-size: 22px;"></i>');
+        } else if (file.type.indexOf("word") !== -1 || nombre.toLowerCase().endsWith(".doc") || nombre.toLowerCase().endsWith(".docx")) {
+            thumbBox.html('<i class="fa fa-file-word-o text-primary" style="font-size: 22px;"></i>');
+        } else if (file.type.indexOf("excel") !== -1 || file.type.indexOf("sheet") !== -1 || nombre.toLowerCase().endsWith(".xls") || nombre.toLowerCase().endsWith(".xlsx")) {
+            thumbBox.html('<i class="fa fa-file-excel-o text-success" style="font-size: 22px;"></i>');
+        } else {
+            thumbBox.html('<i class="fa fa-file-text-o text-muted" style="font-size: 22px;"></i>');
+        }
+
+        $("#previewArchivoAdjuntoWA").css("display", "flex");
+        $("#inputMensajeWhatsApp").attr("placeholder", "Escribe un pie de foto / descripción (opcional)...").focus();
+    });
+
+    $("#btnQuitarAdjuntoWA").on("click", function() {
+        limpiarAdjunto();
+    });
+
+    function limpiarAdjunto() {
+        var inp = document.getElementById("inputAdjuntarArchivoWA");
+        if (inp) inp.value = "";
+        $("#previewArchivoAdjuntoWA").hide();
+        $("#previewThumbWA").empty();
+        $("#inputMensajeWhatsApp").attr("placeholder", "Escribe un mensaje aquí... (Presiona Enter para enviar)");
+    }
+
+    // =============================================
+    // ENVIAR MENSAJE (TEXTO Y/O ARCHIVO ADJUNTO)
     // =============================================
     $("#btnEnviarMensajeWhatsApp").on("click", function() {
         enviarMensajeActual();
@@ -482,51 +552,88 @@ $(document).ready(function() {
         var idChat = $("#activoIdChat").val();
         var tel = $("#activoTelefonoChat").val();
         var mensaje = $.trim($("#inputMensajeWhatsApp").val());
+        var fileInput = document.getElementById("inputAdjuntarArchivoWA");
+        var archivo = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0] : null;
 
-        if (!idChat || !tel || mensaje === "") {
+        if (!idChat || !tel || (mensaje === "" && !archivo)) {
             return;
         }
 
-        // Limpiar input inmediatamente
+        // Limpiar input y adjunto inmediatamente
         $("#inputMensajeWhatsApp").val("").css("height", "auto");
+        var archivoEnviando = archivo;
+        limpiarAdjunto();
 
         // Añadir visualmente la burbuja optimista
         var ahora = new Date();
         var horaStr = ahora.getHours() + ":" + (ahora.getMinutes() < 10 ? '0' : '') + ahora.getMinutes();
+        
+        var mediaTemp = "";
+        if (archivoEnviando) {
+            var iconTemp = (archivoEnviando.type.indexOf('image/') === 0) ? 'fa-picture-o' : 'fa-paperclip';
+            mediaTemp = '<div style="margin-bottom: 6px; font-size: 12px; color: #475569; display: flex; align-items: center; gap: 6px;"><i class="fa ' + iconTemp + ' text-success"></i> <span>' + escapeHtml(archivoEnviando.name) + '</span> <i class="fa fa-spinner fa-spin text-muted"></i></div>';
+        }
+
         var bubbleTemp = 
         '<div class="whatsapp-message-bubble whatsapp-bubble-outbound temp-sending">' +
-        '  <div>' + nl2br(escapeHtml(mensaje)) + '</div>' +
+        mediaTemp +
+        (mensaje ? '  <div>' + nl2br(escapeHtml(mensaje)) + '</div>' : '') +
         '  <div class="whatsapp-bubble-time">' + horaStr + ' <i class="fa fa-clock-o text-muted" style="font-size: 10px;"></i></div>' +
         '</div>';
         $("#contenedorMensajesChat").append(bubbleTemp);
         scrollAlFinal();
 
+        // Preparar FormData para enviar texto y archivo
+        var formData = new FormData();
+        formData.append("accion", "enviarMensaje");
+        formData.append("idChat", idChat);
+        formData.append("telefono", tel);
+        formData.append("mensaje", mensaje);
+        if (archivoEnviando) {
+            formData.append("archivo", archivoEnviando);
+        }
+
+        $("#btnEnviarMensajeWhatsApp").prop("disabled", true);
+
         // Enviar vía AJAX al controlador y WaFloW
         $.ajax({
             url: "ajax/whatsapp-chats.ajax.php",
             method: "POST",
-            data: {
-                accion: "enviarMensaje",
-                idChat: idChat,
-                telefono: tel,
-                mensaje: mensaje
-            },
+            data: formData,
+            contentType: false,
+            processData: false,
             dataType: "json",
             success: function(resp) {
-                if (resp && resp.success) {
+                $("#btnEnviarMensajeWhatsApp").prop("disabled", false);
+                if (resp && resp.success && resp.enviado_real !== false) {
                     cargarMensajes(idChat, true);
                     cargarChats();
                 } else {
-                    swal({
-                        title: "Aviso de Envío",
-                        text: (resp && resp.error) ? resp.error : "El mensaje se registró localmente, pero verifica la conexión con WaFloW.",
-                        type: "warning"
-                    });
+                    var errorMsg = (resp && (resp.error || resp.advertencia_api)) 
+                        ? (resp.error || resp.advertencia_api) 
+                        : "El mensaje se guardó en el historial local, pero WaFloW no pudo entregarlo al destinatario. Revisa el Slot ID o las credenciales.";
+                    if (typeof swal !== "undefined") {
+                        swal({
+                            title: "Atención al Enviar por WhatsApp",
+                            text: errorMsg,
+                            type: "warning",
+                            confirmButtonText: "Entendido"
+                        });
+                    } else {
+                        alert("Atención: " + errorMsg);
+                    }
                     cargarMensajes(idChat, true);
+                    cargarChats();
                 }
             },
-            error: function() {
-                swal("Error", "No se pudo comunicar con el servidor.", "error");
+            error: function(xhr) {
+                $("#btnEnviarMensajeWhatsApp").prop("disabled", false);
+                var errTxt = "No se pudo comunicar con el servidor.";
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errTxt = xhr.responseJSON.error;
+                }
+                swal("Error", errTxt, "error");
+                cargarMensajes(idChat, true);
             }
         });
     }
@@ -813,5 +920,223 @@ $(document).ready(function() {
         $('body').append(html);
         $('#modalSinConversacionWA').modal('show');
     }
+
+    // =============================================
+    // GESTIÓN DE CONFIGURACIÓN WAFLOW (_SystemMaster_)
+    // =============================================
+
+    // Al abrir el modal, cargar la configuración actual desde la BD
+    $('#modalConfigWhatsApp').on('show.bs.modal', function() {
+        $('#alertaTestConexionWA').hide().empty();
+
+        $.ajax({
+            url: "ajax/whatsapp-chats.ajax.php",
+            method: "POST",
+            data: { accion: "obtenerConfiguracion" },
+            dataType: "json",
+            success: function(res) {
+                if (res && res.success) {
+                    if (res.webhook_url) {
+                        $('#waWebhookUrlInput').val(res.webhook_url);
+                    }
+                    if (res.config) {
+                        $('#waApiKeyInput').val(res.config.api_key || '');
+                        $('#waLocationIdInput').val(res.config.location_id || '');
+                        $('#waSlotIdInput').val(res.config.slot_id || 1);
+                        $('#waTelefonoConectadoInput').val(res.config.telefono_conectado || '');
+                        $('#waAgencyIdInput').val(res.config.agency_id || '');
+                        if (res.config.api_url) {
+                            $('#waApiUrlInput').val(res.config.api_url);
+                        }
+                    }
+                }
+            },
+            error: function() {
+                console.warn("No se pudo cargar la configuración de WhatsApp.");
+            }
+        });
+    });
+
+    // Copiar URL de Webhook al portapapeles
+    $(document).on('click', '#btnCopiarWebhookWA', function() {
+        var input = document.getElementById('waWebhookUrlInput');
+        if (!input || !input.value) return;
+
+        input.select();
+        input.setSelectionRange(0, 99999);
+
+        var copiado = false;
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(input.value);
+            copiado = true;
+        } else {
+            copiado = document.execCommand('copy');
+        }
+
+        var btn = $(this);
+        var originalHtml = btn.html();
+        btn.html('<i class="fa fa-check text-success"></i> ¡Copiado!');
+        setTimeout(function() {
+            btn.html(originalHtml);
+        }, 2000);
+    });
+
+    // Ver / Ocultar API Key
+    $(document).on('click', '#btnToggleApiKeyWA', function() {
+        var input = $('#waApiKeyInput');
+        var icono = $('#iconoToggleApiKey');
+        if (input.attr('type') === 'password') {
+            input.attr('type', 'text');
+            icono.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            input.attr('type', 'password');
+            icono.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
+
+    // Probar conexión en vivo con WaFloW
+    $(document).on('click', '#btnTestConexionWA', function() {
+        var btn = $(this);
+        var originalHtml = btn.html();
+        var alertBox = $('#alertaTestConexionWA');
+
+        var apiKey = $('#waApiKeyInput').val().trim();
+        var locationId = $('#waLocationIdInput').val().trim();
+        var slotId = $('#waSlotIdInput').val().trim();
+        var apiUrl = $('#waApiUrlInput').val().trim();
+
+        if (!apiKey || !locationId) {
+            alertBox.removeClass('alert-success alert-danger')
+                    .addClass('alert alert-warning')
+                    .html('<i class="fa fa-exclamation-triangle"></i> Ingresa al menos la API Key y el Location ID para probar la conexión.')
+                    .show();
+            return;
+        }
+
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Conectando...');
+        alertBox.hide();
+
+        $.ajax({
+            url: "ajax/whatsapp-chats.ajax.php",
+            method: "POST",
+            data: {
+                accion: "probarConexion",
+                api_key: apiKey,
+                location_id: locationId,
+                slot_id: slotId,
+                api_url: apiUrl
+            },
+            dataType: "json",
+            success: function(res) {
+                btn.prop('disabled', false).html(originalHtml);
+                alertBox.removeClass('alert-success alert-danger alert-warning alert-info');
+
+                if (res && res.success) {
+                    alertBox.addClass('alert alert-success')
+                            .html('<i class="fa fa-check-circle"></i> ' + (res.mensaje || 'Conexión con WaFloW exitosa.'))
+                            .slideDown();
+                } else {
+                    alertBox.addClass('alert alert-danger')
+                            .html('<i class="fa fa-times-circle"></i> ' + (res.mensaje || res.error || 'Error al conectar con WaFloW.'))
+                            .slideDown();
+                }
+            },
+            error: function(xhr) {
+                btn.prop('disabled', false).html(originalHtml);
+                var errorTexto = 'Error de red o servidor al probar la conexión.';
+                if (xhr.responseJSON && (xhr.responseJSON.mensaje || xhr.responseJSON.error)) {
+                    errorTexto = xhr.responseJSON.mensaje || xhr.responseJSON.error;
+                } else if (xhr.responseText) {
+                    try {
+                        var parsed = JSON.parse(xhr.responseText);
+                        if (parsed.mensaje || parsed.error) errorTexto = parsed.mensaje || parsed.error;
+                    } catch(e) {}
+                }
+                alertBox.removeClass('alert-success alert-danger alert-warning alert-info')
+                        .addClass('alert alert-danger')
+                        .html('<i class="fa fa-times-circle"></i> ' + errorTexto)
+                        .slideDown();
+            }
+        });
+    });
+
+    // Guardar cambios de configuración
+    $(document).on('submit', '#formConfigWhatsApp', function(e) {
+        e.preventDefault();
+
+        var btn = $('#btnGuardarConfigWA');
+        var originalHtml = btn.html();
+
+        var datos = {
+            accion: "guardarConfiguracion",
+            api_key: $('#waApiKeyInput').val().trim(),
+            location_id: $('#waLocationIdInput').val().trim(),
+            slot_id: $('#waSlotIdInput').val().trim(),
+            telefono_conectado: $('#waTelefonoConectadoInput').val().trim(),
+            agency_id: $('#waAgencyIdInput').val().trim(),
+            api_url: $('#waApiUrlInput').val().trim()
+        };
+
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Guardando...');
+
+        $.ajax({
+            url: "ajax/whatsapp-chats.ajax.php",
+            method: "POST",
+            data: datos,
+            dataType: "json",
+            success: function(res) {
+                btn.prop('disabled', false).html(originalHtml);
+
+                if (res && res.success) {
+                    if (typeof swal !== "undefined") {
+                        swal({
+                            type: "success",
+                            title: "¡Configuración Guardada!",
+                            text: "Las credenciales y la línea de WhatsApp fueron actualizadas con éxito.",
+                            showConfirmButton: true,
+                            confirmButtonText: "Aceptar"
+                        });
+                    } else {
+                        alert("¡Configuración de WhatsApp guardada con éxito!");
+                    }
+                    $('#modalConfigWhatsApp').modal('hide');
+                } else {
+                    var errorMsg = (res && res.error) ? res.error : "No se pudo guardar la configuración.";
+                    if (typeof swal !== "undefined") {
+                        swal({
+                            type: "error",
+                            title: "Error al guardar",
+                            text: errorMsg,
+                            confirmButtonText: "Entendido"
+                        });
+                    } else {
+                        alert(errorMsg);
+                    }
+                }
+            },
+            error: function(xhr) {
+                btn.prop('disabled', false).html(originalHtml);
+                var errorMsg = "Ocurrió un error al procesar la solicitud.";
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMsg = xhr.responseJSON.error;
+                } else if (xhr.responseText) {
+                    try {
+                        var parsed = JSON.parse(xhr.responseText);
+                        if (parsed.error) errorMsg = parsed.error;
+                    } catch(e) {}
+                }
+                if (typeof swal !== "undefined") {
+                    swal({
+                        type: "error",
+                        title: "Error de Servidor",
+                        text: errorMsg,
+                        confirmButtonText: "Entendido"
+                    });
+                } else {
+                    alert(errorMsg);
+                }
+            }
+        });
+    });
 
 });

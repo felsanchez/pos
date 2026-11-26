@@ -79,10 +79,29 @@ else if (isset($_POST["accion"]) && $_POST["accion"] == "procesar_pedido") {
         "direccion" => $_POST["direccion"] ?? "",
         "notas" => $_POST["notas"] ?? "",
         "mesa" => $_POST["mesa"] ?? "",
+        "metodo_pago" => $_POST["metodo_pago"] ?? "efectivo",
         "productos" => $productosArr
     ];
 
     $pedido = new AjaxMenuDigital();
     $pedido->datosPedido = $datos;
     $pedido->ajaxProcesarPedido();
+}
+
+// 4. GUARDAR CONFIGURACIÓN BOLD
+else if (isset($_POST["accion"]) && $_POST["accion"] == "guardar_configuracion_bold") {
+    require_once "../modelos/helpers.php";
+    if (!puedeAccion('menu_digital', 'crear')) {
+        echo json_encode(["status" => "error", "mensaje" => "No tiene permisos para modificar la configuración de pagos."]);
+        exit;
+    }
+
+    $datos = [
+        "bold_activo" => isset($_POST["bold_activo"]) ? intval($_POST["bold_activo"]) : 0,
+        "bold_api_key" => isset($_POST["bold_api_key"]) ? trim($_POST["bold_api_key"]) : "",
+        "bold_secret_key" => isset($_POST["bold_secret_key"]) ? trim($_POST["bold_secret_key"]) : ""
+    ];
+
+    $respuesta = ControladorMenuDigital::ctrActualizarConfiguracionBold($datos);
+    echo json_encode(["status" => $respuesta]);
 }

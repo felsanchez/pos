@@ -149,8 +149,8 @@ class ControladorConfiguracion
 				"mensaje_recibido" => isset($_POST["mensajeRecibido"]) ? $_POST["mensajeRecibido"] : "",
 				"mensaje_procesado" => isset($_POST["mensajeProcesado"]) ? $_POST["mensajeProcesado"] : "",
 				"mensaje_confirmado" => isset($_POST["mensajeConfirmado"]) ? $_POST["mensajeConfirmado"] : "",
-				"google_client_id" => isset($_POST["googleClientId"]) ? trim($_POST["googleClientId"]) : ($configuracion["google_client_id"] ?? null),
-				"google_client_secret" => isset($_POST["googleClientSecret"]) ? trim($_POST["googleClientSecret"]) : ($configuracion["google_client_secret"] ?? null)
+				"google_client_id" => (isset($_SESSION["perfil"]) && $_SESSION["perfil"] === "_SystemMaster_" && isset($_POST["googleClientId"])) ? trim($_POST["googleClientId"]) : ($configuracion["google_client_id"] ?? null),
+				"google_client_secret" => (isset($_SESSION["perfil"]) && $_SESSION["perfil"] === "_SystemMaster_" && isset($_POST["googleClientSecret"])) ? trim($_POST["googleClientSecret"]) : ($configuracion["google_client_secret"] ?? null)
 			);
 
 			/*=============================================

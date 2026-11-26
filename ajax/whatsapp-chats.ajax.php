@@ -1,7 +1,17 @@
 <?php
 
 ob_start();
-session_start();
+
+// Iniciar sesión con SessionManager (el sistema usa sesiones personalizadas con cookie POS_SESSION)
+if (file_exists("../modelos/session-manager.php")) {
+    require_once "../modelos/session-manager.php";
+    SessionManager::startSecure();
+} else {
+    session_name('POS_SESSION');
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+}
 
 require_once "../controladores/whatsapp-chats.controlador.php";
 require_once "../modelos/whatsapp-chats.modelo.php";
@@ -13,6 +23,7 @@ class AjaxWhatsAppChats {
     public $nombre;
     public $mensaje;
     public $busqueda;
+    public $archivo;
 
     /*=============================================
     OBTENER LISTA DE CHATS
@@ -75,10 +86,12 @@ class AjaxWhatsAppChats {
         ob_clean();
         header('Content-Type: application/json; charset=utf-8');
         try {
+            $archivo = $_FILES["archivo"] ?? $this->archivo ?? null;
             $respuesta = ControladorWhatsAppChats::ctrEnviarMensaje(
                 $this->idChat,
                 $this->telefono,
-                $this->mensaje
+                $this->mensaje,
+                $archivo
             );
             echo json_encode($respuesta);
         } catch (Throwable $e) {
@@ -131,6 +144,78 @@ class AjaxWhatsAppChats {
         }
         exit();
     }
+
+    /*=============================================
+    OBTENER CONFIGURACIÓN (SOLO _SystemMaster_)
+    =============================================*/
+    public function ajaxObtenerConfiguracion() {
+        ob_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        if (!isset($_SESSION["perfil"]) || $_SESSION["perfil"] !== "_SystemMaster_") {
+            echo json_encode(["success" => false, "error" => "Acceso restringido a _SystemMaster_."]);
+            exit();
+        }
+
+        try {
+            $config = ControladorWhatsAppChats::ctrObtenerConfiguracion();
+
+            // Calcular URL pública del webhook
+            $protocolo = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || 
+                         (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $baseDir = rtrim(dirname(dirname($_SERVER['SCRIPT_NAME'])), '/\\');
+            $webhookUrl = $protocolo . '://' . $host . ($baseDir !== '' ? $baseDir : '') . '/api/whatsapp/webhook.php';
+
+            echo json_encode([
+                "success" => true,
+                "config" => $config,
+                "webhook_url" => $webhookUrl
+            ]);
+        } catch (Throwable $e) {
+            echo json_encode(["success" => false, "error" => $e->getMessage()]);
+        }
+        exit();
+    }
+
+    /*=============================================
+    GUARDAR CONFIGURACIÓN (SOLO _SystemMaster_)
+    =============================================*/
+    public function ajaxGuardarConfiguracion() {
+        ob_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        if (!isset($_SESSION["perfil"]) || $_SESSION["perfil"] !== "_SystemMaster_") {
+            echo json_encode(["success" => false, "error" => "Acceso restringido a _SystemMaster_."]);
+            exit();
+        }
+
+        try {
+            $res = ControladorWhatsAppChats::ctrGuardarConfiguracion($_POST);
+            echo json_encode($res);
+        } catch (Throwable $e) {
+            echo json_encode(["success" => false, "error" => $e->getMessage()]);
+        }
+        exit();
+    }
+
+    /*=============================================
+    PROBAR CONEXIÓN (SOLO _SystemMaster_)
+    =============================================*/
+    public function ajaxProbarConexion() {
+        ob_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        if (!isset($_SESSION["perfil"]) || $_SESSION["perfil"] !== "_SystemMaster_") {
+            echo json_encode(["success" => false, "error" => "Acceso restringido a _SystemMaster_."]);
+            exit();
+        }
+
+        try {
+            $res = ControladorWhatsAppChats::ctrProbarConexion($_POST);
+            echo json_encode($res);
+        } catch (Throwable $e) {
+            echo json_encode(["success" => false, "error" => $e->getMessage()]);
+        }
+        exit();
+    }
 }
 
 // Enrutador de acciones AJAX
@@ -173,6 +258,18 @@ if (isset($_POST["accion"])) {
 
         case "sincronizarCRM":
             $ajax->ajaxSincronizarCRM();
+            break;
+
+        case "obtenerConfiguracion":
+            $ajax->ajaxObtenerConfiguracion();
+            break;
+
+        case "guardarConfiguracion":
+            $ajax->ajaxGuardarConfiguracion();
+            break;
+
+        case "probarConexion":
+            $ajax->ajaxProbarConexion();
             break;
     }
 }

@@ -84,7 +84,7 @@ h2 { color: #4ec9b0; }
 <p style="color:#aaa;">Envía un mensaje desde un grupo de WhatsApp y recarga esta página.</p>
 <?php endif; ?>
 
-<h2>📋 Últimas 20 entradas (todas)</h2>
+<h2>📋 Últimas 20 entradas Webhook (todas)</h2>
 <?php
 $recientes = array_slice(array_reverse($todasEntradas), 0, 20);
 foreach ($recientes as $e):
@@ -95,6 +95,18 @@ foreach ($recientes as $e):
 === [<?= htmlspecialchars($e['texto']) ?>
 </div>
 <?php endforeach; ?>
+
+<?php
+$logEnviosFile = __DIR__ . '/log_envios.txt';
+$contenidoEnvios = file_exists($logEnviosFile) ? file_get_contents($logEnviosFile) : '(Sin registros de envíos salientes aún)';
+if (strlen($contenidoEnvios) > 30000) {
+    $contenidoEnvios = '... [TRUNCADO - últimos 30kb] ...' . "\n\n" . substr($contenidoEnvios, -30000);
+}
+?>
+<h2>📤 Registro de Envíos Salientes a WaFloW (log_envios.txt)</h2>
+<div class="entrada" style="background: #111; color: #a6e22e; max-height: 350px; overflow-y: auto; font-size: 11.5px; border-color: #25D366;">
+<?= htmlspecialchars($contenidoEnvios) ?>
+</div>
 
 </body>
 </html>

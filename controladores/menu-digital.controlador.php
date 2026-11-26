@@ -35,4 +35,22 @@ class ControladorMenuDigital
     {
         return ModeloMenuDigital::mdlCrearOrdenMenuDigital($datos);
     }
+
+    /*=============================================
+    CONFIGURACIÓN BOLD
+    =============================================*/
+    static public function ctrObtenerConfiguracionBold()
+    {
+        return ModeloMenuDigital::mdlObtenerConfiguracionBold();
+    }
+
+    static public function ctrActualizarConfiguracionBold($datos)
+    {
+        return ModeloMenuDigital::mdlActualizarConfiguracionBold($datos);
+    }
+
+    static public function ctrActualizarPagoBold($codigoOrden, $estadoPago, $transaccionId = '')
+    {
+        return ModeloMenuDigital::mdlActualizarPagoBold($codigoOrden, $estadoPago, $transaccionId);
+    }
 }

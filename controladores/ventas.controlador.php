@@ -36,6 +36,54 @@ class ControladorVentas
 	}
 
 	/*=============================================
+	FORMATEAR ETIQUETAS DE OBSERVACIÓN (MENÚ DIGITAL / BOLD)
+	=============================================*/
+	static public function ctrFormatearObservacionBadges($obsRaw, $metodoPago = '')
+	{
+		$obsRaw = $obsRaw ?? '';
+		$badgeMenu = '';
+		$badgeBold = '';
+
+		// Detectar y formatear etiqueta de Pago en Línea Bold
+		if (
+			stripos($obsRaw, 'Pago en Línea Bold') !== false ||
+			stripos($obsRaw, 'Pago en Linea Bold') !== false ||
+			stripos($obsRaw, 'Pago Bold') !== false ||
+			(!empty($metodoPago) && stripos($metodoPago, 'Bold') !== false)
+		) {
+			$badgeBold = '<span class="badge" contenteditable="false" style="background-color: #2563eb; margin-right: 6px; font-size: 11px; vertical-align: middle;"><i class="fa fa-credit-card"></i> Pago en Línea Bold</span> ';
+			$obsRaw = str_ireplace(array(
+				'[ - Pago en Línea Bold]',
+				'[- Pago en Línea Bold]',
+				'[ - Pago en Linea Bold]',
+				'[- Pago en Linea Bold]',
+				'[Pago en Línea Bold]',
+				'[Pago en Linea Bold]',
+				'- Pago en Línea Bold',
+				'- Pago en Linea Bold',
+				'Pago en Línea Bold',
+				'Pago en Linea Bold'
+			), '', $obsRaw);
+		}
+
+		// Detectar y formatear etiqueta de Menú Digital
+		if (stripos($obsRaw, '[Menú Digital]') !== false || stripos($obsRaw, 'Menú Digital') !== false || stripos($obsRaw, 'Menu Digital') !== false) {
+			$badgeMenu = '<span class="badge" contenteditable="false" style="background-color: #00a65a; margin-right: 6px; font-size: 11px; vertical-align: middle;"><i class="fa fa-cutlery"></i> Menú Digital</span> ';
+			$obsRaw = trim(str_ireplace(array('[Menú Digital]', 'Menú Digital', '[Menu Digital]', 'Menu Digital'), '', $obsRaw));
+		}
+
+		// Limpiar corchetes y separadores residuales
+		$obsRaw = str_ireplace(array('[ - ]', '[-]', '[]', '[ -', '[- '), '', $obsRaw);
+		$obsRaw = ltrim($obsRaw, " \t\n\r\0\x0B|:-\\[\\]");
+		$obsTexto = trim($obsRaw);
+
+		return [
+			'badges' => $badgeMenu . $badgeBold,
+			'texto' => $obsTexto
+		];
+	}
+
+	/*=============================================
 	MOSTRAR VENTAS SERVER-SIDE
 	=============================================*/
 	static public function ctrMostrarVentasServerSide($params)
@@ -175,11 +223,16 @@ class ControladorVentas
 			$nestedData[] = $value["fecha"] ?? '';
 
 			// 6: Observación (Editable solo si tiene permiso de editar ventas)
-			$obsVenta = trim($value['observacion'] ?? '');
+			$obsRawVenta = $value['observacion'] ?? '';
+			$metodoPagoVenta = $value['metodo_pago'] ?? '';
+			$formatoObsVenta = self::ctrFormatearObservacionBadges($obsRawVenta, $metodoPagoVenta);
+			$badgesHtmlVenta = $formatoObsVenta['badges'];
+			$obsTextoVenta = $formatoObsVenta['texto'];
+
 			if (puedeAccion('ventas', 'editar')) {
-				$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . $value['id'] . '">' . e($obsVenta) . '</div>';
+				$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . $value['id'] . '">' . $badgesHtmlVenta . e($obsTextoVenta) . '</div>';
 			} else {
-				$nestedData[] = '<div contenteditable="false" class="celda-observacion-disabled" style="cursor: not-allowed; opacity: 0.85; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 4px 8px; color: #64748b; min-height: 28px;" title="Permiso de edición requerido para modificar observación" data-id="' . $value['id'] . '">' . (!empty($obsVenta) ? e($obsVenta) : '<span class="text-muted" style="font-style: italic;">Sin observación</span>') . '</div>';
+				$nestedData[] = '<div contenteditable="false" class="celda-observacion-disabled" style="cursor: not-allowed; opacity: 0.85; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 4px 8px; color: #64748b; min-height: 28px;" title="Permiso de edición requerido para modificar observación" data-id="' . $value['id'] . '">' . $badgesHtmlVenta . (!empty($obsTextoVenta) ? e($obsTextoVenta) : '<span class="text-muted" style="font-style: italic;">Sin observación</span>') . '</div>';
 			}
 
 			// 9: Acciones
@@ -363,18 +416,15 @@ class ControladorVentas
 
 			// 7: Observación (Editable solo si tiene permiso de editar órdenes)
 			$obsRaw = $value['observacion'] ?? '';
-			$badgeMenu = '';
-			if (stripos($obsRaw, '[Menú Digital]') !== false || stripos($obsRaw, 'Menú Digital') !== false) {
-				$badgeMenu = '<span class="badge" style="background-color: #00a65a; margin-right: 6px; font-size: 11px;"><i class="fa fa-cutlery"></i> Menú Digital</span> ';
-				// Eliminar el texto repetido "Menú Digital" y "[Menú Digital]" dejando solo la etiqueta verde
-				$obsRaw = trim(str_ireplace(array('[Menú Digital]', 'Menú Digital', '[Menu Digital]', 'Menu Digital'), '', $obsRaw));
-				$obsRaw = ltrim($obsRaw, " \t\n\r\0\x0B|:-");
-			}
-			$obsTexto = trim($obsRaw);
+			$metodoPagoOrden = $value['metodo_pago'] ?? '';
+			$formatoObsOrden = self::ctrFormatearObservacionBadges($obsRaw, $metodoPagoOrden);
+			$badgesHtml = $formatoObsOrden['badges'];
+			$obsTexto = $formatoObsOrden['texto'];
+
 			if (puedeAccion('ordenes', 'editar')) {
-				$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . e($value['id']) . '">' . $badgeMenu . e($obsTexto) . '</div>';
+				$nestedData[] = '<div contenteditable="true" class="celda-observacion" data-id="' . e($value['id']) . '">' . $badgesHtml . e($obsTexto) . '</div>';
 			} else {
-				$nestedData[] = '<div contenteditable="false" class="celda-observacion-disabled" style="cursor: not-allowed; opacity: 0.85; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 4px 8px; color: #64748b; min-height: 28px;" title="Permiso de edición requerido para modificar observación" data-id="' . e($value['id']) . '">' . $badgeMenu . (!empty($obsTexto) ? e($obsTexto) : '<span class="text-muted" style="font-style: italic;">Sin observación</span>') . '</div>';
+				$nestedData[] = '<div contenteditable="false" class="celda-observacion-disabled" style="cursor: not-allowed; opacity: 0.85; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 4px 8px; color: #64748b; min-height: 28px;" title="Permiso de edición requerido para modificar observación" data-id="' . e($value['id']) . '">' . $badgesHtml . (!empty($obsTexto) ? e($obsTexto) : '<span class="text-muted" style="font-style: italic;">Sin observación</span>') . '</div>';
 			}
 
 			// 8: Fecha
@@ -791,7 +841,12 @@ class ControladorVentas
 			$obsStyle = $esFirmada
 				? ' style="background:#f5f5f5; color:#777; cursor:default; font-style:italic;"'
 				: ' style="min-height:24px;"';
-			$nestedData[] = '<div contenteditable="' . $obsEditable . '" class="celda-observacion" data-id="' . e($value["id"]) . '" data-readonly="' . ($esFirmada ? '1' : '0') . '" data-placeholder="Escribe una observación..."' . $obsStyle . '>' . e($value["observacion"]) . '</div>';
+			$obsRawFE = $value["observacion"] ?? '';
+			$metodoPagoFE = $value["metodo_pago"] ?? '';
+			$formatoObsFE = self::ctrFormatearObservacionBadges($obsRawFE, $metodoPagoFE);
+			$badgesHtmlFE = $formatoObsFE['badges'];
+			$obsTextoFE = $formatoObsFE['texto'];
+			$nestedData[] = '<div contenteditable="' . $obsEditable . '" class="celda-observacion" data-id="' . e($value["id"]) . '" data-readonly="' . ($esFirmada ? '1' : '0') . '" data-placeholder="Escribe una observación..."' . $obsStyle . '>' . $badgesHtmlFE . (!empty($obsTextoFE) ? e($obsTextoFE) : ($esFirmada ? '<span class="text-muted" style="font-style: italic;">Sin observación</span>' : '')) . '</div>';
 
 			// 9: Estado DIAN
 			$badgeDian = '';

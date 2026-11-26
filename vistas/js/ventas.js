@@ -2484,15 +2484,15 @@ $(document).ready(function () {
 								var rowNode = api.row(rowIdx).node();
 								var celdaOriginal = $(rowNode).find('.celda-observacion, .celda-observacion-disabled');
 								var esEditable = celdaOriginal.hasClass('celda-observacion') && celdaOriginal.attr('contenteditable') === 'true';
-								var obsTexto = $('<div>').html(data).text().trim();
-								if (obsTexto === "Sin observación") obsTexto = "";
+								var obsHtml = celdaOriginal.html() ? celdaOriginal.html().trim() : '';
+								if (celdaOriginal.text().trim() === "Sin observación") obsHtml = "";
 
 								finalHtml += '<div style="padding:8px 0; border-bottom:1px solid #eee;">';
-								finalHtml += '<span class="text-bold" style="block;color:#555;margin-bottom:4px;"> ' + label + ':</span>';
+								finalHtml += '<span class="text-bold" style="display:block;color:#555;margin-bottom:4px;"> ' + label + ':</span>';
 								if (esEditable) {
-									finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:24px;">' + obsTexto + '</div>';
+									finalHtml += '<div class="celda-observacion" contenteditable="true" data-id="' + idVenta + '" style="min-height:24px;">' + obsHtml + '</div>';
 								} else {
-									finalHtml += '<div class="celda-observacion-disabled" contenteditable="false" data-id="' + idVenta + '" title="Permiso de edición requerido" style="min-height:24px; border:1px solid #e2e8f0; border-radius:4px; padding:6px 8px; background:#f8fafc; color:#64748b; cursor:not-allowed; opacity:0.85;">' + (obsTexto || '<span class="text-muted" style="font-style:italic;">Sin observación</span>') + '</div>';
+									finalHtml += '<div class="celda-observacion-disabled" contenteditable="false" data-id="' + idVenta + '" title="Permiso de edición requerido" style="min-height:24px; border:1px solid #e2e8f0; border-radius:4px; padding:6px 8px; background:#f8fafc; color:#64748b; cursor:not-allowed; opacity:0.85;">' + (obsHtml || '<span class="text-muted" style="font-style:italic;">Sin observación</span>') + '</div>';
 								}
 								finalHtml += '</div>';
 								return;
